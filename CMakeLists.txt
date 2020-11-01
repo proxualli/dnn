@@ -35,6 +35,7 @@ set(libdnn_headers
   include/Dropout.h
   include/GlobalAvgPooling.h
   include/GlobalMaxPooling.h
+  include/Image.h
   include/Input.h
   include/Layer.h
   include/LocalResponseNormalization.h
@@ -43,6 +44,7 @@ set(libdnn_headers
   include/Min.h
   include/Model.h
   include/Multiply.h
+  include/ParallelFor.h
   include/PartialDepthwiseConvolution.h
   include/Resampling.h
   include/Scripts.h
