@@ -14,6 +14,10 @@
 #include <thread>
 #endif
 
+#ifndef DNN_UNREF_PAR
+	#define DNN_UNREF_PAR(P) (P)
+#endif
+
 namespace dnn
 {
 #if !defined DNN_OMP
@@ -117,7 +121,7 @@ namespace dnn
 				f(i);
 		}
 #else
-		DNN_UNREF_PAR(cores);
+		DNN_UNREF_PAR(threads);
 
 		for_(0ull, range, [&](const blocked_range & r)
 		{

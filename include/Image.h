@@ -160,10 +160,10 @@ namespace dnn
 			{
 			case 0:
 			{
-				if (Bernoulli<bool>(0.1))
+				if (Bernoulli<bool>(Float(0.1)))
 					dstImage = Invert(dstImage);
 
-				if (Bernoulli<bool>(0.2))
+				if (Bernoulli<bool>(Float(0.2)))
 				{
 					if (Bernoulli<bool>())
 						dstImage = Contrast(dstImage, FloatLevel(6));
@@ -175,7 +175,7 @@ namespace dnn
 
 			case 1:
 			{
-				if (Bernoulli<bool>(0.7))
+				if (Bernoulli<bool>(Float(0.7)))
 				{
 					if (Bernoulli<bool>())
 						dstImage = Rotate(dstImage, FloatLevel(2, 0, 20), Interpolation::Cubic, mean);
@@ -183,7 +183,7 @@ namespace dnn
 						dstImage = Rotate(dstImage, -FloatLevel(2, 0, 20), Interpolation::Cubic, mean);
 				}
 
-				if (Bernoulli<bool>( 0.3))
+				if (Bernoulli<bool>(Float(0.3)))
 				{
 					if (Bernoulli<bool>())
 						dstImage = Translate(dstImage, 0, IntLevel(7), mean);
@@ -195,7 +195,7 @@ namespace dnn
 
 			case 2:
 			{
-				if (Bernoulli<bool>( 0.8))
+				if (Bernoulli<bool>(Float(0.8)))
 				{
 					if (Bernoulli<bool>())
 						dstImage = Sharpness(dstImage, FloatLevel(2));
@@ -203,7 +203,7 @@ namespace dnn
 						dstImage = Sharpness(dstImage, FloatLevel(8));
 				}
 
-				if (Bernoulli<bool>( 0.9))
+				if (Bernoulli<bool>(Float(0.9)))
 				{
 					if (Bernoulli<bool>())
 						dstImage = Sharpness(dstImage, FloatLevel(3));
@@ -223,7 +223,7 @@ namespace dnn
 						dstImage = Rotate(dstImage, -FloatLevel(6, 0, 20), Interpolation::Cubic, mean);
 				}
 
-				if (Bernoulli<bool>(0.7))
+				if (Bernoulli<bool>(Float(0.7)))
 				{
 					if (Bernoulli<bool>())
 						dstImage = Translate(dstImage, IntLevel(7), 0, mean);
@@ -238,14 +238,14 @@ namespace dnn
 				if (Bernoulli<bool>())
 					dstImage = AutoContrast(dstImage);
 
-				if (Bernoulli<bool>( 0.9))
+				if (Bernoulli<bool>(Float(0.9)))
 					dstImage = Equalize(dstImage);
 			}
 			break;
 
 			case 5:
 			{
-				if (Bernoulli<bool>(0.2))
+				if (Bernoulli<bool>(Float(0.2)))
 				{
 					if (Bernoulli<bool>())
 						dstImage = Rotate(dstImage, FloatLevel(4, 0, 20), Interpolation::Cubic, mean);
@@ -253,7 +253,7 @@ namespace dnn
 						dstImage = Rotate(dstImage, -FloatLevel(4, 0, 20), Interpolation::Cubic, mean);
 				}
 
-				if (Bernoulli<bool>(0.3))
+				if (Bernoulli<bool>(Float(0.3)))
 				{
 					if (Bernoulli<bool>())
 						dstImage = Posterize(dstImage, 32);
@@ -265,7 +265,7 @@ namespace dnn
 
 			case 6:
 			{
-				if (Bernoulli<bool>(0.4))
+				if (Bernoulli<bool>(Float(0.4)))
 				{
 					if (Bernoulli<bool>())
 						dstImage = Color(dstImage, FloatLevel(3));
@@ -273,7 +273,7 @@ namespace dnn
 						dstImage = Color(dstImage, FloatLevel(7));
 				}
 
-				if (Bernoulli<bool>(0.6))
+				if (Bernoulli<bool>(Float(0.6)))
 				{
 					if (Bernoulli<bool>())
 						dstImage = Brightness(dstImage, FloatLevel(7));
@@ -285,7 +285,7 @@ namespace dnn
 
 			case 7:
 			{
-				if (Bernoulli<bool>(0.3))
+				if (Bernoulli<bool>(Float(0.3)))
 				{
 					if (Bernoulli<bool>())
 						dstImage = Sharpness(dstImage, FloatLevel(9));
@@ -293,7 +293,7 @@ namespace dnn
 						dstImage = Sharpness(dstImage, FloatLevel(1));
 				}
 
-				if (Bernoulli<bool>(0.7))
+				if (Bernoulli<bool>(Float(0.7)))
 				{
 					if (Bernoulli<bool>())
 						dstImage = Brightness(dstImage, FloatLevel(8));
@@ -305,7 +305,7 @@ namespace dnn
 
 			case 8:
 			{
-				if (Bernoulli<bool>(0.6))
+				if (Bernoulli<bool>(Float(0.6)))
 					dstImage = Equalize(dstImage);
 
 				if (Bernoulli<bool>())
@@ -315,7 +315,7 @@ namespace dnn
 
 			case 9:
 			{
-				if (Bernoulli<bool>(0.6))
+				if (Bernoulli<bool>(Float(0.6)))
 				{
 					if (Bernoulli<bool>())
 						dstImage = Contrast(dstImage, FloatLevel(7));
@@ -323,9 +323,9 @@ namespace dnn
 						dstImage = Contrast(dstImage, FloatLevel(3));
 				}
 
-				if (Bernoulli<bool>(0.6))
+				if (Bernoulli<bool>(Float(Float(0.6))))
 				{
-					if (Bernoulli<bool>(0.5))
+					if (Bernoulli<bool>(Float(0.5)))
 						dstImage = Sharpness(dstImage, FloatLevel(6));
 					else
 						dstImage = Sharpness(dstImage, FloatLevel(4));
@@ -335,7 +335,7 @@ namespace dnn
 
 			case 10:
 			{
-				if (Bernoulli<bool>(0.7))
+				if (Bernoulli<bool>(Float(0.7)))
 				{
 					if (Bernoulli<bool>())
 						dstImage = Color(dstImage, FloatLevel(7));
@@ -355,17 +355,17 @@ namespace dnn
 
 			case 11:
 			{
-				if (Bernoulli<bool>(0.3))
+				if (Bernoulli<bool>(Float(0.3)))
 					dstImage = Equalize(dstImage);
 
-				if (Bernoulli<bool>(0.4))
+				if (Bernoulli<bool>(Float(0.4)))
 					dstImage = AutoContrast(dstImage);
 			}
 			break;
 
 			case 12:
 			{
-				if (Bernoulli<bool>(0.4))
+				if (Bernoulli<bool>(Float(0.4)))
 				{
 					if (Bernoulli<bool>())
 						dstImage = Translate(dstImage, IntLevel(3), 0, mean);
@@ -373,14 +373,14 @@ namespace dnn
 						dstImage = Translate(dstImage, -IntLevel(3), 0, mean);
 				}
 
-				if (Bernoulli<bool>(0.2))
+				if (Bernoulli<bool>(Float(0.2)))
 					dstImage = Sharpness(dstImage, FloatLevel(6));
 			}
 			break;
 
 			case 13:
 			{
-				if (Bernoulli<bool>(0.9))
+				if (Bernoulli<bool>(Float(0.9)))
 				{
 					if (Bernoulli<bool>())
 						dstImage = Brightness(dstImage, FloatLevel(6));
@@ -388,7 +388,7 @@ namespace dnn
 						dstImage = Brightness(dstImage, FloatLevel(4));
 				}
 
-				if (Bernoulli<bool>(0.2))
+				if (Bernoulli<bool>(Float(0.2)))
 				{
 					if (Bernoulli<bool>())
 						dstImage = Color(dstImage, FloatLevel(8));
@@ -412,27 +412,27 @@ namespace dnn
 
 			case 15:
 			{
-				if (Bernoulli<bool>(0.2))
+				if (Bernoulli<bool>(Float(0.2)))
 					dstImage = Equalize(dstImage);
 
-				if (Bernoulli<bool>(0.6))
+				if (Bernoulli<bool>(Float(0.6)))
 					dstImage = AutoContrast(dstImage);
 			}
 			break;
 
 			case 16:
 			{
-				if (Bernoulli<bool>(0.2))
+				if (Bernoulli<bool>(Float(0.2)))
 					dstImage = Equalize(dstImage);
 
-				if (Bernoulli<bool>(0.6))
+				if (Bernoulli<bool>(Float(0.6)))
 					dstImage = Equalize(dstImage);
 			}
 			break;
 
 			case 17:
 			{
-				if (Bernoulli<bool>(0.9))
+				if (Bernoulli<bool>(Float(0.9)))
 				{
 					if (Bernoulli<bool>())
 						dstImage = Color(dstImage, FloatLevel(8));
@@ -440,44 +440,44 @@ namespace dnn
 						dstImage = Color(dstImage, FloatLevel(2));
 				}
 
-				if (Bernoulli<bool>(0.6))
+				if (Bernoulli<bool>(Float(0.6)))
 					dstImage = Equalize(dstImage);
 			}
 			break;
 
 			case 18:
 			{
-				if (Bernoulli<bool>(0.8))
+				if (Bernoulli<bool>(Float(0.8)))
 					dstImage = AutoContrast(dstImage);
 
-				if (Bernoulli<bool>(0.2))
+				if (Bernoulli<bool>(Float(0.2)))
 					dstImage = Solarize(dstImage, IntLevel(8, 0, 256));
 			}
 			break;
 
 			case 19:
 			{
-				if (Bernoulli<bool>(0.1))
+				if (Bernoulli<bool>(Float(0.1)))
 					dstImage = Brightness(dstImage, FloatLevel(3));
 
-				if (Bernoulli<bool>(0.7))
+				if (Bernoulli<bool>(Float(0.7)))
 					dstImage = Color(dstImage, FloatLevel(4));
 			}
 			break;
 
 			case 20:
 			{
-				if (Bernoulli<bool>(0.4))
+				if (Bernoulli<bool>(Float(0.4)))
 					dstImage = Solarize(dstImage, IntLevel(5, 0, 256));
 
-				if (Bernoulli<bool>(0.9))
+				if (Bernoulli<bool>(Float(0.9)))
 					dstImage = AutoContrast(dstImage);
 			}
 			break;
 
 			case 21:
 			{
-				if (Bernoulli<bool>(0.9))
+				if (Bernoulli<bool>(Float(0.9)))
 				{
 					if (Bernoulli<bool>())
 						dstImage = Translate(dstImage, IntLevel(7), 0, mean);
@@ -485,7 +485,7 @@ namespace dnn
 						dstImage = Translate(dstImage, -IntLevel(7), 0, mean);
 				}
 
-				if (Bernoulli<bool>(0.7))
+				if (Bernoulli<bool>(Float(0.7)))
 				{
 					if (Bernoulli<bool>())
 						dstImage = Translate(dstImage, IntLevel(7), 0, mean);
@@ -497,27 +497,27 @@ namespace dnn
 
 			case 22:
 			{
-				if (Bernoulli<bool>(0.9))
+				if (Bernoulli<bool>(Float(0.9)))
 					dstImage = AutoContrast(dstImage);
 
-				if (Bernoulli<bool>(0.8))
+				if (Bernoulli<bool>(Float(0.8)))
 					dstImage = Solarize(dstImage, IntLevel(3, 0, 256));
 			}
 			break;
 
 			case 23:
 			{
-				if (Bernoulli<bool>(0.8))
+				if (Bernoulli<bool>(Float(0.8)))
 					dstImage = Equalize(dstImage);
 
-				if (Bernoulli<bool>(0.1))
+				if (Bernoulli<bool>(Float(0.1)))
 					dstImage = Invert(dstImage);
 			}
 			break;
 
 			case 24:
 			{
-				if (Bernoulli<bool>(0.7))
+				if (Bernoulli<bool>(Float(0.7)))
 				{
 					if (Bernoulli<bool>())
 						dstImage = Translate(dstImage, IntLevel(8), 0, mean);
@@ -525,7 +525,7 @@ namespace dnn
 						dstImage = Translate(dstImage, -IntLevel(8), 0, mean);
 				}
 
-				if (Bernoulli<bool>(0.9))
+				if (Bernoulli<bool>(Float(0.9)))
 					dstImage = AutoContrast(dstImage);
 			}
 			break;

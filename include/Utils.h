@@ -46,23 +46,24 @@
 
 #define MAGIC_ENUM_RANGE_MIN 0
 #define MAGIC_ENUM_RANGE_MAX 255
-#include "include/magic_enum.hpp"
 
+#include "magic_enum.hpp"
 #include "dnnl.hpp"
 
 #include "AlignedAllocator.h"
 #include "ParallelFor.h"
 
-
 namespace dnn
 {
 #if defined(_MSC_VER)
-#define DNN_ALIGN(alignment) __declspec(align(alignment))
+	#define DNN_ALIGN(alignment) __declspec(align(alignment))
 #else
-#define DNN_ALIGN(alignment) __attribute__((__aligned__(alignment)))
+	#define DNN_ALIGN(alignment) __attribute__((__aligned__(alignment)))
 #endif
-#define DNN_SIMD_ALIGN DNN_ALIGN(64)
-#define DNN_UNREF_PAR(P) (P)
+	#define DNN_SIMD_ALIGN DNN_ALIGN(64)
+#ifndef DNN_UNREF_PAR
+	#define DNN_UNREF_PAR(P) (P)
+#endif
 
 	typedef float Float;
 	typedef unsigned char Byte;

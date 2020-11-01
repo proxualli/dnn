@@ -31,8 +31,8 @@ namespace dnn
 	{
 		inline static Float f(const Float& x) noexcept { return std::min(Float(1), std::max(Float(0), x * Float(0.2) + Float(0.5))); }
 		inline static Float df(const Float& x) noexcept { return x < Float(-2.5) || x > Float(2.5) ? Float(0) : Float(0.2); }
-		inline static VecFloat fVec(const VecFloat& x) noexcept { return min(VecFloat(1), max(VecFloat(0), x * VecFloat(0.2) + VecFloat(0.5))); }
-		inline static VecFloat dfVec(const VecFloat& x) noexcept { return select(x < VecFloat(-2.5) | x > VecFloat(2.5), VecFloat(0), VecFloat(0.2)); }
+		inline static VecFloat fVec(const VecFloat& x) noexcept { return min(VecFloat(1), max(VecFloat(0), x * VecFloat(Float(0.2)) + VecFloat(Float(0.5)))); }
+		inline static VecFloat dfVec(const VecFloat& x) noexcept { return select(x < VecFloat(Float(-2.5)) | x > VecFloat(Float(2.5)), VecFloat(0), VecFloat(Float(0.2))); }
 	};
 
 	struct Relu6
@@ -46,9 +46,9 @@ namespace dnn
 	struct HardSwish
 	{
 		inline static Float f(const Float& x) noexcept { return x * Relu6::f(x + Float(3)) * Float(1.0 / 6.0); }
-		inline static Float df(const Float& x) noexcept { return x < Float(-3.0) ? Float(0) : x > Float(3.0) ? Float(1) : (Float(1.0 / 3.0) * x + Float(0.5)); }
-		inline static VecFloat fVec(const VecFloat& x) noexcept { return x * Relu6::fVec(x + VecFloat(3)) * VecFloat(1.0 / 6.0); }
-		inline static VecFloat dfVec(const VecFloat& x) noexcept { return select(x < VecFloat(-3.0), VecFloat(0), select(x > VecFloat(3.0), VecFloat(1), (VecFloat(1.0 / 3.0)* x + VecFloat(0.5)))); }
+		inline static Float df(const Float& x) noexcept { return x < Float(-3) ? Float(0) : x > Float(3) ? Float(1) : (Float(1.0 / 3.0) * x + Float(0.5)); }
+		inline static VecFloat fVec(const VecFloat& x) noexcept { return x * Relu6::fVec(x + VecFloat(3)) * VecFloat(Float(1.0 / 6.0)); }
+		inline static VecFloat dfVec(const VecFloat& x) noexcept { return select(x < VecFloat(-3), VecFloat(0), select(x > VecFloat(3), VecFloat(1), (VecFloat(Float(1.0 / 3.0))* x + VecFloat(Float(0.5))))); }
 	};
 
 	struct Identity
@@ -119,8 +119,8 @@ namespace dnn
 	{
 		inline static Float f(const Float& x) noexcept { return Float(1.0507009873554804934193349852946) * (x > Float(0) ? x : Float(1.6732632423543772848170429916717) * (std::exp(x) - Float(1))); }
 		inline static Float df(const Float& x) noexcept { return x > Float(0) ? Float(1.0507009873554804934193349852946) : Float(1.7580993408473768599402175208123) * std::exp(x); }
-		inline static VecFloat fVec(const VecFloat& x) noexcept { return VecFloat(1.0507009873554804934193349852946) * select(x > VecFloat(0), x, VecFloat(1.6732632423543772848170429916717) * (exp(x) - VecFloat(1))); }
-		inline static VecFloat dfVec(const VecFloat& x) noexcept { return select(x > VecFloat(0), VecFloat(1.0507009873554804934193349852946), VecFloat(1.7580993408473768599402175208123) * exp(x)); }
+		inline static VecFloat fVec(const VecFloat& x) noexcept { return VecFloat(Float(1.0507009873554804934193349852946)) * select(x > VecFloat(0), x, VecFloat(Float(1.6732632423543772848170429916717)) * (exp(x) - VecFloat(1))); }
+		inline static VecFloat dfVec(const VecFloat& x) noexcept { return select(x > VecFloat(0), VecFloat(Float(1.0507009873554804934193349852946)), VecFloat(Float(1.7580993408473768599402175208123)) * exp(x)); }
 	};
 
 	struct SoftPlus
