@@ -59,8 +59,6 @@ set(libdnn_sources
   src/Average.cpp
   src/AvgPooling.cpp
   src/BatchNorm.cpp
-  src/BatchNormActivation.cpp
-  src/BatchNormActivationDropout.cpp
   src/BatchNormRelu.cpp
   src/ChannelMultiply.cpp
   src/ChannelShuffle.cpp
