@@ -1,0 +1,241 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{78F1BB71-C716-48F5-9429-4537F1AE6319}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>dnn</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
+    <ProjectName>dnn</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <PlatformToolset>v142</PlatformToolset>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)dnn\deps\oneDNN\include;$(SolutionDir)dnn\deps\oneDNN\build\include;$(SolutionDir)dnn\deps\vectorclass;$(SolutionDir)dnn\deps\zlib-1.2.11;$(SolutionDir)dnn\deps\libpng;$(SolutionDir)dnn\deps\magic_enum;$(SolutionDir)dnn\deps\libjpeg-turbo;$(SolutionDir)dnn\deps\CImg;$(SolutionDir)dnn\deps\CImg\plugins;$(IncludePath)</IncludePath>
+    <CodeAnalysisRuleSet>NativeRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <TargetExt>.dll</TargetExt>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64;$(SolutionDir)libjpeg-turbo</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)dnn\deps\oneDNN\include;$(SolutionDir)dnn\deps\oneDNN\build\include;$(SolutionDir)dnn\deps\vectorclass;$(SolutionDir)dnn\deps\zlib-1.2.11;$(SolutionDir)dnn\deps\libpng;$(SolutionDir)dnn\deps\magic_enum;$(SolutionDir)dnn\deps\libjpeg-turbo;$(SolutionDir)dnn\deps\CImg;$(SolutionDir)dnn\deps\CImg\plugins;$(IncludePath)</IncludePath>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
+    <CodeAnalysisRuleSet>NativeRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <TargetExt>.dll</TargetExt>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64;$(SolutionDir)libjpeg-turbo</LibraryPath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>DNN_EXPORTS;WIN32;DNN_OMP;DNN_LOG;cimg_use_jpeg;cimg_use_png;cimg_use_openmp;cimg_use_zlib;cimg_use_cpp11;_DEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <CallingConvention>Cdecl</CallingConvention>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <AdditionalIncludeDirectories>$(SolutionDir)dnn\include;$(SolutionDir)deps\vectorclass;$(SolutionDir)dnn\deps\libpng;$(SolutionDir)dnn\deps\libjpeg-turbo;$(SolutionDir)dnn\deps\oneDNN\include;$(SolutionDir)dnn\deps\oneDNN\build\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>/openmp:experimental /Qvec-report:1 %(AdditionalOptions)</AdditionalOptions>
+      <Optimization>Disabled</Optimization>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <Parallelization>true</Parallelization>
+      <OpenMP>GenerateParallelCode</OpenMP>
+      <CCppSupport>Cpp17Support</CCppSupport>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <IgnoreSpecificDefaultLibraries>MSVCRT.lib</IgnoreSpecificDefaultLibraries>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
+    </Link>
+    <ProjectReference />
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>DNN_EXPORTS;NDEBUG;WIN32;DNN_CACHE_PRIMITIVES;DNN_OMP;cimg_use_cpp11;cimg_use_openmp;cimg_use_jpeg;cimg_use_png;cimg_use_zlib;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <EnablePREfast>false</EnablePREfast>
+      <AdditionalIncludeDirectories>$(SolutionDir)dnn\include;$(SolutionDir)deps\vectorclass;$(SolutionDir)dnn\deps\libpng;$(SolutionDir)dnn\deps\libjpeg-turbo;$(SolutionDir)dnn\deps\oneDNN\include;$(SolutionDir)dnn\deps\oneDNN\build\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <MSCompatibility>true</MSCompatibility>
+      <StrictAliasing>false</StrictAliasing>
+      <SuppressStartupBanner>false</SuppressStartupBanner>
+      <CLanguageStandard>Default</CLanguageStandard>
+      <CppLanguageStandard>c++1y</CppLanguageStandard>
+      <Cpp0xSupport>true</Cpp0xSupport>
+      <DisableSpecificWarnings>
+      </DisableSpecificWarnings>
+      <CallingConvention>Cdecl</CallingConvention>
+      <OptimizationDiagnosticLevel>Level3</OptimizationDiagnosticLevel>
+      <EnableNeonCodegen>false</EnableNeonCodegen>
+      <StringPooling>true</StringPooling>
+      <WarningLevel>Level3</WarningLevel>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
+      <OpenMP>GenerateParallelCode</OpenMP>
+      <DebugInformationFormat>None</DebugInformationFormat>
+      <Optimization>MaxSpeed</Optimization>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <InterproceduralOptimization>NoIPO</InterproceduralOptimization>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <AdditionalOptions>/openmp:experimental /Qvec-report:1 %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <Link>
+      <InterproceduralOptimization>true</InterproceduralOptimization>
+      <SubSystem>Windows</SubSystem>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <IgnoreSpecificDefaultLibraries>
+      </IgnoreSpecificDefaultLibraries>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="..\magic_enum\include\magic_enum.hpp" />
+    <ClInclude Include="..\vectorclass\instrset.h" />
+    <ClInclude Include="include\Activation.h" />
+    <ClInclude Include="include\Add.h" />
+    <ClInclude Include="include\AlignedAllocator.h" />
+    <ClInclude Include="include\Average.h" />
+    <ClInclude Include="include\AvgPooling.h" />
+    <ClInclude Include="include\BatchNorm.h" />
+    <ClInclude Include="include\BatchNormActivation.h" />
+    <ClInclude Include="include\BatchNormActivationDropout.h" />
+    <ClInclude Include="include\BatchNormRelu.h" />
+    <ClInclude Include="include\ChannelSplit.h" />
+    <ClInclude Include="include\Definition.h" />
+    <ClInclude Include="include\Concat.h" />
+    <ClInclude Include="include\Convolution.h" />
+    <ClInclude Include="include\Cost.h" />
+    <ClInclude Include="include\ConvolutionTranspose.h" />
+    <ClInclude Include="include\Dataprovider.h" />
+    <ClInclude Include="include\Max.h" />
+    <ClInclude Include="include\Min.h" />
+    <ClInclude Include="include\PartialDepthwiseConvolution.h" />
+    <ClInclude Include="include\Divide.h" />
+    <ClInclude Include="include\Dropout.h" />
+    <ClInclude Include="include\Dense.h" />
+    <ClInclude Include="include\GlobalAvgPooling.h" />
+    <ClInclude Include="include\GlobalMaxPooling.h" />
+    <ClInclude Include="include\Image.h" />
+    <ClInclude Include="include\Input.h" />
+    <ClInclude Include="include\Layer.h" />
+    <ClInclude Include="include\LocalResponseNormalization.h" />
+    <ClInclude Include="include\MaxPooling.h" />
+    <ClInclude Include="include\Multiply.h" />
+    <ClInclude Include="include\ChannelMultiply.h" />
+    <ClInclude Include="include\Model.h" />
+    <ClInclude Include="include\ParallelFor.h" />
+    <ClInclude Include="include\DepthwiseConvolution.h" />
+    <ClInclude Include="include\ChannelShuffle.h" />
+    <ClInclude Include="include\Resampling.h" />
+    <ClInclude Include="include\Scripts.h" />
+    <ClInclude Include="include\stdafx.h" />
+    <ClInclude Include="include\Substract.h" />
+    <ClInclude Include="include\targetver.h" />
+    <ClInclude Include="include\Utils.h" />
+    <ClInclude Include="include\ChannelZeroPad.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\Activation.cpp" />
+    <ClCompile Include="src\Add.cpp" />
+    <ClCompile Include="src\Average.cpp" />
+    <ClCompile Include="src\AvgPooling.cpp" />
+    <ClCompile Include="src\BatchNorm.cpp" />
+    <ClCompile Include="src\BatchNormRelu.cpp" />
+    <ClCompile Include="src\ChannelSplit.cpp" />
+    <ClCompile Include="src\Concat.cpp" />
+    <ClCompile Include="src\Convolution.cpp" />
+    <ClCompile Include="src\Cost.cpp" />
+    <ClCompile Include="src\ConvolutionTranspose.cpp" />
+    <ClCompile Include="src\Max.cpp" />
+    <ClCompile Include="src\Min.cpp" />
+    <ClCompile Include="src\PartialDepthwiseConvolution.cpp" />
+    <ClCompile Include="src\Divide.cpp" />
+    <ClCompile Include="src\dllmain.cpp" />
+    <ClCompile Include="src\Dropout.cpp" />
+    <ClCompile Include="src\Dense.cpp" />
+    <ClCompile Include="src\GlobalAvgPooling.cpp" />
+    <ClCompile Include="src\GlobalMaxPooling.cpp" />
+    <ClCompile Include="src\Input.cpp" />
+    <ClCompile Include="src\Layer.cpp" />
+    <ClCompile Include="src\LocalResponseNormalization.cpp" />
+    <ClCompile Include="src\MaxPooling.cpp" />
+    <ClCompile Include="src\Multiply.cpp" />
+    <ClCompile Include="src\Model.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Full</Optimization>
+      <OmitFramePointers Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</OmitFramePointers>
+    </ClCompile>
+    <ClCompile Include="src\DepthwiseConvolution.cpp" />
+    <ClCompile Include="src\ChannelMultiply.cpp" />
+    <ClCompile Include="src\ChannelShuffle.cpp" />
+    <ClCompile Include="src\Resampling.cpp" />
+    <ClCompile Include="src\Scripts.cpp" />
+    <ClCompile Include="src\Substract.cpp" />
+    <ClCompile Include="src\ChannelZeroPad.cpp" />
+    <ClCompile Include="src\stdafx.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="deps\libjpeg-turbo\build\jpeg-static.vcxproj">
+      <Project>{cbddf2db-4407-3d56-87f9-0846eaa8c9d5}</Project>
+    </ProjectReference>
+    <ProjectReference Include="deps\libpng\projects\vstudio\libpng\libpng.vcxproj">
+      <Project>{d6973076-9317-4ef2-a0b8-b7a18ac0713e}</Project>
+    </ProjectReference>
+    <ProjectReference Include="deps\libpng\projects\vstudio\zlib\zlib.vcxproj">
+      <Project>{60f89955-91c6-3a36-8000-13c592fec2df}</Project>
+    </ProjectReference>
+    <ProjectReference Include="deps\oneDNN\build\src\dnnl.vcxproj">
+      <Project>{2f09a747-18cb-3043-85bf-83bba99c5137}</Project>
+    </ProjectReference>
+    <ProjectReference Include="deps\vectorclass\build\vectorclass.vcxproj">
+      <Project>{f19415d6-0631-363f-8e72-a5a79fe1b062}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\convnet\settings.extensions.cs" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets" />
+</Project>
