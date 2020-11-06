@@ -56,41 +56,8 @@ set(libdnn_headers
 
 set(libdnn_sources
   ${libdnn_headers}
-  src/Activation.cpp
-  src/Add.cpp
-  src/Average.cpp
-  src/AvgPooling.cpp
-  src/BatchNorm.cpp
-  src/BatchNormRelu.cpp
-  src/ChannelMultiply.cpp
-  src/ChannelShuffle.cpp
-  src/ChannelSplit.cpp
-  src/ChannelMultiply.cpp
-  src/ChannelZeroPad.cpp
-  src/Concat.cpp
-  src/Convolution.cpp
-  src/ConvolutionTranspose.cpp
-  src/Cost.cpp
-  src/Dense.cpp
-  src/DepthwiseConvolution.cpp
-  src/Divide.cpp
   src/dllmain.cpp
-  src/Dropout.cpp
-  src/GlobalAvgPooling.cpp
-  src/GlobalMaxPooling.cpp
-  src/Input.cpp
-  src/Layer.cpp
-  src/LocalResponseNormalization.cpp
-  src/Max.cpp
-  src/MaxPooling.cpp
-  src/Min.cpp
-  src/Model.cpp
-  src/Multiply.cpp
-  src/PartialDepthwiseConvolution.cpp
-  src/Resampling.cpp
-  src/Scripts.cpp
   src/stdafx.cpp
-  src/Substract.cpp
 )
 
 # ---[ Download deps
@@ -149,7 +116,6 @@ IF(NOT DEFINED VECTORCLASS_SOURCE_DIR)
   EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" --build .
     WORKING_DIRECTORY "${DNN_DEPENDENCIES_BINARY_DIR}/magic_enum-download")
   SET(MAGIC_ENUM_SOURCE_DIR "${DNN_DEPENDENCIES_SOURCE_DIR}/magic_enum" CACHE STRING "MagicEnum source directory")
-  SET(MAGIC_ENUM_INCLUDE_DIR "${DNN_DEPENDENCIES_SOURCE_DIR}/MAGIC_ENUM_SOURCE_DIR/include" CACHE STRING "magic_enum include directory")
  ENDIF()
 
  IF(NOT DEFINED ONEDNN_SOURCE_DIR)
@@ -228,4 +194,5 @@ IF(NOT TARGET oneDNN)
     "${ONEDNN_SOURCE_DIR}"
     "${DNN_DEPENDENCIES_BINARY_DIR}/oneDNN")
 ENDIF()
+
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC oneDNN)

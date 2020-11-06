@@ -2306,5 +2306,41 @@ namespace dnn
 
 			return nullptr;
 		}
+
+		static bool CheckDefinition(std::string& definition, CheckMsg& checkMsg)
+		{
+			definition = Normalize(definition.c_str());
+
+			Read(definition.c_str(), checkMsg, true);
+
+			return checkMsg.Error;
+		}
+
+		static Model* ReadDefinition(const char* definition, const Optimizers optimizer, Dataprovider* dataprovider, CheckMsg& checkMsg)
+		{
+			Model* model = Read(Normalize(definition).c_str(), checkMsg, false, dataprovider, optimizer);
+
+			if (checkMsg.Error)
+			{
+
+			}
+
+			return model;
+		}
+
+		static Model* LoadDefinition(const char* fileName, const Optimizers optimizer, Dataprovider* dataprovider, CheckMsg& checkMsg)
+		{
+			Model* model = nullptr;
+
+			auto file = std::ifstream(fileName);
+			if (!file.bad() && file.is_open())
+			{
+				auto buffer = std::stringstream() << file.rdbuf();
+				file.close();
+				model = ReadDefinition(buffer.str().c_str(), optimizer, dataprovider, checkMsg);
+			}
+
+			return model;
+		}
 	};
 }

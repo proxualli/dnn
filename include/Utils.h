@@ -47,7 +47,7 @@
 #define MAGIC_ENUM_RANGE_MIN 0
 #define MAGIC_ENUM_RANGE_MAX 255
 
-#include "magic_enum.hpp"
+#include "include/magic_enum.hpp"
 #include "dnnl.hpp"
 
 #include "AlignedAllocator.h"
@@ -61,6 +61,7 @@ namespace dnn
 	#define DNN_ALIGN(alignment) __attribute__((__aligned__(alignment)))
 #endif
 	#define DNN_SIMD_ALIGN DNN_ALIGN(64)
+
 #ifndef DNN_UNREF_PAR
 	#define DNN_UNREF_PAR(P) (P)
 #endif
@@ -70,6 +71,8 @@ namespace dnn
 	typedef std::vector<Float, AlignedAllocator<Float, 64ull>> FloatVector;
 	typedef std::vector<Byte, AlignedAllocator<Byte, 64ull>> ByteVector;
 	
+	constexpr auto NEURONS_LIMIT = Float(100);
+	constexpr auto WEIGHTS_LIMIT = Float(100);
 	constexpr auto LIGHT_COMPUTE = 4ull;         // number of threads
 	constexpr auto MEDIUM_COMPUTE = 8ull;
 	constexpr auto FloatSquare(const Float& value) noexcept { return (value * value); }

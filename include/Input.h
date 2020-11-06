@@ -6,16 +6,36 @@ namespace dnn
 	class Input final : public Layer
 	{
 	public:
-		Input(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const size_t c, const size_t d, const size_t h, const size_t w);
+		Input(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const size_t c, const size_t d, const size_t h, const size_t w) :
+			Layer(device, format, name, LayerTypes::Input, 0, 0, c, d, h, w, 0, 0, 0, std::vector<Layer*>())
+		{
+		}
 		
-		std::string GetDescription() const final override;
+		std::string GetDescription() const final override 
+		{
+			return GetDescriptionHeader();
+		}
 
-		size_t FanIn() const final override;
-		size_t FanOut() const final override;
+		size_t Input::FanIn() const final override
+		{
+			return 1;
+		}
 
-		void InitializeDescriptors(const size_t batchSize) final override;
+		size_t Input::FanOut() const final override
+		{
+			return CDHW;
+		}
 
-		void ForwardProp(const size_t batchSize, const bool training) override {}
-		void BackwardProp(const size_t batchSize) override {}
+		void InitializeDescriptors(const size_t batchSize) final override
+		{
+			if (Format == dnnl::memory::format_tag::any)
+				Format = PlainFmt;
+
+			DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ int(batchSize), int(C), int(H), int(W) }), dnnl::memory::data_type::f32, Format));
+			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ int(batchSize), int(C), int(H), int(W) }), dnnl::memory::data_type::f32, Format));
+		}
+
+		void ForwardProp(const size_t batchSize, const bool training) override { }
+		void BackwardProp(const size_t batchSize) override { }
 	};
 }
