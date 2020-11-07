@@ -129,43 +129,43 @@ namespace dnn
 				case 2:
 				{
 					for_i(batchSize, LIGHT_COMPUTE, [=](size_t b)
+					{
+						const auto start = b * size;
+						const auto end = start + size;
+						for (auto n = start; n < end; n++)
 						{
-							const auto start = b * size;
-							const auto end = start + size;
-							for (auto n = start; n < end; n++)
-							{
-								Inputs[0]->NeuronsD1[n] += Scale * NeuronsD1[n];
-								Inputs[1]->NeuronsD1[n] += Scale * NeuronsD1[n];
-							}
-						});
+							Inputs[0]->NeuronsD1[n] += Scale * NeuronsD1[n];
+							Inputs[1]->NeuronsD1[n] += Scale * NeuronsD1[n];
+						}
+					});
 				}
 				break;
 
 				case 3:
 				{
 					for_i(batchSize, LIGHT_COMPUTE, [=](size_t b)
+					{
+						const auto start = b * size;
+						const auto end = start + size;
+						for (auto n = start; n < end; n++)
 						{
-							const auto start = b * size;
-							const auto end = start + size;
-							for (auto n = start; n < end; n++)
-							{
-								Inputs[0]->NeuronsD1[n] += Scale * NeuronsD1[n];
-								Inputs[1]->NeuronsD1[n] += Scale * NeuronsD1[n];
-								Inputs[2]->NeuronsD1[n] += Scale * NeuronsD1[n];
-							}
-						});
+							Inputs[0]->NeuronsD1[n] += Scale * NeuronsD1[n];
+							Inputs[1]->NeuronsD1[n] += Scale * NeuronsD1[n];
+							Inputs[2]->NeuronsD1[n] += Scale * NeuronsD1[n];
+						}
+					});
 				}
 				break;
 
 				default:
 					for_i(batchSize, LIGHT_COMPUTE, [=](size_t b)
-						{
-							const auto start = b * size;
-							const auto end = start + size;
-							for (auto i = 0ull; i < Inputs.size(); i++)
-								for (auto n = start; n < end; n++)
-									Inputs[i]->NeuronsD1[n] += Scale * NeuronsD1[n];
-						});
+					{
+						const auto start = b * size;
+						const auto end = start + size;
+						for (auto i = 0ull; i < Inputs.size(); i++)
+							for (auto n = start; n < end; n++)
+								Inputs[i]->NeuronsD1[n] += Scale * NeuronsD1[n];
+					});
 				}
 #ifdef DNN_STOCHASTIC
 			}

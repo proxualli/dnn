@@ -5,7 +5,7 @@ PROJECT(vectorclass-download NONE)
 INCLUDE(ExternalProject)
 ExternalProject_Add(vectorclass
 	GIT_REPOSITORY https://github.com/zamir1001/vectorclass.git
-	GIT_TAG main
+	GIT_TAG master
 	SOURCE_DIR "${DNN_DEPENDENCIES_SOURCE_DIR}/vectorclass"
 	BINARY_DIR "${DNN_DEPENDENCIES_BINARY_DIR}/vectorclass"
 	CONFIGURE_COMMAND ""
