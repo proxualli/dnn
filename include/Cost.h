@@ -74,11 +74,11 @@ namespace dnn
 
 			description.append(nwl + " Cost:" + dtab + std::string(magic_enum::enum_name<Costs>(CostFunction)));
 			description.append(nwl + " Channels:" + tab + std::to_string(C));
-			description.append(nwl + " LabelTrue:" + tab + FloatToString(LabelTrue));
-			description.append(nwl + " LabelFalse:" + tab + FloatToString(LabelFalse));
-			description.append(nwl + " Weight:" + tab + FloatToString(Weight));
+			description.append(nwl + " LabelTrue:" + tab + FloatToStringFixed(LabelTrue));
+			description.append(nwl + " LabelFalse:" + tab + FloatToStringFixed(LabelFalse));
+			description.append(nwl + " Weight:" + tab + FloatToStringFixed(Weight));
 			if (CostFunction == Costs::MeanAbsoluteEpsError || CostFunction == Costs::CategoricalCrossEntropy)
-				description.append(nwl + " Epsilon:" + tab + FloatToString(Eps, 6));
+				description.append(nwl + " Epsilon:" + tab + FloatToStringFixed(Eps, 6));
 
 			return description;
 		}
