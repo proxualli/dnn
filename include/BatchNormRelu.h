@@ -85,8 +85,8 @@ namespace dnn
 			mean /= C;
 			variance /= C;
 
-			description.append(nwl + " Mean:" + dtab + FloatToString(mean));
-			description.append(nwl + " Variance:" + tab + FloatToString(variance));
+			description.append(nwl + " Mean:" + dtab + FloatToStringFixed(mean));
+			description.append(nwl + " Variance:" + tab + FloatToStringFixed(variance));
 
 			return description;
 		}
