@@ -48,7 +48,7 @@
 #define MAGIC_ENUM_RANGE_MAX 255
 
 #include "magic_enum.hpp"
-#include "../deps/oneDNN/include/dnnl.hpp"
+#include "../build/deps/oneDNN/include/dnnl.hpp"
 
 #include "AlignedAllocator.h"
 #include "ParallelFor.h"
