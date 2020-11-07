@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string>
 #include <utility>
+#include <exception>
 
 #ifdef __MINGW32__
 #include <mm_malloc.h>
