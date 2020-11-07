@@ -6,7 +6,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 string(APPEND CMAKE_CXX_FLAGS " -mfma -mavx2 -march=native -fopenmp")
 string(APPEND CMAKE_C_FLAGS " -mfma -mavx2 -march=native -fopenmp")
 
-project(dnn VERSION 1.0.0 LANGUAGES C CXX)
+project(dnn VERSION 1.0.0 LANGUAGES C CXX ASM)
 
 INCLUDE(GNUInstallDirs)
 
@@ -128,7 +128,6 @@ IF(NOT DEFINED VECTORCLASS_SOURCE_DIR)
   EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" --build .
     WORKING_DIRECTORY "${DNN_DEPENDENCIES_BINARY_DIR}/oneDNN-download")
   SET(ONEDNN_SOURCE_DIR "${DNN_DEPENDENCIES_SOURCE_DIR}/oneDNN" CACHE STRING "oneDNN source directory")
-  SET(ONEDNN_INCLUDE_DIR "${DNN_DEPENDENCIES_BINARY_DIR}/oneDNN/include" CACHE STRING "oneDNN include directory")
  ENDIF()
 
  IF(NOT DEFINED CIMG_SOURCE_DIR)
@@ -149,6 +148,7 @@ target_include_directories(${PROJECT_NAME}
     PUBLIC 
         $<INSTALL_INTERFACE:include>    
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        ${DNN_DEPENDENCIES_BINARY_DIR}/oneDNN/include")
 )
 
 # ---[ Configure VectorClass
