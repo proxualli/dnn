@@ -145,10 +145,11 @@ IF(NOT DEFINED VECTORCLASS_SOURCE_DIR)
 add_library(${PROJECT_NAME} SHARED ${libdnn_sources})
 
 target_include_directories(${PROJECT_NAME}
+    PRIVATE
+        ${DNN_DEPENDENCIES_BINARY_DIR}/oneDNN/include
     PUBLIC 
         $<INSTALL_INTERFACE:include>    
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        ${DNN_DEPENDENCIES_BINARY_DIR}/oneDNN/include")
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>     
 )
 
 # ---[ Configure VectorClass
