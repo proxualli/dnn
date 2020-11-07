@@ -17,7 +17,7 @@ namespace dnn
 			assert(Inputs.size() == 1);
 		}
 
-		std::string ChannelSplit::GetDescription() const final override
+		std::string GetDescription() const final override
 		{
 			std::string description = GetDescriptionHeader();
 
@@ -27,17 +27,17 @@ namespace dnn
 			return description;
 		}
 
-		size_t ChannelSplit::FanIn() const final override
+		size_t FanIn() const final override
 		{
 			return 1;
 		}
 
-		size_t ChannelSplit::FanOut() const final override
+		size_t FanOut() const final override
 		{
 			return 1;
 		}
 
-		void ChannelSplit::InitializeDescriptors(const size_t batchSize) final override
+		void InitializeDescriptors(const size_t batchSize) final override
 		{
 			if (InputLayer->PaddedC % Groups != 0)
 				throw std::exception("input not splittable in ChannelSplit");
@@ -50,7 +50,7 @@ namespace dnn
 			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, BlockedFmt));
 		}
 
-		void ChannelSplit::ForwardProp(const size_t batchSize, const bool training) final override
+		void ForwardProp(const size_t batchSize, const bool training) final override
 		{
 			const auto strideH = W * VectorSize;
 
@@ -111,7 +111,7 @@ namespace dnn
 #endif
 		}
 
-		void ChannelSplit::BackwardProp(const size_t batchSize) final override
+		void BackwardProp(const size_t batchSize) final override
 		{
 #ifdef DNN_LEAN
 			ZeroGradient(batchSize);
