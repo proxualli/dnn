@@ -6,7 +6,7 @@
 
 #undef cimg_display
 #define cimg_display 0
-#include "CImg.h"
+#include "../deps/Cimg/CImg.h"
 
 namespace dnn
 {
