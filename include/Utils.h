@@ -48,7 +48,7 @@
 #define MAGIC_ENUM_RANGE_MAX 255
 
 #include "magic_enum.hpp"
-#include "../build/deps/oneDNN/include/dnnl_types.h"
+#include "../deps/oneDNN/include/dnnl_types.h"
 #include "../build/deps/oneDNN/include/dnnl_config.h"
 #include "../build/deps/oneDNN/include/dnnl_version.h"
 #include "../deps/oneDNN/include/dnnl.hpp"
