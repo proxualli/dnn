@@ -1,5 +1,6 @@
 #pragma once
 #include "Dataprovider.h"
+#include <exception>
 
 namespace dnn
 {
