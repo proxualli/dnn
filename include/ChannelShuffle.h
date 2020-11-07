@@ -25,7 +25,7 @@ namespace dnn
 			assert(Groups > 0 && Groups <= C);
 		}
 
-		std::string ChannelShuffle::GetDescription() const final override
+		std::string GetDescription() const final override
 		{
 			std::string description = GetDescriptionHeader();
 
@@ -36,17 +36,17 @@ namespace dnn
 			return description;
 		}
 
-		size_t ChannelShuffle::FanIn() const final override
+		size_t FanIn() const final override
 		{
 			return 1;
 		}
 
-		size_t ChannelShuffle::FanOut() const final override
+		size_t FanOut() const final override
 		{
 			return 1;
 		}
 
-		void ChannelShuffle::InitializeDescriptors(const size_t batchSize) final override
+		void InitializeDescriptors(const size_t batchSize) final override
 		{
 			if (InputLayer->DstMemDesc->data.ndims == 2)
 			{
@@ -66,7 +66,7 @@ namespace dnn
 			bwd = std::make_unique<dnnl::shuffle_backward>(dnnl::shuffle_backward(*bwdDesc));
 		}
 
-		void ChannelShuffle::ForwardProp(const size_t batchSize, const bool training) final override
+		void ForwardProp(const size_t batchSize, const bool training) final override
 		{
 			auto srcMem = dnnl::memory(*InputLayer->DstMemDesc, Device.first, InputLayer->Neurons.data());
 			auto dstMem = dnnl::memory(*DstMemDesc, Device.first, Neurons.data());
@@ -82,7 +82,7 @@ namespace dnn
 #endif // DNN_LEAN
 		}
 
-		void ChannelShuffle::BackwardProp(const size_t batchSize) final override
+		void BackwardProp(const size_t batchSize) final override
 		{
 #ifdef DNN_LEAN
 			ZeroGradient(batchSize);
