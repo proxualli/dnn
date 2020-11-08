@@ -1,5 +1,6 @@
 #pragma once
 #include "Layer.h"
+#include <stdexcept>
 
 namespace dnn
 {
@@ -39,7 +40,7 @@ namespace dnn
 		void InitializeDescriptors(const size_t batchSize) final override
 		{
 			if (!IsBlockedDataFmt(*Inputs[0]->DstMemDesc) || !IsBlockedDataFmt(*Inputs[1]->DstMemDesc))
-				throw std::exception("incompatible format used");
+				throw std::runtime_error("incompatible format used");
 
 			dnnl::memory::desc memDesc = dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, Format);
 
