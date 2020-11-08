@@ -432,7 +432,7 @@ namespace dnn
 					NeuronsMin = std::numeric_limits<Float>::max();
 					NeuronsMax = std::numeric_limits<Float>::lowest();
 
-					auto sum = Float(0);
+					float sum = Float(0);
 
 					if (ncdhw % VectorSize == 0ull)
 					{
@@ -501,7 +501,8 @@ namespace dnn
 				{
 					WeightsMin = std::numeric_limits<Float>::max();
 					WeightsMax = std::numeric_limits<Float>::lowest();
-					auto sum = Float(0);
+					float sum = Float(0);
+
 					for (auto i = 0ull; i < Weights.size(); i++)
 					{
 						WeightsMin = std::min(WeightsMin, Weights[i]);

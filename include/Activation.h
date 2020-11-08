@@ -101,8 +101,8 @@ namespace dnn
 
 	struct Mish
 	{
-		inline static Float f(const Float& x) noexcept { return x * std::tanhf(std::log1p(std::exp(x))); }
-		inline static Float df(const Float& x) noexcept { const Float tmpExp = std::expf(x); const Float tmpSoftplus = std::log1p(tmpExp); const Float tmpSech = Float(1) / std::cosh(tmpSoftplus); return std::tanh(tmpSoftplus) + x * tmpExp * FloatSquare(tmpSech) / (tmpExp + Float(1)); }
+		inline static Float f(const Float& x) noexcept { return x * std::tanh(std::log1p(std::exp(x))); }
+		inline static Float df(const Float& x) noexcept { const Float tmpExp = std::exp(x); const Float tmpSoftplus = std::log1p(tmpExp); const Float tmpSech = Float(1) / std::cosh(tmpSoftplus); return std::tanh(tmpSoftplus) + x * tmpExp * FloatSquare(tmpSech) / (tmpExp + Float(1)); }
 		inline static VecFloat fVec(const VecFloat& x) noexcept { return x * tanh(log1p(exp(x))); }
 		inline static VecFloat dfVec(const VecFloat& x) noexcept { const VecFloat tmpExp = exp(x); const VecFloat tmpSoftplus = log1p(tmpExp); const VecFloat tmpSech = VecFloat(1) / cosh(tmpSoftplus); return tanh(tmpSoftplus) + x * tmpExp * square(tmpSech) / (tmpExp + VecFloat(1)); }
 	};

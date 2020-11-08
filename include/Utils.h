@@ -251,7 +251,7 @@ namespace dnn
 		if (sysinfo(&info) == 0)
 			return static_cast<size_t>(info.totalram - info.freeram);
 		else
-			return 0ull;
+			return static_cast <size_t>(0);
 #endif
 	}
 	
