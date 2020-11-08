@@ -47,7 +47,7 @@
 #define MAGIC_ENUM_RANGE_MIN 0
 #define MAGIC_ENUM_RANGE_MAX 255
 
-#include "include/magic_enum.hpp"
+#include "../deps/magic_enum/include/magic_enum.hpp"
 #include "../deps/oneDNN/include/dnnl.hpp"
 
 #include "AlignedAllocator.h"
