@@ -109,7 +109,7 @@ namespace dnn
 		void InitializeDescriptors(const size_t batchSize) final override
 		{
 			if (InputLayer->PaddedC % Groups != 0)
-				throw std::exception("input not splittable in PartialDepthwiseConvolution");
+				throw std::invalid_argument("input not splittable in PartialDepthwiseConvolution");
 
 			std::vector<dnnl::memory::desc> memDesc = std::vector<dnnl::memory::desc>({
 				dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(InputLayer->C / Groups), dnnl::memory::dim(InputLayer->H), dnnl::memory::dim(InputLayer->W) }), dnnl::memory::data_type::f32, Format),

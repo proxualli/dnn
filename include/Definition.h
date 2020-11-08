@@ -2335,7 +2335,8 @@ namespace dnn
 			auto file = std::ifstream(fileName);
 			if (!file.bad() && file.is_open())
 			{
-				auto buffer = std::stringstream() << file.rdbuf();
+				std::stringstream stream;
+				auto buffer = (stream << file.rdbuf());
 				file.close();
 				model = ReadDefinition(buffer.str().c_str(), optimizer, dataprovider, checkMsg);
 			}

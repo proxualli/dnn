@@ -16,12 +16,12 @@ namespace dnn
 			return GetDescriptionHeader();
 		}
 
-		size_t Input::FanIn() const final override
+		size_t FanIn() const final override
 		{
 			return 1;
 		}
 
-		size_t Input::FanOut() const final override
+		size_t FanOut() const final override
 		{
 			return CDHW;
 		}
