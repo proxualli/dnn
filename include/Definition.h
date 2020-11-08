@@ -6,6 +6,12 @@ namespace dnn
 	class Definition final
 	{
 	public:
+		typedef BatchNormActivation<HardLogistic, LayerTypes::BatchNormHardLogistic> BatchNormHardLogistic;
+		typedef BatchNormActivation<HardSwish, LayerTypes::BatchNormHardSwish> BatchNormHardSwish;
+		typedef BatchNormActivation<Swish, LayerTypes::BatchNormSwish> BatchNormSwish;
+		typedef BatchNormActivationDropout<HardSwish, LayerTypes::BatchNormHardSwishDropout> BatchNormHardSwishDropout;
+		typedef BatchNormActivationDropout<Relu, LayerTypes::BatchNormReluDropout> BatchNormReluDropout;
+
 		static std::string Normalize(const char* definition)
 		{
 			auto defNorm = std::string(definition);

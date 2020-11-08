@@ -557,8 +557,6 @@ namespace dnn
 		}
 	};
 
-	//template <typename Activation = HardSwish, typename LayerTypes T = LayerTypes::BatchNormHardSwishDropout>
 	typedef BatchNormActivationDropout<HardSwish, LayerTypes::BatchNormHardSwishDropout> BatchNormHardSwishDropout;
-	//template <typename Activation = Relu, typename LayerTypes T = LayerTypes::BatchNormReluDropout>
 	typedef BatchNormActivationDropout<Relu, LayerTypes::BatchNormReluDropout> BatchNormReluDropout;
 }

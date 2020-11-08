@@ -516,10 +516,7 @@ namespace dnn
 		}
 	};
 
-	//template <typename Activation = HardLogistic, typename LayerTypes T = LayerTypes::BatchNormHardLogistic>
 	typedef BatchNormActivation<HardLogistic, LayerTypes::BatchNormHardLogistic> BatchNormHardLogistic;
-	//template <typename Activation = HardSwish, typename LayerTypes T = LayerTypes::BatchNormHardSwish>
 	typedef BatchNormActivation<HardSwish, LayerTypes::BatchNormHardSwish> BatchNormHardSwish;
-	//template <typename Activation = Swish, typename LayerTypes T = LayerTypes::BatchNormSwish>
 	typedef BatchNormActivation<Swish, LayerTypes::BatchNormSwish> BatchNormSwish;
 }
