@@ -213,7 +213,7 @@ namespace dnn
 	static const auto IsStringBool(std::string text)
 	{
 		auto str = std::string(text);
-		std::transform(str.begin(), str.end(), str.begin(), std::tolower);
+		std::transform(text.begin(), text.end(), str.begin(), std::tolower);
 
 		if (str == "true" || str == "yes" || str =="false" || str == "no")
 			return true;
@@ -224,7 +224,7 @@ namespace dnn
 	static const auto StringToBool(std::string text)
 	{
 		auto str = std::string(text);
-		std::transform(str.begin(), str.end(), str.begin(), std::tolower);
+		std::transform(text.begin(), text.end(), str.begin(), std::tolower);
 
 		if (str == "true" || str == "yes")
 			return true;
