@@ -25,7 +25,7 @@ namespace dnn
 			assert(Inputs.size() == 1);
 		}
 
-		std::string Dropout::GetDescription() const final override
+		std::string GetDescription() const final override
 		{
 			std::string description = GetDescriptionHeader();
 
@@ -35,12 +35,12 @@ namespace dnn
 			return description;
 		}
 
-		size_t Dropout::FanIn() const final override
+		size_t FanIn() const final override
 		{
 			return 1;
 		}
 
-		size_t Dropout::FanOut() const final override
+		size_t FanOut() const final override
 		{
 			return 1;
 		}
