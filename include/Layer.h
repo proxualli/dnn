@@ -449,7 +449,7 @@ namespace dnn
 							sum += horizontal_add(neurons);
 						}
 
-						if (!std::isnan<Float>(sum) && !std::isinf<Float>(sum))
+						if (!std::isnan(sum) && !std::isinf(sum))
 						{
 							NeuronsMean = sum / ncdhw;
 							VecFloat vecSum = VecFloat(0);
@@ -459,7 +459,7 @@ namespace dnn
 								vecSum += square(neurons - NeuronsMean);
 							}
 							sum = horizontal_add(vecSum);
-							if (!std::isnan<Float>(sum) && !std::isinf<Float>(sum))
+							if (!std::isnan(sum) && !std::isinf(sum))
 								NeuronsStdDev = std::sqrt(sum / ncdhw);
 							else
 								NeuronsStdDev = Float(0);
@@ -480,14 +480,14 @@ namespace dnn
 							sum += Neurons[i];
 						}
 
-						if (!std::isnan<Float>(sum) && !std::isinf<Float>(sum))
+						if (!std::isnan(sum) && !std::isinf(sum))
 						{
 							NeuronsMean = sum / ncdhw;
 							sum = Float(0);
 							for (auto i = 0ull; i < ncdhw; i++)
 								sum += FloatSquare(Neurons[i] - NeuronsMean);
 
-							if (!std::isnan<Float>(sum) && !std::isinf<Float>(sum))
+							if (!std::isnan(sum) && !std::isinf(sum))
 								NeuronsStdDev = std::sqrt(sum / ncdhw);
 							else
 								NeuronsStdDev = Float(0);
@@ -513,14 +513,14 @@ namespace dnn
 						sum += Weights[i];
 					}
 
-					if (!std::isnan<Float>(sum) && !std::isinf<Float>(sum))
+					if (!std::isnan(sum) && !std::isinf(sum))
 					{
 						WeightsMean = sum / Weights.size();
 						sum = Float(0);
 						for (auto i = 0ull; i < Weights.size(); i++)
 							sum += FloatSquare(Weights[i] - WeightsMean);
 
-						if (!std::isnan<Float>(sum) && !std::isinf<Float>(sum))
+						if (!std::isnan(sum) && !std::isinf(sum))
 							WeightsStdDev = std::sqrt(sum / Weights.size());
 						else
 							WeightsStdDev = Float(0);
@@ -544,14 +544,14 @@ namespace dnn
 							sum += Biases[i];
 						}
 
-						if (!std::isnan<Float>(sum) && !std::isinf<Float>(sum))
+						if (!std::isnan(sum) && !std::isinf(sum))
 						{
 							BiasesMean = sum / BiasCount;
 							sum = Float(0);
 							for (auto i = 0ull; i < BiasCount; i++)
 								sum += FloatSquare(Biases[i] - BiasesMean);
 
-							if (!std::isnan<Float>(sum) && !std::isinf<Float>(sum))
+							if (!std::isnan(sum) && !std::isinf(sum))
 								BiasesStdDev = std::sqrt(sum / BiasCount);
 							else
 								BiasesStdDev = Float(0);

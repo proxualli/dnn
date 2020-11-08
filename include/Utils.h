@@ -10,6 +10,7 @@
 #include <atomic>
 #include <cstdio>
 #include <cstring>
+#include <cmath>
 #include <exception>
 #include <filesystem>
 #include <functional> 
@@ -28,9 +29,6 @@
 #include <unordered_map>
 #include <vector>
 #include <utility>
-
-#include <stdio.h>
-#include <string.h>
 
 #ifndef MAX_VECTOR_SIZE
 #ifdef DNN_AVX512
