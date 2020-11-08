@@ -29,6 +29,9 @@
 #include <vector>
 #include <utility>
 
+#include <stdio.h>
+#include <string.h>
+
 #ifndef MAX_VECTOR_SIZE
 #ifdef DNN_AVX512
 #define INSTRSET 9
