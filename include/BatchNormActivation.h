@@ -515,8 +515,4 @@ namespace dnn
 			return (2 * C * sizeof(Float)) + Layer::GetWeightsSize(persistOptimizer, optimizer);
 		}
 	};
-
-	typedef BatchNormActivation<HardLogistic, LayerTypes::BatchNormHardLogistic> BatchNormHardLogistic;
-	typedef BatchNormActivation<HardSwish, LayerTypes::BatchNormHardSwish> BatchNormHardSwish;
-	typedef BatchNormActivation<Swish, LayerTypes::BatchNormSwish> BatchNormSwish;
 }

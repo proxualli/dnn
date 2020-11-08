@@ -556,7 +556,4 @@ namespace dnn
 			return totalSize;
 		}
 	};
-
-	typedef BatchNormActivationDropout<HardSwish, LayerTypes::BatchNormHardSwishDropout> BatchNormHardSwishDropout;
-	typedef BatchNormActivationDropout<Relu, LayerTypes::BatchNormReluDropout> BatchNormReluDropout;
 }
