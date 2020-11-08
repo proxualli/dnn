@@ -541,141 +541,259 @@ extern "C" DNN_API void DNNGetLayerInfo(const size_t layerIndex, size_t* inputsC
 		switch (layer->LayerType)
 		{
 		case LayerTypes::Resampling:
-			*algorithm = static_cast<Resampling*>(layer)->Algorithm;
-			*fH = static_cast<Resampling*>(layer)->FactorH;
-			*fW = static_cast<Resampling*>(layer)->FactorW;
-			break;
+		{
+			auto resampling = dynamic_cast<Resampling*>(layer);
+			if (resampling)
+			{
+				*algorithm = resampling->Algorithm;
+				*fH = resampling->FactorH;
+				*fW = resampling->FactorW;
+			}
+		}
+		break;
 
 		case LayerTypes::LocalResponseNormalization:
-			*acrossChannels = static_cast<LocalResponseNormalization*>(layer)->AcrossChannels;
-			*localSize = static_cast<LocalResponseNormalization*>(layer)->LocalSize;
-			*alpha = static_cast<LocalResponseNormalization*>(layer)->Alpha;
-			*beta = static_cast<LocalResponseNormalization*>(layer)->Beta;
-			*k = static_cast<LocalResponseNormalization*>(layer)->K;
-			break;
+		{
+			auto lcn = dynamic_cast<LocalResponseNormalization*>(layer);
+			if (lcn)
+			{
+				*acrossChannels = lcn->AcrossChannels;
+				*localSize = lcn->LocalSize;
+				*alpha = lcn->Alpha;
+				*beta = lcn->Beta;
+				*k = lcn->K;
+			}
+		}
+		break;
 
 		case LayerTypes::Activation:
-			*activationFunction = static_cast<Activation*>(layer)->ActivationFunction;
-			*alpha = static_cast<Activation*>(layer)->Alpha;
-			*beta = static_cast<Activation*>(layer)->Beta;
-			break;
+		{
+			auto activation = dynamic_cast<Activation*>(layer);
+			if (activation)
+			{
+				*activationFunction = activation->ActivationFunction;
+				*alpha = activation->Alpha;
+				*beta = activation->Beta;
+			}
+		}
+		break;
 
 		case LayerTypes::BatchNorm:
-			*scaling = static_cast<BatchNorm*>(layer)->Scaling;
-			break;
+		{
+			auto bn = dynamic_cast<BatchNorm*>(layer);
+			if (bn)
+				*scaling = bn->Scaling;
+		}
+		break;
 
 		case LayerTypes::BatchNormHardLogistic:
-			*scaling = static_cast<BatchNormActivation<HardLogistic, LayerTypes::BatchNormHardLogistic>*>(layer)->Scaling;
-			break;
+		{
+			auto bn = dynamic_cast<BatchNormHardLogistic*>(layer);
+			if (bn)
+				*scaling = bn->Scaling;
+		}
+		break;
 
 		case LayerTypes::BatchNormHardSwish:
-			*scaling = static_cast<BatchNormActivation<HardSwish, LayerTypes::BatchNormHardSwish>*>(layer)->Scaling;
-			break;
+		{
+			auto bn = dynamic_cast<BatchNormHardSwish*>(layer);
+			if (bn)
+				*scaling = bn->Scaling;
+		}
+		break;
 
 		case LayerTypes::BatchNormHardSwishDropout:
-			*scaling = static_cast<BatchNormActivationDropout<HardSwish, LayerTypes::BatchNormHardSwishDropout>*>(layer)->Scaling;
-			*dropout = Float(1) - static_cast<BatchNormActivationDropout<HardSwish, LayerTypes::BatchNormHardSwishDropout>*>(layer)->Keep;
-			break;
+		{
+			auto bn = dynamic_cast<BatchNormHardSwishDropout*>(layer);
+			if (bn)
+			{
+				*scaling = bn->Scaling;
+				*dropout = Float(1) - bn->Keep;
+			}
+		}
+		break;
 
 		case LayerTypes::BatchNormRelu:
-			*scaling = static_cast<BatchNormRelu*>(layer)->Scaling;
-			break;
+		{
+			auto bn = dynamic_cast<BatchNormRelu*>(layer);
+			if (bn)
+				*scaling = bn->Scaling;
+		}
+		break;
 
 		case LayerTypes::BatchNormReluDropout:
-			*scaling = static_cast<BatchNormActivationDropout<Relu, LayerTypes::BatchNormReluDropout>*>(layer)->Scaling;
-			*dropout = Float(1) - static_cast<BatchNormActivationDropout<Relu, LayerTypes::BatchNormReluDropout>*>(layer)->Keep;
-			break;
+		{
+			auto bn = dynamic_cast<BatchNormReluDropout*>(layer);
+			if (bn)
+			{
+				*scaling = bn->Scaling;
+				*dropout = Float(1) - bn->Keep;
+			}
+		}
+		break;
 
 		case LayerTypes::BatchNormSwish:
-			*scaling = static_cast<BatchNormActivation<Swish, LayerTypes::BatchNormSwish>*>(layer)->Scaling;
-			break;
+		{
+			auto bn = dynamic_cast<BatchNormSwish*>(layer);
+			if (bn)
+				*scaling = bn->Scaling;
+		}
+		break;
 
 		case LayerTypes::Dropout:
-			*dropout = Float(1) - static_cast<Dropout*>(layer)->Keep;
-			break;
+		{
+			auto drop = dynamic_cast<Dropout*>(layer);
+			if (drop)
+				*dropout = Float(1) - drop->Keep;
+		}
+		break;
 
 		case LayerTypes::AvgPooling:
-			*kernelH = static_cast<AvgPooling*>(layer)->KernelH;
-			*kernelW = static_cast<AvgPooling*>(layer)->KernelW;
-			*strideH = static_cast<AvgPooling*>(layer)->StrideH;
-			*strideW = static_cast<AvgPooling*>(layer)->StrideW;
-			break;
+		{
+			auto pool = dynamic_cast<AvgPooling*>(layer);
+			if (pool)
+			{
+				*kernelH = pool->KernelH;
+				*kernelW = pool->KernelW;
+				*strideH = pool->StrideH;
+				*strideW = pool->StrideW;
+			}
+		}
+		break;
 
 		case LayerTypes::MaxPooling:
-			*kernelH = static_cast<MaxPooling*>(layer)->KernelH;
-			*kernelW = static_cast<MaxPooling*>(layer)->KernelW;
-			*strideH = static_cast<MaxPooling*>(layer)->StrideH;
-			*strideW = static_cast<MaxPooling*>(layer)->StrideW;
-			break;
+		{
+			auto pool = dynamic_cast<MaxPooling*>(layer);
+			if (pool)
+			{
+				*kernelH = pool->KernelH;
+				*kernelW = pool->KernelW;
+				*strideH = pool->StrideH;
+				*strideW = pool->StrideW;
+			}
+		}
+		break;
 
 		case LayerTypes::GlobalAvgPooling:
-			*kernelH = static_cast<GlobalAvgPooling*>(layer)->KernelH;
-			*kernelW = static_cast<GlobalAvgPooling*>(layer)->KernelW;
-			break;
+		{
+			auto pool = dynamic_cast<GlobalAvgPooling*>(layer);
+			if (pool)
+			{
+				*kernelH = pool->KernelH;
+				*kernelW = pool->KernelW;
+			}
+		}
+		break;
 
 		case LayerTypes::GlobalMaxPooling:
-			*kernelH = static_cast<GlobalMaxPooling*>(layer)->KernelH;
-			*kernelW = static_cast<GlobalMaxPooling*>(layer)->KernelW;
-			break;
+		{
+			auto pool = dynamic_cast<GlobalMaxPooling*>(layer);
+			if (pool)
+			{
+				*kernelH = pool->KernelH;
+				*kernelW = pool->KernelW;
+			}
+		}
+		break;
 
 		case LayerTypes::Convolution:
-			*groups = static_cast<Convolution*>(layer)->Groups;
-			*kernelH = static_cast<Convolution*>(layer)->KernelH;
-			*kernelW = static_cast<Convolution*>(layer)->KernelW;
-			*strideH = static_cast<Convolution*>(layer)->StrideH;
-			*strideW = static_cast<Convolution*>(layer)->StrideW;
-			*dilationH = static_cast<Convolution*>(layer)->DilationH;
-			*dilationW = static_cast<Convolution*>(layer)->DilationW;
-			break;
+		{
+			auto conv = dynamic_cast<Convolution*>(layer);
+			if (conv)
+			{
+				*groups = conv->Groups;
+				*kernelH = conv->KernelH;
+				*kernelW = conv->KernelW;
+				*strideH = conv->StrideH;
+				*strideW = conv->StrideW;
+				*dilationH = conv->DilationH;
+				*dilationW = conv->DilationW;
+			}
+		}
+		break;
 
 		case LayerTypes::DepthwiseConvolution:
-			*multiplier = static_cast<DepthwiseConvolution*>(layer)->Multiplier;
-			*kernelH = static_cast<DepthwiseConvolution*>(layer)->KernelH;
-			*kernelW = static_cast<DepthwiseConvolution*>(layer)->KernelW;
-			*strideH = static_cast<DepthwiseConvolution*>(layer)->StrideH;
-			*strideW = static_cast<DepthwiseConvolution*>(layer)->StrideW;
-			*dilationH = static_cast<DepthwiseConvolution*>(layer)->DilationH;
-			*dilationW = static_cast<DepthwiseConvolution*>(layer)->DilationW;
-			break;
+		{
+			auto conv = dynamic_cast<DepthwiseConvolution*>(layer);
+			if (conv)
+			{
+				*multiplier = conv->Multiplier;
+				*kernelH = conv->KernelH;
+				*kernelW = conv->KernelW;
+				*strideH = conv->StrideH;
+				*strideW = conv->StrideW;
+				*dilationH = conv->DilationH;
+				*dilationW = conv->DilationW;
+			}
+		}
+		break;
 
 		case LayerTypes::ConvolutionTranspose:
-			*kernelH = static_cast<ConvolutionTranspose*>(layer)->KernelH;
-			*kernelW = static_cast<ConvolutionTranspose*>(layer)->KernelW;
-			*strideH = static_cast<ConvolutionTranspose*>(layer)->StrideH;
-			*strideW = static_cast<ConvolutionTranspose*>(layer)->StrideW;
-			*dilationH = static_cast<ConvolutionTranspose*>(layer)->DilationH;
-			*dilationW = static_cast<ConvolutionTranspose*>(layer)->DilationW;
-			break;
+		{
+			auto conv = dynamic_cast<ConvolutionTranspose*>(layer);
+			if (conv)
+			{
+				*kernelH = conv->KernelH;
+				*kernelW = conv->KernelW;
+				*strideH = conv->StrideH;
+				*strideW = conv->StrideW;
+				*dilationH = conv->DilationH;
+				*dilationW = conv->DilationW;
+			}
+		}
+		break;
 
 		case LayerTypes::ChannelShuffle:
-			*groups = size_t(static_cast<ChannelShuffle*>(layer)->Groups);
-			break;
+		{
+			auto channel = dynamic_cast<ChannelShuffle*>(layer);
+			if (channel)
+				*groups = channel->Groups;
+		}
+		break;
 
 		case LayerTypes::ChannelSplit:
-			*group = size_t(static_cast<ChannelSplit*>(layer)->Group);
-			*groups = size_t(static_cast<ChannelSplit*>(layer)->Groups);
-			break;
+		{
+			auto channel = dynamic_cast<ChannelSplit*>(layer);
+			if (channel)
+			{
+				*group = channel->Group;
+				*groups = channel->Groups;
+			}
+		}
+		break;
 
 		case LayerTypes::Cost:
-			*cost = static_cast<Cost*>(layer)->CostFunction;
-			*labelTrue = static_cast<Cost*>(layer)->LabelTrue;
-			*labelFalse = static_cast<Cost*>(layer)->LabelFalse;
-			*groupIndex = static_cast<Cost*>(layer)->GroupIndex;
-			*labelIndex = static_cast<Cost*>(layer)->LabelIndex;
-			*weight = static_cast<Cost*>(layer)->Weight;
-			break;
+		{
+			auto loss = dynamic_cast<Cost*>(layer);
+			if (loss)
+			{
+				*cost = loss->CostFunction;
+				*labelTrue = loss->LabelTrue;
+				*labelFalse = loss->LabelFalse;
+				*groupIndex = loss->GroupIndex;
+				*labelIndex = loss->LabelIndex;
+				*weight = loss->Weight;
+			}
+		}
+		break;
 
 		case LayerTypes::PartialDepthwiseConvolution:
-			*group = static_cast<PartialDepthwiseConvolution*>(layer)->Group;
-			*groups = static_cast<PartialDepthwiseConvolution*>(layer)->Groups;
-			*multiplier = static_cast<PartialDepthwiseConvolution*>(layer)->Multiplier;
-			*kernelH = static_cast<PartialDepthwiseConvolution*>(layer)->KernelH;
-			*kernelW = static_cast<PartialDepthwiseConvolution*>(layer)->KernelW;
-			*strideH = static_cast<PartialDepthwiseConvolution*>(layer)->StrideH;
-			*strideW = static_cast<PartialDepthwiseConvolution*>(layer)->StrideW;
-			*dilationH = static_cast<PartialDepthwiseConvolution*>(layer)->DilationH;
-			*dilationW = static_cast<PartialDepthwiseConvolution*>(layer)->DilationW;
-			break;
+		{
+			auto conv = dynamic_cast<PartialDepthwiseConvolution*>(layer);
+			if (conv)
+			{
+				*group = conv->Group;
+				*groups = conv->Groups;
+				*multiplier = conv->Multiplier;
+				*kernelH = conv->KernelH;
+				*kernelW = conv->KernelW;
+				*strideH = conv->StrideH;
+				*strideW = conv->StrideW;
+				*dilationH = conv->DilationH;
+				*dilationW = conv->DilationW;
+			}
+		}
+		break;
 		}
 	}
 }
