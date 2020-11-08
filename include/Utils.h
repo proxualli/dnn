@@ -178,17 +178,17 @@ namespace dnn
 		return std::uniform_real_distribution<T>(min, max)(generator);
 	}
 		
-	static auto FloatToString(const Float value, const std::streamsize precision = 8)
+	static const auto FloatToString(const Float value, const std::streamsize precision = 8)
 	{
 		return (std::ostringstream() << std::setprecision(precision) << value).str();
 	}
 
-	static auto FloatToStringFixed(const Float value, const std::streamsize precision = 8)
+	static const auto FloatToStringFixed(const Float value, const std::streamsize precision = 8)
 	{
 		return (std::ostringstream() << std::setprecision(precision) << std::fixed << value).str();
 	}
 
-	static auto FloatToStringScientific(const Float value, const std::streamsize precision = 4)
+	static const auto FloatToStringScientific(const Float value, const std::streamsize precision = 4)
 	{
 		return (std::ostringstream() << std::setprecision(precision) << std::scientific << value).str();
 	}
