@@ -217,12 +217,17 @@ namespace dnn
 		return static_cast<std::streamsize>(end - start);
 	}
 
+	const auto StringToLower = [](std::string s) 
+	{
+		std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return std::tolower(c); });	
+		return s;
+	};
+
 	static const auto IsStringBool(std::string text)
 	{
-		auto str = std::string(text);
-		std::transform(text.begin(), text.end(), str.begin(), std::tolower);
-
-		if (str == "true" || str == "yes" || str =="false" || str == "no")
+		auto textLower = StringToLower(text);
+		
+		if (textLower == "true" || textLower == "yes" || textLower =="false" || textLower == "no")
 			return true;
 
 		return false;
@@ -230,10 +235,9 @@ namespace dnn
 
 	static const auto StringToBool(std::string text)
 	{
-		auto str = std::string(text);
-		std::transform(text.begin(), text.end(), str.begin(), std::tolower);
-
-		if (str == "true" || str == "yes")
+		auto textLower = StringToLower(text);
+		
+		if (textLower == "true" || textLower == "yes")
 			return true;
 
 		return false;
