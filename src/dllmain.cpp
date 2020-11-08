@@ -1,4 +1,5 @@
 #include "Definition.h"
+#include "Activation.h"
 
 #if defined _WIN32 || defined __CYGWIN__ || defined __MINGW32__
 #if defined DNN_LOG 
