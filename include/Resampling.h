@@ -37,11 +37,11 @@ namespace dnn
 		{
 			std::string description = GetDescriptionHeader();
 
-			description.append(nwl + " Scaling:" + tab + FloatToString(FactorH, 4) + "x" + FloatToString(FactorW, 4));
+			description.append(nwl + std::string(" Scaling:") + tab + FloatToString(FactorH, 4) + std::string("x") + FloatToString(FactorW, 4));
 			if (Algorithm == Algorithms::Linear)
-				description.append(nwl + " Algorithm:\tlinear");
+				description.append(nwl + std::string(" Algorithm:\tlinear"));
 			else
-				description.append(nwl + " Algorithm:\tnearest");
+				description.append(nwl + std::string(" Algorithm:\tnearest"));
 			return description;
 		}
 

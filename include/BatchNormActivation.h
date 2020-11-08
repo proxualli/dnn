@@ -42,8 +42,8 @@ namespace dnn
 		{
 			auto description = GetDescriptionHeader() + GetWeightsDescription(Scaling);
 
-			description.append(nwl + " Momentum:" + tab + FloatToString(Momentum));
-			description.append(nwl + " Eps:" + dtab + FloatToStringScientific(Eps));
+			description.append(nwl + std::string(" Momentum:") + tab + FloatToString(Momentum));
+			description.append(nwl + std::string(" Eps:") + dtab + FloatToStringScientific(Eps));
 
 			auto mean = Float(0);
 			auto variance = Float(0);
@@ -55,8 +55,8 @@ namespace dnn
 			mean /= C;
 			variance /= C;
 
-			description.append(nwl + " Mean:" + dtab + FloatToStringFixed(mean));
-			description.append(nwl + " Variance:" + tab + FloatToStringFixed(variance));
+			description.append(nwl + std::string(" Mean:") + dtab + FloatToStringFixed(mean));
+			description.append(nwl + std::string(" Variance:") + tab + FloatToStringFixed(variance));
 
 			
 			return description;
@@ -515,4 +515,11 @@ namespace dnn
 			return (2 * C * sizeof(Float)) + Layer::GetWeightsSize(persistOptimizer, optimizer);
 		}
 	};
+
+	//template <typename Activation = HardLogistic, typename LayerTypes T = LayerTypes::BatchNormHardLogistic>
+	typedef BatchNormActivation<HardLogistic, LayerTypes::BatchNormHardLogistic> BatchNormHardLogistic;
+	//template <typename Activation = HardSwish, typename LayerTypes T = LayerTypes::BatchNormHardSwish>
+	typedef BatchNormActivation<HardSwish, LayerTypes::BatchNormHardSwish> BatchNormHardSwish;
+	//template <typename Activation = Swish, typename LayerTypes T = LayerTypes::BatchNormSwish>
+	typedef BatchNormActivation<Swish, LayerTypes::BatchNormSwish> BatchNormSwish;
 }

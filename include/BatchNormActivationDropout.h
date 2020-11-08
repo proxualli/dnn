@@ -56,8 +56,8 @@ namespace dnn
 		{
 			auto description = GetDescriptionHeader() + GetWeightsDescription(Scaling);
 
-			description.append(nwl + " Momentum:" + tab + FloatToString(Momentum));
-			description.append(nwl + " Eps:" + dtab + FloatToStringScientific(Eps));
+			description.append(nwl + std::string(" Momentum:") + tab + FloatToString(Momentum));
+			description.append(nwl + std::string(" Eps:") + dtab + FloatToStringScientific(Eps));
 
 			auto mean = Float(0);
 			auto variance = Float(0);
@@ -69,11 +69,11 @@ namespace dnn
 			mean /= C;
 			variance /= C;
 
-			description.append(nwl + " Mean:" + dtab + FloatToStringFixed(mean));
-			description.append(nwl + " Variance:" + tab + FloatToStringFixed(variance));
+			description.append(nwl + std::string(" Mean:") + dtab + FloatToStringFixed(mean));
+			description.append(nwl + std::string(" Variance:") + tab + FloatToStringFixed(variance));
 
-			description.append(nwl + " Dropout:" + tab + FloatToString(Float(1) - Keep));
-			description.append(nwl + " Scale:" + dtab + FloatToString(Scale));
+			description.append(nwl + std::string(" Dropout:") + tab + FloatToString(Float(1) - Keep));
+			description.append(nwl + std::string(" Scale:") + dtab + FloatToString(Scale));
 
 			return description;
 		}
@@ -556,4 +556,9 @@ namespace dnn
 			return totalSize;
 		}
 	};
+
+	//template <typename Activation = HardSwish, typename LayerTypes T = LayerTypes::BatchNormHardSwishDropout>
+	typedef BatchNormActivationDropout<HardSwish, LayerTypes::BatchNormHardSwishDropout> BatchNormHardSwishDropout;
+	//template <typename Activation = Relu, typename LayerTypes T = LayerTypes::BatchNormReluDropout>
+	typedef BatchNormActivationDropout<Relu, LayerTypes::BatchNormReluDropout> BatchNormReluDropout;
 }

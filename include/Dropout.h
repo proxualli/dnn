@@ -29,8 +29,8 @@ namespace dnn
 		{
 			std::string description = GetDescriptionHeader();
 
-			description.append(nwl + " Dropout:" + tab + FloatToString(Float(1) - Keep));
-			description.append(nwl + " Scale:" + dtab + FloatToString(Scale));
+			description.append(nwl + std::string(" Dropout:") + tab + FloatToString(Float(1) - Keep));
+			description.append(nwl + std::string(" Scale:") + dtab + FloatToString(Scale));
 
 			return description;
 		}

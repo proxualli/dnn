@@ -48,11 +48,11 @@ namespace dnn
 		{
 			std::string description = GetDescriptionHeader();
 
-			description.append(nwl + " Kernel:" + tab + std::to_string(KernelH) + "x" + std::to_string(KernelW));
-			description.append(nwl + " Stride:" + tab + std::to_string(StrideH) + "x" + std::to_string(StrideW));
+			description.append(nwl + std::string(" Kernel:") + tab + std::to_string(KernelH) + std::string("x") + std::to_string(KernelW));
+			description.append(nwl + std::string(" Stride:") + tab + std::to_string(StrideH) + std::string("x") + std::to_string(StrideW));
 			if (HasPadding)
-				description.append(nwl + " Padding:" + tab + std::to_string(PadH) + "x" + std::to_string(PadW));
-			description.append(nwl + " Scale:" + dtab + FloatToString(Scale));
+				description.append(nwl + std::string(" Padding:") + tab + std::to_string(PadH) + std::string("x") + std::to_string(PadW));
+			description.append(nwl + std::string(" Scale:") + dtab + FloatToString(Scale));
 
 			return description;
 		}

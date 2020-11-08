@@ -67,20 +67,20 @@ namespace dnn
 			std::string description = GetDescriptionHeader();
 
 			if (DilationH == 1 && DilationW == 1)
-				description.append(nwl + " Kernel:" + tab + std::to_string(KernelH) + "x" + std::to_string(KernelW));
+				description.append(nwl + std::string(" Kernel:") + tab + std::to_string(KernelH) + std::string("x") + std::to_string(KernelW));
 			else
 			{
-				description.append(nwl + " Dilates:" + tab + std::to_string(DilationH) + "x" + std::to_string(DilationW));
-				description.append(nwl + " Kernel:" + tab + std::to_string(DilationKernelH) + "x" + std::to_string(DilationKernelW));
+				description.append(nwl + std::string(" Dilates:") + tab + std::to_string(DilationH) + std::string("x") + std::to_string(DilationW));
+				description.append(nwl + std::string(" Kernel:") + tab + std::to_string(DilationKernelH) + std::string("x") + std::to_string(DilationKernelW));
 			}
 			if (StrideH * StrideW > 1)
-				description.append(nwl + " Stride:" + tab + std::to_string(StrideH) + "x" + std::to_string(StrideW));
+				description.append(nwl + std::string(" Stride:") + tab + std::to_string(StrideH) + std::string("x") + std::to_string(StrideW));
 			if (HasPadding)
-				description.append(nwl + " Padding:" + tab + std::to_string(PadH) + "x" + std::to_string(PadW));
+				description.append(nwl + std::string(" Padding:") + tab + std::to_string(PadH) + std::string("x") + std::to_string(PadW));
 
 			description.append(GetWeightsDescription(true));
 
-			description.append(nwl + " Connections:" + tab + std::to_string(InputLayer->C * C * (H * StrideH) * (W * StrideW) * (HasBias ? KernelH * KernelW + 1 : KernelH * KernelW)));
+			description.append(nwl + std::string(" Connections:") + tab + std::to_string(InputLayer->C * C * (H * StrideH) * (W * StrideW) * (HasBias ? KernelH * KernelW + 1 : KernelH * KernelW)));
 
 			return description;
 		}

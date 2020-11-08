@@ -44,11 +44,11 @@ namespace dnn
 		{
 			std::string description = GetDescriptionHeader();
 
-			description.append(nwl + " AcrossChannels:" + tab + (AcrossChannels ? "Yes" : "No"));
-			description.append(nwl + " LocalSize:" + tab + std::to_string(LocalSize));
-			description.append(nwl + " Alpha:" + dtab + FloatToString(Alpha));
-			description.append(nwl + " Beta:" + dtab + FloatToString(Beta));
-			description.append(nwl + " K:" + dtab + FloatToString(K));
+			description.append(nwl + std::string(" AcrossChannels:") + tab + (AcrossChannels ? std::string("Yes") : std::string("No")));
+			description.append(nwl + std::string(" LocalSize:") + tab + std::to_string(LocalSize));
+			description.append(nwl + std::string(" Alpha:") + dtab + FloatToString(Alpha));
+			description.append(nwl + std::string(" Beta:") + dtab + FloatToString(Beta));
+			description.append(nwl + std::string(" K:") + dtab + FloatToString(K));
 
 			return description;
 		}

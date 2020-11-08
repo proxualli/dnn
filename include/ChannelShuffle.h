@@ -29,9 +29,9 @@ namespace dnn
 		{
 			std::string description = GetDescriptionHeader();
 
-			description.append(nwl + " Groups:" + tab + std::to_string(Groups));
-			description.append(nwl + " GroupSize:" + tab + std::to_string(GroupSize));
-			description.append(nwl + " Connections:" + tab + std::to_string(InputLayer->C / Groups));
+			description.append(nwl + std::string(" Groups:") + tab + std::to_string(Groups));
+			description.append(nwl + std::string(" GroupSize:") + tab + std::to_string(GroupSize));
+			description.append(nwl + std::string(" Connections:") + tab + std::to_string(InputLayer->C / Groups));
 
 			return description;
 		}

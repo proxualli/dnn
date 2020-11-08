@@ -36,7 +36,7 @@ namespace dnn
 		{
 			std::string description = GetDescriptionHeader();
 
-			description.append(nwl + " Scale:" + dtab + FloatToString(Scale));
+			description.append(nwl + std::string(" Scale:") + dtab + FloatToString(Scale));
 
 			return description;
 		}

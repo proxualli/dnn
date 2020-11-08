@@ -48,7 +48,7 @@ namespace dnn
 		{
 			std::string description = GetDescriptionHeader() + GetWeightsDescription(true);
 
-			description.append(nwl + " Connections:" + tab + std::to_string(CDHW * (InputLayer->CDHW + 1)));
+			description.append(nwl + std::string(" Connections:") + tab + std::to_string(CDHW * (InputLayer->CDHW + 1)));
 
 			return description;
 		}

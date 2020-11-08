@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string>
 #include <utility>
-#include <exception>
 #include <stdexcept>
 
 #ifdef __MINGW32__

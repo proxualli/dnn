@@ -3,12 +3,6 @@
 
 namespace dnn
 {
-	typedef BatchNormActivation<HardLogistic, LayerTypes::BatchNormHardLogistic> BatchNormHardLogistic;
-	typedef BatchNormActivation<HardSwish, LayerTypes::BatchNormHardSwish> BatchNormHardSwish;
-	typedef BatchNormActivationDropout<HardSwish, LayerTypes::BatchNormHardSwishDropout> BatchNormHardSwishDropout;
-	typedef BatchNormActivationDropout<Relu, LayerTypes::BatchNormReluDropout> BatchNormReluDropout;
-	typedef BatchNormActivation<Swish, LayerTypes::BatchNormSwish> BatchNormSwish;
-	
 	class Definition final
 	{
 	public:
