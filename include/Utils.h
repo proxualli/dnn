@@ -180,17 +180,17 @@ namespace dnn
 		
 	static const auto FloatToString(const Float value, const std::streamsize precision = 8)
 	{
-		return (std::ostringstream() << std::setprecision(precision) << value).str();
+		return std::string((std::ostringstream() << std::setprecision(precision) << value).str());
 	}
 
 	static const auto FloatToStringFixed(const Float value, const std::streamsize precision = 8)
 	{
-		return (std::ostringstream() << std::setprecision(precision) << std::fixed << value).str();
+		return std::string((std::ostringstream() << std::setprecision(precision) << std::fixed << value).str());
 	}
 
 	static const auto FloatToStringScientific(const Float value, const std::streamsize precision = 4)
 	{
-		return (std::ostringstream() << std::setprecision(precision) << std::scientific << value).str();
+		return std::string((std::ostringstream() << std::setprecision(precision) << std::scientific << value).str());
 	}
 
    	static const auto GetFileSize(const char* fileName)
@@ -211,8 +211,8 @@ namespace dnn
 
 	static const auto IsStringBool(std::string text)
 	{
-		auto str = std::string(text);
-		std::transform(str.begin(), str.end(), str.begin(), std::tolower);
+		auto str = text;
+		std::transform(text.begin(), text.end(), str.begin(), std::tolower);
 
 		if (str == "true" || str == "yes" || str =="false" || str == "no")
 			return true;
@@ -222,8 +222,8 @@ namespace dnn
 
 	static const auto StringToBool(std::string text)
 	{
-		auto str = std::string(text);
-		std::transform(str.begin(), str.end(), str.begin(), std::tolower);
+		auto str = text;
+		std::transform(text.begin(), text.end(), str.begin(), std::tolower);
 
 		if (str == "true" || str == "yes")
 			return true;
