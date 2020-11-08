@@ -131,14 +131,14 @@ namespace dnn
 	inline static void ZeroFloatVector(Float* destination, const size_t elements) noexcept
 	{
 		if (elements < 1048576ull)
-			std::memset(destination, 0, elements * sizeof(Float));
+			::memset(destination, 0, elements * sizeof(Float));
 		else
 		{
 			const auto threads = elements < 2097152ull ? 2ull : elements < 8338608ull ? LIGHT_COMPUTE : MEDIUM_COMPUTE;
 			const auto part = elements / threads;
-			for_i(threads, [=](const size_t thread) { std::memset(destination + part * thread, 0, part * sizeof(Float)); });
+			for_i(threads, [=](const size_t thread) { ::memset(destination + part * thread, 0, part * sizeof(Float)); });
 			if (elements % threads != 0)
-				std::memset(destination + part * threads, 0, (elements - part * threads) * sizeof(Float));
+				::memset(destination + part * threads, 0, (elements - part * threads) * sizeof(Float));
 		}
 	}
 
@@ -184,19 +184,22 @@ namespace dnn
 		
 	static const std::string FloatToString(const Float value, const std::streamsize precision = 8)
 	{
-		std::stringstream stream << std::setprecision(precision) << value;
+		std::stringstream stream; 
+		stream << std::setprecision(precision) << value;
 		return stream.str();
 	}
 
 	static const std::string FloatToStringFixed(const Float value, const std::streamsize precision = 8)
 	{
-		std::stringstream stream << std::setprecision(precision) << std::fixed << value;
+		std::stringstream stream; 
+		stream << std::setprecision(precision) << std::fixed << value;
 		return stream.str();
 	}
 
 	static const std::string FloatToStringScientific(const Float value, const std::streamsize precision = 4)
 	{
-		std::stringstream stream << std::setprecision(precision) << std::scientific << value;
+		std::stringstream stream; 
+		stream << std::setprecision(precision) << std::scientific << value;
 		return stream.str();
 	}
 
