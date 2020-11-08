@@ -1,5 +1,6 @@
 #pragma once
 #include "Layer.h"
+#include <stdexcept>
 
 namespace dnn
 {
@@ -40,11 +41,11 @@ namespace dnn
 		void InitializeDescriptors(const size_t batchSize) final override
 		{
 			if (InputLayer->PaddedC % Groups != 0)
-				throw std::exception("input not splittable in ChannelSplit");
+				throw std::runtime_error("input not splittable in ChannelSplit");
 
 
 			if (GetDataFmt(*InputLayer->DstMemDesc) != BlockedFmt)
-				throw std::exception("Blocked format expected in ChannelSplit");
+				throw std::runtime_error("Blocked format expected in ChannelSplit");
 
 			DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, BlockedFmt));
 			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, BlockedFmt));
