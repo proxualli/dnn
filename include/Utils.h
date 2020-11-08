@@ -178,19 +178,19 @@ namespace dnn
 		return std::uniform_real_distribution<T>(min, max)(generator);
 	}
 		
-	static const auto FloatToString(const Float value, const std::streamsize precision = 8)
+	static auto FloatToString(const Float value, const std::streamsize precision = 8)
 	{
-		return (std::ostringstream() << std::setprecision(precision) << value).str().c_std();
+		return (std::ostringstream() << std::setprecision(precision) << value).str();
 	}
 
-	static const auto FloatToStringFixed(const Float value, const std::streamsize precision = 8)
+	static auto FloatToStringFixed(const Float value, const std::streamsize precision = 8)
 	{
-		return (std::ostringstream() << std::setprecision(precision) << std::fixed << value).str().c_str();
+		return (std::ostringstream() << std::setprecision(precision) << std::fixed << value).str();
 	}
 
-	static const auto FloatToStringScientific(const Float value, const std::streamsize precision = 4)
+	static auto FloatToStringScientific(const Float value, const std::streamsize precision = 4)
 	{
-		return (std::ostringstream() << std::setprecision(precision) << std::scientific << value).str().c_str();
+		return (std::ostringstream() << std::setprecision(precision) << std::scientific << value).str();
 	}
 
    	static const auto GetFileSize(const char* fileName)
