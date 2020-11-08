@@ -497,6 +497,12 @@ extern "C" DNN_API void DNNRefreshStatistics(const size_t layerIndex, std::strin
 
 extern "C" DNN_API void DNNGetLayerInfo(const size_t layerIndex, size_t* inputsCount, LayerTypes* layerType, Activations* activationFunction, Costs* cost, std::string* name, std::string* description, size_t* neuronCount, size_t* weightCount, size_t* biasesCount, size_t* multiplier, size_t* groups, size_t* group, size_t* localSize, size_t* c, size_t* d, size_t* h, size_t* w, size_t* kernelH, size_t* kernelW, size_t* strideH, size_t* strideW, size_t* dilationH, size_t* dilationW, size_t* padD, size_t* padH, size_t* padW, Float* dropout, Float* labelTrue, Float* labelFalse, Float* weight, size_t* groupIndex, size_t* labelIndex, size_t* inputC, Float* alpha, Float* beta, Float* k, Algorithms* algorithm, Float* fH, Float* fW, bool* hasBias, bool* scaling, bool* acrossChannels, bool* locked, bool* lockable)
 {
+	typedef BatchNormActivation<HardLogistic, LayerTypes::BatchNormHardLogistic> BatchNormHardLogistic;
+	typedef BatchNormActivation<HardSwish, LayerTypes::BatchNormHardSwish> BatchNormHardSwish;
+	typedef BatchNormActivationDropout<HardSwish, LayerTypes::BatchNormHardSwishDropout> BatchNormHardSwishDropout;
+	typedef BatchNormActivationDropout<Relu, LayerTypes::BatchNormReluDropout> BatchNormReluDropout;
+	typedef BatchNormActivation<Swish, LayerTypes::BatchNormSwish> BatchNormSwish;
+	
 	if (model && layerIndex < model->Layers.size())
 	{
 		Layer* layer = model->Layers[layerIndex];
