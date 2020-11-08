@@ -184,17 +184,20 @@ namespace dnn
 		
 	static const std::string FloatToString(const Float value, const std::streamsize precision = 8)
 	{
-		return (std::stringstream() << std::setprecision(precision) << value).str();
+		std::stringstream stream << std::setprecision(precision) << value;
+		return stream.str();
 	}
 
 	static const std::string FloatToStringFixed(const Float value, const std::streamsize precision = 8)
 	{
-		return (std::stringstream() << std::setprecision(precision) << std::fixed << value).str();
+		std::stringstream stream << std::setprecision(precision) << std::fixed << value;
+		return stream.str();
 	}
 
 	static const std::string FloatToStringScientific(const Float value, const std::streamsize precision = 4)
 	{
-		return (std::stringstream() << std::setprecision(precision) << std::scientific << value).str();
+		std::stringstream stream << std::setprecision(precision) << std::scientific << value;
+		return stream.str();
 	}
 
    	static const auto GetFileSize(const char* fileName)
