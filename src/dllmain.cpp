@@ -554,14 +554,14 @@ extern "C" DNN_API void DNNGetLayerInfo(const size_t layerIndex, size_t* inputsC
 
 		case LayerTypes::LocalResponseNormalization:
 		{
-			auto lcn = dynamic_cast<LocalResponseNormalization*>(layer);
-			if (lcn)
+			auto lrn = dynamic_cast<LocalResponseNormalization*>(layer);
+			if (lrn)
 			{
-				*acrossChannels = lcn->AcrossChannels;
-				*localSize = lcn->LocalSize;
-				*alpha = lcn->Alpha;
-				*beta = lcn->Beta;
-				*k = lcn->K;
+				*acrossChannels = lrn->AcrossChannels;
+				*localSize = lrn->LocalSize;
+				*alpha = lrn->Alpha;
+				*beta = lrn->Beta;
+				*k = lrn->K;
 			}
 		}
 		break;
@@ -588,7 +588,7 @@ extern "C" DNN_API void DNNGetLayerInfo(const size_t layerIndex, size_t* inputsC
 
 		case LayerTypes::BatchNormHardLogistic:
 		{
-			auto bn = dynamic_cast<BatchNormActivation<HardLogistic, LayerTypes::BatchNormHardLogistic>*>(layer);
+			auto bn = dynamic_cast<BatchNormHardLogistic*>(layer);
 			if (bn)
 				*scaling = bn->Scaling;
 		}
@@ -596,7 +596,7 @@ extern "C" DNN_API void DNNGetLayerInfo(const size_t layerIndex, size_t* inputsC
 
 		case LayerTypes::BatchNormHardSwish:
 		{
-			auto bn = dynamic_cast<BatchNormActivation<HardSwish, LayerTypes::BatchNormHardSwish>*>(layer);
+			auto bn = dynamic_cast<BatchNormHardSwish*>(layer);
 			if (bn)
 				*scaling = bn->Scaling;
 		}
@@ -604,7 +604,7 @@ extern "C" DNN_API void DNNGetLayerInfo(const size_t layerIndex, size_t* inputsC
 
 		case LayerTypes::BatchNormHardSwishDropout:
 		{
-			auto bn = dynamic_cast<BatchNormActivationDropout<HardSwish, LayerTypes::BatchNormHardSwishDropout>*>(layer);
+			auto bn = dynamic_cast<BatchNormHardSwishDropout*>(layer);
 			if (bn)
 			{
 				*scaling = bn->Scaling;
@@ -623,7 +623,7 @@ extern "C" DNN_API void DNNGetLayerInfo(const size_t layerIndex, size_t* inputsC
 
 		case LayerTypes::BatchNormReluDropout:
 		{
-			auto bn = dynamic_cast<BatchNormActivationDropout<Relu, LayerTypes::BatchNormReluDropout>*>(layer);
+			auto bn = dynamic_cast<BatchNormReluDropout*>(layer);
 			if (bn)
 			{
 				*scaling = bn->Scaling;
@@ -634,7 +634,7 @@ extern "C" DNN_API void DNNGetLayerInfo(const size_t layerIndex, size_t* inputsC
 
 		case LayerTypes::BatchNormSwish:
 		{
-			auto bn = dynamic_cast<BatchNormActivation<Swish, LayerTypes::BatchNormSwish>*>(layer);
+			auto bn = dynamic_cast<BatchNormSwish*>(layer);
 			if (bn)
 				*scaling = bn->Scaling;
 		}
