@@ -3,6 +3,7 @@
 #include <string>
 #include <utility>
 #include <exception>
+#include <stdexcept>
 
 #ifdef __MINGW32__
 #include <mm_malloc.h>
