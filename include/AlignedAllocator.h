@@ -42,7 +42,7 @@ namespace dnn
 			void* p = AlignedAlloc(alignment, sizeof(T) * size);
 
 			if (!p && size > 0ull)
-				throw std::exception("failed to allocate");
+				throw std::runtime_error("failed to allocate");
 
 			return static_cast<pointer>(p);
 		}
