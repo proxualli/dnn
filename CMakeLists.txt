@@ -144,7 +144,7 @@ IF(NOT DEFINED VECTORCLASS_SOURCE_DIR)
 
 # Library
 #--------------------------------------
-add_library(${PROJECT_NAME} SHARED ${libdnn_sources} onDNN)
+add_library(${PROJECT_NAME} SHARED ${libdnn_sources} oneDNN)
 
 target_include_directories(${PROJECT_NAME}
     PRIVATE
