@@ -1,15 +1,21 @@
 cmake_minimum_required(VERSION 3.5.0)
 
+if(${CMAKE_VERSION} VERSION_LESS 3.18)
+    cmake_policy(VERSION ${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION})
+else()
+    cmake_policy(VERSION 3.18)
+endif()
+
 INCLUDE(GNUInstallDirs)
 INCLUDE(CheckCSourceCompiles)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_EXTENSIONS ON)
 string(APPEND CMAKE_CXX_FLAGS " -mfma -mavx2 -march=znver2 -fopenmp")
 string(APPEND CMAKE_C_FLAGS " -mfma -mavx2 -march=znver2 -fopenmp")
 
-project(dnn VERSION 1.0.0 LANGUAGES C CXX ASM)
+project(dnn VERSION 1.0 LANGUAGES CXX)
 
 
 set(libdnn_headers
@@ -144,8 +150,6 @@ IF(NOT DEFINED VECTORCLASS_SOURCE_DIR)
 
 # Library
 #--------------------------------------
-add_library(oneDNN SHARED ${DNN_DEPENDENCIES_SOURCE_DIR}/oneDNN)
-
 add_library(${PROJECT_NAME} SHARED ${libdnn_sources})
 
 target_include_directories(${PROJECT_NAME}
