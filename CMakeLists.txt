@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.5.0)
 
+message(STATUS "Using CMake version ${CMAKE_VERSION}")
+
 INCLUDE(GNUInstallDirs)
 INCLUDE(CheckCSourceCompiles)
 
@@ -147,13 +149,21 @@ add_library(${PROJECT_NAME} SHARED ${libdnn_sources})
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC
-	${DNN_DEPENDENCIES_SOURCE_DIR}/zlib-1.2.11
-	${DNN_DEPENDENCIES_SOURCE_DIR}/libpng
-        ${DNN_DEPENDENCIES_SOURCE_DIR}/oneDNN/include
-	${DNN_DEPENDENCIES_SOURCE_DIR}/libjpeg-turbo
+	${DNN_DEPENDENCIES_BINARY_DIR}/zlib-1.2.11
+	${DNN_DEPENDENCIES_BINARY_DIR}/libpng
+        ${DNN_DEPENDENCIES_BINARY_DIR}/oneDNN/include
+	${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo
         $<INSTALL_INTERFACE:include>    
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>     
 )
+
+# ---[ Configure oneDNN
+IF(NOT TARGET oneDNN)
+  ADD_SUBDIRECTORY(
+    "${ONEDNN_SOURCE_DIR}"
+    "${DNN_DEPENDENCIES_BINARY_DIR}/oneDNN")
+ENDIF()
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC oneDNN)
 
 # ---[ Configure VectorClass
 IF(NOT TARGET vectorclass)
@@ -195,10 +205,4 @@ IF(NOT TARGET magic_enum)
 ENDIF()
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC magic_enum)
 
-# ---[ Configure oneDNN
-IF(NOT TARGET oneDNN)
-  ADD_SUBDIRECTORY(
-    "${ONEDNN_SOURCE_DIR}"
-    "${DNN_DEPENDENCIES_BINARY_DIR}/oneDNN")
-ENDIF()
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC oneDNN)
+
