@@ -4,7 +4,7 @@
 
 namespace dnn
 {
-	template <typename Activation = HardSwish, typename LayerTypes T = LayerTypes::BatchNormHardSwishDropout>
+	template <typename Activation = HardSwish, typename dnn::LayerTypes T = LayerTypes::BatchNormHardSwishDropout>
 	class BatchNormActivationDropout final : public Layer
 	{
 	public:
