@@ -1,4 +1,17 @@
-cmake_minimum_required(VERSION 3.5.0)
+cmake_minimum_required(VERSION 3.1)
+
+# Policy: find_package() uses <PackageName>_ROOT variables
+if(POLICY CMP0074)
+  cmake_policy(SET CMP0074 NEW)
+endif()
+
+set(DNN_VERSION_MAJOR 1)
+set(DNN_VERSION_MINOR 0)
+set(DNN_VERSION_PATCH 0)
+set(DNN_VERSION_NOTE "")
+
+set(DNN_VERSION ${DNN_VERSION_MAJOR}.${DNN_VERSION_MINOR}.${DNN_VERSION_PATCH})
+math(EXPR DNN_VERSION_NUMBER "10000*${DNN_VERSION_MAJOR} + 100*${DNN_VERSION_MINOR} + ${DNN_VERSION_PATCH}")
 
 message(STATUS "Using CMake version ${CMAKE_VERSION}")
 
@@ -7,11 +20,11 @@ INCLUDE(CheckCSourceCompiles)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 string(APPEND CMAKE_CXX_FLAGS " -mfma -mavx2 -march=znver2 -fopenmp")
 string(APPEND CMAKE_C_FLAGS " -mfma -mavx2 -march=znver2 -fopenmp")
 
-project(dnn VERSION 1.0 LANGUAGES C CXX ASM)
+project(dnn VERSION ${DNN_VERSION} LANGUAGES C CXX ASM)
 
 set(libdnn_headers
   include/Activation.h
@@ -127,11 +140,25 @@ add_library(${PROJECT_NAME} SHARED ${libdnn_sources})
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC
-	${DNN_DEPENDENCIES_BINARY_DIR}/oneDNN/include
-	${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo
+	${DNN_DEPENDENCIES_SOURCE_DIR}/oneDNN/include
+	${DNN_DEPENDENCIES_SOURCE_DIR}/libjpeg-turbo
         $<INSTALL_INTERFACE:include>    
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>     
 )
+
+target_link_libraries(${PROJECT_NAME}
+  PRIVATE
+    libjpeg
+    oneDNN
+)
+
+# ---[ Configure JPEG
+IF(NOT TARGET libjpeg)
+  ADD_SUBDIRECTORY(
+    "${JPEG_SOURCE_DIR}"
+    "${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo")
+ENDIF()
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC libjpeg)
 
 # ---[ Configure oneDNN
 IF(NOT TARGET oneDNN)
@@ -149,14 +176,6 @@ IF(NOT TARGET vectorclass)
 ENDIF()
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC vectorclass)
 
-# ---[ Configure JPEG
-IF(NOT TARGET libjpeg)
-  ADD_SUBDIRECTORY(
-    "${JPEG_SOURCE_DIR}"
-    "${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo")
-ENDIF()
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC libjpeg)
-
 # ---[ Configure MagicEnum
 IF(NOT TARGET magic_enum)
   ADD_SUBDIRECTORY(
@@ -164,5 +183,3 @@ IF(NOT TARGET magic_enum)
     "${DNN_DEPENDENCIES_BINARY_DIR}/magic_enum")
 ENDIF()
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC magic_enum)
-
-
