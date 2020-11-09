@@ -13,7 +13,48 @@
       "inheritEnvironments": [ "linux_x64" ],
       "wslPath": "${defaultWSLPath}",
       "addressSanitizerRuntimeFlags": "detect_leaks=0",
-      "variables": []
+      "variables": [
+        {
+          "name": "DNNL_BUILD_EXAMPLES",
+          "value": "False",
+          "type": "BOOL"
+        },
+        {
+          "name": "DNNL_BUILD_TESTS",
+          "value": "False",
+          "type": "BOOL"
+        },
+        {
+          "name": "ENABLE_STATIC",
+          "value": "False",
+          "type": "BOOL"
+        },
+        {
+          "name": "PNG_BUILD_ZLIB",
+          "value": "True",
+          "type": "BOOL"
+        },
+        {
+          "name": "PNG_STATIC",
+          "value": "False",
+          "type": "BOOL"
+        },
+        {
+          "name": "PNG_TESTS",
+          "value": "False",
+          "type": "BOOL"
+        },
+        {
+          "name": "REQUIRE_SIMD",
+          "value": "True",
+          "type": "BOOL"
+        },
+        {
+          "name": "WITH_TURBOJPEG",
+          "value": "False",
+          "type": "BOOL"
+        }
+      ]
     }
   ]
 }
