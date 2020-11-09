@@ -139,9 +139,12 @@ IF(NOT DEFINED VECTORCLASS_SOURCE_DIR)
 add_library(${PROJECT_NAME} SHARED ${libdnn_sources})
 
 target_include_directories(${PROJECT_NAME}
-    PUBLIC
-	$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>  
-        $<BUILD_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>     
+    PRIVATE
+        ${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo
+        ${DNN_DEPENDENCIES_BINARY_DIR}/oneDNN/include
+    PUBLIC 
+        $<INSTALL_INTERFACE:include>    
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
 
 target_link_libraries(${PROJECT_NAME}
