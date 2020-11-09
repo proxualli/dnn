@@ -4,7 +4,7 @@
 
 namespace dnn
 {
-	template <typename Activation = HardSwish, typename T = LayerTypes::BatchNormHardSwish>
+	template <typename Activation = HardSwish, typename LayerTypes T = LayerTypes::BatchNormHardSwish>
 	class BatchNormActivation final : public Layer
 	{
 	public:
