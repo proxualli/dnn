@@ -25,11 +25,6 @@
           "type": "BOOL"
         },
         {
-          "name": "ENABLE_STATIC",
-          "value": "False",
-          "type": "BOOL"
-        },
-        {
           "name": "PNG_BUILD_ZLIB",
           "value": "True",
           "type": "BOOL"
@@ -51,6 +46,11 @@
         },
         {
           "name": "WITH_TURBOJPEG",
+          "value": "False",
+          "type": "BOOL"
+        },
+        {
+          "name": "ENABLE_STATIC",
           "value": "False",
           "type": "BOOL"
         }
