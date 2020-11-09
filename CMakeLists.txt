@@ -1,20 +1,16 @@
 cmake_minimum_required(VERSION 3.5.0)
 
+INCLUDE(GNUInstallDirs)
+INCLUDE(CheckCSourceCompiles)
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-
-IF(NOT MSVC)
-  string(APPEND CMAKE_CXX_FLAGS " -mfma -mavx2 -march=znver2 -fopenmp")
-  string(APPEND CMAKE_C_FLAGS " -mfma -mavx2 -march=znver2 -fopenmp")
-ELSE()
-  string(APPEND CMAKE_CXX_FLAGS " /arch:AVX2 /openmp:experimental")
-  string(APPEND CMAKE_C_FLAGS " /arch:AVX2 /openmp:experimental")
-ENDIF()
+string(APPEND CMAKE_CXX_FLAGS " -mfma -mavx2 -march=znver2 -fopenmp")
+string(APPEND CMAKE_C_FLAGS " -mfma -mavx2 -march=znver2 -fopenmp")
 
 project(dnn VERSION 1.0.0 LANGUAGES C CXX ASM)
 
-INCLUDE(GNUInstallDirs)
 
 set(libdnn_headers
   include/Activation.h
@@ -92,8 +88,8 @@ IF(NOT DEFINED VECTORCLASS_SOURCE_DIR)
   EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" --build .
     WORKING_DIRECTORY "${DNN_DEPENDENCIES_BINARY_DIR}/zlib-download")
   SET(ZLIB_SOURCE_DIR "${DNN_DEPENDENCIES_SOURCE_DIR}/zlib-1.2.11" CACHE STRING "ZLib source directory")
-  SET(ZLIB_INCLUDE_DIR "${DNN_DEPENDENCIES_SOURCE_DIR}/ZLIB_SOURCE_DIR/include" CACHE STRING "ZLib include directory")
-  SET(ZLIB_LIBRARY "${DNN_DEPENDENCIES_SOURCE_DIR}/ZLIB_SOURCE_DIR/bin" CACHE STRING "ZLib bin directory")
+  SET(ZLIB_INCLUDE_DIR "${DNN_DEPENDENCIES_BINARY_DIR}/zlib-1.2.11" CACHE STRING "ZLib include directory")
+  SET(ZLIB_LIBRARY "${DNN_DEPENDENCIES_BINARY_DIR}/zlib-1.2.11/bin" CACHE STRING "ZLib bin directory")
  ENDIF()
 
  IF(NOT DEFINED PNG_SOURCE_DIR)
@@ -151,10 +147,11 @@ IF(NOT DEFINED VECTORCLASS_SOURCE_DIR)
 add_library(${PROJECT_NAME} SHARED ${libdnn_sources})
 
 target_include_directories(${PROJECT_NAME}
-    PRIVATE
-        ${DNN_DEPENDENCIES_BINARY_DIR}/deps/oneDNN/include
-	${DNN_DEPENDENCIES_BINARY_DIR}/deps/libjpeg-turbo/include
-    PUBLIC 
+    PUBLIC
+	${DNN_DEPENDENCIES_BINARY_DIR}/zlib-1.2.11
+	${DNN_DEPENDENCIES_BINARY_DIR}/libpng
+        ${DNN_DEPENDENCIES_BINARY_DIR}/oneDNN/include
+	${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo
         $<INSTALL_INTERFACE:include>    
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>     
 )
