@@ -140,16 +140,15 @@ add_library(${PROJECT_NAME} SHARED ${libdnn_sources})
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC
-	${DNN_DEPENDENCIES_SOURCE_DIR}/oneDNN/include
-	${DNN_DEPENDENCIES_SOURCE_DIR}/libjpeg-turbo
-        $<INSTALL_INTERFACE:include>    
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>     
+	$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>  
+        $<BUILD_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>     
 )
 
 target_link_libraries(${PROJECT_NAME}
   PRIVATE
     libjpeg
     oneDNN
+    vectorclass
 )
 
 # ---[ Configure JPEG
