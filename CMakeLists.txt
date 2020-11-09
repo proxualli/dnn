@@ -1,11 +1,5 @@
 cmake_minimum_required(VERSION 3.5.0)
 
-if(${CMAKE_VERSION} VERSION_LESS 3.18)
-    cmake_policy(VERSION ${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION})
-else()
-    cmake_policy(VERSION 3.18)
-endif()
-
 INCLUDE(GNUInstallDirs)
 INCLUDE(CheckCSourceCompiles)
 
@@ -15,8 +9,7 @@ set(CMAKE_CXX_EXTENSIONS ON)
 string(APPEND CMAKE_CXX_FLAGS " -mfma -mavx2 -march=znver2 -fopenmp")
 string(APPEND CMAKE_C_FLAGS " -mfma -mavx2 -march=znver2 -fopenmp")
 
-project(dnn VERSION 1.0 LANGUAGES CXX)
-
+project(dnn VERSION 1.0 LANGUAGES C CXX ASM)
 
 set(libdnn_headers
   include/Activation.h
@@ -154,10 +147,10 @@ add_library(${PROJECT_NAME} SHARED ${libdnn_sources})
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC
-	${DNN_DEPENDENCIES_BINARY_DIR}/zlib-1.2.11
-	${DNN_DEPENDENCIES_BINARY_DIR}/libpng
-        ${DNN_DEPENDENCIES_BINARY_DIR}/oneDNN/include
-	${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo
+	${DNN_DEPENDENCIES_SOURCE_DIR}/zlib-1.2.11
+	${DNN_DEPENDENCIES_SOURCE_DIR}/libpng
+        ${DNN_DEPENDENCIES_SOURCE_DIR}/oneDNN/include
+	${DNN_DEPENDENCIES_SOURCE_DIR}/libjpeg-turbo
         $<INSTALL_INTERFACE:include>    
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>     
 )
