@@ -146,8 +146,6 @@ IF(NOT DEFINED VECTORCLASS_SOURCE_DIR)
 #--------------------------------------
 add_library(${PROJECT_NAME} SHARED ${libdnn_sources})
 
-add_dependencies(${PROJECT_NAME} oneDNN)
-
 target_include_directories(${PROJECT_NAME}
     PRIVATE
 	${DNN_DEPENDENCIES_BINARY_DIR}/zlib-1.2.11
@@ -206,3 +204,5 @@ IF(NOT TARGET oneDNN)
     "${DNN_DEPENDENCIES_BINARY_DIR}/oneDNN")
 ENDIF()
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC oneDNN)
+
+add_dependencies(${PROJECT_NAME} oneDNN)
