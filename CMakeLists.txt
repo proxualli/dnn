@@ -152,7 +152,8 @@ add_library(${PROJECT_NAME} SHARED ${libdnn_sources})
 
 target_include_directories(${PROJECT_NAME}
     PRIVATE
-        ${DNN_DEPENDENCIES_BINARY_DIR}/oneDNN/include
+        ${DNN_DEPENDENCIES_BINARY_DIR}/deps/oneDNN/include
+	${DNN_DEPENDENCIES_BINARY_DIR}/deps/libjpeg-turbo/include
     PUBLIC 
         $<INSTALL_INTERFACE:include>    
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>     
