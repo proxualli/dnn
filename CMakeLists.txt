@@ -147,11 +147,12 @@ IF(NOT DEFINED VECTORCLASS_SOURCE_DIR)
 add_library(${PROJECT_NAME} SHARED ${libdnn_sources})
 
 target_include_directories(${PROJECT_NAME}
-    PUBLIC
+    PRIVATE
 	${DNN_DEPENDENCIES_BINARY_DIR}/zlib-1.2.11
 	${DNN_DEPENDENCIES_BINARY_DIR}/libpng
         ${DNN_DEPENDENCIES_BINARY_DIR}/oneDNN/include
 	${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo
+    PUBLIC
         $<INSTALL_INTERFACE:include>    
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>     
 )
@@ -186,7 +187,7 @@ IF(NOT TARGET libpng)
     "${PNG_SOURCE_DIR}"
     "${DNN_DEPENDENCIES_BINARY_DIR}/libpng")
 ENDIF()
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC libpng)
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC libpng zlib)
 
 # ---[ Configure MagicEnum
 IF(NOT TARGET magic_enum)
