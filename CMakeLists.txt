@@ -82,7 +82,7 @@ set(DNNL_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(WITH_TURBOJPEG FALSE CACHE BOOL "" FORCE) 
 set(ENABLE_SHARED FALSE CACHE BOOL "" FORCE)
 set(ENABLE_STATIC TRUE CACHE BOOL "" FORCE)
-set(PNG_BUILD_ZLIB FALSE CACHE BOOL "" FORCE)
+set(PNG_BUILD_ZLIB TRUE CACHE BOOL "" FORCE)
 set(PNG_SHARED TRUE CACHE BOOL "" FORCE)
 set(PNG_STATIC FALSE CACHE BOOL "" FORCE)
 set(PNG_EXECUTABLES FALSE CACHE BOOL "" FORCE)
@@ -230,6 +230,15 @@ target_include_directories(${PROJECT_NAME}
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
 
+include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/zlib-1.2.11)
+include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/zlib-1.2.11)
+include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/libpng)
+include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/libpng)
+include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/libjpeg-turbo)
+include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo)
+include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/oneDNN/include)
+include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/oneDNN/include)
+
 # ---[ Configure ZLIB
 IF(NOT TARGET zlib)
   ADD_SUBDIRECTORY(
@@ -243,7 +252,7 @@ IF(NOT TARGET libpng)
     "${PNG_SOURCE_DIR}"
     "${DNN_DEPENDENCIES_BINARY_DIR}/libpng")
 ENDIF()
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC libpng)
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} PRIVATE libpng)
 
 # ---[ Configure JPEG
 IF(NOT TARGET libjpeg)
@@ -276,16 +285,6 @@ IF(NOT TARGET magic_enum)
     "${DNN_DEPENDENCIES_BINARY_DIR}/magic_enum")
 ENDIF()
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} PRIVATE magic_enum)
-
-include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/zlib-1.2.11)
-include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/zlib-1.2.11)
-include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/libpng)
-include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/libpng)
-include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/libjpeg-turbo)
-include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo)
-include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/oneDNN/include)
-include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/oneDNN/include)
-
 
 
 
