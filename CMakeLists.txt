@@ -169,6 +169,16 @@ target_include_directories(${PROJECT_NAME}
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
 
+# zlib
+find_path(ZLIB_INCLUDE_PATH	zlib.h)
+find_library(ZLIB_LIBRARY	z)
+if (NOT ZLIB_INCLUDE_PATH OR NOT ZLIB_LIBRARY)
+	message(STATUS "System version of zlib not found, using external/zlib")
+	add_subdirectory(external/zlib)
+	# \note ZLIB_LIBRARY and ZLIB_INCLUDE_PATH are promoted from external/zlib/CMakeLists.txt
+endif ()
+include_directories(${ZLIB_INCLUDE_PATH})
+
 # ---[ Configure JPEG
 IF(NOT TARGET libjpeg)
   ADD_SUBDIRECTORY(
