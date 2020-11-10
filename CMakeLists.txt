@@ -75,8 +75,13 @@ INCLUDE(CheckCSourceCompiles)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-string(APPEND CMAKE_CXX_FLAGS " -mfma -mavx2 -march=znver2 -fopenmp")
-string(APPEND CMAKE_C_FLAGS " -mfma -mavx2 -march=znver2 -fopenmp")
+if (UNIX)
+  set(CMAKE_CXX_FLAGS " -mfma -mavx2 -march=znver2 -fopenmp" CACHE STRING "" FORCE)
+  set(CMAKE_C_FLAGS " -mfma -mavx2 -march=znver2 -fopenmp" CACHE STRING "" FORCE)
+else()
+  set(CMAKE_CXX_FLAGS " /arch:AVX2 /openmp:expermimental" CACHE STRING "" FORCE)
+  set(CMAKE_C_FLAGS " /arch:AVX2 /openmp:expermimental" CACHE STRING "" FORCE)
+endif(UNIX)
 set(DNNL_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(DNNL_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(WITH_TURBOJPEG FALSE CACHE BOOL "" FORCE) 
@@ -239,13 +244,19 @@ include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo)
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/oneDNN/include)
 include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/oneDNN/include)
 
+# ---[ Configure ZLIB
+IF(NOT TARGET zlib)
+  ADD_SUBDIRECTORY(
+    "${ZLIB_SOURCE_DIR}"
+    "${DNN_DEPENDENCIES_BINARY_DIR}/zlib-1.2.11")
+ENDIF()
+
 # ---[ Configure PNG
 IF(NOT TARGET libpng)
   ADD_SUBDIRECTORY(
     "${PNG_SOURCE_DIR}"
     "${DNN_DEPENDENCIES_BINARY_DIR}/libpng")
 ENDIF()
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} PRIVATE libpng)
 
 # ---[ Configure JPEG
 IF(NOT TARGET libjpeg)
