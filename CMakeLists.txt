@@ -173,7 +173,12 @@ target_include_directories(${PROJECT_NAME}
 )
 
 include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo)
+include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/libjpeg-turbo)
 include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/oneDNN/include)
+include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/oneDNN/include)
+
+SET(DNNL_BUILD_EXAMPLES OFF)
+SET(DNNL_BUILD_TESTS OFF)
 
 # ---[ Configure JPEG
 IF(NOT TARGET libjpeg)
