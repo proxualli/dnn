@@ -5,6 +5,54 @@ if(POLICY CMP0074)
   cmake_policy(SET CMP0074 NEW)
 endif()
 
+if(POLICY CMP0022)
+    cmake_policy(SET CMP0022 NEW)
+endif()
+
+# Foo::Bar always refers to an IMPORTED target
+if(POLICY CMP0028)
+    cmake_policy(SET CMP0028 NEW)
+endif()
+
+if(POLICY CMP0054)
+    cmake_policy(SET CMP0054 NEW)
+endif()
+
+# Enable RPATH on MacOS/OSX
+if(POLICY CMP0042)
+    cmake_policy(SET CMP0042 NEW)
+endif()
+
+# Do not export symbols from executables
+if(POLICY CMP0065)
+    cmake_policy(SET CMP0065 NEW)
+endif()
+
+# Pass linker flags to try_compile
+if(POLICY CMP0056)
+    cmake_policy(SET CMP0056 NEW)
+endif()
+
+# Always link with full path
+if(POLICY CMP0060)
+    cmake_policy(SET CMP0060 NEW)
+endif()
+
+# Pass compiler flags to try_compile
+if(POLICY CMP0066)
+    cmake_policy(SET CMP0066 NEW)
+endif()
+
+# Use <PackageName>_ROOT env. variable as a prefix
+if(POLICY CMP0074)
+    cmake_policy(SET CMP0074 NEW)
+endif()
+
+# Install rules order
+if(POLICY CMP0082)
+    cmake_policy(SET CMP0082 NEW)
+endif()
+
 if("${CMAKE_BUILD_TYPE}" STREQUAL "")
     message(STATUS "CMAKE_BUILD_TYPE is unset, defaulting to Release")
     set(CMAKE_BUILD_TYPE "Release" CACHE STRING
@@ -29,8 +77,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 string(APPEND CMAKE_CXX_FLAGS " -mfma -mavx2 -march=znver2 -fopenmp")
 string(APPEND CMAKE_C_FLAGS " -mfma -mavx2 -march=znver2 -fopenmp")
-set(DNNL_BUILD_EXAMPLES OFF BOOL FORCE)
-set(DNNL_BUILD_TESTS OFF BOOL FORCE)
+set(DNNL_BUILD_EXAMPLES OFF FORCE)
+set(DNNL_BUILD_TESTS OFF FORCE)
 
 project(dnn VERSION ${DNN_VERSION} LANGUAGES C CXX ASM)
 
