@@ -75,18 +75,18 @@ INCLUDE(CheckCSourceCompiles)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-if(MSVC)
-  string(APPEND CMAKE_CXX_FLAGS " /arch:AVX2 /openmp:experimental")
-  string(APPEND CMAKE_C_FLAGS " /arch:AVX2 /openmp:experimental")
-else()
-  string(APPEND CMAKE_CXX_FLAGS " -mfma -mavx2 -march=znver2 -fopenmp")
-  string(APPEND CMAKE_C_FLAGS " -mfma -mavx2 -march=znver2 -fopenmp")
-endif()
+string(APPEND CMAKE_CXX_FLAGS " -mfma -mavx2 -march=znver2 -fopenmp")
+string(APPEND CMAKE_C_FLAGS " -mfma -mavx2 -march=znver2 -fopenmp")
 set(DNNL_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(DNNL_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(WITH_TURBOJPEG FALSE CACHE BOOL "" FORCE) 
 set(ENABLE_SHARED FALSE CACHE BOOL "" FORCE)
 set(ENABLE_STATIC TRUE CACHE BOOL "" FORCE)
+set(PNG_BUILD_ZLIB TRUE CACHE BOOL "" FORCE)
+set(PNG_SHARED TRUE CACHE BOOL "" FORCE)
+set(PNG_STATIC FALSE CACHE BOOL "" FORCE)
+set(PNG_EXECUTABLES FALSE CACHE BOOL "" FORCE)
+set(PNG_TESTS FALSE CACHE BOOL "" FORCE)
 
 project(dnn VERSION ${DNN_VERSION} LANGUAGES C CXX ASM)
 
@@ -230,11 +230,28 @@ target_include_directories(${PROJECT_NAME}
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
 
+include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/zlib)
+include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/libpng)
+include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/libpng)
 include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo)
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/libjpeg-turbo)
 include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/oneDNN/include)
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/oneDNN/include)
 
+# ---[ Configure ZLIB
+IF(NOT TARGET zlib)
+  ADD_SUBDIRECTORY(
+    "${ZLIB_SOURCE_DIR}"
+    "${DNN_DEPENDENCIES_BINARY_DIR}/zlib-1.2.11")
+ENDIF()
+
+# ---[ Configure PNG
+IF(NOT TARGET libpng)
+  ADD_SUBDIRECTORY(
+    "${PNG_SOURCE_DIR}"
+    "${DNN_DEPENDENCIES_BINARY_DIR}/libpng")
+ENDIF()
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC libpng)
 
 # ---[ Configure JPEG
 IF(NOT TARGET libjpeg)
