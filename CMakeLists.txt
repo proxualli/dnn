@@ -5,6 +5,16 @@ if(POLICY CMP0074)
   cmake_policy(SET CMP0074 NEW)
 endif()
 
+if("${CMAKE_BUILD_TYPE}" STREQUAL "")
+    message(STATUS "CMAKE_BUILD_TYPE is unset, defaulting to Release")
+    set(CMAKE_BUILD_TYPE "Release" CACHE STRING
+        "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel RelWithAssert ...")
+endif()
+
+if (NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
+    message(FATAL_ERROR "DNN supports 64 bit platforms only")
+endif()
+
 set(DNN_VERSION_MAJOR 1)
 set(DNN_VERSION_MINOR 0)
 set(DNN_VERSION_PATCH 0)
@@ -92,8 +102,8 @@ IF(NOT DEFINED ZLIB_SOURCE_DIR)
   EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" --build .
     WORKING_DIRECTORY "${DNN_DEPENDENCIES_BINARY_DIR}/zlib-download")
   SET(ZLIB_SOURCE_DIR "${DNN_DEPENDENCIES_SOURCE_DIR}/zlib-1.2.11" CACHE STRING "ZLib source directory")
-  SET(ZLIB_INCLUDE_DIR "${DNN_DEPENDENCIES_SOURCE_DIR}/zlib-1.2.11" CACHE STRING "ZLib include directory")
-  SET(ZLIB_LIBRARY "${DNN_DEPENDENCIES_SOURCE_DIR}/zlib-1.2.11/bin" CACHE STRING "ZLib bin directory")
+  SET(ZLIB_INCLUDE_DIR "${DNN_DEPENDENCIES_BINARY_DIR}/zlib-1.2.11" CACHE STRING "ZLib include directory")
+  SET(ZLIB_LIBRARY "${DNN_DEPENDENCIES_SOURCE_DIR}/zlib-1.2.11" CACHE STRING "ZLib bin directory")
  ENDIF()
 
  IF(NOT DEFINED PNG_SOURCE_DIR)
@@ -161,15 +171,13 @@ IF(NOT DEFINED VECTORCLASS_SOURCE_DIR)
 add_library(${PROJECT_NAME} SHARED ${libdnn_sources})
 
 target_include_directories(${PROJECT_NAME}
-    PRIVATE
-        ${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo
-        ${DNN_DEPENDENCIES_BINARY_DIR}/oneDNN/include
-    PUBLIC 
+     PUBLIC 
         $<INSTALL_INTERFACE:include>    
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
 
-include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/zlib-1.2.11)
+include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo)
+include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/oneDNN/include)
 
 # ---[ Configure JPEG
 IF(NOT TARGET libjpeg)
@@ -203,19 +211,6 @@ IF(NOT TARGET magic_enum)
 ENDIF()
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} PRIVATE magic_enum)
 
-# ---[ Configure PNG
-IF(NOT TARGET libpng)
-  ADD_SUBDIRECTORY(
-    "${PNG_SOURCE_DIR}"
-    "${DNN_DEPENDENCIES_BINARY_DIR}/libpng")
-ENDIF()
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} PRIVATE libpng)
 
-# ---[ Configure ZLIB
-IF(NOT TARGET zlib)
-  ADD_SUBDIRECTORY(
-    "${ZLIB_SOURCE_DIR}"
-    "${DNN_DEPENDENCIES_BINARY_DIR}/zlib-1.2.11")
-ENDIF()
 
 
