@@ -242,7 +242,6 @@ IF(NOT TARGET libjpeg)
     "${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo")
 ENDIF()
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC libjpeg)
-add_library(libjpeg STATIC IMPORTED )
 
 # ---[ Configure oneDNN
 IF(NOT TARGET oneDNN)
@@ -251,7 +250,6 @@ IF(NOT TARGET oneDNN)
     "${DNN_DEPENDENCIES_BINARY_DIR}/oneDNN")
 ENDIF()
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC oneDNN)
-add_library(oneDNN SHARED IMPORTED )
 
 # ---[ Configure VectorClass
 IF(NOT TARGET vectorclass)
