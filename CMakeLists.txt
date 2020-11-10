@@ -11,10 +11,6 @@ if("${CMAKE_BUILD_TYPE}" STREQUAL "")
         "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel RelWithAssert ...")
 endif()
 
-if (NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
-    message(FATAL_ERROR "DNN supports 64 bit platforms only")
-endif()
-
 set(DNN_VERSION_MAJOR 1)
 set(DNN_VERSION_MINOR 0)
 set(DNN_VERSION_PATCH 0)
