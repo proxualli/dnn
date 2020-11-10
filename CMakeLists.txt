@@ -229,8 +229,8 @@ target_include_directories(${PROJECT_NAME}
         $<INSTALL_INTERFACE:include>    
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
-
-include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/zlib)
+include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/zlib-1.2.11)
+include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/zlib-1.2.11)
 include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/libpng)
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/libpng)
 include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo)
