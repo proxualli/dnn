@@ -230,11 +230,6 @@ target_include_directories(${PROJECT_NAME}
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
 
-include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/zlib-1.2.11)
-include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/libpng)
-include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo)
-include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/oneDNN/include)
-
 # ---[ Configure ZLIB
 IF(NOT TARGET zlib)
   ADD_SUBDIRECTORY(
@@ -281,6 +276,19 @@ IF(NOT TARGET magic_enum)
     "${DNN_DEPENDENCIES_BINARY_DIR}/magic_enum")
 ENDIF()
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} PRIVATE magic_enum)
+
+include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/zlib-1.2.11)
+include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/zlib-1.2.11)
+include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/libpng)
+include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/libpng)
+include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/libjpeg-turbo)
+include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo)
+include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/oneDNN/include)
+include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/oneDNN/include)
+
+
+
+
 
 
 
