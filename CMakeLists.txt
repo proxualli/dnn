@@ -29,6 +29,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 string(APPEND CMAKE_CXX_FLAGS " -mfma -mavx2 -march=znver2 -fopenmp")
 string(APPEND CMAKE_C_FLAGS " -mfma -mavx2 -march=znver2 -fopenmp")
+set(DNNL_BUILD_EXAMPLES OFF)
+set(DNNL_BUILD_TESTS OFF)
 
 project(dnn VERSION ${DNN_VERSION} LANGUAGES C CXX ASM)
 
@@ -177,8 +179,6 @@ include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/libjpeg-turbo)
 include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/oneDNN/include)
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/oneDNN/include)
 
-SET(DNNL_BUILD_EXAMPLES OFF)
-SET(DNNL_BUILD_TESTS OFF)
 
 # ---[ Configure JPEG
 IF(NOT TARGET libjpeg)
