@@ -344,6 +344,7 @@ namespace dnn
 
 			description.append(nwl + std::string(" Features:") + tab + std::to_string(C) + std::string("x") + std::to_string(H) + std::string("x") + std::to_string(W));
 			description.append(nwl + std::string(" Neurons:") + tab + std::to_string(CDHW));
+			description.append(nwl + std::string(" Format:") + tab + std::string(magic_enum::enum_name<dnnl::memory::format_tag>(Format)));
 
 			return description;
 		}

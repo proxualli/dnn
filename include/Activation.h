@@ -249,8 +249,9 @@ namespace dnn
 		{
 			if (InputLayer->DstMemDesc->data.ndims == 2)
 			{
-				Format = dnnl::memory::format_tag::nc;
-
+				if (Format == dnnl::memory::format_tag::any)
+					Format = dnnl::memory::format_tag::nc;
+				
 				DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, Format));
 				DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, Format));
 			}
@@ -299,7 +300,6 @@ namespace dnn
 			case Activations::HardLogistic:
 			case Activations::HardSwish:
 			case Activations::Mish:
-			case Activations::LogLogistic:
 				if (!IsPlainDataFmt(*InputLayer->DstMemDesc) && !IsBlockedDataFmt(*InputLayer->DstMemDesc))
 					throw std::invalid_argument("Input memory format not supported for this activation function");
 				break;
@@ -346,6 +346,10 @@ namespace dnn
 
 				case Activations::Logistic:
 					algorithm = dnnl::algorithm::eltwise_logistic;
+					break;
+
+				case Activations::LogLogistic:
+					algorithm = dnnl::algorithm::eltwise_logsigmoid;
 					break;
 
 				case Activations::Pow:
@@ -721,99 +725,6 @@ namespace dnn
 			}
 			break;
 
-			case Activations::LogLogistic:
-			{
-				if (InputLayer->DstMemDesc->data.ndims == 2)
-				{
-#ifdef DNN_STOCHASTIC
-					if (batchSize == 1)
-					{
-						for (auto c = 0ull; c < C; c++)
-						{
-							Neurons[c] = LogLogistic::f(InputLayer->Neurons[c]);
-#ifndef DNN_LEAN
-							NeuronsD1[c] = Float(0);
-#endif // DNN_LEAN
-						}
-					}
-					else
-					{
-#endif
-						for_i(batchSize, LIGHT_COMPUTE, [=](size_t n)
-						{
-							const auto offsetN = n * CDHW;
-
-							for (auto c = offsetN; c < offsetN + C; c++)
-							{
-								Neurons[c] = LogLogistic::f(InputLayer->Neurons[c]);
-#ifndef DNN_LEAN
-								NeuronsD1[c] = Float(0);
-#endif // DNN_LEAN
-							}
-						});
-#ifdef DNN_STOCHASTIC
-					}
-#endif
-				}
-				else
-				{
-					const auto vecZero = VecFloat(0);
-					const auto strideH = W * VectorSize;
-#ifdef DNN_STOCHASTIC
-					if (batchSize == 1)
-					{
-						size_t offsetC, offsetH;
-
-						for (auto c = 0ull; c < PaddedC; c += VectorSize)
-						{
-							offsetC = c * HW;
-
-							for (auto h = 0ull; h < H; h++)
-							{
-								offsetH = offsetC + h * strideH;
-
-								for (size_t w = offsetH; w < offsetH + strideH; w += VectorSize)
-								{
-									LogLogistic::fVec(VecFloat().load_a(&InputLayer->Neurons[w])).store_a(&Neurons[w]);
-#ifndef DNN_LEAN
-									vecZero.store_nt(&NeuronsD1[w]);
-#endif // DNN_LEAN
-								}
-							}
-						}
-					}
-					else
-					{
-#endif
-						for_i(batchSize, MEDIUM_COMPUTE, [=](size_t n)
-						{
-							size_t offsetC, offsetH;
-
-							for (auto c = 0ull; c < PaddedC; c += VectorSize)
-							{
-								offsetC = n * PaddedCDHW + c * HW;
-
-								for (auto h = 0ull; h < H; h++)
-								{
-									offsetH = offsetC + h * strideH;
-
-									for (auto w = offsetH; w < offsetH + strideH; w += VectorSize)
-									{
-										LogLogistic::fVec(VecFloat().load_a(&InputLayer->Neurons[w])).store_a(&Neurons[w]);
-#ifndef DNN_LEAN
-										vecZero.store_nt(&NeuronsD1[w]);
-#endif // DNN_LEAN
-									}
-								}
-							}
-						});
-					}
-#ifdef DNN_STOCHASTIC
-				}
-#endif
-			}
-			break;
-
 			default:
 			{
 				auto memSrc = dnnl::memory(*InputLayer->DstMemDesc, Device.first, InputLayer->Neurons.data());
@@ -1083,71 +994,6 @@ namespace dnn
 									offsetH = offsetC + h * strideH;
 									for (auto w = offsetH; w < offsetH + strideH; w += VectorSize)
 										mul_add(Mish::dfVec(VecFloat().load_a(&Neurons[w])), VecFloat().load_a(&NeuronsD1[w]), VecFloat().load_a(&InputLayer->NeuronsD1[w])).store_a(&InputLayer->NeuronsD1[w]);
-								}
-							}
-						});
-#ifdef DNN_STOCHASTIC
-					}
-#endif
-				}
-			}
-			break;
-
-			case Activations::LogLogistic:
-			{
-				if (InputLayer->DstMemDesc->data.ndims == 2)
-				{
-#ifdef DNN_STOCHASTIC
-					if (batchSize == 1)
-					{
-						for (auto c = 0ull; c < C; c++)
-							InputLayer->NeuronsD1[c] += LogLogistic::df(Neurons[c]) * NeuronsD1[c];
-					}
-					else
-					{
-#endif
-						for_i(batchSize, LIGHT_COMPUTE, [=](size_t n)
-						{
-							const auto offsetN = n * CDHW;
-							for (auto c = offsetN; c < offsetN + C; c++)
-								InputLayer->NeuronsD1[c] += LogLogistic::df(Neurons[c]) * NeuronsD1[c];
-						});
-#ifdef DNN_STOCHASTIC
-					}
-#endif
-				}
-				else
-				{
-					const auto strideH = W * VectorSize;
-#ifdef DNN_STOCHASTIC
-					if (batchSize == 1)
-					{
-						size_t offsetC, offsetH;
-						for (auto c = 0ull; c < PaddedC; c += VectorSize)
-						{
-							offsetC = c * HW;
-							for (auto h = 0ull; h < H; h++)
-							{
-								offsetH = offsetC + h * strideH;
-								for (auto w = offsetH; w < offsetH + strideH; w += VectorSize)
-									mul_add(LogLogistic::dfVec(VecFloat().load_a(&Neurons[w])), VecFloat().load_a(&NeuronsD1[w]), VecFloat().load_a(&InputLayer->NeuronsD1[w])).store_a(&InputLayer->NeuronsD1[w]);
-							}
-						}
-					}
-					else
-					{
-#endif
-						for_i(batchSize, MEDIUM_COMPUTE, [=](size_t n)
-						{
-							size_t offsetC, offsetH;
-							for (auto c = 0ull; c < PaddedC; c += VectorSize)
-							{
-								offsetC = n * PaddedCDHW + c * HW;
-								for (auto h = 0ull; h < H; h++)
-								{
-									offsetH = offsetC + h * strideH;
-									for (auto w = offsetH; w < offsetH + strideH; w += VectorSize)
-										mul_add(LogLogistic::dfVec(VecFloat().load_a(&Neurons[w])), VecFloat().load_a(&NeuronsD1[w]), VecFloat().load_a(&InputLayer->NeuronsD1[w])).store_a(&InputLayer->NeuronsD1[w]);
 								}
 							}
 						});

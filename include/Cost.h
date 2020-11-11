@@ -1,5 +1,6 @@
 #pragma once
 #include "Layer.h"
+#include "Activation.h"
 
 namespace dnn
 {
@@ -95,8 +96,12 @@ namespace dnn
 
 		void InitializeDescriptors(const size_t batchSize) final override
 		{
-			DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ int(batchSize), int(C) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::nc));
-			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ int(batchSize), int(C) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::nc));
+			if (Format == dnnl::memory::format_tag::any)
+				Format = dnnl::memory::format_tag::nc;
+
+			DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ int(batchSize), int(C) }), dnnl::memory::data_type::f32, Format));
+			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ int(batchSize), int(C) }), dnnl::memory::data_type::f32, Format));
+			
 			isLogSoftmax = static_cast<Activation*>(InputLayer)->ActivationFunction == Activations::LogSoftmax;
 		}
 

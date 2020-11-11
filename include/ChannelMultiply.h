@@ -39,6 +39,8 @@ namespace dnn
 
 		void InitializeDescriptors(const size_t batchSize) final override
 		{
+			Format = BlockedFmt;
+
 			if (!IsBlockedDataFmt(*Inputs[0]->DstMemDesc) || !IsBlockedDataFmt(*Inputs[1]->DstMemDesc))
 				throw std::runtime_error("incompatible format used");
 

@@ -43,12 +43,23 @@ namespace dnn
 			if (InputLayer->PaddedC % Groups != 0)
 				throw std::runtime_error("input not splittable in ChannelSplit");
 
+			if (InputLayer->DstMemDesc->data.ndims == 2)
+			{
+				Format = dnnl::memory::format_tag::nc;
 
-			if (GetDataFmt(*InputLayer->DstMemDesc) != BlockedFmt)
-				throw std::runtime_error("Blocked format expected in ChannelSplit");
+				DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, Format));
+				DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, Format));
+			}
+			else
+			{
+				if (GetDataFmt(*InputLayer->DstMemDesc) != BlockedFmt)
+					throw std::runtime_error("Blocked format expected in ChannelSplit");
 
-			DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, BlockedFmt));
-			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, BlockedFmt));
+				Format = BlockedFmt;
+
+				DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, Format));
+				DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, Format));
+			}
 		}
 
 		void ForwardProp(const size_t batchSize, const bool training) final override

@@ -145,6 +145,9 @@ namespace dnn
 			DstMemDesc = std::make_unique<dnnl::memory::desc>(fwdDesc->dst_desc());
 			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(fwdDesc->dst_desc());
 
+			if (Format == dnnl::memory::format_tag::any)
+				Format = GetDataFmt(*DstMemDesc);
+
 			partSrc = InputLayer->DstMemDesc->submemory_desc({ dnnl::memory::dim(batchSize), dnnl::memory::dim(InputLayer->C / Groups), dnnl::memory::dim(InputLayer->H), dnnl::memory::dim(InputLayer->W) }, { 0, dnnl::memory::dim((Group - 1) * C), 0, 0 });
 			partDiffSrc = InputLayer->DiffDstMemDesc->submemory_desc({ dnnl::memory::dim(batchSize), dnnl::memory::dim(InputLayer->C / Groups), dnnl::memory::dim(InputLayer->H), dnnl::memory::dim(InputLayer->W) }, { 0, dnnl::memory::dim((Group - 1) * C), 0, 0 });
 
