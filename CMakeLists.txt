@@ -85,6 +85,18 @@ set(PNG_TESTS FALSE CACHE BOOL "" FORCE)
 
 project(dnn VERSION ${DNN_VERSION} LANGUAGES C CXX ASM)
 
+MACRO(DNN_TARGET_ENABLE_CXX14 target)
+  IF(MSVC)
+    TARGET_COMPILE_OPTIONS(${target} PRIVATE /arch:AVX2)
+  ELSE()
+    TARGET_COMPILE_OPTIONS(${target} PRIVATE -mavx2 -mfma -march=znver2 -fopenmp)
+  ENDIF()
+  SET_TARGET_PROPERTIES(${target} PROPERTIES
+    CXX_STANDARD 14
+    CXX_STANDARD_REQUIRED YES
+    CXX_EXTENSIONS OFF)
+ENDMACRO()
+
 MACRO(DNN_TARGET_ENABLE_CXX17 target)
   IF(MSVC)
     TARGET_COMPILE_OPTIONS(${target} PRIVATE /arch:AVX2)
@@ -230,7 +242,7 @@ IF(NOT DEFINED VECTORCLASS_SOURCE_DIR)
 # Library
 #--------------------------------------
 add_library(${PROJECT_NAME} SHARED ${libdnn_sources})
-DNN_TARGET_ENABLE_CXX17(libdnn_sources)
+DNN_TARGET_ENABLE_CXX17(${PROJECT_NAME})
 target_include_directories(${PROJECT_NAME}
      PUBLIC 
         $<INSTALL_INTERFACE:include>    
