@@ -27,7 +27,7 @@ namespace dnn
 
 		std::string GetDescription() const final override
 		{
-			std::string description = GetDescriptionHeader();
+			auto description = GetDescriptionHeader();
 
 			description.append(nwl + std::string(" Groups:") + tab + std::to_string(Groups));
 			description.append(nwl + std::string(" GroupSize:") + tab + std::to_string(GroupSize));
@@ -51,26 +51,26 @@ namespace dnn
 			if (InputLayer->DstMemDesc->data.ndims == 2)
 			{
 				if (Format == dnnl::memory::format_tag::any)
-					Format = dnnl::memory::format_tag::nc;
+					chosenFormat = dnnl::memory::format_tag::nc;
 
-				DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, Format));
-				DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, Format));
+				DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, chosenFormat));
+				DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, chosenFormat));
 			}
 			else
 			{
 				if (Format == dnnl::memory::format_tag::any)
 				{
-					Format = GetDataFmt(*InputLayer->DstMemDesc);
-					if (Format != GetDataFmt(*InputLayer->DiffDstMemDesc))
+					chosenFormat = GetDataFmt(*InputLayer->DstMemDesc);
+					if (chosenFormat != GetDataFmt(*InputLayer->DiffDstMemDesc))
 						throw std::invalid_argument("Src and Diff format are different in " + std::string(magic_enum::enum_name<LayerTypes>(LayerType)) + " layer " + Name);
 				}
 
-				DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, Format));
-				DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, Format));
+				DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, chosenFormat));
+				DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, chosenFormat));
 			}
 
-			fwdDesc = std::make_unique<dnnl::shuffle_forward::primitive_desc>(dnnl::shuffle_forward::primitive_desc(dnnl::shuffle_forward::desc(dnnl::prop_kind::forward_training, *DstMemDesc, 1, int(GroupSize)), Device.first));
-			bwdDesc = std::make_unique<dnnl::shuffle_backward::primitive_desc>(dnnl::shuffle_backward::primitive_desc(dnnl::shuffle_backward::desc(*DiffDstMemDesc, 1, int(GroupSize)), Device.first, *fwdDesc));
+			fwdDesc = std::make_unique<dnnl::shuffle_forward::primitive_desc>(dnnl::shuffle_forward::primitive_desc(dnnl::shuffle_forward::desc(dnnl::prop_kind::forward_training, *DstMemDesc, 1, int(GroupSize)), Device.engine));
+			bwdDesc = std::make_unique<dnnl::shuffle_backward::primitive_desc>(dnnl::shuffle_backward::primitive_desc(dnnl::shuffle_backward::desc(*DiffDstMemDesc, 1, int(GroupSize)), Device.engine, *fwdDesc));
 
 			fwd = std::make_unique<dnnl::shuffle_forward>(dnnl::shuffle_forward(*fwdDesc));
 			bwd = std::make_unique<dnnl::shuffle_backward>(dnnl::shuffle_backward(*bwdDesc));
@@ -78,11 +78,11 @@ namespace dnn
 
 		void ForwardProp(const size_t batchSize, const bool training) final override
 		{
-			auto srcMem = dnnl::memory(*InputLayer->DstMemDesc, Device.first, InputLayer->Neurons.data());
-			auto dstMem = dnnl::memory(*DstMemDesc, Device.first, Neurons.data());
+			auto srcMem = dnnl::memory(*InputLayer->DstMemDesc, Device.engine, InputLayer->Neurons.data());
+			auto dstMem = dnnl::memory(*DstMemDesc, Device.engine, Neurons.data());
 
-			fwd->execute(Device.second, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DST, dstMem } });
-			Device.second.wait();
+			fwd->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DST, dstMem } });
+			Device.stream.wait();
 
 #ifndef DNN_LEAN
 			if (training)
@@ -100,11 +100,11 @@ namespace dnn
 			DNN_UNREF_PAR(batchSize);
 #endif // DNN_LEAN
 
-			auto diffDstMem = dnnl::memory(*DiffDstMemDesc, Device.first, NeuronsD1.data());
-			auto diffSrcMem = dnnl::memory(*InputLayer->DiffDstMemDesc, Device.first, InputLayer->NeuronsD1.data());
+			auto diffDstMem = dnnl::memory(*DiffDstMemDesc, Device.engine, NeuronsD1.data());
+			auto diffSrcMem = dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data());
 
-			bwd->execute(Device.second, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_DIFF_DST, diffDstMem}, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
-			Device.second.wait();
+			bwd->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_DIFF_DST, diffDstMem}, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
+			Device.stream.wait();
 
 #ifdef DNN_LEAN
 			ReleaseGradient();

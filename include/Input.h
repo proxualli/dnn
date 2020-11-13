@@ -28,11 +28,9 @@ namespace dnn
 
 		void InitializeDescriptors(const size_t batchSize) final override
 		{
-			if (Format == dnnl::memory::format_tag::any)
-				Format = PlainFmt;
-
-			DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ int(batchSize), int(C), int(H), int(W) }), dnnl::memory::data_type::f32, Format));
-			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ int(batchSize), int(C), int(H), int(W) }), dnnl::memory::data_type::f32, Format));
+			chosenFormat = PlainFmt;
+			DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ int(batchSize), int(C), int(H), int(W) }), dnnl::memory::data_type::f32, chosenFormat));
+			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ int(batchSize), int(C), int(H), int(W) }), dnnl::memory::data_type::f32, chosenFormat));
 		}
 
 		void ForwardProp(const size_t batchSize, const bool training) override { }

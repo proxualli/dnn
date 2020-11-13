@@ -27,7 +27,7 @@ namespace dnn
 
 		std::string GetDescription() const final override
 		{
-			std::string description = GetDescriptionHeader();
+			auto description = GetDescriptionHeader();
 
 			description.append(nwl + std::string(" Dropout:") + tab + FloatToString(Float(1) - Keep));
 			description.append(nwl + std::string(" Scale:") + dtab + FloatToString(Scale));
@@ -47,6 +47,8 @@ namespace dnn
 
 		void InitializeDescriptors(const size_t batchSize) final override
 		{
+			chosenFormat = GetDataFmt(*InputLayer->DstMemDesc);
+
 			DstMemDesc = std::make_unique<dnnl::memory::desc>(*InputLayer->DstMemDesc);
 			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(*InputLayer->DiffDstMemDesc);
 		}

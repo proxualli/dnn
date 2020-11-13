@@ -72,11 +72,6 @@ message(STATUS "Using CMake version ${CMAKE_VERSION}")
 INCLUDE(GNUInstallDirs)
 INCLUDE(CheckCSourceCompiles)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-string(APPEND CMAKE_CXX_FLAGS " -L/opt/lib -mfma -mavx2 -march=znver2 -fopenmp")
-string(APPEND CMAKE_CXX_FLAGS " -L/opt/lib -mfma -mavx2 -march=znver2 -fopenmp")
 set(DNNL_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(DNNL_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(WITH_TURBOJPEG FALSE CACHE BOOL "" FORCE) 
@@ -89,6 +84,18 @@ set(PNG_EXECUTABLES FALSE CACHE BOOL "" FORCE)
 set(PNG_TESTS FALSE CACHE BOOL "" FORCE)
 
 project(dnn VERSION ${DNN_VERSION} LANGUAGES C CXX ASM)
+
+MACRO(DNN_TARGET_ENABLE_CXX17 target)
+  IF(MSVC)
+    TARGET_COMPILE_OPTIONS(${target} PRIVATE /arch:AVX2)
+  ELSE()
+    TARGET_COMPILE_OPTIONS(${target} PRIVATE -mavx2 -mfma -march=znver2 -fopenmp)
+  ENDIF()
+  SET_TARGET_PROPERTIES(${target} PROPERTIES
+    CXX_STANDARD 17
+    CXX_STANDARD_REQUIRED YES
+    CXX_EXTENSIONS OFF)
+ENDMACRO()
 
 set(libdnn_headers
   include/Activation.h
@@ -223,7 +230,7 @@ IF(NOT DEFINED VECTORCLASS_SOURCE_DIR)
 # Library
 #--------------------------------------
 add_library(${PROJECT_NAME} SHARED ${libdnn_sources})
-
+DNN_TARGET_ENABLE_CXX17((libdnn_sources)
 target_include_directories(${PROJECT_NAME}
      PUBLIC 
         $<INSTALL_INTERFACE:include>    
@@ -234,6 +241,10 @@ include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/libjpeg-turbo)
 include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo)
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/oneDNN/include)
 include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/oneDNN/include)
+include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/vectorclass)
+include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/vectorclass)
+include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/magic_enum/include)
+include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/magic_enum/include)
 
 # ---[ Configure JPEG
 IF(NOT TARGET libjpeg)

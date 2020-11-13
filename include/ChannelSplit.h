@@ -20,7 +20,7 @@ namespace dnn
 
 		std::string GetDescription() const final override
 		{
-			std::string description = GetDescriptionHeader();
+			auto description = GetDescriptionHeader();
 
 			description.append(nwl + std::string(" Groups:") + tab + std::to_string(Groups));
 			description.append(nwl + std::string(" Group:") + dtab + std::to_string(Group));
@@ -45,20 +45,20 @@ namespace dnn
 
 			if (InputLayer->DstMemDesc->data.ndims == 2)
 			{
-				Format = dnnl::memory::format_tag::nc;
+				chosenFormat = dnnl::memory::format_tag::nc;
 
-				DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, Format));
-				DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, Format));
+				DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, chosenFormat));
+				DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, chosenFormat));
 			}
 			else
 			{
 				if (GetDataFmt(*InputLayer->DstMemDesc) != BlockedFmt)
 					throw std::runtime_error("Blocked format expected in ChannelSplit");
 
-				Format = BlockedFmt;
+				chosenFormat = BlockedFmt;
 
-				DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, Format));
-				DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, Format));
+				DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, chosenFormat));
+				DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, chosenFormat));
 			}
 		}
 
@@ -153,22 +153,22 @@ namespace dnn
 			{
 #endif
 				for_i(batchSize, MEDIUM_COMPUTE, [=](size_t n)
+				{
+					for (auto c = 0ull; c < PaddedC; c += VectorSize)
 					{
-						for (auto c = 0ull; c < PaddedC; c += VectorSize)
+						const auto offsetC = n * InputLayer->PaddedCDHW + (c + ((Group - 1) * PaddedC)) * HW;
+						const auto offsetCHalf = n * PaddedCDHW + c * HW;
+
+						for (auto h = 0ull; h < H; h++)
 						{
-							const auto offsetC = n * InputLayer->PaddedCDHW + (c + ((Group - 1) * PaddedC)) * HW;
-							const auto offsetCHalf = n * PaddedCDHW + c * HW;
+							const auto offsetH = offsetC + h * strideH;
+							const auto offsetHHalf = offsetCHalf + h * strideH;
 
-							for (auto h = 0ull; h < H; h++)
-							{
-								const auto offsetH = offsetC + h * strideH;
-								const auto offsetHHalf = offsetCHalf + h * strideH;
-
-								for (auto w = 0ull; w < strideH; w += VectorSize)
-									(VecFloat().load_a(&InputLayer->NeuronsD1[w + offsetH]) += VecFloat().load_a(&NeuronsD1[w + offsetHHalf])).store_a(&InputLayer->NeuronsD1[w + offsetH]);
-							}
+							for (auto w = 0ull; w < strideH; w += VectorSize)
+								(VecFloat().load_a(&InputLayer->NeuronsD1[w + offsetH]) += VecFloat().load_a(&NeuronsD1[w + offsetHHalf])).store_a(&InputLayer->NeuronsD1[w + offsetH]);
 						}
-					});
+					}
+				});
 #ifdef DNN_STOCHASTIC
 			}
 #endif

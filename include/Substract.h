@@ -49,6 +49,7 @@ namespace dnn
 		{
 			DstMemDesc = std::make_unique<dnnl::memory::desc>(*InputLayer->DstMemDesc);
 			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(*InputLayer->DiffDstMemDesc);
+			chosenFormat = GetDataFmt(*DstMemDesc);
 
 			for (auto i = 1ull; i < Inputs.size(); i++)
 			{
@@ -61,19 +62,19 @@ namespace dnn
 			for (auto i = 0ull; i < Inputs.size(); i++)
 				srcsMemsDesc[i] = *Inputs[i]->DstMemDesc;
 
-			fwdDesc = std::make_unique<dnnl::sum::primitive_desc>(dnnl::sum::primitive_desc(*DstMemDesc, Scales, srcsMemsDesc, Device.first));
+			fwdDesc = std::make_unique<dnnl::sum::primitive_desc>(dnnl::sum::primitive_desc(*DstMemDesc, Scales, srcsMemsDesc, Device.engine));
 
-			fwdArgs = std::unordered_map<int, dnnl::memory>{ { DNNL_ARG_DST, dnnl::memory(*DstMemDesc, Device.first, Neurons.data()) } };
+			fwdArgs = std::unordered_map<int, dnnl::memory>{ { DNNL_ARG_DST, dnnl::memory(*DstMemDesc, Device.engine, Neurons.data()) } };
 			for (auto i = 0ull; i < Inputs.size(); i++)
-				fwdArgs.insert({ DNNL_ARG_MULTIPLE_SRC + int(i), dnnl::memory(srcsMemsDesc[i], Device.first, Inputs[i]->Neurons.data()) });
+				fwdArgs.insert({ DNNL_ARG_MULTIPLE_SRC + int(i), dnnl::memory(srcsMemsDesc[i], Device.engine, Inputs[i]->Neurons.data()) });
 
 			fwd = std::make_unique<dnnl::sum>(dnnl::sum(*fwdDesc));
 		}
 
 		void ForwardProp(const size_t batchSize, const bool training)  final override
 		{
-			fwd->execute(Device.second, fwdArgs);
-			Device.second.wait();
+			fwd->execute(Device.stream, fwdArgs);
+			Device.stream.wait();
 
 #ifndef DNN_LEAN
 			if (training)
@@ -116,28 +117,28 @@ namespace dnn
 				if (Inputs.size() == 2)
 				{
 					for_i(batchSize, LIGHT_COMPUTE, [=](size_t b)
+					{
+						const auto start = b * PaddedCDHW;
+						const auto end = start + CDHW;
+						for (auto n = start; n < end; n++)
 						{
-							const auto start = b * PaddedCDHW;
-							const auto end = start + CDHW;
-							for (auto n = start; n < end; n++)
-							{
-								Inputs[0]->NeuronsD1[n] += NeuronsD1[n];
-								Inputs[1]->NeuronsD1[n] -= NeuronsD1[n];
-							}
-						});
+							Inputs[0]->NeuronsD1[n] += NeuronsD1[n];
+							Inputs[1]->NeuronsD1[n] -= NeuronsD1[n];
+						}
+					});
 				}
 				else
 				{
 					for_i(batchSize, LIGHT_COMPUTE, [=](size_t b)
-						{
-							const auto start = b * PaddedCDHW;
-							const auto end = start + CDHW;
+					{
+						const auto start = b * PaddedCDHW;
+						const auto end = start + CDHW;
+						for (auto n = start; n < end; n++)
+							Inputs[0]->NeuronsD1[n] += NeuronsD1[n];
+						for (auto i = 1ull; i < Inputs.size(); i++)
 							for (auto n = start; n < end; n++)
-								Inputs[0]->NeuronsD1[n] += NeuronsD1[n];
-							for (auto i = 1ull; i < Inputs.size(); i++)
-								for (auto n = start; n < end; n++)
-									Inputs[i]->NeuronsD1[n] -= NeuronsD1[n];
-						});
+								Inputs[i]->NeuronsD1[n] -= NeuronsD1[n];
+					});
 				}
 #ifdef DNN_STOCHASTIC
 			}

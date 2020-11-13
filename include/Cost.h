@@ -96,11 +96,9 @@ namespace dnn
 
 		void InitializeDescriptors(const size_t batchSize) final override
 		{
-			if (Format == dnnl::memory::format_tag::any)
-				Format = dnnl::memory::format_tag::nc;
-
-			DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ int(batchSize), int(C) }), dnnl::memory::data_type::f32, Format));
-			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ int(batchSize), int(C) }), dnnl::memory::data_type::f32, Format));
+			chosenFormat = dnnl::memory::format_tag::nc;
+			DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ int(batchSize), int(C) }), dnnl::memory::data_type::f32, chosenFormat));
+			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ int(batchSize), int(C) }), dnnl::memory::data_type::f32, chosenFormat));
 			
 			isLogSoftmax = static_cast<Activation*>(InputLayer)->ActivationFunction == Activations::LogSoftmax;
 		}

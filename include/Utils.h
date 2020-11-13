@@ -106,7 +106,7 @@ namespace dnn
 
 	constexpr auto DivUp(const size_t& c) noexcept { return (((c - 1) / VectorSize) + 1) * VectorSize; }
 	constexpr auto IsPlainDataFmt(const dnnl::memory::desc& md) noexcept { return md.data.format_kind == dnnl_blocked && md.data.format_desc.blocking.inner_nblks == 0; }
-	constexpr auto IsBlockedDataFmt(const dnnl::memory::desc& md) noexcept { return md.data.format_kind == dnnl_blocked && md.data.format_desc.blocking.inner_nblks == 1 && md.data.format_desc.blocking.inner_idxs[0] == 1 && md.data.format_desc.blocking.inner_blks[0] == VectorSize; }
+	constexpr auto IsBlockedDataFmt(const dnnl::memory::desc& md) noexcept { return md.data.format_kind == dnnl_blocked && md.data.format_desc.blocking.inner_nblks == 1 && md.data.format_desc.blocking.inner_idxs[0] == 1 && (md.data.format_desc.blocking.inner_blks[0] == 4 || md.data.format_desc.blocking.inner_blks[0] == 8 || md.data.format_desc.blocking.inner_blks[0] == 16); }
 	constexpr auto GetDataFmt(const dnnl::memory::desc& md) noexcept
 	{
 		if (md.data.format_kind == dnnl_blocked)
@@ -116,10 +116,17 @@ namespace dnn
 			else 
 				if (md.data.format_desc.blocking.inner_nblks == 1 && md.data.format_desc.blocking.inner_idxs[0] == 1)
 				{
-					if (md.data.format_desc.blocking.inner_blks[0] == VectorSize)
-						return BlockedFmt;
-					else if (md.data.format_desc.blocking.inner_blks[0] == 4)
+					switch (md.data.format_desc.blocking.inner_blks[0])
+					{
+					case 4:
 						return dnnl::memory::format_tag::nChw4c;
+					case 8:
+						return dnnl::memory::format_tag::nChw8c;
+					case 16:
+						return dnnl::memory::format_tag::nChw16c;
+					default:
+						return dnnl::memory::format_tag::undef;
+					}
 				}
 		}
 

@@ -161,7 +161,7 @@ namespace dnn
 			Name(name),
 			DataProv(dataprovider),
 			Engine(dnnl::engine(dnnl::engine::kind::cpu, 0)),
-			Device({ Engine, dnnl::stream(Engine) }),
+			Device(dnn::Device(Engine, dnnl::stream(Engine))),
 			Format(dnnl::memory::format_tag::any),
 			PersistOptimizer(false),
 			DisableLocking(true),

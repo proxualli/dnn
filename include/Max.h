@@ -26,7 +26,7 @@ namespace dnn
 
 		std::string GetDescription() const final override
 		{
-			std::string description = GetDescriptionHeader();
+			auto description = GetDescriptionHeader();
 
 			return description;
 		}
@@ -45,6 +45,7 @@ namespace dnn
 		{
 			DstMemDesc = std::make_unique<dnnl::memory::desc>(*InputLayer->DstMemDesc);
 			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(*InputLayer->DiffDstMemDesc);
+			chosenFormat = GetDataFmt(*DstMemDesc);
 
 			for (auto i = 1ull; i < Inputs.size(); i++)
 			{
@@ -53,14 +54,14 @@ namespace dnn
 					throw std::invalid_argument("Incompatible memory formats in Max layer");
 			}
 
-			fwdDesc = std::make_unique<dnnl::binary::primitive_desc>(dnnl::binary::primitive_desc(dnnl::binary::desc(dnnl::algorithm::binary_max, *Inputs[0]->DstMemDesc, *Inputs[1]->DstMemDesc, *InputLayer->DstMemDesc), Device.first));
+			fwdDesc = std::make_unique<dnnl::binary::primitive_desc>(dnnl::binary::primitive_desc(dnnl::binary::desc(dnnl::algorithm::binary_max, *Inputs[0]->DstMemDesc, *Inputs[1]->DstMemDesc, *InputLayer->DstMemDesc), Device.engine));
 			fwd = std::make_unique<dnnl::binary>(dnnl::binary(*fwdDesc));
 		}
 
 		void ForwardProp(const size_t batchSize, const bool training)  final override
 		{
-			fwd->execute(Device.second, std::unordered_map<int, dnnl::memory>{ { DNNL_ARG_SRC_0, dnnl::memory(*Inputs[0]->DstMemDesc, Device.first, InputLayer->Neurons.data()) }, { DNNL_ARG_SRC_1, dnnl::memory(*Inputs[1]->DstMemDesc, Device.first, InputLayer->Neurons.data()) }, { DNNL_ARG_DST, dnnl::memory(*DstMemDesc, Device.first, Neurons.data()) }});
-			Device.second.wait();
+			fwd->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ { DNNL_ARG_SRC_0, dnnl::memory(*Inputs[0]->DstMemDesc, Device.engine, InputLayer->Neurons.data()) }, { DNNL_ARG_SRC_1, dnnl::memory(*Inputs[1]->DstMemDesc, Device.engine, InputLayer->Neurons.data()) }, { DNNL_ARG_DST, dnnl::memory(*DstMemDesc, Device.engine, Neurons.data()) }});
+			Device.stream.wait();
 
 #ifndef DNN_LEAN
 			if (training)

@@ -39,6 +39,7 @@ namespace dnn
 		{
 			DstMemDesc = std::make_unique<dnnl::memory::desc>(*InputLayer->DstMemDesc);
 			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(*InputLayer->DiffDstMemDesc);
+			chosenFormat = GetDataFmt(*DstMemDesc);
 
 			for (auto i = 1ull; i < Inputs.size(); i++)
 			{
