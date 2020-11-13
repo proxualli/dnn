@@ -230,7 +230,7 @@ IF(NOT DEFINED VECTORCLASS_SOURCE_DIR)
 # Library
 #--------------------------------------
 add_library(${PROJECT_NAME} SHARED ${libdnn_sources})
-DNN_TARGET_ENABLE_CXX17((libdnn_sources)
+DNN_TARGET_ENABLE_CXX17(libdnn_sources)
 target_include_directories(${PROJECT_NAME}
      PUBLIC 
         $<INSTALL_INTERFACE:include>    
