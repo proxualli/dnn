@@ -243,7 +243,6 @@ IF(NOT DEFINED VECTORCLASS_SOURCE_DIR)
 # Library
 #--------------------------------------
 add_library(${PROJECT_NAME} STATIC ${libdnn_sources})
-add_subdirectory(deps)
 DNN_TARGET_ENABLE_CXX17(${PROJECT_NAME})
 target_include_directories(${PROJECT_NAME}
      PUBLIC 
