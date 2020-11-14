@@ -31,7 +31,7 @@ set(PNG_STATIC TRUE CACHE BOOL "" FORCE)
 set(PNG_EXECUTABLES FALSE CACHE BOOL "" FORCE)
 set(PNG_TESTS FALSE CACHE BOOL "" FORCE)
 
-project(dnn VERSION ${DNN_VERSION} LANGUAGES C CXX ASM)
+project(${PROJECT_NAME} VERSION ${DNN_VERSION} LANGUAGES C CXX ASM)
 
 MACRO(DNN_TARGET_ENABLE_CXX14 target)
   IF(MSVC)
@@ -57,7 +57,7 @@ MACRO(DNN_TARGET_ENABLE_CXX17 target)
     CXX_EXTENSIONS OFF)
 ENDMACRO()
 
-set(libdnn_headers
+set(dnn_headers
   include/Activation.h
   include/Add.h
   include/AlignedAllocator.h
@@ -99,14 +99,18 @@ set(libdnn_headers
   include/Scripts.h
   include/stdafx.h
   include/Substract.h
-  include/targetver.h
   include/Utils.h
+IF(MSVC)
+  include/targetver.h
+ENDIF()
 )
 
-set(libdnn_sources
-  ${libdnn_headers}
+set(dnn_sources
+  ${dnn_headers}
   src/dllmain.cpp
+IF(MSVC)
   src/stdafx.cpp
+ENDIF()
 )
 
 # ---[ Download deps
@@ -189,7 +193,7 @@ IF(NOT DEFINED VECTORCLASS_SOURCE_DIR)
 
 # Library
 #--------------------------------------
-add_library(${PROJECT_NAME} SHARED ${libdnn_sources})
+add_library(${PROJECT_NAME} STATIC ${dnn_sources})
 DNN_TARGET_ENABLE_CXX17(${PROJECT_NAME})
 target_include_directories(${PROJECT_NAME}
      PUBLIC 
