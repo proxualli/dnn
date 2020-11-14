@@ -167,6 +167,7 @@ SET(DNN_DEPENDENCIES_SOURCE_DIR ${CMAKE_SOURCE_DIR}/deps
   CACHE PATH "Confu-style dependencies source directory")
 SET(DNN_DEPENDENCIES_BINARY_DIR ${CMAKE_BINARY_DIR}/deps
   CACHE PATH "Confu-style dependencies binary directory")
+SET(ZLIB_DEPS_DIR ${CMAKE_BINARY_DIR} PARENT_SCOPE)
 
 IF(NOT DEFINED ZLIB_SOURCE_DIR)
   MESSAGE(STATUS "Downloading ZLib to ${DNN_DEPENDENCIES_SOURCE_DIR}/zlib-1.2.11 (define ZLIB_SOURCE_DIR to avoid it)")
@@ -269,8 +270,8 @@ IF(NOT TARGET zlib)
     "${ZLIB_SOURCE_DIR}"
     "${DNN_DEPENDENCIES_BINARY_DIR}/zlib-1.2.11")
 ENDIF()
-add_subdirectory(deps)
-include_directories(${PROJECT_NAME} ${CMAKE_CURRENT_BINARY_DIR} PARENT_SCOPE)
+ADD_SUBDIRECTORY(deps)
+include_directories(${PROJECT_NAME} ${ZLIB_DEPS_DIR})
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC zlib)
 
 # ---[ Configure PNG
