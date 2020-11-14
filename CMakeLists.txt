@@ -263,6 +263,14 @@ include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/vectorclass)
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/magic_enum/include)
 include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/magic_enum/include)
 
+# ---[ Configure ZLIB
+IF(NOT TARGET zlib)
+  ADD_SUBDIRECTORY(
+    "${ZLIB_SOURCE_DIR}"
+    "${DNN_DEPENDENCIES_BINARY_DIR}/zlib-1.2.11")
+ENDIF()
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC zlib)
+
 # ---[ Configure PNG
 IF(NOT TARGET libpng)
   ADD_SUBDIRECTORY(
