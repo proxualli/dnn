@@ -36,7 +36,7 @@ add_compile_definitions(DNN_EXPORTS DNN_CACHE_PRIMITIVES DNN_OMP cimg_use_cpp11 
 project(dnn VERSION ${DNN_VERSION} LANGUAGES CXX)
 
 MACRO(DNN_TARGET_ENABLE_CXX17 target)
-  IF(MSVC)
+  IF(WIN32 OR MSVC)
     TARGET_COMPILE_OPTIONS(${target} PRIVATE /arch:AVX2 /openmp:experimental)
   ELSE()
     TARGET_COMPILE_OPTIONS(${target} PRIVATE -mavx2 -mfma -march=znver2 -fopenmp)
@@ -46,6 +46,27 @@ MACRO(DNN_TARGET_ENABLE_CXX17 target)
     CXX_STANDARD_REQUIRED YES
     CXX_EXTENSIONS OFF)
 ENDMACRO()
+
+function(find_static_library LIB_NAME OUT)
+    if (WIN32 OR MSVC)
+        set(CMAKE_FIND_LIBRARY_SUFFIXES ".lib")
+    elseif (UNIX)
+        set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
+    endif()      
+
+    find_library(
+        FOUND_${LIB_NAME}_STATIC
+        ${LIB_NAME}
+        )
+
+    if (FOUND_${LIB_NAME}_STATIC)
+        get_filename_component(ABS_FILE ${FOUND_${LIB_NAME}_STATIC} ABSOLUTE)
+    else()
+        message(SEND_ERROR "Unable to find library ${LIB_NAME}")
+    endif()
+
+    set(${OUT} ${ABS_FILE} PARENT_SCOPE)
+endfunction()
 
 set(libdnn_headers
   include/Activation.h
@@ -208,6 +229,7 @@ IF(NOT TARGET zlib)
     "${ZLIB_SOURCE_DIR}"
     "${DNN_DEPENDENCIES_BINARY_DIR}/zlib-1.2.11")
 ENDIF()
+find_static_library(zlib ZLIB)
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC zlib)
 
 # ---[ Configure PNG
@@ -217,7 +239,8 @@ IF(NOT TARGET libpng)
     "${DNN_DEPENDENCIES_BINARY_DIR}/libpng")
 ENDIF()
 include_directories(libpng ${ZLIB_INCLUDE_DIR})
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC libpng)
+find_static_library(libpng libpng-LIB)
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC ${libpng-LIB})
 
 # ---[ Configure JPEG
 IF(NOT TARGET libjpeg)
