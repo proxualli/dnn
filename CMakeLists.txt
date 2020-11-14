@@ -31,6 +31,8 @@ set(PNG_STATIC TRUE CACHE BOOL "" FORCE)
 set(PNG_EXECUTABLES FALSE CACHE BOOL "" FORCE)
 set(PNG_TESTS FALSE CACHE BOOL "" FORCE)
 
+add_compile_definitions(-Dcimg_use_cpp11 -Dcimg_use_jpeg -Dcimg_use_png -Dcimg_use_zlib)
+
 project(dnn VERSION ${DNN_VERSION} LANGUAGES CXX)
 
 MACRO(DNN_TARGET_ENABLE_CXX17 target)
