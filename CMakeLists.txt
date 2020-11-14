@@ -31,7 +31,7 @@ set(PNG_STATIC TRUE CACHE BOOL "" FORCE)
 set(PNG_EXECUTABLES FALSE CACHE BOOL "" FORCE)
 set(PNG_TESTS FALSE CACHE BOOL "" FORCE)
 
-project(dnn VERSION ${DNN_VERSION} LANGUAGES C CXX)
+project(dnn VERSION ${DNN_VERSION} LANGUAGES CXX)
 
 MACRO(DNN_TARGET_ENABLE_CXX17 target)
   IF(MSVC)
@@ -177,7 +177,7 @@ IF(NOT DEFINED VECTORCLASS_SOURCE_DIR)
 
 # Library
 #--------------------------------------
-add_library(${PROJECT_NAME} STATIC ${libdnn_sources})
+add_library(${PROJECT_NAME} SHARED ${libdnn_sources})
 DNN_TARGET_ENABLE_CXX17(${PROJECT_NAME})
 target_include_directories(${PROJECT_NAME}
      PUBLIC 
