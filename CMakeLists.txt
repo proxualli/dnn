@@ -208,7 +208,6 @@ IF(NOT TARGET zlib)
     "${ZLIB_SOURCE_DIR}"
     "${DNN_DEPENDENCIES_BINARY_DIR}/zlib-1.2.11")
 ENDIF()
-find_static_library(zlib ZLIB)
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC zlib)
 
 # ---[ Configure PNG
