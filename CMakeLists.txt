@@ -199,6 +199,8 @@ include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/vectorclass)
 include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/vectorclass)
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/magic_enum/include)
 include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/magic_enum/include)
+include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/CImg)
+include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/CImg)
 
 # ---[ Configure ZLIB
 IF(NOT TARGET zlib)
