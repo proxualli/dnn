@@ -250,8 +250,8 @@ target_include_directories(${PROJECT_NAME}
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
 
-include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/zlib)
-include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/zlib)
+include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/zlib-1.2.11)
+include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/zlib-1.2.11)
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/libpng)
 include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/libpng)
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/libjpeg-turbo)
@@ -269,7 +269,6 @@ IF(NOT TARGET zlib)
     "${ZLIB_SOURCE_DIR}"
     "${DNN_DEPENDENCIES_BINARY_DIR}/zlib-1.2.11")
 ENDIF()
-include_directories(${PROJECT_NAME} ${ZLIB_INCLUDE_DIR})
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC zlib)
 
 # ---[ Configure PNG
