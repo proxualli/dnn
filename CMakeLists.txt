@@ -45,7 +45,7 @@ MACRO(DNN_TARGET_ENABLE_CXX17 target)
     CXX_EXTENSIONS OFF)
 ENDMACRO()
 
-set(dnn_headers
+set(libdnn_headers
   include/Activation.h
   include/Add.h
   include/AlignedAllocator.h
@@ -93,8 +93,8 @@ IF(MSVC)
 ENDIF()
 )
 
-set(dnn_sources
-  ${dnn_headers}
+set(libdnn_sources
+  ${libdnn_headers}
   src/dllmain.cpp
 IF(MSVC)
   src/stdafx.cpp
@@ -181,7 +181,7 @@ IF(NOT DEFINED VECTORCLASS_SOURCE_DIR)
 
 # Library
 #--------------------------------------
-add_library(${PROJECT_NAME} STATIC ${dnn_sources})
+add_library(${PROJECT_NAME} STATIC ${libdnn_sources})
 DNN_TARGET_ENABLE_CXX17(${PROJECT_NAME})
 target_include_directories(${PROJECT_NAME}
      PUBLIC 
