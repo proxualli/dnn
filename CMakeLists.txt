@@ -88,17 +88,13 @@ set(libdnn_headers
   include/stdafx.h
   include/Substract.h
   include/Utils.h
-IF(MSVC)
   include/targetver.h
-ENDIF()
 )
 
 set(libdnn_sources
   ${libdnn_headers}
   src/dllmain.cpp
-IF(MSVC)
   src/stdafx.cpp
-ENDIF()
 )
 
 # ---[ Download deps
