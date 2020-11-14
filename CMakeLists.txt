@@ -250,6 +250,10 @@ target_include_directories(${PROJECT_NAME}
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
 
+include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/zlib)
+include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/zlib)
+include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/libpng)
+include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/libpng)
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/libjpeg-turbo)
 include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo)
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/oneDNN/include)
@@ -258,6 +262,21 @@ include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/vectorclass)
 include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/vectorclass)
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/magic_enum/include)
 include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/magic_enum/include)
+
+# ---[ Configure ZLIB
+IF(NOT TARGET zlib)
+  ADD_SUBDIRECTORY(
+    "${ZLIB_SOURCE_DIR}"
+    "${DNN_DEPENDENCIES_BINARY_DIR}/zlib-1.2.11")
+ENDIF()
+
+# ---[ Configure PNG
+IF(NOT TARGET libpng)
+  ADD_SUBDIRECTORY(
+    "${PNG_SOURCE_DIR}"
+    "${DNN_DEPENDENCIES_BINARY_DIR}/libpng")
+ENDIF()
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC libpng)
 
 # ---[ Configure JPEG
 IF(NOT TARGET libjpeg)
