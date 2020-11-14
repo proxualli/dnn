@@ -250,6 +250,7 @@ target_include_directories(${PROJECT_NAME}
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
 
+include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/zlib)
 include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/zlib)
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/libpng)
 include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/libpng)
@@ -268,6 +269,7 @@ IF(NOT TARGET zlib)
     "${ZLIB_SOURCE_DIR}"
     "${DNN_DEPENDENCIES_BINARY_DIR}/zlib-1.2.11")
 ENDIF()
+TARGET_LINK_LIBRARIES(libpng PUBLIC zlib)
 
 # ---[ Configure PNG
 IF(NOT TARGET libpng)
