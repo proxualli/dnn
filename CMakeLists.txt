@@ -179,7 +179,7 @@ IF(NOT DEFINED VECTORCLASS_SOURCE_DIR)
 
 # Library
 #--------------------------------------
-add_library(${PROJECT_NAME} SHARED ${libdnn_sources})
+add_library(${PROJECT_NAME} STATIC ${libdnn_sources})
 DNN_TARGET_ENABLE_CXX17(${PROJECT_NAME})
 target_include_directories(${PROJECT_NAME}
      PUBLIC 
@@ -217,7 +217,7 @@ IF(NOT TARGET libpng)
     "${DNN_DEPENDENCIES_BINARY_DIR}/libpng")
 ENDIF()
 include_directories(libpng ${ZLIB_INCLUDE_DIR})
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC libpng16.a)
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC libpng)
 
 # ---[ Configure JPEG
 IF(NOT TARGET libjpeg)
@@ -225,7 +225,7 @@ IF(NOT TARGET libjpeg)
     "${JPEG_SOURCE_DIR}"
     "${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo")
 ENDIF()
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC libjpeg.a)
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC libjpeg)
 
 # ---[ Configure oneDNN
 IF(NOT TARGET oneDNN)
