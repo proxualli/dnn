@@ -49,8 +49,10 @@
 #define MAGIC_ENUM_RANGE_MIN 0
 #define MAGIC_ENUM_RANGE_MAX 255
 
-#include "../deps/magic_enum/include/magic_enum.hpp"
-#include "../deps/oneDNN/include/dnnl.hpp"
+#include "magic_enum.hpp"
+
+#include "dnnl.hpp"
+#include "dnnl_debug.h"
 
 #include "AlignedAllocator.h"
 #include "ParallelFor.h"
@@ -224,10 +226,10 @@ namespace dnn
 		return static_cast<std::streamsize>(end - start);
 	}
 
-	inline static std::string StringToLower(std::string s)
+	inline static std::string StringToLower(std::string text)
 	{
-		std::transform(s.begin(), s.end(), s.begin(), ::tolower);
-		return s;
+		std::transform(text.begin(), text.end(), text.begin(), ::tolower);
+		return text;
 	};
 
 	static const bool IsStringBool(std::string text)
@@ -287,11 +289,11 @@ namespace dnn
 	}
 
 	// From Stack Overflow https://stackoverflow.com/questions/216823/whats-the-best-way-to-trim-stdstring
-	static auto Trim(std::string s)
+	static auto Trim(std::string text)
 	{
-		s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) { return !std::isspace(ch); }));
-		s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) { return !std::isspace(ch); }).base(), s.end());
-		return s;
+		text.erase(text.begin(), std::find_if(text.begin(), text.end(), [](int ch) { return !std::isspace(ch); }));
+		text.erase(std::find_if(text.rbegin(), text.rend(), [](int ch) { return !std::isspace(ch); }).base(), text.end());
+		return text;
 	}
 
 	// from Stack Overflow https://stackoverflow.com/questions/6089231/getting-std-ifstream-to-handle-lf-cr-and-crlf
