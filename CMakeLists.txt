@@ -6,7 +6,19 @@ INCLUDE(GNUInstallDirs)
 INCLUDE(CheckCSourceCompiles)
 INCLUDE(CheckCXXSourceCompiles)
 
-project(dnn VERSION ${DNN_VERSION} LANGUAGES CXX)
+set(DNN_VERSION_MAJOR 1)
+set(DNN_VERSION_MINOR 0)
+set(DNN_VERSION_PATCH 0)
+set(DNN_VERSION_NOTE "")
+
+set(DNN_VERSION ${DNN_VERSION_MAJOR}.${DNN_VERSION_MINOR}.${DNN_VERSION_PATCH})
+math(EXPR DNN_VERSION_NUMBER "10000*${DNN_VERSION_MAJOR} + 100*${DNN_VERSION_MINOR} + ${DNN_VERSION_PATCH}")
+
+#####
+# Enables project() command manages VERSION variables.
+if(POLICY CMP0048)
+    cmake_policy(SET CMP0048 NEW)
+endif(POLICY CMP0048)
 
 #####
 # Enables link_directories() treat paths relative
@@ -15,12 +27,7 @@ if(POLICY CMP0015)
     cmake_policy(SET CMP0015 NEW)
 endif(POLICY CMP0015)
 
-#####
-# Enables project() command manages VERSION variables.
-if(POLICY CMP0048)
-    cmake_policy(SET CMP0048 NEW)
-endif(POLICY CMP0048)
-
+project(dnn VERSION ${DNN_VERSION} LANGUAGES CXX)
 
 #####
 # Change the default build type from Debug to Release, while still
@@ -41,14 +48,6 @@ else(NOT CMAKE_BUILD_TYPE)
         message("==========================================================================================")
     endif(CMAKE_BUILD_TYPE STREQUAL "Debug")
 endif(NOT CMAKE_BUILD_TYPE)
-
-set(DNN_VERSION_MAJOR 1)
-set(DNN_VERSION_MINOR 0)
-set(DNN_VERSION_PATCH 0)
-set(DNN_VERSION_NOTE "")
-
-set(DNN_VERSION ${DNN_VERSION_MAJOR}.${DNN_VERSION_MINOR}.${DNN_VERSION_PATCH})
-math(EXPR DNN_VERSION_NUMBER "10000*${DNN_VERSION_MAJOR} + 100*${DNN_VERSION_MINOR} + ${DNN_VERSION_PATCH}")
 
 option(BUILD_SHARED_LIBS "Build shared library" OFF)
 option(BUILD_STATIC_LIBS "Build static library" ON)
