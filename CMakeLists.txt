@@ -219,8 +219,8 @@ if(BUILD_STATIC_LIBS)
   target_include_directories(${PROJECT_NAME}
        PUBLIC
           ${PROJECT_NAME} PUBLIC
-          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/${PROJECT_NAME}>> 
-          $<INSTALL_INTERFACE:include/${PROJECT_NAME}>)
+          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>> 
+          $<INSTALL_INTERFACE:include>)
 endif()
 
 if(BUILD_SHARED_LIBS)
@@ -234,8 +234,8 @@ if(BUILD_SHARED_LIBS)
   target_include_directories(${PROJECT_NAME}
        PRIVATE
           ${PROJECT_NAME} PRIVATE
-          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/${PROJECT_NAME}>> 
-          $<INSTALL_INTERFACE:include/${PROJECT_NAME}>)
+          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>> 
+          $<INSTALL_INTERFACE:include>)
 endif()
 
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/zlib-1.2.11)
