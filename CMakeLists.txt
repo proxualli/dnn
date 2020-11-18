@@ -219,7 +219,7 @@ if(BUILD_STATIC_LIBS)
   target_include_directories(${PROJECT_NAME}
        PUBLIC
           ${PROJECT_NAME} PUBLIC
-          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>> 
+          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> 
           $<INSTALL_INTERFACE:include>)
 endif()
 
@@ -234,7 +234,7 @@ if(BUILD_SHARED_LIBS)
   target_include_directories(${PROJECT_NAME}
        PRIVATE
           ${PROJECT_NAME} PRIVATE
-          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>> 
+          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> 
           $<INSTALL_INTERFACE:include>)
 endif()
 
