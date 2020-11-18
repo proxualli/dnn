@@ -4,6 +4,7 @@ message(STATUS "Using CMake version ${CMAKE_VERSION}")
 
 INCLUDE(GNUInstallDirs)
 INCLUDE(CheckCSourceCompiles)
+INCLUDE(CheckCXXSourceCompiles)
 
 project(dnn VERSION ${DNN_VERSION} LANGUAGES CXX)
 
@@ -49,9 +50,8 @@ set(DNN_VERSION_NOTE "")
 set(DNN_VERSION ${DNN_VERSION_MAJOR}.${DNN_VERSION_MINOR}.${DNN_VERSION_PATCH})
 math(EXPR DNN_VERSION_NUMBER "10000*${DNN_VERSION_MAJOR} + 100*${DNN_VERSION_MINOR} + ${DNN_VERSION_PATCH}")
 
-option(USE_OMP "Build dnn with OMP library support" ON)
-option(BUILD_SHARED_LIBS "Build shared library" ON)
-option(BUILD_STATIC_LIBS "Build static library" OFF)
+option(BUILD_SHARED_LIBS "Build shared library" OFF)
+option(BUILD_STATIC_LIBS "Build static library" ON)
 
 ####
 # Create the library target
