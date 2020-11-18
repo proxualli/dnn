@@ -1,9 +1,9 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.5.0 FATAL_ERROR)
 
-PROJECT(oneDNN-download NONE)
+PROJECT(dnnl-download NONE)
 
 INCLUDE(ExternalProject)
-ExternalProject_Add(oneDNN
+ExternalProject_Add(dnnl
 	GIT_REPOSITORY https://github.com/oneapi-src/oneDNN.git
 	GIT_TAG master
 	SOURCE_DIR "${DNN_DEPENDENCIES_SOURCE_DIR}/oneDNN"

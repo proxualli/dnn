@@ -245,6 +245,8 @@ include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/libjpeg-turbo)
 include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo)
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/oneDNN/include)
 include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/oneDNN/include)
+include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/oneDNN/src)
+include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/oneDNN/src)
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/vectorclass)
 include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/vectorclass)
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/magic_enum/include)
@@ -278,12 +280,12 @@ ENDIF()
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} PRIVATE	libjpeg)
 
 # ---[ Configure oneDNN
-IF(NOT TARGET oneDNN)
+IF(NOT TARGET dnnl)
   ADD_SUBDIRECTORY(
     "${ONEDNN_SOURCE_DIR}"
     "${DNN_DEPENDENCIES_BINARY_DIR}/oneDNN")
 ENDIF()
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} PRIVATE	oneDNN)
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} PRIVATE	dnnl)
 
 # ---[ Configure VectorClass
 IF(NOT TARGET vectorclass)
