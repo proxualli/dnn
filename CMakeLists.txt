@@ -35,6 +35,9 @@ add_compile_definitions(DNN_EXPORTS DNN_CACHE_PRIMITIVES DNN_OMP cimg_use_cpp11 
 
 project(dnn VERSION ${DNN_VERSION} LANGUAGES CXX)
 
+option(BUILD_SHARED_LIBS "Build shared library" ON)
+option(BUILD_STATIC_LIBS "Build static library" OFF)
+
 MACRO(DNN_TARGET_ENABLE_CXX17 target)
   IF(WIN32 OR MSVC)
     TARGET_COMPILE_OPTIONS(${target} PRIVATE /arch:AVX2 /openmp:experimental)
@@ -177,8 +180,7 @@ IF(NOT DEFINED VECTORCLASS_SOURCE_DIR)
   SET(CIMG_SOURCE_DIR "${DNN_DEPENDENCIES_SOURCE_DIR}/CImg" CACHE STRING "CImg source directory")
  ENDIF()
 
-# Library
-#--------------------------------------
+if(BUILD_STATIC_LIBS)
 add_library(${PROJECT_NAME} STATIC ${libdnn_sources})
 DNN_TARGET_ENABLE_CXX17(${PROJECT_NAME})
 target_include_directories(${PROJECT_NAME}
@@ -186,6 +188,17 @@ target_include_directories(${PROJECT_NAME}
         $<INSTALL_INTERFACE:include>    
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
+endif()
+
+if(BUILD_SHARED_LIBS)
+add_library(${PROJECT_NAME} SHARED ${libdnn_sources})
+DNN_TARGET_ENABLE_CXX17(${PROJECT_NAME})
+target_include_directories(${PROJECT_NAME}
+     PRIVATE 
+        $<INSTALL_INTERFACE:include>    
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+endif()
+
 
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/zlib-1.2.11)
 include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/zlib-1.2.11)
