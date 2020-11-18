@@ -199,12 +199,11 @@ if(BUILD_SHARED_LIBS)
   add_library(${PROJECT_NAME} SHARED ${libdnn_sources})
   DNN_TARGET_ENABLE_CXX17(${PROJECT_NAME})
   target_include_directories(${PROJECT_NAME}
-       PUBLIC
+       PRIVATE
          $<INSTALL_INTERFACE:include>    
          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   )
 endif()
-
 
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/zlib-1.2.11)
 include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/zlib-1.2.11)
