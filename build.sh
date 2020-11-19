@@ -1,4 +1,5 @@
 #!/bin/sh
+sudo apt-get install nasm
 mkdir build
 cd build
 cmake -G Ninja ..
