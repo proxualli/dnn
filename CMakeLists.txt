@@ -249,6 +249,8 @@ include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/magic_enum/include)
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/CImg)
 include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/CImg)
 
+add_library(png)
+
 # ---[ Configure ZLIB
 IF(NOT TARGET zlib)
   ADD_SUBDIRECTORY(
