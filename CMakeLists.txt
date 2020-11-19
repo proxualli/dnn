@@ -6,17 +6,6 @@ INCLUDE(GNUInstallDirs)
 INCLUDE(CheckCSourceCompiles)
 INCLUDE(CheckCXXSourceCompiles)
 
-enable_language(ASM_NASM)
-set(CMAKE_ASM_NASM_OBJECT_FORMAT elf64)
-set(CMAKE_ASM_NASM_COMPILE_OBJECT "<CMAKE_ASM_NASM_COMPILER> <INCLUDES> \
-    <FLAGS> -f ${CMAKE_ASM_NASM_OBJECT_FORMAT} -o <OBJECT> <SOURCE>")
-
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(CMAKE_ASM_NASM_FLAGS "${ASM_NASM_FLAGS} -g -Fdwarf")
-else()
-    set(CMAKE_ASM_NASM_FLAGS "${ASM_NASM_FLAGS}")
-endif()
-
 set(DNN_VERSION_MAJOR 1)
 set(DNN_VERSION_MINOR 0)
 set(DNN_VERSION_PATCH 0)
@@ -62,10 +51,6 @@ endif(NOT CMAKE_BUILD_TYPE)
 
 option(BUILD_SHARED_LIBS "Build shared library" ON)
 option(BUILD_STATIC_LIBS "Build static library" OFF)
-
-####
-# Create the library target
-set(PACKAGE_NAME dnn)
 
 add_compile_definitions(DNN_EXPORTS DNN_CACHE_PRIMITIVES DNN_OMP cimg_use_cpp11 cimg_use_jpeg cimg_use_png cimg_use_zlib)
 
