@@ -249,15 +249,13 @@ include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/magic_enum/include)
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/CImg)
 include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/CImg)
 
-add_library(png)
-
 # ---[ Configure ZLIB
 IF(NOT TARGET zlib)
   ADD_SUBDIRECTORY(
     "${ZLIB_SOURCE_DIR}"
     "${DNN_DEPENDENCIES_BINARY_DIR}/zlib-1.2.11")
 ENDIF()
-TARGET_LINK_LIBRARIES(png PRIVATE zlib)
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} PRIVATE zlib)
 
 # ---[ Configure PNG
 IF(NOT TARGET png)
@@ -265,7 +263,7 @@ IF(NOT TARGET png)
     "${PNG_SOURCE_DIR}"
     "${DNN_DEPENDENCIES_BINARY_DIR}/libpng")
 ENDIF()
-include_directories(png ${ZLIB_INCLUDE_DIR})
+include_directories(png ${ZLIB_LIBRARY})
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} PRIVATE	png)
 
 # ---[ Configure JPEG
