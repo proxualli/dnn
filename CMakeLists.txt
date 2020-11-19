@@ -27,7 +27,7 @@ if(POLICY CMP0015)
     cmake_policy(SET CMP0015 NEW)
 endif(POLICY CMP0015)
 
-project(dnn VERSION ${DNN_VERSION} LANGUAGES CXX)
+project(dnn VERSION ${DNN_VERSION} LANGUAGES C CXX)
 
 #####
 # Change the default build type from Debug to Release, while still
@@ -69,6 +69,11 @@ MACRO(DNN_TARGET_ENABLE_CXX17 target)
     CXX_STANDARD_REQUIRED YES
     CXX_EXTENSIONS OFF)
 ENDMACRO()
+
+enable_language(ASM_NASM)
+if(CMAKE_ASM_NASM_COMPILER_LOADED)
+  set(CAN_USE_ASSEMBLER TRUE)
+endif(CMAKE_ASM_NASM_COMPILER_LOADED)
 
 set(libdnn_headers
   include/Activation.h
