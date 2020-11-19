@@ -71,9 +71,6 @@ MACRO(DNN_TARGET_ENABLE_CXX17 target)
 ENDMACRO()
 
 enable_language(ASM_NASM)
-if(CMAKE_ASM_NASM_COMPILER_LOADED)
-  set(CAN_USE_ASSEMBLER TRUE)
-endif(CMAKE_ASM_NASM_COMPILER_LOADED)
 
 set(libdnn_headers
   include/Activation.h
