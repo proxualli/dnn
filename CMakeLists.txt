@@ -5,6 +5,7 @@ message(STATUS "Using CMake version ${CMAKE_VERSION}")
 INCLUDE(GNUInstallDirs)
 INCLUDE(CheckCSourceCompiles)
 INCLUDE(CheckCXXSourceCompiles)
+enable_language(ASM_NASM)
 
 set(DNN_VERSION_MAJOR 1)
 set(DNN_VERSION_MINOR 0)
@@ -69,8 +70,6 @@ MACRO(DNN_TARGET_ENABLE_CXX17 target)
     CXX_STANDARD_REQUIRED YES
     CXX_EXTENSIONS OFF)
 ENDMACRO()
-
-enable_language(ASM_NASM)
 
 set(libdnn_headers
   include/Activation.h
