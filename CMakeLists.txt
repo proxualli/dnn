@@ -27,8 +27,22 @@ if(POLICY CMP0015)
     cmake_policy(SET CMP0015 NEW)
 endif(POLICY CMP0015)
 
-project(dnn VERSION ${DNN_VERSION} LANGUAGES C CXX)
+project(dnn VERSION ${DNN_VERSION} LANGUAGES C CXX ASM_NASM)
   
+# old school CMAKE to handle NASM formats
+if(WIN32)
+    set(CMAKE_ASM_NASM_FLAGS_DEBUG "-g -F cv8")
+    set(CMAKE_ASM_NASM_OBJECT_FORMAT win64)
+elseif(APPLE)
+    set(CMAKE_ASM_NASM_FLAGS_DEBUG "-g -F dwarf")
+    set(CMAKE_ASM_NASM_OBJECT_FORMAT macho64)
+else()
+    set(CMAKE_ASM_NASM_FLAGS_DEBUG "-g -F dwarf")
+    set(CMAKE_ASM_NASM_OBJECT_FORMAT elf64)
+    set(CMAKE_ASM_NASM_COMPILE_OBJECT "<CMAKE_ASM_NASM_COMPILER> <INCLUDES> \
+    <FLAGS> -f ${CMAKE_ASM_NASM_OBJECT_FORMAT} -o <OBJECT> <SOURCE>")
+endif()
+
 #####
 # Change the default build type from Debug to Release, while still
 # supporting overriding the build type.
