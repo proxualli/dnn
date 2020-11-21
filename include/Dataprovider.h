@@ -181,8 +181,8 @@ namespace dnn
 #else
 			const std::string fileName = "commands.sh";
 #endif
-			std::cout << (DatasetsDirectory / fileName).string() << std::endl;
-			auto batch = std::ofstream((DatasetsDirectory / fileName).string(), std::ios::trunc);
+			
+			auto batch = std::ofstream((DatasetsDirectory / fileName).c_str(), std::ios::trunc);
 
 			switch (dataset)
 			{
@@ -291,7 +291,7 @@ namespace dnn
 			break;
 			}
 
-            
+            batch.flush();
 			batch.close();
 
 			std::filesystem::permissions((DatasetsDirectory / fileName).string(), std::filesystem::perms::owner_all | std::filesystem::perms::group_all);
