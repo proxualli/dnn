@@ -1,6 +1,6 @@
 #ifndef _WIN32
 #include <stdlib.h>
-#define DNN_API __declspec(dllimport)
+#define DNN_API extern "C" 
 #else
 #define DNN_API extern "C" __declspec(dllimport)
 #endif
