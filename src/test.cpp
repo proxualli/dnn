@@ -223,6 +223,6 @@ int main()
     }
     else
     {
-        throw std::exception(msg.Message.c_str());
+        std::cout << nwl + msg.Message;
     }
 }
