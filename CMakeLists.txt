@@ -232,10 +232,6 @@ target_include_directories(${PROJECT_NAME}
        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> 
        $<INSTALL_INTERFACE:include>)
 
-add_executable(test ${libdnn_test})
-DNN_TARGET_ENABLE_CXX17(test)
-TARGET_LINK_LIBRARIES(test PUBLIC ${PROJECT_NAME})
-
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/zlib-1.2.11)
 include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/zlib-1.2.11)
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/libpng)
@@ -299,3 +295,25 @@ IF(NOT TARGET magic_enum)
     "${MAGIC_ENUM_SOURCE_DIR}"
     "${DNN_DEPENDENCIES_BINARY_DIR}/magic_enum")
 ENDIF()
+
+add_executable(test ${libdnn_test})
+DNN_TARGET_ENABLE_CXX17(test)
+
+include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/zlib-1.2.11)
+include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/zlib-1.2.11)
+include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/libpng)
+include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/libpng)
+include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/libjpeg-turbo)
+include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo)
+include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/oneDNN/include)
+include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/oneDNN/include)
+include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/oneDNN/src)
+include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/oneDNN/src)
+include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/vectorclass)
+include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/vectorclass)
+include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/magic_enum/include)
+include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/magic_enum/include)
+include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/CImg)
+include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/CImg)
+
+TARGET_LINK_LIBRARIES(test PRIVATE ${PROJECT_NAME})
