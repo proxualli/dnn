@@ -458,11 +458,11 @@ namespace dnn
                             blocks.push_back(
                                 Convolution(C, In("CC", CC), channels, 1, 1, 1, 1, 0, 0) +
                                 Dropout(C, In("C", C)) +
-                                "[P" + to_string(g) + "]" + nwl + "Type=AvgPooling" + nwl + "Inputs=D" + to_string(C) + nwl + "Kernel=2,2" + nwl + "Stride=2,2" + nwl + nwl);
+                                "[P" + to_string(g) + "]" + nwl + "Type=AvgPooling" + nwl + "Inputs=D" + std::to_string(C) + nwl + "Kernel=2,2" + nwl + "Stride=2,2" + nwl + nwl);
                         else
                             blocks.push_back(
                                 Convolution(C, "CC" + to_string(CC), channels, 1, 1, 1, 1, 0, 0) +
-                                "[P" + to_string(g) + "]" + nwl + "Type=AvgPooling" + nwl + "Inputs=C" + to_string(C) + nwl + "Kernel=2,2" + nwl + "Stride=2,2" + nwl + nwl);
+                                "[P" + to_string(g) + "]" + nwl + "Type=AvgPooling" + nwl + "Inputs=C" + std::to_string(C) + nwl + "Kernel=2,2" + nwl + "Stride=2,2" + nwl + nwl);
                         C++;
                         CC++;
 
@@ -499,7 +499,7 @@ namespace dnn
                     BatchNorm(C + 1, In("C", C)) +
                     GlobalAvgPooling(In("B", C + 1)) +
                     "[ACT]" + nwl + "Type=Activation" + nwl + "Inputs=GAP" + nwl + "Activation=LogSoftmax" + nwl + nwl +
-                    "[Cost]" + nwl + "Type=Cost" + nwl + "Inputs=ACT" + nwl + "Cost=CategoricalCrossEntropy" + nwl + "Channels=" + to_string(p.Classes());
+                    "[Cost]" + nwl + "Type=Cost" + nwl + "Inputs=ACT" + nwl + "Cost=CategoricalCrossEntropy" + nwl + "Channels=" + std::to_string(p.Classes());
             }
             break;
 
@@ -597,7 +597,7 @@ namespace dnn
                     BatchNorm(C + 1, In("C", C)) +
                     GlobalAvgPooling(In("B", C + 1)) +
                     "[ACT]" + nwl + "Type=Activation" + nwl + "Inputs=GAP" + nwl + "Activation=LogSoftmax" + nwl + nwl +
-                    "[Cost]" + nwl + "Type=Cost" + nwl + "Inputs=ACT" + nwl + "Cost=CategoricalCrossEntropy" + nwl + "Channels=" + to_string(p.Classes());
+                    "[Cost]" + nwl + "Type=Cost" + nwl + "Inputs=ACT" + nwl + "Cost=CategoricalCrossEntropy" + nwl + "Channels=" + std::to_string(p.Classes());
             }
             break;
 
@@ -643,10 +643,10 @@ namespace dnn
                         W *= 2;
 
                         auto strChannelZeroPad = p.ChannelZeroPad ?
-                            ("[AVG" + to_string(g) + "]" + nwl + "Type=AvgPooling" + nwl + "Inputs=A" + to_string(A) + nwl + "Kernel=3,3" + nwl + "Stride=2,2" + nwl + "Pad=1,1" + nwl + nwl +
-                                "[CZP" + to_string(g) + "]" + nwl + "Type=ChannelZeroPad" + nwl + "Inputs=AVG" + to_string(g) + nwl + "Channels=" + to_string(W) + nwl + nwl +
+                            ("[AVG" + std::to_string(g) + "]" + nwl + "Type=AvgPooling" + nwl + "Inputs=A" + std::to_string(A) + nwl + "Kernel=3,3" + nwl + "Stride=2,2" + nwl + "Pad=1,1" + nwl + nwl +
+                                "[CZP" + std::to_string(g) + "]" + nwl + "Type=ChannelZeroPad" + nwl + "Inputs=AVG" + std::to_string(g) + nwl + "Channels=" + std::to_string(W) + nwl + nwl +
                                 Add(A + 1, In("C", C + 1 + bn) + "," + In("CZP", g))) :
-                            "[AVG" + to_string(g) + "]" + nwl + "Type=AvgPooling" + nwl + "Inputs=B" + to_string(C) + nwl + "Kernel=2,2" + nwl + "Stride=2,2" + nwl + nwl +
+                            "[AVG" + std::to_string(g) + "]" + nwl + "Type=AvgPooling" + nwl + "Inputs=B" + std::to_string(C) + nwl + "Kernel=2,2" + nwl + "Stride=2,2" + nwl + nwl +
                             (Convolution(C + 2 + bn, In("AVG", g), DIV8(W), 1, 1, 1, 1, 0, 0) +
                                 Add(A + 1, In("C", C + 1 + bn) + "," + In("C", C + 2 + bn)));
 
@@ -715,7 +715,7 @@ namespace dnn
                     BatchNorm(C + 1, In("C", C)) +
                     GlobalAvgPooling(In("B", C + 1)) +
                     "[ACT]" + nwl + "Type=Activation" + nwl + "Inputs=GAP" + nwl + "Activation=LogSoftmax" + nwl + nwl +
-                    "[Cost]" + nwl + "Type=Cost" + nwl + "Inputs=ACT" + nwl + "Cost=CategoricalCrossEntropy" + nwl + "Channels=" + to_string(p.Classes());
+                    "[Cost]" + nwl + "Type=Cost" + nwl + "Inputs=ACT" + nwl + "Cost=CategoricalCrossEntropy" + nwl + "Channels=" + std::to_string(p.Classes());
             }
             break;
 
@@ -801,7 +801,7 @@ namespace dnn
                     BatchNorm(C + 1, In("C", C)) +
                     GlobalAvgPooling(In("B", C + 1)) +
                     "[ACT]" + nwl + "Type=Activation" + nwl + "Inputs=GAP" + nwl + "Activation=LogSoftmax" + nwl + nwl +
-                    "[Cost]" + nwl + "Type=Cost" + nwl + "Inputs=ACT" + nwl + "Cost=CategoricalCrossEntropy" + nwl + "Channels=" + to_string(p.Classes()) + nwl + "Eps=0.125";
+                    "[Cost]" + nwl + "Type=Cost" + nwl + "Inputs=ACT" + nwl + "Cost=CategoricalCrossEntropy" + nwl + "Channels=" + std::to_string(p.Classes()) + nwl + "Eps=0.125";
             }
             break;
 
