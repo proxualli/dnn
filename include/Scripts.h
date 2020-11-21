@@ -249,7 +249,7 @@ namespace dnn
                 (multiplier > 1 ? "Mulltiplier=" + std::to_string(multiplier) + nwl : "") +
                 "Kernel=" + std::to_string(kernelX) + "," + std::to_string(kernelY) + nwl +
                 (strideX != 1 || strideY != 1 ? "Stride=" + std::to_string(strideX) + "," + std::to_string(strideY) + nwl : "") +
-                (padX != 0 || padY != 0 ? "Pad=" + to_string(padX) + "," + to_string(padY) + nwl : "") +
+                (padX != 0 || padY != 0 ? "Pad=" + std::to_string(padX) + "," + std::to_string(padY) + nwl : "") +
                 (weightsFiller != "" ? "WeightsFiller=" + weightsFiller + nwl + nwl : nwl);
         }
 
