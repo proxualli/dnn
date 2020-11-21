@@ -1,5 +1,8 @@
 #ifndef _WIN32
 #include <stdlib.h>
+#define DNN_API
+#else
+#define DNN_API extern "C" __declspec(dllimport)
 #endif
 
 #include <chrono>
@@ -15,7 +18,7 @@ static std::string Path = std::string(getenv("HOME")) + "/convnet/";
 
 using namespace dnn;
 
-#define DNN_API extern "C" __declspec(dllimport)
+
 
 DNN_API bool DNNStochasticEnabled();
 DNN_API void DNNSetLocked(const bool locked);
