@@ -179,11 +179,14 @@ namespace dnn
 
 			const std::string fileName = "commands.cmd";
 #else
-			const std::string fileName = "commands.txt";
+			const std::string fileName = "commands.sh";
 #endif
 			
-			auto batch = std::ofstream((DatasetsDirectory / fileName).string(), std::ios::trunc);
-		    
+			std::ofstream batch((DatasetsDirectory / fileName).string(), std::ios::trunc);
+		    if (!batch.is_open()) { // check for successful opening
+				cout << "Output file " << (DatasetsDirectory / fileName).string() << " could not be opened!" << endl;
+ 			}
+
 			switch (dataset)
 			{
 			case Datasets::cifar10:
