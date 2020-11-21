@@ -119,6 +119,10 @@ set(libdnn_sources
   src/stdafx.cpp
 )
 
+set(libdnn_test
+  $(src/test.cpp)
+)
+
 # ---[ Download deps
 SET(DNN_DEPENDENCIES_SOURCE_DIR ${CMAKE_SOURCE_DIR}/deps
   CACHE PATH "Confu-style dependencies source directory")
@@ -227,6 +231,10 @@ target_include_directories(${PROJECT_NAME}
        ${PROJECT_NAME} PRIVATE
        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> 
        $<INSTALL_INTERFACE:include>)
+
+add_executable(test ${libdnn_test})
+DNN_TARGET_ENABLE_CXX17(test)
+TARGET_LINK_LIBRARIES(test PUBLIC ${PROJECT_NAME})
 
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/zlib-1.2.11)
 include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/zlib-1.2.11)
