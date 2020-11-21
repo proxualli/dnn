@@ -185,12 +185,12 @@ namespace dnn
 			auto batch = std::ofstream((DatasetsDirectory / fileName).c_str(), std::ios::trunc);
 			if (batch.fail()) 
 			{
-        		cerr << "open failure as expected: " << strerror(errno) << '\n';
+        		std::cerr << "open failure as expected: " << strerror(errno) << '\n';
         	
     		} 
 			else 
 			{
-        		cerr << "open success, not as expected\n";
+        		std::cerr << "open success, not as expected\n";
         	
 			}
 
