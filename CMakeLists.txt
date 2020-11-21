@@ -120,7 +120,7 @@ set(libdnn_sources
 )
 
 set(libdnn_test
-  src/test.cpp)
+  src/test.cpp
 )
 
 # ---[ Download deps
