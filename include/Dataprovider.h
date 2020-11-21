@@ -169,7 +169,7 @@ namespace dnn
 					"$shell.Namespace($destination).copyhere($item)" << std::endl <<
 					"}" << std::endl <<
 					"}" << std::endl <<
-					"UnZip-File -File \"" << DatasetsDirectory.string() << "\\tiny-imagenet-200.zip\" –Destination \"" << DatasetsDirectory.string() << "\"" << std::endl;
+					"UnZip-File -File \"" << DatasetsDirectory.string() << "\\tiny-imagenet-200.zip\" ï¿½Destination \"" << DatasetsDirectory.string() << "\"" << std::endl;
 
 				unzipScript.close();
 				
@@ -182,7 +182,7 @@ namespace dnn
 			const std::string fileName = "commands.sh";
 #endif
 
-			auto batch = std::ofstream((DatasetsDirectory / fileName).string(), std::ios::trunc);
+			auto batch = std::ofstream((DatasetsDirectory / fileName).string(), std::ios_base::out |std::ios::trunc);
 
 			switch (dataset)
 			{
