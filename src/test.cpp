@@ -88,7 +88,8 @@ int main()
 
     DNNDataprovider(Path.c_str());
   
-    if (DNNReadDefinition(dnn::ScriptsCatalog::Generate(param).c_str(), Optimizers::NAG, msg) == 1)
+    std::string model = dnn::ScriptsCatalog::Generate(param);
+    if (DNNReadDefinition(model.c_str(), Optimizers::NAG, msg) == 1)
     {
         std::cout << nwl + "Definition loaded..." << std::endl;
            
@@ -223,6 +224,6 @@ int main()
     }
     else
     {
-        std::cout << nwl + "Could not load model" + nwl << msg.Message << std::endl;
+        std::cout << nwl + "Could not load model" + nwl << msg.Message << std::endl << model;
     }
 }
