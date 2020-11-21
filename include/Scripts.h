@@ -142,7 +142,7 @@ namespace dnn
         {
             return variable ? std::string("Yes") : std::string("No");
         }
-
+/*
         static auto to_string(const size_t variable)
         {
             return std::to_string(variable);
@@ -152,7 +152,7 @@ namespace dnn
         {
             return std::to_string(variable);
         }
-
+*/
         static auto to_string(const Datasets dataset)
         {
             return std::string(magic_enum::enum_name<Datasets>(dataset));
