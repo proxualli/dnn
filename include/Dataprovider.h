@@ -179,7 +179,7 @@ namespace dnn
 
 			const std::string fileName = "commands.cmd";
 #else
-			const std::string fileName = "commands.sh";
+			const std::string fileName = "commands.txt";
 #endif
 			
 			auto batch = std::ofstream((DatasetsDirectory / fileName).string(), std::ios::trunc);
