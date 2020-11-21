@@ -90,13 +90,13 @@ int main()
   
     if (DNNReadDefinition(dnn::ScriptsCatalog::Generate(param).c_str(), Optimizers::NAG, msg) == 1)
     {
-        std::cout << nwl + "Definition loaded...";
+        std::cout << nwl + "Definition loaded..." << std::endl;
            
         DNNSetNewEpochDelegate(&NewEpoch);
 
         if (DNNLoadDataset())
         {
-            std::cout << nwl + "Dataset loaded...";
+            std::cout << nwl + "Dataset loaded..."<< std::endl;
 
             DNNAddLearningRateSGDR(true, 1, 0.05f, 128, 1, 200, 1, 0.0001f, 0.0005f, 0.9f, 1.0f, 200, true, false, 0.0f, 0.7f, 0.7f, 0.7f, 20, 0.7f, 0, 10.0f, 12.0f);
                                        
@@ -136,7 +136,7 @@ int main()
 
             DNNTraining();
 
-            std::cout << nwl + "Training started...";
+            std::cout << nwl + "Training started..." << << std::endl;
 
             bool stop = false;
             while (!stop)
@@ -219,10 +219,10 @@ int main()
             DNNModelDispose();
         }
         else
-            std::cout << nwl + "Could not load dataset";
+            std::cout << nwl + "Could not load dataset" << std::endl;
     }
     else
     {
-        std::cout << nwl + "Could not load model";
+        std::cout << nwl + "Could not load model" + nwl << msg.Message << std::endl;
     }
 }
