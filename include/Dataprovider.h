@@ -182,7 +182,7 @@ namespace dnn
 			const std::string fileName = "commands.sh";
 #endif
 			std::cout << (DatasetsDirectory / fileName).string() << std::endl;
-			auto batch = std::ofstream((DatasetsDirectory / fileName).string(), std::ios::ate || std::ios::out || std::ios::trunc);
+			auto batch = std::ofstream((DatasetsDirectory / fileName).string(), std::ios::trunc);
 
 			switch (dataset)
 			{
