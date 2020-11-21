@@ -223,6 +223,6 @@ int main()
     }
     else
     {
-        std::cout << nwl + msg.Message;
+        std::cout << nwl + "Could not load model";
     }
 }
