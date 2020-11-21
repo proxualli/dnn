@@ -136,7 +136,7 @@ int main()
 
             DNNTraining();
 
-            std::cout << nwl + "Training started..." << << std::endl;
+            std::cout << nwl + "Training started..." << std::endl;
 
             bool stop = false;
             while (!stop)
