@@ -303,6 +303,7 @@ DNN_TARGET_ENABLE_CXX17(test)
 target_include_directories(test PUBLIC
        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> 
        $<INSTALL_INTERFACE:include>
+       PRIVATE .
        PRIVATE src)
 
 TARGET_LINK_LIBRARIES(test PUBLIC ${PROJECT_NAME})
