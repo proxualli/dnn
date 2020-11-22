@@ -341,7 +341,7 @@ namespace dnn
 			if (status == 0 && dataset == Datasets::tinyimagenet)
 				GetTinyImageNetLabels(path / std::string(magic_enum::enum_name<Datasets>(dataset)));
 
-			std::filesystem::remove((DatasetsDirectory / fileName));
+			//std::filesystem::remove((DatasetsDirectory / fileName));
 
 			return status == 0;
 #endif
