@@ -54,8 +54,8 @@ else(NOT CMAKE_BUILD_TYPE)
     endif(CMAKE_BUILD_TYPE STREQUAL "Debug")
 endif(NOT CMAKE_BUILD_TYPE)
 
-option(BUILD_SHARED_LIBS "Build shared library" OFF)
-option(BUILD_STATIC_LIBS "Build static library" ON)
+option(BUILD_SHARED_LIBS "Build shared library" ON)
+option(BUILD_STATIC_LIBS "Build static library" OFF)
 
 add_compile_definitions(DNN_EXPORTS DNN_CACHE_PRIMITIVES DNN_OMP cimg_use_cpp11 cimg_use_jpeg cimg_use_png cimg_use_zlib)
 
@@ -299,7 +299,6 @@ IF(NOT TARGET magic_enum)
     "${MAGIC_ENUM_SOURCE_DIR}"
     "${DNN_DEPENDENCIES_BINARY_DIR}/magic_enum")
 ENDIF()
-
 
 install(TARGETS ${PROJECT_NAME}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
