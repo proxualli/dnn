@@ -199,9 +199,9 @@ namespace dnn
 					"cd " + path.string() << std::endl <<
 					"curl -O http://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz && tar -xf cifar-10-binary.tar.gz --strip-components=1 && del /Q cifar-10-binary.tar.gz" << std::endl;
 #else
-					"#!/bin/sh" << std::endl <<
-					"echo Downloading " + std::string(magic_enum::enum_name<Datasets>(dataset)) + " dataset" << std::endl <<
-					"curl -O http://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz && tar -xf cifar-10-binary.tar.gz --strip-components=1 && rm ./cifar-10-binary.tar.gz" << std::endl;
+					std::string("#!/bin/sh") << std::endl <<
+					std::string("echo Downloading ") + std::string(magic_enum::enum_name<Datasets>(dataset)) + std::string(" dataset") << std::endl <<
+					std::string("curl -O http://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz && tar -xf cifar-10-binary.tar.gz --strip-components=1 && rm ./cifar-10-binary.tar.gz") << std::endl;
 #endif
 			}
 			break;
@@ -334,7 +334,7 @@ namespace dnn
 			}
 				
 #else
-			int status = std::system("/bin/sh " + fileName.c_str());
+			int status = std::system((std::string("/bin/sh ") + fileName).c_str());
 
 			if (status == 0 && dataset == Datasets::tinyimagenet)
 				GetTinyImageNetLabels(path / std::string(magic_enum::enum_name<Datasets>(dataset)));
