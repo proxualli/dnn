@@ -3,7 +3,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.5.0 FATAL_ERROR)
 PROJECT(jpeg-download NONE)
 
 INCLUDE(ExternalProject)
-ExternalProject_Add(jpeg
+ExternalProject_Add(libjpeg
 	GIT_REPOSITORY https://github.com/libjpeg-turbo/libjpeg-turbo.git
 	GIT_TAG master
 	SOURCE_DIR "${DNN_DEPENDENCIES_SOURCE_DIR}/libjpeg-turbo"
