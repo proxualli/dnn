@@ -69,36 +69,32 @@ void NewEpoch(size_t CurrentCycle, size_t CurrentEpoch, size_t TotalEpochs, bool
 
 int main()
 {
-    dnn::ScriptParameters param;
-    
-    param.Dataset = dnn::Datasets::cifar10;
+    ScriptParameters param;
+   
+    param.Dataset = Datasets::cifar10;
     param.C = 3;
     param.H = 32;
     param.W = 32;
     param.PadH = 4;
     param.PadW = 4;
     param.MirrorPad = false;
-    param.Script = dnn::Scripts::shufflenetv2;
+    param.Script = Scripts::shufflenetv2;
     param.Groups = 3;
     param.Iterations = 6;
     param.Width = 10;
     param.Relu = true;
   
-    dnn::CheckMsg msg;
+    CheckMsg msg;
 
     DNNDataprovider(Path.c_str());
   
-    std::string model = dnn::ScriptsCatalog::Generate(param);
+    std::string model = ScriptsCatalog::Generate(param);
     if (DNNReadDefinition(model.c_str(), Optimizers::NAG, msg) == 1)
     {
-        std::cout << nwl + "Definition loaded..." << std::endl;
-           
         DNNSetNewEpochDelegate(&NewEpoch);
 
         if (DNNLoadDataset())
         {
-            std::cout << nwl + "Dataset loaded..."<< std::endl;
-
             DNNAddLearningRateSGDR(true, 1, 0.05f, 128, 1, 200, 1, 0.0001f, 0.0005f, 0.9f, 1.0f, 200, true, false, 0.0f, 0.7f, 0.7f, 0.7f, 20, 0.7f, 0, 10.0f, 12.0f);
                                        
             size_t* cycle = new size_t();
@@ -137,7 +133,7 @@ int main()
 
             DNNTraining();
 
-            std::cout << nwl + "Training started..." << std::endl;
+            std::cout << nwl + "training started..." << std::endl;
 
             bool stop = false;
             while (!stop)
