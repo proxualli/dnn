@@ -231,8 +231,8 @@ endif()
 add_library(${PROJECT_NAME} ${libdnn_sources})
 DNN_TARGET_ENABLE_CXX17(${PROJECT_NAME})
 target_include_directories(${PROJECT_NAME}
-     PUBLIC
-       ${PROJECT_NAME} PUBLIC
+     PRIVATE
+       ${PROJECT_NAME} PRIVATE
        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> 
        $<INSTALL_INTERFACE:include>)
 
@@ -267,7 +267,7 @@ IF(NOT TARGET png)
     "${PNG_SOURCE_DIR}"
     "${DNN_DEPENDENCIES_BINARY_DIR}/libpng")
 ENDIF()
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC png)
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} PRIVATE	png)
 
 # ---[ Configure JPEG
 IF(NOT TARGET jpeg)
@@ -275,7 +275,7 @@ IF(NOT TARGET jpeg)
     "${JPEG_SOURCE_DIR}"
     "${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo")
 ENDIF()
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC jpeg)
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} PRIVATE	jpeg)
 
 # ---[ Configure oneDNN
 IF(NOT TARGET dnnl)
@@ -283,7 +283,7 @@ IF(NOT TARGET dnnl)
     "${ONEDNN_SOURCE_DIR}"
     "${DNN_DEPENDENCIES_BINARY_DIR}/oneDNN")
 ENDIF()
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC dnnl)
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} PRIVATE	dnnl)
 
 # ---[ Configure VectorClass
 IF(NOT TARGET vectorclass)
@@ -291,7 +291,7 @@ IF(NOT TARGET vectorclass)
     "${VECTORCLASS_SOURCE_DIR}"
     "${DNN_DEPENDENCIES_BINARY_DIR}/vectorclass")
 ENDIF()
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC vectorclass)
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} PRIVATE	vectorclass)
 
 # ---[ Configure MagicEnum
 IF(NOT TARGET magic_enum)
@@ -304,27 +304,5 @@ install(TARGETS ${PROJECT_NAME} DESTINATION /usr/lib)
 
 add_executable(test ${libdnn_test})
 DNN_TARGET_ENABLE_CXX17(test)
-target_include_directories(test
-     PUBLIC
-       test PUBLIC
-       $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include> 
-       $<INSTALL_INTERFACE:${CMAKE_BINARY_DIR}/include>)
-
-include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/zlib-1.2.11)
-include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/zlib-1.2.11)
-include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/libpng)
-include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/libpng)
-include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/libjpeg-turbo)
-include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo)
-include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/oneDNN/include)
-include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/oneDNN/include)
-include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/oneDNN/src)
-include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/oneDNN/src)
-include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/vectorclass)
-include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/vectorclass)
-include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/magic_enum/include)
-include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/magic_enum/include)
-include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/CImg)
-include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/CImg)
 
 TARGET_LINK_LIBRARIES(test PRIVATE ${PROJECT_NAME})
