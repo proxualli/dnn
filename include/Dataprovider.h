@@ -184,15 +184,13 @@ namespace dnn
 			
 			auto batch = std::ofstream((DatasetsDirectory / fileName).string(), std::ios::trunc);
 		   
- 			
-
 			switch (dataset)
 			{
 			case Datasets::cifar10:
 			{
 				path = DatasetsDirectory / std::string(magic_enum::enum_name<Datasets>(dataset));
 				std::filesystem::create_directories(path);
- 				std::cout << "Output file " << (DatasetsDirectory / fileName).string() << std::endl;
+ 				
 				batch <<
 #if defined _WIN32 || defined __CYGWIN__ || defined __MINGW32__
 					"@echo off" << std::endl <<
@@ -201,9 +199,9 @@ namespace dnn
 					"cd " + path.string() << std::endl <<
 					"curl -O http://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz && tar -xf cifar-10-binary.tar.gz --strip-components=1 && del /Q cifar-10-binary.tar.gz" << std::endl;
 #else
-					std::string("#!/bin/sh") << std::endl <<
-					std::string("echo Downloading ") + std::string(magic_enum::enum_name<Datasets>(dataset)) + std::string(" dataset") << std::endl <<
-					std::string("curl -O http://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz && tar -xf cifar-10-binary.tar.gz --strip-components=1 && rm ./cifar-10-binary.tar.gz") << std::endl;
+					"#!/bin/sh" << std::endl <<
+					"echo Downloading " + std::string(magic_enum::enum_name<Datasets>(dataset)) + " dataset" << std::endl <<
+					"curl -O http://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz && tar -xf cifar-10-binary.tar.gz --strip-components=1 && rm ./cifar-10-binary.tar.gz" << std::endl;
 #endif
 			}
 			break;
@@ -336,7 +334,7 @@ namespace dnn
 			}
 				
 #else
-			int status = std::system(fileName.c_str());
+			int status = std::system("/bin/sh " + fileName.c_str());
 
 			if (status == 0 && dataset == Datasets::tinyimagenet)
 				GetTinyImageNetLabels(path / std::string(magic_enum::enum_name<Datasets>(dataset)));
