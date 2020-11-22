@@ -200,8 +200,10 @@ namespace dnn
 					"curl -O http://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz && tar -xf cifar-10-binary.tar.gz --strip-components=1 && del /Q cifar-10-binary.tar.gz" << std::endl;
 #else
 					std::string("#!/bin/sh") << std::endl <<
-					std::string("echo Downloading ") + std::string(magic_enum::enum_name<Datasets>(dataset)) + std::string(" dataset") << std::endl <<
-					std::string("curl -O http://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz && tar -xf cifar-10-binary.tar.gz --strip-components=1 && rm ./cifar-10-binary.tar.gz") << std::endl;
+					std::string("echo Downloading ") + std::string(magic_enum::enum_name<Datasets>(dataset)) + std::string(" dataset") << std::endl << std::endl <<
+					std::string("curl -O http://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz") << std::endl << 
+					std::string("tar -xf cifar-10-binary.tar.gz --strip-components=1") << std::endl 
+					<< std::string("rm ./cifar-10-binary.tar.gz") << std::endl;
 #endif
 			}
 			break;
