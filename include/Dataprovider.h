@@ -184,7 +184,7 @@ namespace dnn
 			
 			std::ofstream batch((DatasetsDirectory / fileName).string(), std::ios::trunc);
 		    if (!batch.is_open()) { // check for successful opening
-				std::cout << "Output file " << (DatasetsDirectory / fileName).string() << " could not be opened!" << endl;
+				std::cout << "Output file " << (DatasetsDirectory / fileName).string() << " could not be opened!" << std::endl;
  			}
 
 			switch (dataset)
