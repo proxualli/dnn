@@ -296,8 +296,15 @@ IF(NOT TARGET magic_enum)
     "${DNN_DEPENDENCIES_BINARY_DIR}/magic_enum")
 ENDIF()
 
+install(TARGETS ${PROJECT_NAME} DESTINATION /usr/lib)
+
 add_executable(test ${libdnn_test})
 DNN_TARGET_ENABLE_CXX17(test)
+target_include_directories(test
+     PRIVATE
+       test PRIVATE
+       $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include> 
+       $<INSTALL_INTERFACE:${CMAKE_BINARY_DIR}/include>)
 
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/zlib-1.2.11)
 include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/zlib-1.2.11)
