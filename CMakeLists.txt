@@ -54,7 +54,7 @@ else(NOT CMAKE_BUILD_TYPE)
     endif(CMAKE_BUILD_TYPE STREQUAL "Debug")
 endif(NOT CMAKE_BUILD_TYPE)
 
-option(BUILD_SHARED_LIBS "Build shared library" OFF)
+option(BUILD_SHARED_LIBS "Build shared library" ON)
 
 add_compile_definitions(DNN_EXPORTS DNN_CACHE_PRIMITIVES DNN_OMP cimg_use_cpp11 cimg_use_jpeg cimg_use_png cimg_use_zlib)
 
@@ -225,7 +225,7 @@ else()
   set(PNG_STATIC TRUE CACHE BOOL "" FORCE)
 endif()
 
-add_library(${PROJECT_NAME} ${libdnn_sources})
+add_library(${PROJECT_NAME})
 DNN_TARGET_ENABLE_CXX17(${PROJECT_NAME})
 target_include_directories(${PROJECT_NAME} PUBLIC
        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> 
@@ -245,9 +245,7 @@ include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/oneDNN/src)
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/vectorclass)
 include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/vectorclass)
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/magic_enum/include)
-include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/magic_enum/include)
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/CImg)
-include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/CImg)
 
 # ---[ Configure ZLIB
 IF(NOT TARGET zlib)
@@ -307,6 +305,4 @@ target_include_directories(test PUBLIC
        $<INSTALL_INTERFACE:include>
        PRIVATE src)
 
-TARGET_LINK_LIBRARIES(test PUBLIC png)
-TARGET_LINK_LIBRARIES(test PUBLIC jpeg)
 TARGET_LINK_LIBRARIES(test PUBLIC ${PROJECT_NAME})
