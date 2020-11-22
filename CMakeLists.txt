@@ -259,12 +259,12 @@ ENDIF()
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC zlib)
 
 # ---[ Configure PNG
-IF(NOT TARGET png16)
+IF(NOT TARGET png)
   ADD_SUBDIRECTORY(
     "${PNG_SOURCE_DIR}"
     "${DNN_DEPENDENCIES_BINARY_DIR}/libpng")
 ENDIF()
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC png16)
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC png)
 
 # ---[ Configure JPEG
 IF(NOT TARGET jpeg)
@@ -307,5 +307,10 @@ target_include_directories(test PUBLIC
        ${PROJECT_NAME} PUBLIC
        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> 
        $<INSTALL_INTERFACE:include>)
+
+include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/libpng)
+include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/libpng)
+include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/libjpeg-turbo)
+include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo)
 
 TARGET_LINK_LIBRARIES(test PUBLIC ${PROJECT_NAME})
