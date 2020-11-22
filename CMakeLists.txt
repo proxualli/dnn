@@ -6,6 +6,7 @@ endif()
 
 message(STATUS "Using CMake version ${CMAKE_VERSION}")
 
+INCLUDE(GNUInstallDirs)
 INCLUDE(CheckCSourceCompiles)
 INCLUDE(CheckCXXSourceCompiles)
 
@@ -299,7 +300,7 @@ IF(NOT TARGET magic_enum)
     "${DNN_DEPENDENCIES_BINARY_DIR}/magic_enum")
 ENDIF()
 
-INCLUDE(GNUInstallDirs)
+
 install(TARGETS ${PROJECT_NAME}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
