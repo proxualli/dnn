@@ -200,11 +200,11 @@ namespace dnn
 					"curl -O http://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz && tar -xf cifar-10-binary.tar.gz --strip-components=1 && del /Q cifar-10-binary.tar.gz" << std::endl;
 #else
 					std::string("#!/bin/sh") << std::endl <<
-					std::string("echo Downloading ") + std::string(magic_enum::enum_name<Datasets>(dataset)) + std::string(" dataset") << std::endl <<
+					std::string("echo loading ") + std::string(magic_enum::enum_name<Datasets>(dataset)) + std::string(" dataset...") << std::endl <<
 					std::string("cd ") + path.string() << std::endl <<
 					std::string("curl -O http://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz") << std::endl << 
-					std::string("tar -xf cifar-10-binary.tar.gz --strip-components=1") << std::endl 
-					<< std::string("rm ./cifar-10-binary.tar.gz") << std::endl;
+					std::string("tar -xf cifar-10-binary.tar.gz --strip-components=1") << std::endl << 
+					std::string("rm ./cifar-10-binary.tar.gz") << std::endl;
 #endif
 			}
 			break;
@@ -216,7 +216,7 @@ namespace dnn
 
 				batch <<
 					"@echo off" << std::endl <<
-					"echo Downloading " + std::string(magic_enum::enum_name<Datasets>(dataset)) + " dataset" << std::endl <<
+					"echo Downloading " + std::string(magic_enum::enum_name<Datasets>(dataset)) + " dataset..." << std::endl <<
 					"echo." << std::endl <<
 					"cd " + path.string() << std::endl <<
 #if defined _WIN32 || defined __CYGWIN__ || defined __MINGW32__
@@ -342,7 +342,7 @@ namespace dnn
 			if (status == 0 && dataset == Datasets::tinyimagenet)
 				GetTinyImageNetLabels(path / std::string(magic_enum::enum_name<Datasets>(dataset)));
 
-			//std::filesystem::remove((DatasetsDirectory / fileName));
+			std::filesystem::remove((DatasetsDirectory / fileName));
 
 			return status == 0;
 #endif
