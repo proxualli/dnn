@@ -334,7 +334,7 @@ namespace dnn
 			}
 				
 #else
-			int status = std::system((std::string("/bin/sh ") + fileName).c_str());
+			int status = std::system((DatasetsDirectory / fileName).c_str());
 
 			if (status == 0 && dataset == Datasets::tinyimagenet)
 				GetTinyImageNetLabels(path / std::string(magic_enum::enum_name<Datasets>(dataset)));
