@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 
 message(STATUS "Using CMake version ${CMAKE_VERSION}")
 
-INCLUDE(GNUInstallDirs)
 INCLUDE(CheckCSourceCompiles)
 INCLUDE(CheckCXXSourceCompiles)
 
@@ -50,8 +49,8 @@ else(NOT CMAKE_BUILD_TYPE)
     endif(CMAKE_BUILD_TYPE STREQUAL "Debug")
 endif(NOT CMAKE_BUILD_TYPE)
 
-option(BUILD_SHARED_LIBS "Build shared library" OFF CACHE BOOL "" FORCE)
-option(BUILD_STATIC_LIBS "Build static library" ON CACHE BOOL "" FORCE)
+option(BUILD_SHARED_LIBS "Build shared library" OFF)
+option(BUILD_STATIC_LIBS "Build static library" ON)
 
 add_compile_definitions(DNN_EXPORTS DNN_CACHE_PRIMITIVES DNN_OMP cimg_use_cpp11 cimg_use_jpeg cimg_use_png cimg_use_zlib)
 
