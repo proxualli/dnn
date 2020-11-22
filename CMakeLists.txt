@@ -305,8 +305,8 @@ install(TARGETS ${PROJECT_NAME} DESTINATION /usr/lib)
 add_executable(test ${libdnn_test})
 DNN_TARGET_ENABLE_CXX17(test)
 target_include_directories(test PRIVATE
-       ${PROJECT_NAME}
-       ${PROJECT_NAME}/include> 
-      )
+       ${PROJECT_NAME} PRIVATE
+       $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> 
+       $<INSTALL_INTERFACE:include>)
 
 TARGET_LINK_LIBRARIES(test PRIVATE ${PROJECT_NAME})
