@@ -54,8 +54,8 @@ else(NOT CMAKE_BUILD_TYPE)
     endif(CMAKE_BUILD_TYPE STREQUAL "Debug")
 endif(NOT CMAKE_BUILD_TYPE)
 
-option(BUILD_SHARED_LIBS "Build shared library" OFF)
-option(BUILD_STATIC_LIBS "Build static library" ON)
+option(BUILD_SHARED_LIBS "Build shared library" ON)
+option(BUILD_STATIC_LIBS "Build static library" OFF)
 
 add_compile_definitions(DNN_EXPORTS DNN_CACHE_PRIMITIVES DNN_OMP cimg_use_cpp11 cimg_use_jpeg cimg_use_png cimg_use_zlib)
 
@@ -304,9 +304,9 @@ install(TARGETS ${PROJECT_NAME} DESTINATION /usr/lib)
 
 add_executable(test ${libdnn_test})
 DNN_TARGET_ENABLE_CXX17(test)
-target_include_directories(test PUBLIC
-       ${PROJECT_NAME} PUBLIC
+target_include_directories(test PRIVATE
+       ${PROJECT_NAME} PRIVATE
        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> 
        $<INSTALL_INTERFACE:include>)
 
-TARGET_LINK_LIBRARIES(test PUBLIC ${PROJECT_NAME})
+TARGET_LINK_LIBRARIES(test PRIVATE ${PROJECT_NAME})
