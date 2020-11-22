@@ -231,8 +231,8 @@ endif()
 add_library(${PROJECT_NAME} ${libdnn_sources})
 DNN_TARGET_ENABLE_CXX17(${PROJECT_NAME})
 target_include_directories(${PROJECT_NAME}
-     PRIVATE
-       ${PROJECT_NAME} PRIVATE
+     PUBLIC
+       ${PROJECT_NAME} PUBLIC
        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> 
        $<INSTALL_INTERFACE:include>)
 
@@ -267,7 +267,7 @@ IF(NOT TARGET png)
     "${PNG_SOURCE_DIR}"
     "${DNN_DEPENDENCIES_BINARY_DIR}/libpng")
 ENDIF()
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} PRIVATE	png)
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC png)
 
 # ---[ Configure JPEG
 IF(NOT TARGET jpeg)
@@ -275,7 +275,7 @@ IF(NOT TARGET jpeg)
     "${JPEG_SOURCE_DIR}"
     "${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo")
 ENDIF()
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} PRIVATE	jpeg)
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC jpeg)
 
 # ---[ Configure oneDNN
 IF(NOT TARGET dnnl)
@@ -283,7 +283,7 @@ IF(NOT TARGET dnnl)
     "${ONEDNN_SOURCE_DIR}"
     "${DNN_DEPENDENCIES_BINARY_DIR}/oneDNN")
 ENDIF()
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} PRIVATE	dnnl)
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC dnnl)
 
 # ---[ Configure VectorClass
 IF(NOT TARGET vectorclass)
@@ -291,7 +291,7 @@ IF(NOT TARGET vectorclass)
     "${VECTORCLASS_SOURCE_DIR}"
     "${DNN_DEPENDENCIES_BINARY_DIR}/vectorclass")
 ENDIF()
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} PRIVATE	vectorclass)
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC vectorclass)
 
 # ---[ Configure MagicEnum
 IF(NOT TARGET magic_enum)
@@ -305,8 +305,8 @@ install(TARGETS ${PROJECT_NAME} DESTINATION /usr/lib)
 add_executable(test ${libdnn_test})
 DNN_TARGET_ENABLE_CXX17(test)
 target_include_directories(test
-     PRIVATE
-       test PRIVATE
+     PUBLIC
+       test PUBLIC
        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include> 
        $<INSTALL_INTERFACE:${CMAKE_BINARY_DIR}/include>)
 
