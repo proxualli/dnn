@@ -300,7 +300,7 @@ add_executable(test ${libdnn_test})
 DNN_TARGET_ENABLE_CXX17(test)
 target_include_directories(test
      PRIVATE
-       ${PROJECT_NAME} PRIVATE
+       test PRIVATE
        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> 
        $<INSTALL_INTERFACE:include>)
 
