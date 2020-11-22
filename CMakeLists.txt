@@ -307,4 +307,6 @@ target_include_directories(test PUBLIC
        $<INSTALL_INTERFACE:include>
        PRIVATE src)
 
+TARGET_LINK_LIBRARIES(test PUBLIC png)
+TARGET_LINK_LIBRARIES(test PUBLIC jpeg)
 TARGET_LINK_LIBRARIES(test PUBLIC ${PROJECT_NAME})
