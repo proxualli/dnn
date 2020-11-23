@@ -231,6 +231,13 @@ target_include_directories(${PROJECT_NAME} PUBLIC
        $<INSTALL_INTERFACE:include>
        PRIVATE src)
 
+add_executable(test ${libdnn_test})
+DNN_TARGET_ENABLE_CXX17(test)
+target_include_directories(test PUBLIC
+       $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> 
+       $<INSTALL_INTERFACE:include>
+       PRIVATE src)
+
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/zlib-1.2.11)
 include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/zlib-1.2.11)
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/libpng)
@@ -296,12 +303,5 @@ ENDIF()
 install(TARGETS ${PROJECT_NAME}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-
-add_executable(test ${libdnn_test})
-DNN_TARGET_ENABLE_CXX17(test)
-target_include_directories(test PUBLIC
-       $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> 
-       $<INSTALL_INTERFACE:include>
-       PRIVATE src)
 
 TARGET_LINK_LIBRARIES(test PUBLIC ${PROJECT_NAME})
