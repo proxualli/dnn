@@ -55,31 +55,29 @@ endif(NOT CMAKE_BUILD_TYPE)
 
 option(BUILD_SHARED_LIBS "Build shared library" ON)
 
-add_compile_definitions(DNN_EXPORTS DNN_CACHE_PRIMITIVES DNN_OMP cimg_use_cpp11 cimg_use_jpeg cimg_use_png cimg_use_zlib)
-
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 if (WIN32 OR MSVC)
   if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     # warning level 4 and all warnings as errors
-    add_compile_options(/W4)
+    add_compile_options(/W4 /arch:AVX2 /openmp:experimental)
   else()
-    add_compile_options(/W3)
+    add_compile_options(/W3 /arch:AVX2 /openmp:experimental)
   endif()
 else()
   if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     # lots of warnings and all warnings as errors
-    add_compile_options(-Wall -Wextra -pedantic)
+    add_compile_options(-Wall -Wextra -mavx2 -mfma -march=znver2 -fopenmp -fPIC)
   else()
-    add_compile_options(-Ofast -Wno-error)
+    add_compile_options(-Ofast -Wno-error -mavx2 -mfma -march=znver2 -fopenmp -fPIC)
   endif()
 endif()
 
 MACRO(DNN_TARGET_ENABLE_CXX17 target)
   IF(WIN32 OR MSVC)
-    TARGET_COMPILE_OPTIONS(${target} PUBLIC /arch:AVX2 /openmp:experimental)
+    TARGET_COMPILE_OPTIONS(${target} PRIVATE /arch:AVX2 /openmp:experimental)
   ELSE()
-    TARGET_COMPILE_OPTIONS(${target} PUBLIC -mavx2 -mfma -march=znver2 -fopenmp -fPIC $<$<CXX_COMPILER_ID:GNU>:-Wno-psabi>)
+    TARGET_COMPILE_OPTIONS(${target} PRIVATE -mavx2 -mfma -march=znver2 -fopenmp -fPIC $<$<CXX_COMPILER_ID:GNU>:-Wno-psabi>)
   ENDIF()
   SET_TARGET_PROPERTIES(${target} PROPERTIES
     CXX_STANDARD 17
@@ -245,6 +243,7 @@ IF(NOT DEFINED VECTORCLASS_SOURCE_DIR)
 
 add_library(${PROJECT_NAME} ${libdnn_sources})
 DNN_TARGET_ENABLE_CXX17(${PROJECT_NAME})
+target_compile_definitions(${PROJECT_NAME} DNN_EXPORTS DNN_CACHE_PRIMITIVES DNN_OMP cimg_use_cpp11 cimg_use_jpeg cimg_use_png cimg_use_zlib)
 target_include_directories(${PROJECT_NAME}
     PUBLIC
        $<INSTALL_INTERFACE:include>
