@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdlib>
 #include <stdlib.h>
 #include <string>
 #include <utility>
@@ -88,10 +89,7 @@ namespace dnn
 #elif defined(__MINGW32__)
 			return ::_mm_malloc(size, align);
 #else  // posix assumed
-			void* p;
-			if (::posix_memalign(&p, align, size) != 0)
-				p = 0;
-			return p;
+			return ::aligned_alloc(align, size);
 #endif
 		}
 
