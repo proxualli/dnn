@@ -60,11 +60,19 @@ add_compile_definitions(DNN_EXPORTS DNN_CACHE_PRIMITIVES DNN_OMP cimg_use_cpp11 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 if (WIN32 OR MSVC)
+  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     # warning level 4 and all warnings as errors
-    add_compile_options(/W4 /WX)
+    add_compile_options(/W4)
+  else()
+    add_compile_options(/W3)
+  endif()
 else()
+  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     # lots of warnings and all warnings as errors
-    add_compile_options(-Wall -Wextra -pedantic -Werror)
+    add_compile_options(-Wall -g2 -Wextra -pedantic)
+  else()
+    add_compile_options(-Ofast -Wno-error)
+  endif()
 endif()
 
 MACRO(DNN_TARGET_ENABLE_CXX17 target)
