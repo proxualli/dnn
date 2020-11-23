@@ -69,7 +69,7 @@ if (WIN32 OR MSVC)
 else()
   if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     # lots of warnings and all warnings as errors
-    add_compile_options(-Wall -g2 -Wextra -pedantic)
+    add_compile_options(-Wall -Wextra -pedantic)
   else()
     add_compile_options(-Ofast -Wno-error)
   endif()
