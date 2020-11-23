@@ -440,7 +440,7 @@ namespace dnn
 									goto FAIL;
 								}
 
-								for (auto i = 1; i < inputs.size(); i++)
+								for (auto i = 1ull; i < inputs.size(); i++)
 									if (inputs[i]->C != inputs[0]->C)
 									{
 										msg = CheckMsg(line, col, "Layer " + name + " has uneven channels in the input " + inputs[i]->Name + ", must have " + std::to_string(inputs[0]->C) + " channels.");
