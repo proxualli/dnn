@@ -453,9 +453,9 @@ namespace dnn
 			return weightsSize;
 		}
 
-		size_t GetNeuronsSize(const size_t batchSize) const
+		auto GetNeuronsSize(const size_t batchSize) const
 		{
-			auto neuronsSize = 0ull;
+			size_t neuronsSize = 0;
 
 			for (auto layer : Layers)
 				neuronsSize += layer->GetNeuronsSize(batchSize);

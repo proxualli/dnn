@@ -41,7 +41,7 @@ project(dnn VERSION ${DNN_VERSION} LANGUAGES C CXX)
 # to pay attention to the value of these variables.
 if(NOT CMAKE_BUILD_TYPE)
     message(STATUS "No build type specified; defaulting to CMAKE_BUILD_TYPE=Release.")
-    set(CMAKE_BUILD_TYPE Debug CACHE STRING
+    set(CMAKE_BUILD_TYPE Release CACHE STRING
         "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel."
         FORCE)
 else(NOT CMAKE_BUILD_TYPE)
