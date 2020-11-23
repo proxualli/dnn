@@ -232,7 +232,7 @@ namespace dnn
 		return text;
 	};
 
-	static const bool IsStringBool(std::string text)
+	static bool IsStringBool(std::string text)
 	{
 		auto textLower = StringToLower(text);
 		
@@ -242,7 +242,7 @@ namespace dnn
 		return false;
 	}
 
-	static const bool StringToBool(std::string text)
+	static bool StringToBool(std::string text)
 	{
 		auto textLower = StringToLower(text);
 		
