@@ -1228,7 +1228,7 @@ namespace dnn
 		{
 			Image dstImage(image.Channels, image.Depth + (depth * 2), image.Height + (height * 2), image.Width + (width * 2));
 
-			for (auto c = 0; c < dstImage.Channels; c++)
+			for (auto c = 0ull; c < dstImage.Channels; c++)
 			{
 				const T channelMean = std::is_floating_point_v<T> ? T(0) : T(mean[c]);
 				for (auto d = 0ull; d < dstImage.Depth; d++)
