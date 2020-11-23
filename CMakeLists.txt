@@ -57,28 +57,22 @@ option(BUILD_SHARED_LIBS "Build shared library" ON)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-if (WIN32 OR MSVC)
-  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    # warning level 4 and all warnings as errors
-    add_compile_options(/W4 /arch:AVX2 /openmp:experimental)
-  else()
-    add_compile_options(/W3 /arch:AVX2 /openmp:experimental)
-  endif()
-else()
-  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    # lots of warnings and all warnings as errors
-    add_compile_options(-Wall -Wextra -mavx2 -mfma -march=znver2 -fopenmp -fPIC)
-  else()
-    add_compile_options(-Ofast -Wno-error -mavx2 -mfma -march=znver2 -fopenmp -fPIC)
-  endif()
-endif()
-
 MACRO(DNN_TARGET_ENABLE_CXX17 target)
-  IF(WIN32 OR MSVC)
-    TARGET_COMPILE_OPTIONS(${target} PRIVATE /arch:AVX2 /openmp:experimental)
-  ELSE()
-    TARGET_COMPILE_OPTIONS(${target} PRIVATE -mavx2 -mfma -march=znver2 -fopenmp -fPIC $<$<CXX_COMPILER_ID:GNU>:-Wno-psabi>)
-  ENDIF()
+  if(WIN32 OR MSVC)
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+      # warning level 4 and all warnings as errors
+      TARGET_COMPILE_OPTIONS(${target} PRIVATE /W4 /arch:AVX2 /openmp:experimental)
+    else()
+      TARGET_COMPILE_OPTIONS(${target} PRIVATE /W3 /arch:AVX2 /openmp:experimental)
+    endif()
+  else()
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+      # warning level 4 and all warnings as errors
+      TARGET_COMPILE_OPTIONS(${target} PRIVATE -Wextra -mavx2 -mfma -march=znver2 -fopenmp -fPIC $<$<CXX_COMPILER_ID:GNU>:-Wno-psabi>)
+    else()
+      TARGET_COMPILE_OPTIONS(${target} PRIVATE -Ofast -Wno-error -mavx2 -mfma -march=znver2 -fopenmp -fPIC $<$<CXX_COMPILER_ID:GNU>:-Wno-psabi>)
+    endif()
+  endif()
   SET_TARGET_PROPERTIES(${target} PROPERTIES
     CXX_STANDARD 17
     CXX_STANDARD_REQUIRED YES
