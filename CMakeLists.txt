@@ -32,7 +32,6 @@ if(POLICY CMP0015)
 endif(POLICY CMP0015)
 
 project(dnn VERSION ${DNN_VERSION} LANGUAGES C CXX)
-  
 
 #####
 # Change the default build type from Debug to Release, while still
@@ -42,7 +41,7 @@ project(dnn VERSION ${DNN_VERSION} LANGUAGES C CXX)
 # to pay attention to the value of these variables.
 if(NOT CMAKE_BUILD_TYPE)
     message(STATUS "No build type specified; defaulting to CMAKE_BUILD_TYPE=Release.")
-    set(CMAKE_BUILD_TYPE Release CACHE STRING
+    set(CMAKE_BUILD_TYPE Debug CACHE STRING
         "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel."
         FORCE)
 else(NOT CMAKE_BUILD_TYPE)
@@ -58,6 +57,16 @@ option(BUILD_SHARED_LIBS "Build shared library" ON)
 
 add_compile_definitions(DNN_EXPORTS DNN_CACHE_PRIMITIVES DNN_OMP cimg_use_cpp11 cimg_use_jpeg cimg_use_png cimg_use_zlib)
 
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+if (WIN32 OR MSVC)
+    # warning level 4 and all warnings as errors
+    add_compile_options(/W4 /WX)
+else()
+    # lots of warnings and all warnings as errors
+    add_compile_options(-Wall -Wextra -pedantic -Werror)
+endif()
+
 MACRO(DNN_TARGET_ENABLE_CXX17 target)
   IF(WIN32 OR MSVC)
     TARGET_COMPILE_OPTIONS(${target} PUBLIC /arch:AVX2 /openmp:experimental)
@@ -69,6 +78,27 @@ MACRO(DNN_TARGET_ENABLE_CXX17 target)
     CXX_STANDARD_REQUIRED YES
     CXX_EXTENSIONS ON)
 ENDMACRO()
+
+set(DNNL_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(DNNL_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(WITH_TURBOJPEG FALSE CACHE BOOL "" FORCE) 
+set(PNG_EXECUTABLES FALSE CACHE BOOL "" FORCE)
+set(PNG_TESTS FALSE CACHE BOOL "" FORCE)
+set(PNG_BUILD_ZLIB TRUE CACHE BOOL "" FORCE)
+
+if(BUILD_SHARED_LIBS)
+  set(DNNL_LIBRARY_TYPE "SHARED" CACHE STRING "" FORCE)
+  set(PNG_SHARED TRUE CACHE BOOL "" FORCE)
+  set(PNG_STATIC FALSE CACHE BOOL "" FORCE)
+  set(ENABLE_SHARED TRUE CACHE BOOL "" FORCE)
+  set(ENABLE_STATIC FALSE CACHE BOOL "" FORCE)
+else()
+  set(DNNL_LIBRARY_TYPE "STATIC" CACHE STRING "" FORCE)
+  set(PNG_SHARED FALSE CACHE BOOL "" FORCE)
+  set(PNG_STATIC TRUE CACHE BOOL "" FORCE)
+  set(ENABLE_SHARED FALSE CACHE BOOL "" FORCE)
+  set(ENABLE_STATIC TRUE CACHE BOOL "" FORCE)
+endif()
 
 set(libdnn_headers
   include/Activation.h
@@ -125,29 +155,6 @@ set(libdnn_sources
 set(libdnn_test
   src/test.cpp
 )
-
-set(DNNL_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-set(DNNL_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(WITH_TURBOJPEG FALSE CACHE BOOL "" FORCE) 
-set(PNG_EXECUTABLES FALSE CACHE BOOL "" FORCE)
-set(PNG_TESTS FALSE CACHE BOOL "" FORCE)
-set(PNG_BUILD_ZLIB TRUE CACHE BOOL "" FORCE)
-
-if(BUILD_SHARED_LIBS)
-  set(DNNL_LIBRARY_TYPE "SHARED" CACHE STRING "" FORCE)
-  set(ENABLE_SHARED TRUE CACHE BOOL "" FORCE)
-  set(ENABLE_STATIC FALSE CACHE BOOL "" FORCE)
-  set(PNG_SHARED TRUE CACHE BOOL "" FORCE)
-  set(PNG_STATIC FALSE CACHE BOOL "" FORCE)
-else()
-  set(DNNL_LIBRARY_TYPE "STATIC" CACHE STRING "" FORCE)
-  set(ENABLE_SHARED FALSE CACHE BOOL "" FORCE)
-  set(ENABLE_STATIC TRUE CACHE BOOL "" FORCE)
-  set(PNG_SHARED FALSE CACHE BOOL "" FORCE)
-  set(PNG_STATIC TRUE CACHE BOOL "" FORCE)
-endif()
-
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # ---[ Download deps
 SET(DNN_DEPENDENCIES_SOURCE_DIR ${CMAKE_SOURCE_DIR}/deps
@@ -257,7 +264,6 @@ include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/oneDNN/include)
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/oneDNN/src)
 include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/oneDNN/src)
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/vectorclass)
-include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/vectorclass)
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/magic_enum/include)
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/CImg)
 
