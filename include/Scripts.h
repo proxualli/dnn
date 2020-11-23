@@ -102,7 +102,7 @@ namespace dnn
                 return (Groups * Iterations * (Bottleneck ? 3u : 2u)) + ((Groups - 1) * 2);
             case Scripts::shufflenetv2:
                 return (Groups * (Iterations - 1) * 3) + (Groups * 5) + 1;
-            defaullt:
+            default:
                 return 0;
             }
         }
@@ -142,7 +142,7 @@ namespace dnn
         {
             return variable ? std::string("Yes") : std::string("No");
         }
-/*
+
         static auto to_string(const size_t variable)
         {
             return std::to_string(variable);
@@ -152,7 +152,7 @@ namespace dnn
         {
             return std::to_string(variable);
         }
-*/
+
         static auto to_string(const Datasets dataset)
         {
             return std::string(magic_enum::enum_name<Datasets>(dataset));
@@ -182,26 +182,26 @@ namespace dnn
 
         static std::string In(std::string prefix, size_t id)
         {
-            return prefix + std::to_string(id);
+            return prefix + to_string(id);
         }
 
         static std::string BatchNorm(size_t id, std::string inputs, std::string group = "", std::string prefix = "B")
         {
-            return "[" + group + prefix + std::to_string(id) + "]" + nwl +
+            return "[" + group + prefix + to_string(id) + "]" + nwl +
                 "Type=BatchNorm" + nwl +
                 "Inputs=" + inputs + nwl + nwl;
         }
 
         static std::string BatchNormActivation(size_t id, std::string inputs, bool relu = true, std::string group = "", std::string prefix = "B")
         {
-            return "[" + group + prefix + std::to_string(id) + "]" + nwl +
+            return "[" + group + prefix + to_string(id) + "]" + nwl +
                 (relu ? "Type=BatchNormRelu" + nwl : "Type=BatchNormHardSwish" + nwl) +
                 "Inputs=" + inputs + nwl + nwl;
         }
 
         static std::string BatchNormActivationDropout(size_t id, std::string inputs, bool relu = true, Float dropout = 0.0f, std::string group = "", std::string prefix = "B")
         {
-            return "[" + group + prefix + std::to_string(id) + "]" + nwl +
+            return "[" + group + prefix + to_string(id) + "]" + nwl +
                 (relu ? "Type=BatchNormReluDropout" + nwl : "Type=BatchNormHardSwishDropout" + nwl) +
                 "Inputs=" + inputs + nwl +
                 (dropout > 0.0f ? "Dropout=" + to_string(dropout) + nwl + nwl : nwl);
@@ -209,60 +209,60 @@ namespace dnn
 
         static std::string BatchNormHardSwish(size_t id, std::string inputs, std::string group = "", std::string prefix = "B")
         {
-            return "[" + group + prefix + std::to_string(id) + "]" + nwl +
+            return "[" + group + prefix + to_string(id) + "]" + nwl +
                 "Type=BatchNormHardSwish" + nwl +
                 "Inputs=" + inputs + nwl + nwl;
         }
 
         static std::string BatchNormRelu(size_t id, std::string inputs, std::string group = "", std::string prefix = "B")
         {
-            return "[" + group + prefix + std::to_string(id) + "]" + nwl +
+            return "[" + group + prefix + to_string(id) + "]" + nwl +
                 "Type=BatchNormRelu" + nwl +
                 "Inputs=" + inputs + nwl + nwl;
         }
 
         static std::string BatchNormReluDropout(size_t id, std::string inputs, Float dropout = 0.0f, std::string group = "", std::string prefix = "B")
         {
-            return "[" + group + prefix + std::to_string(id) + "]" + nwl +
+            return "[" + group + prefix + to_string(id) + "]" + nwl +
                 "Type=BatchNormReluDropout" + nwl +
                 "Inputs=" + inputs + nwl +
-                (dropout > 0.0f ? "Dropout=" + std::to_string(dropout) + nwl + nwl : nwl);
+                (dropout > 0.0f ? "Dropout=" + to_string(dropout) + nwl + nwl : nwl);
         }
 
         static std::string Convolution(size_t id, std::string inputs, size_t channels, size_t kernelX = 3, size_t kernelY = 3, size_t strideX = 1, size_t strideY = 1, size_t padX = 1, size_t padY = 1, std::string group = "", std::string prefix = "C", std::string weightsFiller = "")
         {
-            return "[" + group + prefix + std::to_string(id) + "]" + nwl +
+            return "[" + group + prefix + to_string(id) + "]" + nwl +
                 "Type=Convolution" + nwl +
                 "Inputs=" + inputs + nwl +
-                "Channels=" + std::to_string(channels) + nwl +
-                "Kernel=" + std::to_string(kernelX) + "," + std::to_string(kernelY) + nwl +
-                (strideX != 1 || strideY != 1 ? "Stride=" + std::to_string(strideX) + "," + std::to_string(strideY) + nwl : "") +
-                (padX != 0 || padY != 0 ? "Pad=" + std::to_string(padX) + "," + std::to_string(padY) + nwl : "") +
+                "Channels=" + to_string(channels) + nwl +
+                "Kernel=" + to_string(kernelX) + "," + to_string(kernelY) + nwl +
+                (strideX != 1 || strideY != 1 ? "Stride=" + to_string(strideX) + "," + to_string(strideY) + nwl : "") +
+                (padX != 0 || padY != 0 ? "Pad=" + to_string(padX) + "," + to_string(padY) + nwl : "") +
                 (weightsFiller != "" ? "WeightsFiller=" + weightsFiller + nwl + nwl : nwl);
         }
 
         static std::string DepthwiseConvolution(size_t id, std::string inputs, size_t multiplier = 1, size_t kernelX = 3, size_t kernelY = 3, size_t strideX = 1, size_t strideY = 1, size_t padX = 1, size_t padY = 1, std::string group = "", std::string prefix = "DC", std::string weightsFiller = "")
         {
-            return "[" + group + prefix + std::to_string(id) + "]" + nwl +
+            return "[" + group + prefix + to_string(id) + "]" + nwl +
                 "Type=DepthwiseConvolution" + nwl +
                 "Inputs=" + inputs + nwl +
-                (multiplier > 1 ? "Mulltiplier=" + std::to_string(multiplier) + nwl : "") +
-                "Kernel=" + std::to_string(kernelX) + "," + std::to_string(kernelY) + nwl +
-                (strideX != 1 || strideY != 1 ? "Stride=" + std::to_string(strideX) + "," + std::to_string(strideY) + nwl : "") +
-                (padX != 0 || padY != 0 ? "Pad=" + std::to_string(padX) + "," + std::to_string(padY) + nwl : "") +
+                (multiplier > 1 ? "Mulltiplier=" + to_string(multiplier) + nwl : "") +
+                "Kernel=" + to_string(kernelX) + "," + to_string(kernelY) + nwl +
+                (strideX != 1 || strideY != 1 ? "Stride=" + to_string(strideX) + "," + to_string(strideY) + nwl : "") +
+                (padX != 0 || padY != 0 ? "Pad=" + to_string(padX) + "," + to_string(padY) + nwl : "") +
                 (weightsFiller != "" ? "WeightsFiller=" + weightsFiller + nwl + nwl : nwl);
         }
 
         static std::string PartialDepthwiseConvolution(size_t id, std::string inputs, size_t part = 1, size_t groups = 1, size_t kernelX = 3, size_t kernelY = 3, size_t strideX = 1, size_t strideY = 1, size_t padX = 1, size_t padY = 1, std::string group = "", std::string prefix = "DC", std::string weightsFiller = "")
         {
-            return "[" + group + prefix + std::to_string(id) + "]" + nwl +
+            return "[" + group + prefix + to_string(id) + "]" + nwl +
                 "Type=PartialDepthwiseConvolution" + nwl +
                 "Inputs=" + inputs + nwl +
-                "Group=" + std::to_string(part) + nwl +
-                "Groups=" + std::to_string(groups) + nwl +
-                "Kernel=" + std::to_string(kernelX) + "," + std::to_string(kernelY) + nwl +
-                (strideX != 1 || strideY != 1 ? "Stride=" + std::to_string(strideX) + "," + std::to_string(strideY) + nwl : "") +
-                (padX != 0 || padY != 0 ? "Pad=" + std::to_string(padX) + "," + std::to_string(padY) + nwl : "") +
+                "Group=" + to_string(part) + nwl +
+                "Groups=" + to_string(groups) + nwl +
+                "Kernel=" + to_string(kernelX) + "," + to_string(kernelY) + nwl +
+                (strideX != 1 || strideY != 1 ? "Stride=" + to_string(strideX) + "," + to_string(strideY) + nwl : "") +
+                (padX != 0 || padY != 0 ? "Pad=" + to_string(padX) + "," + to_string(padY) + nwl : "") +
                 (weightsFiller != "" ? "WeightsFiller=" + weightsFiller + nwl + nwl : nwl);
         }
 
@@ -301,24 +301,24 @@ namespace dnn
 
         static std::string ChannelSplit(size_t id, std::string inputs, size_t groups, size_t part, std::string group = "", std::string prefix = "CS")
         {
-            return "[" + group + prefix + std::to_string(id) + "]" + nwl +
+            return "[" + group + prefix + to_string(id) + "]" + nwl +
                 "Type=ChannelSplit" + nwl +
                 "Inputs=" + inputs + nwl +
-                "Groups=" + std::to_string(groups) + nwl +
-                "Group=" + std::to_string(part) + nwl + nwl;
+                "Groups=" + to_string(groups) + nwl +
+                "Group=" + to_string(part) + nwl + nwl;
         }
 
         static std::string ChannelShuffle(size_t id, std::string inputs, size_t groups = 2, std::string group = "", std::string prefix = "CSH")
         {
-            return "[" + group + prefix + std::to_string(id) + "]" + nwl +
+            return "[" + group + prefix + to_string(id) + "]" + nwl +
                 "Type=ChannelShuffle" + nwl +
                 "Inputs=" + inputs + nwl +
-                "Groups=" + std::to_string(groups) + nwl + nwl;
+                "Groups=" + to_string(groups) + nwl + nwl;
         }
 
         static std::string Concat(size_t id, std::string inputs, std::string group = "", std::string prefix = "CC")
         {
-            return "[" + group + prefix + std::to_string(id) + "]" + nwl +
+            return "[" + group + prefix + to_string(id) + "]" + nwl +
                 "Type=Concat" + nwl +
                 "Inputs=" + inputs + nwl + nwl;
         }
@@ -332,7 +332,7 @@ namespace dnn
 
         static std::string Add(size_t id, std::string inputs, std::string group = "", std::string prefix = "A")
         {
-            return "[" + group + prefix + std::to_string(id) + "]" + nwl +
+            return "[" + group + prefix + to_string(id) + "]" + nwl +
                 "Type=Add" + nwl +
                 "Inputs=" + inputs + nwl + nwl;
         }
@@ -346,14 +346,14 @@ namespace dnn
 
         static std::string Dropout(size_t id, std::string inputs, std::string group = "", std::string prefix = "D")
         {
-            return "[" + group + prefix + std::to_string(id) + "]" + nwl +
+            return "[" + group + prefix + to_string(id) + "]" + nwl +
                 "Type=Dropout" + nwl +
                 "Inputs=" + inputs + nwl + nwl;
         }
 
         static std::string HardLogistic(size_t id, std::string inputs, std::string group = "", std::string prefix = "ACT")
         {
-            return "[" + group + prefix + std::to_string(id) + "]" + nwl +
+            return "[" + group + prefix + to_string(id) + "]" + nwl +
                 "Type=Activation" + nwl +
                 "Inputs=" + inputs + nwl +
                 "Activation=HardLogistic" + nwl + nwl;
@@ -361,7 +361,7 @@ namespace dnn
 
         static std::string HardSwish(size_t id, std::string inputs, std::string group = "", std::string prefix = "ACT")
         {
-            return "[" + group + prefix + std::to_string(id) + "]" + nwl +
+            return "[" + group + prefix + to_string(id) + "]" + nwl +
                 "Type=Activation" + nwl +
                 "Inputs=" + inputs + nwl +
                 "Activation=HardSwish" + nwl + nwl;
@@ -375,19 +375,19 @@ namespace dnn
             auto net =
                 "[" + p.GetName() + "]" + nwl +
                 "Dataset=" + to_string(p.Dataset) + nwl +
-                "Dim=" + std::to_string(p.C) + "," + std::to_string(p.H) + "," + std::to_string(p.W) + nwl +
-                ((p.PadH > 0 || p.PadW > 0) ? (!p.MirrorPad ? "ZeroPad=" + std::to_string(p.PadH) + "," + std::to_string(p.PadW) + nwl : "MirrorPad=" + std::to_string(p.PadH) + "," + std::to_string(p.PadW) + nwl) : "") +
+                "Dim=" + to_string(p.C) + "," + to_string(p.H) + "," + to_string(p.W) + nwl +
+                ((p.PadH > 0 || p.PadW > 0) ? (!p.MirrorPad ? "ZeroPad=" + to_string(p.PadH) + "," + to_string(p.PadW) + nwl : "MirrorPad=" + to_string(p.PadH) + "," + to_string(p.PadW) + nwl) : "") +
                 ((p.PadH > 0 || p.PadW > 0) ? "RandomCrop=Yes" + nwl : "") +
-                "WeightsFiller=" + to_string(p.WeightsFiller) + (ScaleVisible(p.WeightsFiller) ? "(" + std::to_string(p.WeightsScale) + ")" : "") + nwl +
-                (p.WeightsLRM != 1 ? "WeightsLRM=" + std::to_string(p.WeightsLRM) + nwl : "") +
-                (p.WeightsWDM != 1 ? "WeightsWDM=" + std::to_string(p.WeightsWDM) + nwl : "") +
-                (p.HasBias ? "BiasesFiller=" + to_string(p.BiasesFiller) + (ScaleVisible(p.BiasesFiller) ? "(" + std::to_string(p.BiasesScale) + ")" : "") + nwl +
-                (p.BiasesLRM != 1 ? "BiasesLRM=" + std::to_string(p.BiasesLRM) + nwl : "") +
-                (p.BiasesWDM != 1 ? "BiasesWDM=" + std::to_string(p.BiasesWDM) + nwl : "") : "Biases=No" + nwl) +
-                (p.DropoutVisible() ? "Dropout=" + std::to_string(p.Dropout) + nwl : "") +
+                "WeightsFiller=" + to_string(p.WeightsFiller) + (ScaleVisible(p.WeightsFiller) ? "(" + to_string(p.WeightsScale) + ")" : "") + nwl +
+                (p.WeightsLRM != 1 ? "WeightsLRM=" + to_string(p.WeightsLRM) + nwl : "") +
+                (p.WeightsWDM != 1 ? "WeightsWDM=" + to_string(p.WeightsWDM) + nwl : "") +
+                (p.HasBias ? "BiasesFiller=" + to_string(p.BiasesFiller) + (ScaleVisible(p.BiasesFiller) ? "(" + to_string(p.BiasesScale) + ")" : "") + nwl +
+                (p.BiasesLRM != 1 ? "BiasesLRM=" + to_string(p.BiasesLRM) + nwl : "") +
+                (p.BiasesWDM != 1 ? "BiasesWDM=" + to_string(p.BiasesWDM) + nwl : "") : "Biases=No" + nwl) +
+                (p.DropoutVisible() ? "Dropout=" + to_string(p.Dropout) + nwl : "") +
                 "Scaling=" + to_string(p.BatchNormScaling) + nwl +
-                "Momentum=" + std::to_string(p.BatchNormMomentum) + nwl +
-                "Eps=" + std::to_string(p.BatchNormEps) + nwl + nwl;
+                "Momentum=" + to_string(p.BatchNormMomentum) + nwl +
+                "Eps=" + to_string(p.BatchNormEps) + nwl + nwl;
 
             auto blocks = std::vector<std::string>();
 
@@ -458,11 +458,11 @@ namespace dnn
                             blocks.push_back(
                                 Convolution(C, In("CC", CC), channels, 1, 1, 1, 1, 0, 0) +
                                 Dropout(C, In("C", C)) +
-                                "[P" + to_string(g) + "]" + nwl + "Type=AvgPooling" + nwl + "Inputs=D" + std::to_string(C) + nwl + "Kernel=2,2" + nwl + "Stride=2,2" + nwl + nwl);
+                                "[P" + to_string(g) + "]" + nwl + "Type=AvgPooling" + nwl + "Inputs=D" + to_string(C) + nwl + "Kernel=2,2" + nwl + "Stride=2,2" + nwl + nwl);
                         else
                             blocks.push_back(
                                 Convolution(C, "CC" + to_string(CC), channels, 1, 1, 1, 1, 0, 0) +
-                                "[P" + to_string(g) + "]" + nwl + "Type=AvgPooling" + nwl + "Inputs=C" + std::to_string(C) + nwl + "Kernel=2,2" + nwl + "Stride=2,2" + nwl + nwl);
+                                "[P" + to_string(g) + "]" + nwl + "Type=AvgPooling" + nwl + "Inputs=C" + to_string(C) + nwl + "Kernel=2,2" + nwl + "Stride=2,2" + nwl + nwl);
                         C++;
                         CC++;
 
@@ -499,7 +499,7 @@ namespace dnn
                     BatchNorm(C + 1, In("C", C)) +
                     GlobalAvgPooling(In("B", C + 1)) +
                     "[ACT]" + nwl + "Type=Activation" + nwl + "Inputs=GAP" + nwl + "Activation=LogSoftmax" + nwl + nwl +
-                    "[Cost]" + nwl + "Type=Cost" + nwl + "Inputs=ACT" + nwl + "Cost=CategoricalCrossEntropy" + nwl + "Channels=" + std::to_string(p.Classes());
+                    "[Cost]" + nwl + "Type=Cost" + nwl + "Inputs=ACT" + nwl + "Cost=CategoricalCrossEntropy" + nwl + "Channels=" + to_string(p.Classes());
             }
             break;
 
@@ -597,7 +597,7 @@ namespace dnn
                     BatchNorm(C + 1, In("C", C)) +
                     GlobalAvgPooling(In("B", C + 1)) +
                     "[ACT]" + nwl + "Type=Activation" + nwl + "Inputs=GAP" + nwl + "Activation=LogSoftmax" + nwl + nwl +
-                    "[Cost]" + nwl + "Type=Cost" + nwl + "Inputs=ACT" + nwl + "Cost=CategoricalCrossEntropy" + nwl + "Channels=" + std::to_string(p.Classes());
+                    "[Cost]" + nwl + "Type=Cost" + nwl + "Inputs=ACT" + nwl + "Cost=CategoricalCrossEntropy" + nwl + "Channels=" + to_string(p.Classes());
             }
             break;
 
@@ -643,10 +643,10 @@ namespace dnn
                         W *= 2;
 
                         auto strChannelZeroPad = p.ChannelZeroPad ?
-                            ("[AVG" + std::to_string(g) + "]" + nwl + "Type=AvgPooling" + nwl + "Inputs=A" + std::to_string(A) + nwl + "Kernel=3,3" + nwl + "Stride=2,2" + nwl + "Pad=1,1" + nwl + nwl +
-                                "[CZP" + std::to_string(g) + "]" + nwl + "Type=ChannelZeroPad" + nwl + "Inputs=AVG" + std::to_string(g) + nwl + "Channels=" + std::to_string(W) + nwl + nwl +
+                            ("[AVG" + to_string(g) + "]" + nwl + "Type=AvgPooling" + nwl + "Inputs=A" + to_string(A) + nwl + "Kernel=3,3" + nwl + "Stride=2,2" + nwl + "Pad=1,1" + nwl + nwl +
+                                "[CZP" + to_string(g) + "]" + nwl + "Type=ChannelZeroPad" + nwl + "Inputs=AVG" + to_string(g) + nwl + "Channels=" + to_string(W) + nwl + nwl +
                                 Add(A + 1, In("C", C + 1 + bn) + "," + In("CZP", g))) :
-                            "[AVG" + std::to_string(g) + "]" + nwl + "Type=AvgPooling" + nwl + "Inputs=B" + std::to_string(C) + nwl + "Kernel=2,2" + nwl + "Stride=2,2" + nwl + nwl +
+                            "[AVG" + to_string(g) + "]" + nwl + "Type=AvgPooling" + nwl + "Inputs=B" + to_string(C) + nwl + "Kernel=2,2" + nwl + "Stride=2,2" + nwl + nwl +
                             (Convolution(C + 2 + bn, In("AVG", g), DIV8(W), 1, 1, 1, 1, 0, 0) +
                                 Add(A + 1, In("C", C + 1 + bn) + "," + In("C", C + 2 + bn)));
 
@@ -715,7 +715,7 @@ namespace dnn
                     BatchNorm(C + 1, In("C", C)) +
                     GlobalAvgPooling(In("B", C + 1)) +
                     "[ACT]" + nwl + "Type=Activation" + nwl + "Inputs=GAP" + nwl + "Activation=LogSoftmax" + nwl + nwl +
-                    "[Cost]" + nwl + "Type=Cost" + nwl + "Inputs=ACT" + nwl + "Cost=CategoricalCrossEntropy" + nwl + "Channels=" + std::to_string(p.Classes());
+                    "[Cost]" + nwl + "Type=Cost" + nwl + "Inputs=ACT" + nwl + "Cost=CategoricalCrossEntropy" + nwl + "Channels=" + to_string(p.Classes());
             }
             break;
 
@@ -801,7 +801,7 @@ namespace dnn
                     BatchNorm(C + 1, In("C", C)) +
                     GlobalAvgPooling(In("B", C + 1)) +
                     "[ACT]" + nwl + "Type=Activation" + nwl + "Inputs=GAP" + nwl + "Activation=LogSoftmax" + nwl + nwl +
-                    "[Cost]" + nwl + "Type=Cost" + nwl + "Inputs=ACT" + nwl + "Cost=CategoricalCrossEntropy" + nwl + "Channels=" + std::to_string(p.Classes()) + nwl + "Eps=0.125";
+                    "[Cost]" + nwl + "Type=Cost" + nwl + "Inputs=ACT" + nwl + "Cost=CategoricalCrossEntropy" + nwl + "Channels=" + to_string(p.Classes()) + nwl + "Eps=0.125";
             }
             break;
 

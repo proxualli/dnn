@@ -1827,9 +1827,9 @@ namespace dnn
 			}
 		}
 
-		virtual size_t GetWeightsSize(const bool persistOptimizer = false, const Optimizers optimizer = Optimizers::SGD) const
+		virtual std::streamsize GetWeightsSize(const bool persistOptimizer = false, const Optimizers optimizer = Optimizers::SGD) const
 		{
-			size_t weightsSize = 0;
+			std::streamsize weightsSize = 0;
 
 			if (HasWeights)
 			{

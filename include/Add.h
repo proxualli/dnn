@@ -75,7 +75,6 @@ namespace dnn
 			}
 
 			srcsMemsDesc = std::vector<dnnl::memory::desc>(Inputs.size());
-
 			for (size_t i = 0; i < Inputs.size(); i++)
 				srcsMemsDesc[i] = *Inputs[i]->DstMemDesc;
 

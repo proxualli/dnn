@@ -443,9 +443,9 @@ namespace dnn
 			}
 		}		
 	
-		size_t GetWeightsSize(const bool persistOptimizer) const
+		auto GetWeightsSize(const bool persistOptimizer) const
 		{
-			auto weightsSize = 0ull;
+			std::streamsize weightsSize = 0;
 
 			for (auto layer : Layers)
 				weightsSize += layer->GetWeightsSize(persistOptimizer, Optimizer);
