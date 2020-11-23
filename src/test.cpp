@@ -1,8 +1,8 @@
 #ifndef _WIN32
-#include <stdlib.h>
-#define DNN_API extern "C" 
+  #include <stdlib.h>
+  #define DNN_API extern "C" 
 #else
-#define DNN_API extern "C" __declspec(dllimport)
+  #define DNN_API extern "C" __declspec(dllimport)
 #endif
 
 #include <chrono>

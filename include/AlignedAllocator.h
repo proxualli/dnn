@@ -80,7 +80,7 @@ namespace dnn
 		}
 
 	private:
-		void* AlignedAlloc(const size_type align, const size_type size) const
+		inline void* AlignedAlloc(const size_type align, const size_type size) const
 		{
 #if defined(_WIN32) || defined(__CYGWIN__)
 			return ::_aligned_malloc(size, align);
@@ -93,7 +93,7 @@ namespace dnn
 #endif
 		}
 
-		void AlignedFree(pointer ptr)
+		inline void AlignedFree(pointer ptr)
 		{
 #if defined(_WIN32) || defined(__CYGWIN__)
 			::_aligned_free(ptr);
