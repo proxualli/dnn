@@ -62,7 +62,7 @@ MACRO(DNN_TARGET_ENABLE_CXX17 target)
   IF(WIN32 OR MSVC)
     TARGET_COMPILE_OPTIONS(${target} PUBLIC /arch:AVX2 /openmp:experimental)
   ELSE()
-    TARGET_COMPILE_OPTIONS(${target} PUBLIC -mavx2 -mfma -march=znver2 -fopenmp -fPIC -Wno-psabi)
+    TARGET_COMPILE_OPTIONS(${target} PUBLIC -mavx2 -mfma -march=znver2 -fopenmp -fPIC $<$<CXX_COMPILER_ID:GNU>:-Wno-psabi>)
   ENDIF()
   SET_TARGET_PROPERTIES(${target} PROPERTIES
     CXX_STANDARD 17
