@@ -54,6 +54,7 @@ else(NOT CMAKE_BUILD_TYPE)
     endif(CMAKE_BUILD_TYPE STREQUAL "Debug")
 endif(NOT CMAKE_BUILD_TYPE)
 
+option(BUILD_SHARED_LIBS "Build shared library" ON)
 
 add_compile_definitions(DNN_EXPORTS DNN_CACHE_PRIMITIVES DNN_OMP cimg_use_cpp11 cimg_use_jpeg cimg_use_png cimg_use_zlib)
 
@@ -142,7 +143,7 @@ else()
   set(DNNL_LIBRARY_TYPE "STATIC" CACHE STRING "" FORCE)
   set(ENABLE_SHARED FALSE CACHE BOOL "" FORCE)
   set(ENABLE_STATIC TRUE CACHE BOOL "" FORCE)
-  set(PNG_SHARED TRUE CACHE BOOL "" FORCE)
+  set(PNG_SHARED FALSE CACHE BOOL "" FORCE)
   set(PNG_STATIC TRUE CACHE BOOL "" FORCE)
 endif()
 
@@ -275,8 +276,6 @@ IF(NOT TARGET png)
     "${DNN_DEPENDENCIES_BINARY_DIR}/libpng")
 ENDIF()
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC png)
-
-set(LIBRARY_PATH=/opt/libjpeg-turbo/lib64)
 
 # ---[ Configure JPEG
 IF(NOT TARGET jpeg)
