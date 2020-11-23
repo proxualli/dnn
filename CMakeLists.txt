@@ -276,6 +276,8 @@ IF(NOT TARGET png)
 ENDIF()
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC png)
 
+set(LIBRARY_PATH=/opt/libjpeg-turbo/lib64)
+
 # ---[ Configure JPEG
 IF(NOT TARGET jpeg)
   ADD_SUBDIRECTORY(
