@@ -41,7 +41,7 @@ project(dnn VERSION ${DNN_VERSION} LANGUAGES C CXX)
 # to pay attention to the value of these variables.
 if(NOT CMAKE_BUILD_TYPE)
     message(STATUS "No build type specified; defaulting to CMAKE_BUILD_TYPE=Release.")
-    set(CMAKE_BUILD_TYPE Release CACHE STRING
+    set(CMAKE_BUILD_TYPE Debug CACHE STRING
         "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel."
         FORCE)
 else(NOT CMAKE_BUILD_TYPE)
@@ -68,7 +68,7 @@ MACRO(DNN_TARGET_ENABLE_CXX17 target)
   else()
     if(CMAKE_BUILD_TYPE STREQUAL "Debug")
       # warning level 4 and all warnings as errors
-      TARGET_COMPILE_OPTIONS(${target} PRIVATE -Wextra -mavx2 -mfma -march=znver2 -fopenmp -fPIC $<$<CXX_COMPILER_ID:GNU>:-Wno-psabi>)
+      TARGET_COMPILE_OPTIONS(${target} PRIVATE -g -Wextra -mavx2 -mfma -march=znver2 -fopenmp -fPIC $<$<CXX_COMPILER_ID:GNU>:-Wno-psabi>)
     else()
       TARGET_COMPILE_OPTIONS(${target} PRIVATE -Ofast -Wno-error -mavx2 -mfma -march=znver2 -fopenmp -fPIC $<$<CXX_COMPILER_ID:GNU>:-Wno-psabi>)
     endif()
