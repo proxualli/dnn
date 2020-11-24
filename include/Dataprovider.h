@@ -169,7 +169,7 @@ namespace dnn
 					"$shell.Namespace($destination).copyhere($item)" << std::endl <<
 					"}" << std::endl <<
 					"}" << std::endl <<
-					"UnZip-File -File \"" << DatasetsDirectory.string() << "\\tiny-imagenet-200.zip\" –Destination \"" << DatasetsDirectory.string() << "\"" << std::endl;
+					"UnZip-File -File \"" << DatasetsDirectory.string() << "\\tiny-imagenet-200.zip\" ï¿½Destination \"" << DatasetsDirectory.string() << "\"" << std::endl;
 
 				unzipScript.close();
 				
@@ -192,14 +192,19 @@ namespace dnn
 				std::filesystem::create_directories(path);
 
 				batch <<
+#if defined _WIN32 || defined __CYGWIN__ || defined __MINGW32__
 					"@echo off" << std::endl <<
 					"echo Downloading " + std::string(magic_enum::enum_name<Datasets>(dataset)) + " dataset" << std::endl <<
 					"echo." << std::endl <<
 					"cd " + path.string() << std::endl <<
-#if defined _WIN32 || defined __CYGWIN__ || defined __MINGW32__
 					"curl -O http://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz && tar -xf cifar-10-binary.tar.gz --strip-components=1 && del /Q cifar-10-binary.tar.gz" << std::endl;
 #else
-					"curl -O http://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz && tar -xf cifar-10-binary.tar.gz --strip-components=1 && rm ./cifar-10-binary.tar.gz" << std::endl;
+					std::string("#!/bin/sh") << std::endl <<
+					std::string("echo loading ") + std::string(magic_enum::enum_name<Datasets>(dataset)) + std::string(" dataset...") << std::endl <<
+					std::string("cd ") + path.string() << std::endl <<
+					std::string("curl -O http://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz") << std::endl << 
+					std::string("tar -xf cifar-10-binary.tar.gz --strip-components=1") << std::endl << 
+					std::string("rm ./cifar-10-binary.tar.gz") << std::endl;
 #endif
 			}
 			break;
@@ -210,14 +215,19 @@ namespace dnn
 				std::filesystem::create_directories(path);
 
 				batch <<
+#if defined _WIN32 || defined __CYGWIN__ || defined __MINGW32__
 					"@echo off" << std::endl <<
 					"echo Downloading " + std::string(magic_enum::enum_name<Datasets>(dataset)) + " dataset" << std::endl <<
 					"echo." << std::endl <<
 					"cd " + path.string() << std::endl <<
-#if defined _WIN32 || defined __CYGWIN__ || defined __MINGW32__
-					"curl -O http://www.cs.toronto.edu/~kriz/cifar-100-binary.tar.gz && tar -xf cifar-100-binary.tar.gz --strip-components=1 && del /Q cifar-100-binary.tar.gz" << std::endl;
+					"curl -O http://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz && tar -xf cifar-10-binary.tar.gz --strip-components=1 && del /Q cifar-10-binary.tar.gz" << std::endl;
 #else
-					"curl -O http://www.cs.toronto.edu/~kriz/cifar-100-binary.tar.gz && tar -xf cifar-100-binary.tar.gz --strip-components=1 && rm ./cifar-100-binary.tar.gz" << std::endl;
+					std::string("#!/bin/sh") << std::endl <<
+					std::string("echo loading ") + std::string(magic_enum::enum_name<Datasets>(dataset)) + std::string(" dataset...") << std::endl <<
+					std::string("cd ") + path.string() << std::endl <<
+					std::string("curl -O http://www.cs.toronto.edu/~kriz/cifar-100-binary.tar.gz") << std::endl << 
+					std::string("tar -xf cifar-100-binary.tar.gz --strip-components=1") << std::endl << 
+					std::string("rm ./cifar-100-binary.tar.gz") << std::endl;
 #endif
 			}
 			break;
@@ -225,23 +235,29 @@ namespace dnn
 			case Datasets::fashionmnist:
 			{
 				batch <<
+#if defined _WIN32 || defined __CYGWIN__ || defined __MINGW32__
 					"@echo off" << std::endl <<
 					"echo Downloading " + std::string(magic_enum::enum_name<Datasets>(dataset)) + " dataset" << std::endl <<
 					"echo." << std::endl <<
 					"cd " + path.string() << std::endl <<
-					"curl -O http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/train-images-idx3-ubyte.gz" << std::endl <<
-					"curl -O http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/t10k-images-idx3-ubyte.gz" << std::endl <<
-					"curl -O http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/train-labels-idx1-ubyte.gz" << std::endl <<
-					"curl -O http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/t10k-labels-idx1-ubyte.gz" << std::endl <<
+#else
+					std::string("#!/bin/sh") << std::endl <<
+					std::string("echo loading ") + std::string(magic_enum::enum_name<Datasets>(dataset)) + std::string(" dataset...") << std::endl <<
+					std::string("cd ") + path.string() << std::endl <<
+#endif
+					std::string("curl -O http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/train-images-idx3-ubyte.gz") << std::endl <<
+					std::string("curl -O http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/t10k-images-idx3-ubyte.gz") << std::endl <<
+					std::string("curl -O http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/train-labels-idx1-ubyte.gz") << std::endl <<
+					std::string("curl -O http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/t10k-labels-idx1-ubyte.gz") << std::endl <<
 #if defined _WIN32 || defined __CYGWIN__ || defined __MINGW32__
 					"powershell -ExecutionPolicy Bypass -command \"& {&./UnZip-File.ps1}\";" << std::endl <<
 					"del *.gz" << std::endl <<
 					"del UnZip-File.ps1" << std::endl;
 #else
-					"gunzip -f ./train-images-idx3-ubyte.gz" << std::endl <<
-					"gunzip -f ./t10k-images-idx3-ubyte.gz" << std::endl <<
-					"gunzip -f ./train-labels-idx1-ubyte.gz" << std::endl <<
-					"gunzip -f ./t10k-labels-idx1-ubyte.gz" << std::endl;
+					std::string("gunzip -f ./train-images-idx3-ubyte.gz") << std::endl <<
+					std::string("gunzip -f ./t10k-images-idx3-ubyte.gz") << std::endl <<
+					std::string("gunzip -f ./train-labels-idx1-ubyte.gz") << std::endl <<
+					std::string("gunzip -f ./t10k-labels-idx1-ubyte.gz") << std::endl;
 #endif
 			}
 			break;
@@ -249,23 +265,29 @@ namespace dnn
 			case Datasets::mnist:
 			{
 				batch <<
+#if defined _WIN32 || defined __CYGWIN__ || defined __MINGW32__
 					"@echo off" << std::endl <<
 					"echo Downloading " + std::string(magic_enum::enum_name<Datasets>(dataset)) + " dataset" << std::endl <<
 					"echo." << std::endl <<
 					"cd " + path.string() << std::endl <<
-					"curl -O http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz" << std::endl <<
-					"curl -O http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz" << std::endl <<
-					"curl -O http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz" << std::endl <<
-					"curl -O http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz" << std::endl <<
+#else
+					std::string("#!/bin/sh") << std::endl <<
+					std::string("echo loading ") + std::string(magic_enum::enum_name<Datasets>(dataset)) + std::string(" dataset...") << std::endl <<
+					std::string("cd ") + path.string() << std::endl <<
+#endif
+					std::string("curl -O http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz") << std::endl <<
+					std::string("curl -O http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz") << std::endl <<
+					std::string("curl -O http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz") << std::endl <<
+					std::string("curl -O http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz") << std::endl <<
 #if defined _WIN32 || defined __CYGWIN__ || defined __MINGW32__
 					"powershell -ExecutionPolicy Bypass -command \"& {&./UnZip-File.ps1}\";" << std::endl <<
 					"del *.gz" << std::endl <<
 					"del UnZip-File.ps1" << std::endl;
 #else
-					"gunzip -f ./train-images-idx3-ubyte.gz" << std::endl <<
-					"gunzip -f ./t10k-images-idx3-ubyte.gz" << std::endl <<
-					"gunzip -f ./train-labels-idx1-ubyte.gz" << std::endl <<
-					"gunzip -f ./t10k-labels-idx1-ubyte.gz" << std::endl;
+					std::string("gunzip -f ./train-images-idx3-ubyte.gz") << std::endl <<
+					std::string("gunzip -f ./t10k-images-idx3-ubyte.gz") << std::endl <<
+					std::string("gunzip -f ./train-labels-idx1-ubyte.gz") << std::endl <<
+					std::string("gunzip -f ./t10k-labels-idx1-ubyte.gz") << std::endl;
 #endif
 			}
 			break;
@@ -332,7 +354,7 @@ namespace dnn
 			}
 				
 #else
-			int status = std::system(fileName.c_str());
+			int status = std::system((DatasetsDirectory / fileName).c_str());
 
 			if (status == 0 && dataset == Datasets::tinyimagenet)
 				GetTinyImageNetLabels(path / std::string(magic_enum::enum_name<Datasets>(dataset)));
