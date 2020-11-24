@@ -297,17 +297,23 @@ namespace dnn
 				path = DatasetsDirectory;
 
 				batch <<
+#if defined _WIN32 || defined __CYGWIN__ || defined __MINGW32__
 					"@echo off" << std::endl <<
 					"echo Downloading " + std::string(magic_enum::enum_name<Datasets>(dataset)) + " dataset" << std::endl <<
 					"echo." << std::endl <<
 					"cd " + path.string() << std::endl <<
-					"curl -O http://cs231n.stanford.edu/tiny-imagenet-200.zip" << std::endl <<
+#else
+					std::string("#!/bin/sh") << std::endl <<
+					std::string("echo loading ") + std::string(magic_enum::enum_name<Datasets>(dataset)) + std::string(" dataset...") << std::endl <<
+					std::string("cd ") + path.string() << std::endl <<
+#endif
+					std::string("curl -O http://cs231n.stanford.edu/tiny-imagenet-200.zip") << std::endl <<
 #if defined _WIN32 || defined __CYGWIN__ || defined __MINGW32__
 					"powershell -ExecutionPolicy Bypass -command \"& {&./UnZip-File.ps1}\";" << std::endl <<
 				    "ren tiny-imagenet-200 tinyimagenet && del /Q tiny-imagenet-200.zip" << std::endl <<
 					"del UnZip-File.ps1" << std::endl;
 #else
-					"unzip -o -d ./tiny-imagenet ./tiny-imagenet-200.zip" << std::endl;
+					std::string("unzip -o -d ./tiny-imagenet ./tiny-imagenet-200.zip") << std::endl;
 #endif
 			}
 			break;
