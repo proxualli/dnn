@@ -261,10 +261,15 @@ namespace dnn
 		return statusEx.ullAvailPhys;
 #else
 		struct sysinfo info;
+		
 		if (sysinfo(&info) == 0)
-			return static_cast<size_t>(info.totalram - info.freeram);
+		{
+			size_t ramSize = info.totalram - info.freeram;
+			std::cout << "memory: \t" << ramsize << " << std::endl;
+			return ramSize;
+		}
 		else
-			return static_cast<size_t>(0);
+			return 0ull;
 #endif
 	}
 	
