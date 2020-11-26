@@ -264,8 +264,8 @@ namespace dnn
 		
 		if (sysinfo(&info) == 0)
 		{
-			printf(std::string("Total  RAM: %ld MB") + std::string(nwl), info.totalram/1024/1024);
-    		printf(std::string("Free   RAM: %ld MB") + std::string(nwl), (info.totalram-info.freeram)/1024/1024);
+			printf((std::string("Total  RAM: %ld MB") + std::string(nwl)).c_str(), info.totalram/1024/1024);
+    		printf((std::string("Free   RAM: %ld MB") + std::string(nwl)).c_str(), (info.totalram-info.freeram)/1024/1024);
 						
 			return info.totalram - info.freeram;
 		}
