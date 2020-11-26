@@ -768,7 +768,7 @@ namespace dnn
 						return;
 					}
 				SetBatchSize(CurrentTrainingRate.BatchSize);
-				printf((std::string("ok") + std::string(nwl)).c_str());
+				std::cout << "ok" + nwl;
 
 				auto learningRateEpochs = CurrentTrainingRate.Epochs;
 				auto learningRateIndex = 0ull;
