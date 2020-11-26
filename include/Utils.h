@@ -264,9 +264,11 @@ namespace dnn
 		
 		if (sysinfo(&info) == 0)
 		{
-			size_t ramSize = info.totalram - info.freeram;
-			std::cout << "memory: \t" << std::to_string(ramSize) << std::endl;
-			return ramSize;
+			printf("Total Ram: %lluk\tFree: %lluk\n",
+                info.totalram *(unsigned long long)info.mem_unit / 1024,
+                info.freeram *(unsigned long long)info.mem_unit/ 1024);
+						
+			return info.totalram - info.freeram;
 		}
 		else
 			return static_cast<size_t>(0);
