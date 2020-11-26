@@ -133,8 +133,6 @@ int main()
 
             DNNTraining();
 
-            std::cout << nwl + "training started..." << std::endl;
-
             bool stop = false;
             while (!stop)
             {
@@ -213,7 +211,7 @@ int main()
             delete taskState;
 
             DNNStop();
-            //DNNModelDispose();
+            DNNModelDispose();
         }
         else
             std::cout << nwl + "Could not load dataset" << std::endl;

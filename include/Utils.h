@@ -264,10 +264,10 @@ namespace dnn
 		
 		if (sysinfo(&info) == 0)
 		{
-			printf((std::string("Total  RAM: %ld MB") + std::string(nwl)).c_str(), info.totalram/1024/1024);
-    		printf((std::string("Free   RAM: %ld MB") + std::string(nwl)).c_str(), (info.totalram-info.freeram)/1024/1024);
-						
-			return info.totalram - info.freeram;
+			std::cout << "Total  RAM: " << std::to_string(info.totalram/1024/1024) << std::endl;
+			std::cout << "Free   RAM: " << std::to_string(info.freeram/1024/1024) << std::endl;
+									
+			return static_cast<size_t>(info.freeram);
 		}
 		else
 			return static_cast<size_t>(0);

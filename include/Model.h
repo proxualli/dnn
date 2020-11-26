@@ -760,7 +760,7 @@ namespace dnn
 				CurrentTrainingRate = TrainingRates[0];
 				Rate = CurrentTrainingRate.MaximumRate;
 				CurrentCycle = CurrentTrainingRate.Cycles;
-				printf((std::string("Needed RAM: %ld MB") + std::string(nwl)).c_str(), GetNeuronsSize(CurrentTrainingRate.BatchSize - BatchSize)/1024/1024);
+				std::cout << "Needed RAM: " << std::to_string(GetNeuronsSize(CurrentTrainingRate.BatchSize - BatchSize)/1024/1024) << std::endl;
 				if (CurrentTrainingRate.BatchSize > BatchSize)
 					if (GetTotalFreeMemory() < GetNeuronsSize(CurrentTrainingRate.BatchSize - BatchSize))
 					{
@@ -768,8 +768,7 @@ namespace dnn
 						return;
 					}
 				SetBatchSize(CurrentTrainingRate.BatchSize);
-				std::cout << "ok" + nwl;
-
+			
 				auto learningRateEpochs = CurrentTrainingRate.Epochs;
 				auto learningRateIndex = 0ull;
 
