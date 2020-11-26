@@ -404,7 +404,7 @@ namespace dnn
 
 		inline void ReleaseGradient()
 		{
-			NeuronsD1.~vector();
+			NeuronsD1.resize(0);
 		}
 #endif // DNN_LEAN
 
@@ -785,22 +785,22 @@ namespace dnn
 			case Optimizers::RMSProp:
 			case Optimizers::SGDMomentum:
 				WeightsPar1 = FloatVector(WeightsMemDesc->get_size(), Float(0));
-				WeightsPar2.~vector();
+				WeightsPar2.resize(0);
 				if (HasBias)
 				{
 					BiasesPar1 = FloatVector(BiasCount, Float(0));
-					BiasesPar2.~vector();
+					BiasesPar2.resize(0);
 				}
 				Moments = 0;
 				break;
 
 			case Optimizers::SGD:
-				WeightsPar1.~vector();
-				WeightsPar2.~vector();
+				WeightsPar1.resize(0);
+				WeightsPar2.resize(0);
 				if (HasBias)
 				{
-					BiasesPar1.~vector();
-					BiasesPar2.~vector();
+					BiasesPar1.resize(0);
+					BiasesPar2.resize(0);
 				}
 				Moments = 0;
 				break;
@@ -836,21 +836,21 @@ namespace dnn
 				case Optimizers::RMSProp:
 				case Optimizers::SGDMomentum:
 					WeightsPar1.resize(WeightsMemDesc->get_size(), Float(0));
-					WeightsPar2.~vector();
+					WeightsPar2.resize(0);
 					if (HasBias)
 					{
 						BiasesPar1.resize(BiasCount, Float(0));
-						BiasesPar2.~vector();
+						BiasesPar2.resize(0);
 					}
 					break;
 
 				case Optimizers::SGD:
-					WeightsPar1.~vector();
-					WeightsPar2.~vector();
+					WeightsPar1.resize(0);
+					WeightsPar2.resize(0);
 					if (HasBias)
 					{
-						BiasesPar1.~vector();
-						BiasesPar2.~vector();
+						BiasesPar1.resize(0);
+						BiasesPar2.resize(0);
 					}
 					break;
 				}

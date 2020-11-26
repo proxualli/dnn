@@ -259,18 +259,12 @@ namespace dnn
 		statusEx.dwLength = sizeof(MEMORYSTATUSEX);
 		GlobalMemoryStatusEx(&statusEx);
 		return statusEx.ullAvailPhys;
-#else
-        
+#else        
 		struct sysinfo info;
-		
 		if (sysinfo(&info) == 0)
 		{
 			std::cout << "Total  RAM: " << std::to_string(info.totalram*info.mem_unit/1024/1024) << " MB" << std::endl;
 			std::cout << "Free   RAM: " << std::to_string(info.freeram*info.mem_unit/1024/1024) << " MB" << std::endl;
-
-			//long pages = sysconf(_SC_PHYS_PAGES);
-            //long page_size = sysconf(_SC_PAGE_SIZE);
-    	    //return pages * page_size;
 
 			return static_cast<size_t>(info.freeram * info.mem_unit);
 		}
