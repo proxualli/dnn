@@ -95,7 +95,7 @@ int main()
 
         if (DNNLoadDataset())
         {
-            DNNAddLearningRateSGDR(true, 1, 0.05f, 128, 1, 200, 1, 0.0001f, 0.0005f, 0.9f, 1.0f, 200, true, false, 0.0f, 0.7f, 0.7f, 0.7f, 20, 0.7f, 0, 10.0f, 12.0f);
+            DNNAddLearningRateSGDR(true, 1, 0.05f, 32, 1, 200, 1, 0.0001f, 0.0005f, 0.9f, 1.0f, 200, true, false, 0.0f, 0.7f, 0.7f, 0.7f, 20, 0.7f, 0, 10.0f, 12.0f);
                                        
             size_t* cycle = new size_t();
             size_t* totalCycles = new size_t();
@@ -137,7 +137,7 @@ int main()
             while (!stop)
             {
                 timePoint = timer.now();
-                std::this_thread::sleep_for(std::chrono::milliseconds(60000));
+                std::this_thread::sleep_for(std::chrono::milliseconds(10000));
 
                 DNNGetTrainingInfo(cycle, totalCycles, epoch, totalEpochs, horizontalMirror, verticalMirror, dropout, cutout, autoAugment, colorCast, colorAngle, distortion, interpolation, scaling, rotation, sampleIndex, batchSize, rate, momentum, l2Penalty, avgTrainLoss, trainErrorPercentage, trainErrors, avgTestLoss, testErrorPercentage, testErrors, state, taskState);
 
