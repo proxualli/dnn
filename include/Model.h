@@ -738,6 +738,7 @@ namespace dnn
 				TaskState.store(TaskStates::Running);
 				State.store(States::Idle);
 
+				printf("Needed RAM: %ld MB\n", GetNeuronsSize(CurrentTrainingRate.BatchSize - BatchSize)/1024/1024);
 				//auto oldWeightSaveFileName = std::string();
 
 				auto timer = std::chrono::high_resolution_clock();

@@ -264,8 +264,8 @@ namespace dnn
 		
 		if (sysinfo(&info) == 0)
 		{
-			printf("Total  RAM: %ld MB\n", info.totalram/1024/1024);
-    		printf("Free   RAM: %ld MB\n", (info.totalram-info.freeram)/1024/1024);
+			printf("Total  RAM: %ld MB" + nwl, info.totalram/1024/1024);
+    		printf("Free   RAM: %ld MB" + nwl, (info.totalram-info.freeram)/1024/1024);
 						
 			return info.totalram - info.freeram;
 		}
