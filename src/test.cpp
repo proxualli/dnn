@@ -174,7 +174,7 @@ int main()
                 Float seconds = Float(std::chrono::duration_cast<std::chrono::microseconds>(time).count()) / 1000000;
                 Float samplesPerSecond = samples / seconds;
 
-                std::cout << nwl + "Cycle: " << Cycle << nwl + "Epoch: " << Epoch << nwl + "SampleIndex: " << SampleIndex << nwl + "ErrorPercentage: " << TrainErrorPercentage << nwl + "Samples/second: " << std::to_string(samplesPerSecond) << std::endl;
+                std::cout << std::endl << "Cycle: " << Cycle << std::endl << "Epoch: " << Epoch << std::endl << "SampleIndex: " << SampleIndex << std::endl << "ErrorPercentage: " << TrainErrorPercentage << std::endl <<  "Samples/second: " << std::to_string(samplesPerSecond) << std::endl;
 
                 oldSampleIndex = SampleIndex;
 
