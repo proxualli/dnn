@@ -738,7 +738,6 @@ namespace dnn
 				TaskState.store(TaskStates::Running);
 				State.store(States::Idle);
 
-				printf((std::string("Needed RAM: %ld MB") + std::string(nwl)).c_str(), GetNeuronsSize(CurrentTrainingRate.BatchSize - BatchSize)/1024/1024);
 				//auto oldWeightSaveFileName = std::string();
 
 				auto timer = std::chrono::high_resolution_clock();
@@ -761,6 +760,7 @@ namespace dnn
 				CurrentTrainingRate = TrainingRates[0];
 				Rate = CurrentTrainingRate.MaximumRate;
 				CurrentCycle = CurrentTrainingRate.Cycles;
+				printf((std::string("Needed RAM: %ld MB") + std::string(nwl)).c_str(), GetNeuronsSize(CurrentTrainingRate.BatchSize - BatchSize)/1024/1024);
 				if (CurrentTrainingRate.BatchSize > BatchSize)
 					if (GetTotalFreeMemory() < GetNeuronsSize(CurrentTrainingRate.BatchSize - BatchSize))
 					{
