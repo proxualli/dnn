@@ -264,11 +264,10 @@ namespace dnn
 		
 		if (sysinfo(&info) == 0)
 		{
-			printf("Total Ram: %lluMB\tFree: %lluMB\n",
-                info.totalram *(unsigned long long)info.mem_unit / 1048576,
-                info.freeram *(unsigned long long)info.mem_unit/ 1048576);
+			printf("Total RAM: %ld MB\n", info.totalram/1024/1024);
+    		printf("Free RAM: %ld MB\n", (info.totalram-info.freeram)/1024/1024);
 						
-			return info.freeram;
+			return info.totalram - info.freeram;
 		}
 		else
 			return static_cast<size_t>(0);
