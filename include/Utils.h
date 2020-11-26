@@ -252,7 +252,7 @@ namespace dnn
 		return false;
 	}
 
-	static const auto GetTotalFreeMemory()
+	static auto GetTotalFreeMemory()
 	{
 #if defined _WIN32 || defined __CYGWIN__ || defined __MINGW32__
 		MEMORYSTATUSEX statusEx;
@@ -269,7 +269,7 @@ namespace dnn
 			return ramSize;
 		}
 		else
-			return 0ull;
+			return static_cast<size_t>(0);
 #endif
 	}
 	
