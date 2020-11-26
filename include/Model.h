@@ -738,7 +738,7 @@ namespace dnn
 				TaskState.store(TaskStates::Running);
 				State.store(States::Idle);
 
-				printf("Needed RAM: %ld MB\n", GetNeuronsSize(CurrentTrainingRate.BatchSize - BatchSize)/1024/1024);
+				printf("Needed RAM: %ld MB" + nwl, GetNeuronsSize(CurrentTrainingRate.BatchSize - BatchSize)/1024/1024);
 				//auto oldWeightSaveFileName = std::string();
 
 				auto timer = std::chrono::high_resolution_clock();
@@ -768,6 +768,7 @@ namespace dnn
 						return;
 					}
 				SetBatchSize(CurrentTrainingRate.BatchSize);
+				printf("ok" + nwl, GetNeuronsSize(CurrentTrainingRate.BatchSize - BatchSize)/1024/1024);
 
 				auto learningRateEpochs = CurrentTrainingRate.Epochs;
 				auto learningRateIndex = 0ull;
