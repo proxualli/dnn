@@ -64,7 +64,7 @@ DNN_API void DNNGetImage(const size_t layer, const unsigned char fillColor, unsi
 
 void NewEpoch(size_t CurrentCycle, size_t CurrentEpoch, size_t TotalEpochs, bool HorizontalFlip, bool VerticalFlip, Float Dropout, Float Cutout, Float AutoAugment, Float ColorCast, size_t ColorAngle, Float Distortion, size_t Interpolation, Float Scaling, Float Rotation, Float MaximumRate, size_t BatchSize, Float Momentum, Float L2Penalty, Float AvgTrainLoss, Float TrainErrorPercentage, Float TrainAccuracy, size_t TrainErrors, Float AvgTestLoss, Float TestErrorPercentage, Float TestAccuracy, size_t TestErrors)
 {
-    std::cout << nwl + "Epoch:\t" << std::to_string(CurrentEpoch) << nwl + "Test Accuracy:\t" << std::to_string(TestAccuracy) << std::endl;
+    std::cout << std::endl << "Epoch:\t" << std::to_string(CurrentEpoch) << std::endl <<  "Test Accuracy:\t" << std::to_string(TestAccuracy) << std::endl;
 }
 
 int main()
@@ -137,8 +137,12 @@ int main()
             while (!stop)
             {
                 timePoint = timer.now();
-                std::this_thread::sleep_for(std::chrono::milliseconds(60000));
-
+                //if(!mutex.try_lock())
+                {
+                    std::this_thread::yield();
+                    std::this_thread::sleep_for(std::chrono::minutes(1));
+                }
+                
                 DNNGetTrainingInfo(cycle, totalCycles, epoch, totalEpochs, horizontalMirror, verticalMirror, dropout, cutout, autoAugment, colorCast, colorAngle, distortion, interpolation, scaling, rotation, sampleIndex, batchSize, rate, momentum, l2Penalty, avgTrainLoss, trainErrorPercentage, trainErrors, avgTestLoss, testErrorPercentage, testErrors, state, taskState);
 
                 size_t Cycle = *cycle;
@@ -214,10 +218,10 @@ int main()
             DNNModelDispose();
         }
         else
-            std::cout << nwl + "Could not load dataset" << std::endl;
+            std::cout << std::endl << "Could not load dataset" << std::endl;
     }
     else
     {
-        std::cout << nwl + "Could not load model" + nwl << msg.Message << std::endl << model;
+        std::cout << std::endl <<  "Could not load model" << std::endl << msg.Message << std::endl << model;
     }
 }
