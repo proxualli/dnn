@@ -81,6 +81,7 @@ ENDMACRO()
 
 set(DNNL_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(DNNL_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(DNNL_ARCH_OPT_FLAGS "--Ofast -O3 -flto -funroll-loops -enable-partial-unswitch -unroll-aggressive -enable-strided-vectorization -enable-epilog-vectorization -ftree-vectorize -Wno-error -mavx2 -mfma -march=znver2 -fopenmp -ffast-math" CACHE STRING "" FORCE)
 set(WITH_TURBOJPEG FALSE CACHE BOOL "" FORCE) 
 set(PNG_EXECUTABLES FALSE CACHE BOOL "" FORCE)
 set(PNG_TESTS FALSE CACHE BOOL "" FORCE)
@@ -237,7 +238,7 @@ IF(NOT DEFINED VECTORCLASS_SOURCE_DIR)
 
 add_library(${PROJECT_NAME} ${libdnn_sources})
 DNN_TARGET_ENABLE_CXX17(${PROJECT_NAME})
-target_compile_definitions(${PROJECT_NAME} PUBLIC DNN_EXPORTS DNN_CACHE_PRIMITIVES DNN_OMP cimg_use_cpp11 cimg_use_jpeg cimg_use_png cimg_use_zlib)
+target_compile_definitions(${PROJECT_NAME} PRIVATE DNN_EXPORTS DNN_CACHE_PRIMITIVES DNN_OMP cimg_use_cpp11 cimg_use_jpeg cimg_use_png cimg_use_zlib)
 target_include_directories(${PROJECT_NAME}
     PUBLIC
        $<INSTALL_INTERFACE:include>
