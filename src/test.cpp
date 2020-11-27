@@ -69,12 +69,8 @@ void NewEpoch(size_t CurrentCycle, size_t CurrentEpoch, size_t TotalEpochs, bool
     std::cout << std::endl << "Epoch:\t" << std::to_string(CurrentEpoch) << std::endl <<  "Test Accuracy:\t" << std::to_string(TestAccuracy) << std::endl;
 }
 
-void GetTrainingInfo()
+void GetTrainingInfo(int minutes)
 {
-    std::chrono::high_resolution_clock::time_point timePoint = std::chrono::high_resolution_clock().now();
-    
-    std::this_thread::sleep_for(std::chrono::minutes(1));
-
     size_t* cycle = new size_t();
     size_t* totalCycles = new size_t();
     size_t* epoch = new size_t();
@@ -103,6 +99,10 @@ void GetTrainingInfo()
     size_t* testErrors = new size_t();
     States* state = new States();
     TaskStates* taskState = new TaskStates();
+
+    std::chrono::high_resolution_clock::time_point timePoint = std::chrono::high_resolution_clock().now();
+    
+    std::this_thread::sleep_for(std::chrono::minutes(minutes));
 
     DNNGetTrainingInfo(cycle, totalCycles, epoch, totalEpochs, horizontalMirror, verticalMirror, dropout, cutout, autoAugment, colorCast, colorAngle, distortion, interpolation, scaling, rotation, sampleIndex, batchSize, rate, momentum, l2Penalty, avgTrainLoss, trainErrorPercentage, trainErrors, avgTestLoss, testErrorPercentage, testErrors, state, taskState);
 
@@ -210,19 +210,7 @@ int main()
             stop = false;
 
             while (!stop)
-            {
-                std::future<void> task = std::async(std::launch::async, [=] { GetTrainingInfo(); });
-
-                if (task.valid())
-                try
-                {
-                    task.get();
-                }
-                catch (const std::runtime_error& e)
-                {
-                    std::cout << "Async task threw exception: " << e.what() << std::endl;
-                }
-            }
+               GetTrainingInfo(1);
             
             DNNStop();
             DNNModelDispose();
