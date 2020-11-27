@@ -208,7 +208,6 @@ int main()
             DNNTraining();
 
             stop = false;
-
             while (!stop)
                GetTrainingInfo(1);
             
