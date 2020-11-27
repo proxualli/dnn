@@ -81,7 +81,7 @@ ENDMACRO()
 
 set(DNNL_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(DNNL_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(DNNL_ARCH_OPT_FLAGS "--Ofast -O3 -flto -funroll-loops -enable-partial-unswitch -unroll-aggressive -enable-strided-vectorization -enable-epilog-vectorization -ftree-vectorize -Wno-error -mavx2 -mfma -march=znver2 -fopenmp -ffast-math" CACHE STRING "" FORCE)
+set(DNNL_ARCH_OPT_FLAGS "-Ofast -O3 -flto -funroll-loops -enable-partial-unswitch -unroll-aggressive -enable-strided-vectorization -enable-epilog-vectorization -ftree-vectorize -Wno-error -mavx2 -mfma -march=znver2 -fopenmp -ffast-math" CACHE STRING "" FORCE)
 set(WITH_TURBOJPEG FALSE CACHE BOOL "" FORCE) 
 set(PNG_EXECUTABLES FALSE CACHE BOOL "" FORCE)
 set(PNG_TESTS FALSE CACHE BOOL "" FORCE)
