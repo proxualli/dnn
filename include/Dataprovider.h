@@ -119,6 +119,11 @@ namespace dnn
 				std::filesystem::create_directories(path);
 			}
 			break;
+
+			case Datasets::cifar10:
+			case Datasets::cifar100:
+			case Datasets::tinyimagenet:
+			break;
 			}
 
 #if defined _WIN32 || defined __CYGWIN__ || defined __MINGW32__
@@ -176,6 +181,10 @@ namespace dnn
 				unzipScript.close();
 				
 			}
+			break;
+
+			case Datasets::cifar10:
+			case Datasets::cifar100:
 			break;
 			}
 
