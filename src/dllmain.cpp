@@ -402,6 +402,15 @@ extern "C" DNN_API void DNNGetTrainingInfo(size_t* currentCycle, size_t* totalCy
 			*testErrors = model->TestErrors;
 		}
 		break;
+
+		case States::Idle:
+		case States::NewEpoch:
+	    case States::SaveWeights:
+		case States::Completed:
+		{
+			// Do nothing
+		}
+		break;
 		}
 		
 		*currentCycle = model->CurrentCycle;
@@ -797,6 +806,9 @@ extern "C" DNN_API void DNNGetLayerInfo(const size_t layerIndex, size_t* inputsC
 			}
 		}
 		break;
+
+		default:
+			return;
 		}
 	}
 }
