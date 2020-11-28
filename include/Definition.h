@@ -339,6 +339,9 @@ namespace dnn
 									goto FAIL;
 								}
 								break;
+
+							default:
+							break;
 							}
 						}
 

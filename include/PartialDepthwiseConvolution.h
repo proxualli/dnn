@@ -69,12 +69,13 @@ namespace dnn
 			WeightsMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(InputLayer->C / Groups), dnnl::memory::dim(Multiplier), dnnl::memory::dim(1), dnnl::memory::dim(KernelH), dnnl::memory::dim(KernelW) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::goihw));
 		}
 
-		std::string GetDescription() const
+		std::string GetDescription() const final override
 		{
 			auto description = GetDescriptionHeader();
 
 			description.append(nwl + std::string(" Groups:") + tab + std::to_string(Groups));
 			description.append(nwl + std::string(" Group:") + dtab + std::to_string(Group));
+
 			if (Multiplier > 1)
 				description.append(nwl + std::string(" Multiplier:") + tab + std::to_string(Multiplier));
 			if (DilationH == 1 && DilationW == 1)
@@ -96,12 +97,12 @@ namespace dnn
 			return description;
 		}
 
-		size_t FanIn() const
+		size_t FanIn() const final override
 		{
 			return Groups * KernelH * KernelW;
 		}
 
-		size_t FanOut() const
+		size_t FanOut() const final override
 		{
 			return Multiplier * KernelH * KernelW / StrideH * StrideW;
 		}

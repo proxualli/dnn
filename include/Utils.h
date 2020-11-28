@@ -66,10 +66,6 @@ namespace dnn
 #endif
 	#define DNN_SIMD_ALIGN DNN_ALIGN(64)
 
-#ifndef DNN_UNREF_PAR
-	#define DNN_UNREF_PAR(P) (P)
-#endif
-
 	typedef float Float;
 	typedef unsigned char Byte;
 	typedef std::vector<Float, AlignedAllocator<Float, 64ull>> FloatVector;

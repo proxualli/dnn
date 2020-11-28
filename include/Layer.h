@@ -752,6 +752,9 @@ namespace dnn
 				}
 			}
 			break;
+
+			default:
+				break;
 			}
 
 			if (dirty)
@@ -1762,6 +1765,9 @@ namespace dnn
 							is.read(reinterpret_cast<char*>(&Moments), std::streamsize(sizeof(size_t)));
 						}
 						break;
+
+						default:
+						break
 						}
 				}
 				else
@@ -1821,6 +1827,9 @@ namespace dnn
 							is.read(reinterpret_cast<char*>(&B2), std::streamsize(sizeof(Float)));
 							is.read(reinterpret_cast<char*>(&Moments), std::streamsize(sizeof(size_t)));
 						}
+						break;
+
+						default:
 						break;
 						}
 				}
