@@ -340,7 +340,7 @@ namespace dnn
 			    case Activations::LogSoftmax:
 				case Activations::PRelu:
 			    case Activations::Softmax:
-				    break,
+				    break;
 
 				case Activations::Abs:
 					algorithm = dnnl::algorithm::eltwise_abs;
