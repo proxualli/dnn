@@ -1568,6 +1568,8 @@ namespace dnn
 							os.write(reinterpret_cast<const char*>(&Moments), std::streamsize(sizeof(size_t)));
 						}
 						break;
+
+						default:
 						}
 				}
 				else
@@ -1579,6 +1581,18 @@ namespace dnn
 					if (persistOptimizer)
 						switch (optimizer)
 						{
+						case Optimizers::AdaDelta:
+						{
+							os.write(reinterpret_cast<const char*>(weightsPar1.data()), std::streamsize(WeightCount * sizeof(Float)));
+							if (HasBias)
+								os.write(reinterpret_cast<const char*>(BiasesPar1.data()), std::streamsize(BiasCount * sizeof(Float)));
+
+							os.write(reinterpret_cast<const char*>(weightsPar2.data()), std::streamsize(WeightCount * sizeof(Float)));
+							if (HasBias)
+								os.write(reinterpret_cast<const char*>(BiasesPar2.data()), std::streamsize(BiasCount * sizeof(Float)));
+						}
+						break;
+
 						case Optimizers::Adam:
 						{
 							os.write(reinterpret_cast<const char*>(WeightsPar1.data()), std::streamsize(WeightCount * sizeof(Float)));
@@ -1767,7 +1781,6 @@ namespace dnn
 						break;
 
 						default:
-						break
 						}
 				}
 				else
@@ -1830,7 +1843,6 @@ namespace dnn
 						break;
 
 						default:
-						break;
 						}
 				}
 			}
