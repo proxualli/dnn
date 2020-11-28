@@ -340,8 +340,6 @@ namespace dnn
 								}
 								break;
 
-							default:
-							break;
 							}
 						}
 
@@ -911,8 +909,6 @@ namespace dnn
 						case LayerTypes::BatchNormSwish:
 							isNormalizationLayer = true;
 							break;
-						default:
-							isNormalizationLayer = false;
 					}
 
 					layerMandatory += 1;
