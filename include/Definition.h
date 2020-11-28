@@ -286,6 +286,10 @@ namespace dnn
 						{
 							switch(activationFunction)
 							{
+							case Activations::PRelu:
+								break;
+
+							case Activations::Mish:
 							case Activations::Abs:
 							case Activations::Exp:
 							case Activations::Gelu:
@@ -296,6 +300,7 @@ namespace dnn
 							case Activations::Logistic:
 							case Activations::LogLogistic:
 							case Activations::LogSoftmax:
+							case Activations::Pow:
 							case Activations::Round:
 							case Activations::Softmax:
 							case Activations::SoftRelu:
@@ -449,12 +454,22 @@ namespace dnn
 									}
 							}
 							break;
+							default:
+							{
+								if (inputs.size() > 1)
+								{
+									msg = CheckMsg(line, col, "Layer " + name + " must have only one input.");
+									goto FAIL;
+								}
+							}
 						}
 
 						try
 						{
 							switch (layerType)
 							{
+							case LayerTypes::Input:
+								break;
 							case LayerTypes::Activation:
 								model->Layers.push_back(new Activation(model->Device, model->Format, name, activationFunction, inputs, alpha, beta));
 								break;
