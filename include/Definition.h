@@ -936,6 +936,8 @@ namespace dnn
 						case LayerTypes::BatchNormSwish:
 							isNormalizationLayer = true;
 							break;
+						default:
+							isNormalizationLayer = false;
 					}
 
 					layerMandatory += 1;
@@ -2019,6 +2021,9 @@ namespace dnn
 					case Activations::Relu:
 						alpha = Float(0);
 						break;
+					default:
+					    alpha = Float(0);
+						beta = Float(0);
 					}
 				}
 				else if (strLine.rfind("Channels=") == 0)

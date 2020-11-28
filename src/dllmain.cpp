@@ -222,6 +222,9 @@ extern "C" DNN_API void DNNGetImage(const size_t layerIndex, const unsigned char
 				std::memcpy(image, img.data(), img.size());
 			}
 			break;
+
+			default:
+				return;
 		}
 	}
 }
