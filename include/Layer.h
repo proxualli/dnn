@@ -1569,7 +1569,8 @@ namespace dnn
 						}
 						break;
 
-						default:
+						case Optimizers::SGD:
+						break;
 						}
 				}
 				else
@@ -1641,6 +1642,9 @@ namespace dnn
 							os.write(reinterpret_cast<const char*>(&B2), std::streamsize(sizeof(Float)));
 							os.write(reinterpret_cast<const char*>(&Moments), std::streamsize(sizeof(size_t)));
 						}
+						break;
+
+						case Optimizers::SGD:
 						break;
 						}
 				}
@@ -1780,7 +1784,8 @@ namespace dnn
 						}
 						break;
 
-						default:
+						case Optimizers::SGD:
+						break;
 						}
 				}
 				else
@@ -1842,7 +1847,8 @@ namespace dnn
 						}
 						break;
 
-						default:
+						case Optimizers::SGD:
+						break;
 						}
 				}
 			}
