@@ -117,18 +117,18 @@ namespace dnn
 
         auto GetName() const
         {
-            auto common = std::string(magic_enum::enum_name<Scripts>(Script)) + "-" + std::to_string(H) + "x" + std::to_string(W) + "-" + std::to_string(Groups) + "-" + std::to_string(Iterations) + "-";
+            auto common = std::string(magic_enum::enum_name<Scripts>(Script)) + std::string("-") + std::to_string(H) + std::string("x") + std::to_string(W) + std::string("-") + std::to_string(Groups) + std::string("-") + std::to_string(Iterations) + std::string("-");
             
             switch (Script)
             {
             case Scripts::densenet:
-                return common + std::to_string(GrowthRate) + (Dropout > 0 ? "-dropout" : "") + (Compression > 0 ? "-compression" : "") + (Bottleneck ? "-bottleneck" : "") + (Relu ? "" : "-hardswish");
+                return common + std::to_string(GrowthRate) + (Dropout > 0 ? std::string("-dropout") : std::string("")) + (Compression > 0 ? std::string("-compression") : std::string("")) + (Bottleneck ? std::string("-bottleneck") : std::string("")) + (Relu ? std::string("") : std::string("-hardswish"));
             case Scripts::mobilenetv3:
-                return common + std::to_string(Width) + (Relu ? "" : "-hardswish") + (SqueezeExcitation ? "-se" : "");
+                return common + std::to_string(Width) + (Relu ? std::string("") : std::string("-hardswish")) + (SqueezeExcitation ? std::string("-se") : std::string(""));
             case Scripts::resnet:
-                return common + std::to_string(Width) + (Dropout > 0 ? "-dropout" : "") + (Bottleneck ? "-bottleneck" : "") + (ChannelZeroPad ? "-channelzeropad" : "") + (Relu ? "" : "-hardswish");
+                return common + std::to_string(Width) + (Dropout > 0 ? std::string("-dropout") : std::string("")) + (Bottleneck ? std::string("-bottleneck") : std::string("")) + (ChannelZeroPad ? std::string("-channelzeropad") : std::string("")) + (Relu ? std::string("") : std::string("-hardswish"));
             case Scripts::shufflenetv2:
-                return common + std::to_string(Width) + (Relu ? "" : "-hardswish") + (SqueezeExcitation ? "-se" : "");
+                return common + std::to_string(Width) + (Relu ? std::string("") : std::string("-hardswish")) + (SqueezeExcitation ? std::string("-se") : std::string(""));
             default:
                 return common;
             }
