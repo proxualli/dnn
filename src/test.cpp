@@ -11,13 +11,12 @@
 #include "Scripts.h"
 
 #ifdef _WIN32
-static std::string Path = std::string(getenv("USERPROFILE")) + "\\Documents\\convnet\\";
+static std::string path = std::string(getenv("USERPROFILE")) + std::string("\\Documents\\convnet\\");
 #else
-static std::string Path = std::string(getenv("HOME")) + "/convnet/";
+static std::string path = std::string(getenv("HOME")) + std::string("/convnet/");
 #endif
 
 using namespace dnn;
-
 
 
 DNN_API bool DNNStochasticEnabled();
@@ -69,7 +68,7 @@ void NewEpoch(size_t CurrentCycle, size_t CurrentEpoch, size_t TotalEpochs, bool
     std::cout << std::endl << "Epoch:\t" << std::to_string(CurrentEpoch) << std::endl <<  "Test Accuracy:\t" << std::to_string(TestAccuracy) << std::endl;
 }
 
-void GetTrainingInfo(int minutes)
+void GetProgress(int minutes)
 {
     size_t* cycle = new size_t();
     size_t* totalCycles = new size_t();
@@ -178,38 +177,37 @@ void GetTrainingInfo(int minutes)
 
 int main()
 {
-    ScriptParameters param;
-   
-    param.Dataset = Datasets::cifar10;
-    param.C = 3;
-    param.H = 32;
-    param.W = 32;
-    param.PadH = 4;
-    param.PadW = 4;
-    param.MirrorPad = false;
-    param.Script = Scripts::shufflenetv2;
-    param.Groups = 3;
-    param.Iterations = 6;
-    param.Width = 10;
-    param.Relu = true;
-  
     CheckMsg msg;
 
-    DNNDataprovider(Path.c_str());
+    ScriptParameters p;
+    p.Dataset = Datasets::cifar10;
+    p.C = 3;
+    p.H = 32;
+    p.W = 32;
+    p.PadH = 4;
+    p.PadW = 4;
+    p.MirrorPad = false;
+    p.Script = Scripts::shufflenetv2;
+    p.Groups = 3;
+    p.Iterations = 6;
+    p.Width = 10;
+    p.Relu = true;
   
-    std::string model = ScriptsCatalog::Generate(param);
+    auto model = ScriptsCatalog::Generate(p);
+
+    DNNDataprovider(path.c_str());
     if (DNNReadDefinition(model.c_str(), Optimizers::NAG, msg) == 1)
     {
-        DNNSetNewEpochDelegate(&NewEpoch);
-
         if (DNNLoadDataset())
         {
+            DNNSetNewEpochDelegate(&NewEpoch);
             DNNAddLearningRateSGDR(true, 1, 0.05f, 128, 1, 200, 1, 0.0001f, 0.0005f, 0.9f, 1.0f, 200, true, false, 0.0f, 0.7f, 0.7f, 0.7f, 20, 0.7f, 0, 10.0f, 12.0f);
+            
             DNNTraining();
 
             stop = false;
             while (!stop)
-               GetTrainingInfo(1);
+               GetProgress(1);
             
             DNNStop();
             DNNModelDispose();
@@ -218,7 +216,5 @@ int main()
             std::cout << std::endl << "Could not load dataset" << std::endl;
     }
     else
-    {
-        std::cout << std::endl <<  "Could not load model" << std::endl << msg.Message << std::endl << model;
-    }
+        std::cout << std::endl <<  "Could not load model" << std::endl << msg.Message << std::endl << model << std::endl;
 }
