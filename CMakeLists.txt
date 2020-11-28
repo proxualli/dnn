@@ -254,7 +254,7 @@ target_include_directories(${PROJECT_NAME}
     PRIVATE
        ${CMAKE_CURRENT_SOURCE_DIR}/src)
 add_custom_command(
-        TARGET ${PROJECT_NAME} POST_BUILD
+        TARGET ${PROJECT_NAME} PRE_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy ${ZLIB_SOURCE_DIR}/zlib.h ${ZLIB_INCLUDE_DIR}/zlib.h
         DEPENDS ${ZLIB_SOURCE_DIR}/zlib.h)
 
