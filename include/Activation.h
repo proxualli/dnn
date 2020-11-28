@@ -334,6 +334,14 @@ namespace dnn
 			{
 				switch (ActivationFunction)
 				{
+				case Activations::HardLogistic:
+			    case Activations::HardSwish:
+			    case Activations::Mish:
+			    case Activations::LogSoftmax:
+				case Activations::PRelu:
+			    case Activations::Softmax:
+				    break,
+
 				case Activations::Abs:
 					algorithm = dnnl::algorithm::eltwise_abs;
 					break;
