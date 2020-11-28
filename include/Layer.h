@@ -1797,6 +1797,17 @@ namespace dnn
 					if (persistOptimizer)
 						switch (optimizer)
 						{
+						case Optimizers::AdaDelta:
+						{
+							is.read(reinterpret_cast<char*>(WeightsPar1.data()), std::streamsize(WeightCount * sizeof(Float)));
+							if (HasBias)
+								is.read(reinterpret_cast<char*>(BiasesPar1.data()), std::streamsize(BiasCount * sizeof(Float)));
+							is.read(reinterpret_cast<char*>(WeightsPar2.data()), std::streamsize(WeightCount * sizeof(Float)));
+							if (HasBias)
+								is.read(reinterpret_cast<char*>(BiasesPar2.data()), std::streamsize(BiasCount * sizeof(Float)));
+						}
+						break;
+
 						case Optimizers::Adam:
 						{
 							is.read(reinterpret_cast<char*>(WeightsPar1.data()), std::streamsize(WeightCount * sizeof(Float)));

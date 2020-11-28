@@ -406,6 +406,10 @@ namespace dnn
 				Mean = std::vector<Float>({ Float(33.318443) });
 				StdDev = std::vector<Float>({ Float(78.567261) });
 				break;
+			case Datasets::cifar10:
+			case Datasets::cifar100:
+			case Datasets::tinyimagenet:
+			break;
 			}
 
 			switch (dataset)
