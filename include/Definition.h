@@ -287,6 +287,7 @@ namespace dnn
 							switch(activationFunction)
 							{
 							case Activations::PRelu:
+							case Activations::Swish:
 								break;
 
 							case Activations::Mish:
@@ -454,6 +455,17 @@ namespace dnn
 									}
 							}
 							break;
+							
+							case LayerTypes::Concat:
+							{
+								if (inputs.size() < 2)
+								{
+									msg = CheckMsg(line, col, "Layer " + name + " has not enough inputs.");
+									goto FAIL;
+								}
+							}
+							break;
+
 							default:
 							{
 								if (inputs.size() > 1)
