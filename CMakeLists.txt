@@ -253,6 +253,10 @@ target_include_directories(${PROJECT_NAME}
        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     PRIVATE
        ${CMAKE_CURRENT_SOURCE_DIR}/src)
+add_custom_command(
+        TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy ${ZLIB_SOURCE_DIR}/zlib.h ${ZLIB_INCLUDE_DIR}/zlib.h
+        DEPENDS ${ZLIB_SOURCE_DIR}/zlib.h)
 
 add_executable(test ${libdnn_test})
 DNN_TARGET_ENABLE_CXX17(test)
@@ -329,3 +333,5 @@ install(TARGETS ${PROJECT_NAME}
     PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 TARGET_LINK_LIBRARIES(test PUBLIC ${PROJECT_NAME})
+
+
