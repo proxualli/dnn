@@ -15,19 +15,19 @@ set(DNN_VERSION ${DNN_VERSION_MAJOR}.${DNN_VERSION_MINOR}.${DNN_VERSION_PATCH})
 math(EXPR DNN_VERSION_NUMBER "10000*${DNN_VERSION_MAJOR} + 100*${DNN_VERSION_MINOR} + ${DNN_VERSION_PATCH}")
 
 #####
-# Enables project() command manages VERSION variables.
-if(POLICY CMP0048)
-    cmake_policy(SET CMP0048 NEW)
-endif(POLICY CMP0048)
-
-#####
 # Enables link_directories() treat paths relative
 # to the source dir.
 if(POLICY CMP0015)
     cmake_policy(SET CMP0015 NEW)
 endif(POLICY CMP0015)
 
-project(dnn VERSION ${DNN_VERSION} LANGUAGES C CXX)
+#####
+# Enables project() command manages VERSION variables.
+if(POLICY CMP0048)
+    cmake_policy(SET CMP0048 NEW)
+endif(POLICY CMP0048)
+
+project(dnn VERSION ${DNN_VERSION} LANGUAGES ASM C CXX)
 
 INCLUDE(GNUInstallDirs)
 INCLUDE(CheckCSourceCompiles)
@@ -316,8 +316,11 @@ IF(NOT TARGET magic_enum)
     "${DNN_DEPENDENCIES_BINARY_DIR}/magic_enum")
 ENDIF()
 
+TARGET_LINK_LIBRARIES(test PRIVATE ${PROJECT_NAME})
+
 install(TARGETS ${PROJECT_NAME}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
-TARGET_LINK_LIBRARIES(test PRIVATE ${PROJECT_NAME})
+
+
