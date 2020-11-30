@@ -27,6 +27,12 @@ if(POLICY CMP0048)
     cmake_policy(SET CMP0048 NEW)
 endif(POLICY CMP0048)
 
+if("${CMAKE_BUILD_TYPE}" STREQUAL "")
+    message(STATUS "CMAKE_BUILD_TYPE is unset, defaulting to Release")
+    set(CMAKE_BUILD_TYPE "Release" CACHE STRING
+        "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel RelWithAssert ...")
+endif()
+
 project(dnn VERSION ${DNN_VERSION} LANGUAGES C CXX)
 
 INCLUDE(GNUInstallDirs)
@@ -45,7 +51,7 @@ if(WIN32 OR MSVC)
   set(debug_flags /W4 /Od)
   set(release_flags /W3 /O2 /Ob2 /Oi /Ot /GL /GF /Gy /fp:fast)
 else()
-  set(flags -mfma -mavx2 -march=znver2 -fopenmp -fPIC)
+  set(flags -mfma -mavx2 -march=znver2 -fopenmp)
   add_compile_options(
     "$<$<COMPILE_LANGUAGE:CXX>:${flags}>"
     "$<$<COMPILE_LANGUAGE:C>:${flags}>")
