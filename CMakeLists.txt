@@ -39,23 +39,13 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 MACRO(DNN_TARGET_ENABLE_CXX17 target)
   if(WIN32 OR MSVC)
-    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-      # warning level 4 and all warnings as errors
-      TARGET_COMPILE_OPTIONS(${target} PRIVATE /W4 /Od /arch:AVX2 /openmp:experimental)
-    else()
-      TARGET_COMPILE_OPTIONS(${target} PRIVATE /W3 /O2 /Ob2 /Oi /Ot /GL /GF /Gy /fp:fast /arch:AVX2 /openmp:experimental)
-    endif()
+    add_compile_options(
+      "$<$<CONFIG:RELEASE>:/W3 /O2 /Ob2 /Oi /Ot /GL /GF /Gy /fp:fast /arch:AVX2 /openmp:experimental>"
+      "$<$<CONFIG:DEBUG>:/W4 /Od /arch:AVX2 /openmp:experimental>"
   else()
-    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-      # warning level 4 and all warnings as errors
-      TARGET_COMPILE_OPTIONS(${target} PRIVATE -g -Wextra -mavx2 -mfma -march=znver2 -fopenmp -fPIC)
-    else()
-      if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-        TARGET_COMPILE_OPTIONS(${target} PRIVATE -Ofast -funroll-loops -ftree-vectorize -Wno-error -mavx2 -mfma -march=znver2 -fopenmp -ffast-math -fPIC)
-      else()
-        TARGET_COMPILE_OPTIONS(${target} PRIVATE -Ofast -funroll-loops -ftree-vectorize -Wno-error -mavx2 -mfma -march=znver2 -fopenmp -ffast-math -fPIC -unroll-aggressive)
-      endif()
-    endif()
+      add_compile_options(
+      "$<$<CONFIG:RELEASE>:-Ofast -funroll-loops -ftree-vectorize -Wno-error -mavx2 -mfma -march=znver2 -fopenmp -ffast-math -fPIC>"
+      "$<$<CONFIG:DEBUG>:-g -Wextra -mavx2 -mfma -march=znver2 -fopenmp -fPIC>"
   endif()
   SET_TARGET_PROPERTIES(${target} PROPERTIES
     CXX_STANDARD 17
