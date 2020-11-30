@@ -38,19 +38,20 @@ option(BUILD_SHARED_LIBS "Build shared library" ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 if(WIN32 OR MSVC)
+  set(flags /arch:AVX2 /openmp:experimental)
   add_compile_options(
-    "$<$<COMPILE_LANGUAGE:CXX>:/arch:AVX2 /openmp:experimental>"
-    "$<$<COMPILE_LANGUAGE:C>:/arch:AVX2 /openmp:experimental>")
+    "$<$<COMPILE_LANGUAGE:CXX>:${flags}>"
+    "$<$<COMPILE_LANGUAGE:C>:${flags}>")
   set(debug_flags /W4 /Od)
   set(release_flags /W3 /O2 /Ob2 /Oi /Ot /GL /GF /Gy /fp:fast)
 else()
+  set(flags -mfma -mavx2 -march=znver2 -fopenmp -fPIC)
   add_compile_options(
-    "$<$<COMPILE_LANGUAGE:CXX>:-mfma -mavx2 -march=znver2 -fopenmp -fPIC>"
-    "$<$<COMPILE_LANGUAGE:C>:-mfma -mavx2 -march=znver2 -fopenmp -fPIC>")
+    "$<$<COMPILE_LANGUAGE:CXX>:${flags}>"
+    "$<$<COMPILE_LANGUAGE:C>:${flags}>")
   set(debug_flags -g -Wextra)
   set(release_flags -Ofast -funroll-loops -ftree-vectorize -Wno-error -ffast-math)
 endif()
-
 
 MACRO(DNN_TARGET_ENABLE_CXX17 target)
   SET_TARGET_PROPERTIES(${target} PROPERTIES
