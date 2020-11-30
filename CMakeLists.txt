@@ -61,7 +61,7 @@ MACRO(DNN_TARGET_ENABLE_CXX17 target)
   if(WIN32 OR MSVC)
     if(CMAKE_BUILD_TYPE STREQUAL "Debug")
       # warning level 4 and all warnings as errors
-      TARGET_COMPILE_OPTIONS(${target} PRIVATE /W4 /fp:fast /arch:AVX2 /openmp:experimental)
+      TARGET_COMPILE_OPTIONS(${target} PRIVATE /W4 /Od /arch:AVX2 /openmp:experimental)
     else()
       TARGET_COMPILE_OPTIONS(${target} PRIVATE /W3 /O2 /Ob2 /Oi /Ot /GL /GF /Gy /fp:fast /arch:AVX2 /openmp:experimental)
     endif()
