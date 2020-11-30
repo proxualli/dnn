@@ -41,11 +41,11 @@ MACRO(DNN_TARGET_ENABLE_CXX17 target)
   if(WIN32 OR MSVC)
     add_compile_options(
       "$<$<CONFIG:RELEASE>:/W3 /O2 /Ob2 /Oi /Ot /GL /GF /Gy /fp:fast /arch:AVX2 /openmp:experimental>"
-      "$<$<CONFIG:DEBUG>:/W4 /Od /arch:AVX2 /openmp:experimental>"
+      "$<$<CONFIG:DEBUG>:/W4 /Od /arch:AVX2 /openmp:experimental>")
   else()
       add_compile_options(
       "$<$<CONFIG:RELEASE>:-Ofast -funroll-loops -ftree-vectorize -Wno-error -mavx2 -mfma -march=znver2 -fopenmp -ffast-math -fPIC>"
-      "$<$<CONFIG:DEBUG>:-g -Wextra -mavx2 -mfma -march=znver2 -fopenmp -fPIC>"
+      "$<$<CONFIG:DEBUG>:-g -Wextra -mavx2 -mfma -march=znver2 -fopenmp -fPIC>")
   endif()
   SET_TARGET_PROPERTIES(${target} PROPERTIES
     CXX_STANDARD 17
