@@ -41,8 +41,8 @@ if(WIN32 OR MSVC)
   set (debug_flags /W4 /Od /arch:AVX2 /openmp:experimental)
   set (release_flags /W3 /O2 /Ob2 /Oi /Ot /GL /GF /Gy /fp:fast /arch:AVX2 /openmp:experimental)
 else()
-  set (debug_flags -g -Wextra -mavx2 -mfma -march=znver2 -fopenmp -fPIC)
-  set (release_flags -Ofast -funroll-loops -ftree-vectorize -Wno-error -mavx2 -mfma -march=znver2 -fopenmp -ffast-math -fPIC)
+  set (debug_flags -g -Wextra -mfma -mavx2 -march=znver2 -fopenmp -fPIC)
+  set (release_flags -Ofast -funroll-loops -ftree-vectorize -Wno-error -mfma -mavx2 -march=znver2 -fopenmp -ffast-math -fPIC)
 endif()
 
 MACRO(DNN_TARGET_ENABLE_CXX17 target)
@@ -50,6 +50,9 @@ MACRO(DNN_TARGET_ENABLE_CXX17 target)
     CXX_STANDARD 17
     CXX_STANDARD_REQUIRED YES
     CXX_EXTENSIONS ON)
+  target_compile_options(${target} PUBLIC
+    "$<$<CONFIG:RELEASE>:${release_flags}>"
+    "$<$<CONFIG:DEBUG>:${debug_flags}>")
 ENDMACRO()
 
 set(DNNL_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
@@ -58,9 +61,9 @@ if(WIN32 OR MSVC)
   set(DNNL_ARCH_OPT_FLAGS "/arch:AVX2" CACHE STRING "" FORCE)
 else()
   if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    set(DNNL_ARCH_OPT_FLAGS "-O3 -funroll-loops -ftree-vectorize -Wno-error -mavx2 -mfma -march=znver2 -fopenmp -fPIC" CACHE STRING "" FORCE)
+    set(DNNL_ARCH_OPT_FLAGS "-O3 -funroll-loops -ftree-vectorize -Wno-error -mfma -mavx2 -march=znver2 -fopenmp -fPIC" CACHE STRING "" FORCE)
   else()
-    set(DNNL_ARCH_OPT_FLAGS "-O3 -funroll-loops -ftree-vectorize -Wno-error -mavx2 -mfma -march=znver2 -fopenmp -fPIC -unroll-aggressive" CACHE STRING "" FORCE)
+    set(DNNL_ARCH_OPT_FLAGS "-O3 -funroll-loops -ftree-vectorize -Wno-error -mfma -mavx2 -march=znver2 -fopenmp -fPIC -unroll-aggressive" CACHE STRING "" FORCE)
   endif()
 endif()
 set(WITH_TURBOJPEG FALSE CACHE BOOL "" FORCE) 
@@ -221,9 +224,6 @@ IF(NOT DEFINED VECTORCLASS_SOURCE_DIR)
 
 add_library(${PROJECT_NAME} ${libdnn_sources})
 DNN_TARGET_ENABLE_CXX17(${PROJECT_NAME})
-target_compile_options(${PROJECT_NAME} PRIVATE
-  "$<$<CONFIG:RELEASE>:${release_flags}>"
-  "$<$<CONFIG:DEBUG>:${debug_flags}>")
 target_compile_definitions(${PROJECT_NAME} PRIVATE DNN_EXPORTS DNN_CACHE_PRIMITIVES DNN_OMP cimg_use_cpp11 cimg_use_jpeg cimg_use_png cimg_use_zlib)
 target_include_directories(${PROJECT_NAME}
     PUBLIC
@@ -234,9 +234,6 @@ target_include_directories(${PROJECT_NAME}
 
 add_executable(test ${libdnn_test})
 DNN_TARGET_ENABLE_CXX17(test)
-target_compile_options(test PRIVATE
-  "$<$<CONFIG:RELEASE>:${release_flags}>"
-  "$<$<CONFIG:DEBUG>:${debug_flags}>")
 target_include_directories(test 
     PUBLIC
        $<INSTALL_INTERFACE:include>
