@@ -37,16 +37,18 @@ option(BUILD_SHARED_LIBS "Build shared library" ON)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
+if(WIN32 OR MSVC)
+  set (debug_flags /W4 /Od /arch:AVX2 /openmp:experimental)
+  set (release_flags /W3 /O2 /Ob2 /Oi /Ot /GL /GF /Gy /fp:fast /arch:AVX2 /openmp:experimental)
+else()
+  set (debug_flags -g -Wextra -mavx2 -mfma -march=znver2 -fopenmp -fPIC)
+  set (release_flags -Ofast -funroll-loops -ftree-vectorize -Wno-error -mavx2 -mfma -march=znver2 -fopenmp -ffast-math -fPIC)
+endif()
+
 MACRO(DNN_TARGET_ENABLE_CXX17 target)
-  if(WIN32 OR MSVC)
-    add_compile_options(
-      "$<$<CONFIG:RELEASE>:/W3 /O2 /Ob2 /Oi /Ot /GL /GF /Gy /fp:fast /arch:AVX2 /openmp:experimental>"
-      "$<$<CONFIG:DEBUG>:/W4 /Od /arch:AVX2 /openmp:experimental>")
-  else()
-      add_compile_options(
-      "$<$<CONFIG:RELEASE>:-Ofast -funroll-loops -ftree-vectorize -Wno-error -mavx2 -mfma -march=znver2 -fopenmp -ffast-math -fPIC>"
-      "$<$<CONFIG:DEBUG>:-g -Wextra -mavx2 -mfma -march=znver2 -fopenmp -fPIC>")
-  endif()
+  target_compile_options(target PRIVATE
+    "$<$<CONFIG:RELEASE>:${release_flags}>"
+    "$<$<CONFIG:DEBUG>:${debug_flags}>")
   SET_TARGET_PROPERTIES(${target} PROPERTIES
     CXX_STANDARD 17
     CXX_STANDARD_REQUIRED YES
