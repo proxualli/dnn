@@ -46,9 +46,6 @@ else()
 endif()
 
 MACRO(DNN_TARGET_ENABLE_CXX17 target)
-  target_compile_options(target PRIVATE
-    "$<$<CONFIG:RELEASE>:${release_flags}>"
-    "$<$<CONFIG:DEBUG>:${debug_flags}>")
   SET_TARGET_PROPERTIES(${target} PROPERTIES
     CXX_STANDARD 17
     CXX_STANDARD_REQUIRED YES
@@ -224,6 +221,9 @@ IF(NOT DEFINED VECTORCLASS_SOURCE_DIR)
 
 add_library(${PROJECT_NAME} ${libdnn_sources})
 DNN_TARGET_ENABLE_CXX17(${PROJECT_NAME})
+ target_compile_options${PROJECT_NAME} PRIVATE
+    "$<$<CONFIG:RELEASE>:${release_flags}>"
+    "$<$<CONFIG:DEBUG>:${debug_flags}>")
 target_compile_definitions(${PROJECT_NAME} PRIVATE DNN_EXPORTS DNN_CACHE_PRIMITIVES DNN_OMP cimg_use_cpp11 cimg_use_jpeg cimg_use_png cimg_use_zlib)
 target_include_directories(${PROJECT_NAME}
     PUBLIC
@@ -313,6 +313,3 @@ TARGET_LINK_LIBRARIES(test PRIVATE ${PROJECT_NAME})
 install(TARGETS ${PROJECT_NAME}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-
-
-
