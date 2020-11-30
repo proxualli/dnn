@@ -221,7 +221,7 @@ IF(NOT DEFINED VECTORCLASS_SOURCE_DIR)
 
 add_library(${PROJECT_NAME} ${libdnn_sources})
 DNN_TARGET_ENABLE_CXX17(${PROJECT_NAME})
-target_compile_options${PROJECT_NAME} PRIVATE
+target_compile_options(${PROJECT_NAME} PRIVATE
   "$<$<CONFIG:RELEASE>:${release_flags}>"
   "$<$<CONFIG:DEBUG>:${debug_flags}>")
 target_compile_definitions(${PROJECT_NAME} PRIVATE DNN_EXPORTS DNN_CACHE_PRIMITIVES DNN_OMP cimg_use_cpp11 cimg_use_jpeg cimg_use_png cimg_use_zlib)
