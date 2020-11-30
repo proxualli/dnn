@@ -27,7 +27,7 @@ if(POLICY CMP0048)
     cmake_policy(SET CMP0048 NEW)
 endif(POLICY CMP0048)
 
-project(dnn VERSION ${DNN_VERSION} LANGUAGES ASM C CXX)
+project(dnn VERSION ${DNN_VERSION} LANGUAGES C CXX)
 
 INCLUDE(GNUInstallDirs)
 INCLUDE(CheckCSourceCompiles)
@@ -50,7 +50,7 @@ MACRO(DNN_TARGET_ENABLE_CXX17 target)
     CXX_STANDARD 17
     CXX_STANDARD_REQUIRED YES
     CXX_EXTENSIONS ON)
-  target_compile_options(${target} PUBLIC
+  target_compile_options(${target} PRIVATE
     "$<$<CONFIG:RELEASE>:${release_flags}>"
     "$<$<CONFIG:DEBUG>:${debug_flags}>")
 ENDMACRO()
