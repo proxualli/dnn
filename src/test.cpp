@@ -68,7 +68,7 @@ void NewEpoch(size_t CurrentCycle, size_t CurrentEpoch, size_t TotalEpochs, bool
     std::cout << std::endl << "Epoch:\t" << std::to_string(CurrentEpoch) << std::endl <<  "Test Accuracy:\t" << std::to_string(TestAccuracy) << std::endl;
 }
 
-inline void GetProgress(int minutes = 1)
+inline void GetProgress(int seconds = 10)
 {
     size_t* cycle = new size_t();
     size_t* totalCycles = new size_t();
@@ -101,7 +101,7 @@ inline void GetProgress(int minutes = 1)
 
     std::chrono::high_resolution_clock::time_point timePoint = std::chrono::high_resolution_clock().now();
     
-    std::this_thread::sleep_for(std::chrono::minutes(minutes));
+    std::this_thread::sleep_for(std::chrono::seconds(seconds));
 
     DNNGetTrainingInfo(cycle, totalCycles, epoch, totalEpochs, horizontalMirror, verticalMirror, dropout, cutout, autoAugment, colorCast, colorAngle, distortion, interpolation, scaling, rotation, sampleIndex, batchSize, rate, momentum, l2Penalty, avgTrainLoss, trainErrorPercentage, trainErrors, avgTestLoss, testErrorPercentage, testErrors, state, taskState);
 
@@ -133,15 +133,15 @@ inline void GetProgress(int minutes = 1)
     if (oldSampleIndex > SampleIndex)
         oldSampleIndex = 0;
 
-    size_t samples = SampleIndex - oldSampleIndex;
-    std::chrono::duration<Float> time = std::chrono::high_resolution_clock().now() - timePoint;
-    Float seconds = Float(std::chrono::duration_cast<std::chrono::microseconds>(time).count()) / 1000000;
-    Float samplesPerSecond = samples / seconds;
-
-    std::cout << std::endl << "Cycle: " << Cycle << std::endl << "Epoch: " << Epoch << std::endl << "SampleIndex: " << SampleIndex << std::endl << "ErrorPercentage: " << TrainErrorPercentage << std::endl << "Samples/second: " << std::to_string(samplesPerSecond) << std::endl;
-
-    oldSampleIndex = SampleIndex;
-
+    const Float samples = SampleIndex - oldSampleIndex;
+    //std::chrono::duration<Float> time = std::chrono::high_resolution_clock().now() - timePoint;
+    //Float seconds = Float(std::chrono::duration_cast<std::chrono::microseconds>(time).count()) / 1000000;
+    const Float samplesPerSecond = samples / seconds;
+    if (SampleIndex > oldSampleIndex)
+    {
+        std::cout << std::endl << "Cycle: " << Cycle << std::endl << "Epoch: " << Epoch << std::endl << "SampleIndex: " << SampleIndex << std::endl << "ErrorPercentage: " << TrainErrorPercentage << std::endl << "Samples/second: " << std::to_string(samplesPerSecond) << std::endl;
+        oldSampleIndex = SampleIndex;
+    }
     stop = State == States::Completed;
 
     delete cycle;
@@ -211,7 +211,7 @@ int main()
 
             stop = false;
             while (!stop)
-               GetProgress(1);
+               GetProgress(10);
             
             DNNStop();
             DNNModelDispose();
