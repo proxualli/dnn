@@ -211,7 +211,7 @@ int main()
 
             stop = false;
             while (!stop)
-               GetProgress(120);
+               GetProgress(30);
             
             DNNStop();
             DNNModelDispose();
