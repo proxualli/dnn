@@ -176,7 +176,7 @@ namespace dnn
 					"$shell.Namespace($destination).copyhere($item)" << std::endl <<
 					"}" << std::endl <<
 					"}" << std::endl <<
-					"UnZip-File -File \"" << DatasetsDirectory.string() << "\\tiny-imagenet-200.zip\" �Destination \"" << DatasetsDirectory.string() << "\"" << std::endl;
+					"UnZip-File -File \"" << DatasetsDirectory.string() << "\\tiny-imagenet-200.zip\" -Destination \"" << DatasetsDirectory.string() << "\"" << std::endl;
 
 				unzipScript.close();
 				
