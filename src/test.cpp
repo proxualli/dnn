@@ -100,7 +100,6 @@ inline void GetProgress(int seconds = 10)
     TaskStates* taskState = new TaskStates();
 
     std::chrono::high_resolution_clock::time_point timePoint = std::chrono::high_resolution_clock().now();
-    
     std::this_thread::sleep_for(std::chrono::seconds(seconds));
 
     DNNGetTrainingInfo(cycle, totalCycles, epoch, totalEpochs, horizontalMirror, verticalMirror, dropout, cutout, autoAugment, colorCast, colorAngle, distortion, interpolation, scaling, rotation, sampleIndex, batchSize, rate, momentum, l2Penalty, avgTrainLoss, trainErrorPercentage, trainErrors, avgTestLoss, testErrorPercentage, testErrors, state, taskState);
@@ -134,9 +133,9 @@ inline void GetProgress(int seconds = 10)
         oldSampleIndex = 0;
 
     const Float samples = SampleIndex - oldSampleIndex;
-    //std::chrono::duration<Float> time = std::chrono::high_resolution_clock().now() - timePoint;
-    //Float seconds = Float(std::chrono::duration_cast<std::chrono::microseconds>(time).count()) / 1000000;
-    const Float samplesPerSecond = samples / seconds;
+    std::chrono::duration<Float> time = std::chrono::high_resolution_clock().now() - timePoint;
+    Float realSeconds = Float(std::chrono::duration_cast<std::chrono::microseconds>(time).count()) / 1000000;
+    const Float samplesPerSecond = samples / realSeconds;
     if (SampleIndex > oldSampleIndex)
     {
         std::cout << std::endl << "Cycle: " << Cycle << std::endl << "Epoch: " << Epoch << std::endl << "SampleIndex: " << SampleIndex << std::endl << "ErrorPercentage: " << TrainErrorPercentage << std::endl << "Samples/second: " << std::to_string(samplesPerSecond) << std::endl;
