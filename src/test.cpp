@@ -68,7 +68,7 @@ void NewEpoch(size_t CurrentCycle, size_t CurrentEpoch, size_t TotalEpochs, bool
     std::cout << std::endl << "Epoch:\t" << std::to_string(CurrentEpoch) << std::endl <<  "Test Accuracy:\t" << std::to_string(TestAccuracy) << std::endl;
 }
 
-void GetProgress(int minutes)
+inline void GetProgress(int minutes = 1)
 {
     size_t* cycle = new size_t();
     size_t* totalCycles = new size_t();
@@ -180,6 +180,9 @@ int main()
     CheckMsg msg;
 
     ScriptParameters p;
+
+    p.Script = Scripts::shufflenetv2;
+
     p.Dataset = Datasets::cifar10;
     p.C = 3;
     p.H = 32;
@@ -187,12 +190,13 @@ int main()
     p.PadH = 4;
     p.PadW = 4;
     p.MirrorPad = false;
-    p.Script = Scripts::shufflenetv2;
+    
     p.Groups = 3;
     p.Iterations = 6;
     p.Width = 10;
     p.Relu = true;
-  
+    p.SqueezeExcitation = false;
+
     auto model = ScriptsCatalog::Generate(p);
 
     DNNDataprovider(path.c_str());
@@ -201,8 +205,8 @@ int main()
         if (DNNLoadDataset())
         {
             DNNSetNewEpochDelegate(&NewEpoch);
+
             DNNAddLearningRateSGDR(true, 1, 0.05f, 128, 1, 200, 1, 0.0001f, 0.0005f, 0.9f, 1.0f, 200, true, false, 0.0f, 0.7f, 0.7f, 0.7f, 20, 0.7f, 0, 10.0f, 12.0f);
-            
             DNNTraining();
 
             stop = false;
