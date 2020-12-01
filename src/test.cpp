@@ -142,6 +142,7 @@ inline void GetProgress(int seconds = 10)
         std::cout << std::endl << "Cycle: " << Cycle << std::endl << "Epoch: " << Epoch << std::endl << "SampleIndex: " << SampleIndex << std::endl << "ErrorPercentage: " << TrainErrorPercentage << std::endl << "Samples/second: " << std::to_string(samplesPerSecond) << std::endl;
         oldSampleIndex = SampleIndex;
     }
+
     stop = State == States::Completed;
 
     delete cycle;
@@ -211,7 +212,7 @@ int main()
 
             stop = false;
             while (!stop)
-               GetProgress(10);
+               GetProgress(120);
             
             DNNStop();
             DNNModelDispose();
