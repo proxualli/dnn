@@ -18,6 +18,7 @@ namespace dnn
 		std::filesystem::path StorageDirectory;
 		std::filesystem::path DatasetsDirectory;
 		Datasets Dataset;
+		size_t C;
 		std::vector<Float> Mean;
 		std::vector<Float> StdDev;
 		size_t TrainingSamplesCount;
@@ -37,6 +38,7 @@ namespace dnn
 			TestingSamplesCount(0),
 			Hierarchies(0),
 			Dataset(Datasets::cifar10),
+			C(3),
 			Mean(std::vector<Float>({ Float(0) })),
 			StdDev(std::vector<Float>({ Float(0) }))
 		{
@@ -398,18 +400,21 @@ namespace dnn
 			switch (dataset)
 			{
 			case Datasets::fashionmnist:
+				C = 1;
 				Mean = std::vector<Float>({ Float(72.940247) });
 				StdDev = std::vector<Float>({ Float(90.021133) });
 				break;
 
 			case Datasets::mnist:
+				C = 1;
 				Mean = std::vector<Float>({ Float(33.318443) });
 				StdDev = std::vector<Float>({ Float(78.567261) });
 				break;
 			case Datasets::cifar10:
 			case Datasets::cifar100:
 			case Datasets::tinyimagenet:
-			break;
+			    C = 3;
+			    break;
 			}
 
 			switch (dataset)
