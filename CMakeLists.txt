@@ -53,7 +53,7 @@ if(WIN32 OR MSVC)
   set(release_flags /openmp:experimental /W3 /O2 /Ob2 /Oi /Ot /GL /GF /Gy /fp:fast)
 else()
   set(flags -mfma -mavx2 -march=znver2 -fopenmp)
-  set(linkflags -fopenmp=libiomp5)
+  set(linkflags -fopenmp=libomp.lib)
   add_compile_options(
     "$<$<COMPILE_LANGUAGE:CXX>:${flags}>"
     "$<$<COMPILE_LANGUAGE:C>:${flags}>")
