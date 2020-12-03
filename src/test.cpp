@@ -60,7 +60,7 @@ DNN_API int DNNLoadNetworkWeights(const char* fileName, const bool persistOptimi
 DNN_API int DNNSaveNetworkWeights(const char* fileName, const bool persistOptimizer);
 DNN_API int DNNLoadLayerWeights(const char* fileName, const size_t layerIndex, const bool persistOptimizer);
 DNN_API int DNNSaveLayerWeights(const char* fileName, const size_t layerIndex, const bool persistOptimizer);
-// DNN_API void DNNGetLayerWeights(const size_t layerIndex, std::vector<Float>* weights, std::vector<Float>* biases);
+DNN_API void DNNGetLayerWeights(const size_t layerIndex, std::vector<Float>* weights, std::vector<Float>* biases);
 DNN_API void DNNSetCostIndex(const size_t index);
 DNN_API void DNNGetCostInfo(const size_t costIndex, size_t* trainErrors, Float* trainLoss, Float* avgTrainLoss, Float* trainErrorPercentage, size_t* testErrors, Float* testLoss, Float* avgTestLoss, Float* testErrorPercentage);
 DNN_API void DNNGetImage(const size_t layer, const unsigned char fillColor, unsigned char* image);
@@ -69,7 +69,7 @@ static size_t oldSampleIndex = 0;
 
 void NewEpoch(size_t CurrentCycle, size_t CurrentEpoch, size_t TotalEpochs, bool HorizontalFlip, bool VerticalFlip, Float Dropout, Float Cutout, Float AutoAugment, Float ColorCast, size_t ColorAngle, Float Distortion, size_t Interpolation, Float Scaling, Float Rotation, Float MaximumRate, size_t BatchSize, Float Momentum, Float L2Penalty, Float AvgTrainLoss, Float TrainErrorPercentage, Float TrainAccuracy, size_t TrainErrors, Float AvgTestLoss, Float TestErrorPercentage, Float TestAccuracy, size_t TestErrors)
 {
-    std::cout << "Cycle: " << std::to_string(CurrentCycle) << "  Epoch: " << std::to_string(CurrentEpoch) << "  Test Accuracy: " << FloatToStringFixed(TestAccuracy, 2) << std::string("                                                                     ") << std::endl;
+    std::cout << "Cycle: " << std::to_string(CurrentCycle) << "  Epoch: " << std::to_string(CurrentEpoch) << "  Test Accuracy: " << FloatToStringFixed(TestAccuracy, 2) << std::string("                                                                            ") << std::endl;
     std::cout.flush();
 }
 
@@ -144,7 +144,7 @@ void GetTrainingProgress(int seconds = 10, size_t trainingSamples = 50000, size_
             else if (i == pos) std::cout << ">";
             else std::cout << " ";
         }
-        std::cout << "] " << int(progress * 100.0) << "%  Cycle:" << std::to_string(*cycle) << "  Epoch:" << std::to_string(*epoch) << "  Train Error:";
+        std::cout << "] " << int(progress * 100.0) << "%  Cycle:" << std::to_string(*cycle) << "  Epoch:" << std::to_string(*epoch) << "  Error:";
         if (*state == States::Testing)
             std::cout << FloatToStringFixed(*testErrorPercentage, 2);
         else
@@ -194,16 +194,16 @@ int main()
     ScriptParameters p;
 
     p.Script = Scripts::shufflenetv2;
-    p.Dataset = Datasets::mnist;
-    p.C = 1;
+    p.Dataset = Datasets::cifar10;
+    p.C = 3;
     p.H = 32;
     p.W = 32;
     p.PadH = 4;
     p.PadW = 4;
     p.MirrorPad = false;
     p.Groups = 3;
-    p.Iterations = 2;
-    p.Width = 4;
+    p.Iterations = 6;
+    p.Width = 10;
     p.Relu = true;
     p.SqueezeExcitation = false;
 
@@ -216,7 +216,7 @@ int main()
         {
             DNNSetNewEpochDelegate(&NewEpoch);
 
-            DNNAddLearningRateSGDR(true, 1, 0.05f, 128, 1, 20, 1, 0.0001f, 0.0005f, 0.9f, 1.0f, 20, false, false, 0.0f, 0.5f, 0.0f, 0.0f, 20, 0.7f, 0, 10.0f, 12.0f);
+            DNNAddLearningRateSGDR(true, 1, 0.05f, 128, 1, 20, 1, 0.0001f, 0.0005f, 0.9f, 1.0f, 20, true, false, 0.0f, 0.7f, 0.7f, 0.7f, 20, 0.7f, 0, 10.0f, 12.0f);
             DNNTraining();
 
             auto name = new std::string();
