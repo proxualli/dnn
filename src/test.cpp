@@ -157,7 +157,7 @@ inline void GetProgress(int seconds = 10)
             else if (i == pos) std::cout << ">";
             else std::cout << " ";
         }
-        std::cout << "] " << int(progress * 100.0) << " %\tCycle: " << std::to_string(Cycle) << "\tEpoch: " << std::to_string(Epoch) << "\tError% " << std::string(TrainErrorPercentage) << "\t" << std::to_string(samplesPerSecond) << " samples/s\r";
+        std::cout << "] " << int(progress * 100.0) << " %\tCycle: " << std::to_string(Cycle) << "\tEpoch: " << std::to_string(Epoch) << "\tError% " << std::to_string(TrainErrorPercentage) << "\t" << std::to_string(samplesPerSecond) << " samples/s\r";
         std::cout.flush();
 
         stop = State == States::Completed;
