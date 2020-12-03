@@ -171,7 +171,7 @@ inline void GetProgress(int seconds = 10)
 
         std::cout.flush();
 
-        progress += Float(SampleIndex / 50000); 
+        progress = Float(SampleIndex / 50000); 
     }
    
     delete cycle;
@@ -241,7 +241,7 @@ int main()
 
             stop = false;
             while (!stop)
-               GetProgress(30);
+               GetProgress(5);
             
             DNNStop();
             DNNModelDispose();
