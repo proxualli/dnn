@@ -45,6 +45,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 if(WIN32 OR MSVC)
   set(flags /arch:AVX2)
+  set(linkflags "")
   add_compile_options(
     "$<$<COMPILE_LANGUAGE:CXX>:${flags}>"
     "$<$<COMPILE_LANGUAGE:C>:${flags}>")
@@ -52,9 +53,11 @@ if(WIN32 OR MSVC)
   set(release_flags /openmp:experimental /W3 /O2 /Ob2 /Oi /Ot /GL /GF /Gy /fp:fast)
 else()
   set(flags -mfma -mavx2 -march=znver2 -fopenmp)
+  set(linkflags -fopenmp)
   add_compile_options(
     "$<$<COMPILE_LANGUAGE:CXX>:${flags}>"
     "$<$<COMPILE_LANGUAGE:C>:${flags}>")
+  
   set(debug_flags -g -Wextra)
   set(release_flags -Ofast -funroll-loops -ftree-vectorize -Wno-error)
 endif()
@@ -67,6 +70,9 @@ MACRO(DNN_TARGET_ENABLE_CXX17 target)
   target_compile_options(${target} PRIVATE
     "$<$<CONFIG:RELEASE>:${release_flags}>"
     "$<$<CONFIG:DEBUG>:${debug_flags}>")
+  target_link_options(${target} PRIVATE
+    "$<$<COMPILE_LANGUAGE:CXX>:${linkflags}>"
+    "$<$<COMPILE_LANGUAGE:C>:${linkflags}>")
 ENDMACRO()
 
 set(DNNL_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
@@ -238,9 +244,6 @@ IF(NOT DEFINED VECTORCLASS_SOURCE_DIR)
 
 add_library(${PROJECT_NAME} ${libdnn_sources})
 DNN_TARGET_ENABLE_CXX17(${PROJECT_NAME})
-target_link_options(${PROJECT_NAME} PRIVATE
-  "$<$<COMPILE_LANGUAGE:CXX>:${flags}>"
-  "$<$<COMPILE_LANGUAGE:C>:${flags}>")
 if(BUILD_SHARED_LIBS)
   target_compile_definitions(${PROJECT_NAME} PRIVATE DNN_EXPORTS DNN_DLL DNN_CACHE_PRIMITIVES DNN_OMP cimg_use_cpp11 cimg_use_jpeg cimg_use_png cimg_use_zlib)
 else()
@@ -254,9 +257,6 @@ target_include_directories(${PROJECT_NAME}
        ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 add_executable(test ${libdnn_test})
-target_link_options(test PRIVATE
-  "$<$<COMPILE_LANGUAGE:CXX>:${flags}>"
-  "$<$<COMPILE_LANGUAGE:C>:${flags}>")
 DNN_TARGET_ENABLE_CXX17(test)
 target_include_directories(test 
     PUBLIC
