@@ -153,6 +153,8 @@ inline void GetProgress(int seconds = 10)
         States State = static_cast<States>(*state);
         TaskStates TaskState = static_cast<TaskStates>(*taskState);
 
+        stop = State == States::Completed;
+
         if (oldSampleIndex > SampleIndex)
             oldSampleIndex = 0;
 
@@ -171,8 +173,6 @@ inline void GetProgress(int seconds = 10)
         progress += Float(SampleIndex / 50000); 
     }
    
-    stop = State == States::Completed;
-
     delete cycle;
     delete totalCycles;
     delete epoch;
