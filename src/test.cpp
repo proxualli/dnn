@@ -249,22 +249,6 @@ int main()
     DNNDataprovider(path.c_str());
     if (DNNReadDefinition(model.c_str(), Optimizers::NAG, msg) == 1)
     {
-        std::string* name = new std::string();
-        size_t* costIndex = new size_t(); 
-        size_t* costLayerCount = new size_t(); 
-        size_t* groupIndex = new size_t(); 
-        size_t* labelIndex = new size_t(); 
-        size_t* hierarchies = new size_t(); 
-        bool* meanStdNormalization = new bool(); 
-        Costs* lossFunction = new Costs(); 
-        Datasets* dataset = new Datasets(); 
-        size_t* layerCount = new size_t(); 
-        size_t* trainingSamples = new size_t(); 
-        size_t* testingSamples = new size_t(); 
-        std::vector<Float>* meanTrainSet = new std::vector<Float>();
-        std::vector<Float>* stdTrainSet = new std::vector<Float>();
-        DNNGetNetworkInfo(name, costIndex, costLayerCount, groupIndex, labelIndex, hierarchies, meanStdNormalization, lossFunction, dataset, layerCount, trainingSamples, testingSamples, meanTrainSet, stdTrainSet);
-
         if (DNNLoadDataset())
         {
             DNNSetNewEpochDelegate(&NewEpoch);
@@ -272,30 +256,47 @@ int main()
             DNNAddLearningRateSGDR(true, 1, 0.05f, 128, 1, 200, 1, 0.0001f, 0.0005f, 0.9f, 1.0f, 200, true, false, 0.0f, 0.7f, 0.7f, 0.7f, 20, 0.7f, 0, 10.0f, 12.0f);
             DNNTraining();
 
+            std::string* name = new std::string();
+            size_t* costIndex = new size_t(); 
+            size_t* costLayerCount = new size_t(); 
+            size_t* groupIndex = new size_t(); 
+            size_t* labelIndex = new size_t(); 
+            size_t* hierarchies = new size_t(); 
+            bool* meanStdNormalization = new bool(); 
+            Costs* lossFunction = new Costs(); 
+            Datasets* dataset = new Datasets(); 
+            size_t* layerCount = new size_t(); 
+            size_t* trainingSamples = new size_t(); 
+            size_t* testingSamples = new size_t(); 
+            std::vector<Float>* meanTrainSet = new std::vector<Float>();
+            std::vector<Float>* stdTrainSet = new std::vector<Float>();
+            DNNGetNetworkInfo(name, costIndex, costLayerCount, groupIndex, labelIndex, hierarchies, meanStdNormalization, lossFunction, dataset, layerCount, trainingSamples, testingSamples, meanTrainSet, stdTrainSet);
+
             stop = false;
             while (!stop)
                GetProgress(5, *trainingSamples, *testingSamples);
             
             DNNStop();
+
+            delete name;
+            delete costIndex; 
+            delete costLayerCount; 
+            delete groupIndex; 
+            delete labelIndex; 
+            delete hierarchies; 
+            delete meanStdNormalization; 
+            delete lossFunction; 
+            delete dataset; 
+            delete layerCount; 
+            delete trainingSamples; 
+            delete testingSamples; 
+            delete meanTrainSet;
+            delete stdTrainSet;
+
             DNNModelDispose();
         }
         else
             std::cout << std::endl << "Could not load dataset" << std::endl;
-
-        delete name;
-        delete costIndex; 
-        delete costLayerCount; 
-        delete groupIndex; 
-        delete labelIndex; 
-        delete hierarchies; 
-        delete meanStdNormalization; 
-        delete lossFunction; 
-        delete dataset; 
-        delete layerCount; 
-        delete trainingSamples; 
-        delete testingSamples; 
-        delete meanTrainSet;
-        delete stdTrainSet;
     }
     else
         std::cout << std::endl <<  "Could not load model" << std::endl << msg.Message << std::endl << model << std::endl;
