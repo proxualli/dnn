@@ -8,6 +8,7 @@
   #define DNN_API extern "C"
 #endif
 #endif
+
 #include <chrono>
 
 #include "Utils.h"
@@ -18,6 +19,7 @@ static std::string path = std::string(getenv("USERPROFILE")) + std::string("\\Do
 #else
 static std::string path = std::string(getenv("HOME")) + std::string("/convnet/");
 #endif
+
 
 using namespace dnn;
 
@@ -67,7 +69,7 @@ static size_t oldSampleIndex = 0;
 
 void NewEpoch(size_t CurrentCycle, size_t CurrentEpoch, size_t TotalEpochs, bool HorizontalFlip, bool VerticalFlip, Float Dropout, Float Cutout, Float AutoAugment, Float ColorCast, size_t ColorAngle, Float Distortion, size_t Interpolation, Float Scaling, Float Rotation, Float MaximumRate, size_t BatchSize, Float Momentum, Float L2Penalty, Float AvgTrainLoss, Float TrainErrorPercentage, Float TrainAccuracy, size_t TrainErrors, Float AvgTestLoss, Float TestErrorPercentage, Float TestAccuracy, size_t TestErrors)
 {
-    std::cout << "Cycle: " << std::to_string(CurrentCycle) << "  Epoch: " << std::to_string(CurrentEpoch) << "  Test Accuracy: " << std::to_string(TestAccuracy) << std::string("                                                     ") << std::endl;
+    std::cout << "Cycle: " << std::to_string(CurrentCycle) << "  Epoch: " << std::to_string(CurrentEpoch) << "  Test Accuracy: " << FloatToStringFixed(TestAccuracy, 2) << std::string("                                                                  ") << std::endl;
     std::cout.flush();
 }
 
@@ -139,10 +141,10 @@ void GetTrainingProgress(int seconds = 10, size_t trainingSamples = 50000, size_
         }
         std::cout << "] " << int(progress * 100.0) << "%  Cycle:" << std::to_string(*cycle) << "  Epoch:" << std::to_string(*epoch) << "  Error:";
         if (*state == States::Testing)
-            std::cout << std::to_string(*testErrorPercentage);
+            std::cout << FloatToStringFixed(*testErrorPercentage, 2);
         else
-            std::cout << std::to_string(*trainErrorPercentage);
-        std::cout << "%  " << std::to_string(samplesPerSecond) << " samples/s   \r";
+            std::cout << FloatToStringFixed(*trainErrorPercentage, 2);
+        std::cout << "%  " << FloatToStringFixed(samplesPerSecond, 2) << " samples/s   \r";
         std::cout.flush();
 
         if (*sampleIndex > oldSampleIndex)
