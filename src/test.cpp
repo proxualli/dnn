@@ -253,7 +253,7 @@ int main()
         size_t* costIndex = new size_t(); 
         size_t* costLayerCount = new size_t(); 
         size_t* groupIndex = new size_t(); 
-        size_t* labelindex = new size_t(); 
+        size_t* labelIndex = new size_t(); 
         size_t* hierarchies = new size_t(); 
         bool* meanStdNormalization = new bool(); 
         Costs* lossFunction = new Costs(); 
@@ -286,7 +286,7 @@ int main()
         delete costIndex; 
         delete costLayerCount; 
         delete groupIndex; 
-        delete labelindex; 
+        delete labelIndex; 
         delete hierarchies; 
         delete meanStdNormalization; 
         delete lossFunction; 
