@@ -1,5 +1,6 @@
 #include "Definition.h"
 
+#ifdef DNN_DLL
 #if defined _WIN32 || defined __CYGWIN__ || defined __MINGW32__
 #if defined DNN_LOG 
 FILE* stream;
@@ -49,6 +50,9 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
 #else
 #define DNN_API
 #endif
+#endif
+#else
+#define DNN_API
 #endif
 
 using namespace dnn;
