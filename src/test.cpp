@@ -145,7 +145,7 @@ void GetProgress(int seconds = 10, size_t trainingSamples = 50000, size_t testin
         std::cout.flush();
 
         if (*sampleIndex > oldSampleIndex)
-           oldSampleIndex = SampleIndex;
+           oldSampleIndex = *sampleIndex;
     }
    
     delete cycle;
