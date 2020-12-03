@@ -127,7 +127,7 @@ void GetProgress(int seconds = 10, size_t trainingSamples = 50000, size_t testin
 
         std::chrono::duration<Float> elapsedTime = std::chrono::high_resolution_clock().now() - startTime;
         const Float elapsedSeconds = Float(std::chrono::duration_cast<std::chrono::microseconds>(elapsedTime).count()) / 1000000;
-        const Float samplesPerSecond = Float(SampleIndex - oldSampleIndex) / elapsedSeconds;
+        const Float samplesPerSecond = Float(*sampleIndex - oldSampleIndex) / elapsedSeconds;
 
         std::cout << "[";
         int pos = barWidth * progress;
