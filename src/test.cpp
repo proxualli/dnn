@@ -143,6 +143,8 @@ inline void GetProgress(int seconds = 10)
         States State = static_cast<States>(*state);
         TaskStates TaskState = static_cast<TaskStates>(*taskState);
 
+        progress = Float(SampleIndex) / 50000; 
+
         const Float samples = SampleIndex - oldSampleIndex;
         std::chrono::duration<Float> time = std::chrono::high_resolution_clock().now() - timePoint;
         Float realSeconds = Float(std::chrono::duration_cast<std::chrono::microseconds>(time).count()) / 1000000;
@@ -155,8 +157,9 @@ inline void GetProgress(int seconds = 10)
             else if (i == pos) std::cout << ">";
             else std::cout << " ";
         }
-        std::cout << "] " << int(progress * 100.0) << " %\t" << std::to_string(samplesPerSecond) << " samples/s\r";
-       
+        std::cout << "] " << int(progress * 100.0) << " %\tCycle: " << std::to_string(Cycle) << "\tEpoch: " << std::to_string(Epoch) << "\tError% " << std::string(TrainErrorPercentage) << "\t" << std::to_string(samplesPerSecond) << " samples/s\r";
+        std::cout.flush();
+
         stop = State == States::Completed;
 
         if (oldSampleIndex > SampleIndex)
@@ -165,13 +168,11 @@ inline void GetProgress(int seconds = 10)
         
         if (SampleIndex > oldSampleIndex)
         {
-            //std::cout << std::endl << "Cycle: " << Cycle << std::endl << "Epoch: " << Epoch << std::endl << "SampleIndex: " << SampleIndex << std::endl << "ErrorPercentage: " << TrainErrorPercentage << std::endl << "Samples/second: " << std::to_string(samplesPerSecond) << std::endl;
+            //std::cout << std::endl << << std::endl << "Epoch: " << Epoch << std::endl << "SampleIndex: " << SampleIndex << std::endl << "ErrorPercentage: " << TrainErrorPercentage << std::endl << "Samples/second: " << std::to_string(samplesPerSecond) << std::endl;
             oldSampleIndex = SampleIndex;
         }
 
-        std::cout.flush();
-
-        progress = Float(SampleIndex / 50000); 
+       
     }
    
     delete cycle;
