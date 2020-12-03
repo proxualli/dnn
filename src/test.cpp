@@ -144,7 +144,7 @@ void GetTrainingProgress(int seconds = 10, size_t trainingSamples = 50000, size_
             else if (i == pos) std::cout << ">";
             else std::cout << " ";
         }
-        std::cout << "] " << int(progress * 100.0) << "%  Cycle:" << std::to_string(*cycle) << "  Epoch:" << std::to_string(*epoch) << "  Error:";
+        std::cout << "] " << int(progress * 100.0) << "%  Cycle:" << std::to_string(*cycle) << "  Epoch:" << std::to_string(*epoch) << "  Train Error:";
         if (*state == States::Testing)
             std::cout << FloatToStringFixed(*testErrorPercentage, 2);
         else
