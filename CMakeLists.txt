@@ -53,7 +53,7 @@ if(WIN32 OR MSVC)
   set(release_flags /openmp:experimental /W3 /O2 /Ob2 /Oi /Ot /GL /GF /Gy /fp:fast)
 else()
   set(flags -mfma -mavx2 -march=znver2 -fopenmp)
-  set(linkflags -fopenmp)
+  set(linkflags -fopenmp=libiomp5)
   add_compile_options(
     "$<$<COMPILE_LANGUAGE:CXX>:${flags}>"
     "$<$<COMPILE_LANGUAGE:C>:${flags}>")
@@ -329,7 +329,7 @@ IF(NOT TARGET dnnl)
 ENDIF()
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC dnnl)
 
-# ---[ Configure VectorClass
+# ---[ Configure vectorclass
 IF(NOT TARGET vectorclass)
   ADD_SUBDIRECTORY(
     "${VECTORCLASS_SOURCE_DIR}"
@@ -348,8 +348,8 @@ TARGET_LINK_LIBRARIES(test PUBLIC ${PROJECT_NAME})
 
 install(TARGETS test DESTINATION bin)
 if(WIN32 OR MSVC AND BUILD_SHARED_LIBS)
-install(TARGETS zlib LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+  install(TARGETS zlib LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+      PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 endif()
 install(TARGETS ${PROJECT_NAME}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
