@@ -71,7 +71,13 @@ void NewEpoch(size_t CurrentCycle, size_t CurrentEpoch, size_t TotalEpochs, bool
     std::cout << "Cycle: " << std::to_string(CurrentCycle) << "   Epoch: " << std::to_string(CurrentEpoch) << "   Test Accuracy: " << std::to_string(TestAccuracy) << std::string("                                                                    ") << std::endl;
 }
 
-inline void GetProgress(int seconds = 10)
+std::string GetModelInfo()
+{
+
+    return "";
+}
+
+void GetProgress(int seconds = 10, size_t trainingSamples = 50000, size_t testingSamples = 10000)
 {
     size_t* cycle = new size_t();
     size_t* totalCycles = new size_t();
@@ -143,7 +149,10 @@ inline void GetProgress(int seconds = 10)
         States State = static_cast<States>(*state);
         TaskStates TaskState = static_cast<TaskStates>(*taskState);
 
-        progress = Float(SampleIndex) / 50000; 
+        if (*state == States::Testing)
+            progress = Float(SampleIndex) / testingSamples; 
+        else
+            progress = Float(SampleIndex) / trainingSamples; 
 
         if (oldSampleIndex > SampleIndex)
             oldSampleIndex = 0;
@@ -160,7 +169,12 @@ inline void GetProgress(int seconds = 10)
             else if (i == pos) std::cout << ">";
             else std::cout << " ";
         }
-        std::cout << "] " << int(progress * 100.0) << " %  Cycle:" << std::to_string(Cycle) << " Epoch:" << std::to_string(Epoch) << "  Error:" << std::to_string(TrainErrorPercentage) << " %  " << std::to_string(samplesPerSecond) << " samples/s  \r";
+        
+        if (*state == States::Testing)
+            std::cout << "] " << int(progress * 100.0) << "%  Cycle:" << std::to_string(Cycle) << " Epoch:" << std::to_string(Epoch) << "  Error:" << std::to_string(TestErrorPercentage) << "%  " << std::to_string(samplesPerSecond) << " samples/s  \r";
+        else
+            std::cout << "] " << int(progress * 100.0) << "%  Cycle:" << std::to_string(Cycle) << " Epoch:" << std::to_string(Epoch) << "  Error:" << std::to_string(TrainErrorPercentage) << "%  " << std::to_string(samplesPerSecond) << " samples/s  \r";
+        
         std::cout.flush();
 
         stop = State == States::Completed;
@@ -229,9 +243,28 @@ int main()
 
     auto model = ScriptsCatalog::Generate(p);
 
+    
+
+
     DNNDataprovider(path.c_str());
     if (DNNReadDefinition(model.c_str(), Optimizers::NAG, msg) == 1)
     {
+        std::string* name = new std::string();
+        size_t* costIndex = new size_t(); 
+        size_t* costLayerCount = new size_t(); 
+        size_t* groupIndex = new size_t(); 
+        size_t* labelindex = new size_t(); 
+        size_t* hierarchies = new size_t(); 
+        bool* meanStdNormalization = new bool(); 
+        Costs* lossFunction = new Costs(); 
+        Datasets* dataset = new Datasets(); 
+        size_t* layerCount = new size_t(); 
+        size_t* trainingSamples = new size_t(); 
+        size_t* testingSamples = new size_t(); 
+        std::vector<Float>* meanTrainSet = new std::vector<Float>();
+        std::vector<Float>* stdTrainSet = new std::vector<Float>();
+
+        DNNGetNetworkInfo(name, costIndex, costLayerCount, groupIndex, labelIndex, hierarchies, meanStdNormalization, lossFunction, dataset, layerCount, trainingSamples, testingSamples, meanTrainSet, stdTrainSet);
         if (DNNLoadDataset())
         {
             DNNSetNewEpochDelegate(&NewEpoch);
@@ -241,7 +274,7 @@ int main()
 
             stop = false;
             while (!stop)
-               GetProgress(5);
+               GetProgress(5, *trainingSamples, *testingSamples);
             
             DNNStop();
             DNNModelDispose();
