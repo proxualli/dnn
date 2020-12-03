@@ -109,7 +109,8 @@ inline void GetProgress(int seconds = 10)
         DNNGetTrainingInfo(cycle, totalCycles, epoch, totalEpochs, horizontalMirror, verticalMirror, dropout, cutout, autoAugment, colorCast, colorAngle, distortion, interpolation, scaling, rotation, sampleIndex, batchSize, rate, momentum, l2Penalty, avgTrainLoss, trainErrorPercentage, trainErrors, avgTestLoss, testErrorPercentage, testErrors, state, taskState);
     } 
     while (*state == States::Idle);
-
+    
+    int barWidth = 70;
     float progress = 0.0;
     while (*state != States::Completed)
     {
