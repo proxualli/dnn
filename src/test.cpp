@@ -67,39 +67,39 @@ static size_t oldSampleIndex = 0;
 
 void NewEpoch(size_t CurrentCycle, size_t CurrentEpoch, size_t TotalEpochs, bool HorizontalFlip, bool VerticalFlip, Float Dropout, Float Cutout, Float AutoAugment, Float ColorCast, size_t ColorAngle, Float Distortion, size_t Interpolation, Float Scaling, Float Rotation, Float MaximumRate, size_t BatchSize, Float Momentum, Float L2Penalty, Float AvgTrainLoss, Float TrainErrorPercentage, Float TrainAccuracy, size_t TrainErrors, Float AvgTestLoss, Float TestErrorPercentage, Float TestAccuracy, size_t TestErrors)
 {
-    std::cout << "Cycle: " << std::to_string(CurrentCycle) << "  Epoch: " << std::to_string(CurrentEpoch) << "  Test Accuracy: " << std::to_string(TestAccuracy) << std::string("                                                                                    ") << std::endl;
+    std::cout << "Cycle: " << std::to_string(CurrentCycle) << "  Epoch: " << std::to_string(CurrentEpoch) << "  Test Accuracy: " << std::to_string(TestAccuracy) << std::string("                                                                                 ") << std::endl;
 }
 
 void GetProgress(int seconds = 10, size_t trainingSamples = 50000, size_t testingSamples = 10000)
 {
-    size_t* cycle = new size_t();
-    size_t* totalCycles = new size_t();
-    size_t* epoch = new size_t();
-    size_t* totalEpochs = new size_t();
-    bool* horizontalMirror = new bool();
-    bool* verticalMirror = new bool();
-    Float* dropout = new Float();
-    Float* cutout = new Float();
-    Float* autoAugment = new Float();
-    Float* colorCast = new Float();
-    size_t* colorAngle = new size_t();
-    Float* distortion = new Float();
-    size_t* interpolation = new size_t();
-    Float* scaling = new Float();
-    Float* rotation = new Float();
-    size_t* sampleIndex = new size_t();
-    Float* rate = new Float();
-    Float* momentum = new Float();
-    Float* l2Penalty = new Float();
-    size_t* batchSize = new size_t();
-    Float* avgTrainLoss = new Float();
-    Float* trainErrorPercentage = new Float();
-    size_t* trainErrors = new size_t();
-    Float* avgTestLoss = new Float();
-    Float* testErrorPercentage = new Float();
-    size_t* testErrors = new size_t();
-    States* state = new States();
-    TaskStates* taskState = new TaskStates();
+    auto cycle = new size_t();
+    auto totalCycles = new size_t();
+    auto epoch = new size_t();
+    auto totalEpochs = new size_t();
+    auto horizontalMirror = new bool();
+    auto verticalMirror = new bool();
+    auto dropout = new Float();
+    auto cutout = new Float();
+    auto autoAugment = new Float();
+    auto colorCast = new Float();
+    auto colorAngle = new size_t();
+    auto distortion = new Float();
+    auto interpolation = new size_t();
+    auto scaling = new Float();
+    auto rotation = new Float();
+    auto sampleIndex = new size_t();
+    auto rate = new Float();
+    auto momentum = new Float();
+    auto l2Penalty = new Float();
+    auto batchSize = new size_t();
+    auto avgTrainLoss = new Float();
+    auto trainErrorPercentage = new Float();
+    auto trainErrors = new size_t();
+    auto avgTestLoss = new Float();
+    auto testErrorPercentage = new Float();
+    auto testErrors = new size_t();
+    auto state = new States();
+    auto taskState = new TaskStates();
 
     *state = States::Idle;
     do
@@ -117,37 +117,12 @@ void GetProgress(int seconds = 10, size_t trainingSamples = 50000, size_t testin
         std::this_thread::sleep_for(std::chrono::seconds(seconds));
         DNNGetTrainingInfo(cycle, totalCycles, epoch, totalEpochs, horizontalMirror, verticalMirror, dropout, cutout, autoAugment, colorCast, colorAngle, distortion, interpolation, scaling, rotation, sampleIndex, batchSize, rate, momentum, l2Penalty, avgTrainLoss, trainErrorPercentage, trainErrors, avgTestLoss, testErrorPercentage, testErrors, state, taskState);
 
-        size_t Cycle = *cycle;
-        size_t Epoch = *epoch;
-        size_t TotalEpochs = *totalEpochs;
-        bool Mirror = *horizontalMirror;
-        Float Dropout = *dropout;
-        Float Cutout = *cutout;
-        Float AutoAugment = *autoAugment;
-        Float ColorCast = *colorCast;
-        size_t ColorAngle = *colorAngle;
-        Float Distortion = *distortion;
-        size_t Interpolation = *interpolation;
-        size_t SampleIndex = *sampleIndex;
-        Float Rate = *rate;
-        Float Momentum = *momentum;
-        Float L2Penalty = *l2Penalty;
-        size_t BatchSize = *batchSize;
-        Float AvgTrainLoss = *avgTrainLoss;
-        Float TrainErrorPercentage = *trainErrorPercentage;
-        size_t TrainErrors = *trainErrors;
-        Float AvgTestLoss = *avgTestLoss;
-        Float TestErrorPercentage = *testErrorPercentage;
-        size_t TestErrors = *testErrors;
-        States State = static_cast<States>(*state);
-        TaskStates TaskState = static_cast<TaskStates>(*taskState);
-
         if (*state == States::Testing)
-            progress = Float(SampleIndex) / testingSamples; 
+            progress = Float(*sampleIndex) / testingSamples; 
         else
-            progress = Float(SampleIndex) / trainingSamples; 
+            progress = Float(*sampleIndex) / trainingSamples; 
 
-        if (oldSampleIndex > SampleIndex)
+        if (oldSampleIndex > *sampleIndex)
             oldSampleIndex = 0;
 
         std::chrono::duration<Float> elapsedTime = std::chrono::high_resolution_clock().now() - startTime;
@@ -161,15 +136,15 @@ void GetProgress(int seconds = 10, size_t trainingSamples = 50000, size_t testin
             else if (i == pos) std::cout << ">";
             else std::cout << " ";
         }
-        std::cout << "] " << int(progress * 100.0) << "%  Cycle:" << std::to_string(Cycle) << "  Epoch:" << std::to_string(Epoch) << "  Error:";
+        std::cout << "] " << int(progress * 100.0) << "%  Cycle:" << std::to_string(*cycle) << "  Epoch:" << std::to_string(*epoch) << "  Error:";
         if (*state == States::Testing)
-            std::cout << std::to_string(TestErrorPercentage);
+            std::cout << std::to_string(*testErrorPercentage);
         else
-            std::cout << std::to_string(TrainErrorPercentage);
+            std::cout << std::to_string(*trainErrorPercentage);
         std::cout << "%  " << std::to_string(samplesPerSecond) << " samples/s   \r";
         std::cout.flush();
 
-        if (SampleIndex > oldSampleIndex)
+        if (*sampleIndex > oldSampleIndex)
            oldSampleIndex = SampleIndex;
     }
    
@@ -236,20 +211,20 @@ int main()
             DNNAddLearningRateSGDR(true, 1, 0.05f, 128, 1, 200, 1, 0.0001f, 0.0005f, 0.9f, 1.0f, 200, true, false, 0.0f, 0.7f, 0.7f, 0.7f, 20, 0.7f, 0, 10.0f, 12.0f);
             DNNTraining();
 
-            std::string* name = new std::string();
-            size_t* costIndex = new size_t(); 
-            size_t* costLayerCount = new size_t(); 
-            size_t* groupIndex = new size_t(); 
-            size_t* labelIndex = new size_t(); 
-            size_t* hierarchies = new size_t(); 
-            bool* meanStdNormalization = new bool(); 
-            Costs* lossFunction = new Costs(); 
-            Datasets* dataset = new Datasets(); 
-            size_t* layerCount = new size_t(); 
-            size_t* trainingSamples = new size_t(); 
-            size_t* testingSamples = new size_t(); 
-            std::vector<Float>* meanTrainSet = new std::vector<Float>();
-            std::vector<Float>* stdTrainSet = new std::vector<Float>();
+            auto name = new std::string();
+            auto costIndex = new size_t(); 
+            auto costLayerCount = new size_t(); 
+            auto groupIndex = new size_t(); 
+            auto labelIndex = new size_t(); 
+            auto hierarchies = new size_t(); 
+            auto meanStdNormalization = new bool(); 
+            auto lossFunction = new Costs(); 
+            auto dataset = new Datasets(); 
+            auto layerCount = new size_t(); 
+            auto trainingSamples = new size_t(); 
+            auto testingSamples = new size_t(); 
+            auto meanTrainSet = new std::vector<Float>();
+            auto stdTrainSet = new std::vector<Float>();
             
             DNNGetNetworkInfo(name, costIndex, costLayerCount, groupIndex, labelIndex, hierarchies, meanStdNormalization, lossFunction, dataset, layerCount, trainingSamples, testingSamples, meanTrainSet, stdTrainSet);
 
