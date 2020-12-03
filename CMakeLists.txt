@@ -55,6 +55,9 @@ else()
   add_compile_options(
     "$<$<COMPILE_LANGUAGE:CXX>:${flags}>"
     "$<$<COMPILE_LANGUAGE:C>:${flags}>")
+  add_link_options(
+    "$<$<COMPILE_LANGUAGE:CXX>:${flags}>"
+    "$<$<COMPILE_LANGUAGE:C>:${flags}>")
   set(debug_flags -g -Wextra)
   set(release_flags -Ofast -funroll-loops -ftree-vectorize -Wno-error)
 endif()
