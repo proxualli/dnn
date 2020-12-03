@@ -53,11 +53,14 @@ if(WIN32 OR MSVC)
   set(release_flags /openmp:experimental /W3 /O2 /Ob2 /Oi /Ot /GL /GF /Gy /fp:fast)
 else()
   set(flags -mfma -mavx2 -march=znver2 -fopenmp)
-  set(linkflags -fopenmp)
+  if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    set(linkflags -fopenmp=libiomp5)
+  else()
+    set(linkflags -fopenmp)
+  endif()
   add_compile_options(
     "$<$<COMPILE_LANGUAGE:CXX>:${flags}>"
     "$<$<COMPILE_LANGUAGE:C>:${flags}>")
-  
   set(debug_flags -g -Wextra)
   set(release_flags -Ofast -funroll-loops -ftree-vectorize -Wno-error)
 endif()
