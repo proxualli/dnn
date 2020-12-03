@@ -263,8 +263,8 @@ int main()
         size_t* testingSamples = new size_t(); 
         std::vector<Float>* meanTrainSet = new std::vector<Float>();
         std::vector<Float>* stdTrainSet = new std::vector<Float>();
-
         DNNGetNetworkInfo(name, costIndex, costLayerCount, groupIndex, labelIndex, hierarchies, meanStdNormalization, lossFunction, dataset, layerCount, trainingSamples, testingSamples, meanTrainSet, stdTrainSet);
+
         if (DNNLoadDataset())
         {
             DNNSetNewEpochDelegate(&NewEpoch);
@@ -281,6 +281,21 @@ int main()
         }
         else
             std::cout << std::endl << "Could not load dataset" << std::endl;
+
+        delete name;
+        delete costIndex; 
+        delete costLayerCount; 
+        delete groupIndex; 
+        delete labelindex; 
+        delete hierarchies; 
+        delete meanStdNormalization; 
+        delete lossFunction; 
+        delete dataset; 
+        delete layerCount; 
+        delete trainingSamples; 
+        delete testingSamples; 
+        delete meanTrainSet;
+        delete stdTrainSet;
     }
     else
         std::cout << std::endl <<  "Could not load model" << std::endl << msg.Message << std::endl << model << std::endl;
