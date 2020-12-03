@@ -68,8 +68,8 @@ MACRO(DNN_TARGET_ENABLE_CXX17 target)
     "$<$<CONFIG:RELEASE>:${release_flags}>"
     "$<$<CONFIG:DEBUG>:${debug_flags}>")
   target_link_options(${target} PRIVATE
-    "$<$<LINKER_LANGUAGE:CXX>:${flags}>"
-    "$<$<LINKER_LANGUAGE:C>:${flags}>")
+    "$<$<COMPILE_LANGUAGE:CXX>:${flags}>"
+    "$<$<COMPILE_LANGUAGE:C>:${flags}>")
 ENDMACRO()
 
 set(DNNL_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
