@@ -102,49 +102,74 @@ inline void GetProgress(int seconds = 10)
     States* state = new States();
     TaskStates* taskState = new TaskStates();
 
-    std::chrono::high_resolution_clock::time_point timePoint = std::chrono::high_resolution_clock().now();
-    std::this_thread::sleep_for(std::chrono::seconds(seconds));
-
-    DNNGetTrainingInfo(cycle, totalCycles, epoch, totalEpochs, horizontalMirror, verticalMirror, dropout, cutout, autoAugment, colorCast, colorAngle, distortion, interpolation, scaling, rotation, sampleIndex, batchSize, rate, momentum, l2Penalty, avgTrainLoss, trainErrorPercentage, trainErrors, avgTestLoss, testErrorPercentage, testErrors, state, taskState);
-
-    size_t Cycle = *cycle;
-    size_t Epoch = *epoch;
-    size_t TotalEpochs = *totalEpochs;
-    bool Mirror = *horizontalMirror;
-    Float Dropout = *dropout;
-    Float Cutout = *cutout;
-    Float AutoAugment = *autoAugment;
-    Float ColorCast = *colorCast;
-    size_t ColorAngle = *colorAngle;
-    Float Distortion = *distortion;
-    size_t Interpolation = *interpolation;
-    size_t SampleIndex = *sampleIndex;
-    Float Rate = *rate;
-    Float Momentum = *momentum;
-    Float L2Penalty = *l2Penalty;
-    size_t BatchSize = *batchSize;
-    Float AvgTrainLoss = *avgTrainLoss;
-    Float TrainErrorPercentage = *trainErrorPercentage;
-    size_t TrainErrors = *trainErrors;
-    Float AvgTestLoss = *avgTestLoss;
-    Float TestErrorPercentage = *testErrorPercentage;
-    size_t TestErrors = *testErrors;
-    States State = static_cast<States>(*state);
-    TaskStates TaskState = static_cast<TaskStates>(*taskState);
-
-    if (oldSampleIndex > SampleIndex)
-        oldSampleIndex = 0;
-
-    const Float samples = SampleIndex - oldSampleIndex;
-    std::chrono::duration<Float> time = std::chrono::high_resolution_clock().now() - timePoint;
-    Float realSeconds = Float(std::chrono::duration_cast<std::chrono::microseconds>(time).count()) / 1000000;
-    const Float samplesPerSecond = samples / realSeconds;
-    if (SampleIndex > oldSampleIndex)
+    *state = States::Idle;
+    do
     {
-        std::cout << std::endl << "Cycle: " << Cycle << std::endl << "Epoch: " << Epoch << std::endl << "SampleIndex: " << SampleIndex << std::endl << "ErrorPercentage: " << TrainErrorPercentage << std::endl << "Samples/second: " << std::to_string(samplesPerSecond) << std::endl;
-        oldSampleIndex = SampleIndex;
-    }
+        std::this_thread::sleep_for(std::chrono::milliseconds(250));
+        DNNGetTrainingInfo(cycle, totalCycles, epoch, totalEpochs, horizontalMirror, verticalMirror, dropout, cutout, autoAugment, colorCast, colorAngle, distortion, interpolation, scaling, rotation, sampleIndex, batchSize, rate, momentum, l2Penalty, avgTrainLoss, trainErrorPercentage, trainErrors, avgTestLoss, testErrorPercentage, testErrors, state, taskState);
+    } 
+    while (*state == States::Idle);
 
+    float progress = 0.0;
+    while (*state != States::Completed)
+    {
+        std::chrono::high_resolution_clock::time_point timePoint = std::chrono::high_resolution_clock().now();
+        std::this_thread::sleep_for(std::chrono::seconds(seconds));
+        DNNGetTrainingInfo(cycle, totalCycles, epoch, totalEpochs, horizontalMirror, verticalMirror, dropout, cutout, autoAugment, colorCast, colorAngle, distortion, interpolation, scaling, rotation, sampleIndex, batchSize, rate, momentum, l2Penalty, avgTrainLoss, trainErrorPercentage, trainErrors, avgTestLoss, testErrorPercentage, testErrors, state, taskState);
+
+        std::cout << "[";
+        int pos = barWidth * progress;
+        for (int i = 0; i < barWidth; ++i) {
+            if (i < pos) std::cout << "=";
+            else if (i == pos) std::cout << ">";
+            else std::cout << " ";
+        }
+        std::cout << "] " << int(progress * 100.0) << " %\r";
+       
+
+        size_t Cycle = *cycle;
+        size_t Epoch = *epoch;
+        size_t TotalEpochs = *totalEpochs;
+        bool Mirror = *horizontalMirror;
+        Float Dropout = *dropout;
+        Float Cutout = *cutout;
+        Float AutoAugment = *autoAugment;
+        Float ColorCast = *colorCast;
+        size_t ColorAngle = *colorAngle;
+        Float Distortion = *distortion;
+        size_t Interpolation = *interpolation;
+        size_t SampleIndex = *sampleIndex;
+        Float Rate = *rate;
+        Float Momentum = *momentum;
+        Float L2Penalty = *l2Penalty;
+        size_t BatchSize = *batchSize;
+        Float AvgTrainLoss = *avgTrainLoss;
+        Float TrainErrorPercentage = *trainErrorPercentage;
+        size_t TrainErrors = *trainErrors;
+        Float AvgTestLoss = *avgTestLoss;
+        Float TestErrorPercentage = *testErrorPercentage;
+        size_t TestErrors = *testErrors;
+        States State = static_cast<States>(*state);
+        TaskStates TaskState = static_cast<TaskStates>(*taskState);
+
+        if (oldSampleIndex > SampleIndex)
+            oldSampleIndex = 0;
+
+        const Float samples = SampleIndex - oldSampleIndex;
+        std::chrono::duration<Float> time = std::chrono::high_resolution_clock().now() - timePoint;
+        Float realSeconds = Float(std::chrono::duration_cast<std::chrono::microseconds>(time).count()) / 1000000;
+        const Float samplesPerSecond = samples / realSeconds;
+        if (SampleIndex > oldSampleIndex)
+        {
+            std::cout << std::endl << "Cycle: " << Cycle << std::endl << "Epoch: " << Epoch << std::endl << "SampleIndex: " << SampleIndex << std::endl << "ErrorPercentage: " << TrainErrorPercentage << std::endl << "Samples/second: " << std::to_string(samplesPerSecond) << std::endl;
+            oldSampleIndex = SampleIndex;
+        }
+
+        std::cout.flush();
+
+        progress += Float(SampleIndex / 50000); 
+    }
+   
     stop = State == States::Completed;
 
     delete cycle;
@@ -195,8 +220,8 @@ int main()
     p.MirrorPad = false;
     
     p.Groups = 3;
-    p.Iterations = 6;
-    p.Width = 10;
+    p.Iterations = 3;
+    p.Width = 8;
     p.Relu = true;
     p.SqueezeExcitation = false;
 
