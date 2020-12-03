@@ -68,13 +68,7 @@ static size_t oldSampleIndex = 0;
 
 void NewEpoch(size_t CurrentCycle, size_t CurrentEpoch, size_t TotalEpochs, bool HorizontalFlip, bool VerticalFlip, Float Dropout, Float Cutout, Float AutoAugment, Float ColorCast, size_t ColorAngle, Float Distortion, size_t Interpolation, Float Scaling, Float Rotation, Float MaximumRate, size_t BatchSize, Float Momentum, Float L2Penalty, Float AvgTrainLoss, Float TrainErrorPercentage, Float TrainAccuracy, size_t TrainErrors, Float AvgTestLoss, Float TestErrorPercentage, Float TestAccuracy, size_t TestErrors)
 {
-    std::cout << "Cycle: " << std::to_string(CurrentCycle) << "   Epoch: " << std::to_string(CurrentEpoch) << "   Test Accuracy: " << std::to_string(TestAccuracy) << std::string("                                                                    ") << std::endl;
-}
-
-std::string GetModelInfo()
-{
-
-    return "";
+    std::cout << "Cycle: " << std::to_string(CurrentCycle) << "  Epoch: " << std::to_string(CurrentEpoch) << "  Test Accuracy: " << std::to_string(TestAccuracy) << std::string("                                                                                    ") << std::endl;
 }
 
 void GetProgress(int seconds = 10, size_t trainingSamples = 50000, size_t testingSamples = 10000)
@@ -171,21 +165,16 @@ void GetProgress(int seconds = 10, size_t trainingSamples = 50000, size_t testin
         }
         
         if (*state == States::Testing)
-            std::cout << "] " << int(progress * 100.0) << "%  Cycle:" << std::to_string(Cycle) << " Epoch:" << std::to_string(Epoch) << "  Error:" << std::to_string(TestErrorPercentage) << "%  " << std::to_string(samplesPerSecond) << " samples/s  \r";
+            std::cout << "] " << int(progress * 100.0) << "%  Cycle:" << std::to_string(Cycle) << "  Epoch:" << std::to_string(Epoch) << "  Error:" << std::to_string(TestErrorPercentage) << "%  " << std::to_string(samplesPerSecond) << " samples/s  \r";
         else
-            std::cout << "] " << int(progress * 100.0) << "%  Cycle:" << std::to_string(Cycle) << " Epoch:" << std::to_string(Epoch) << "  Error:" << std::to_string(TrainErrorPercentage) << "%  " << std::to_string(samplesPerSecond) << " samples/s  \r";
+            std::cout << "] " << int(progress * 100.0) << "%  Cycle:" << std::to_string(Cycle) << "  Epoch:" << std::to_string(Epoch) << "  Error:" << std::to_string(TrainErrorPercentage) << "%  " << std::to_string(samplesPerSecond) << " samples/s  \r";
         
         std::cout.flush();
 
         stop = State == States::Completed;
 
         if (SampleIndex > oldSampleIndex)
-        {
-            //std::cout << std::endl << << std::endl << "Epoch: " << Epoch << std::endl << "SampleIndex: " << SampleIndex << std::endl << "ErrorPercentage: " << TrainErrorPercentage << std::endl << "Samples/second: " << std::to_string(samplesPerSecond) << std::endl;
-            oldSampleIndex = SampleIndex;
-        }
-
-       
+           oldSampleIndex = SampleIndex;
     }
    
     delete cycle;
@@ -226,7 +215,6 @@ int main()
     ScriptParameters p;
 
     p.Script = Scripts::shufflenetv2;
-
     p.Dataset = Datasets::cifar10;
     p.C = 3;
     p.H = 32;
@@ -234,7 +222,6 @@ int main()
     p.PadH = 4;
     p.PadW = 4;
     p.MirrorPad = false;
-    
     p.Groups = 3;
     p.Iterations = 2;
     p.Width = 4;
@@ -242,9 +229,6 @@ int main()
     p.SqueezeExcitation = false;
 
     auto model = ScriptsCatalog::Generate(p);
-
-    
-
 
     DNNDataprovider(path.c_str());
     if (DNNReadDefinition(model.c_str(), Optimizers::NAG, msg) == 1)
@@ -270,6 +254,7 @@ int main()
             size_t* testingSamples = new size_t(); 
             std::vector<Float>* meanTrainSet = new std::vector<Float>();
             std::vector<Float>* stdTrainSet = new std::vector<Float>();
+            
             DNNGetNetworkInfo(name, costIndex, costLayerCount, groupIndex, labelIndex, hierarchies, meanStdNormalization, lossFunction, dataset, layerCount, trainingSamples, testingSamples, meanTrainSet, stdTrainSet);
 
             stop = false;
