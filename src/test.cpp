@@ -145,6 +145,9 @@ inline void GetProgress(int seconds = 10)
 
         progress = Float(SampleIndex) / 50000; 
 
+        if (oldSampleIndex > SampleIndex)
+            oldSampleIndex = 0;
+
         const Float samples = SampleIndex - oldSampleIndex;
         std::chrono::duration<Float> time = std::chrono::high_resolution_clock().now() - timePoint;
         Float realSeconds = Float(std::chrono::duration_cast<std::chrono::microseconds>(time).count()) / 1000000;
@@ -162,10 +165,6 @@ inline void GetProgress(int seconds = 10)
 
         stop = State == States::Completed;
 
-        if (oldSampleIndex > SampleIndex)
-            oldSampleIndex = 0;
-
-        
         if (SampleIndex > oldSampleIndex)
         {
             //std::cout << std::endl << << std::endl << "Epoch: " << Epoch << std::endl << "SampleIndex: " << SampleIndex << std::endl << "ErrorPercentage: " << TrainErrorPercentage << std::endl << "Samples/second: " << std::to_string(samplesPerSecond) << std::endl;
@@ -223,8 +222,8 @@ int main()
     p.MirrorPad = false;
     
     p.Groups = 3;
-    p.Iterations = 3;
-    p.Width = 8;
+    p.Iterations = 2;
+    p.Width = 4;
     p.Relu = true;
     p.SqueezeExcitation = false;
 
