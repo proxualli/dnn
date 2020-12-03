@@ -2,9 +2,12 @@
   #include <stdlib.h>
   #define DNN_API extern "C" 
 #else
+#ifdef DNN_DLL
   #define DNN_API extern "C" __declspec(dllimport)
+#else
+  #define DNN_API extern "C"
 #endif
-
+#endif
 #include <chrono>
 
 #include "Utils.h"
