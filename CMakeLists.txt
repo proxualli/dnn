@@ -254,6 +254,9 @@ target_include_directories(${PROJECT_NAME}
        ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 add_executable(test ${libdnn_test})
+target_link_options(test PRIVATE
+  "$<$<COMPILE_LANGUAGE:CXX>:${flags}>"
+  "$<$<COMPILE_LANGUAGE:C>:${flags}>")
 DNN_TARGET_ENABLE_CXX17(test)
 target_include_directories(test 
     PUBLIC
