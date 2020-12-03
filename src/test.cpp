@@ -63,7 +63,6 @@ DNN_API void DNNSetCostIndex(const size_t index);
 DNN_API void DNNGetCostInfo(const size_t costIndex, size_t* trainErrors, Float* trainLoss, Float* avgTrainLoss, Float* trainErrorPercentage, size_t* testErrors, Float* testLoss, Float* avgTestLoss, Float* testErrorPercentage);
 DNN_API void DNNGetImage(const size_t layer, const unsigned char fillColor, unsigned char* image);
 
-static bool stop = false;
 static size_t oldSampleIndex = 0;
 
 void NewEpoch(size_t CurrentCycle, size_t CurrentEpoch, size_t TotalEpochs, bool HorizontalFlip, bool VerticalFlip, Float Dropout, Float Cutout, Float AutoAugment, Float ColorCast, size_t ColorAngle, Float Distortion, size_t Interpolation, Float Scaling, Float Rotation, Float MaximumRate, size_t BatchSize, Float Momentum, Float L2Penalty, Float AvgTrainLoss, Float TrainErrorPercentage, Float TrainAccuracy, size_t TrainErrors, Float AvgTestLoss, Float TestErrorPercentage, Float TestAccuracy, size_t TestErrors)
@@ -114,7 +113,7 @@ void GetProgress(int seconds = 10, size_t trainingSamples = 50000, size_t testin
     float progress = 0.0;
     while (*state != States::Completed)
     {
-        std::chrono::high_resolution_clock::time_point timePoint = std::chrono::high_resolution_clock().now();
+        std::chrono::high_resolution_clock::time_point startTime = std::chrono::high_resolution_clock().now();
         std::this_thread::sleep_for(std::chrono::seconds(seconds));
         DNNGetTrainingInfo(cycle, totalCycles, epoch, totalEpochs, horizontalMirror, verticalMirror, dropout, cutout, autoAugment, colorCast, colorAngle, distortion, interpolation, scaling, rotation, sampleIndex, batchSize, rate, momentum, l2Penalty, avgTrainLoss, trainErrorPercentage, trainErrors, avgTestLoss, testErrorPercentage, testErrors, state, taskState);
 
@@ -151,10 +150,9 @@ void GetProgress(int seconds = 10, size_t trainingSamples = 50000, size_t testin
         if (oldSampleIndex > SampleIndex)
             oldSampleIndex = 0;
 
-        const Float samples = SampleIndex - oldSampleIndex;
-        std::chrono::duration<Float> time = std::chrono::high_resolution_clock().now() - timePoint;
-        Float realSeconds = Float(std::chrono::duration_cast<std::chrono::microseconds>(time).count()) / 1000000;
-        const Float samplesPerSecond = samples / realSeconds;
+        std::chrono::duration<Float> elapsedTime = std::chrono::high_resolution_clock().now() - startTime;
+        const Float elapsedSeconds = Float(std::chrono::duration_cast<std::chrono::microseconds>(elapsedTime).count()) / 1000000;
+        const Float samplesPerSecond = Float(SampleIndex - oldSampleIndex) / elapsedSeconds;
 
         std::cout << "[";
         int pos = barWidth * progress;
@@ -163,15 +161,13 @@ void GetProgress(int seconds = 10, size_t trainingSamples = 50000, size_t testin
             else if (i == pos) std::cout << ">";
             else std::cout << " ";
         }
-        
+        std::cout << "] " << int(progress * 100.0) << "%  Cycle:" << std::to_string(Cycle) << "  Epoch:" << std::to_string(Epoch) << "  Error:";
         if (*state == States::Testing)
-            std::cout << "] " << int(progress * 100.0) << "%  Cycle:" << std::to_string(Cycle) << "  Epoch:" << std::to_string(Epoch) << "  Error:" << std::to_string(TestErrorPercentage) << "%  " << std::to_string(samplesPerSecond) << " samples/s  \r";
+            std::cout << std::to_string(TestErrorPercentage);
         else
-            std::cout << "] " << int(progress * 100.0) << "%  Cycle:" << std::to_string(Cycle) << "  Epoch:" << std::to_string(Epoch) << "  Error:" << std::to_string(TrainErrorPercentage) << "%  " << std::to_string(samplesPerSecond) << " samples/s  \r";
-        
+            std::cout << std::to_string(TrainErrorPercentage);
+        std::cout << "%  " << std::to_string(samplesPerSecond) << " samples/s   \r";
         std::cout.flush();
-
-        stop = State == States::Completed;
 
         if (SampleIndex > oldSampleIndex)
            oldSampleIndex = SampleIndex;
@@ -257,9 +253,7 @@ int main()
             
             DNNGetNetworkInfo(name, costIndex, costLayerCount, groupIndex, labelIndex, hierarchies, meanStdNormalization, lossFunction, dataset, layerCount, trainingSamples, testingSamples, meanTrainSet, stdTrainSet);
 
-            stop = false;
-            while (!stop)
-               GetProgress(5, *trainingSamples, *testingSamples);
+            GetProgress(5, *trainingSamples, *testingSamples);
             
             DNNStop();
 
