@@ -55,9 +55,6 @@ else()
   add_compile_options(
     "$<$<COMPILE_LANGUAGE:CXX>:${flags}>"
     "$<$<COMPILE_LANGUAGE:C>:${flags}>")
-  add_link_options(
-    "$<$<COMPILE_LANGUAGE:CXX>:${flags}>"
-    "$<$<COMPILE_LANGUAGE:C>:${flags}>")
   set(debug_flags -g -Wextra)
   set(release_flags -Ofast -funroll-loops -ftree-vectorize -Wno-error)
 endif()
@@ -70,6 +67,9 @@ MACRO(DNN_TARGET_ENABLE_CXX17 target)
   target_compile_options(${target} PRIVATE
     "$<$<CONFIG:RELEASE>:${release_flags}>"
     "$<$<CONFIG:DEBUG>:${debug_flags}>")
+  target_link_options(${target} PRIVATE
+    "$<$<LINKER_LANGUAGE:CXX>:${flags}>"
+    "$<$<LINKER_LANGUAGE:C>:${flags}>")
 ENDMACRO()
 
 set(DNNL_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
