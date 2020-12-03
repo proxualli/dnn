@@ -109,8 +109,8 @@ inline void GetProgress(int seconds = 10)
         DNNGetTrainingInfo(cycle, totalCycles, epoch, totalEpochs, horizontalMirror, verticalMirror, dropout, cutout, autoAugment, colorCast, colorAngle, distortion, interpolation, scaling, rotation, sampleIndex, batchSize, rate, momentum, l2Penalty, avgTrainLoss, trainErrorPercentage, trainErrors, avgTestLoss, testErrorPercentage, testErrors, state, taskState);
     } 
     while (*state == States::Idle);
-    
-    int barWidth = 70;
+
+    int barWidth = 60;
     float progress = 0.0;
     while (*state != States::Completed)
     {
@@ -125,7 +125,7 @@ inline void GetProgress(int seconds = 10)
             else if (i == pos) std::cout << ">";
             else std::cout << " ";
         }
-        std::cout << "] " << int(progress * 100.0) << " %\r";
+        std::cout << "] " << int(progress * 100.0) << " %\t" << std::to_string(samplesPerSecond) << " samples/s\r";
        
 
         size_t Cycle = *cycle;
@@ -162,7 +162,7 @@ inline void GetProgress(int seconds = 10)
         const Float samplesPerSecond = samples / realSeconds;
         if (SampleIndex > oldSampleIndex)
         {
-            std::cout << std::endl << "Cycle: " << Cycle << std::endl << "Epoch: " << Epoch << std::endl << "SampleIndex: " << SampleIndex << std::endl << "ErrorPercentage: " << TrainErrorPercentage << std::endl << "Samples/second: " << std::to_string(samplesPerSecond) << std::endl;
+            //std::cout << std::endl << "Cycle: " << Cycle << std::endl << "Epoch: " << Epoch << std::endl << "SampleIndex: " << SampleIndex << std::endl << "ErrorPercentage: " << TrainErrorPercentage << std::endl << "Samples/second: " << std::to_string(samplesPerSecond) << std::endl;
             oldSampleIndex = SampleIndex;
         }
 
