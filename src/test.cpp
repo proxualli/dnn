@@ -118,16 +118,6 @@ inline void GetProgress(int seconds = 10)
         std::this_thread::sleep_for(std::chrono::seconds(seconds));
         DNNGetTrainingInfo(cycle, totalCycles, epoch, totalEpochs, horizontalMirror, verticalMirror, dropout, cutout, autoAugment, colorCast, colorAngle, distortion, interpolation, scaling, rotation, sampleIndex, batchSize, rate, momentum, l2Penalty, avgTrainLoss, trainErrorPercentage, trainErrors, avgTestLoss, testErrorPercentage, testErrors, state, taskState);
 
-        std::cout << "[";
-        int pos = barWidth * progress;
-        for (int i = 0; i < barWidth; ++i) {
-            if (i < pos) std::cout << "=";
-            else if (i == pos) std::cout << ">";
-            else std::cout << " ";
-        }
-        std::cout << "] " << int(progress * 100.0) << " %\t" << std::to_string(samplesPerSecond) << " samples/s\r";
-       
-
         size_t Cycle = *cycle;
         size_t Epoch = *epoch;
         size_t TotalEpochs = *totalEpochs;
@@ -153,15 +143,26 @@ inline void GetProgress(int seconds = 10)
         States State = static_cast<States>(*state);
         TaskStates TaskState = static_cast<TaskStates>(*taskState);
 
+        const Float samples = SampleIndex - oldSampleIndex;
+        std::chrono::duration<Float> time = std::chrono::high_resolution_clock().now() - timePoint;
+        Float realSeconds = Float(std::chrono::duration_cast<std::chrono::microseconds>(time).count()) / 1000000;
+        const Float samplesPerSecond = samples / realSeconds;
+
+        std::cout << "[";
+        int pos = barWidth * progress;
+        for (int i = 0; i < barWidth; ++i) {
+            if (i < pos) std::cout << "=";
+            else if (i == pos) std::cout << ">";
+            else std::cout << " ";
+        }
+        std::cout << "] " << int(progress * 100.0) << " %\t" << std::to_string(samplesPerSecond) << " samples/s\r";
+       
         stop = State == States::Completed;
 
         if (oldSampleIndex > SampleIndex)
             oldSampleIndex = 0;
 
-        const Float samples = SampleIndex - oldSampleIndex;
-        std::chrono::duration<Float> time = std::chrono::high_resolution_clock().now() - timePoint;
-        Float realSeconds = Float(std::chrono::duration_cast<std::chrono::microseconds>(time).count()) / 1000000;
-        const Float samplesPerSecond = samples / realSeconds;
+        
         if (SampleIndex > oldSampleIndex)
         {
             //std::cout << std::endl << "Cycle: " << Cycle << std::endl << "Epoch: " << Epoch << std::endl << "SampleIndex: " << SampleIndex << std::endl << "ErrorPercentage: " << TrainErrorPercentage << std::endl << "Samples/second: " << std::to_string(samplesPerSecond) << std::endl;
