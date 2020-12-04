@@ -46,7 +46,7 @@ DNN_API void DNNStop();
 DNN_API void DNNPause();
 DNN_API void DNNResume();
 DNN_API void DNNTesting();
-DNN_API void DNNGetTrainingInfo(size_t* currentCycle, size_t* totalCycles, size_t* currentEpoch, size_t* totalEpochs, bool* verticalMirror, bool* horizontalMirror, Float* dropout, Float* cutout, Float* autoAugment, Float* colorCast, size_t* colorAngle, Float* distortion, size_t* interpolation, Float* scaling, Float* rotation, size_t* sampleIndex, size_t* batchSize, Float* rate, Float* momentum, Float* l2Penalty, Float* avgTrainLoss, Float* trainErrorPercentage, size_t* trainErrors, Float* avgTestLoss, Float* testErrorPercentage, size_t* testErrors, States* networkState, TaskStates* taskState);
+DNN_API void DNNGetTrainingInfo(size_t* currentCycle, size_t* totalCycles, size_t* currentEpoch, size_t* totalEpochs, bool* verticalMirror, bool* horizontalMirror, Float* dropout, Float* cutout, Float* autoAugment, Float* colorCast, size_t* colorAngle, Float* distortion, size_t* interpolation, Float* scaling, Float* rotation, size_t* sampleIndex, size_t* batchSize, Float* rate, Float* momentum, Float* l2Penalty, Float* avgTrainLoss, Float* trainErrorPercentage, size_t* trainErrors, Float* avgTestLoss, Float* testErrorPercentage, size_t* testErrors, Float* sampleSpeed, States* networkState, TaskStates* taskState);
 DNN_API void DNNGetTestingInfo(size_t* batchSize, size_t* sampleIndex, Float* avgTestLoss, Float* testErrorPercentage, size_t* testErrors, States* networkState, TaskStates* taskState);
 DNN_API void DNNGetNetworkInfo(std::string* name, size_t* costIndex, size_t* costLayerCount, size_t* groupIndex, size_t* labelindex, size_t* hierarchies, bool* meanStdNormalization, Costs* lossFunction, Datasets* dataset, size_t* layerCount, size_t* trainingSamples, size_t* testingSamples, std::vector<Float>* meanTrainSet, std::vector<Float>* stdTrainSet);
 DNN_API void DNNSetOptimizer(const Optimizers strategy);
@@ -70,12 +70,8 @@ static std::chrono::high_resolution_clock::time_point startTime;
 
 void NewEpoch(size_t CurrentCycle, size_t CurrentEpoch, size_t TotalEpochs, bool HorizontalFlip, bool VerticalFlip, Float Dropout, Float Cutout, Float AutoAugment, Float ColorCast, size_t ColorAngle, Float Distortion, size_t Interpolation, Float Scaling, Float Rotation, Float MaximumRate, size_t BatchSize, Float Momentum, Float L2Penalty, Float AvgTrainLoss, Float TrainErrorPercentage, Float TrainAccuracy, size_t TrainErrors, Float AvgTestLoss, Float TestErrorPercentage, Float TestAccuracy, size_t TestErrors)
 {
-    std::chrono::duration<Float> elapsedTime = std::chrono::high_resolution_clock().now() - startTime;
-    const Float elapsedSeconds = Float(std::chrono::duration_cast<std::chrono::microseconds>(elapsedTime).count()) / 1000000;
-
     std::cout << "Cycle: " << std::to_string(CurrentCycle) << "  Epoch: " << std::to_string(CurrentEpoch) << "  Test Accuracy: " << FloatToStringFixed(TestAccuracy, 2) << std::string("                                                                            ") << std::endl;
     std::cout.flush();
-    startTime = std::chrono::high_resolution_clock().now();
 }
 
 void GetTrainingProgress(int seconds = 10, size_t trainingSamples = 50000, size_t testingSamples = 10000)
@@ -106,6 +102,7 @@ void GetTrainingProgress(int seconds = 10, size_t trainingSamples = 50000, size_
     auto avgTestLoss = new Float();
     auto testErrorPercentage = new Float();
     auto testErrors = new size_t();
+    auto sampleSpeed = new Float();
     auto state = new States();
     auto taskState = new TaskStates();
 
@@ -113,22 +110,21 @@ void GetTrainingProgress(int seconds = 10, size_t trainingSamples = 50000, size_
     do
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(250));
-        DNNGetTrainingInfo(cycle, totalCycles, epoch, totalEpochs, horizontalMirror, verticalMirror, dropout, cutout, autoAugment, colorCast, colorAngle, distortion, interpolation, scaling, rotation, sampleIndex, batchSize, rate, momentum, l2Penalty, avgTrainLoss, trainErrorPercentage, trainErrors, avgTestLoss, testErrorPercentage, testErrors, state, taskState);
+        DNNGetTrainingInfo(cycle, totalCycles, epoch, totalEpochs, horizontalMirror, verticalMirror, dropout, cutout, autoAugment, colorCast, colorAngle, distortion, interpolation, scaling, rotation, sampleIndex, batchSize, rate, momentum, l2Penalty, avgTrainLoss, trainErrorPercentage, trainErrors, avgTestLoss, testErrorPercentage, testErrors, sampleSpeed, state, taskState);
     } 
     while (*state == States::Idle && *state != States::Completed);
 
     int barWidth = 52;
     float progress = 0.0;
+    
     while (*state != States::Completed)
     {
-        startTime = std::chrono::high_resolution_clock().now();
-        
         if (*state == States::Testing)
             std::this_thread::sleep_for(std::chrono::seconds(1));
         else
             std::this_thread::sleep_for(std::chrono::seconds(seconds));
         
-        DNNGetTrainingInfo(cycle, totalCycles, epoch, totalEpochs, horizontalMirror, verticalMirror, dropout, cutout, autoAugment, colorCast, colorAngle, distortion, interpolation, scaling, rotation, sampleIndex, batchSize, rate, momentum, l2Penalty, avgTrainLoss, trainErrorPercentage, trainErrors, avgTestLoss, testErrorPercentage, testErrors, state, taskState);
+        DNNGetTrainingInfo(cycle, totalCycles, epoch, totalEpochs, horizontalMirror, verticalMirror, dropout, cutout, autoAugment, colorCast, colorAngle, distortion, interpolation, scaling, rotation, sampleIndex, batchSize, rate, momentum, l2Penalty, avgTrainLoss, trainErrorPercentage, trainErrors, avgTestLoss, testErrorPercentage, testErrors, sampleSpeed, state, taskState);
         
         if (oldSampleIndex > *sampleIndex)
             oldSampleIndex = 0;
@@ -139,10 +135,6 @@ void GetTrainingProgress(int seconds = 10, size_t trainingSamples = 50000, size_
                 progress = Float(*sampleIndex) / testingSamples; 
             else
                 progress = Float(*sampleIndex) / trainingSamples; 
-
-            std::chrono::duration<Float> elapsedTime = std::chrono::high_resolution_clock().now() - startTime;
-            const Float elapsedSeconds = Float(std::chrono::duration_cast<std::chrono::microseconds>(elapsedTime).count()) / 1000000;
-            const Float samplesPerSecond = Float(*sampleIndex - oldSampleIndex) / elapsedSeconds;
 
             std::cout << "[";
             int pos = barWidth * progress;
@@ -156,7 +148,7 @@ void GetTrainingProgress(int seconds = 10, size_t trainingSamples = 50000, size_
                 std::cout << FloatToStringFixed(*testErrorPercentage, 2);
             else
                 std::cout << FloatToStringFixed(*trainErrorPercentage, 2);
-            std::cout << "%  " << FloatToStringFixed(samplesPerSecond, 2) << " samples/s   \r";
+            std::cout << "%  " << FloatToStringFixed(*sampleSpeed, 2) << " samples/s   \r";
             std::cout.flush();
 
             oldSampleIndex = *sampleIndex;
@@ -189,6 +181,7 @@ void GetTrainingProgress(int seconds = 10, size_t trainingSamples = 50000, size_
     delete avgTestLoss;
     delete testErrorPercentage;
     delete testErrors;
+    delete sampleSpeed;
     delete state;
     delete taskState;
 }
