@@ -107,7 +107,7 @@ void GetTrainingProgress(int seconds = 5, size_t trainingSamples = 50000, size_t
         std::this_thread::sleep_for(std::chrono::milliseconds(250));
         DNNGetTrainingInfo(cycle, totalCycles, epoch, totalEpochs, horizontalMirror, verticalMirror, dropout, cutout, autoAugment, colorCast, colorAngle, distortion, interpolation, scaling, rotation, sampleIndex, batchSize, rate, momentum, l2Penalty, avgTrainLoss, trainErrorPercentage, trainErrors, avgTestLoss, testErrorPercentage, testErrors, sampleSpeed, state, taskState);
     } 
-    while (*state == States::Idle && *state != States::Completed);
+    while (*state == States::Idle);
 
     int barWidth = 52;
     float progress = 0.0;
