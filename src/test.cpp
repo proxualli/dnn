@@ -243,7 +243,7 @@ int main()
             
             DNNGetNetworkInfo(name, costIndex, costLayerCount, groupIndex, labelIndex, hierarchies, meanStdNormalization, lossFunction, dataset, layerCount, trainingSamples, testingSamples, meanTrainSet, stdTrainSet);
 
-            GetTrainingProgress(5, *trainingSamples, *testingSamples);
+            GetTrainingProgress(2, *trainingSamples, *testingSamples);
             
             DNNStop();
 
