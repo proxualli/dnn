@@ -959,7 +959,7 @@ namespace dnn
 								updateTime = updateTimeCount;
 
                                 elapsedTime = timer.now() - timePointGlobal;
-								SampleSpeed = (SampleIndex + BatchSize) / (Float(std::chrono::duration_cast<std::chrono::microseconds>(elapsedTime).count()) / 1000000);
+								SampleSpeed = BatchSize / (Float(std::chrono::duration_cast<std::chrono::microseconds>(elapsedTime).count()) / 1000000);
 
 								if (TaskState.load() != TaskStates::Running && !CheckTaskState())
 									break;
@@ -1023,7 +1023,7 @@ namespace dnn
 								RecognizedBatch(State.load(), BatchSize, overflow, TestSkipCount, SampleLabels);
 
 								elapsedTime = timer.now() - timePointGlobal;
-								SampleSpeed = (SampleIndex + BatchSize) / (Float(std::chrono::duration_cast<std::chrono::microseconds>(elapsedTime).count()) / 1000000);
+								SampleSpeed = BatchSize / (Float(std::chrono::duration_cast<std::chrono::microseconds>(elapsedTime).count()) / 1000000);
 
 								if (TaskState.load() != TaskStates::Running && !CheckTaskState())
 									break;
@@ -1175,7 +1175,7 @@ namespace dnn
 					fpropTime = timer.now() - timePointGlobal;
 
                     elapsedTime = timer.now() - timePointGlobal;
-					SampleSpeed = (SampleIndex + BatchSize) / (Float(std::chrono::duration_cast<std::chrono::microseconds>(elapsedTime).count()) / 1000000);
+					SampleSpeed = BatchSize / (Float(std::chrono::duration_cast<std::chrono::microseconds>(elapsedTime).count()) / 1000000);
 					
 					if (TaskState.load() != TaskStates::Running && !CheckTaskState())
 						break;
