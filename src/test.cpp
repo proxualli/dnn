@@ -66,11 +66,16 @@ DNN_API void DNNGetCostInfo(const size_t costIndex, size_t* trainErrors, Float* 
 DNN_API void DNNGetImage(const size_t layer, const unsigned char fillColor, unsigned char* image);
 
 static size_t oldSampleIndex = 0;
+static std::chrono::high_resolution_clock::time_point startTime;
 
 void NewEpoch(size_t CurrentCycle, size_t CurrentEpoch, size_t TotalEpochs, bool HorizontalFlip, bool VerticalFlip, Float Dropout, Float Cutout, Float AutoAugment, Float ColorCast, size_t ColorAngle, Float Distortion, size_t Interpolation, Float Scaling, Float Rotation, Float MaximumRate, size_t BatchSize, Float Momentum, Float L2Penalty, Float AvgTrainLoss, Float TrainErrorPercentage, Float TrainAccuracy, size_t TrainErrors, Float AvgTestLoss, Float TestErrorPercentage, Float TestAccuracy, size_t TestErrors)
 {
+    std::chrono::duration<Float> elapsedTime = std::chrono::high_resolution_clock().now() - startTime;
+    const Float elapsedSeconds = Float(std::chrono::duration_cast<std::chrono::microseconds>(elapsedTime).count()) / 1000000;
+
     std::cout << "Cycle: " << std::to_string(CurrentCycle) << "  Epoch: " << std::to_string(CurrentEpoch) << "  Test Accuracy: " << FloatToStringFixed(TestAccuracy, 2) << std::string("                                                                            ") << std::endl;
     std::cout.flush();
+    startTime = std::chrono::high_resolution_clock().now();
 }
 
 void GetTrainingProgress(int seconds = 10, size_t trainingSamples = 50000, size_t testingSamples = 10000)
@@ -116,7 +121,7 @@ void GetTrainingProgress(int seconds = 10, size_t trainingSamples = 50000, size_
     float progress = 0.0;
     while (*state != States::Completed)
     {
-        std::chrono::high_resolution_clock::time_point startTime = std::chrono::high_resolution_clock().now();
+        startTime = std::chrono::high_resolution_clock().now();
         
         if (*state == States::Testing)
             std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -124,36 +129,38 @@ void GetTrainingProgress(int seconds = 10, size_t trainingSamples = 50000, size_
             std::this_thread::sleep_for(std::chrono::seconds(seconds));
         
         DNNGetTrainingInfo(cycle, totalCycles, epoch, totalEpochs, horizontalMirror, verticalMirror, dropout, cutout, autoAugment, colorCast, colorAngle, distortion, interpolation, scaling, rotation, sampleIndex, batchSize, rate, momentum, l2Penalty, avgTrainLoss, trainErrorPercentage, trainErrors, avgTestLoss, testErrorPercentage, testErrors, state, taskState);
-
-        if (*state == States::Testing)
-            progress = Float(*sampleIndex) / testingSamples; 
-        else
-            progress = Float(*sampleIndex) / trainingSamples; 
-
+        
         if (oldSampleIndex > *sampleIndex)
             oldSampleIndex = 0;
 
-        std::chrono::duration<Float> elapsedTime = std::chrono::high_resolution_clock().now() - startTime;
-        const Float elapsedSeconds = Float(std::chrono::duration_cast<std::chrono::microseconds>(elapsedTime).count()) / 1000000;
-        const Float samplesPerSecond = Float(*sampleIndex - oldSampleIndex) / elapsedSeconds;
-
-        std::cout << "[";
-        int pos = barWidth * progress;
-        for (int i = 0; i < barWidth; ++i) {
-            if (i < pos) std::cout << "=";
-            else if (i == pos) std::cout << ">";
-            else std::cout << " ";
-        }
-        std::cout << "] " << int(progress * 100.0) << "%  Cycle:" << std::to_string(*cycle) << "  Epoch:" << std::to_string(*epoch) << "  Error:";
-        if (*state == States::Testing)
-            std::cout << FloatToStringFixed(*testErrorPercentage, 2);
-        else
-            std::cout << FloatToStringFixed(*trainErrorPercentage, 2);
-        std::cout << "%  " << FloatToStringFixed(samplesPerSecond, 2) << " samples/s   \r";
-        std::cout.flush();
-
         if (*sampleIndex > oldSampleIndex)
-           oldSampleIndex = *sampleIndex;
+        {
+            if (*state == States::Testing)
+                progress = Float(*sampleIndex) / testingSamples; 
+            else
+                progress = Float(*sampleIndex) / trainingSamples; 
+
+            std::chrono::duration<Float> elapsedTime = std::chrono::high_resolution_clock().now() - startTime;
+            const Float elapsedSeconds = Float(std::chrono::duration_cast<std::chrono::microseconds>(elapsedTime).count()) / 1000000;
+            const Float samplesPerSecond = Float(*sampleIndex) / elapsedSeconds;
+
+            std::cout << "[";
+            int pos = barWidth * progress;
+            for (int i = 0; i < barWidth; ++i) {
+                if (i < pos) std::cout << "=";
+                else if (i == pos) std::cout << ">";
+                else std::cout << " ";
+            }
+            std::cout << "] " << int(progress * 100.0) << "%  Cycle:" << std::to_string(*cycle) << "  Epoch:" << std::to_string(*epoch) << "  Error:";
+            if (*state == States::Testing)
+                std::cout << FloatToStringFixed(*testErrorPercentage, 2);
+            else
+                std::cout << FloatToStringFixed(*trainErrorPercentage, 2);
+            std::cout << "%  " << FloatToStringFixed(samplesPerSecond, 2) << " samples/s   \r";
+            std::cout.flush();
+
+            oldSampleIndex = *sampleIndex;
+        }
     }
    
     delete cycle;
