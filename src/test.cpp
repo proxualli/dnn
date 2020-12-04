@@ -209,8 +209,8 @@ int main()
     p.PadW = 4;
     p.MirrorPad = false;
     p.Groups = 3;
-    p.Iterations = 6;
-    p.Width = 10;
+    p.Iterations = 2;
+    p.Width = 4;
     p.Relu = true;
     p.SqueezeExcitation = false;
 
