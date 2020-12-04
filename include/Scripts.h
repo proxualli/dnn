@@ -12,7 +12,7 @@ namespace dnn
         resnet = 2,
         shufflenetv2 = 3
     };
-
+  
     constexpr auto ScaleVisible(const Fillers filler)
     {
         switch (filler)
