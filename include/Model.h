@@ -1174,8 +1174,7 @@ namespace dnn
 
 					fpropTime = timer.now() - timePointGlobal;
 
-                    elapsedTime = timer.now() - timePointGlobal;
-					SampleSpeed = BatchSize / (Float(std::chrono::duration_cast<std::chrono::microseconds>(elapsedTime).count()) / 1000000);
+                   	SampleSpeed = BatchSize / (Float(std::chrono::duration_cast<std::chrono::microseconds>(fpropTime).count()) / 1000000);
 					
 					if (TaskState.load() != TaskStates::Running && !CheckTaskState())
 						break;

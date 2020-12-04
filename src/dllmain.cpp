@@ -444,7 +444,7 @@ extern "C" DNN_API void DNNGetTrainingInfo(size_t* currentCycle, size_t* totalCy
 	}
 }
 
-extern "C" DNN_API void DNNGetTestingInfo(size_t* batchSize, size_t* sampleIndex, Float* avgTestLoss, Float* testErrorPercentage, size_t* testErrors, States* networkState, TaskStates* taskState)
+extern "C" DNN_API void DNNGetTestingInfo(size_t* batchSize, size_t* sampleIndex, Float* avgTestLoss, Float* testErrorPercentage, size_t* testErrors, Float* sampleSpeed, States* networkState, TaskStates* taskState)
 {
 	if (model)
 	{
@@ -460,6 +460,7 @@ extern "C" DNN_API void DNNGetTestingInfo(size_t* batchSize, size_t* sampleIndex
 		*avgTestLoss = model->AvgTestLoss;
 		*testErrorPercentage = model->TestErrorPercentage;
 		*testErrors = model->TestErrors;
+		*sampleSpeed = model->SampleSpeed;
 				
 		*networkState = model->State.load();
 		*taskState = model->TaskState.load();
