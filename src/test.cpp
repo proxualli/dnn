@@ -114,10 +114,7 @@ void GetTrainingProgress(int seconds = 5, size_t trainingSamples = 50000, size_t
   
     while (*state != States::Completed)
     {
-        if (*state == States::Testing)
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-        else
-            std::this_thread::sleep_for(std::chrono::seconds(seconds));
+        std::this_thread::sleep_for(std::chrono::seconds((*state == States::Testing) ? 1 : seconds));
         
         DNNGetTrainingInfo(cycle, totalCycles, epoch, totalEpochs, horizontalMirror, verticalMirror, dropout, cutout, autoAugment, colorCast, colorAngle, distortion, interpolation, scaling, rotation, sampleIndex, batchSize, rate, momentum, l2Penalty, avgTrainLoss, trainErrorPercentage, trainErrors, avgTestLoss, testErrorPercentage, testErrors, sampleSpeed, state, taskState);
        
