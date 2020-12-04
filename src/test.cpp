@@ -115,7 +115,7 @@ void GetTrainingProgress(int seconds = 10, size_t trainingSamples = 50000, size_
         std::this_thread::sleep_for(std::chrono::milliseconds(250));
         DNNGetTrainingInfo(cycle, totalCycles, epoch, totalEpochs, horizontalMirror, verticalMirror, dropout, cutout, autoAugment, colorCast, colorAngle, distortion, interpolation, scaling, rotation, sampleIndex, batchSize, rate, momentum, l2Penalty, avgTrainLoss, trainErrorPercentage, trainErrors, avgTestLoss, testErrorPercentage, testErrors, state, taskState);
     } 
-    while (*state == States::Idle);
+    while (*state == States::Idle && *state != States::Completed);
 
     int barWidth = 52;
     float progress = 0.0;
@@ -142,7 +142,7 @@ void GetTrainingProgress(int seconds = 10, size_t trainingSamples = 50000, size_
 
             std::chrono::duration<Float> elapsedTime = std::chrono::high_resolution_clock().now() - startTime;
             const Float elapsedSeconds = Float(std::chrono::duration_cast<std::chrono::microseconds>(elapsedTime).count()) / 1000000;
-            const Float samplesPerSecond = Float(*sampleIndex) / elapsedSeconds;
+            const Float samplesPerSecond = Float(*sampleIndex - oldSampleIndex) / elapsedSeconds;
 
             std::cout << "[";
             int pos = barWidth * progress;
