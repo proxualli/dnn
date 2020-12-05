@@ -201,11 +201,6 @@ int main()
     {
         if (DNNLoadDataset())
         {
-            DNNSetNewEpochDelegate(&NewEpoch);
-
-            DNNAddLearningRateSGDR(true, 1, 0.05f, 128, 1, 20, 1, 0.0001f, 0.0005f, 0.9f, 1.0f, 20, true, false, 0.0f, 0.7f, 0.7f, 0.7f, 20, 0.7f, 0, 10.0f, 12.0f);
-            DNNTraining();
-
             auto name = new std::string();
             auto costIndex = new size_t(); 
             auto costLayerCount = new size_t(); 
@@ -224,6 +219,11 @@ int main()
             DNNGetNetworkInfo(name, costIndex, costLayerCount, groupIndex, labelIndex, hierarchies, meanStdNormalization, lossFunction, dataset, layerCount, trainingSamples, testingSamples, meanTrainSet, stdTrainSet);
             std::cout << std::endl << std::string("Training ") << *name << std::string(" on ") << std::string(magic_enum::enum_name<Datasets>(*dataset)) << std::endl;
             std::cout.flush();
+
+            DNNSetNewEpochDelegate(&NewEpoch);
+
+            DNNAddLearningRateSGDR(true, 1, 0.05f, 128, 1, 20, 1, 0.0001f, 0.0005f, 0.9f, 1.0f, 20, true, false, 0.0f, 0.7f, 0.7f, 0.7f, 20, 0.7f, 0, 10.0f, 12.0f);
+            DNNTraining();
 
             GetTrainingProgress(1, *trainingSamples, *testingSamples);
             
