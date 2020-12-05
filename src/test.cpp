@@ -186,10 +186,11 @@ int main()
     p.PadW = 4;
     p.MirrorPad = false;
     p.Groups = 3;
-    p.Iterations = 4;
-    p.Width = 10;
+    p.Iterations = 2;
+    p.Width = 4;
     p.Relu = true;
     p.Dropout = 0;
+    p.Bottleneck = false;
     p.SqueezeExcitation = false;
     p.ChannelZeroPad = true;
 
@@ -221,6 +222,8 @@ int main()
             auto stdTrainSet = new std::vector<Float>();
             
             DNNGetNetworkInfo(name, costIndex, costLayerCount, groupIndex, labelIndex, hierarchies, meanStdNormalization, lossFunction, dataset, layerCount, trainingSamples, testingSamples, meanTrainSet, stdTrainSet);
+            std::cout << std::endl << std::string("Training ") << *name << std::string(" on ") << std::string(magic_enum::enum_name<Datasets>(*dataset)) << std::endl;
+            std::cout.flush();
 
             GetTrainingProgress(1, *trainingSamples, *testingSamples);
             
