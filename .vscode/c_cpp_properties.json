@@ -6,6 +6,8 @@
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/include/**",
                 "${workspaceFolder}/src/**",
+                "${workspaceFolder}/deps/vectorclass/**",
+                "${workspaceFolder}/deps/magic_enum/include/**",
                 "${workspaceFolder}/deps/libjpeg-turbo/**",
                 "${workspaceFolder}/deps/libpng/**",
                 "${workspaceFolder}/deps/zlib-1.2.11/**",
@@ -16,8 +18,8 @@
                 "${workspaceFolder}/build/deps/libpng/**",
                 "${workspaceFolder}/build/deps/zlib-1.2.11/**",
                 "${workspaceFolder}/build/deps/oneDNN/**",
-                "${workspaceFolder}/build/deps/oneDNN/include/**",
-                "${workspaceFolder}/build/deps/CImg/**"
+                "${workspaceFolder}/build/deps/oneDNN/include/**"
+                
             ],
             "defines": [
                 "_NDEBUG",
