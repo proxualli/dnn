@@ -568,13 +568,13 @@ namespace dnn
 
 				if (task.valid())
 					try
-				{
-					task.get();
-				}
-				catch (const std::runtime_error& e)
-				{
-					std::cout << "Async task threw exception: " << e.what() << std::endl;
-				}
+				    {
+					    task.get();
+				    }
+				    catch (const std::runtime_error& e)
+				    {
+					    std::cout << "Async task threw exception: " << e.what() << std::endl;
+				    }
 
 				State.store(States::Completed);
 			}
@@ -763,13 +763,15 @@ namespace dnn
 				CurrentTrainingRate = TrainingRates[0];
 				Rate = CurrentTrainingRate.MaximumRate;
 				CurrentCycle = CurrentTrainingRate.Cycles;
-				std::cout << "Needed RAM: " << std::to_string(GetNeuronsSize(CurrentTrainingRate.BatchSize - BatchSize)/1024/1024) << " MB" << std::endl;
+				
 				if (CurrentTrainingRate.BatchSize > BatchSize)
 					if (GetTotalFreeMemory() < GetNeuronsSize(CurrentTrainingRate.BatchSize - BatchSize))
 					{
+						std::cout << "Needed memory: " << std::to_string(GetNeuronsSize(CurrentTrainingRate.BatchSize - BatchSize)/1024/1024) << " MB" << std::endl;
 						State.store(States::Completed);
 						return;
 					}
+				std::cout << "Needed memory: " << std::to_string(GetNeuronsSize(CurrentTrainingRate.BatchSize - BatchSize)/1024/1024) << " MB" << std::endl;
 				SetBatchSize(CurrentTrainingRate.BatchSize);
 			
 				auto learningRateEpochs = CurrentTrainingRate.Epochs;
@@ -810,7 +812,6 @@ namespace dnn
 						FirstUnlockedLayer.store(i);
 						break;
 					}
-
 				
 				while (CurrentEpoch < TotalEpochs)
 				{

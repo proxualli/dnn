@@ -1,0 +1,35 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/include/**",
+                "${workspaceFolder}/src/**",
+                "${workspaceFolder}/deps/libjpeg-turbo/**",
+                "${workspaceFolder}/deps/libpng/**",
+                "${workspaceFolder}/deps/zlib-1.2.11/**",
+                "${workspaceFolder}/deps/oneDNN/**",
+                "${workspaceFolder}/deps/oneDNN/include/**",
+                "${workspaceFolder}/deps/CImg/**",
+                "${workspaceFolder}/build/deps/libjpeg-turbo/**",
+                "${workspaceFolder}/build/deps/libpng/**",
+                "${workspaceFolder}/build/deps/zlib-1.2.11/**",
+                "${workspaceFolder}/build/deps/oneDNN/**",
+                "${workspaceFolder}/build/deps/oneDNN/include/**",
+                "${workspaceFolder}/build/deps/CImg/**"
+            ],
+            "defines": [
+                "_NDEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "windowsSdkVersion": "10.0.19041.0",
+            "compilerPath": "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.28.29333/bin/Hostx64/x64/cl.exe",
+            "cStandard": "c99",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "msvc-x64"
+        }
+    ],
+    "version": 4
+}

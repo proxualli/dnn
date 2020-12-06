@@ -254,14 +254,13 @@ namespace dnn
 		MEMORYSTATUSEX statusEx;
 		statusEx.dwLength = sizeof(MEMORYSTATUSEX);
 		GlobalMemoryStatusEx(&statusEx);
+		std::cout << "Free memory: " << std::to_string(statusEx.ullAvailPhys/1024/1024) << std::string("/") << std::to_string(statusEx.ullTotalPhys/1024/1024)" MB" << std::endl;
 		return statusEx.ullAvailPhys;
 #else        
 		struct sysinfo info;
 		if (sysinfo(&info) == 0)
 		{
-			std::cout << "Total  RAM: " << std::to_string(info.totalram*info.mem_unit/1024/1024) << " MB" << std::endl;
-			std::cout << "Free   RAM: " << std::to_string(info.freeram*info.mem_unit/1024/1024) << " MB" << std::endl;
-
+			std::cout << "Free memory: " << std::to_string(info.freeram*info.mem_unit/1024/1024) << std::string("/") << std::to_string(info.totalram*info.mem_unit/1024/1024)" MB" << std::endl;
 			return static_cast<size_t>(info.freeram * info.mem_unit);
 		}
 		else
@@ -336,7 +335,7 @@ namespace dnn
 	template <typename T>
 	constexpr void SwapEndian(T& buffer)
 	{
-		static_assert(std::is_standard_layout<T>::value, "SwapEndian support standard layout types only");
+		static_assert(std::is_standard_layout<T>::value, "SwapEndian supports standard layout types only");
 		auto startIndex = static_cast<char*>((void*)buffer.data());
 		auto endIndex = startIndex + sizeof(buffer);
 		std::reverse(startIndex, endIndex);
