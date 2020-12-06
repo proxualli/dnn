@@ -256,13 +256,13 @@ namespace dnn
 		MEMORYSTATUSEX statusEx;
 		statusEx.dwLength = sizeof(MEMORYSTATUSEX);
 		GlobalMemoryStatusEx(&statusEx);
-		std::cout << std::string("Free memory: ") << std::to_string(statusEx.ullAvailPhys/1024/1024) << std::string("/") << std::to_string(statusEx.ullTotalPhys/1024/1024) << " MB" << std::endl;
+		std::cout << std::string("Available memory:\t") << std::to_string(statusEx.ullAvailPhys/1024/1024) << std::string("/") << std::to_string(statusEx.ullTotalPhys/1024/1024) << " MB" << std::endl;
 		return statusEx.ullAvailPhys;
 #else        
 		struct sysinfo info;
 		if (sysinfo(&info) == 0)
 		{
-			std::cout << std::string("Free memory: ") << std::to_string(info.freeram*info.mem_unit/1024/1024) << std::string("/") << std::to_string(info.totalram*info.mem_unit/1024/1024) << " MB" << std::endl;
+			std::cout << std::string("Available memory:\t") << std::to_string(info.freeram*info.mem_unit/1024/1024) << std::string("/") << std::to_string(info.totalram*info.mem_unit/1024/1024) << " MB" << std::endl;
 			return static_cast<size_t>(info.freeram * info.mem_unit);
 		}
 		else

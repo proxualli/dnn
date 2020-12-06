@@ -217,7 +217,7 @@ int main()
             auto stdTrainSet = new std::vector<Float>();
             
             DNNGetNetworkInfo(name, costIndex, costLayerCount, groupIndex, labelIndex, hierarchies, meanStdNormalization, lossFunction, dataset, layerCount, trainingSamples, testingSamples, meanTrainSet, stdTrainSet);
-            std::cout << std::endl << std::string("Training ") << *name << std::string(" on ") << std::string(magic_enum::enum_name<Datasets>(*dataset)) << std::endl;
+            std::cout << std::string("Training ") << *name << std::string(" on ") << std::string(magic_enum::enum_name<Datasets>(*dataset)) << std::endl << std::endl;
             std::cout.flush();
 
             DNNSetNewEpochDelegate(&NewEpoch);

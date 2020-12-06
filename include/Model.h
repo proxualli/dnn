@@ -767,11 +767,11 @@ namespace dnn
 				if (CurrentTrainingRate.BatchSize > BatchSize)
 					if (GetTotalFreeMemory() < GetNeuronsSize(CurrentTrainingRate.BatchSize - BatchSize))
 					{
-						std::cout << "Needed memory: " << std::to_string(GetNeuronsSize(CurrentTrainingRate.BatchSize - BatchSize)/1024/1024) << " MB" << std::endl;
+						std::cout << std::string("Model size:\t") << std::to_string(GetNeuronsSize(CurrentTrainingRate.BatchSize - BatchSize)/1024/1024) << " MB" << std::endl << std::endl;
 						State.store(States::Completed);
 						return;
 					}
-				std::cout << "Needed memory: " << std::to_string(GetNeuronsSize(CurrentTrainingRate.BatchSize - BatchSize)/1024/1024) << " MB" << std::endl;
+				std::cout << std::string("Model size:\t") << std::to_string(GetNeuronsSize(CurrentTrainingRate.BatchSize - BatchSize)/1024/1024) << " MB" << std::endl << std::endl;
 				SetBatchSize(CurrentTrainingRate.BatchSize);
 			
 				auto learningRateEpochs = CurrentTrainingRate.Epochs;
