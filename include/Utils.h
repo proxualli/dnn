@@ -72,7 +72,7 @@ namespace dnn
 	typedef std::vector<Float, AlignedAllocator<Float, 64ull>> FloatVector;
 	typedef std::vector<Byte, AlignedAllocator<Byte, 64ull>> ByteVector;
 
-    constexpr bool LITTLE_ENDIAN = std::endian::native == std::endian::little;	 only available in c++20 
+    constexpr bool LITTLE_ENDIAN = std::endian::native == std::endian::little;
 	constexpr auto NEURONS_LIMIT = Float(100);   // limit for all the value of the neurons and its derivatives [-NEURONS_LIMIT,NEURONS_LIMIT]
 	constexpr auto WEIGHTS_LIMIT = Float(100);   // limit for all the value of the weights and biases [-WEIGHTS_LIMIT,WEIGHTS_LIMIT]
 	constexpr auto LIGHT_COMPUTE = 4ull;         // number of threads
