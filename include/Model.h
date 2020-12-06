@@ -248,7 +248,7 @@ namespace dnn
 #endif
 		}
 
-		~Model()
+		virtual ~Model()
 		{
 			for (auto i = 0ull; i < Layers.size(); i++)
 				delete Layers[i];

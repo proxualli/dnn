@@ -375,16 +375,16 @@ extern "C" DNN_API void DNNGetTrainingInfo(size_t* currentCycle, size_t* totalCy
 {
 	if (model)
 	{
+		const size_t sampleIndex = model->SampleIndex + model->BatchSize;
+
 		switch (model->State)
 		{
 		case States::Training:
 		{
-			const size_t sampleIdx = ((model->SampleIndex + model->BatchSize) >= dataprovider->TrainingSamplesCount) ? dataprovider->TrainingSamplesCount : model->SampleIndex + model->BatchSize;
-
 			model->TrainLoss = model->CostLayers[model->CostIndex]->TrainLoss;
 			model->TrainErrors = model->CostLayers[model->CostIndex]->TrainErrors;
-			model->TrainErrorPercentage = Float(model->TrainErrors * 100) / sampleIdx;
-			model->AvgTrainLoss = model->TrainLoss / sampleIdx;
+			model->TrainErrorPercentage = Float(model->TrainErrors * 100) / sampleIndex;
+			model->AvgTrainLoss = model->TrainLoss / sampleIndex;
    
 			*avgTrainLoss = model->AvgTrainLoss;
 			*trainErrorPercentage = model->TrainErrorPercentage;
@@ -394,12 +394,12 @@ extern "C" DNN_API void DNNGetTrainingInfo(size_t* currentCycle, size_t* totalCy
 
 		case States::Testing:
 		{
-			const size_t sampleIdx = ((model->SampleIndex + model->BatchSize) >= dataprovider->TestingSamplesCount) ? dataprovider->TestingSamplesCount : model->SampleIndex + model->BatchSize;
+			const size_t adjustedsampleIndex = sampleIndex > dataprovider->TestingSamplesCount ? dataprovider->TestingSamplesCount : sampleIndex;
 						
 			model->TestLoss = model->CostLayers[model->CostIndex]->TestLoss;
 			model->TestErrors = model->CostLayers[model->CostIndex]->TestErrors;
-			model->TestErrorPercentage = Float(model->TestErrors * 100) / sampleIdx;
-			model->AvgTestLoss = model->TestLoss / sampleIdx;
+			model->TestErrorPercentage = Float(model->TestErrors * 100) / adjustedsampleIndex;
+			model->AvgTestLoss = model->TestLoss / adjustedsampleIndex;
 
 			*avgTestLoss = model->AvgTestLoss;
 			*testErrorPercentage = model->TestErrorPercentage;
@@ -448,12 +448,13 @@ extern "C" DNN_API void DNNGetTestingInfo(size_t* batchSize, size_t* sampleIndex
 {
 	if (model)
 	{
-		const size_t sampleIdx = ((model->SampleIndex + model->BatchSize) >= dataprovider->TestingSamplesCount) ? dataprovider->TestingSamplesCount : model->SampleIndex + model->BatchSize;
-					
+		const size_t sampleIndex = model->SampleIndex + model->BatchSize;
+		const size_t adjustedsampleIndex = sampleIndex > dataprovider->TestingSamplesCount ? dataprovider->TestingSamplesCount : sampleIndex;
+							
 		model->TestLoss = model->CostLayers[model->CostIndex]->TestLoss;
 		model->TestErrors = model->CostLayers[model->CostIndex]->TestErrors;
-		model->TestErrorPercentage = Float(model->TestErrors * 100) / sampleIdx;
-		model->AvgTestLoss = model->TestLoss / sampleIdx;
+		model->TestErrorPercentage = Float(model->TestErrors * 100) / adjustedsampleIndex;
+		model->AvgTestLoss = model->TestLoss / adjustedsampleIndex;
 
 		*batchSize = model->BatchSize;
 		*sampleIndex = model->SampleIndex;
