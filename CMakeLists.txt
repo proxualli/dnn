@@ -62,7 +62,7 @@ else()
     "$<$<COMPILE_LANGUAGE:CXX>:${flags}>"
     "$<$<COMPILE_LANGUAGE:C>:${flags}>")
   set(debug_flags -g -Wextra)
-  set(release_flags -Ofast -funroll-loops -ftree-vectorize)
+  set(release_flags -g -O0)
 endif()
 
 MACRO(DNN_TARGET_ENABLE_CXX20 target)
