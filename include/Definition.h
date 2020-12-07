@@ -496,31 +496,31 @@ namespace dnn
 								break;
 							case LayerTypes::BatchNorm:
 								model->Layers.push_back(std::make_unique<BatchNorm>(model->Device, model->Format, name, inputs, scaling, momentum, eps, biases));
-								model->Layers[model->Layers.size() - 1].get()->SetParameters(useDefaultParams, weightsFiller, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesScale, biasesLRM, biasesWDM);
+								model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesScale, biasesLRM, biasesWDM);
 								break;
 							case LayerTypes::BatchNormHardLogistic:
 								model->Layers.push_back(std::make_unique<BatchNormActivation<HardLogistic, LayerTypes::BatchNormHardLogistic>>(model->Device, model->Format, name, inputs, scaling, momentum, eps, biases));
-								model->Layers[model->Layers.size() - 1].get()->SetParameters(useDefaultParams, weightsFiller, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesScale, biasesLRM, biasesWDM);
+								model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesScale, biasesLRM, biasesWDM);
 								break;
 							case LayerTypes::BatchNormHardSwish:
 								model->Layers.push_back(std::make_unique<BatchNormActivation<HardSwish, LayerTypes::BatchNormHardSwish>>(model->Device, model->Format, name, inputs, scaling, momentum, eps, biases));
-								model->Layers[model->Layers.size() - 1].get()->SetParameters(useDefaultParams, weightsFiller, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesScale, biasesLRM, biasesWDM);
+								model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesScale, biasesLRM, biasesWDM);
 								break;
 							case LayerTypes::BatchNormHardSwishDropout:
 								model->Layers.push_back(std::make_unique<BatchNormActivationDropout<HardSwish, LayerTypes::BatchNormHardSwishDropout>>(model->Device, model->Format, name, inputs, dropout, scaling, momentum, eps, biases));
-								model->Layers[model->Layers.size() - 1].get()->SetParameters(useDefaultParams, weightsFiller, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesScale, biasesLRM, biasesWDM);
+								model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesScale, biasesLRM, biasesWDM);
 								break;
 							case LayerTypes::BatchNormRelu:
 								model->Layers.push_back(std::make_unique<BatchNormRelu>(model->Device, model->Format, name, inputs, scaling, momentum, eps, biases));
-								model->Layers[model->Layers.size() - 1].get()->SetParameters(useDefaultParams, weightsFiller, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesScale, biasesLRM, biasesWDM);
+								model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesScale, biasesLRM, biasesWDM);
 								break;
 							case LayerTypes::BatchNormReluDropout:
 								model->Layers.push_back(std::make_unique<BatchNormActivationDropout<Relu, LayerTypes::BatchNormReluDropout>>(model->Device, model->Format, name, inputs, dropout, scaling, momentum, eps, biases));
-								model->Layers[model->Layers.size() - 1].get()->SetParameters(useDefaultParams, weightsFiller, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesScale, biasesLRM, biasesWDM);
+								model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesScale, biasesLRM, biasesWDM);
 								break;
 							case LayerTypes::BatchNormSwish:
 								model->Layers.push_back(std::make_unique<BatchNormActivation<Swish, LayerTypes::BatchNormSwish>>(model->Device, model->Format, name, inputs, scaling, momentum, eps, biases));
-								model->Layers[model->Layers.size() - 1].get()->SetParameters(useDefaultParams, weightsFiller, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesScale, biasesLRM, biasesWDM);
+								model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesScale, biasesLRM, biasesWDM);
 								break;
 							case LayerTypes::ChannelMultiply:
 								model->Layers.push_back(std::make_unique<ChannelMultiply>(model->Device, model->Format, name, inputs));
@@ -539,24 +539,24 @@ namespace dnn
 								break;
 							case LayerTypes::Convolution:
 								model->Layers.push_back(std::make_unique<Convolution>(model->Device, model->Format, name, inputs, c, kernelH, kernelW, strideH, strideW, dilationH, dilationW, padH, padW, groups, biases));
-								model->Layers[model->Layers.size() - 1].get()->SetParameters(useDefaultParams, weightsFiller, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesScale, biasesLRM, biasesWDM);
+								model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesScale, biasesLRM, biasesWDM);
 								break;
 							case LayerTypes::ConvolutionTranspose:
 								model->Layers.push_back(std::make_unique<ConvolutionTranspose>(model->Device, model->Format, name, inputs, c, kernelH, kernelW, strideH, strideW, dilationH, dilationW, padH, padW, biases));
-								model->Layers[model->Layers.size() - 1].get()->SetParameters(useDefaultParams, weightsFiller, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesScale, biasesLRM, biasesWDM);
+								model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesScale, biasesLRM, biasesWDM);
 								break;
 							case LayerTypes::Cost:
 								model->Layers.push_back(std::make_unique<Cost>(model->Device, model->Format, name, costFunction, groupIndex, labelIndex, c, inputs, labelTrue, labelFalse, weight, epsSpecified ? eps : Float(0)));
-								model->CostLayers.push_back(static_cast<Cost*>(model->Layers[model->Layers.size() - 1].get()));
+								model->CostLayers.push_back(dynamic_cast<Cost*>(model->Layers[model->Layers.size() - 1].get()));
 								model->CostFuction = costFunction;
 								break;
 							case LayerTypes::Dense:
 								model->Layers.push_back(std::make_unique<Dense>(model->Device, model->Format, name, c, inputs, biases));
-								model->Layers[model->Layers.size() - 1].get()->SetParameters(useDefaultParams, weightsFiller, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesScale, biasesLRM, biasesWDM);
+								model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesScale, biasesLRM, biasesWDM);
 								break;
 							case LayerTypes::DepthwiseConvolution:
 								model->Layers.push_back(std::make_unique<DepthwiseConvolution>(model->Device, model->Format, name, inputs, kernelH, kernelW, strideH, strideW, dilationH, dilationW, padH, padW, multiplier, biases));
-								model->Layers[model->Layers.size() - 1].get()->SetParameters(useDefaultParams, weightsFiller, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesScale, biasesLRM, biasesWDM);
+								model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesScale, biasesLRM, biasesWDM);
 								break;
 							case LayerTypes::Divide:
 								model->Layers.push_back(std::make_unique<Divide>(model->Device, model->Format, name, inputs));
@@ -587,7 +587,7 @@ namespace dnn
 								break;
 							case LayerTypes::PartialDepthwiseConvolution:
 								model->Layers.push_back(std::make_unique<PartialDepthwiseConvolution>(model->Device, model->Format, name, inputs, group, groups, kernelH, kernelW, strideH, strideW, dilationH, dilationW, padH, padW, multiplier, biases));
-								model->Layers[model->Layers.size() - 1].get()->SetParameters(useDefaultParams, weightsFiller, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesScale, biasesLRM, biasesWDM);
+								model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesScale, biasesLRM, biasesWDM);
 								break;
 							case LayerTypes::Resampling:
 								model->Layers.push_back(std::make_unique<Resampling>(model->Device, model->Format, name, inputs, algorithm, factorH, factorW));
@@ -2253,7 +2253,7 @@ namespace dnn
 				}
 
 				model->Layers.push_back(std::make_unique<Cost>(model->Device, model->Format, layerNames[model->Layers.size()].first, costFunction, groupIndex, labelIndex, c, model->GetLayerInputs(inputsStr), labelTrue, labelFalse, weight, epsSpecified ? eps : Float(0)));
-				model->CostLayers.push_back(static_cast<Cost*>(model->Layers[model->Layers.size() - 1].get()));
+				model->CostLayers.push_back(dynamic_cast<Cost*>(model->Layers[model->Layers.size() - 1].get()));
 				model->CostFuction = costFunction;
 			}
 
