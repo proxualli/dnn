@@ -147,7 +147,7 @@ namespace dnn
 		bool DisableLocking;
 		TrainingRate CurrentTrainingRate;
 		std::vector<std::unique_ptr<Layer>> Layers;
-		std::vector<size_t> CostLayers;
+		std::vector<Cost*> CostLayers;
 		std::vector<TrainingRate> TrainingRates;
 		std::chrono::duration<Float> fpropTime;
 		std::chrono::duration<Float> bpropTime;
@@ -216,7 +216,7 @@ namespace dnn
 			GroupIndex(0),
 			CostIndex(0),
 			CostFuction(Costs::CategoricalCrossEntropy),
-			CostLayers(std::vector<size_t>()),
+			CostLayers(std::vector<Cost*>()),
 			Layers(std::vector<std::unique_ptr<Layer>>()),
 			TrainingRates(std::vector<TrainingRate>()),
 			fpropTime(std::chrono::duration<Float>(Float(0))),
@@ -649,23 +649,21 @@ namespace dnn
 		{
 			for (auto cost : CostLayers)
 			{
-				Cost* costLayer = dynamic_cast<Cost*>(Layers[CostLayers[cost]].get());
-
 				for (auto b = 0ull; b < batchSize; b++)
 				{
 					if (overflow && b >= skipCount)
 						return;
 
-					const auto batchOffset = b * costLayer->C;
+					const auto batchOffset = b * cost->C;
 					auto loss = Float(0);
 
-					for (auto i = 0ull; i < costLayer->C; i++)
-						loss += costLayer->Neurons[batchOffset + i] * costLayer->Weight;
+					for (auto i = 0ull; i < cost->C; i++)
+						loss += cost->Neurons[batchOffset + i] * cost->Weight;
 
 					if (state == States::Training)
-						costLayer->TrainLoss += loss;
+						cost->TrainLoss += loss;
 					else
-						costLayer->TestLoss += loss;
+						cost->TestLoss += loss;
 				}
 			}
 		}
@@ -674,10 +672,8 @@ namespace dnn
 		{
 			for (auto cost : CostLayers)
 			{
-				Cost* costLayer = dynamic_cast<Cost*>(Layers[CostLayers[cost]].get());
-
-				const auto inputLayer = costLayer->InputLayer;
-				const auto labelIndex = costLayer->LabelIndex;
+				const auto inputLayer = cost->InputLayer;
+				const auto labelIndex = cost->LabelIndex;
 
 				for (auto b = 0ull; b < batchSize; b++)
 				{
@@ -700,13 +696,13 @@ namespace dnn
 					if (hotIndex != sampleLabels[b][labelIndex])
 					{
 						if (state == States::Training)
-							costLayer->TrainErrors++;
+							cost->TrainErrors++;
 						else
-							costLayer->TestErrors++;
+							cost->TestErrors++;
 					}
 
 					if (state == States::Testing)
-						costLayer->ConfusionMatrix[hotIndex][sampleLabels[b][labelIndex]]++;
+						cost->ConfusionMatrix[hotIndex][sampleLabels[b][labelIndex]]++;
 				}
 			}
 		}
@@ -847,10 +843,8 @@ namespace dnn
 							std::shuffle(std::begin(RandomTrainingSamples), std::end(RandomTrainingSamples), std::mt19937(physicalSeed()));
 
 						for (auto cost : CostLayers)
-						{
-							Cost* costLayer = dynamic_cast<Cost*>(Layers[CostLayers[cost]].get());
-							costLayer->Reset();
-						}
+							cost->Reset();
+
 #ifdef DNN_STOCHASTIC				
 						if (BatchSize == 1)
 						{
@@ -919,10 +913,7 @@ namespace dnn
 								Layers[0]->fpropTime = timer.now() - timePointGlobal;
 
 								for (auto cost : CostLayers)
-								{
-									Cost* costLayer = dynamic_cast<Cost*>(Layers[CostLayers[cost]].get());
-									costLayer->SetSampleLabels(SampleLabels);
-								}
+									cost->SetSampleLabels(SampleLabels);
 
 								for (auto i = 1ull; i < Layers.size(); i++)
 								{
@@ -1013,10 +1004,7 @@ namespace dnn
 								Layers[0]->fpropTime = timer.now() - timePoint;
 
 								for (auto cost : CostLayers)
-								{
-									Cost* costLayer = dynamic_cast<Cost*>(Layers[CostLayers[cost]].get());
-									costLayer->SetSampleLabels(SampleLabels);
-								}
+									cost->SetSampleLabels(SampleLabels);
 
 								for (auto i = 1ull; i < Layers.size(); i++)
 								{
@@ -1044,22 +1032,20 @@ namespace dnn
 						{
 							for (auto cost : CostLayers)
 							{
-								Cost* costLayer = dynamic_cast<Cost*>(Layers[CostLayers[cost]].get());
-								costLayer->AvgTrainLoss = costLayer->TrainLoss / DataProv->TrainingSamplesCount;
-								costLayer->AvgTestLoss = costLayer->TestLoss / DataProv->TestingSamplesCount;
-								costLayer->TrainErrorPercentage = costLayer->TrainErrors / Float(DataProv->TrainingSamplesCount / 100);
-								costLayer->TestErrorPercentage = costLayer->TestErrors / Float(DataProv->TestingSamplesCount / 100);
+								cost->AvgTrainLoss = cost->TrainLoss / DataProv->TrainingSamplesCount;
+								cost->AvgTestLoss = cost->TestLoss / DataProv->TestingSamplesCount;
+								cost->TrainErrorPercentage = cost->TrainErrors / Float(DataProv->TrainingSamplesCount / 100);
+								cost->TestErrorPercentage = cost->TestErrors / Float(DataProv->TestingSamplesCount / 100);
 							}
 
-							Cost* costLayer = dynamic_cast<Cost*>(Layers[CostLayers[CostIndex]].get());
-							TrainLoss = costLayer->TrainLoss;
-							TrainErrors = costLayer->TrainErrors;
-							AvgTrainLoss = costLayer->AvgTrainLoss;
-							TrainErrorPercentage = costLayer->TrainErrorPercentage;
-							TestLoss = costLayer->TestLoss;
-							TestErrors = costLayer->TestErrors;
-							AvgTestLoss = costLayer->AvgTestLoss;
-							TestErrorPercentage = costLayer->TestErrorPercentage;
+							TrainLoss = CostLayers[CostIndex]->TrainLoss;
+							TrainErrors = CostLayers[CostIndex]->TrainErrors;
+							AvgTrainLoss = CostLayers[CostIndex]->AvgTrainLoss;
+							TrainErrorPercentage = CostLayers[CostIndex]->TrainErrorPercentage;
+							TestLoss = CostLayers[CostIndex]->TestLoss;
+							TestErrors = CostLayers[CostIndex]->TestErrors;
+							AvgTestLoss = CostLayers[CostIndex]->AvgTestLoss;
+							TestErrorPercentage = CostLayers[CostIndex]->TestErrorPercentage;
 							Accuracy = Float(100) - TestErrorPercentage;
 
 							// save the weights
@@ -1136,10 +1122,7 @@ namespace dnn
 				State.store(States::Testing);
 
 				for (auto cost : CostLayers)
-				{
-					Cost* costLayer = dynamic_cast<Cost*>(Layers[CostLayers[cost]].get());
-					costLayer->Reset();
-				}
+					cost->Reset();
 
 #ifdef DNN_STOCHASTIC
 				if (BatchSize == 1)
@@ -1173,10 +1156,7 @@ namespace dnn
 					Layers[0]->fpropTime = timer.now() - timePointGlobal;
 
 					for (auto cost : CostLayers)
-					{
-						Cost* costLayer = dynamic_cast<Cost*>(Layers[CostLayers[cost]].get());
-						costLayer->SetSampleLabels(SampleLabels);
-					}
+						cost->SetSampleLabels(SampleLabels);
 
 					for (auto i = 1ull; i < Layers.size(); i++)
 					{
@@ -1202,16 +1182,14 @@ namespace dnn
 #endif
 			for (auto cost : CostLayers)
 			{
-				Cost* costLayer = dynamic_cast<Cost*>(Layers[CostLayers[cost]].get());
-				costLayer->AvgTestLoss = costLayer->TestLoss / DataProv->TestingSamplesCount;
-				costLayer->TestErrorPercentage = costLayer->TestErrors / Float(DataProv->TestingSamplesCount / 100);
+				cost->AvgTestLoss = cost->TestLoss / DataProv->TestingSamplesCount;
+				cost->TestErrorPercentage = cost->TestErrors / Float(DataProv->TestingSamplesCount / 100);
 			}
 
-			Cost* costLayer = dynamic_cast<Cost*>(Layers[CostLayers[CostIndex]].get());
-			TestLoss = costLayer->TestLoss;
-			AvgTestLoss = costLayer->AvgTestLoss;
-			TestErrors = costLayer->TestErrors;
-			TestErrorPercentage = costLayer->TestErrorPercentage;
+			TestLoss = CostLayers[CostIndex]->TestLoss;
+			AvgTestLoss = CostLayers[CostIndex]->AvgTestLoss;
+			TestErrors = CostLayers[CostIndex]->TestErrors;
+			TestErrorPercentage = CostLayers[CostIndex]->TestErrorPercentage;
 			Accuracy = Float(100) - TestErrorPercentage;
 
 			/*

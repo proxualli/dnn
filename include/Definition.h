@@ -547,7 +547,7 @@ namespace dnn
 								break;
 							case LayerTypes::Cost:
 								model->Layers.push_back(std::make_unique<Cost>(model->Device, model->Format, name, costFunction, groupIndex, labelIndex, c, inputs, labelTrue, labelFalse, weight, epsSpecified ? eps : Float(0)));
-								model->CostLayers.push_back(model->Layers.size() - 1);
+								model->CostLayers.push_back(dynamic_cast<Cost*>(model->Layers[model->Layers.size() - 1].get()));
 								model->CostFuction = costFunction;
 								break;
 							case LayerTypes::Dense:
@@ -2253,7 +2253,7 @@ namespace dnn
 				}
 
 				model->Layers.push_back(std::make_unique<Cost>(model->Device, model->Format, layerNames[model->Layers.size()].first, costFunction, groupIndex, labelIndex, c, model->GetLayerInputs(inputsStr), labelTrue, labelFalse, weight, epsSpecified ? eps : Float(0)));
-				model->CostLayers.push_back(model->Layers.size() - 1);
+				model->CostLayers.push_back(dynamic_cast<Cost*>(model->Layers[model->Layers.size() - 1].get()));
 				model->CostFuction = costFunction;
 			}
 
@@ -2275,9 +2275,8 @@ namespace dnn
 			if (model && !model->CostLayers.empty())
 			{
 				model->CostIndex = model->CostLayers.size() - 1ull;
-				Cost* cost = dynamic_cast<Cost*>(model->Layers[model->CostLayers[model->CostIndex]].get());
-				model->GroupIndex = cost->GroupIndex;
-				model->LabelIndex = cost->LabelIndex;
+				model->GroupIndex = model->CostLayers[model->CostIndex]->GroupIndex;
+				model->LabelIndex = model->CostLayers[model->CostIndex]->LabelIndex;
 			}
 			else
 			{
@@ -2286,13 +2285,13 @@ namespace dnn
 			}
 
 			for (auto l : model->CostLayers)
-				if (model->Layers[l]->Outputs.size() > 0)
+				if (l->Outputs.size() > 0)
 				{
 					for (auto t : layerNames)
-						if (t.first == model->Layers[l]->Name)
+						if (t.first == l->Name)
 							line = t.second;
 
-					msg = CheckMsg(line, col, "Cost Layer " + model->Layers[l]->Name + " is referenced.");
+					msg = CheckMsg(line, col, "Cost Layer " + l->Name + " is referenced.");
 					goto FAIL;
 				}
 
