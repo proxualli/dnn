@@ -284,10 +284,10 @@ namespace dnn
 				std::transform(layerName.begin(), layerName.end(), layerName.begin(), ::tolower);
 				if (layerName == nameLower)
 					return false;
-		}
+			}
 
 			return true;
-	}
+		}
 
 		void SetHyperParameters(const Float adaDeltaEps, const Float adaGradEps, const Float adamEps, const Float adamBeta2, const Float adamaxEps, const Float adamaxBeta2, const Float rmsPropEps, const Float radamEps, const Float radamBeta1, const Float radamBeta2)
 		{

@@ -2321,6 +2321,7 @@ namespace dnn
 			}
 
 			std::setlocale(LC_ALL, userLocale);
+            delete[] userLocale;
 
 			msg = CheckMsg(0, 0, "No issues found", false);	// All checks have passed
 
@@ -2334,7 +2335,8 @@ namespace dnn
 			}
 
 			std::setlocale(LC_ALL, userLocale);
-
+            delete[] userLocale;
+			
 			return nullptr;
 		}
 
