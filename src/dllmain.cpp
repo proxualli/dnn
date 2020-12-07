@@ -485,7 +485,7 @@ extern "C" DNN_API void DNNRefreshStatistics(const size_t layerIndex, std::strin
 			return;
 		}
 
-		Layer* layer = model->Layers[layerIndex].get();
+		Layer* layer = model->Layers[layerIndex];
 		
 		*description = layer->GetDescription();
 
@@ -518,7 +518,7 @@ extern "C" DNN_API void DNNGetLayerInfo(const size_t layerIndex, size_t* inputsC
 {
 	if (model && layerIndex < model->Layers.size())
 	{
-		Layer* layer = model->Layers[layerIndex].get();
+		Layer* layer = model->Layers[layerIndex];
 
 		*inputsCount = layer->Inputs.size();
 		*layerType = layer->LayerType;
@@ -840,7 +840,7 @@ extern "C" DNN_API int DNNLoadLayerWeights(const char* fileName, const size_t la
 {
 	if (model)
 	{
-		if (GetFileSize(fileName) == model->Layers[layerIndex].get()->GetWeightsSize(persistOptimizer, model->Optimizer))
+		if (GetFileSize(fileName) == model->Layers[layerIndex]->GetWeightsSize(persistOptimizer, model->Optimizer))
 			return model->LoadLayerWeights(fileName, layerIndex, persistOptimizer);
 		else
 			return -1;

@@ -146,7 +146,7 @@ namespace dnn
 		bool PersistOptimizer;
 		bool DisableLocking;
 		TrainingRate CurrentTrainingRate;
-		std::vector<std::unique_ptr<Layer>> Layers;
+		std::vector<Layer*> Layers;
 		std::vector<Cost*> CostLayers;
 		std::vector<TrainingRate> TrainingRates;
 		std::chrono::duration<Float> fpropTime;
@@ -217,7 +217,7 @@ namespace dnn
 			CostIndex(0),
 			CostFuction(Costs::CategoricalCrossEntropy),
 			CostLayers(std::vector<Cost*>()),
-			Layers(std::vector<std::unique_ptr<Layer>>()),
+			Layers(std::vector<Layer*>()),
 			TrainingRates(std::vector<TrainingRate>()),
 			fpropTime(std::chrono::duration<Float>(Float(0))),
 			bpropTime(std::chrono::duration<Float>(Float(0))),
@@ -276,7 +276,7 @@ namespace dnn
 
 			for (auto l = 0ull; l < Layers.size(); l++)
 			{
-				auto layerName = Layers[l].get()->Name;
+				auto layerName = Layers[l]->Name;
 				std::transform(layerName.begin(), layerName.end(), layerName.begin(), ::tolower);
 				if (layerName == nameLower)
 					return false;
@@ -314,7 +314,7 @@ namespace dnn
 				{
 					if (Layers[l]->Name == name)
 					{
-						list.push_back(Layers[l].get());
+						list.push_back(Layers[l]);
 						exists = true;
 					}
 				}
@@ -388,7 +388,7 @@ namespace dnn
 				else
 				{
 					if (count == 0 && Layers[layer]->LayerType != LayerTypes::Cost)
-						unreferencedLayers.push_back(Layers[layer].get());
+						unreferencedLayers.push_back(Layers[layer]);
 				}
 			}
 

@@ -245,10 +245,12 @@ int main()
         
         */
             DNNStop();
-            DNNModelDispose();
+           
         }
         else
             std::cout << std::endl << "Could not load dataset" << std::endl;
+
+        DNNModelDispose();
     }
     else
         std::cout << std::endl << "Could not load model" << std::endl << msg.Message << std::endl << model << std::endl;
