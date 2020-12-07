@@ -256,13 +256,13 @@ namespace dnn
 			{
 				ResettingWeights.store(true);
 
-				for (size_t l = 0ull; l < Layers.size(); l++)
+				for (auto l = 0ull; l < Layers.size(); l++)
 				{
-					while (Layers[l].get()->RefreshingStats.load())
+					while (Layers[l]->RefreshingStats.load())
 						std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-					Layers[l].get()->ResetWeights(WeightsFiller, WeightsScale, BiasesFiller, BiasesScale);
-					Layers[l].get()->ResetOptimizer(Optimizer);
+					Layers[l]->ResetWeights(WeightsFiller, WeightsScale, BiasesFiller, BiasesScale);
+					Layers[l]->ResetOptimizer(Optimizer);
 				}
 
 				ResettingWeights.store(false);
@@ -274,7 +274,7 @@ namespace dnn
 			std::string nameLower(name);
 			std::transform(nameLower.begin(), nameLower.end(), nameLower.begin(), ::tolower);
 
-			for (size_t l = 0ull; l < Layers.size(); l++)
+			for (auto l = 0ull; l < Layers.size(); l++)
 			{
 				auto layerName = Layers[l].get()->Name;
 				std::transform(layerName.begin(), layerName.end(), layerName.begin(), ::tolower);
@@ -287,18 +287,18 @@ namespace dnn
 
 		void SetHyperParameters(const Float adaDeltaEps, const Float adaGradEps, const Float adamEps, const Float adamBeta2, const Float adamaxEps, const Float adamaxBeta2, const Float rmsPropEps, const Float radamEps, const Float radamBeta1, const Float radamBeta2)
 		{
-			for (size_t l = 0ull; l < Layers.size(); l++)
+			for (auto l = 0ull; l < Layers.size(); l++)
 			{
-				Layers[l].get()->AdaDeltaEps = adaDeltaEps;
-				Layers[l].get()->AdaGradEps = adaGradEps;
-				Layers[l].get()->AdamEps = adamEps;
-				Layers[l].get()->AdamBeta2 = adamBeta2;
-				Layers[l].get()->AdamaxEps = adamaxEps;
-				Layers[l].get()->AdamaxBeta2 = adamaxBeta2;
-				Layers[l].get()->RMSPropEps = rmsPropEps;
-				Layers[l].get()->RAdamEps = radamEps;
-				Layers[l].get()->RAdamBeta1 = radamBeta1;
-				Layers[l].get()->RAdamBeta2 = radamBeta2;
+				Layers[l]->AdaDeltaEps = adaDeltaEps;
+				Layers[l]->AdaGradEps = adaGradEps;
+				Layers[l]->AdamEps = adamEps;
+				Layers[l]->AdamBeta2 = adamBeta2;
+				Layers[l]->AdamaxEps = adamaxEps;
+				Layers[l]->AdamaxBeta2 = adamaxBeta2;
+				Layers[l]->RMSPropEps = rmsPropEps;
+				Layers[l]->RAdamEps = radamEps;
+				Layers[l]->RAdamBeta1 = radamBeta1;
+				Layers[l]->RAdamBeta2 = radamBeta2;
 			}
 		}
 
@@ -310,9 +310,9 @@ namespace dnn
 			for (auto name : inputs)
 			{
 				exists = false;
-				for (size_t l = 0ull; l < Layers.size(); l++)
+				for (auto l = 0ull; l < Layers.size(); l++)
 				{
-					if (Layers[l].get()->Name == name)
+					if (Layers[l]->Name == name)
 					{
 						list.push_back(Layers[l].get());
 						exists = true;
@@ -330,7 +330,7 @@ namespace dnn
 		{
 			auto list = std::vector<Layer*>();
 
-			for (size_t l = 0ull; l < Layers.size(); l++)
+			for (auto l = 0ull; l < Layers.size(); l++)
 			{
 				if (Layers[l]->Name == Layers[layer]->Name)
 					continue;
@@ -352,7 +352,7 @@ namespace dnn
 		{
 			// This determines how the backprop step correctly flows
 			// When SharesInput is true we have to add our diff vector instead of just copying it because there's more than one layer involved
-			for (size_t l = 0ull; l < Layers.size(); l++)
+			for (auto l = 0ull; l < Layers.size(); l++)
 			{
 				Layers[l]->SharesInput = false;
 				Layers[l]->Outputs = GetLayerOutputs(l);
@@ -360,13 +360,13 @@ namespace dnn
 
 			auto unreferencedLayers = std::vector<Layer*>();
 
-			for (size_t layer = 0ull; layer < Layers.size(); layer++)
+			for (auto layer = 0ull; layer < Layers.size(); layer++)
 			{
 				auto count = Layers[layer]->Outputs.size();
 
 				if (count > 1)
 				{
-					for (size_t l = 0ull; l < Layers.size(); l++)
+					for (auto l = 0ull; l < Layers.size(); l++)
 					{
 						if (Layers[l]->Name == Layers[layer]->Name)
 							continue;
