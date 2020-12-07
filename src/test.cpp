@@ -199,9 +199,9 @@ int main()
     DNNDataprovider(path.c_str());
     if (DNNReadDefinition(model.c_str(), Optimizers::NAG, msg) == 1)
     {
-        //if (DNNLoadDataset())
+        if (DNNLoadDataset())
         {
-            /*
+        
             auto name = new std::string();
             auto costIndex = new size_t(); 
             auto costLayerCount = new size_t(); 
@@ -242,13 +242,13 @@ int main()
             delete testingSamples; 
             delete meanTrainSet;
             delete stdTrainSet;
-            */
+        
 
             DNNStop();
             DNNModelDispose();
         }
-        /*else
-            std::cout << std::endl << "Could not load dataset" << std::endl;*/
+        else
+            std::cout << std::endl << "Could not load dataset" << std::endl;
     }
     else
         std::cout << std::endl << "Could not load model" << std::endl << msg.Message << std::endl << model << std::endl;
