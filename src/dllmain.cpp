@@ -170,7 +170,7 @@ extern "C" DNN_API bool DNNStochasticEnabled()
 extern "C" DNN_API void DNNGetConfusionMatrix(const size_t costLayerIndex, std::vector<std::vector<size_t>>* confusionMatrix)
 {
 	if (model && costLayerIndex < model->CostLayers.size())
-		(*confusionMatrix) = model->CostLayers[costLayerIndex]->ConfusionMatrix;
+		(*confusionMatrix) = dynamic_cast<Cost*>(model->Layers[model->CostLayers[costLayerIndex]].get())->ConfusionMatrix;
 }
 
 extern "C" DNN_API void DNNSetOptimizersHyperParameters(const Float adaDeltaEps, const Float adaGradEps, const Float adamEps, const Float adamBeta2, const Float adamaxEps, const Float adamaxBeta2, const Float rmsPropEps, const Float radamEps, const Float radamBeta1, const Float radamBeta2)
@@ -320,15 +320,16 @@ extern "C" DNN_API void DNNGetCostInfo(const size_t costLayerIndex, size_t* trai
 {
 	if (model && costLayerIndex < model->CostLayers.size())
 	{
-		*trainErrors = model->CostLayers[costLayerIndex]->TrainErrors;
-		*trainLoss = model->CostLayers[costLayerIndex]->TrainLoss;
-		*avgTrainLoss = model->CostLayers[costLayerIndex]->AvgTrainLoss;
-		*trainErrorPercentage = model->CostLayers[costLayerIndex]->TrainErrorPercentage;
+		Cost* cost = dynamic_cast<Cost*>(model->Layers[model->CostLayers[costLayerIndex]].get());
+		*trainErrors = cost->TrainErrors;
+		*trainLoss = cost->TrainLoss;
+		*avgTrainLoss = cost->AvgTrainLoss;
+		*trainErrorPercentage = cost->TrainErrorPercentage;
 
-		*testErrors = model->CostLayers[costLayerIndex]->TestErrors;
-		*testLoss = model->CostLayers[costLayerIndex]->TestLoss;
-		*avgTestLoss = model->CostLayers[costLayerIndex]->AvgTestLoss;
-		*testErrorPercentage = model->CostLayers[costLayerIndex]->TestErrorPercentage;
+		*testErrors = cost->TestErrors;
+		*testLoss = cost->TestLoss;
+		*avgTestLoss = cost->AvgTestLoss;
+		*testErrorPercentage = cost->TestErrorPercentage;
 	}
 }
 
@@ -377,12 +378,14 @@ extern "C" DNN_API void DNNGetTrainingInfo(size_t* currentCycle, size_t* totalCy
 	{
 		const size_t sampleIdx = model->SampleIndex + model->BatchSize;
 
+		Cost* cost = dynamic_cast<Cost*>(model->Layers[model->CostLayers[model->CostIndex]].get());
+
 		switch (model->State)
 		{
 		case States::Training:
 		{
-			model->TrainLoss = model->CostLayers[model->CostIndex]->TrainLoss;
-			model->TrainErrors = model->CostLayers[model->CostIndex]->TrainErrors;
+			model->TrainLoss = cost->TrainLoss;
+			model->TrainErrors = cost->TrainErrors;
 			model->TrainErrorPercentage = Float(model->TrainErrors * 100) / sampleIdx;
 			model->AvgTrainLoss = model->TrainLoss / sampleIdx;
    
@@ -396,8 +399,8 @@ extern "C" DNN_API void DNNGetTrainingInfo(size_t* currentCycle, size_t* totalCy
 		{
 			const size_t adjustedsampleIndex = sampleIdx > dataprovider->TestingSamplesCount ? dataprovider->TestingSamplesCount : sampleIdx;
 						
-			model->TestLoss = model->CostLayers[model->CostIndex]->TestLoss;
-			model->TestErrors = model->CostLayers[model->CostIndex]->TestErrors;
+			model->TestLoss = cost->TestLoss;
+			model->TestErrors = cost->TestErrors;
 			model->TestErrorPercentage = Float(model->TestErrors * 100) / adjustedsampleIndex;
 			model->AvgTestLoss = model->TestLoss / adjustedsampleIndex;
 
@@ -450,9 +453,11 @@ extern "C" DNN_API void DNNGetTestingInfo(size_t* batchSize, size_t* sampleIndex
 	{
 		const size_t sampleIdx = model->SampleIndex + model->BatchSize;
 		const size_t adjustedsampleIndex = sampleIdx > dataprovider->TestingSamplesCount ? dataprovider->TestingSamplesCount : sampleIdx;
-							
-		model->TestLoss = model->CostLayers[model->CostIndex]->TestLoss;
-		model->TestErrors = model->CostLayers[model->CostIndex]->TestErrors;
+						
+		Cost* cost = dynamic_cast<Cost*>(model->Layers[model->CostLayers[model->CostIndex]].get());
+
+		model->TestLoss = cost->TestLoss;
+		model->TestErrors = cost->TestErrors;
 		model->TestErrorPercentage = Float(model->TestErrors * 100) / adjustedsampleIndex;
 		model->AvgTestLoss = model->TestLoss / adjustedsampleIndex;
 
