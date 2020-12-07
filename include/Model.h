@@ -248,10 +248,7 @@ namespace dnn
 #endif
 		}
 
-		virtual ~Model()
-		{
-			
-		}		
+		virtual ~Model() = default;
 		
 		void ResetWeights()
 		{
