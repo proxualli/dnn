@@ -440,7 +440,8 @@ namespace dnn
 				const auto pathTestPatterns = (DatasetsDirectory / std::string(magic_enum::enum_name<Datasets>(dataset)) / "test_batch.bin").string();
 
 				auto ok = true;
-				for_i(5, [=, &ok](size_t batch)
+				for(size_t batch = 0; batch < 5; batch++)
+				//for_i(5, [=, &ok](size_t batch)
 				{
 					auto infile = std::ifstream(pathTrainPatterns[batch], std::ios::binary | std::ios::in);
 
@@ -461,7 +462,7 @@ namespace dnn
 					}
 					else
 						ok = false;
-				});
+				} //);
 
 				if (!ok)
 					return false;
@@ -654,7 +655,8 @@ namespace dnn
 				else
 					return false;
 
-				for_i(200ull, [=](size_t item)
+                for(size_t item = 0; item < 200; item++)
+				//for_i(200ull, [=](size_t item)
 				{
 					const auto offset = item * 500;
 					for (size_t i = 0; i < 500; i++)
@@ -664,7 +666,7 @@ namespace dnn
 						TrainingSamples[pos] = Image<Byte>::LoadJPEG(fileName, true);
 						TrainingLabels[pos][0] = item;
 					}
-				});
+				}//);
 
 				infile.open((DatasetsDirectory / std::string(magic_enum::enum_name<Datasets>(dataset))  / "val" / "val_annotations.txt").string());
 				if (!infile.bad() && infile.is_open())
@@ -695,13 +697,14 @@ namespace dnn
 				else
 					return false;
 
-				for_i(TestingSamplesCount, [=](size_t i)
+				 for(size_t i = 0; i < TestingSamplesCount; i++)
+				//for_i(TestingSamplesCount, [=](size_t i)
 				{
 					const auto fileName = (DatasetsDirectory / std::string(magic_enum::enum_name<Datasets>(dataset))  / "val" / "images" / ("val_" + std::to_string(i) + ".JPEG")).string();
 					//const auto fileName = (DatasetsDirectory() / std::string(magic_enum::enum_name<Datasets>(dataset))  / "test" / "images" / ("test_" + std::to_string(i) + ".JPEG")).string();
 					TestingSamples[i] = Image<Byte>::LoadJPEG(fileName, true);
 					TestingLabels[i][0] = labels_idx[i];
-				});
+				} //);
 			}
 			break;
 			}
