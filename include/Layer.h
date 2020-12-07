@@ -319,7 +319,10 @@ namespace dnn
 			chosenFormat = format;
 		}
 
-		// virtual ~Layer() = default;
+		virtual ~Layer()
+		{
+			
+		};
 
 		void SetParameters(const bool useDefaults, const Fillers weightsFiller, const Float weightsScale, const Float weightsLRM, const Float weightsWDM, const Fillers biasesFiller, const Float biasesScale, const Float biasesLRM, const Float biasesWDM)
 		{
