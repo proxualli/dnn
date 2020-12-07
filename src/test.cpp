@@ -201,6 +201,7 @@ int main()
     {
         if (DNNLoadDataset())
         {
+            /*
             auto name = new std::string();
             auto costIndex = new size_t(); 
             auto costLayerCount = new size_t(); 
@@ -227,8 +228,6 @@ int main()
 
             GetTrainingProgress(1, *trainingSamples, *testingSamples);
             
-            DNNStop();
-
             delete name;
             delete costIndex; 
             delete costLayerCount; 
@@ -243,7 +242,9 @@ int main()
             delete testingSamples; 
             delete meanTrainSet;
             delete stdTrainSet;
+            */
 
+            DNNStop();
             DNNModelDispose();
         }
         else
