@@ -251,7 +251,8 @@ namespace dnn
 		virtual ~Model()
 		{
 			for (auto i = 0ull; i < Layers.size(); i++)
-				delete Layers[i];
+			    if (Layers[i])
+				    delete Layers[i];
 		}		
 		
 		void ResetWeights()
