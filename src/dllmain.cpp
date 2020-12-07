@@ -72,7 +72,7 @@ extern "C" DNN_API void DNNModelDispose()
 		model->~Model();
 }
 
-extern "C" DNN_API Model* DNNModel(std::string name)
+extern "C" DNN_API Model* DNNModel(const std::string& name)
 {
 	if (model.get())
 		DNNModelDispose();
@@ -82,7 +82,7 @@ extern "C" DNN_API Model* DNNModel(std::string name)
 	return model.get();
 }
 
-extern "C" DNN_API void DNNDataprovider(std::string directory)
+extern "C" DNN_API void DNNDataprovider(const std::string& directory)
 {
 	dataprovider = std::make_unique<Dataprovider>(directory);
 }
@@ -100,7 +100,7 @@ extern "C" DNN_API bool DNNCheckDefinition(std::string& definition, CheckMsg& ch
 	return Definition::CheckDefinition(definition, checkMsg);
 }
 
-extern "C" DNN_API int DNNReadDefinition(std::string definition, const Optimizers optimizer, CheckMsg& checkMsg)
+extern "C" DNN_API int DNNReadDefinition(const std::string& definition, const Optimizers optimizer, CheckMsg& checkMsg)
 {
 	dnn::Model *ptr = nullptr;
 	
@@ -118,7 +118,7 @@ extern "C" DNN_API int DNNReadDefinition(std::string definition, const Optimizer
 	return 0;
 }
 
-extern "C" DNN_API int DNNLoadDefinition(std::string fileName, const Optimizers optimizer, CheckMsg& checkMsg)
+extern "C" DNN_API int DNNLoadDefinition(const std::string& fileName, const Optimizers optimizer, CheckMsg& checkMsg)
 {
 	dnn::Model *ptr = nullptr;
 	
@@ -820,7 +820,7 @@ extern "C" DNN_API void DNNGetLayerInfo(const size_t layerIndex, size_t* inputsC
 	}
 }
 
-extern "C" DNN_API int DNNLoadNetworkWeights(std::string fileName, const bool persistOptimizer)
+extern "C" DNN_API int DNNLoadNetworkWeights(const std::string& fileName, const bool persistOptimizer)
 {
 	if (model)
 		return model->LoadWeights(fileName, persistOptimizer);
@@ -828,7 +828,7 @@ extern "C" DNN_API int DNNLoadNetworkWeights(std::string fileName, const bool pe
 	return -10;
 }
 
-extern "C" DNN_API int DNNSaveNetworkWeights(std::string fileName, const bool persistOptimizer)
+extern "C" DNN_API int DNNSaveNetworkWeights(const std::string& fileName, const bool persistOptimizer)
 {
 	if (model)
 		return model->SaveWeights(fileName, persistOptimizer);
@@ -836,7 +836,7 @@ extern "C" DNN_API int DNNSaveNetworkWeights(std::string fileName, const bool pe
 	return -10;
 }
 
-extern "C" DNN_API int DNNLoadLayerWeights(std::string fileName, const size_t layerIndex, const bool persistOptimizer)
+extern "C" DNN_API int DNNLoadLayerWeights(const std::string& fileName, const size_t layerIndex, const bool persistOptimizer)
 {
 	if (model)
 	{
@@ -849,7 +849,7 @@ extern "C" DNN_API int DNNLoadLayerWeights(std::string fileName, const size_t la
 	return -10;
 }
 
-extern "C" DNN_API int DNNSaveLayerWeights(std::string fileName, const size_t layerIndex, const bool persistOptimizer)
+extern "C" DNN_API int DNNSaveLayerWeights(const std::string& fileName, const size_t layerIndex, const bool persistOptimizer)
 {
 	if (model && layerIndex < model->Layers.size())
 		return model->SaveLayerWeights(fileName, layerIndex, persistOptimizer);

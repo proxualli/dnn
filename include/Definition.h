@@ -6,7 +6,7 @@ namespace dnn
 	class Definition final
 	{
 	public:
-		static std::string Normalize(std::string definition)
+		static std::string Normalize(const std::string& definition)
 		{
 			auto defNorm = std::string(definition);
 						
@@ -114,7 +114,7 @@ namespace dnn
 			return defNorm;
 		}
 
-		static Model* Read(std::string definition, CheckMsg& msg, const bool onlyCheck = false, Dataprovider* dataprovider = nullptr, const Optimizers optimizer = Optimizers::NAG)
+		static Model* Read(const std::string& definition, CheckMsg& msg, const bool onlyCheck = false, Dataprovider* dataprovider = nullptr, const Optimizers optimizer = Optimizers::NAG)
 		{
 			auto userLocale = std::setlocale(LC_ALL, "C");
 
@@ -2340,14 +2340,14 @@ namespace dnn
 
 		static bool CheckDefinition(std::string& definition, CheckMsg& checkMsg)
 		{
-			definition = Normalize(definition.c_str());
+			definition = Normalize(definition);
 
-			Read(definition.c_str(), checkMsg, true);
+			Read(definition, checkMsg, true);
 
 			return checkMsg.Error;
 		}
 
-		static Model* ReadDefinition(std::string definition, const Optimizers optimizer, Dataprovider* dataprovider, CheckMsg& checkMsg)
+		static Model* ReadDefinition(const std::string& definition, const Optimizers optimizer, Dataprovider* dataprovider, CheckMsg& checkMsg)
 		{
 			Model* model = Read(Normalize(definition), checkMsg, false, dataprovider, optimizer);
 
@@ -2359,7 +2359,7 @@ namespace dnn
 			return model;
 		}
 
-		static Model* LoadDefinition(std::string fileName, const Optimizers optimizer, Dataprovider* dataprovider, CheckMsg& checkMsg)
+		static Model* LoadDefinition(const std::string& fileName, const Optimizers optimizer, Dataprovider* dataprovider, CheckMsg& checkMsg)
 		{
 			Model* model = nullptr;
 

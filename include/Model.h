@@ -158,7 +158,7 @@ namespace dnn
 
 		void(*NewEpoch)(size_t, size_t, size_t, bool, bool, Float, Float, Float, Float, size_t, Float, size_t, Float, Float, Float, size_t, Float, Float, Float, Float, Float, size_t, Float, Float, Float, size_t);
 
-		Model(std::string name, Dataprovider* dataprovider) :
+		Model(const std::string& name, Dataprovider* dataprovider) :
 			Name(name),
 			DataProv(dataprovider),
 			Engine(dnnl::engine(dnnl::engine::kind::cpu, 0)),
@@ -269,7 +269,7 @@ namespace dnn
 			}
 		}
 
-		bool IsUniqueLayerName(const char* name) const
+		bool IsUniqueLayerName(const std::string& name) const
 		{
 			std::string nameLower(name);
 			std::transform(nameLower.begin(), nameLower.end(), nameLower.begin(), ::tolower);
