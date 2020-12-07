@@ -208,7 +208,7 @@ namespace dnn
 		return stream.str();
 	}
 
-   	static const auto GetFileSize(const char* fileName)
+   	static const auto GetFileSize(std::string fileName)
 	{
 		auto file = std::ifstream(fileName, std::ifstream::in | std::ifstream::binary);
 

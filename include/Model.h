@@ -158,7 +158,7 @@ namespace dnn
 
 		void(*NewEpoch)(size_t, size_t, size_t, bool, bool, Float, Float, Float, Float, size_t, Float, size_t, Float, Float, Float, size_t, Float, Float, Float, Float, Float, size_t, Float, Float, Float, size_t);
 
-		Model(const char* name, Dataprovider* dataprovider) :
+		Model(std::string name, Dataprovider* dataprovider) :
 			Name(name),
 			DataProv(dataprovider),
 			Engine(dnnl::engine(dnnl::engine::kind::cpu, 0)),
@@ -1540,7 +1540,7 @@ namespace dnn
 			}
 		}
 		
-		int SaveWeights(const char* fileName, const bool persistOptimizer = false) const
+		int SaveWeights(std::string fileName, const bool persistOptimizer = false) const
 		{
 			auto os = std::ofstream(fileName, std::ios::out | std::ios::binary | std::ios::trunc);
 
@@ -1557,7 +1557,7 @@ namespace dnn
 			return -1;
 		}
 
-		int LoadWeights(const char* fileName, const bool persistOptimizer = false)
+		int LoadWeights(std::string fileName, const bool persistOptimizer = false)
 		{
 			if (GetFileSize(fileName) == GetWeightsSize(persistOptimizer))
 			{
@@ -1577,7 +1577,7 @@ namespace dnn
 			return -1;
 		}
 
-		int SaveLayerWeights(const char* fileName, const size_t layerIndex, const bool persistOptimizer = false) const
+		int SaveLayerWeights(std::string fileName, const size_t layerIndex, const bool persistOptimizer = false) const
 		{
 			auto os = std::ofstream(fileName, std::ios::out | std::ios::binary | std::ios::trunc);
 
@@ -1593,7 +1593,7 @@ namespace dnn
 			return -1;
 		}
 
-		int LoadLayerWeights(const char* fileName, const size_t layerIndex, const bool persistOptimizer = false)
+		int LoadLayerWeights(std::string fileName, const size_t layerIndex, const bool persistOptimizer = false)
 		{
 			if (GetFileSize(fileName) == Layers[layerIndex]->GetWeightsSize(persistOptimizer, Optimizer))
 			{
