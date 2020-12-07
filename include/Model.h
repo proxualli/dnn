@@ -146,7 +146,7 @@ namespace dnn
 		bool PersistOptimizer;
 		bool DisableLocking;
 		TrainingRate CurrentTrainingRate;
-		std::vector<Layer*> Layers;
+		std::vector<std::unique_ptr<Layer>> Layers;
 		std::vector<Cost*> CostLayers;
 		std::vector<TrainingRate> TrainingRates;
 		std::chrono::duration<Float> fpropTime;
@@ -217,7 +217,7 @@ namespace dnn
 			CostIndex(0),
 			CostFuction(Costs::CategoricalCrossEntropy),
 			CostLayers(std::vector<Cost*>()),
-			Layers(std::vector<Layer*>()),
+			Layers(std::vector<std::unique_ptr<Layer>>()),
 			TrainingRates(std::vector<TrainingRate>()),
 			fpropTime(std::chrono::duration<Float>(Float(0))),
 			bpropTime(std::chrono::duration<Float>(Float(0))),
@@ -250,9 +250,7 @@ namespace dnn
 
 		virtual ~Model()
 		{
-			for (auto i = 0ull; i < Layers.size(); i++)
-			    if (Layers[i])
-				    delete Layers[i];
+			
 		}		
 		
 		void ResetWeights()
@@ -261,13 +259,13 @@ namespace dnn
 			{
 				ResettingWeights.store(true);
 
-				for (auto layer : Layers)
+				for (size_t l = 0ull; l < Layers.size(); l++)
 				{
-					while (layer->RefreshingStats.load())
+					while (Layers[l].get()->RefreshingStats.load())
 						std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-					layer->ResetWeights(WeightsFiller, WeightsScale, BiasesFiller, BiasesScale);
-					layer->ResetOptimizer(Optimizer);
+					Layers[l].get()->ResetWeights(WeightsFiller, WeightsScale, BiasesFiller, BiasesScale);
+					Layers[l].get()->ResetOptimizer(Optimizer);
 				}
 
 				ResettingWeights.store(false);
@@ -279,9 +277,9 @@ namespace dnn
 			std::string nameLower(name);
 			std::transform(nameLower.begin(), nameLower.end(), nameLower.begin(), ::tolower);
 
-			for (auto layer : Layers)
+			for (size_t l = 0ull; l < Layers.size(); l++)
 			{
-				auto layerName = layer->Name;
+				auto layerName = Layers[l].get()->Name;
 				std::transform(layerName.begin(), layerName.end(), layerName.begin(), ::tolower);
 				if (layerName == nameLower)
 					return false;
@@ -292,18 +290,18 @@ namespace dnn
 
 		void SetHyperParameters(const Float adaDeltaEps, const Float adaGradEps, const Float adamEps, const Float adamBeta2, const Float adamaxEps, const Float adamaxBeta2, const Float rmsPropEps, const Float radamEps, const Float radamBeta1, const Float radamBeta2)
 		{
-			for (auto layer : Layers)
+			for (size_t l = 0ull; l < Layers.size(); l++)
 			{
-				layer->AdaDeltaEps = adaDeltaEps;
-				layer->AdaGradEps = adaGradEps;
-				layer->AdamEps = adamEps;
-				layer->AdamBeta2 = adamBeta2;
-				layer->AdamaxEps = adamaxEps;
-				layer->AdamaxBeta2 = adamaxBeta2;
-				layer->RMSPropEps = rmsPropEps;
-				layer->RAdamEps = radamEps;
-				layer->RAdamBeta1 = radamBeta1;
-				layer->RAdamBeta2 = radamBeta2;
+				Layers[l].get()->AdaDeltaEps = adaDeltaEps;
+				Layers[l].get()->AdaGradEps = adaGradEps;
+				Layers[l].get()->AdamEps = adamEps;
+				Layers[l].get()->AdamBeta2 = adamBeta2;
+				Layers[l].get()->AdamaxEps = adamaxEps;
+				Layers[l].get()->AdamaxBeta2 = adamaxBeta2;
+				Layers[l].get()->RMSPropEps = rmsPropEps;
+				Layers[l].get()->RAdamEps = radamEps;
+				Layers[l].get()->RAdamBeta1 = radamBeta1;
+				Layers[l].get()->RAdamBeta2 = radamBeta2;
 			}
 		}
 
@@ -315,11 +313,11 @@ namespace dnn
 			for (auto name : inputs)
 			{
 				exists = false;
-				for (auto layer : Layers)
+				for (size_t l = 0ull; l < Layers.size(); l++)
 				{
-					if (layer->Name == name)
+					if (Layers[l].get()->Name == name)
 					{
-						list.push_back(layer);
+						list.push_back(Layers[l].get());
 						exists = true;
 					}
 				}
@@ -331,18 +329,18 @@ namespace dnn
 			return list;
 		}
 
-		std::vector<Layer*> GetLayerOutputs(const Layer* layer) const
+		std::vector<Layer*> GetLayerOutputs(const size_t layer) const
 		{
 			auto list = std::vector<Layer*>();
 
-			for (auto l : Layers)
+			for (size_t l = 0ull; l < Layers.size(); l++)
 			{
-				if (l->Name == layer->Name)
+				if (Layers[l]->Name == Layers[layer]->Name)
 					continue;
 
-				for (auto inputs : l->Inputs)
+				for (auto inputs : Layers[l]->Inputs)
 				{
-					if (inputs->Name == layer->Name)
+					if (inputs->Name == Layers[layer]->Name)
 					{
 						list.push_back(inputs);
 						break;
@@ -357,30 +355,30 @@ namespace dnn
 		{
 			// This determines how the backprop step correctly flows
 			// When SharesInput is true we have to add our diff vector instead of just copying it because there's more than one layer involved
-			for (auto layer : Layers)
+			for (size_t l = 0ull; l < Layers.size(); l++)
 			{
-				layer->SharesInput = false;
-				layer->Outputs = GetLayerOutputs(layer);
+				Layers[l]->SharesInput = false;
+				Layers[l]->Outputs = GetLayerOutputs(l);
 			}
 
 			auto unreferencedLayers = std::vector<Layer*>();
 
-			for (auto layer : Layers)
+			for (size_t layer = 0ull; layer < Layers.size(); layer++)
 			{
-				auto count = layer->Outputs.size();
+				auto count = Layers[layer]->Outputs.size();
 
 				if (count > 1)
 				{
-					for (auto l : Layers)
+					for (size_t l = 0ull; l < Layers.size(); l++)
 					{
-						if (l->Name == layer->Name)
+						if (Layers[l]->Name == Layers[layer]->Name)
 							continue;
 
-						for (auto inputs : l->Inputs)
+						for (auto inputs : Layers[l]->Inputs)
 						{
-							if (inputs->Name == layer->Name)
+							if (inputs->Name == Layers[layer]->Name)
 							{
-								l->SharesInput = true;
+								Layers[l]->SharesInput = true;
 								count--;
 								break;
 							}
@@ -392,8 +390,8 @@ namespace dnn
 				}
 				else
 				{
-					if (count == 0 && layer->LayerType != LayerTypes::Cost)
-						unreferencedLayers.push_back(layer);
+					if (count == 0 && Layers[layer]->LayerType != LayerTypes::Cost)
+						unreferencedLayers.push_back(Layers[layer].get());
 				}
 			}
 
@@ -450,8 +448,8 @@ namespace dnn
 		{
 			std::streamsize weightsSize = 0;
 
-			for (auto layer : Layers)
-				weightsSize += layer->GetWeightsSize(persistOptimizer, Optimizer);
+			for (auto i = 0ull; i < Layers.size(); i++)
+				weightsSize += Layers[i]->GetWeightsSize(persistOptimizer, Optimizer);
 
 			return weightsSize;
 		}
@@ -460,16 +458,16 @@ namespace dnn
 		{
 			size_t neuronsSize = 0;
 
-			for (auto layer : Layers)
-				neuronsSize += layer->GetNeuronsSize(batchSize);
+			for (auto i = 0ull; i < Layers.size(); i++)
+				neuronsSize += Layers[i]->GetNeuronsSize(batchSize);
 
 			return neuronsSize;
 		}
 
 		bool BatchNormalizationUsed() const
 		{
-			for (auto layer : Layers)
-				if (layer->LayerType == LayerTypes::BatchNorm || layer->LayerType == LayerTypes::BatchNormHardLogistic || layer->LayerType == LayerTypes::BatchNormHardSwish || layer->LayerType == LayerTypes::BatchNormHardSwishDropout || layer->LayerType == LayerTypes::BatchNormRelu || layer->LayerType == LayerTypes::BatchNormReluDropout || layer->LayerType == LayerTypes::BatchNormSwish)
+			for (auto i = 0ull; i < Layers.size(); i++)
+				if (Layers[i]->LayerType == LayerTypes::BatchNorm || Layers[i]->LayerType == LayerTypes::BatchNormHardLogistic || Layers[i]->LayerType == LayerTypes::BatchNormHardSwish || Layers[i]->LayerType == LayerTypes::BatchNormHardSwishDropout || Layers[i]->LayerType == LayerTypes::BatchNormRelu || Layers[i]->LayerType == LayerTypes::BatchNormReluDropout || Layers[i]->LayerType == LayerTypes::BatchNormSwish)
 					return true;
 
 			return false;
@@ -595,8 +593,8 @@ namespace dnn
 
 		void SetOptimizer(const Optimizers optimizer)
 		{
-			for (auto layer : Layers)
-				layer->SetOptimizer(optimizer);
+			for (auto i = 0ull; i < Layers.size(); i++)
+				Layers[i]->SetOptimizer(optimizer);
 
 			Optimizer = optimizer;
 		}
@@ -718,8 +716,8 @@ namespace dnn
 			{
 				BatchSizeChanging.store(true);
 
-				for (auto layer : Layers)
-					layer->SetBatchSize(batchSize);
+				for (auto i = 0ull; i < Layers.size(); i++)
+					Layers[i]->SetBatchSize(batchSize);
 
 				AdjustedTrainingSamplesCount = (DataProv->TrainingSamplesCount % batchSize == 0) ? DataProv->TrainingSamplesCount : ((DataProv->TrainingSamplesCount / batchSize) + 1) * batchSize;
 				AdjustedTestingSamplesCount = (DataProv->TestingSamplesCount % batchSize == 0) ? DataProv->TestingSamplesCount : ((DataProv->TestingSamplesCount / batchSize) + 1) * batchSize;
@@ -1551,8 +1549,8 @@ namespace dnn
 
 			if (!os.bad() && os.is_open())
 			{
-				for (auto layer : Layers)
-					layer->Save(os, persistOptimizer, Optimizer);
+				for (auto i = 0ull; i < Layers.size(); i++)
+					Layers[i]->Save(os, persistOptimizer, Optimizer);
 
 				os.close();
 
@@ -1570,8 +1568,8 @@ namespace dnn
 
 				if (!is.bad() && is.is_open())
 				{
-					for (auto layer : Layers)
-						layer->Load(is, persistOptimizer, Optimizer);
+					for (auto i = 0ull; i < Layers.size(); i++)
+						Layers[i]->Load(is, persistOptimizer, Optimizer);
 
 					is.close();
 

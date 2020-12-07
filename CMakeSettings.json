@@ -15,19 +15,18 @@
       "variables": []
     },
     {
-      "name": "WSL-GCC-Release",
-      "generator": "Ninja",
-      "configurationType": "Release",
+      "name": "x64-Debug",
+      "generator": "Visual Studio 16 2019 Win64",
+      "configurationType": "Debug",
       "buildRoot": "${projectDir}\\out\\build\\${name}",
       "installRoot": "${projectDir}\\out\\install\\${name}",
-      "cmakeExecutable": "cmake",
       "cmakeCommandArgs": "",
       "buildCommandArgs": "",
       "ctestCommandArgs": "",
-      "inheritEnvironments": [ "linux_x64" ],
-      "wslPath": "${defaultWSLPath}",
-      "addressSanitizerRuntimeFlags": "detect_leaks=0",
-      "variables": []
+      "inheritEnvironments": [ "msvc_x64_x64" ],
+      "variables": [],
+      "cmakeExecutable": "C:/Program Files/CMake/bin/cmake.exe",
+      "intelliSenseMode": "windows-msvc-x64"
     }
   ]
 }
