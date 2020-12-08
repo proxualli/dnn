@@ -250,17 +250,22 @@ namespace dnn
 
 		virtual ~Model()
 		{
-			const auto costCount = CostLayers.size();
-			for (auto c = 0; c < costCount; c++)
-				CostLayers[c] = nullptr;
-
-			const auto layerCount = Layers.size();
-			for (auto i = 0; i < layerCount; i++)
+			if (CostLayers)
 			{
-				if (Layers[i] != nullptr)
+				const auto costCount = CostLayers.size();
+				for (auto c = 0; c < costCount; c++)
+					CostLayers[c] = nullptr;
+			}
+			if (Layers)
+			{
+				const auto layerCount = Layers.size();
+				for (auto i = 0; i < layerCount; i++)
 				{
-					delete Layers[i];
-					Layers[i] = nullptr;
+					if (Layers[i] != nullptr)
+					{
+						delete Layers[i];
+						Layers[i] = nullptr;
+					}
 				}
 			}
 		};
