@@ -250,13 +250,7 @@ namespace dnn
 
 		virtual ~Model()
 		{
-			if (CostLayers)
-			{
-				const auto costCount = CostLayers.size();
-				for (auto c = 0; c < costCount; c++)
-					CostLayers[c] = nullptr;
-			}
-			if (Layers)
+			if (!Layers.empty())
 			{
 				const auto layerCount = Layers.size();
 				for (auto i = 0; i < layerCount; i++)
