@@ -248,7 +248,12 @@ namespace dnn
 #endif
 		}
 
-		virtual ~Model() = default;
+		~Model()
+		{
+			const layerCount = Layers.size();
+			for (size_t i = 0; i < layerCount; i++)
+				delete Layers[i];
+		};
 		
 		
 		void ResetWeights()
