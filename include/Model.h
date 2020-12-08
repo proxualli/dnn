@@ -252,7 +252,10 @@ namespace dnn
 		{
 			for (auto l = 0ull; l < Layers.size(); l++)
 				if (Layers[l])
+				{
 					delete Layers[l];
+					Layers[l] = nullptr;
+				}
 		}
 		
 		
