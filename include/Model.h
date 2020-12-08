@@ -248,14 +248,8 @@ namespace dnn
 #endif
 		}
 
-		virtual ~Model()
-		{
-			for (auto i = 0ull; i < Layers.size(); i++)
-				if(Layers[i])
-				    delete Layers[i];
-		};
-		
-		
+		virtual ~Model() = default;
+				
 		void ResetWeights()
 		{
 			if (!BatchSizeChanging.load() && !ResettingWeights.load())
