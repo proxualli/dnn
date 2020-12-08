@@ -250,7 +250,7 @@ namespace dnn
 
 		virtual ~Model()
 		{
-			if (!Layers.empty())
+			/*if (!Layers.empty())
 			{
 				for (auto i = 0; i < Layers.size(); i++)
 				{
@@ -260,7 +260,7 @@ namespace dnn
 						Layers[i] = nullptr;
 					}
 				}
-			}
+			}*/
 		};
 		
 		
