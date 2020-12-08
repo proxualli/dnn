@@ -250,14 +250,8 @@ namespace dnn
 
 		virtual ~Model()
 		{
-			for (auto i = 0; i < Layers.size(); i++)
-			{
+			for (auto i = 0ull; i < Layers.size(); i++)
 				delete Layers[i];
-				Layers[i] = nullptr;
-			}
-			Layers.~vector();
-
-			CostLayers.~vector();
 		};
 		
 		
