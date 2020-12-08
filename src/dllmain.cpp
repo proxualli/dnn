@@ -72,7 +72,7 @@ extern "C" DNN_API void DNNModelDispose()
 		model->~Model();
 }
 
-extern "C" DNN_API Model* DNNModel(const std::string& name)
+extern "C" DNN_API Model* DNNModel(const std::string name)
 {
 	if (model.get())
 		DNNModelDispose();

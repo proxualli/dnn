@@ -196,8 +196,8 @@ int main()
 
     auto model = ScriptsCatalog::Generate(p);
 
-    DNNDataprovider(path.c_str());
-    if (DNNReadDefinition(model.c_str(), Optimizers::NAG, msg) == 1)
+    DNNDataprovider(path);
+    if (DNNReadDefinition(model, Optimizers::NAG, msg) == 1)
     {
         if (DNNLoadDataset())
         {

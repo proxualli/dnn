@@ -158,7 +158,7 @@ namespace dnn
 
 		void(*NewEpoch)(size_t, size_t, size_t, bool, bool, Float, Float, Float, Float, size_t, Float, size_t, Float, Float, Float, size_t, Float, Float, Float, Float, Float, size_t, Float, Float, Float, size_t);
 
-		Model(const std::string& name, Dataprovider* dataprovider) :
+		Model(const std::string name, Dataprovider* dataprovider) :
 			Name(name),
 			DataProv(dataprovider),
 			Engine(dnnl::engine(dnnl::engine::kind::cpu, 0)),
