@@ -251,10 +251,13 @@ namespace dnn
 		~Model()
 		{
 			const auto layerCount = Layers.size();
-			for (size_t i = 0; i < layerCount; i++)
+			for (auto i = 0; i < layerCount; i++)
 			{
-				delete Layers[i];
-				Layers[i] = nullptr;
+				if (Layers[i])
+				{
+					delete Layers[i];
+					Layers[i] = nullptr;
+				}
 			}
 		};
 		
