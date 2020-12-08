@@ -547,7 +547,7 @@ namespace dnn
 								break;
 							case LayerTypes::Cost:
 								model->Layers.push_back(new Cost(model->Device, model->Format, name, costFunction, groupIndex, labelIndex, c, inputs, labelTrue, labelFalse, weight, epsSpecified ? eps : Float(0)));
-								model->CostLayers.push_back(static_cast<Cost*>(model->Layers[model->Layers.size() - 1]));
+								model->CostLayers.push_back(dynamic_cast<Cost*>(model->Layers[model->Layers.size() - 1]));
 								model->CostFuction = costFunction;
 								break;
 							case LayerTypes::Dense:
@@ -2253,7 +2253,7 @@ namespace dnn
 				}
 
 				model->Layers.push_back(new Cost(model->Device, model->Format, layerNames[model->Layers.size()].first, costFunction, groupIndex, labelIndex, c, model->GetLayerInputs(inputsStr), labelTrue, labelFalse, weight, epsSpecified ? eps : Float(0)));
-				model->CostLayers.push_back(static_cast<Cost*>(model->Layers[model->Layers.size() - 1]));
+				model->CostLayers.push_back(dynamic_cast<Cost*>(model->Layers[model->Layers.size() - 1]));
 				model->CostFuction = costFunction;
 			}
 
