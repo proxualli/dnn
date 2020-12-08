@@ -248,7 +248,11 @@ namespace dnn
 #endif
 		}
 
-		virtual ~Model() = default;
+		virtual ~Model()
+		{
+			std::for_each(Layers.begin(), Layers.end(), [](Layer* layer) { delete layer; });
+			Layers.clear();
+		}
 				
 		void ResetWeights()
 		{
