@@ -252,7 +252,10 @@ namespace dnn
 		{
 			const auto layerCount = Layers.size();
 			for (size_t i = 0; i < layerCount; i++)
+			{
 				delete Layers[i];
+				Layers[i] = nullptr;
+			}
 		};
 		
 		
