@@ -47,6 +47,8 @@ namespace dnn
 			std::locale::global(std::locale(""));
 		}
 
+		virtual ~Dataprovider() = default;
+
 		bool DatasetAvailable(const Datasets dataset)
 		{
 			std::filesystem::path path;
