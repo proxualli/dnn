@@ -10,7 +10,7 @@ namespace dnn
 		const size_t Group;
 		const size_t Groups;
 
-		ChannelSplit(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const size_t group, const size_t groups) :
+		ChannelSplit(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector< std::shared_ptr<Layer>>& inputs, const size_t group, const size_t groups) :
 			Layer(device, format, name, LayerTypes::ChannelSplit, 0, 0, inputs[0]->PaddedC / groups, inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs),
 			Group(group),
 			Groups(groups)

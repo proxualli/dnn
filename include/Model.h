@@ -146,8 +146,8 @@ namespace dnn
 		bool PersistOptimizer;
 		bool DisableLocking;
 		TrainingRate CurrentTrainingRate;
-		std::vector<Layer*> Layers;
-		std::vector<Cost*> CostLayers;
+		std::vector<std::shared_ptr<Layer>> Layers;
+		std::vector<std::shared_ptr<Cost>> CostLayers;
 		std::vector<TrainingRate> TrainingRates;
 		std::chrono::duration<Float> fpropTime;
 		std::chrono::duration<Float> bpropTime;
@@ -216,8 +216,8 @@ namespace dnn
 			GroupIndex(0),
 			CostIndex(0),
 			CostFuction(Costs::CategoricalCrossEntropy),
-			CostLayers(std::vector<Cost*>()),
-			Layers(std::vector<Layer*>()),
+			CostLayers(std::vector< std::shared_ptr<Cost>>()),
+			Layers(std::vector< std::shared_ptr<Layer>>()),
 			TrainingRates(std::vector<TrainingRate>()),
 			fpropTime(std::chrono::duration<Float>(Float(0))),
 			bpropTime(std::chrono::duration<Float>(Float(0))),
@@ -248,11 +248,7 @@ namespace dnn
 #endif
 		}
 
-		virtual ~Model()
-		{
-			std::for_each(Layers.begin(), Layers.end(), [](Layer* layer) { delete layer; });
-			Layers.clear();
-		}
+		virtual ~Model() = default;
 				
 		void ResetWeights()
 		{
@@ -291,37 +287,37 @@ namespace dnn
 
 		void SetHyperParameters(const Float adaDeltaEps, const Float adaGradEps, const Float adamEps, const Float adamBeta2, const Float adamaxEps, const Float adamaxBeta2, const Float rmsPropEps, const Float radamEps, const Float radamBeta1, const Float radamBeta2)
 		{
-			for (auto l = 0ull; l < Layers.size(); l++)
+			for_each(Layers.begin(), Layers.end(), [&](std::shared_ptr<Layer> layer)
 			{
-				Layers[l]->AdaDeltaEps = adaDeltaEps;
-				Layers[l]->AdaGradEps = adaGradEps;
-				Layers[l]->AdamEps = adamEps;
-				Layers[l]->AdamBeta2 = adamBeta2;
-				Layers[l]->AdamaxEps = adamaxEps;
-				Layers[l]->AdamaxBeta2 = adamaxBeta2;
-				Layers[l]->RMSPropEps = rmsPropEps;
-				Layers[l]->RAdamEps = radamEps;
-				Layers[l]->RAdamBeta1 = radamBeta1;
-				Layers[l]->RAdamBeta2 = radamBeta2;
-			}
+				layer->AdaDeltaEps = adaDeltaEps;
+				layer->AdaGradEps = adaGradEps;
+				layer->AdamEps = adamEps;
+				layer->AdamBeta2 = adamBeta2;
+				layer->AdamaxEps = adamaxEps;
+				layer->AdamaxBeta2 = adamaxBeta2;
+				layer->RMSPropEps = rmsPropEps;
+				layer->RAdamEps = radamEps;
+				layer->RAdamBeta1 = radamBeta1;
+				layer->RAdamBeta2 = radamBeta2;
+			});
 		}
 
-		std::vector<Layer*> GetLayerInputs(const std::vector<std::string>& inputs) const
+		std::vector<std::shared_ptr<Layer>> GetLayerInputs(const std::vector<std::string>& inputs) const
 		{
-			auto list = std::vector<Layer*>();
+			auto list = std::vector<std::shared_ptr<Layer>>();
 
 			bool exists;
 			for (auto name : inputs)
 			{
 				exists = false;
-				for (auto l = 0ull; l < Layers.size(); l++)
+				for_each(Layers.begin(), Layers.end(), [&](std::shared_ptr<Layer> layer)
 				{
-					if (Layers[l]->Name == name)
+					if (layer->Name == name)
 					{
-						list.push_back(Layers[l]);
+						list.push_back(layer);
 						exists = true;
 					}
-				}
+				});
 
 				if (!exists)
 					throw std::invalid_argument(std::string("Invalid input layer: " + name).c_str());
@@ -330,54 +326,50 @@ namespace dnn
 			return list;
 		}
 
-		std::vector<Layer*> GetLayerOutputs(const size_t layer) const
+		std::vector<std::shared_ptr<Layer>> GetLayerOutputs(const std::shared_ptr<Layer>& parentLayer) const
 		{
-			auto list = std::vector<Layer*>();
+			auto list = std::vector<std::shared_ptr<Layer>>();
 
-			for (auto l = 0ull; l < Layers.size(); l++)
+			for_each(Layers.begin(), Layers.end(), [&](std::shared_ptr<Layer> layer)
 			{
-				if (Layers[l]->Name == Layers[layer]->Name)
-					continue;
-
-				for (auto inputs : Layers[l]->Inputs)
-				{
-					if (inputs->Name == Layers[layer]->Name)
-					{
-						list.push_back(inputs);
-						break;
-					}
-				}
-			}
+				if (layer->Name != parentLayer->Name)
+					for (auto inputs : layer->Inputs)
+						if (inputs->Name == parentLayer->Name)
+						{
+							list.push_back(inputs);
+							break;
+						}
+			});
 
 			return list;
 		}
 
-		std::vector<Layer*> SetRelations()
+		std::vector<std::shared_ptr<Layer>> SetRelations()
 		{
 			// This determines how the backprop step correctly flows
 			// When SharesInput is true we have to add our diff vector instead of just copying it because there's more than one layer involved
-			for (auto l = 0ull; l < Layers.size(); l++)
+			for_each(Layers.begin(), Layers.end(), [&](std::shared_ptr<Layer> layer)
 			{
-				Layers[l]->SharesInput = false;
-				Layers[l]->Outputs = GetLayerOutputs(l);
-			}
+				layer->SharesInput = false;
+				layer->Outputs = GetLayerOutputs(layer);
+			});
 
-			auto unreferencedLayers = std::vector<Layer*>();
+			auto unreferencedLayers = std::vector<std::shared_ptr<Layer>>();
 
-			for (auto layer = 0ull; layer < Layers.size(); layer++)
+			for_each(Layers.begin(), Layers.end(), [&](std::shared_ptr<Layer> layer)
 			{
-				auto count = Layers[layer]->Outputs.size();
+				auto count = layer->Outputs.size();
 
 				if (count > 1)
 				{
 					for (auto l = 0ull; l < Layers.size(); l++)
 					{
-						if (Layers[l]->Name == Layers[layer]->Name)
+						if (Layers[l]->Name == layer->Name)
 							continue;
 
 						for (auto inputs : Layers[l]->Inputs)
 						{
-							if (inputs->Name == Layers[layer]->Name)
+							if (inputs->Name == layer->Name)
 							{
 								Layers[l]->SharesInput = true;
 								count--;
@@ -391,10 +383,10 @@ namespace dnn
 				}
 				else
 				{
-					if (count == 0 && Layers[layer]->LayerType != LayerTypes::Cost)
-						unreferencedLayers.push_back(Layers[layer]);
+					if (count == 0 && layer->LayerType != LayerTypes::Cost)
+						unreferencedLayers.push_back(layer);
 				}
-			}
+			});
 
 			return unreferencedLayers;
 		}

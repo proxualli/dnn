@@ -7,7 +7,7 @@ namespace dnn
 	{
 	public:
 		Input(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const size_t c, const size_t d, const size_t h, const size_t w) :
-			Layer(device, format, name, LayerTypes::Input, 0, 0, c, d, h, w, 0, 0, 0, std::vector<Layer*>())
+			Layer(device, format, name, LayerTypes::Input, 0, 0, c, d, h, w, 0, 0, 0, std::vector<std::shared_ptr<Layer>>())
 		{
 		}
 		

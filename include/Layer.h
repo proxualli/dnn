@@ -177,9 +177,9 @@ namespace dnn
 		const size_t PadH;
 		const size_t PadW;
 		const bool HasPadding;
-		const std::vector<Layer*> Inputs;
+		const std::vector<std::shared_ptr<Layer>> Inputs;
 		Layer* InputLayer;
-		std::vector<Layer*> Outputs;
+		std::vector<std::shared_ptr<Layer>> Outputs;
 		bool LayerBeforeCost;
 		bool SharesInput;
 		const dnnl::memory::format_tag Format;
@@ -239,7 +239,7 @@ namespace dnn
 		std::unique_ptr<dnnl::memory::desc> WeightsMemDesc;
 		std::unique_ptr<dnnl::memory::desc> PersistWeightsMemDesc;
 
-		Layer(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const LayerTypes layerType, const size_t weightCount, const size_t biasCount, const size_t c, const size_t d, const size_t h, const size_t w, const size_t padD, const size_t padH, const size_t padW, const std::vector<Layer*>& inputs, const bool hasBias = false) :
+		Layer(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const LayerTypes layerType, const size_t weightCount, const size_t biasCount, const size_t c, const size_t d, const size_t h, const size_t w, const size_t padD, const size_t padH, const size_t padW, const std::vector< std::shared_ptr<Layer>>& inputs, const bool hasBias = false) :
 			Device(device),
 			Format(format),
 			Name(name),
@@ -269,7 +269,7 @@ namespace dnn
 			PaddedC(DivUp(c)),
 			PaddedCDHW(layerType != LayerTypes::Input ? (DivUp(c) * d * h * w) : c * d * h * w),
 			HasPadding(padD > 0 || padH > 0 || padW > 0),
-			InputLayer(inputs.size() > 0 ? inputs[0] : nullptr),
+			InputLayer(inputs.size() > 0 ? inputs[0].get() : nullptr),
 			RandomEngine(std::mt19937(physicalSeed())),
 			Neurons(FloatVector()),
 			NeuronsD1(FloatVector()),
@@ -294,7 +294,7 @@ namespace dnn
 			RAdamEps(Float(1e-08)),
 			RAdamBeta1(Float(0.9)),
 			RAdamBeta2(Float(0.999)),
-			Outputs(std::vector<Layer*>()),
+			Outputs(std::vector< std::shared_ptr<Layer>>()),
 			UseDefaultParameters(true),
 			LockUpdate(false),
 			RefreshingStats(false),

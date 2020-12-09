@@ -12,7 +12,7 @@ namespace dnn
 		std::unordered_map<int, dnnl::memory> fwdArgs;
 
 	public:
-		ChannelMultiply(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs) :
+		ChannelMultiply(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector< std::shared_ptr<Layer>>& inputs) :
 			Layer(device, format, name, LayerTypes::ChannelMultiply, 0, 0, inputs[0]->C, inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs)
 		{
 			assert(Inputs.size() == 2);

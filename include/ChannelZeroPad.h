@@ -7,7 +7,7 @@ namespace dnn
 	class ChannelZeroPad final : public Layer
 	{
 	public:
-		ChannelZeroPad(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const size_t c) :
+		ChannelZeroPad(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<std::shared_ptr<Layer>>& inputs, const size_t c) :
 			Layer(device, format, name, LayerTypes::ChannelZeroPad, 0, 0, c, inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs)
 		{
 			assert(Inputs.size() == 1);

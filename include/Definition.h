@@ -241,7 +241,7 @@ namespace dnn
 							model->BatchNormEps = eps;
 							model->Dropout = dropout;
 
-							model->Layers.push_back(new Input(model->Device, model->Format, "Input", c, model->RandomCrop ? d : d + padD, model->RandomCrop ? h : h + padH, model->RandomCrop ? w : w + padW));
+							model->Layers.push_back(std::make_shared<Input>(model->Device, model->Format, "Input", c, model->RandomCrop ? d : d + padD, model->RandomCrop ? h : h + padH, model->RandomCrop ? w : w + padW));
 
 							isModel = false;
 
@@ -483,117 +483,117 @@ namespace dnn
 							case LayerTypes::Input:
 								break;
 							case LayerTypes::Activation:
-								model->Layers.push_back(new Activation(model->Device, model->Format, name, activationFunction, inputs, alpha, beta));
+								model->Layers.push_back(std::make_shared<Activation>(model->Device, model->Format, name, activationFunction, inputs, alpha, beta));
 								break;
 							case LayerTypes::Add:
-								model->Layers.push_back(new Add(model->Device, model->Format, name, inputs));
+								model->Layers.push_back(std::make_shared<Add>(model->Device, model->Format, name, inputs));
 								break;
 							case LayerTypes::Average:
-								model->Layers.push_back(new Average(model->Device, model->Format, name, inputs));
+								model->Layers.push_back(std::make_shared<Average>(model->Device, model->Format, name, inputs));
 								break;
 							case LayerTypes::AvgPooling:
-								model->Layers.push_back(new AvgPooling(model->Device, model->Format, name, inputs, kernelH, kernelW, strideH, strideW, padH, padW));
+								model->Layers.push_back(std::make_shared<AvgPooling>(model->Device, model->Format, name, inputs, kernelH, kernelW, strideH, strideW, padH, padW));
 								break;
 							case LayerTypes::BatchNorm:
-								model->Layers.push_back(new BatchNorm(model->Device, model->Format, name, inputs, scaling, momentum, eps, biases));
+								model->Layers.push_back(std::make_shared<BatchNorm>(model->Device, model->Format, name, inputs, scaling, momentum, eps, biases));
 								model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesScale, biasesLRM, biasesWDM);
 								break;
 							case LayerTypes::BatchNormHardLogistic:
-								model->Layers.push_back(new BatchNormActivation<HardLogistic, LayerTypes::BatchNormHardLogistic>(model->Device, model->Format, name, inputs, scaling, momentum, eps, biases));
+								model->Layers.push_back(std::make_shared<BatchNormActivation<HardLogistic, LayerTypes::BatchNormHardLogistic>>(model->Device, model->Format, name, inputs, scaling, momentum, eps, biases));
 								model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesScale, biasesLRM, biasesWDM);
 								break;
 							case LayerTypes::BatchNormHardSwish:
-								model->Layers.push_back(new BatchNormActivation<HardSwish, LayerTypes::BatchNormHardSwish>(model->Device, model->Format, name, inputs, scaling, momentum, eps, biases));
+								model->Layers.push_back(std::make_shared<BatchNormActivation<HardSwish, LayerTypes::BatchNormHardSwish>>(model->Device, model->Format, name, inputs, scaling, momentum, eps, biases));
 								model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesScale, biasesLRM, biasesWDM);
 								break;
 							case LayerTypes::BatchNormHardSwishDropout:
-								model->Layers.push_back(new BatchNormActivationDropout<HardSwish, LayerTypes::BatchNormHardSwishDropout>(model->Device, model->Format, name, inputs, dropout, scaling, momentum, eps, biases));
+								model->Layers.push_back(std::make_shared<BatchNormActivationDropout<HardSwish, LayerTypes::BatchNormHardSwishDropout>>(model->Device, model->Format, name, inputs, dropout, scaling, momentum, eps, biases));
 								model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesScale, biasesLRM, biasesWDM);
 								break;
 							case LayerTypes::BatchNormRelu:
-								model->Layers.push_back(new BatchNormRelu(model->Device, model->Format, name, inputs, scaling, momentum, eps, biases));
+								model->Layers.push_back(std::make_shared<BatchNormRelu>(model->Device, model->Format, name, inputs, scaling, momentum, eps, biases));
 								model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesScale, biasesLRM, biasesWDM);
 								break;
 							case LayerTypes::BatchNormReluDropout:
-								model->Layers.push_back(new BatchNormActivationDropout<Relu, LayerTypes::BatchNormReluDropout>(model->Device, model->Format, name, inputs, dropout, scaling, momentum, eps, biases));
+								model->Layers.push_back(std::make_shared<BatchNormActivationDropout<Relu, LayerTypes::BatchNormReluDropout>>(model->Device, model->Format, name, inputs, dropout, scaling, momentum, eps, biases));
 								model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesScale, biasesLRM, biasesWDM);
 								break;
 							case LayerTypes::BatchNormSwish:
-								model->Layers.push_back(new BatchNormActivation<Swish, LayerTypes::BatchNormSwish>(model->Device, model->Format, name, inputs, scaling, momentum, eps, biases));
+								model->Layers.push_back(std::make_shared<BatchNormActivation<Swish, LayerTypes::BatchNormSwish>>(model->Device, model->Format, name, inputs, scaling, momentum, eps, biases));
 								model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesScale, biasesLRM, biasesWDM);
 								break;
 							case LayerTypes::ChannelMultiply:
-								model->Layers.push_back(new ChannelMultiply(model->Device, model->Format, name, inputs));
+								model->Layers.push_back(std::make_shared<ChannelMultiply>(model->Device, model->Format, name, inputs));
 								break;
 							case LayerTypes::ChannelShuffle:
-								model->Layers.push_back(new ChannelShuffle(model->Device, model->Format, name, inputs, groups));
+								model->Layers.push_back(std::make_shared<ChannelShuffle>(model->Device, model->Format, name, inputs, groups));
 								break;
 							case LayerTypes::ChannelSplit:
-								model->Layers.push_back(new ChannelSplit(model->Device, model->Format, name, inputs, group, groups));
+								model->Layers.push_back(std::make_shared<ChannelSplit>(model->Device, model->Format, name, inputs, group, groups));
 								break;
 							case LayerTypes::ChannelZeroPad:
-								model->Layers.push_back(new ChannelZeroPad(model->Device, model->Format, name, inputs, c));
+								model->Layers.push_back(std::make_shared<ChannelZeroPad>(model->Device, model->Format, name, inputs, c));
 								break;
 							case LayerTypes::Concat:
-								model->Layers.push_back(new Concat(model->Device, model->Format, name, inputs));
+								model->Layers.push_back(std::make_shared<Concat>(model->Device, model->Format, name, inputs));
 								break;
 							case LayerTypes::Convolution:
-								model->Layers.push_back(new Convolution(model->Device, model->Format, name, inputs, c, kernelH, kernelW, strideH, strideW, dilationH, dilationW, padH, padW, groups, biases));
+								model->Layers.push_back(std::make_shared<Convolution>(model->Device, model->Format, name, inputs, c, kernelH, kernelW, strideH, strideW, dilationH, dilationW, padH, padW, groups, biases));
 								model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesScale, biasesLRM, biasesWDM);
 								break;
 							case LayerTypes::ConvolutionTranspose:
-								model->Layers.push_back(new ConvolutionTranspose(model->Device, model->Format, name, inputs, c, kernelH, kernelW, strideH, strideW, dilationH, dilationW, padH, padW, biases));
+								model->Layers.push_back(std::make_shared<ConvolutionTranspose>(model->Device, model->Format, name, inputs, c, kernelH, kernelW, strideH, strideW, dilationH, dilationW, padH, padW, biases));
 								model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesScale, biasesLRM, biasesWDM);
 								break;
 							case LayerTypes::Cost:
-								model->Layers.push_back(new Cost(model->Device, model->Format, name, costFunction, groupIndex, labelIndex, c, inputs, labelTrue, labelFalse, weight, epsSpecified ? eps : Float(0)));
-								model->CostLayers.push_back(dynamic_cast<Cost*>(model->Layers[model->Layers.size() - 1]));
+								model->Layers.push_back(std::make_shared<Cost>(model->Device, model->Format, name, costFunction, groupIndex, labelIndex, c, inputs, labelTrue, labelFalse, weight, epsSpecified ? eps : Float(0)));
+								model->CostLayers.push_back(std::shared_ptr<Cost>(dynamic_cast<Cost*>(model->Layers[model->Layers.size() - 1].get())));
 								model->CostFuction = costFunction;
 								break;
 							case LayerTypes::Dense:
-								model->Layers.push_back(new Dense(model->Device, model->Format, name, c, inputs, biases));
+								model->Layers.push_back(std::make_shared<Dense>(model->Device, model->Format, name, c, inputs, biases));
 								model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesScale, biasesLRM, biasesWDM);
 								break;
 							case LayerTypes::DepthwiseConvolution:
-								model->Layers.push_back(new DepthwiseConvolution(model->Device, model->Format, name, inputs, kernelH, kernelW, strideH, strideW, dilationH, dilationW, padH, padW, multiplier, biases));
+								model->Layers.push_back(std::make_shared<DepthwiseConvolution>(model->Device, model->Format, name, inputs, kernelH, kernelW, strideH, strideW, dilationH, dilationW, padH, padW, multiplier, biases));
 								model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesScale, biasesLRM, biasesWDM);
 								break;
 							case LayerTypes::Divide:
-								model->Layers.push_back(new Divide(model->Device, model->Format, name, inputs));
+								model->Layers.push_back(std::make_shared<Divide>(model->Device, model->Format, name, inputs));
 								break;
 							case LayerTypes::Dropout:
-								model->Layers.push_back(new Dropout(model->Device, model->Format, name, inputs, dropout));
+								model->Layers.push_back(std::make_shared<Dropout>(model->Device, model->Format, name, inputs, dropout));
 								break;
 							case LayerTypes::GlobalAvgPooling:
-								model->Layers.push_back(new GlobalAvgPooling(model->Device, model->Format, name, inputs));
+								model->Layers.push_back(std::make_shared<GlobalAvgPooling>(model->Device, model->Format, name, inputs));
 								break;
 							case LayerTypes::GlobalMaxPooling:
-								model->Layers.push_back(new GlobalMaxPooling(model->Device, model->Format, name, inputs));
+								model->Layers.push_back(std::make_shared<GlobalMaxPooling>(model->Device, model->Format, name, inputs));
 								break;
 							case LayerTypes::LocalResponseNormalization:
-								model->Layers.push_back(new LocalResponseNormalization(model->Device, model->Format, name, inputs, acrossChannels, localSize, alpha, beta, k));
+								model->Layers.push_back(std::make_shared<LocalResponseNormalization>(model->Device, model->Format, name, inputs, acrossChannels, localSize, alpha, beta, k));
 								break;
 							case LayerTypes::Max:
-								model->Layers.push_back(new Max(model->Device, model->Format, name, inputs));
+								model->Layers.push_back(std::make_shared<Max>(model->Device, model->Format, name, inputs));
 								break;
 							case LayerTypes::MaxPooling:
-								model->Layers.push_back(new MaxPooling(model->Device, model->Format, name, inputs, kernelH, kernelW, strideH, strideW, padH, padW));
+								model->Layers.push_back(std::make_shared<MaxPooling>(model->Device, model->Format, name, inputs, kernelH, kernelW, strideH, strideW, padH, padW));
 								break;
 							case LayerTypes::Min:
-								model->Layers.push_back(new Min(model->Device, model->Format, name, inputs));
+								model->Layers.push_back(std::make_shared<Min>(model->Device, model->Format, name, inputs));
 								break;
 							case LayerTypes::Multiply:
-								model->Layers.push_back(new Multiply(model->Device, model->Format, name, inputs));
+								model->Layers.push_back(std::make_shared<Multiply>(model->Device, model->Format, name, inputs));
 								break;
 							case LayerTypes::PartialDepthwiseConvolution:
-								model->Layers.push_back(new PartialDepthwiseConvolution(model->Device, model->Format, name, inputs, group, groups, kernelH, kernelW, strideH, strideW, dilationH, dilationW, padH, padW, multiplier, biases));
+								model->Layers.push_back(std::make_shared<PartialDepthwiseConvolution>(model->Device, model->Format, name, inputs, group, groups, kernelH, kernelW, strideH, strideW, dilationH, dilationW, padH, padW, multiplier, biases));
 								model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesScale, biasesLRM, biasesWDM);
 								break;
 							case LayerTypes::Resampling:
-								model->Layers.push_back(new Resampling(model->Device, model->Format, name, inputs, algorithm, factorH, factorW));
+								model->Layers.push_back(std::make_shared<Resampling>(model->Device, model->Format, name, inputs, algorithm, factorH, factorW));
 								break;
 							case LayerTypes::Substract:
-								model->Layers.push_back(new Substract(model->Device, model->Format, name, inputs));
+								model->Layers.push_back(std::make_shared<Substract>(model->Device, model->Format, name, inputs));
 								break;
 							}
 						}
@@ -2252,8 +2252,8 @@ namespace dnn
 					goto FAIL;
 				}
 
-				model->Layers.push_back(new Cost(model->Device, model->Format, layerNames[model->Layers.size()].first, costFunction, groupIndex, labelIndex, c, model->GetLayerInputs(inputsStr), labelTrue, labelFalse, weight, epsSpecified ? eps : Float(0)));
-				model->CostLayers.push_back(dynamic_cast<Cost*>(model->Layers[model->Layers.size() - 1]));
+				model->Layers.push_back(std::make_shared<Cost>(model->Device, model->Format, layerNames[model->Layers.size()].first, costFunction, groupIndex, labelIndex, c, model->GetLayerInputs(inputsStr), labelTrue, labelFalse, weight, epsSpecified ? eps : Float(0)));
+				model->CostLayers.push_back(std::shared_ptr<Cost>(dynamic_cast<Cost*>(model->Layers[model->Layers.size() - 1].get())));
 				model->CostFuction = costFunction;
 			}
 

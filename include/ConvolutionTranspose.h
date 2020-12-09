@@ -38,7 +38,7 @@ namespace dnn
 		const size_t DilationKernelH;
 		const size_t DilationKernelW;
 
-		ConvolutionTranspose(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const size_t c, const size_t kernelH, const size_t kernelW, const size_t strideH, const size_t strideW, const size_t dilationH, const size_t dilationW, const size_t padH, const size_t padW, const bool hasBias) :
+		ConvolutionTranspose(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<std::shared_ptr<Layer>>& inputs, const size_t c, const size_t kernelH, const size_t kernelW, const size_t strideH, const size_t strideW, const size_t dilationH, const size_t dilationW, const size_t padH, const size_t padW, const bool hasBias) :
 			Layer(device, format, name, LayerTypes::ConvolutionTranspose, inputs[0]->C* c* kernelH* kernelW, c, c, inputs[0]->D, strideH* ((inputs[0]->H - 1) + (1 + (kernelH - 1) * dilationH) - (padH * 2)), strideW* ((inputs[0]->W - 1) + (1 + (kernelW - 1) * dilationW) - (padW * 2)), 0, padH, padW, inputs, hasBias),
 			KernelH(kernelH),
 			KernelW(kernelW),
