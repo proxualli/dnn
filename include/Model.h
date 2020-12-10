@@ -326,9 +326,9 @@ namespace dnn
 			return list;
 		}
 
-		std::vector<std::shared_ptr<Layer>> GetLayerOutputs(const Layer& parentLayer) const
+		std::vector<Layer*> GetLayerOutputs(const Layer& parentLayer) const
 		{
-			auto list = std::vector<std::shared_ptr<Layer>>();
+			auto list = std::vector<Layer*>();
 
 			for (auto &layer : Layers)
 				if (layer->Name != parentLayer.Name)
