@@ -274,9 +274,9 @@ namespace dnn
 			std::string nameLower(name);
 			std::transform(nameLower.begin(), nameLower.end(), nameLower.begin(), ::tolower);
 			
-			for (auto &layer : Layers)
+			for (auto layer : Layers)
 			{
-				auto &layerName = layer->Name;
+				auto layerName = layer->Name;
 				std::transform(layerName.begin(), layerName.end(), layerName.begin(), ::tolower);
 				if (layerName == nameLower)
 					return false;
@@ -287,7 +287,7 @@ namespace dnn
 
 		void SetHyperParameters(const Float adaDeltaEps, const Float adaGradEps, const Float adamEps, const Float adamBeta2, const Float adamaxEps, const Float adamaxBeta2, const Float rmsPropEps, const Float radamEps, const Float radamBeta1, const Float radamBeta2)
 		{
-			for (auto &layer : Layers)
+			for (auto layer : Layers)
 			{
 				layer->AdaDeltaEps = adaDeltaEps;
 				layer->AdaGradEps = adaGradEps;
@@ -307,10 +307,10 @@ namespace dnn
 			auto list = std::vector<Layer*>();
 
 			bool exists;
-			for (auto &name : inputs)
+			for (auto name : inputs)
 			{
 				exists = false;
-				for (auto &layer : Layers)
+				for (auto layer : Layers)
 				{
 					if (layer->Name == name)
 					{
@@ -330,9 +330,9 @@ namespace dnn
 		{
 			auto list = std::vector<Layer*>();
 
-			for (auto &layer : Layers)
+			for (auto layer : Layers)
 				if (layer->Name != parentLayer->Name)
-					for (auto &inputs : layer->Inputs)
+					for (auto inputs : layer->Inputs)
 						if (inputs->Name == parentLayer->Name)
 						{
 							list.push_back(inputs);
@@ -346,7 +346,7 @@ namespace dnn
 		{
 			// This determines how the backprop step correctly flows
 			// When SharesInput is true we have to add our diff vector instead of just copying it because there's more than one layer involved
-			for (auto &layer : Layers)
+			for (auto layer : Layers)
 			{
 				layer->SharesInput = false;
 				//layer->Outputs = GetLayerOutputs(*layer.get());
@@ -354,18 +354,18 @@ namespace dnn
 
 			auto unreferencedLayers = std::vector<Layer*>();
 
-			for (auto &layer : Layers)
+			for (auto layer : Layers)
 			{
 				auto count = GetLayerOutputs(layer.get()).size();
 
 				if (count > 1)
 				{
-					for (auto &l : Layers)
+					for (auto l : Layers)
 					{
 						if (l->Name == layer->Name)
 							continue;
 
-						for (auto &inputs : l->Inputs)
+						for (auto inputs : l->Inputs)
 						{
 							if (inputs->Name == layer->Name)
 							{
@@ -437,7 +437,7 @@ namespace dnn
 		{
 			std::streamsize weightsSize = 0;
 
-			for (auto &layer : Layers)
+			for (auto layer : Layers)
 				weightsSize += layer->GetWeightsSize(persistOptimizer, Optimizer);
 
 			return weightsSize;
@@ -447,7 +447,7 @@ namespace dnn
 		{
 			size_t neuronsSize = 0;
 
-			for (auto &layer : Layers)
+			for (auto layer : Layers)
 				neuronsSize += layer->GetNeuronsSize(batchSize);
 
 			return neuronsSize;
@@ -455,7 +455,7 @@ namespace dnn
 
 		bool BatchNormalizationUsed() const
 		{
-			for (auto &layer : Layers)
+			for (auto layer : Layers)
 				if (layer->LayerType == LayerTypes::BatchNorm || layer->LayerType == LayerTypes::BatchNormHardLogistic || layer->LayerType == LayerTypes::BatchNormHardSwish || layer->LayerType == LayerTypes::BatchNormHardSwishDropout || layer->LayerType == LayerTypes::BatchNormRelu || layer->LayerType == LayerTypes::BatchNormReluDropout || layer->LayerType == LayerTypes::BatchNormSwish)
 					return true;
 
@@ -591,7 +591,7 @@ namespace dnn
 #ifdef DNN_STOCHASTIC
 		void CostFunction(const States state)
 		{
-			for (auto &cost : CostLayers)
+			for (auto cost : CostLayers)
 			{
 				auto loss = Float(0);
 
@@ -607,7 +607,7 @@ namespace dnn
 
 		void Recognized(const States state, const std::vector<size_t>& sampleLabel)
 		{
-			for (auto &cost : CostLayers)
+			for (auto cost : CostLayers)
 			{
 				const auto inputLayer = cost->InputLayer;
 				const auto labelIndex = cost->LabelIndex;
@@ -639,7 +639,7 @@ namespace dnn
 
 		void CostFunctionBatch(const States state, const size_t batchSize, const bool overflow, const size_t skipCount)
 		{
-			for (auto &cost : CostLayers)
+			for (auto cost : CostLayers)
 			{
 				for (auto b = 0ull; b < batchSize; b++)
 				{
@@ -662,7 +662,7 @@ namespace dnn
 
 		void RecognizedBatch(const States state, const size_t batchSize, const bool overflow, const size_t skipCount, const std::vector<std::vector<size_t>>& sampleLabels)
 		{
-			for (auto &cost : CostLayers)
+			for (auto cost : CostLayers)
 			{
 				const auto &inputLayer = cost->InputLayer;
 				const auto labelIndex = cost->LabelIndex;
@@ -1172,7 +1172,7 @@ namespace dnn
 #ifdef DNN_STOCHASTIC
 				}
 #endif
-			for (auto &cost : CostLayers)
+			for (auto cost : CostLayers)
 			{
 				cost->AvgTestLoss = cost->TestLoss / DataProv->TestingSamplesCount;
 				cost->TestErrorPercentage = cost->TestErrors / Float(DataProv->TestingSamplesCount / 100);
