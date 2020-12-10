@@ -330,17 +330,15 @@ namespace dnn
 		{
 			auto list = std::vector<std::shared_ptr<Layer>>();
 
-			for (auto layer : Layers)
-			{
+			for (auto &layer : Layers)
 				if (layer->Name != parentLayer.Name)
-					for (auto inputs : layer->Inputs)
+					for (auto &inputs : layer->Inputs)
 						if (inputs->Name == parentLayer.Name)
 						{
 							list.push_back(inputs);
 							break;
 						}
-			}
-
+			
 			return list;
 		}
 
@@ -351,27 +349,27 @@ namespace dnn
 			for (auto &layer : Layers)
 			{
 				layer->SharesInput = false;
-				layer->Outputs = GetLayerOutputs(*layer.get());
+				//layer->Outputs = GetLayerOutputs(*layer.get());
 			}
 
 			auto unreferencedLayers = std::vector<std::shared_ptr<Layer>>();
 
 			for (auto &layer : Layers)
 			{
-				auto count = layer->Outputs.size();
+				auto count = GetLayerOutputs(*layer.get()).size();
 
 				if (count > 1)
 				{
-					for (auto l = 0ull; l < Layers.size(); l++)
+					for (auto &l : Layers)
 					{
-						if (Layers[l]->Name == layer->Name)
+						if (l->Name == layer->Name)
 							continue;
 
-						for (auto inputs : Layers[l]->Inputs)
+						for (auto &inputs : l->Inputs)
 						{
 							if (inputs->Name == layer->Name)
 							{
-								Layers[l]->SharesInput = true;
+								l->SharesInput = true;
 								count--;
 								break;
 							}

@@ -183,7 +183,7 @@ namespace dnn
 		const bool HasPadding;
 		const std::vector<std::shared_ptr<Layer>> Inputs;
 		std::shared_ptr<Layer> InputLayer;
-		std::vector<std::shared_ptr<Layer>> Outputs;
+		//std::vector<std::shared_ptr<Layer>> Outputs;
 		bool LayerBeforeCost;
 		bool SharesInput;
 		const dnnl::memory::format_tag Format;
@@ -298,7 +298,7 @@ namespace dnn
 			RAdamEps(Float(1e-08)),
 			RAdamBeta1(Float(0.9)),
 			RAdamBeta2(Float(0.999)),
-			Outputs(std::vector<std::shared_ptr<Layer>>()),
+			//Outputs(std::vector<std::shared_ptr<Layer>>()),
 			UseDefaultParameters(true),
 			LockUpdate(false),
 			RefreshingStats(false),

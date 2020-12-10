@@ -1,5 +1,6 @@
 #pragma once
 #include "Model.h"
+#include <Model.h>
 
 namespace dnn
 {
@@ -427,8 +428,8 @@ namespace dnn
 
 					if (!isModel)
 					{
-						const auto name = layerNames[model->Layers.size()].first;
-						const auto inputs = model->GetLayerInputs(inputsStr);
+						const auto &name = layerNames[model->Layers.size()].first;
+						const auto &inputs = model->GetLayerInputs(inputsStr);
 
 						switch (layerType)
 						{
@@ -2284,8 +2285,8 @@ namespace dnn
 				goto FAIL;
 			}
 
-			for (auto l : model->CostLayers)
-				if (l->Outputs.size() > 0)
+			for (auto &l : model->CostLayers)
+				if (model->GetLayerOutputs(*l.get()).size() > 0)
 				{
 					for (auto t : layerNames)
 						if (t.first == l->Name)
