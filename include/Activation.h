@@ -222,7 +222,7 @@ namespace dnn
 		const Float Alpha;
 		const Float Beta;
 
-		Activation(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const Activations activation, const std::vector< std::shared_ptr<Layer>>& inputs, const Float alpha = Float(0), const Float beta = Float(0)) :
+		Activation(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const Activations activation, const std::vector<Layer*>& inputs, const Float alpha = Float(0), const Float beta = Float(0)) :
 			Layer(device, format, name, LayerTypes::Activation, 0, 0, inputs[0]->C, inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs, false),
 			ActivationFunction(activation),
 			Alpha(alpha),

@@ -21,7 +21,7 @@ namespace dnn
 		bool reorderBwdDiffWeights;
 
 	public:
-		Dense(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const size_t c, const std::vector<std::shared_ptr<Layer>>& inputs, const bool hasBias) :
+		Dense(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const size_t c, const std::vector<Layer*>& inputs, const bool hasBias) :
 			Layer(device, format, name, LayerTypes::Dense, c* inputs[0]->CDHW, c, c, 1, 1, 1, 0, 0, 0, inputs, hasBias),
 			reorderFwdSrc(false),
 			reorderBwdSrc(false),

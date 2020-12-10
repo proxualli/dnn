@@ -26,7 +26,7 @@ namespace dnn
 		const size_t KernelW;
 		const Float Scale;
 
-		GlobalAvgPooling(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<std::shared_ptr<Layer>>& inputs) :
+		GlobalAvgPooling(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs) :
 			Layer(device, format, name, LayerTypes::GlobalAvgPooling, 0, 0, inputs[0]->C, 1, 1, 1, 0, 0, 0, inputs),
 			KernelH(inputs[0]->H),
 			KernelW(inputs[0]->W),

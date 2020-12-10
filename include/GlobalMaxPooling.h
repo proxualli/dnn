@@ -24,7 +24,7 @@ namespace dnn
 		const size_t KernelW;
 		const Float Scale;
 
-		GlobalMaxPooling(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<std::shared_ptr<Layer>>& inputs) :
+		GlobalMaxPooling(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs) :
 			Layer(device, format, name, LayerTypes::GlobalMaxPooling, 0, 0, inputs[0]->C, 1, 1, 1, 0, 0, 0, inputs),
 			KernelH(inputs[0]->H),
 			KernelW(inputs[0]->W),

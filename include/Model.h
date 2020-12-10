@@ -302,9 +302,9 @@ namespace dnn
 			}
 		}
 
-		std::vector<std::shared_ptr<Layer>> GetLayerInputs(const std::vector<std::string>& inputs) const
+		std::vector<Layer*> GetLayerInputs(const std::vector<std::string>& inputs) const
 		{
-			auto list = std::vector<std::shared_ptr<Layer>>();
+			auto list = std::vector<Layer*>();
 
 			bool exists;
 			for (auto name : inputs)
@@ -314,7 +314,7 @@ namespace dnn
 				{
 					if (layer->Name == name)
 					{
-						list.push_back(layer);
+						list.push_back(layer.get());
 						exists = true;
 					}
 				}
@@ -326,15 +326,15 @@ namespace dnn
 			return list;
 		}
 
-		std::vector<std::shared_ptr<Layer>> GetLayerOutputs(const std::shared_ptr<Layer>& parentLayer) const
+		std::vector<Layer*> GetLayerOutputs(const Layer& parentLayer) const
 		{
-			auto list = std::vector<std::shared_ptr<Layer>>();
+			auto list = std::vector<Layer*>();
 
 			for (auto layer : Layers)
 			{
-				if (layer->Name != parentLayer->Name)
+				if (layer->Name != parentLayer.Name)
 					for (auto inputs : layer->Inputs)
-						if (inputs->Name == parentLayer->Name)
+						if (inputs->Name == parentLayer.Name)
 						{
 							list.push_back(inputs);
 							break;
@@ -344,17 +344,17 @@ namespace dnn
 			return list;
 		}
 
-		std::vector<std::shared_ptr<Layer>> SetRelations()
+		std::vector<Layer*> SetRelations()
 		{
 			// This determines how the backprop step correctly flows
 			// When SharesInput is true we have to add our diff vector instead of just copying it because there's more than one layer involved
 			for (auto layer : Layers)
 			{
 				layer->SharesInput = false;
-				layer->Outputs = GetLayerOutputs(layer);
+				layer->Outputs = GetLayerOutputs(*layer.get());
 			}
 
-			auto unreferencedLayers = std::vector<std::shared_ptr<Layer>>();
+			auto unreferencedLayers = std::vector<Layer*>();
 
 			for (auto layer : Layers)
 			{
@@ -384,7 +384,7 @@ namespace dnn
 				else
 				{
 					if (count == 0 && layer->LayerType != LayerTypes::Cost)
-						unreferencedLayers.push_back(layer);
+						unreferencedLayers.push_back(layer.get());
 				}
 			}
 

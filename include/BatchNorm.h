@@ -34,7 +34,7 @@ namespace dnn
 		FloatVector RunningVariance;
 		FloatVector InvStdDev;
 
-		BatchNorm(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector< std::shared_ptr<Layer>>& inputs, const bool scaling = true, const Float momentum = Float(0.99), const Float eps = Float(1e-04), const bool hasBias = true) :
+		BatchNorm(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const bool scaling = true, const Float momentum = Float(0.99), const Float eps = Float(1e-04), const bool hasBias = true) :
 			Layer(device, format, name, LayerTypes::BatchNorm, inputs[0]->C, inputs[0]->C, inputs[0]->C, inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs, hasBias),
 			Scaling(scaling),
 			Eps(eps),
