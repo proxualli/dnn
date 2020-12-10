@@ -146,7 +146,7 @@ namespace dnn
 		bool PersistOptimizer;
 		bool DisableLocking;
 		TrainingRate CurrentTrainingRate;
-		std::vector<std::shared_ptr<Layer>> Layers;
+		std::vector<std::unique_ptr<Layer>> Layers;
 		std::vector<Cost*> CostLayers;
 		std::vector<TrainingRate> TrainingRates;
 		std::chrono::duration<Float> fpropTime;
@@ -217,7 +217,7 @@ namespace dnn
 			CostIndex(0),
 			CostFuction(Costs::CategoricalCrossEntropy),
 			CostLayers(std::vector<Cost*>()),
-			Layers(std::vector< std::shared_ptr<Layer>>()),
+			Layers(std::vector< std::unique_ptr<Layer>>()),
 			TrainingRates(std::vector<TrainingRate>()),
 			fpropTime(std::chrono::duration<Float>(Float(0))),
 			bpropTime(std::chrono::duration<Float>(Float(0))),
@@ -274,7 +274,7 @@ namespace dnn
 			std::string nameLower(name);
 			std::transform(nameLower.begin(), nameLower.end(), nameLower.begin(), ::tolower);
 			
-			for (auto layer : Layers)
+			for (auto &layer : Layers)
 			{
 				auto layerName = layer->Name;
 				std::transform(layerName.begin(), layerName.end(), layerName.begin(), ::tolower);
@@ -287,7 +287,7 @@ namespace dnn
 
 		void SetHyperParameters(const Float adaDeltaEps, const Float adaGradEps, const Float adamEps, const Float adamBeta2, const Float adamaxEps, const Float adamaxBeta2, const Float rmsPropEps, const Float radamEps, const Float radamBeta1, const Float radamBeta2)
 		{
-			for (auto layer : Layers)
+			for (auto &layer : Layers)
 			{
 				layer->AdaDeltaEps = adaDeltaEps;
 				layer->AdaGradEps = adaGradEps;
@@ -310,7 +310,7 @@ namespace dnn
 			for (auto name : inputs)
 			{
 				exists = false;
-				for (auto layer : Layers)
+				for (auto &layer : Layers)
 				{
 					if (layer->Name == name)
 					{
@@ -330,7 +330,7 @@ namespace dnn
 		{
 			auto list = std::vector<Layer*>();
 
-			for (auto layer : Layers)
+			for (auto &layer : Layers)
 				if (layer->Name != parentLayer->Name)
 					for (auto inputs : layer->Inputs)
 						if (inputs->Name == parentLayer->Name)
@@ -346,7 +346,7 @@ namespace dnn
 		{
 			// This determines how the backprop step correctly flows
 			// When SharesInput is true we have to add our diff vector instead of just copying it because there's more than one layer involved
-			for (auto layer : Layers)
+			for (auto &layer : Layers)
 			{
 				layer->SharesInput = false;
 				//layer->Outputs = GetLayerOutputs(*layer.get());
@@ -354,13 +354,13 @@ namespace dnn
 
 			auto unreferencedLayers = std::vector<Layer*>();
 
-			for (auto layer : Layers)
+			for (auto &layer : Layers)
 			{
 				auto count = GetLayerOutputs(layer.get()).size();
 
 				if (count > 1)
 				{
-					for (auto l : Layers)
+					for (auto &l : Layers)
 					{
 						if (l->Name == layer->Name)
 							continue;
@@ -437,7 +437,7 @@ namespace dnn
 		{
 			std::streamsize weightsSize = 0;
 
-			for (auto layer : Layers)
+			for (auto &layer : Layers)
 				weightsSize += layer->GetWeightsSize(persistOptimizer, Optimizer);
 
 			return weightsSize;
@@ -447,7 +447,7 @@ namespace dnn
 		{
 			size_t neuronsSize = 0;
 
-			for (auto layer : Layers)
+			for (auto &layer : Layers)
 				neuronsSize += layer->GetNeuronsSize(batchSize);
 
 			return neuronsSize;
@@ -455,7 +455,7 @@ namespace dnn
 
 		bool BatchNormalizationUsed() const
 		{
-			for (auto layer : Layers)
+			for (auto &layer : Layers)
 				if (layer->LayerType == LayerTypes::BatchNorm || layer->LayerType == LayerTypes::BatchNormHardLogistic || layer->LayerType == LayerTypes::BatchNormHardSwish || layer->LayerType == LayerTypes::BatchNormHardSwishDropout || layer->LayerType == LayerTypes::BatchNormRelu || layer->LayerType == LayerTypes::BatchNormReluDropout || layer->LayerType == LayerTypes::BatchNormSwish)
 					return true;
 
