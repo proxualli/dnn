@@ -147,7 +147,7 @@ namespace dnn
 		bool DisableLocking;
 		TrainingRate CurrentTrainingRate;
 		std::vector<std::shared_ptr<Layer>> Layers;
-		std::vector<std::shared_ptr<Cost>> CostLayers;
+		std::vector<std::weak_ptr<Cost>> CostLayers;
 		std::vector<TrainingRate> TrainingRates;
 		std::chrono::duration<Float> fpropTime;
 		std::chrono::duration<Float> bpropTime;
@@ -216,7 +216,7 @@ namespace dnn
 			GroupIndex(0),
 			CostIndex(0),
 			CostFuction(Costs::CategoricalCrossEntropy),
-			CostLayers(std::vector<std::shared_ptr<Cost>>()),
+			CostLayers(std::vector<std::weak_ptr<Cost>>()),
 			Layers(std::vector< std::shared_ptr<Layer>>()),
 			TrainingRates(std::vector<TrainingRate>()),
 			fpropTime(std::chrono::duration<Float>(Float(0))),
@@ -641,62 +641,69 @@ namespace dnn
 
 		void CostFunctionBatch(const States state, const size_t batchSize, const bool overflow, const size_t skipCount)
 		{
-			for (auto cost : CostLayers)
+			for (auto costPtr : CostLayers)
 			{
-				for (auto b = 0ull; b < batchSize; b++)
+				if (std::shared_ptr<Cost> cost = costPtr.lock())
 				{
-					if (overflow && b >= skipCount)
-						return;
 
-					const auto batchOffset = b * cost->C;
-					auto loss = Float(0);
+					for (auto b = 0ull; b < batchSize; b++)
+					{
+						if (overflow && b >= skipCount)
+							return;
 
-					for (auto i = 0ull; i < cost->C; i++)
-						loss += cost->Neurons[batchOffset + i] * cost->Weight;
+						const auto batchOffset = b * cost->C;
+						auto loss = Float(0);
 
-					if (state == States::Training)
-						cost->TrainLoss += loss;
-					else
-						cost->TestLoss += loss;
+						for (auto i = 0ull; i < cost->C; i++)
+							loss += cost->Neurons[batchOffset + i] * cost->Weight;
+
+						if (state == States::Training)
+							cost->TrainLoss += loss;
+						else
+							cost->TestLoss += loss;
+					}
 				}
 			}
 		}
 
 		void RecognizedBatch(const States state, const size_t batchSize, const bool overflow, const size_t skipCount, const std::vector<std::vector<size_t>>& sampleLabels)
 		{
-			for (auto cost : CostLayers)
+			for (auto costPtr : CostLayers)
 			{
-				const auto inputLayer = cost->InputLayer;
-				const auto labelIndex = cost->LabelIndex;
-
-				for (auto b = 0ull; b < batchSize; b++)
+				if (std::shared_ptr<Cost> cost = costPtr.lock())
 				{
-					if (overflow && b >= skipCount)
-						return;
+					const auto inputLayer = cost->InputLayer;
+					const auto labelIndex = cost->LabelIndex;
 
-					const auto sampleOffset = b * inputLayer->C;
-
-					auto hotIndex = 0ull;
-					auto maxValue = std::numeric_limits<Float>::lowest();
-					for (auto i = 0ull; i < inputLayer->C; i++)
+					for (auto b = 0ull; b < batchSize; b++)
 					{
-						if (inputLayer->Neurons[i + sampleOffset] > maxValue)
+						if (overflow && b >= skipCount)
+							return;
+
+						const auto sampleOffset = b * inputLayer->C;
+
+						auto hotIndex = 0ull;
+						auto maxValue = std::numeric_limits<Float>::lowest();
+						for (auto i = 0ull; i < inputLayer->C; i++)
 						{
-							maxValue = inputLayer->Neurons[i + sampleOffset];
-							hotIndex = i;
+							if (inputLayer->Neurons[i + sampleOffset] > maxValue)
+							{
+								maxValue = inputLayer->Neurons[i + sampleOffset];
+								hotIndex = i;
+							}
 						}
-					}
 
-					if (hotIndex != sampleLabels[b][labelIndex])
-					{
-						if (state == States::Training)
-							cost->TrainErrors++;
-						else
-							cost->TestErrors++;
-					}
+						if (hotIndex != sampleLabels[b][labelIndex])
+						{
+							if (state == States::Training)
+								cost->TrainErrors++;
+							else
+								cost->TestErrors++;
+						}
 
-					if (state == States::Testing)
-						cost->ConfusionMatrix[hotIndex][sampleLabels[b][labelIndex]]++;
+						if (state == States::Testing)
+							cost->ConfusionMatrix[hotIndex][sampleLabels[b][labelIndex]]++;
+					}
 				}
 			}
 		}
@@ -836,8 +843,13 @@ namespace dnn
 						for (auto shuffle = 0ull; shuffle < shuffleCount; shuffle++)
 							std::shuffle(std::begin(RandomTrainingSamples), std::end(RandomTrainingSamples), std::mt19937(physicalSeed()));
 
-						for (auto cost : CostLayers)
-							cost->Reset();
+						for (auto costPtr : CostLayers)
+						{
+							if (std::shared_ptr<Cost> cost = costPtr.lock())
+							{
+								cost->Reset();
+							}
+						}
 
 #ifdef DNN_STOCHASTIC				
 						if (BatchSize == 1)
@@ -849,8 +861,13 @@ namespace dnn
 								auto SampleLabel = TrainSample(SampleIndex);
 								Layers[0]->fpropTime = timer.now() - timePointGlobal;
 
-								for (auto cost : CostLayers)
-									cost->SetSampleLabel(SampleLabel);
+								for (auto costPtr : CostLayers)
+								{
+									if (std::shared_ptr<Cost> cost = costPtr.lock())
+									{
+										cost->SetSampleLabel(SampleLabel);
+									}
+								}
 
 								for (auto i = 0ull; i < Layers.size(); i++)
 								{
@@ -906,8 +923,13 @@ namespace dnn
 								auto SampleLabels = TrainBatch(SampleIndex, BatchSize);
 								Layers[0]->fpropTime = timer.now() - timePointGlobal;
 
-								for (auto cost : CostLayers)
-									cost->SetSampleLabels(SampleLabels);
+								for (auto costPtr : CostLayers)
+								{
+									if (std::shared_ptr<Cost> cost = costPtr.lock())
+									{
+										cost->SetSampleLabels(SampleLabels);
+									}
+								}
 
 								for (auto i = 1ull; i < Layers.size(); i++)
 								{
@@ -972,8 +994,13 @@ namespace dnn
 							{
 								auto SampleLabel = TestSample(SampleIndex);
 
-								for (auto cost : CostLayers)
-									cost->SetSampleLabel(SampleLabel);
+								for (auto costPtr : CostLayers)
+								{
+									if (std::shared_ptr<Cost> cost = costPtr.lock())
+									{
+										cost->SetSampleLabel(SampleLabel);
+									}
+								}
 
 								for (auto i = 1u; i < Layers.size(); i++)
 									Layers[i]->ForwardProp(1, false);
@@ -997,8 +1024,13 @@ namespace dnn
 								auto SampleLabels = TestBatch(SampleIndex, BatchSize);
 								Layers[0]->fpropTime = timer.now() - timePoint;
 
-								for (auto cost : CostLayers)
-									cost->SetSampleLabels(SampleLabels);
+								for (auto costPtr : CostLayers)
+								{
+									if (std::shared_ptr<Cost> cost = costPtr.lock())
+									{
+										cost->SetSampleLabels(SampleLabels);
+									}
+								}
 
 								for (auto i = 1ull; i < Layers.size(); i++)
 								{
@@ -1024,23 +1056,29 @@ namespace dnn
 #endif
 						if (CheckTaskState())
 						{
-							for (auto cost : CostLayers)
+							for (auto costPtr : CostLayers)
 							{
-								cost->AvgTrainLoss = cost->TrainLoss / DataProv->TrainingSamplesCount;
-								cost->AvgTestLoss = cost->TestLoss / DataProv->TestingSamplesCount;
-								cost->TrainErrorPercentage = cost->TrainErrors / Float(DataProv->TrainingSamplesCount / 100);
-								cost->TestErrorPercentage = cost->TestErrors / Float(DataProv->TestingSamplesCount / 100);
+								if (std::shared_ptr<Cost> cost = costPtr.lock())
+								{
+									cost->AvgTrainLoss = cost->TrainLoss / DataProv->TrainingSamplesCount;
+									cost->AvgTestLoss = cost->TestLoss / DataProv->TestingSamplesCount;
+									cost->TrainErrorPercentage = cost->TrainErrors / Float(DataProv->TrainingSamplesCount / 100);
+									cost->TestErrorPercentage = cost->TestErrors / Float(DataProv->TestingSamplesCount / 100);
+								}
 							}
 
-							TrainLoss = CostLayers[CostIndex]->TrainLoss;
-							TrainErrors = CostLayers[CostIndex]->TrainErrors;
-							AvgTrainLoss = CostLayers[CostIndex]->AvgTrainLoss;
-							TrainErrorPercentage = CostLayers[CostIndex]->TrainErrorPercentage;
-							TestLoss = CostLayers[CostIndex]->TestLoss;
-							TestErrors = CostLayers[CostIndex]->TestErrors;
-							AvgTestLoss = CostLayers[CostIndex]->AvgTestLoss;
-							TestErrorPercentage = CostLayers[CostIndex]->TestErrorPercentage;
-							Accuracy = Float(100) - TestErrorPercentage;
+							if (std::shared_ptr<Cost> cost = CostLayers[CostIndex].lock())
+							{
+								TrainLoss = cost->TrainLoss;
+								TrainErrors = cost->TrainErrors;
+								AvgTrainLoss = cost->AvgTrainLoss;
+								TrainErrorPercentage = cost->TrainErrorPercentage;
+								TestLoss = cost->TestLoss;
+								TestErrors = cost->TestErrors;
+								AvgTestLoss = cost->AvgTestLoss;
+								TestErrorPercentage = cost->TestErrorPercentage;
+								Accuracy = Float(100) - TestErrorPercentage;
+							}
 
 							// save the weights
 							State.store(States::SaveWeights);
@@ -1115,8 +1153,13 @@ namespace dnn
 
 				State.store(States::Testing);
 
-				for (auto cost : CostLayers)
-					cost->Reset();
+				for (auto costPtr : CostLayers)
+				{
+					if (std::shared_ptr<Cost> cost = costPtr.lock())
+					{
+						cost->Reset();
+					}
+				}
 
 #ifdef DNN_STOCHASTIC
 				if (BatchSize == 1)
@@ -1125,8 +1168,13 @@ namespace dnn
 					{
 						auto SampleLabel = TestAugmentedSample(SampleIndex);
 
-						for (auto cost : CostLayers)
-							cost->SetSampleLabel(SampleLabel);
+						for (auto costPtr : CostLayers)
+						{
+							if (std::shared_ptr<Cost> cost = costPtr.lock())
+							{
+								cost->SetSampleLabel(SampleLabel);
+							}
+						}
 
 						for (auto i = 1ull; i < Layers.size(); i++)
 							Layers[i]->ForwardProp(1, false);
@@ -1149,8 +1197,13 @@ namespace dnn
 					auto SampleLabels = TestAugmentedBatch(SampleIndex, BatchSize);
 					Layers[0]->fpropTime = timer.now() - timePointGlobal;
 
-					for (auto cost : CostLayers)
-						cost->SetSampleLabels(SampleLabels);
+					for (auto costPtr : CostLayers)
+					{
+						if (std::shared_ptr<Cost> cost = costPtr.lock())
+						{
+							cost->SetSampleLabels(SampleLabels);
+						}
+					}
 
 					for (auto i = 1ull; i < Layers.size(); i++)
 					{
@@ -1174,17 +1227,22 @@ namespace dnn
 #ifdef DNN_STOCHASTIC
 				}
 #endif
-			for (auto cost : CostLayers)
+			for (auto costPtr : CostLayers)
 			{
-				cost->AvgTestLoss = cost->TestLoss / DataProv->TestingSamplesCount;
-				cost->TestErrorPercentage = cost->TestErrors / Float(DataProv->TestingSamplesCount / 100);
+				if (std::shared_ptr<Cost> cost = costPtr.lock())
+				{
+					cost->AvgTestLoss = cost->TestLoss / DataProv->TestingSamplesCount;
+					cost->TestErrorPercentage = cost->TestErrors / Float(DataProv->TestingSamplesCount / 100);
+				}
 			}
-
-			TestLoss = CostLayers[CostIndex]->TestLoss;
-			AvgTestLoss = CostLayers[CostIndex]->AvgTestLoss;
-			TestErrors = CostLayers[CostIndex]->TestErrors;
-			TestErrorPercentage = CostLayers[CostIndex]->TestErrorPercentage;
-			Accuracy = Float(100) - TestErrorPercentage;
+			if (std::shared_ptr<Cost> cost = CostLayers[CostIndex].lock())
+			{
+				TestLoss = cost->TestLoss;
+				AvgTestLoss = cost->AvgTestLoss;
+				TestErrors = cost->TestErrors;
+				TestErrorPercentage = cost->TestErrorPercentage;
+				Accuracy = Float(100) - TestErrorPercentage;
+			}
 
 			/*
 			auto fileName = std::string("C:\\test.txt");

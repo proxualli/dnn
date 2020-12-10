@@ -2275,8 +2275,11 @@ namespace dnn
 			if (model && !model->CostLayers.empty())
 			{
 				model->CostIndex = model->CostLayers.size() - 1ull;
-				model->GroupIndex = model->CostLayers[model->CostIndex]->GroupIndex;
-				model->LabelIndex = model->CostLayers[model->CostIndex]->LabelIndex;
+				if (std::shared_ptr<Cost> cost = model->CostLayers[model->CostIndex].lock())
+				{
+					model->GroupIndex = cost->GroupIndex;
+					model->LabelIndex = cost->LabelIndex;
+				}
 			}
 			else
 			{
@@ -2285,16 +2288,20 @@ namespace dnn
 			}
 
 			for (auto l : model->CostLayers)
-				if (l->Outputs.size() > 0)
+			{
+				if (std::shared_ptr<Cost> cost = l.lock())
 				{
-					for (auto t : layerNames)
-						if (t.first == l->Name)
-							line = t.second;
+					if (cost->Outputs.size() > 0)
+					{
+						for (auto t : layerNames)
+							if (t.first == cost->Name)
+								line = t.second;
 
-					msg = CheckMsg(line, col, "Cost Layer " + l->Name + " is referenced.");
-					goto FAIL;
+						msg = CheckMsg(line, col, "Cost Layer " + cost->Name + " is referenced.");
+						goto FAIL;
+					}
 				}
-
+			}
 			if (model->Layers.back()->LayerType != LayerTypes::Cost)
 			{
 				msg = CheckMsg(line, col, "Last layer must of type Cost.");
