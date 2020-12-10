@@ -326,9 +326,9 @@ namespace dnn
 			return list;
 		}
 
-		std::vector<Layer*> GetLayerOutputs(const Layer& parentLayer) const
+		std::vector<std::shared_ptr<Layer>> GetLayerOutputs(const Layer& parentLayer) const
 		{
-			auto list = std::vector<Layer*>();
+			auto list = std::vector<std::shared_ptr<Layer>>();
 
 			for (auto layer : Layers)
 			{
@@ -344,7 +344,7 @@ namespace dnn
 			return list;
 		}
 
-		std::vector<Layer*> SetRelations()
+		std::vector<std::shared_ptr<Layer>> SetRelations()
 		{
 			// This determines how the backprop step correctly flows
 			// When SharesInput is true we have to add our diff vector instead of just copying it because there's more than one layer involved
@@ -354,7 +354,7 @@ namespace dnn
 				layer->Outputs = GetLayerOutputs(*layer.get());
 			}
 
-			auto unreferencedLayers = std::vector<Layer*>();
+			auto unreferencedLayers = std::vector<std::shared_ptr<Layer>>();
 
 			for (auto layer : Layers)
 			{
@@ -384,7 +384,7 @@ namespace dnn
 				else
 				{
 					if (count == 0 && layer->LayerType != LayerTypes::Cost)
-						unreferencedLayers.push_back(layer.get());
+						unreferencedLayers.push_back(layer);
 				}
 			}
 

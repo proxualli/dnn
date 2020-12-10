@@ -155,7 +155,7 @@ namespace dnn
 	
 	class Layer;
 
-	typedef const std::vector<Layer*>& Inputs;
+	typedef const std::vector<std::shared_ptr<Layer>>& Inputs;
 
 	class Layer
 	{
@@ -181,9 +181,9 @@ namespace dnn
 		const size_t PadH;
 		const size_t PadW;
 		const bool HasPadding;
-		Inputs Inputs;
+		const std::vector<std::shared_ptr<Layer>> Inputs;
 		Layer* InputLayer;
-		std::vector<Layer*> Outputs;
+		std::vector<std::shared_ptr<Layer>> Outputs;
 		bool LayerBeforeCost;
 		bool SharesInput;
 		const dnnl::memory::format_tag Format;
@@ -273,7 +273,7 @@ namespace dnn
 			PaddedC(DivUp(c)),
 			PaddedCDHW(layerType != LayerTypes::Input ? (DivUp(c) * d * h * w) : c * d * h * w),
 			HasPadding(padD > 0 || padH > 0 || padW > 0),
-			InputLayer(inputs.size() > 0 ? inputs[0] : nullptr),
+			InputLayer(inputs.size() > 0 ? inputs[0].get() : nullptr),
 			RandomEngine(std::mt19937(physicalSeed())),
 			Neurons(FloatVector()),
 			NeuronsD1(FloatVector()),
@@ -298,7 +298,7 @@ namespace dnn
 			RAdamEps(Float(1e-08)),
 			RAdamBeta1(Float(0.9)),
 			RAdamBeta2(Float(0.999)),
-			Outputs(std::vector<Layer*>()),
+			Outputs(std::vector<std::shared_ptr<Layer>>()),
 			UseDefaultParameters(true),
 			LockUpdate(false),
 			RefreshingStats(false),
