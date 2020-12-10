@@ -62,7 +62,11 @@ else()
     "$<$<COMPILE_LANGUAGE:CXX>:${flags}>"
     "$<$<COMPILE_LANGUAGE:C>:${flags}>")
   set(debug_flags -g -Wextra)
-  set(release_flags -g -O0)
+  if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    set(release_flags -Ofast -funroll-loops -ftree-vectorize -Wno-error)
+  else()
+    set(release_flags -Ofast -funroll-loops -ftree-vectorize -Wno-error -unroll-aggressive)
+  endif()
 endif()
 
 MACRO(DNN_TARGET_ENABLE_CXX17 target)
