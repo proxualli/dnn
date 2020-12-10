@@ -230,6 +230,7 @@ int main()
     {
         if (DNNLoadDataset())
         {
+            /*
         
             auto name = new std::string();
             auto costIndex = new size_t(); 
@@ -274,6 +275,7 @@ int main()
         
         
             DNNStop();
+            */
            
         }
         else

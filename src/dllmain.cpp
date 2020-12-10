@@ -375,7 +375,7 @@ extern "C" DNN_API void DNNGetTrainingInfo(size_t* currentCycle, size_t* totalCy
 {
 	if (model)
 	{
-		const size_t sampleIdx = model->SampleIndex + model->BatchSize;
+		const auto sampleIdx = model->SampleIndex + model->BatchSize;
 
 		switch (model->State)
 		{
@@ -394,7 +394,7 @@ extern "C" DNN_API void DNNGetTrainingInfo(size_t* currentCycle, size_t* totalCy
 
 		case States::Testing:
 		{
-			const size_t adjustedsampleIndex = sampleIdx > dataprovider->TestingSamplesCount ? dataprovider->TestingSamplesCount : sampleIdx;
+			const auto adjustedsampleIndex = sampleIdx > dataprovider->TestingSamplesCount ? dataprovider->TestingSamplesCount : sampleIdx;
 						
 			model->TestLoss = model->CostLayers[model->CostIndex]->TestLoss;
 			model->TestErrors = model->CostLayers[model->CostIndex]->TestErrors;
@@ -448,8 +448,8 @@ extern "C" DNN_API void DNNGetTestingInfo(size_t* batchSize, size_t* sampleIndex
 {
 	if (model)
 	{
-		const size_t sampleIdx = model->SampleIndex + model->BatchSize;
-		const size_t adjustedsampleIndex = sampleIdx > dataprovider->TestingSamplesCount ? dataprovider->TestingSamplesCount : sampleIdx;
+		const auto sampleIdx = model->SampleIndex + model->BatchSize;
+		const auto adjustedsampleIndex = sampleIdx > dataprovider->TestingSamplesCount ? dataprovider->TestingSamplesCount : sampleIdx;
 							
 		model->TestLoss = model->CostLayers[model->CostIndex]->TestLoss;
 		model->TestErrors = model->CostLayers[model->CostIndex]->TestErrors;
