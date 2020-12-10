@@ -13,7 +13,7 @@ namespace dnn
 		std::unordered_map<int, dnnl::memory> bwdArgs;
 
 	public:
-		static size_t GetSumInputChannels(const std::vector<std::shared_ptr<Layer>>& inputs)
+		static size_t GetSumInputChannels(const std::vector<Layer*>& inputs)
 		{
 			auto channels = 0ull;
 			for (auto layer : inputs)
