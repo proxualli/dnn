@@ -153,6 +153,8 @@ namespace dnn
 		Device(const dnnl::engine& eng, dnnl::stream str) : engine(eng), stream(str) {}
 	};
 	
+	typedef const std::vector<Layer*>& Inputs;
+
 	class Layer
 	{
 	protected:
@@ -1957,5 +1959,4 @@ namespace dnn
 		virtual ByteVector GetImage(const Byte) { return ByteVector(); }
 	};
 
-	typedef const std::vector<Layer*>& Inputs;
 }
