@@ -307,10 +307,10 @@ namespace dnn
 			auto list = std::vector<std::shared_ptr<Layer>>();
 
 			bool exists;
-			for (auto name : inputs)
+			for (auto &name : inputs)
 			{
 				exists = false;
-				for (auto layer : Layers)
+				for (auto &layer : Layers)
 				{
 					if (layer->Name == name)
 					{
