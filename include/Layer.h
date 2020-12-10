@@ -239,7 +239,7 @@ namespace dnn
 		std::unique_ptr<dnnl::memory::desc> WeightsMemDesc;
 		std::unique_ptr<dnnl::memory::desc> PersistWeightsMemDesc;
 
-		Layer(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const LayerTypes layerType, const size_t weightCount, const size_t biasCount, const size_t c, const size_t d, const size_t h, const size_t w, const size_t padD, const size_t padH, const size_t padW, const std::vector<Layer*>& inputs, const bool hasBias = false) :
+		Layer(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const LayerTypes layerType, const size_t weightCount, const size_t biasCount, const size_t c, const size_t d, const size_t h, const size_t w, const size_t padD, const size_t padH, const size_t padW, dnn::Inputs inputs, const bool hasBias = false) :
 			Device(device),
 			Format(format),
 			Name(name),
@@ -1956,4 +1956,6 @@ namespace dnn
 
 		virtual ByteVector GetImage(const Byte) { return ByteVector(); }
 	};
+
+	typedef const std::vector<Layer*>& Inputs;
 }

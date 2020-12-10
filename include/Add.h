@@ -13,7 +13,7 @@ namespace dnn
 		std::unique_ptr<dnnl::sum> fwd;
 
 	public:
-		Add(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs) :
+		Add(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, dnn::Inputs inputs) :
 			Layer(device, format, name, LayerTypes::Add, 0, 0, inputs[0]->C, inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs)
 		{
 			assert(Inputs.size() > 1);

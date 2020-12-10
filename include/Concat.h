@@ -13,7 +13,7 @@ namespace dnn
 		std::unordered_map<int, dnnl::memory> bwdArgs;
 
 	public:
-		static size_t GetSumInputChannels(const std::vector<Layer*>& inputs)
+		static size_t GetSumInputChannels(dnn::Inputs inputs)
 		{
 			auto channels = 0ull;
 			for (auto layer : inputs)
@@ -22,7 +22,7 @@ namespace dnn
 			return channels;
 		}
 
-		Concat(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs) :
+		Concat(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, dnn::Inputs inputs) :
 			Layer(device, format, name, LayerTypes::Concat, 0, 0, GetSumInputChannels(inputs), inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs)
 		{
 			assert(Inputs.size() > 1);

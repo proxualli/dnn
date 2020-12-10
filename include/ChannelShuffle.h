@@ -15,7 +15,7 @@ namespace dnn
 	    const size_t Groups;
 		const size_t GroupSize;
 
-		ChannelShuffle(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const size_t groups) :
+		ChannelShuffle(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, dnn::Inputs inputs, const size_t groups) :
 			Layer(device, format, name, LayerTypes::ChannelShuffle, 0, 0, inputs[0]->C, inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs),
 			Groups(groups),
 			GroupSize(inputs[0]->C / groups)

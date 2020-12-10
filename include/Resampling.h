@@ -24,7 +24,7 @@ namespace dnn
 		const Float FactorH;
 		const Float FactorW;
 
-		Resampling(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const Algorithms algorithm, const Float factorH, const Float factorW) :
+		Resampling(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, dnn::Inputs inputs, const Algorithms algorithm, const Float factorH, const Float factorW) :
 			Layer(device, format, name, LayerTypes::Resampling, 0, 0, inputs[0]->C, inputs[0]->D, static_cast<size_t>(inputs[0]->H* double(factorH)), static_cast<size_t>(inputs[0]->W* double(factorW)), 0, 0, 0, inputs),
 			Algorithm(algorithm),
 			FactorH(factorH),
