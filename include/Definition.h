@@ -1,6 +1,5 @@
 #pragma once
 #include "Model.h"
-#include <Model.h>
 
 namespace dnn
 {
@@ -2286,7 +2285,7 @@ namespace dnn
 			}
 
 			for (auto l : model->CostLayers)
-				if (model->GetLayerOutputs(*l).size() > 0)
+				if (model->GetLayerOutputs(l).size() > 0)
 				{
 					for (auto t : layerNames)
 						if (t.first == l->Name)
