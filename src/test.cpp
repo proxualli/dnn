@@ -201,7 +201,7 @@ int main()
     {
         if (DNNLoadDataset())
         {
-        /*
+        
             auto name = new std::string();
             auto costIndex = new size_t(); 
             auto costLayerCount = new size_t(); 
@@ -243,7 +243,7 @@ int main()
             delete meanTrainSet;
             delete stdTrainSet;
         
-        */
+        
             DNNStop();
            
         }

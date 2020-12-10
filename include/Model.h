@@ -147,7 +147,7 @@ namespace dnn
 		bool DisableLocking;
 		TrainingRate CurrentTrainingRate;
 		std::vector<std::shared_ptr<Layer>> Layers;
-		std::vector<Cost*> CostLayers;
+		std::vector<std::shared_ptr<Cost>> CostLayers;
 		std::vector<TrainingRate> TrainingRates;
 		std::chrono::duration<Float> fpropTime;
 		std::chrono::duration<Float> bpropTime;
@@ -216,7 +216,7 @@ namespace dnn
 			GroupIndex(0),
 			CostIndex(0),
 			CostFuction(Costs::CategoricalCrossEntropy),
-			CostLayers(std::vector<Cost*>()),
+			CostLayers(std::vector<std::shared_ptr<Cost>>()),
 			Layers(std::vector< std::shared_ptr<Layer>>()),
 			TrainingRates(std::vector<TrainingRate>()),
 			fpropTime(std::chrono::duration<Float>(Float(0))),
