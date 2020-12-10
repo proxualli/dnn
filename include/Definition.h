@@ -548,7 +548,7 @@ namespace dnn
 								break;
 							case LayerTypes::Cost:
 								model->Layers.push_back(std::make_shared<Cost>(model->Device, model->Format, name, costFunction, groupIndex, labelIndex, c, inputs, labelTrue, labelFalse, weight, epsSpecified ? eps : Float(0)));
-								model->CostLayers.push_back(std::shared_ptr<Cost>(dynamic_cast<Cost*>(model->Layers[model->Layers.size() - 1].get())));
+								model->CostLayers.push_back(dynamic_cast<Cost*>(model->Layers[model->Layers.size() - 1].get()));
 								model->CostFuction = costFunction;
 								break;
 							case LayerTypes::Dense:
@@ -2254,7 +2254,7 @@ namespace dnn
 				}
 
 				model->Layers.push_back(std::make_shared<Cost>(model->Device, model->Format, layerNames[model->Layers.size()].first, costFunction, groupIndex, labelIndex, c, model->GetLayerInputs(inputsStr), labelTrue, labelFalse, weight, epsSpecified ? eps : Float(0)));
-				model->CostLayers.push_back(std::shared_ptr<Cost>(dynamic_cast<Cost*>(model->Layers[model->Layers.size() - 1].get())));
+				model->CostLayers.push_back(dynamic_cast<Cost*>(model->Layers[model->Layers.size() - 1].get()));
 				model->CostFuction = costFunction;
 			}
 
@@ -2285,8 +2285,8 @@ namespace dnn
 				goto FAIL;
 			}
 
-			for (auto &l : model->CostLayers)
-				if (model->GetLayerOutputs(*l.get()).size() > 0)
+			for (auto l : model->CostLayers)
+				if (model->GetLayerOutputs(*l).size() > 0)
 				{
 					for (auto t : layerNames)
 						if (t.first == l->Name)

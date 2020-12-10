@@ -147,7 +147,7 @@ namespace dnn
 		bool DisableLocking;
 		TrainingRate CurrentTrainingRate;
 		std::vector<std::shared_ptr<Layer>> Layers;
-		std::vector<std::shared_ptr<Cost>> CostLayers;
+		std::vector<Cost*> CostLayers;
 		std::vector<TrainingRate> TrainingRates;
 		std::chrono::duration<Float> fpropTime;
 		std::chrono::duration<Float> bpropTime;
@@ -216,7 +216,7 @@ namespace dnn
 			GroupIndex(0),
 			CostIndex(0),
 			CostFuction(Costs::CategoricalCrossEntropy),
-			CostLayers(std::vector<std::shared_ptr<Cost>>()),
+			CostLayers(std::vector<Cost*>()),
 			Layers(std::vector< std::shared_ptr<Layer>>()),
 			TrainingRates(std::vector<TrainingRate>()),
 			fpropTime(std::chrono::duration<Float>(Float(0))),
@@ -274,9 +274,9 @@ namespace dnn
 			std::string nameLower(name);
 			std::transform(nameLower.begin(), nameLower.end(), nameLower.begin(), ::tolower);
 			
-			for (auto layer : Layers)
+			for (auto &layer : Layers)
 			{
-				auto layerName = layer->Name;
+				auto &layerName = layer->Name;
 				std::transform(layerName.begin(), layerName.end(), layerName.begin(), ::tolower);
 				if (layerName == nameLower)
 					return false;
@@ -287,7 +287,7 @@ namespace dnn
 
 		void SetHyperParameters(const Float adaDeltaEps, const Float adaGradEps, const Float adamEps, const Float adamBeta2, const Float adamaxEps, const Float adamaxBeta2, const Float rmsPropEps, const Float radamEps, const Float radamBeta1, const Float radamBeta2)
 		{
-			for (auto layer : Layers)
+			for (auto &layer : Layers)
 			{
 				layer->AdaDeltaEps = adaDeltaEps;
 				layer->AdaGradEps = adaGradEps;
@@ -582,7 +582,7 @@ namespace dnn
 
 		void SetOptimizer(const Optimizers optimizer)
 		{
-			for (auto layer : Layers)
+			for (auto &layer : Layers)
 				layer->SetOptimizer(optimizer);
 
 			Optimizer = optimizer;
@@ -664,7 +664,7 @@ namespace dnn
 		{
 			for (auto &cost : CostLayers)
 			{
-				const auto inputLayer = cost->InputLayer;
+				const auto &inputLayer = cost->InputLayer;
 				const auto labelIndex = cost->LabelIndex;
 
 				for (auto b = 0ull; b < batchSize; b++)
