@@ -147,7 +147,7 @@ namespace dnn
 		bool DisableLocking;
 		TrainingRate CurrentTrainingRate;
 		std::vector<std::shared_ptr<Layer>> Layers;
-		std::vector<std::shared_ptr<Cost>> CostLayers;
+		std::vector<Cost*> CostLayers;
 		std::vector<TrainingRate> TrainingRates;
 		std::chrono::duration<Float> fpropTime;
 		std::chrono::duration<Float> bpropTime;
@@ -216,7 +216,7 @@ namespace dnn
 			GroupIndex(0),
 			CostIndex(0),
 			CostFuction(Costs::CategoricalCrossEntropy),
-			CostLayers(std::vector< std::shared_ptr<Cost>>()),
+			CostLayers(std::vector<Cost*>()),
 			Layers(std::vector< std::shared_ptr<Layer>>()),
 			TrainingRates(std::vector<TrainingRate>()),
 			fpropTime(std::chrono::duration<Float>(Float(0))),
@@ -273,10 +273,10 @@ namespace dnn
 		{
 			std::string nameLower(name);
 			std::transform(nameLower.begin(), nameLower.end(), nameLower.begin(), ::tolower);
-
-			for (auto l = 0ull; l < Layers.size(); l++)
+			
+			for (auto layer : Layers)
 			{
-				auto layerName = Layers[l]->Name;
+				auto layerName = layer->Name;
 				std::transform(layerName.begin(), layerName.end(), layerName.begin(), ::tolower);
 				if (layerName == nameLower)
 					return false;
@@ -287,7 +287,7 @@ namespace dnn
 
 		void SetHyperParameters(const Float adaDeltaEps, const Float adaGradEps, const Float adamEps, const Float adamBeta2, const Float adamaxEps, const Float adamaxBeta2, const Float rmsPropEps, const Float radamEps, const Float radamBeta1, const Float radamBeta2)
 		{
-			for_each(Layers.begin(), Layers.end(), [&](std::shared_ptr<Layer> layer)
+			for (auto layer : Layers)
 			{
 				layer->AdaDeltaEps = adaDeltaEps;
 				layer->AdaGradEps = adaGradEps;
@@ -299,7 +299,7 @@ namespace dnn
 				layer->RAdamEps = radamEps;
 				layer->RAdamBeta1 = radamBeta1;
 				layer->RAdamBeta2 = radamBeta2;
-			});
+			}
 		}
 
 		std::vector<std::shared_ptr<Layer>> GetLayerInputs(const std::vector<std::string>& inputs) const
@@ -310,14 +310,14 @@ namespace dnn
 			for (auto name : inputs)
 			{
 				exists = false;
-				for_each(Layers.begin(), Layers.end(), [&](std::shared_ptr<Layer> layer)
+				for (auto layer : Layers)
 				{
 					if (layer->Name == name)
 					{
 						list.push_back(layer);
 						exists = true;
 					}
-				});
+				}
 
 				if (!exists)
 					throw std::invalid_argument(std::string("Invalid input layer: " + name).c_str());
@@ -330,7 +330,7 @@ namespace dnn
 		{
 			auto list = std::vector<std::shared_ptr<Layer>>();
 
-			for_each(Layers.begin(), Layers.end(), [&](std::shared_ptr<Layer> layer)
+			for (auto layer : Layers)
 			{
 				if (layer->Name != parentLayer->Name)
 					for (auto inputs : layer->Inputs)
@@ -339,7 +339,7 @@ namespace dnn
 							list.push_back(inputs);
 							break;
 						}
-			});
+			}
 
 			return list;
 		}
@@ -348,15 +348,15 @@ namespace dnn
 		{
 			// This determines how the backprop step correctly flows
 			// When SharesInput is true we have to add our diff vector instead of just copying it because there's more than one layer involved
-			for_each(Layers.begin(), Layers.end(), [&](std::shared_ptr<Layer> layer)
+			for (auto layer : Layers)
 			{
 				layer->SharesInput = false;
 				layer->Outputs = GetLayerOutputs(layer);
-			});
+			}
 
 			auto unreferencedLayers = std::vector<std::shared_ptr<Layer>>();
 
-			for_each(Layers.begin(), Layers.end(), [&](std::shared_ptr<Layer> layer)
+			for (auto layer : Layers)
 			{
 				auto count = layer->Outputs.size();
 
@@ -386,19 +386,17 @@ namespace dnn
 					if (count == 0 && layer->LayerType != LayerTypes::Cost)
 						unreferencedLayers.push_back(layer);
 				}
-			});
+			}
 
 			return unreferencedLayers;
 		}
 
 		void SetLocking(const bool locked)
 		{
-			for (auto layer = 0ull; layer < Layers.size(); layer++)
-			{
-				if (Layers[layer]->Lockable() && !DisableLocking)
-					Layers[layer]->LockUpdate.store(locked);
-			}
-
+			for (auto layer : Layers)
+				if (layer->Lockable() && !DisableLocking)
+					layer->LockUpdate.store(locked);
+			
 			if (!DisableLocking)
 			{
 				FirstUnlockedLayer.store(Layers.size() - 2);
@@ -441,8 +439,8 @@ namespace dnn
 		{
 			std::streamsize weightsSize = 0;
 
-			for (auto i = 0ull; i < Layers.size(); i++)
-				weightsSize += Layers[i]->GetWeightsSize(persistOptimizer, Optimizer);
+			for (auto layer : Layers)
+				weightsSize += layer->GetWeightsSize(persistOptimizer, Optimizer);
 
 			return weightsSize;
 		}
@@ -451,16 +449,16 @@ namespace dnn
 		{
 			size_t neuronsSize = 0;
 
-			for (auto i = 0ull; i < Layers.size(); i++)
-				neuronsSize += Layers[i]->GetNeuronsSize(batchSize);
+			for (auto layer : Layers)
+				neuronsSize += layer->GetNeuronsSize(batchSize);
 
 			return neuronsSize;
 		}
 
 		bool BatchNormalizationUsed() const
 		{
-			for (auto i = 0ull; i < Layers.size(); i++)
-				if (Layers[i]->LayerType == LayerTypes::BatchNorm || Layers[i]->LayerType == LayerTypes::BatchNormHardLogistic || Layers[i]->LayerType == LayerTypes::BatchNormHardSwish || Layers[i]->LayerType == LayerTypes::BatchNormHardSwishDropout || Layers[i]->LayerType == LayerTypes::BatchNormRelu || Layers[i]->LayerType == LayerTypes::BatchNormReluDropout || Layers[i]->LayerType == LayerTypes::BatchNormSwish)
+			for (auto layer : Layers)
+				if (layer->LayerType == LayerTypes::BatchNorm || layer->LayerType == LayerTypes::BatchNormHardLogistic || layer->LayerType == LayerTypes::BatchNormHardSwish || layer->LayerType == LayerTypes::BatchNormHardSwishDropout || layer->LayerType == LayerTypes::BatchNormRelu || layer->LayerType == LayerTypes::BatchNormReluDropout || layer->LayerType == LayerTypes::BatchNormSwish)
 					return true;
 
 			return false;
@@ -586,8 +584,8 @@ namespace dnn
 
 		void SetOptimizer(const Optimizers optimizer)
 		{
-			for (auto i = 0ull; i < Layers.size(); i++)
-				Layers[i]->SetOptimizer(optimizer);
+			for (auto layer : Layers)
+				layer->SetOptimizer(optimizer);
 
 			Optimizer = optimizer;
 		}
