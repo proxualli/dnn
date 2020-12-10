@@ -429,7 +429,7 @@ namespace dnn
 					if (!isModel)
 					{
 						const auto &name = layerNames[model->Layers.size()].first;
-						const auto &inputs = model->GetLayerInputs(inputsStr);
+						const auto inputs = model->GetLayerInputs(inputsStr);
 
 						switch (layerType)
 						{

@@ -302,7 +302,7 @@ namespace dnn
 			}
 		}
 
-		const std::vector<std::shared_ptr<Layer>> GetLayerInputs(const std::vector<std::string>& inputs) const
+		std::vector<std::shared_ptr<Layer>> GetLayerInputs(const std::vector<std::string>& inputs) const
 		{
 			auto list = std::vector<std::shared_ptr<Layer>>();
 
