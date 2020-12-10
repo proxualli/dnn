@@ -302,9 +302,9 @@ namespace dnn
 			}
 		}
 
-		std::vector<Layer*> GetLayerInputs(const std::vector<std::string>& inputs) const
+		const std::vector<std::shared_ptr<Layer>>& GetLayerInputs(const std::vector<std::string>& inputs) const
 		{
-			auto list = std::vector<Layer*>();
+			auto list = std::vector<std::shared_ptr<Layer>>();
 
 			bool exists;
 			for (auto name : inputs)
@@ -314,7 +314,7 @@ namespace dnn
 				{
 					if (layer->Name == name)
 					{
-						list.push_back(layer.get());
+						list.push_back(layer);
 						exists = true;
 					}
 				}
