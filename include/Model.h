@@ -1042,16 +1042,16 @@ namespace dnn
 
 							// save the weights
 							State.store(States::SaveWeights);
-							SaveWeights((DataProv->StorageDirectory / "Definitions" / (Name + "-weights") / (Name + " (epoch " + std::to_string(CurrentEpoch) + " - " + std::to_string(TestErrors) + " errors).weights")).string().c_str(), PersistOptimizer);
+							SaveWeights((DataProv->StorageDirectory / "Definitions" / (Name + "-weights") / (Name + " (epoch " + std::to_string(CurrentEpoch) + " - " + std::to_string(TestErrors) + " errors).weights")).string(), PersistOptimizer);
 
-							//auto fileName = (DataProv->StorageDirectory / "Definitions" /  (Name + "-weights") / (Name + " (epoch " + std::to_string(CurrentEpoch) + " - " + std::to_string(TestErrors) + " errors).weights")).string().c_str();
+							//auto fileName = (DataProv->StorageDirectory / "Definitions" /  (Name + "-weights") / (Name + " (epoch " + std::to_string(CurrentEpoch) + " - " + std::to_string(TestErrors) + " errors).weights")).string();
 							//if (TestErrors <= BestScore)
 							//{
 							//	BestScore = TestErrors;
 							//	oldWeightSaveFileName = fileName;
 							//}
 							/*if (!oldWeightSaveFileName.empty() && file_exist(oldWeightSaveFileName))
-							DeleteFile(oldWeightSaveFileName.c_str());
+							DeleteFile(oldWeightSaveFileName);
 							oldWeightSaveFileName = fileName;*/
 
 							//auto cycle = CurrentCycle;
