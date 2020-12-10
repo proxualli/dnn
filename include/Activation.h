@@ -54,9 +54,9 @@ namespace dnn
 	struct Identity
 	{
 		inline static Float f(const Float& x) noexcept { return x; }
-		inline static Float df(const Float& x) noexcept { return Float(1); }
+		inline static Float df(const Float&) noexcept { return Float(1); }
 		inline static VecFloat fVec(const VecFloat& x) noexcept { return x; }
-		inline static VecFloat dfVec(const VecFloat& x) noexcept { return VecFloat(1); }
+		inline static VecFloat dfVec(const VecFloat&) noexcept { return VecFloat(1); }
 	};
 
 	struct Log

@@ -521,6 +521,11 @@ namespace dnn
 
 			RunningMean = FloatVector(PaddedC, Float(0));
 			RunningVariance = FloatVector(PaddedC, Float(1));
+
+			DNN_UNREF_PAR(weightFiller);
+			DNN_UNREF_PAR(weightFillerScale);
+			DNN_UNREF_PAR(biasFiller);
+			DNN_UNREF_PAR(biasFillerScale);
 		}
 
 		void Save(std::ostream& os, const bool persistOptimizer = false, const Optimizers optimizer = Optimizers::SGD) override

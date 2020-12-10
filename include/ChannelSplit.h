@@ -64,6 +64,8 @@ namespace dnn
 
 		void ForwardProp(const size_t batchSize, const bool training) final override
 		{
+			DNN_UNREF_PAR(training);
+
 			const auto strideH = W * VectorSize;
 
 #ifdef DNN_STOCHASTIC

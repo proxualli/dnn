@@ -1954,6 +1954,6 @@ namespace dnn
 			return neuronsSize;
 		}
 
-		virtual ByteVector GetImage(const Byte fillColor) { return ByteVector(); }
+		virtual ByteVector GetImage(const Byte) { return ByteVector(); }
 	};
 }

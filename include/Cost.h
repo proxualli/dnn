@@ -129,6 +129,8 @@ namespace dnn
 
 		void ForwardProp(const size_t batchSize, const bool training) final override
 		{
+			DNN_UNREF_PAR(training);
+
 			switch (CostFunction)
 			{
 			case Costs::BinaryCrossEntropy:

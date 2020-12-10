@@ -155,7 +155,7 @@ namespace dnn
 		ZeroFloatVector(destination.data(), elements);
 	}
 	
-	inline static const auto BernoulliVecFloat(const Float prob = Float(0.5)) noexcept
+	inline static auto BernoulliVecFloat(const Float prob = Float(0.5)) noexcept
 	{
 		static thread_local auto generator = Ranvec1(3);
 		generator.init(static_cast<int>(__rdtsc()), static_cast<int>(std::hash<std::thread::id>()(std::this_thread::get_id())));
@@ -167,48 +167,48 @@ namespace dnn
 	}
 
 	template<typename T>
-	static const auto Bernoulli(const Float prob = Float(0.5)) noexcept
+	static auto Bernoulli(const Float prob = Float(0.5)) noexcept
 	{
 		static thread_local auto generator = std::mt19937(static_cast<unsigned>(__rdtsc()));
 		return static_cast<T>(std::bernoulli_distribution(double(prob))(generator));
 	}
 
 	template<typename T>
-	static const auto UniformInt(const T min, const T max) noexcept
+	static auto UniformInt(const T min, const T max) noexcept
 	{
 		static thread_local auto generator = std::mt19937(static_cast<unsigned>(__rdtsc()));
 		return std::uniform_int_distribution<T>(min, max)(generator);
 	}
 
 	template<typename T>
-	static const auto UniformReal(const T min, const T max) noexcept
+	static auto UniformReal(const T min, const T max) noexcept
 	{
 		static thread_local auto generator = std::mt19937(static_cast<unsigned>(__rdtsc()));
 		return std::uniform_real_distribution<T>(min, max)(generator);
 	}
 		
-	static const std::string FloatToString(const Float value, const std::streamsize precision = 8)
+	static std::string FloatToString(const Float value, const std::streamsize precision = 8)
 	{
 		std::stringstream stream; 
 		stream << std::setprecision(precision) << value;
 		return stream.str();
 	}
 
-	static const std::string FloatToStringFixed(const Float value, const std::streamsize precision = 8)
+	static std::string FloatToStringFixed(const Float value, const std::streamsize precision = 8)
 	{
 		std::stringstream stream; 
 		stream << std::setprecision(precision) << std::fixed << value;
 		return stream.str();
 	}
 
-	static const std::string FloatToStringScientific(const Float value, const std::streamsize precision = 4)
+	static std::string FloatToStringScientific(const Float value, const std::streamsize precision = 4)
 	{
 		std::stringstream stream; 
 		stream << std::setprecision(precision) << std::scientific << value;
 		return stream.str();
 	}
 
-   	static const auto GetFileSize(std::string fileName)
+   	static auto GetFileSize(std::string fileName)
 	{
 		auto file = std::ifstream(fileName, std::ifstream::in | std::ifstream::binary);
 

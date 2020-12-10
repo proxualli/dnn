@@ -33,7 +33,7 @@ namespace dnn
 			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ int(batchSize), int(C), int(H), int(W) }), dnnl::memory::data_type::f32, chosenFormat));
 		}
 
-		void ForwardProp(const size_t batchSize, const bool training) override { }
-		void BackwardProp(const size_t batchSize) override { }
+		void ForwardProp(const size_t batchSize, const bool training) override { DNN_UNREF_PAR(batchSize); DNN_UNREF_PAR(training); }
+		void BackwardProp(const size_t batchSize) override { DNN_UNREF_PAR(batchSize); }
 	};
 }

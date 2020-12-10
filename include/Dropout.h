@@ -47,6 +47,8 @@ namespace dnn
 
 		void InitializeDescriptors(const size_t batchSize) final override
 		{
+			DNN_UNREF_PAR(batchSize);
+
 			chosenFormat = GetDataFmt(*InputLayer->DstMemDesc);
 
 			DstMemDesc = std::make_unique<dnnl::memory::desc>(*InputLayer->DstMemDesc);
