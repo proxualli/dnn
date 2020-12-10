@@ -67,6 +67,30 @@ void NewEpoch(size_t CurrentCycle, size_t CurrentEpoch, size_t TotalEpochs, bool
 {
     std::cout << "Cycle: " << std::to_string(CurrentCycle) << "  Epoch: " << std::to_string(CurrentEpoch) << "  Test Accuracy: " << FloatToStringFixed(TestAccuracy, 2) << std::string("%                                                                           ") << std::endl;
     std::cout.flush();
+
+    DNN_UNREF_PAR(TotalEpochs);
+    DNN_UNREF_PAR(HorizontalFlip);
+    DNN_UNREF_PAR(VerticalFlip);
+    DNN_UNREF_PAR(Dropout);
+    DNN_UNREF_PAR(Cutout);
+    DNN_UNREF_PAR(AutoAugment);
+    DNN_UNREF_PAR(ColorCast);
+    DNN_UNREF_PAR(ColorAngle);
+    DNN_UNREF_PAR(Distortion);
+    DNN_UNREF_PAR(Interpolation);
+    DNN_UNREF_PAR(Scaling);
+    DNN_UNREF_PAR(Rotation);
+    DNN_UNREF_PAR(MaximumRate);
+    DNN_UNREF_PAR(BatchSize);
+    DNN_UNREF_PAR(Momentum);
+    DNN_UNREF_PAR(L2Penalty);
+    DNN_UNREF_PAR(AvgTrainLoss);
+    DNN_UNREF_PAR(TrainErrorPercentage);
+    DNN_UNREF_PAR(TrainAccuracy);
+    DNN_UNREF_PAR(TrainErrors);
+    DNN_UNREF_PAR(AvgTestLoss);
+    DNN_UNREF_PAR(TestErrorPercentage);
+    DNN_UNREF_PAR(TestErrors);
 }
 
 void GetTrainingProgress(int seconds = 5, size_t trainingSamples = 50000, size_t testingSamples = 10000)
@@ -125,10 +149,15 @@ void GetTrainingProgress(int seconds = 5, size_t trainingSamples = 50000, size_t
 
         std::cout << "[";
         int pos = int(barWidth * progress);
-        for (int i = 0; i < barWidth; ++i) {
-            if (i < pos) std::cout << "=";
-            else if (i == pos) std::cout << ">";
-            else std::cout << " ";
+        for (int i = 0; i < barWidth; ++i) 
+        {
+            if (i < pos) 
+                std::cout << "=";
+            else 
+                if (i == pos) 
+                    std::cout << ">";
+                else 
+                    std::cout << " ";
         }
         std::cout << "] " << int(progress * 100.0) << "%  Cycle:" << std::to_string(*cycle) << "  Epoch:" << std::to_string(*epoch) << "  Error:";
         if (*state == States::Testing)

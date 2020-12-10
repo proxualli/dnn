@@ -53,6 +53,8 @@ namespace dnn
 
 		void ForwardProp(const size_t batchSize, const bool training)  final override
 		{
+			DNN_UNREF_PAR(training);
+
 #ifdef DNN_STOCHASTIC
 			if (batchSize == 1)
 			{
