@@ -153,6 +153,8 @@ namespace dnn
 		Device(const dnnl::engine& eng, dnnl::stream str) : engine(eng), stream(str) {}
 	};
 	
+	class Layer;
+
 	typedef const std::vector<Layer*>& Inputs;
 
 	class Layer
@@ -179,7 +181,7 @@ namespace dnn
 		const size_t PadH;
 		const size_t PadW;
 		const bool HasPadding;
-		const std::vector<Layer*> Inputs;
+		Inputs Inputs;
 		Layer* InputLayer;
 		std::vector<Layer*> Outputs;
 		bool LayerBeforeCost;
