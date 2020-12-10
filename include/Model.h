@@ -81,7 +81,7 @@ namespace dnn
 
 	public:
 		const std::string Name;
-		const dnnl::engine Engine;
+		const std::unique_ptr<dnnl::engine> Engine;
 		dnn::Device Device;
 		dnnl::memory::format_tag Format;
 		Dataprovider* DataProv;
@@ -161,8 +161,8 @@ namespace dnn
 		Model(const std::string name, Dataprovider* dataprovider) :
 			Name(name),
 			DataProv(dataprovider),
-			Engine(dnnl::engine(dnnl::engine::kind::cpu, 0)),
-			Device(dnn::Device(Engine, dnnl::stream(Engine))),
+			Engine(std::make_unique<dnnl::engine>(dnnl::engine::kind::cpu, 0)),
+			Device(dnn::Device(*Engine.get(), dnnl::stream(*Engine.get()))),
 			Format(dnnl::memory::format_tag::any),
 			PersistOptimizer(false),
 			DisableLocking(true),
