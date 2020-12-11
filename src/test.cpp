@@ -210,14 +210,14 @@ int main()
     ScriptParameters p;
 
     p.Script = Scripts::shufflenetv2;
-    p.Dataset = Datasets::tinyimagenet;
+    p.Dataset = Datasets::cifar100;
     p.C = 3;
-    p.H = 48;
-    p.W = 48;
-    p.PadH = 6;
-    p.PadW = 6;
+    p.H = 32;
+    p.W = 32;
+    p.PadH = 4;
+    p.PadW = 4;
     p.MirrorPad = false;
-    p.Groups = 4;
+    p.Groups = 3;
     p.Iterations = 2;
     p.Width = 4;
     p.Relu = true;
