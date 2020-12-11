@@ -230,8 +230,6 @@ int main()
     {
         if (DNNLoadDataset())
         {
-            /*
-        
             auto name = new std::string();
             auto costIndex = new size_t(); 
             auto costLayerCount = new size_t(); 
@@ -275,13 +273,9 @@ int main()
         
         
             DNNStop();
-            */
-           
         }
         else
             std::cout << std::endl << "Could not load dataset" << std::endl;
-
-        //DNNModelDispose();
     }
     else
         std::cout << std::endl << "Could not load model" << std::endl << msg.Message << std::endl << model << std::endl;
