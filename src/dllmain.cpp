@@ -99,17 +99,42 @@ extern "C" DNN_API bool DNNCheckDefinition(std::string& definition, CheckMsg& ch
 
 extern "C" DNN_API int DNNReadDefinition(const std::string& definition, const Optimizers optimizer, CheckMsg& checkMsg)
 {
-		
-	model = Definition::ReadDefinition(definition, optimizer, dataprovider.get(), checkMsg);
+	dnn::Model* ptr = nullptr;
 
-	return 1;
+	ptr = Definition::ReadDefinition(definition, optimizer, dataprovider.get(), checkMsg);
+
+	if (ptr)
+	{
+		DNNModelDispose();
+
+		model = std::unique_ptr<Model>(ptr);
+		
+		ptr = nullptr;
+
+		return 1;
+	}
+
+	return 0;
 }
 
 extern "C" DNN_API int DNNLoadDefinition(const std::string& fileName, const Optimizers optimizer, CheckMsg& checkMsg)
 {
-	model = Definition::LoadDefinition(fileName, optimizer, dataprovider.get(), checkMsg);
+	dnn::Model* ptr = nullptr;
+
+	ptr = Definition::LoadDefinition(fileName, optimizer, dataprovider.get(), checkMsg);
 	
-	return 1;
+	if (ptr)
+	{
+		DNNModelDispose();
+
+		model = std::unique_ptr<Model>(ptr);
+
+		ptr = nullptr;
+
+		return 1;
+	}
+
+	return 0;
 }
 
 extern "C" DNN_API void DNNGetLayerInputs(const size_t layerIndex, std::vector<size_t> * inputs)
