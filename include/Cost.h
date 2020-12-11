@@ -40,7 +40,7 @@ namespace dnn
 
 		std::vector<std::vector<size_t>> ConfusionMatrix;
 
-		Cost(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const Costs cost, const size_t groupIndex, const size_t labelIndex, const size_t c, dnn::Inputs inputs, const Float labelTrue, const Float labelFalse, const Float weight, const Float eps) :
+		Cost(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const Costs cost, const size_t groupIndex, const size_t labelIndex, const size_t c, const std::vector<Layer*>& inputs, const Float labelTrue, const Float labelFalse, const Float weight, const Float eps) :
 			Layer(device, format, name, LayerTypes::Cost, 0, 0, c, 1, 1, 1, 0, 0, 0, inputs),
 			CostFunction(cost),
 			GroupIndex(groupIndex),

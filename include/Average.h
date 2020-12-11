@@ -15,7 +15,7 @@ namespace dnn
 	public:
 		const Float Scale;
 
-		Average(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, dnn::Inputs inputs) :
+		Average(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs) :
 			Layer(device, format, name, LayerTypes::Average, 0, 0, inputs[0]->C, inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs),
 			Scale(Float(1) / Inputs.size())
 		{

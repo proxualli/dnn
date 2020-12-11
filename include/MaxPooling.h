@@ -26,7 +26,7 @@ namespace dnn
 		const size_t StrideH;
 		const size_t StrideW;
 		
-		MaxPooling(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, dnn::Inputs inputs, const size_t kernelH = 2, const size_t kernelW = 2, const size_t strideH = 2, const size_t strideW = 2, const size_t padH = 0, const size_t padW = 0) :
+		MaxPooling(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const size_t kernelH = 2, const size_t kernelW = 2, const size_t strideH = 2, const size_t strideW = 2, const size_t padH = 0, const size_t padW = 0) :
 			Layer(device, format, name, LayerTypes::MaxPooling, 0, 0, inputs[0]->C, inputs[0]->D, (((inputs[0]->H - kernelH) + (padH * 2)) / strideH) + 1, (((inputs[0]->W - kernelW) + (padW * 2)) / strideW) + 1, 0, padH, padW, inputs),
 			KernelH(kernelH),
 			KernelW(kernelW),

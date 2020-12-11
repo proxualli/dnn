@@ -39,7 +39,7 @@ namespace dnn
 		const size_t DilationKernelH;
 		const size_t DilationKernelW;
 
-		Convolution(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, dnn::Inputs inputs, const size_t c, const size_t kernelH, const size_t kernelW, const size_t strideH, const size_t strideW, const size_t dilationH, const size_t dilationW, const size_t padH, const size_t padW, const size_t groups, const bool hasBias) :
+		Convolution(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const size_t c, const size_t kernelH, const size_t kernelW, const size_t strideH, const size_t strideW, const size_t dilationH, const size_t dilationW, const size_t padH, const size_t padW, const size_t groups, const bool hasBias) :
 			Layer(device, format, name, LayerTypes::Convolution, groups* (inputs[0]->C / groups)* (c / groups)* kernelH* kernelW, c, c, inputs[0]->D, (((inputs[0]->H - (1 + (kernelH - 1) * dilationH)) + (padH * 2)) / strideH) + 1, (((inputs[0]->W - (1 + (kernelW - 1) * dilationW)) + (padW * 2)) / strideW) + 1, 0, padH, padW, inputs, hasBias),
 			Groups(groups),
 			KernelH(kernelH),

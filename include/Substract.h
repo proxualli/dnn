@@ -13,7 +13,7 @@ namespace dnn
 		std::unordered_map<int, dnnl::memory> fwdArgs;
 
 	public:
-		Substract(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, dnn::Inputs inputs) :
+		Substract(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs) :
 			Layer(device, format, name, LayerTypes::Substract, 0, 0, inputs[0]->C, inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs)
 		{
 			assert(Inputs.size() > 1);

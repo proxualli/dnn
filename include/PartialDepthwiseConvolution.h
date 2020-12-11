@@ -38,7 +38,7 @@ namespace dnn
 		const size_t DilationKernelH;
 		const size_t DilationKernelW;
 				
-		PartialDepthwiseConvolution(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, dnn::Inputs inputs, const size_t group, const size_t groups, const size_t kernelH, const size_t kernelW, const size_t strideH = 1, const size_t strideW = 1, const size_t dilationH = 1, const size_t dilationW = 1, const size_t padH = 0, const size_t padW = 0, const size_t multiplier = 1, const bool hasBias = true) :
+		PartialDepthwiseConvolution(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const size_t group, const size_t groups, const size_t kernelH, const size_t kernelW, const size_t strideH = 1, const size_t strideW = 1, const size_t dilationH = 1, const size_t dilationW = 1, const size_t padH = 0, const size_t padW = 0, const size_t multiplier = 1, const bool hasBias = true) :
 			Layer(device, format, name, LayerTypes::PartialDepthwiseConvolution, multiplier* inputs[0]->C / groups * kernelH * kernelW, multiplier* inputs[0]->C / groups, multiplier* inputs[0]->C / groups, inputs[0]->D, ((((inputs[0]->H - (1 + (kernelH - 1) * dilationH)) + (padH * 2)) / strideH) + 1), ((((inputs[0]->W - (1 + (kernelW - 1) * dilationW)) + (padW * 2)) / strideW) + 1), 0, padH, padW, inputs, hasBias),
 			Group(group),
 			Groups(groups),
