@@ -105,10 +105,8 @@ extern "C" DNN_API int DNNReadDefinition(const std::string& definition, const Op
 
 	if (ptr)
 	{
-		DNNModelDispose();
-
+		model.reset();
 		model = std::unique_ptr<Model>(ptr);
-		
 		ptr = nullptr;
 
 		return 1;
@@ -125,10 +123,8 @@ extern "C" DNN_API int DNNLoadDefinition(const std::string& fileName, const Opti
 	
 	if (ptr)
 	{
-		DNNModelDispose();
-
+		model.reset();
 		model = std::unique_ptr<Model>(ptr);
-
 		ptr = nullptr;
 
 		return 1;
