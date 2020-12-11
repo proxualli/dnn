@@ -12,5 +12,5 @@ export KMP_BLOCKTIME=0
 export vCPUs=`cat /proc/cpuinfo | grep processor | wc -l`
 export OMP_NUM_THREADS=$((vCPUs / 2))
 
-mkdir -p build && cd build && cmake -DCMAKE_BUILD_TYPE=Debug -G Ninja ..
+mkdir -p build && cd build && cmake -G Ninja ..
 ninja

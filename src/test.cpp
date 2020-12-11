@@ -271,7 +271,6 @@ int main()
             delete meanTrainSet;
             delete stdTrainSet;
         
-        
             DNNStop();
         }
         else
