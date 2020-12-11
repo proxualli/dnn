@@ -329,7 +329,7 @@ namespace dnn
 					"del UnZip-File.ps1" << std::endl;
 #else
 					std::string("unzip -o ./tiny-imagenet-200.zip") << std::endl <<
-					std::string("mv tiny-imagenet-200 tiny-imagenet") << std::endl <<
+					std::string("mv tiny-imagenet-200 tinyimagenet") << std::endl <<
 					std::string("rm tiny-imagenet-200.zip") << std::endl;
 #endif
 			}
