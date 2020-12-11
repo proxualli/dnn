@@ -214,7 +214,7 @@ namespace dnn
 					"cd " + path.string() << std::endl <<
 					"curl -O http://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz && tar -xf cifar-10-binary.tar.gz --strip-components=1 && del /Q cifar-10-binary.tar.gz" << std::endl;
 #else
-					std::string("#!/bin/sh") << std::endl <<
+					std::string("#!/bin/bash") << std::endl <<
 					std::string("echo loading ") + std::string(magic_enum::enum_name<Datasets>(dataset)) + std::string(" dataset...") << std::endl <<
 					std::string("cd ") + path.string() << std::endl <<
 					std::string("curl -O http://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz") << std::endl << 
@@ -237,7 +237,7 @@ namespace dnn
 					"cd " + path.string() << std::endl <<
 					"curl -O http://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz && tar -xf cifar-10-binary.tar.gz --strip-components=1 && del /Q cifar-10-binary.tar.gz" << std::endl;
 #else
-					std::string("#!/bin/sh") << std::endl <<
+					std::string("#!/bin/bash") << std::endl <<
 					std::string("echo loading ") + std::string(magic_enum::enum_name<Datasets>(dataset)) + std::string(" dataset...") << std::endl <<
 					std::string("cd ") + path.string() << std::endl <<
 					std::string("curl -O http://www.cs.toronto.edu/~kriz/cifar-100-binary.tar.gz") << std::endl << 
@@ -256,7 +256,7 @@ namespace dnn
 					"echo." << std::endl <<
 					"cd " + path.string() << std::endl <<
 #else
-					std::string("#!/bin/sh") << std::endl <<
+					std::string("#!/bin/bash") << std::endl <<
 					std::string("echo loading ") + std::string(magic_enum::enum_name<Datasets>(dataset)) + std::string(" dataset...") << std::endl <<
 					std::string("cd ") + path.string() << std::endl <<
 #endif
@@ -286,7 +286,7 @@ namespace dnn
 					"echo." << std::endl <<
 					"cd " + path.string() << std::endl <<
 #else
-					std::string("#!/bin/sh") << std::endl <<
+					std::string("#!/bin/bash") << std::endl <<
 					std::string("echo loading ") + std::string(magic_enum::enum_name<Datasets>(dataset)) + std::string(" dataset...") << std::endl <<
 					std::string("cd ") + path.string() << std::endl <<
 #endif
@@ -318,7 +318,7 @@ namespace dnn
 					"echo." << std::endl <<
 					"cd " + path.string() << std::endl <<
 #else
-					std::string("#!/bin/sh") << std::endl <<
+					std::string("#!/bin/bash") << std::endl <<
 					std::string("echo loading ") + std::string(magic_enum::enum_name<Datasets>(dataset)) + std::string(" dataset...") << std::endl <<
 					std::string("cd ") + path.string() << std::endl <<
 #endif
