@@ -220,7 +220,7 @@ int main()
     p.Groups = 3;
     p.Iterations = 2;
     p.Width = 4;
-    p.Relu = true;
+    p.Relu = false;
     p.Dropout = 0;
     p.Bottleneck = false;
     p.SqueezeExcitation = false;
