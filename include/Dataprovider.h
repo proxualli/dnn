@@ -325,10 +325,12 @@ namespace dnn
 					std::string("curl -O http://cs231n.stanford.edu/tiny-imagenet-200.zip") << std::endl <<
 #if defined _WIN32 || defined __CYGWIN__ || defined __MINGW32__
 					"powershell -ExecutionPolicy Bypass -command \"& {&./UnZip-File.ps1}\";" << std::endl <<
-				    "ren tiny-imagenet-200 tinyimagenet && del /Q tiny-imagenet-200.zip" << std::endl <<
+					"ren tiny-imagenet-200 tinyimagenet && del /Q tiny-imagenet-200.zip" << std::endl <<
 					"del UnZip-File.ps1" << std::endl;
 #else
-					std::string("unzip -o -d ./tiny-imagenet ./tiny-imagenet-200.zip") << std::endl;
+					std::string("unzip -o ./tiny-imagenet-200.zip") << std::endl <<
+					std::string("mv tiny-imagenet-200 tiny-imagenet") << std::endl <<
+					std::string("rm tiny-imagenet-200.zip") << std::endl;
 #endif
 			}
 			break;
