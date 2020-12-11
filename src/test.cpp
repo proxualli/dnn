@@ -212,10 +212,10 @@ int main()
     p.Script = Scripts::shufflenetv2;
     p.Dataset = Datasets::tinyimagenet;
     p.C = 3;
-    p.H = 64;
-    p.W = 64;
-    p.PadH = 8;
-    p.PadW = 8;
+    p.H = 48;
+    p.W = 48;
+    p.PadH = 6;
+    p.PadW = 6;
     p.MirrorPad = false;
     p.Groups = 4;
     p.Iterations = 2;
