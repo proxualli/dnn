@@ -147,25 +147,28 @@ void GetTrainingProgress(int seconds = 5, size_t trainingSamples = 50000, size_t
         else
             progress = Float(*sampleIndex) / trainingSamples; 
 
-        std::cout << "[";
-        int pos = int(barWidth * progress);
-        for (int i = 0; i < barWidth; ++i) 
+        if (*state != States::Completed)
         {
-            if (i < pos) 
-                std::cout << "=";
-            else 
-                if (i == pos) 
-                    std::cout << ">";
-                else 
-                    std::cout << " ";
+            std::cout << "[";
+            int pos = int(barWidth * progress);
+            for (int i = 0; i < barWidth; ++i)
+            {
+                if (i < pos)
+                    std::cout << "=";
+                else
+                    if (i == pos)
+                        std::cout << ">";
+                    else
+                        std::cout << " ";
+            }
+            std::cout << "] " << int(progress * 100.0) << "%  Cycle:" << std::to_string(*cycle) << "  Epoch:" << std::to_string(*epoch) << "  Error:";
+            if (*state == States::Testing)
+                std::cout << FloatToStringFixed(*testErrorPercentage, 2);
+            else
+                std::cout << FloatToStringFixed(*trainErrorPercentage, 2);
+            std::cout << "%  " << FloatToStringFixed(*sampleSpeed, 2) << " samples/s   \r";
+            std::cout.flush();
         }
-        std::cout << "] " << int(progress * 100.0) << "%  Cycle:" << std::to_string(*cycle) << "  Epoch:" << std::to_string(*epoch) << "  Error:";
-        if (*state == States::Testing)
-            std::cout << FloatToStringFixed(*testErrorPercentage, 2);
-        else
-            std::cout << FloatToStringFixed(*trainErrorPercentage, 2);
-        std::cout << "%  " << FloatToStringFixed(*sampleSpeed, 2) << " samples/s   \r";
-        std::cout.flush();
     }
    
     delete cycle;
@@ -251,7 +254,7 @@ int main()
 
             DNNSetNewEpochDelegate(&NewEpoch);
 
-            DNNAddLearningRateSGDR(true, 1, 0.05f, 128, 1, 2, 1, 0.0001f, 0.0005f, 0.9f, 1.0f, 20, true, false, 0.0f, 0.7f, 0.7f, 0.7f, 20, 0.7f, 0, 10.0f, 12.0f);
+            DNNAddLearningRateSGDR(true, 1, 0.05f, 128, 1, 20, 1, 0.0001f, 0.0005f, 0.9f, 1.0f, 20, true, false, 0.0f, 0.7f, 0.7f, 0.7f, 20, 0.7f, 0, 10.0f, 12.0f);
             DNNTraining();
 
             GetTrainingProgress(1, *trainingSamples, *testingSamples);
