@@ -210,17 +210,17 @@ int main()
     ScriptParameters p;
 
     p.Script = Scripts::shufflenetv2;
-    p.Dataset = Datasets::fashionmnist;
-    p.C = 1;
-    p.H = 28;
-    p.W = 28;
-    p.PadH = 4;
-    p.PadW = 4;
+    p.Dataset = Datasets::tinyimagenet;
+    p.C = 3;
+    p.H = 64;
+    p.W = 64;
+    p.PadH = 8;
+    p.PadW = 8;
     p.MirrorPad = false;
-    p.Groups = 3;
+    p.Groups = 4;
     p.Iterations = 2;
     p.Width = 4;
-    p.Relu = false;
+    p.Relu = true;
     p.Dropout = 0;
     p.Bottleneck = false;
     p.SqueezeExcitation = false;
