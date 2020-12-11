@@ -114,11 +114,11 @@ namespace dnn
 			return defNorm;
 		}
 
-		static Model* Read(const std::string& definition, CheckMsg& msg, const bool onlyCheck = false, Dataprovider* dataprovider = nullptr, const Optimizers optimizer = Optimizers::NAG)
+		static std::unique_ptr<Model> Read(const std::string& definition, CheckMsg& msg, const bool onlyCheck = false, Dataprovider* dataprovider = nullptr, const Optimizers optimizer = Optimizers::NAG)
 		{
 			auto userLocale = std::setlocale(LC_ALL, "C");
 
-			auto model = static_cast<Model*>(nullptr);
+			auto model = std::unique_ptr<Model>(nullptr);
 			auto dataset = Datasets::cifar10;
 			auto classes = size_t(10);
 			auto c = size_t(0);
@@ -213,7 +213,7 @@ namespace dnn
 						if (modelName.empty())
 						{
 							modelName = layerName;
-							model = new Model(modelName, dataprovider);
+							model = std::make_unique<Model>(modelName, dataprovider);
 							
 							layerNames.push_back(std::make_pair("Input", line));
 						}
@@ -2347,9 +2347,9 @@ namespace dnn
 			return checkMsg.Error;
 		}
 
-		static Model* ReadDefinition(const std::string& definition, const Optimizers optimizer, Dataprovider* dataprovider, CheckMsg& checkMsg)
+		static std::unique_ptr<Model> ReadDefinition(const std::string& definition, const Optimizers optimizer, Dataprovider* dataprovider, CheckMsg& checkMsg)
 		{
-			Model* model = Read(Normalize(definition), checkMsg, false, dataprovider, optimizer);
+			std::unique_ptr<Model> model = Read(Normalize(definition), checkMsg, false, dataprovider, optimizer);
 
 			if (checkMsg.Error)
 			{
@@ -2359,9 +2359,9 @@ namespace dnn
 			return model;
 		}
 
-		static Model* LoadDefinition(const std::string& fileName, const Optimizers optimizer, Dataprovider* dataprovider, CheckMsg& checkMsg)
+		static std::unique_ptr<Model> LoadDefinition(const std::string& fileName, const Optimizers optimizer, Dataprovider* dataprovider, CheckMsg& checkMsg)
 		{
-			Model* model = nullptr;
+			std::unique_ptr<Model> model = nullptr;
 
 			auto file = std::ifstream(fileName);
 			if (!file.bad() && file.is_open())
