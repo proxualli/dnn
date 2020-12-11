@@ -248,7 +248,11 @@ namespace dnn
 #endif
 		}
 
-		virtual ~Model() = default;
+		virtual ~Model()
+		{
+			for (auto cost : CostLayers)
+				cost = nullptr;
+		}
 				
 		void ResetWeights()
 		{
@@ -307,7 +311,7 @@ namespace dnn
 			auto list = std::vector<Layer*>();
 
 			bool exists;
-			for (auto name : inputs)
+			for (auto &name : inputs)
 			{
 				exists = false;
 				for (auto &layer : Layers)
