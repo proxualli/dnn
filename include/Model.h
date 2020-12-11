@@ -81,7 +81,6 @@ namespace dnn
 
 	public:
 		const std::string Name;
-		const dnnl::engine Engine;
 		dnn::Device Device;
 		dnnl::memory::format_tag Format;
 		Dataprovider* DataProv;
@@ -161,8 +160,7 @@ namespace dnn
 		Model(const std::string& name, Dataprovider* dataprovider) :
 			Name(name),
 			DataProv(dataprovider),
-			Engine(dnnl::engine(dnnl::engine::kind::cpu, 0)),
-			Device(dnn::Device(Engine, dnnl::stream(Engine))),
+			Device(dnn::Device(dnnl::engine(dnnl::engine::kind::cpu, 0), dnnl::stream(dnnl::engine(dnnl::engine::kind::cpu, 0)))),
 			Format(dnnl::memory::format_tag::any),
 			PersistOptimizer(false),
 			DisableLocking(true),
@@ -248,12 +246,9 @@ namespace dnn
 #endif
 		}
 
-		virtual ~Model()
-		{
-			for (auto cost : CostLayers)
-				cost = nullptr;
-		}
-				
+		virtual ~Model() = default;
+		
+			
 		void ResetWeights()
 		{
 			if (!BatchSizeChanging.load() && !ResettingWeights.load())
