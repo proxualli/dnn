@@ -248,6 +248,11 @@ namespace dnn
 
 		virtual ~Model() = default;
 		
+		void ReleaseCosts()
+		{
+			for (auto cost : CostLayers)
+				cost = nullptr;
+		}
 			
 		void ResetWeights()
 		{

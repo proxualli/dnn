@@ -69,7 +69,10 @@ extern "C" DNN_API void DNNSetNewEpochDelegate(void(*newEpoch)(size_t, size_t, s
 extern "C" DNN_API void DNNModelDispose()
 {
 	if (model.get())
+	{
+		model->ReleaseCosts();
 		model->~Model();
+	}
 }
 
 extern "C" DNN_API Model* DNNModel(const std::string name)
