@@ -210,7 +210,7 @@ int main()
     ScriptParameters p;
 
     p.Script = Scripts::shufflenetv2;
-    p.Dataset = Datasets::cifar100;
+    p.Dataset = Datasets::cifar10;
     p.C = 3;
     p.H = 32;
     p.W = 32;
@@ -218,8 +218,8 @@ int main()
     p.PadW = 4;
     p.MirrorPad = false;
     p.Groups = 3;
-    p.Iterations = 2;
-    p.Width = 4;
+    p.Iterations = 6;
+    p.Width = 10;
     p.Relu = true;
     p.Dropout = 0;
     p.Bottleneck = false;
