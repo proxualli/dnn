@@ -224,7 +224,7 @@ namespace dnn
 		return static_cast<std::streamsize>(end - start);
 	}
 
-	inline static std::string StringToLower(std::string text)
+	inline static auto StringToLower(std::string text)
 	{
 		std::transform(text.begin(), text.end(), text.begin(), ::tolower);
 		return text;

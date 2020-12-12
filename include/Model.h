@@ -269,16 +269,15 @@ namespace dnn
 			}
 		}
 
-		bool IsUniqueLayerName(const std::string& name) const
+		bool IsUniqueLayerName(std::string name) const
 		{
-			std::string nameLower(name);
-			std::transform(nameLower.begin(), nameLower.end(), nameLower.begin(), ::tolower);
+			std::transform(name.begin(), name.end(), name.begin(), ::tolower);
 			
 			for (auto &layer : Layers)
 			{
 				auto layerName = layer->Name;
 				std::transform(layerName.begin(), layerName.end(), layerName.begin(), ::tolower);
-				if (layerName == nameLower)
+				if (layerName == name)
 					return false;
 			}
 
@@ -850,7 +849,7 @@ namespace dnn
 								for (auto cost : CostLayers)
 									cost->SetSampleLabel(SampleLabel);
 
-								for (auto i = 0ull; i < Layers.size(); i++)
+								for (auto i = 1ull; i < Layers.size(); i++)
 								{
 									timePoint = timer.now();
 									Layers[i]->ForwardProp(1, true);
@@ -1513,8 +1512,8 @@ namespace dnn
 		
 		void ForwardProp(const size_t batchSize)
 		{
-			for (size_t i = 0; i < Layers.size(); i++)
-				Layers[i]->ForwardProp(batchSize, State.load() == States::Training);
+			for (auto &layer : Layers)
+				layer->ForwardProp(batchSize, State.load() == States::Training);
 		}
 
 		void BackwardProp(const size_t batchSize)
@@ -1539,8 +1538,8 @@ namespace dnn
 
 			if (!os.bad() && os.is_open())
 			{
-				for (auto i = 0ull; i < Layers.size(); i++)
-					Layers[i]->Save(os, persistOptimizer, Optimizer);
+				for (auto& layer : Layers)
+					layer->Save(os, persistOptimizer, Optimizer);
 
 				os.close();
 
@@ -1558,8 +1557,8 @@ namespace dnn
 
 				if (!is.bad() && is.is_open())
 				{
-					for (auto i = 0ull; i < Layers.size(); i++)
-						Layers[i]->Load(is, persistOptimizer, Optimizer);
+					for (auto& layer : Layers)
+						layer->Load(is, persistOptimizer, Optimizer);
 
 					is.close();
 
