@@ -181,7 +181,7 @@ namespace dnn
 		const bool HasPadding;
 		const std::vector<Layer*> Inputs;
 		Layer* InputLayer;
-		//std::vector<std::shared_ptr<Layer>> Outputs;
+		//std::vector<Layer*> Outputs;
 		bool LayerBeforeCost;
 		bool SharesInput;
 		const dnnl::memory::format_tag Format;
@@ -266,8 +266,8 @@ namespace dnn
 			BiasesScale(Float(0)),
 			BiasesLRM(Float(1)),
 			BiasesWDM(Float(1)),
-			HW(h* w),
-			CDHW(c* d* h* w),
+			HW(h * w),
+			CDHW(c * d * h * w),
 			PaddedC(DivUp(c)),
 			PaddedCDHW(layerType != LayerTypes::Input ? (DivUp(c) * d * h * w) : c * d * h * w),
 			HasPadding(padD > 0 || padH > 0 || padW > 0),
@@ -296,7 +296,7 @@ namespace dnn
 			RAdamEps(Float(1e-08)),
 			RAdamBeta1(Float(0.9)),
 			RAdamBeta2(Float(0.999)),
-			//Outputs(std::vector<std::shared_ptr<Layer>>()),
+			//Outputs(std::vector<Layer*>()),
 			UseDefaultParameters(true),
 			LockUpdate(false),
 			RefreshingStats(false),
