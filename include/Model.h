@@ -1042,7 +1042,7 @@ namespace dnn
 							// save the weights
 							State.store(States::SaveWeights);
 							std::filesystem::create_directories(DataProv->StorageDirectory / std::string("definitions") / (Name + std::string("-weights")));
-							SaveWeights((DataProv->StorageDirectory / "definitions" / (Name + "-weights") / ("epoch " + std::to_string(CurrentEpoch) + std::string("(") + std::to_string(TestErrors) + " errors).weights")).string(), PersistOptimizer);
+							SaveWeights((DataProv->StorageDirectory / std::string("definitions") / (Name + std::string("-weights")) / (std::string("epoch_") + std::to_string(CurrentEpoch) + std::string("(") + std::to_string(TestErrors) + std::string(").weights"))).string(), PersistOptimizer);
 
 							//auto fileName = (DataProv->StorageDirectory / "Definitions" /  (Name + "-weights") / (Name + " (epoch " + std::to_string(CurrentEpoch) + " - " + std::to_string(TestErrors) + " errors).weights")).string();
 							//if (TestErrors <= BestScore)

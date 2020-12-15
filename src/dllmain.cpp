@@ -68,7 +68,7 @@ extern "C" DNN_API void DNNSetNewEpochDelegate(void(*newEpoch)(size_t, size_t, s
 
 extern "C" DNN_API void DNNModelDispose()
 {
-	if (model.get())
+	if (model)
 		model.reset();
 }
 
