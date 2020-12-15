@@ -8,7 +8,7 @@
 #include <algorithm>
 #include <array>
 #include <atomic>
-//#include <bit>
+#include <bit>
 #include <cstdio>
 #include <cstring>
 #include <cmath>
@@ -72,7 +72,7 @@ namespace dnn
 	typedef std::vector<Float, AlignedAllocator<Float, 64ull>> FloatVector;
 	typedef std::vector<Byte, AlignedAllocator<Byte, 64ull>> ByteVector;
 
-    //constexpr bool IS_LITTLE_ENDIAN = (std::endian::native == std::endian::little);
+    constexpr bool IS_LITTLE_ENDIAN = std::endian::native == std::endian::little;
 	constexpr auto NEURONS_LIMIT = Float(100);   // limit for all the value of the neurons and its derivatives [-NEURONS_LIMIT,NEURONS_LIMIT]
 	constexpr auto WEIGHTS_LIMIT = Float(100);   // limit for all the value of the weights and biases [-WEIGHTS_LIMIT,WEIGHTS_LIMIT]
 	constexpr auto LIGHT_COMPUTE = 4ull;         // number of threads
@@ -187,21 +187,21 @@ namespace dnn
 		return std::uniform_real_distribution<T>(min, max)(generator);
 	}
 		
-	static std::string FloatToString(const Float value, const std::streamsize precision = 8)
+	static auto FloatToString(const Float value, const std::streamsize precision = 8)
 	{
 		std::stringstream stream; 
 		stream << std::setprecision(precision) << value;
 		return stream.str();
 	}
 
-	static std::string FloatToStringFixed(const Float value, const std::streamsize precision = 8)
+	static auto FloatToStringFixed(const Float value, const std::streamsize precision = 8)
 	{
 		std::stringstream stream; 
 		stream << std::setprecision(precision) << std::fixed << value;
 		return stream.str();
 	}
 
-	static std::string FloatToStringScientific(const Float value, const std::streamsize precision = 4)
+	static auto FloatToStringScientific(const Float value, const std::streamsize precision = 4)
 	{
 		std::stringstream stream; 
 		stream << std::setprecision(precision) << std::scientific << value;
@@ -230,7 +230,7 @@ namespace dnn
 		return text;
 	};
 
-	static bool IsStringBool(std::string text)
+	static auto IsStringBool(std::string text)
 	{
 		auto textLower = StringToLower(text);
 		
@@ -240,7 +240,7 @@ namespace dnn
 		return false;
 	}
 
-	static bool StringToBool(std::string text)
+	static auto StringToBool(std::string text)
 	{
 		auto textLower = StringToLower(text);
 		
