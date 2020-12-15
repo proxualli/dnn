@@ -234,7 +234,7 @@ int main()
 
     DNNDataprovider(path);
     
-    if (DNNReadDefinition(model, optimzer, msg) == 1)
+    if (DNNReadDefinition(model, optimizer, msg) == 1)
     {
         if (DNNLoadDataset())
         {
