@@ -32,7 +32,7 @@ namespace dnn
 		std::vector<std::vector<size_t>> TestingLabels;
 
 		Dataprovider(const std::string& directory) :
-			StorageDirectory(std::filesystem::u8path(directory)),
+			StorageDirectory(std::filesystem::path(directory)),
 			DatasetsDirectory(StorageDirectory / "datasets"),
 			TrainingSamplesCount(0),
 			TestingSamplesCount(0),
