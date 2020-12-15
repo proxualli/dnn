@@ -223,7 +223,7 @@ int main()
     p.Relu = true;
     p.Dropout = 0;
     p.Bottleneck = false;
-    p.SqueezeExcitation = false;
+    p.SqueezeExcitation = true;
     p.ChannelZeroPad = true;
 
     auto model = ScriptsCatalog::Generate(p);
@@ -254,7 +254,7 @@ int main()
 
             DNNSetNewEpochDelegate(&NewEpoch);
 
-            DNNAddLearningRateSGDR(true, 1, 0.05f, 128, 1, 20, 1, 0.0001f, 0.0005f, 0.9f, 1.0f, 20, true, false, 0.0f, 0.7f, 0.7f, 0.7f, 20, 0.7f, 0, 10.0f, 12.0f);
+            DNNAddLearningRateSGDR(true, 1, 0.05f, 144, 1, 200, 1, 0.0001f, 0.0005f, 0.9f, 1.0f, 20, true, false, 0.0f, 0.7f, 0.7f, 0.7f, 20, 0.7f, 0, 10.0f, 12.0f);
             DNNTraining();
 
             GetTrainingProgress(1, *trainingSamples, *testingSamples);
