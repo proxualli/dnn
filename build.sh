@@ -1,4 +1,8 @@
 #!/bin/bash
+sudo apt-get update
+sudo apt-get install build-essential
+sudo apt-get install curl
+sudo apt-get install clang
 sudo apt-get install nasm
 sudo apt-get install doxygen
 sudo apt-get install cmake
