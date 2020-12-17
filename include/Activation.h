@@ -231,7 +231,8 @@ namespace dnn
 			algorithm(dnnl::algorithm::eltwise_linear),
 			reorderFwdSrc(false),
 			reorderBwdSrc(false),
-			reorderBwdDiffSrc(false)
+			reorderBwdDiffSrc(false),
+			reorderBwdDiffWeights(false)
 		{
 			assert(Inputs.size() == 1);
 
@@ -286,12 +287,10 @@ namespace dnn
 			{
 			case Activations::PRelu:
 			{
-				std::vector<dnnl::memory::desc> memDesc = std::vector<dnnl::memory::desc>({
-					dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(1), dnnl::memory::dim(C), dnnl::memory::dim(1), dnnl::memory::dim(1) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::any),
-					dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::any) });
+				auto memDesc = dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(1), dnnl::memory::dim(C), dnnl::memory::dim(1), dnnl::memory::dim(1) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::an);
 							
-				fwdDescPRelu = std::make_unique<dnnl::prelu_forward::primitive_desc>(dnnl::prelu_forward::primitive_desc(dnnl::prelu_forward::desc(dnnl::prop_kind::forward, *DstMemDesc, memDesc[0]), Device.engine));
-				bwdDescPRelu = std::make_unique<dnnl::prelu_backward::primitive_desc>(dnnl::prelu_backward::primitive_desc(dnnl::prelu_backward::desc(*DstMemDesc, memDesc[0], *DiffDstMemDesc, memDesc[0]), Device.engine, *fwdDescPRelu));
+				fwdDescPRelu = std::make_unique<dnnl::prelu_forward::primitive_desc>(dnnl::prelu_forward::primitive_desc(dnnl::prelu_forward::desc(dnnl::prop_kind::forward, *DstMemDesc, memDesc), Device.engine));
+				bwdDescPRelu = std::make_unique<dnnl::prelu_backward::primitive_desc>(dnnl::prelu_backward::primitive_desc(dnnl::prelu_backward::desc(*DstMemDesc, memDesc, *DiffDstMemDesc, memDesc), Device.engine, *fwdDescPRelu));
 
 				if (*WeightsMemDesc != fwdDescPRelu->weights_desc())
 				{
