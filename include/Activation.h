@@ -287,7 +287,7 @@ namespace dnn
 			{
 			case Activations::PRelu:
 			{
-				auto memDesc = dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(1), dnnl::memory::dim(C), dnnl::memory::dim(1), dnnl::memory::dim(1) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::an);
+				auto memDesc = dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(1), dnnl::memory::dim(C), dnnl::memory::dim(1), dnnl::memory::dim(1) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::any);
 							
 				fwdDescPRelu = std::make_unique<dnnl::prelu_forward::primitive_desc>(dnnl::prelu_forward::primitive_desc(dnnl::prelu_forward::desc(dnnl::prop_kind::forward, *DstMemDesc, memDesc), Device.engine));
 				bwdDescPRelu = std::make_unique<dnnl::prelu_backward::primitive_desc>(dnnl::prelu_backward::primitive_desc(dnnl::prelu_backward::desc(*DstMemDesc, memDesc, *DiffDstMemDesc, memDesc), Device.engine, *fwdDescPRelu));
