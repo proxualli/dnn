@@ -314,6 +314,7 @@ namespace dnn
 					chosenFormat = GetDataFmt(*DstMemDesc);
 
 				reorderFwdSrc = fwdDescPRelu->src_desc() != *InputLayer->DstMemDesc;
+				reorderBwdSrc = bwdDescPRelu->src_desc() != *InputLayer->DstMemDesc;
 				reorderBwdDiffSrc = bwdDescPRelu->diff_src_desc() != *InputLayer->DiffDstMemDesc;
 				reorderBwdDiffWeights = bwdDescPRelu->diff_weights_desc() != fwdDescPRelu->weights_desc();
 
