@@ -229,7 +229,7 @@ int main()
     auto model = ScriptsCatalog::Generate(p);
 
 
-    const auto optimizer = Optimizers::SGDMomentum;
+    const auto optimizer = Optimizers::NAG;
     const auto persistOptimizer = true;
 
     DNNDataprovider(path);
