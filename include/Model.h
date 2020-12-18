@@ -355,9 +355,9 @@ namespace dnn
 
 			for (auto &layer : Layers)
 			{
-				auto count = GetLayerOutputs(layer.get()).size();
+				auto outputLayersCount = GetLayerOutputs(layer.get()).size();
 
-				if (count > 1)
+				if (outputLayersCount > 1)
 				{
 					for (auto &l : Layers)
 					{
@@ -369,18 +369,18 @@ namespace dnn
 							if (inputs->Name == layer->Name)
 							{
 								l->SharesInput = true;
-								count--;
+								outputLayersCount--;
 								break;
 							}
 						}
 
-						if (count == 1)
+						if (outputLayersCount == 1)
 							break;
 					}
 				}
 				else
 				{
-					if (count == 0 && layer->LayerType != LayerTypes::Cost)
+					if (outputLayersCount == 0 && layer->LayerType != LayerTypes::Cost)
 						unreferencedLayers.push_back(layer.get());
 				}
 			}
@@ -786,11 +786,11 @@ namespace dnn
 
 				SetOptimizer(Optimizer);
 				if (!PersistOptimizer)
-					for (auto l = 1ull; l < Layers.size(); l++)
-						Layers[l]->ResetOptimizer(Optimizer);
+					for (auto& layer : Layers)
+						layer->ResetOptimizer(Optimizer);
 				else
-					for (auto l = 1ull; l < Layers.size(); l++)
-						Layers[l]->CheckOptimizer(Optimizer);
+					for (auto& layer : Layers)
+						layer->CheckOptimizer(Optimizer);
 
 				FirstUnlockedLayer.store(Layers.size() - 2);
 				for (auto i = 0ull; i < Layers.size(); i++)

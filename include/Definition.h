@@ -2018,6 +2018,9 @@ namespace dnn
 						alpha = Float(1);
 						beta = Float(1);
 						break;
+					case Activations::PRelu:
+						alpha = Float(0.3);
+						break;
 					case Activations::Relu:
 						alpha = Float(0);
 						break;

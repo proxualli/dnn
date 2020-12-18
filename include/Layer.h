@@ -153,9 +153,7 @@ namespace dnn
 		Device(const dnnl::engine& eng, dnnl::stream str) : engine(eng), stream(str) {}
 	};
 	
-	class Layer;
-
-    class Layer
+	class Layer
 	{
 	protected:
 		dnn::Device Device;
