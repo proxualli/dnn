@@ -256,13 +256,13 @@ namespace dnn
 			{
 				ResettingWeights.store(true);
 
-				for (auto l = 0ull; l < Layers.size(); l++)
+				for (auto& layer : Layers)
 				{
-					while (Layers[l]->RefreshingStats.load())
+					while (layer->RefreshingStats.load())
 						std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-					Layers[l]->ResetWeights(WeightsFiller, WeightsScale, BiasesFiller, BiasesScale);
-					Layers[l]->ResetOptimizer(Optimizer);
+					layer->ResetWeights(WeightsFiller, WeightsScale, BiasesFiller, BiasesScale);
+					layer->ResetOptimizer(Optimizer);
 				}
 
 				ResettingWeights.store(false);
