@@ -236,8 +236,8 @@ namespace dnn
 		{
 			assert(Inputs.size() == 1);
 
-			PersistWeightsMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(1), dnnl::memory::dim(C), dnnl::memory::dim(1), dnnl::memory::dim(1) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::oihw));
-			WeightsMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(1), dnnl::memory::dim(C), dnnl::memory::dim(1), dnnl::memory::dim(1) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::oihw));
+			PersistWeightsMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ 1, dnnl::memory::dim(C), 1, 1}), dnnl::memory::data_type::f32, dnnl::memory::format_tag::nchw));
+			WeightsMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ 1, dnnl::memory::dim(C), 1, 1 }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::nchw));
 		}
 				
 		std::string GetDescription() const final override
@@ -287,7 +287,7 @@ namespace dnn
 			{
 			case Activations::PRelu:
 			{
-				auto memDesc = dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(1), dnnl::memory::dim(C), dnnl::memory::dim(1), dnnl::memory::dim(1) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::any);
+				auto memDesc = dnnl::memory::desc(dnnl::memory::dims({ 1, dnnl::memory::dim(C), 1, 1 }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::any);
 							
 				fwdDescPRelu = std::make_unique<dnnl::prelu_forward::primitive_desc>(dnnl::prelu_forward::primitive_desc(dnnl::prelu_forward::desc(dnnl::prop_kind::forward, *DstMemDesc, memDesc), Device.engine));
 				bwdDescPRelu = std::make_unique<dnnl::prelu_backward::primitive_desc>(dnnl::prelu_backward::primitive_desc(dnnl::prelu_backward::desc(*DstMemDesc, memDesc, *DiffDstMemDesc, memDesc), Device.engine, *fwdDescPRelu));
@@ -459,6 +459,32 @@ namespace dnn
 			}
 		}
 
+		ByteVector GetImage(const Byte fillColor) final override
+		{
+			if (HasWeights)
+			{
+				const auto rangeWeights = GetColorRange(WeightsMin, WeightsMax);
+
+				const auto width = WeightCount;
+				const auto height = 1;
+				const auto totalSize = width * (height + 3);
+
+				auto image = ByteVector(totalSize, fillColor);
+
+				for (auto y = 0ull; y < height; y++)
+				{
+					const auto start = y * width;
+					const auto end = start + width;
+					for (auto x = start; x < end; x++)
+						image[x] = GetColorFromRange(rangeWeights, WeightsMin, Weights[x]);
+				}
+				
+				return image;
+			}
+			else
+				return ByteVector();
+		}
+
 		void ResetWeights(const Fillers weightFiller, const Float weightFillerScale, const Fillers biasFiller, const Float biasFillerScale) override
 		{
 			if (HasWeights)
@@ -521,14 +547,14 @@ namespace dnn
 			case Activations::PRelu:
 			{
 				auto memSrc = dnnl::memory(*InputLayer->DstMemDesc, Device.engine, InputLayer->Neurons.data());
-				auto srcMem = reorderFwdSrc ? dnnl::memory(fwdDesc->src_desc(), Device.engine) : memSrc;
+				auto srcMem = reorderFwdSrc ? dnnl::memory(fwdDescPRelu->src_desc(), Device.engine) : memSrc;
 				if (reorderFwdSrc)
 				{
 					dnnl::reorder(memSrc, srcMem).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_FROM, memSrc}, { DNNL_ARG_TO, srcMem } });
 					Device.stream.wait();
 				}
 
-				auto weightsMem = dnnl::memory(fwdDesc->weights_desc(), Device.engine, Weights.data());
+				auto weightsMem = dnnl::memory(fwdDescPRelu->weights_desc(), Device.engine, Weights.data());
 
 				auto dstMem = dnnl::memory(*DstMemDesc, Device.engine, Neurons.data());
 
@@ -906,8 +932,12 @@ namespace dnn
 
 			case Activations::PRelu:
 			{
-				auto diffDstMem = dnnl::memory(*DiffDstMemDesc, Device.engine, NeuronsD1.data());
+				auto dstMem = dnnl::memory(bwdDescPRelu->dst_desc(), Device.engine, Neurons.data());
+				auto diffDstMem = dnnl::memory(bwdDescPRelu ->diff_dst_desc(), Device.engine, NeuronsD1.data());
 
+				auto memDiffSrc = SharesInput ? dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine) : dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data());
+				auto diffSrcMem = reorderBwdDiffSrc ? dnnl::memory(bwdDescPRelu->diff_src_desc(), Device.engine) : memDiffSrc;
+				
 				auto memSrc = dnnl::memory(*InputLayer->DstMemDesc, Device.engine, InputLayer->Neurons.data());
 				auto srcMem = reorderBwdSrc ? dnnl::memory(bwdDescPRelu->src_desc(), Device.engine) : memSrc;
 				if (reorderBwdSrc)
@@ -915,11 +945,13 @@ namespace dnn
 					dnnl::reorder(memSrc, srcMem).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_FROM, memSrc}, { DNNL_ARG_TO, srcMem } });
 					Device.stream.wait();
 				}
-
+				
 				auto memDiffWeights = dnnl::memory(*WeightsMemDesc, Device.engine, WeightsD1.data());
 				auto diffWeightsMem = reorderBwdDiffWeights ? dnnl::memory(bwdDescPRelu->diff_weights_desc(), Device.engine) : memDiffWeights;
 	
-				bwdPRelu->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_DIFF_DST, diffDstMem}, { DNNL_ARG_SRC, srcMem }, { DNNL_ARG_DIFF_WEIGHTS, diffWeightsMem } });
+				auto weightsMem = dnnl::memory(bwdDescPRelu->weights_desc(), Device.engine, Weights.data());
+
+				bwdPRelu->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_WEIGHTS, weightsMem }, { DNNL_ARG_DIFF_DST, diffDstMem }, { DNNL_ARG_DIFF_WEIGHTS, diffWeightsMem }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
 				Device.stream.wait();
 
 				if (reorderBwdDiffWeights)
@@ -927,10 +959,7 @@ namespace dnn
 					dnnl::reorder(diffWeightsMem, memDiffWeights).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_FROM, diffWeightsMem}, { DNNL_ARG_TO, memDiffWeights } });
 					Device.stream.wait();
 				}
-
-				auto memDiffSrc = SharesInput ? dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine) : dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data());
-				auto diffSrcMem = reorderBwdDiffSrc ? dnnl::memory(bwdDescPRelu->diff_src_desc(), Device.engine) : memDiffSrc;
-
+				
 				if (reorderBwdDiffSrc)
 				{
 					dnnl::reorder(diffSrcMem, memDiffSrc).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_FROM, diffSrcMem}, { DNNL_ARG_TO, memDiffSrc } });

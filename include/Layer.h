@@ -398,8 +398,8 @@ namespace dnn
 
 		inline void ZeroGradientMulti(const size_t batchSize)
 		{
-			for (auto& layer : Inputs)
-			    ZeroFloatVectorAllocate(layer->NeuronsD1, batchSize * layer->PaddedCDHW);
+			for (auto& inputLayer : Inputs)
+			    ZeroFloatVectorAllocate(inputLayer->NeuronsD1, batchSize * inputLayer->PaddedCDHW);
 		}
 
 		inline void ReleaseGradient()

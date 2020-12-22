@@ -224,6 +224,16 @@ extern "C" DNN_API void DNNGetImage(const size_t layerIndex, const unsigned char
 			}
 			break;
 
+			case LayerTypes::Activation:
+			{
+				if (model->Layers[layerIndex]->HasWeights)
+				{
+					ByteVector img = model->Layers[layerIndex]->GetImage(fillColor);
+					std::memcpy(image, img.data(), img.size());
+				}
+			}
+			break;
+
 			default:
 				return;
 		}
