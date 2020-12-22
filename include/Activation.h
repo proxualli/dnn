@@ -463,9 +463,9 @@ namespace dnn
 		{
 			if (HasWeights)
 			{
-				const auto rangeWeights = GetColorRange(WeightsMin, WeightsMax);
+				const auto rangeWeights = GetColorRange(BiasesMin, BiasesMax);
 
-				const auto width = WeightCount;
+				const auto width = BiasCount;
 				const auto height = 1;
 				const auto totalSize = width * (height + 3);
 
@@ -476,7 +476,7 @@ namespace dnn
 					const auto start = y * width;
 					const auto end = start + width;
 					for (auto x = start; x < end; x++)
-						image[x] = GetColorFromRange(rangeWeights, WeightsMin, Weights[x]);
+						image[x] = GetColorFromRange(rangeWeights, BiasesMin, Biases[x]);
 				}
 				
 				return image;
