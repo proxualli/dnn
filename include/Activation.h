@@ -224,7 +224,7 @@ namespace dnn
 		const Float Beta;
 
 		Activation(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const Activations activation, const std::vector<Layer*>& inputs, const Float alpha = Float(0), const Float beta = Float(0)) :
-			Layer(device, format, name, LayerTypes::Activation, activation == dnn::Activations::PRelu ? inputs[0]->C : 0, 0, inputs[0]->C, inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs, false),
+			Layer(device, format, name, LayerTypes::Activation, activation == dnn::Activations::PRelu ? inputs[0]->C : 0, activation == dnn::Activations::PRelu ? inputs[0]->C : 0, inputs[0]->C, inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs, activation == dnn::Activations::PRelu),
 			ActivationFunction(activation),
 			Alpha(alpha),
 			Beta(beta),
@@ -294,7 +294,7 @@ namespace dnn
 
 				if (*WeightsMemDesc != fwdDescPRelu->weights_desc())
 				{
-					auto memWeights = dnnl::memory(*WeightsMemDesc, Device.engine, Weights.data());
+					auto memWeights = dnnl::memory(*WeightsMemDesc, Device.engine, Biases.data());
 
 					auto weights = FloatVector(fwdDescPRelu->weights_desc().get_size());
 					auto weightsMem = dnnl::memory(fwdDescPRelu->weights_desc(), Device.engine, weights.data());
@@ -302,7 +302,7 @@ namespace dnn
 					dnnl::reorder(memWeights, weightsMem).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_FROM, memWeights}, { DNNL_ARG_TO, weightsMem } });
 					Device.stream.wait();
 
-					Weights = weights;
+					Biases = weights;
 					WeightsMemDesc = std::make_unique<dnnl::memory::desc>(fwdDescPRelu->weights_desc());
 				}
 
@@ -488,7 +488,7 @@ namespace dnn
 		void ResetWeights(const Fillers weightFiller, const Float weightFillerScale, const Fillers biasFiller, const Float biasFillerScale) override
 		{
 			if (HasWeights)
-				Weights = FloatVector(PaddedC, Float(Alpha));
+				Biases = FloatVector(PaddedC, Float(Alpha));
 		
 		    DNN_UNREF_PAR(weightFiller);
 			DNN_UNREF_PAR(weightFillerScale);
@@ -554,7 +554,7 @@ namespace dnn
 					Device.stream.wait();
 				}
 
-				auto weightsMem = dnnl::memory(fwdDescPRelu->weights_desc(), Device.engine, Weights.data());
+				auto weightsMem = dnnl::memory(fwdDescPRelu->weights_desc(), Device.engine, Biases.data());
 
 				auto dstMem = dnnl::memory(*DstMemDesc, Device.engine, Neurons.data());
 
@@ -946,10 +946,10 @@ namespace dnn
 					Device.stream.wait();
 				}
 				
-				auto memDiffWeights = dnnl::memory(*WeightsMemDesc, Device.engine, WeightsD1.data());
+				auto memDiffWeights = dnnl::memory(*WeightsMemDesc, Device.engine, BiasesD1.data());
 				auto diffWeightsMem = reorderBwdDiffWeights ? dnnl::memory(bwdDescPRelu->diff_weights_desc(), Device.engine) : memDiffWeights;
 	
-				auto weightsMem = dnnl::memory(bwdDescPRelu->weights_desc(), Device.engine, Weights.data());
+				auto weightsMem = dnnl::memory(bwdDescPRelu->weights_desc(), Device.engine, Biases.data());
 
 				bwdPRelu->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_WEIGHTS, weightsMem }, { DNNL_ARG_DIFF_DST, diffDstMem }, { DNNL_ARG_DIFF_WEIGHTS, diffWeightsMem }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
 				Device.stream.wait();
