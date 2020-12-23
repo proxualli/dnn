@@ -704,8 +704,8 @@ namespace dnn
 			{
 				BatchSizeChanging.store(true);
 
-				for (auto i = 0ull; i < Layers.size(); i++)
-					Layers[i]->SetBatchSize(batchSize);
+				for (auto &layer : Layers)
+					layer->SetBatchSize(batchSize);
 
 				AdjustedTrainingSamplesCount = (DataProv->TrainingSamplesCount % batchSize == 0) ? DataProv->TrainingSamplesCount : ((DataProv->TrainingSamplesCount / batchSize) + 1) * batchSize;
 				AdjustedTestingSamplesCount = (DataProv->TestingSamplesCount % batchSize == 0) ? DataProv->TestingSamplesCount : ((DataProv->TestingSamplesCount / batchSize) + 1) * batchSize;

@@ -287,6 +287,13 @@ namespace dnn
 							switch(activationFunction)
 							{
 							case Activations::PRelu:
+								if (alpha == 0)
+								{
+									msg = CheckMsg(line - 1, col, "Activation used without Alpha parameter.");
+									goto FAIL;
+								}
+								break;
+
 							case Activations::Swish:
 								break;
 
@@ -310,7 +317,7 @@ namespace dnn
 							case Activations::Tanh:
 								if (alpha != 0 || beta != 0)
 								{
-									msg = CheckMsg(line - 1, col, "This Activation doesn't have an Alpha or Beta parameter.");
+									msg = CheckMsg(line - 1, col, "This Activation cannot have an Alpha or Beta parameter.");
 									goto FAIL;
 								}
 								break;
@@ -2019,7 +2026,7 @@ namespace dnn
 						beta = Float(1);
 						break;
 					case Activations::PRelu:
-						alpha = Float(0.3);
+						alpha = Float(0.25);
 						break;
 					case Activations::Relu:
 						alpha = Float(0);
