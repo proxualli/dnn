@@ -208,7 +208,7 @@ extern "C" DNN_API void DNNGetImage(const size_t layerIndex, const unsigned char
 		{
 			case LayerTypes::BatchNorm:
 			case LayerTypes::BatchNormFTS:
-			case LayerTypes::BatchNormFTSDropout
+			case LayerTypes::BatchNormFTSDropout:
 			case LayerTypes::BatchNormHardLogistic:
 			case LayerTypes::BatchNormHardSwish:
 			case LayerTypes::BatchNormHardSwishDropout:

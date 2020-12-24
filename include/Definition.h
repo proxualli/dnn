@@ -1416,7 +1416,7 @@ namespace dnn
 				}
 				else if (strLine.rfind("Dropout=") == 0)
 				{
-					if (!isNormalizationLayer && layerType != LayerTypes::Input && layerType != LayerTypes::Dropout && layerType != LayerTypes::BatchNormReluDropout && layerType != LayerTypes::BatchNormHardSwishDropout && layerType != LayerTypes::BatchNormFPSDropout)
+					if (!isNormalizationLayer && layerType != LayerTypes::Input && layerType != LayerTypes::Dropout && layerType != LayerTypes::BatchNormReluDropout && layerType != LayerTypes::BatchNormHardSwishDropout && layerType != LayerTypes::BatchNormFTSDropout)
 					{
 						msg = CheckMsg(line, col, "Dropout cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
 						goto FAIL;
@@ -2012,7 +2012,7 @@ namespace dnn
 
 					switch (activationFunction)
 					{
-					case Activations::FPS:
+					case Activations::FTS:
 					    alpha = Float(-0.2);
 						break;
 					case Activations::BoundedRelu:
