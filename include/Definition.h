@@ -943,8 +943,8 @@ namespace dnn
 					switch (layerType)
 					{
 						case LayerTypes::BatchNorm:
-						case LayerTypes::BatchNormFPS:
-						case LayerTypes::BatchNormFPSDropout:
+						case LayerTypes::BatchNormFTS:
+						case LayerTypes::BatchNormFTSDropout:
 						case LayerTypes::BatchNormHardLogistic:
 						case LayerTypes::BatchNormHardSwish:
 						case LayerTypes::BatchNormHardSwishDropout:
