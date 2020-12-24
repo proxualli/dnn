@@ -108,7 +108,7 @@ namespace dnn
 		Divide = 23,
 		Dropout = 24,
 		GlobalAvgPooling = 25,
-		GlobalMaxPooling = 27,
+		GlobalMaxPooling = 26,
 		Input = 27,
 		LocalResponseNormalization = 28,
 		Max = 29,

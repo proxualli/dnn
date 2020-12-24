@@ -284,8 +284,12 @@ namespace dnn
 
 						if (layerType == LayerTypes::Activation)
 						{
+
 							switch(activationFunction)
 							{
+							case Activation::FTS:
+							break;
+
 							case Activations::PRelu:
 								if (alpha == 0)
 								{
@@ -295,8 +299,6 @@ namespace dnn
 								break;
 
 							case Activations::Swish:
-								break;
-
 							case Activations::Mish:
 							case Activations::Abs:
 							case Activations::Exp:
