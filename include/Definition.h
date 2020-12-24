@@ -505,6 +505,14 @@ namespace dnn
 								model->Layers.push_back(std::make_unique<BatchNorm>(model->Device, model->Format, name, inputs, scaling, momentum, eps, biases));
 								model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesScale, biasesLRM, biasesWDM);
 								break;
+							case LayerTypes::BatchNormFPS:
+								model->Layers.push_back(std::make_unique<BatchNormActivation<FPS, LayerTypes::BatchNormFPS>>(model->Device, model->Format, name, inputs, scaling, momentum, eps, biases));
+								model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesScale, biasesLRM, biasesWDM);
+								break;
+							case LayerTypes::BatchNormFPSDropout:
+								model->Layers.push_back(std::make_unique<BatchNormActivationDropout<FPS, LayerTypes::BatchNormFPSDropout>>(model->Device, model->Format, name, inputs, dropout, scaling, momentum, eps, biases));
+								model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesScale, biasesLRM, biasesWDM);
+								break;
 							case LayerTypes::BatchNormHardLogistic:
 								model->Layers.push_back(std::make_unique<BatchNormActivation<HardLogistic, LayerTypes::BatchNormHardLogistic>>(model->Device, model->Format, name, inputs, scaling, momentum, eps, biases));
 								model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesScale, biasesLRM, biasesWDM);
@@ -935,6 +943,8 @@ namespace dnn
 					switch (layerType)
 					{
 						case LayerTypes::BatchNorm:
+						case LayerTypes::BatchNormFPS:
+						case LayerTypes::BatchNormFPSDropout:
 						case LayerTypes::BatchNormHardLogistic:
 						case LayerTypes::BatchNormHardSwish:
 						case LayerTypes::BatchNormHardSwishDropout:
@@ -1406,7 +1416,7 @@ namespace dnn
 				}
 				else if (strLine.rfind("Dropout=") == 0)
 				{
-					if (!isNormalizationLayer && layerType != LayerTypes::Input && layerType != LayerTypes::Dropout && layerType != LayerTypes::BatchNormReluDropout && layerType != LayerTypes::BatchNormHardSwishDropout)
+					if (!isNormalizationLayer && layerType != LayerTypes::Input && layerType != LayerTypes::Dropout && layerType != LayerTypes::BatchNormReluDropout && layerType != LayerTypes::BatchNormHardSwishDropout && layerType != LayerTypes::BatchNormFPSDropout)
 					{
 						msg = CheckMsg(line, col, "Dropout cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
 						goto FAIL;
@@ -2002,6 +2012,9 @@ namespace dnn
 
 					switch (activationFunction)
 					{
+					case Activations::FPS:
+					    alpha = Float(-0.2);
+						break;
 					case Activations::BoundedRelu:
 						alpha = Float(6);
 						break;
