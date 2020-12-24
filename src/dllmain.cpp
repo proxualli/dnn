@@ -207,6 +207,8 @@ extern "C" DNN_API void DNNGetImage(const size_t layerIndex, const unsigned char
 		switch (model->Layers[layerIndex]->LayerType)
 		{
 			case LayerTypes::BatchNorm:
+			case LayerTypes::BatchNormFTS:
+			case LayerTypes::BatchNormFTSDropout
 			case LayerTypes::BatchNormHardLogistic:
 			case LayerTypes::BatchNormHardSwish:
 			case LayerTypes::BatchNormHardSwishDropout:
@@ -605,6 +607,25 @@ extern "C" DNN_API void DNNGetLayerInfo(const size_t layerIndex, size_t* inputsC
 			auto bn = dynamic_cast<BatchNorm*>(model->Layers[layerIndex].get());
 			if (bn)
 				*scaling = bn->Scaling;
+		}
+		break;
+
+		case LayerTypes::BatchNormFTS:
+		{
+			auto bn = dynamic_cast<BatchNormActivation<FTS, LayerTypes::BatchNormFTS>*>(model->Layers[layerIndex].get());
+			if (bn)
+				*scaling = bn->Scaling;
+		}
+		break;
+
+		case LayerTypes::BatchNormFTSDropout:
+		{
+			auto bn = dynamic_cast<BatchNormActivationDropout<FTS, LayerTypes::BatchNormFTSDropout>*>(model->Layers[layerIndex].get());
+			if (bn)
+			{
+				*scaling = bn->Scaling;
+				*dropout = Float(1) - bn->Keep;
+			}
 		}
 		break;
 

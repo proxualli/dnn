@@ -59,6 +59,8 @@ namespace dnn
 		inline static VecFloat dfVec(const VecFloat&) noexcept { return VecFloat(1); }
 	};
 
+   
+
 	struct Log
 	{
 		inline static Float f(const Float& x) noexcept { return std::log(x); }
@@ -115,6 +117,14 @@ namespace dnn
 		inline static VecFloat dfVec(const VecFloat& x) noexcept { return select(x > VecFloat(0), VecFloat(1), VecFloat(0)); }
 	};
 
+    struct FTS
+	{
+		inline static Float f(const Float& x, const Float& alpha = Float(-0.2)) noexcept { return Relu.f(x) * Logistic.f(x) + alpha; }
+		inline static Float df(const Float& x, const Float& alpha = Float(-0.2)) noexcept { return Relu.df(x) * Logistic.df(x) + alpha; }
+		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(Float(-0.2))) noexcept { return Relu.fVec(x) * Logistic.fVec(x) + alpha; }
+		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(Float(-0.2))) noexcept { return  Relu.dfVec(x) * Logistic.dfVec(x) + alpha; }
+	};
+
 	struct Selu
 	{
 		inline static Float f(const Float& x) noexcept { return Float(1.0507009873554804934193349852946) * (x > Float(0) ? x : Float(1.6732632423543772848170429916717) * (std::exp(x) - Float(1))); }
@@ -163,26 +173,27 @@ namespace dnn
 		Clip = 2,
 		Elu = 3,
 		Exp = 4,
-		Gelu = 5,
-		GeluErf = 6,
-		HardLogistic = 7,
-		HardSwish = 8,
-		Linear = 9,
-		Log = 10,
-		Logistic = 11,
-		LogLogistic = 12,
-		LogSoftmax = 13,
-		Mish = 14,
-		Pow = 15,
-		PRelu = 16,
-		Relu = 17,
-		Round = 18,
-		Softmax = 19,
-		SoftRelu = 20,
-		Sqrt = 21,
-		Square = 22,
-		Swish = 23,
-		Tanh = 24
+		FTS = 5,
+		Gelu = 6,
+		GeluErf = 7,
+		HardLogistic = 8,
+		HardSwish = 9,
+		Linear = 10,
+		Log = 11,
+		Logistic = 12,
+		LogLogistic = 13,
+		LogSoftmax = 14,
+		Mish = 15,
+		Pow = 16,
+		PRelu = 17,
+		Relu = 18,
+		Round = 19,
+		Softmax = 20,
+		SoftRelu = 21,
+		Sqrt = 22,
+		Square = 23,
+		Swish = 24,
+		Tanh = 25
 	};
 
 	class Activation final : public Layer
@@ -350,6 +361,7 @@ namespace dnn
 			}
 			break;
 
+            case Activations::FTS:
 			case Activations::HardLogistic:
 			case Activations::HardSwish:
 			case Activations::Mish:
@@ -361,6 +373,7 @@ namespace dnn
 			{
 				switch (ActivationFunction)
 				{
+				case Activations::FTS:
 				case Activations::HardLogistic:
 			    case Activations::HardSwish:
 			    case Activations::Mish:
@@ -567,6 +580,100 @@ namespace dnn
 #endif
 			}
 			break;
+
+			case Activations::FPS:
+			{
+				if (InputLayer->DstMemDesc->data.ndims == 2)
+				{
+#ifdef DNN_STOCHASTIC
+					if (batchSize == 1)
+					{
+						for (auto c = 0ull; c < C; c++)
+						{
+							Neurons[c] = FPS::f(InputLayer->Neurons[c]);
+#ifndef DNN_LEAN
+							NeuronsD1[c] = Float(0);
+#endif // DNN_LEAN
+						}
+					}
+					else
+					{
+#endif
+						for_i(batchSize, LIGHT_COMPUTE, [=](size_t n)
+						{
+							const auto offsetN = n * CDHW;
+
+							for (auto c = offsetN; c < offsetN + C; c++)
+							{
+								Neurons[c] = FPS::f(InputLayer->Neurons[c]);
+#ifndef DNN_LEAN
+								NeuronsD1[c] = Float(0);
+#endif // DNN_LEAN
+							}
+						});
+#ifdef DNN_STOCHASTIC
+					}
+#endif
+				}
+				else
+				{
+					const auto vecZero = VecFloat(0);
+					const auto strideH = W * VectorSize;
+#ifdef DNN_STOCHASTIC
+					if (batchSize == 1)
+					{
+						size_t offsetC, offsetH;
+
+						for (auto c = 0ull; c < PaddedC; c += VectorSize)
+						{
+							offsetC = c * HW;
+
+							for (auto h = 0ull; h < H; h++)
+							{
+								offsetH = offsetC + h * strideH;
+
+								for (auto w = offsetH; w < offsetH + strideH; w += VectorSize)
+								{
+									FPS::fVec(VecFloat().load_a(&InputLayer->Neurons[w])).store_a(&Neurons[w]);
+#ifndef DNN_LEAN
+									vecZero.store_nt(&NeuronsD1[w]);
+#endif // DNN_LEAN
+								}
+							}
+						}
+					}
+					else
+					{
+#endif
+						for_i(batchSize, MEDIUM_COMPUTE, [=](size_t n)
+						{
+							size_t offsetC, offsetH;
+
+							for (auto c = 0ull; c < PaddedC; c += VectorSize)
+							{
+								offsetC = n * PaddedCDHW + c * HW;
+
+								for (auto h = 0ull; h < H; h++)
+								{
+									offsetH = offsetC + h * strideH;
+
+									for (auto w = offsetH; w < offsetH + strideH; w += VectorSize)
+									{
+										FPS::fVec(VecFloat().load_a(&InputLayer->Neurons[w])).store_a(&Neurons[w]);
+#ifndef DNN_LEAN
+										vecZero.store_nt(&NeuronsD1[w]);
+#endif // DNN_LEAN
+									}
+								}
+							}
+						});
+					}
+#ifdef DNN_STOCHASTIC
+				}
+#endif
+			}
+			break;
+
 
 			case Activations::HardLogistic:
 			{
@@ -970,6 +1077,71 @@ namespace dnn
 				{
 					bwdAdd->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ { DNNL_ARG_SRC_0, dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data()) }, { DNNL_ARG_SRC_1, memDiffSrc }, { DNNL_ARG_DST, dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data()) } });
 					Device.stream.wait();
+				}
+			}
+			break;
+
+			case Activations::FPS:
+			{
+				if (InputLayer->DstMemDesc->data.ndims == 2)
+				{
+#ifdef DNN_STOCHASTIC
+					if (batchSize == 1)
+					{
+						for (auto c = 0ull; c < C; c++)
+							InputLayer->NeuronsD1[c] += FPS::df(Neurons[c]) * NeuronsD1[c];
+					}
+					else
+					{
+#endif
+						for_i(batchSize, LIGHT_COMPUTE, [=](size_t n)
+						{
+							const auto offsetN = n * CDHW;
+							for (auto c = offsetN; c < offsetN + C; c++)
+								InputLayer->NeuronsD1[c] += FPS::df(Neurons[c]) * NeuronsD1[c];
+						});
+#ifdef DNN_STOCHASTIC
+					}
+#endif
+				}
+				else
+				{
+					const auto strideH = W * VectorSize;
+#ifdef DNN_STOCHASTIC
+					if (batchSize == 1)
+					{
+						size_t offsetC, offsetH;
+						for (auto c = 0ull; c < PaddedC; c += VectorSize)
+						{
+							offsetC = c * HW;
+							for (auto h = 0ull; h < H; h++)
+							{
+								offsetH = offsetC + h * strideH;
+								for (auto w = offsetH; w < offsetH + strideH; w += VectorSize)
+									mul_add(FPS::dfVec(VecFloat().load_a(&Neurons[w])), VecFloat().load_a(&NeuronsD1[w]), VecFloat().load_a(&InputLayer->NeuronsD1[w])).store_a(&InputLayer->NeuronsD1[w]);
+							}
+						}
+					}
+					else
+					{
+#endif
+						for_i(batchSize, MEDIUM_COMPUTE, [=](size_t n)
+						{
+							size_t offsetC, offsetH;
+							for (auto c = 0ull; c < PaddedC; c += VectorSize)
+							{
+								offsetC = n * PaddedCDHW + c * HW;
+								for (auto h = 0ull; h < H; h++)
+								{
+									offsetH = offsetC + h * strideH;
+									for (auto w = offsetH; w < offsetH + strideH; w += VectorSize)
+										mul_add(FPS::dfVec(VecFloat().load_a(&Neurons[w])), VecFloat().load_a(&NeuronsD1[w]), VecFloat().load_a(&InputLayer->NeuronsD1[w])).store_a(&InputLayer->NeuronsD1[w]);
+								}
+							}
+						});
+#ifdef DNN_STOCHASTIC
+					}
+#endif
 				}
 			}
 			break;
