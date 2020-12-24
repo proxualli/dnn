@@ -115,15 +115,7 @@ namespace dnn
 		inline static VecFloat dfVec(const VecFloat& x) noexcept { return select(x > VecFloat(0), VecFloat(1), VecFloat(0)); }
 	};
 
-    struct FTS
-	{
-		inline static Float f(const Float& x, const Float& alpha = Float(-0.2)) noexcept { return Relu::f(x) * Logistic::f(x) + alpha; }
-		inline static Float df(const Float& x, const Float& alpha = Float(-0.2)) noexcept { return Relu::df(x) * Logistic::df(x) + alpha; }
-		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(Float(-0.2))) noexcept { return Relu::fVec(x) * Logistic::fVec(x) + alpha; }
-		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(Float(-0.2))) noexcept { return  Relu::dfVec(x) * Logistic::dfVec(x) + alpha; }
-	};
-
-	struct Selu
+    struct Selu
 	{
 		inline static Float f(const Float& x) noexcept { return Float(1.0507009873554804934193349852946) * (x > Float(0) ? x : Float(1.6732632423543772848170429916717) * (std::exp(x) - Float(1))); }
 		inline static Float df(const Float& x) noexcept { return x > Float(0) ? Float(1.0507009873554804934193349852946) : Float(1.7580993408473768599402175208123) * std::exp(x); }
@@ -162,7 +154,14 @@ namespace dnn
 		inline static VecFloat fVec(const VecFloat& x) noexcept { const VecFloat tmpExp2 = exp(VecFloat(2) * x);  return (tmpExp2 - VecFloat(1)) / (tmpExp2 + VecFloat(1)); }
 		inline static VecFloat dfVec(const VecFloat& x) noexcept { return (VecFloat(1) - square(x)); }
 	};
-	
+	 
+	 struct FTS
+	{
+		inline static Float f(const Float& x, const Float& alpha = Float(-0.2)) noexcept { return Relu::f(x) * Swish::f(x) + alpha; }
+		inline static Float df(const Float& x, const Float& alpha = Float(-0.2)) noexcept { return Relu::df(x) * Swish::df(x) + alpha; }
+		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(Float(-0.2))) noexcept { return Relu::fVec(x) * Swish::fVec(x) + alpha; }
+		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(Float(-0.2))) noexcept { return  Relu::dfVec(x) * Swish::dfVec(x) + alpha; }
+	};
 
 	enum class Activations
 	{
