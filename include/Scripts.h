@@ -185,14 +185,14 @@ namespace dnn
         static std::string BatchNormActivation(size_t id, std::string inputs, bool relu = true, std::string group = "", std::string prefix = "B")
         {
             return "[" + group + prefix + std::to_string(id) + "]" + nwl +
-                (relu ? "Type=BatchNormRelu" + nwl : "Type=BatchNormFPS" + nwl) +
+                (relu ? "Type=BatchNormRelu" + nwl : "Type=BatchNormFTS" + nwl) +
                 "Inputs=" + inputs + nwl + nwl;
         }
 
         static std::string BatchNormActivationDropout(size_t id, std::string inputs, bool relu = true, Float dropout = 0.0f, std::string group = "", std::string prefix = "B")
         {
             return "[" + group + prefix + std::to_string(id) + "]" + nwl +
-                (relu ? "Type=BatchNormReluDropout" + nwl : "Type=BatchNormFPSDropout" + nwl) +
+                (relu ? "Type=BatchNormReluDropout" + nwl : "Type=BatchNormFTSDropout" + nwl) +
                 "Inputs=" + inputs + nwl +
                 (dropout > 0.0f ? "Dropout=" + std::to_string(dropout) + nwl + nwl : nwl);
         }
