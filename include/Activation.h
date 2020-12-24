@@ -157,10 +157,10 @@ namespace dnn
 	 
 	 struct FTS
 	{
-		inline static Float f(const Float& x, const Float& alpha = Float(-0.2)) noexcept { return Relu::f(x) * Logistic::f(x) + alpha; }
-		inline static Float df(const Float& x, const Float& alpha = Float(-0.2)) noexcept { return Relu::df(x) * Logistic::df(x) + alpha; }
-		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(Float(-0.2))) noexcept { return Relu::fVec(x) * Logistic::fVec(x) + alpha; }
-		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(Float(-0.2))) noexcept { return  Relu::dfVec(x) * Logistic::dfVec(x) + alpha; }
+		inline static Float f(const Float& x, const Float& alpha = Float(-0.2)) noexcept { return  x >= Float(0) ? Logistic::f(x) + alpha : alpha; }
+		inline static Float df(const Float& x, const Float& alpha = Float(-0.2)) noexcept { return x >= Float(0) ? Logistic::f(x) * (Float(1) - x) + x : Float(0); }
+		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(Float(-0.2))) noexcept { return select(x >= VecFloat(0), Logistic::fVec(x) + alpha, VecFloat(alpha)); }
+		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(Float(-0.2))) noexcept { return  select(x >= VecFloat(0), Logistic::fVec(x) * (VecFloat(Float(1)) - x) + x, VecFloat(0)); }
 	};
 
 	enum class Activations
