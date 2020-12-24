@@ -287,7 +287,7 @@ namespace dnn
 
 							switch(activationFunction)
 							{
-							case Activation::FTS:
+							case Activations::FTS:
 							break;
 
 							case Activations::PRelu:
