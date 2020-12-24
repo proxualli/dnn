@@ -579,7 +579,7 @@ namespace dnn
 			}
 			break;
 
-			case Activations::FTS
+			case Activations::FTS:
 			{
 				if (InputLayer->DstMemDesc->data.ndims == 2)
 				{
