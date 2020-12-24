@@ -505,12 +505,12 @@ namespace dnn
 								model->Layers.push_back(std::make_unique<BatchNorm>(model->Device, model->Format, name, inputs, scaling, momentum, eps, biases));
 								model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesScale, biasesLRM, biasesWDM);
 								break;
-							case LayerTypes::BatchNormFPS:
-								model->Layers.push_back(std::make_unique<BatchNormActivation<FPS, LayerTypes::BatchNormFPS>>(model->Device, model->Format, name, inputs, scaling, momentum, eps, biases));
+							case LayerTypes::BatchNormFTS:
+								model->Layers.push_back(std::make_unique<BatchNormActivation<FTS, LayerTypes::BatchNormFTS>>(model->Device, model->Format, name, inputs, scaling, momentum, eps, biases));
 								model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesScale, biasesLRM, biasesWDM);
 								break;
-							case LayerTypes::BatchNormFPSDropout:
-								model->Layers.push_back(std::make_unique<BatchNormActivationDropout<FPS, LayerTypes::BatchNormFPSDropout>>(model->Device, model->Format, name, inputs, dropout, scaling, momentum, eps, biases));
+							case LayerTypes::BatchNormFTSDropout:
+								model->Layers.push_back(std::make_unique<BatchNormActivationDropout<FTS, LayerTypes::BatchNormFTSDropout>>(model->Device, model->Format, name, inputs, dropout, scaling, momentum, eps, biases));
 								model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesScale, biasesLRM, biasesWDM);
 								break;
 							case LayerTypes::BatchNormHardLogistic:

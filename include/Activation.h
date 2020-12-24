@@ -59,9 +59,7 @@ namespace dnn
 		inline static VecFloat dfVec(const VecFloat&) noexcept { return VecFloat(1); }
 	};
 
-   
-
-	struct Log
+    struct Log
 	{
 		inline static Float f(const Float& x) noexcept { return std::log(x); }
 		inline static Float df(const Float& x) noexcept { return Float(1) / x; }
@@ -581,7 +579,7 @@ namespace dnn
 			}
 			break;
 
-			case Activations::FPS:
+			case Activations::FTS
 			{
 				if (InputLayer->DstMemDesc->data.ndims == 2)
 				{
@@ -590,7 +588,7 @@ namespace dnn
 					{
 						for (auto c = 0ull; c < C; c++)
 						{
-							Neurons[c] = FPS::f(InputLayer->Neurons[c]);
+							Neurons[c] = FTS::f(InputLayer->Neurons[c]);
 #ifndef DNN_LEAN
 							NeuronsD1[c] = Float(0);
 #endif // DNN_LEAN
@@ -605,7 +603,7 @@ namespace dnn
 
 							for (auto c = offsetN; c < offsetN + C; c++)
 							{
-								Neurons[c] = FPS::f(InputLayer->Neurons[c]);
+								Neurons[c] = FTS::f(InputLayer->Neurons[c]);
 #ifndef DNN_LEAN
 								NeuronsD1[c] = Float(0);
 #endif // DNN_LEAN
@@ -634,7 +632,7 @@ namespace dnn
 
 								for (auto w = offsetH; w < offsetH + strideH; w += VectorSize)
 								{
-									FPS::fVec(VecFloat().load_a(&InputLayer->Neurons[w])).store_a(&Neurons[w]);
+									FTS::fVec(VecFloat().load_a(&InputLayer->Neurons[w])).store_a(&Neurons[w]);
 #ifndef DNN_LEAN
 									vecZero.store_nt(&NeuronsD1[w]);
 #endif // DNN_LEAN
@@ -659,7 +657,7 @@ namespace dnn
 
 									for (auto w = offsetH; w < offsetH + strideH; w += VectorSize)
 									{
-										FPS::fVec(VecFloat().load_a(&InputLayer->Neurons[w])).store_a(&Neurons[w]);
+										FTS::fVec(VecFloat().load_a(&InputLayer->Neurons[w])).store_a(&Neurons[w]);
 #ifndef DNN_LEAN
 										vecZero.store_nt(&NeuronsD1[w]);
 #endif // DNN_LEAN
@@ -1081,7 +1079,7 @@ namespace dnn
 			}
 			break;
 
-			case Activations::FPS:
+			case Activations::FTS:
 			{
 				if (InputLayer->DstMemDesc->data.ndims == 2)
 				{
@@ -1089,7 +1087,7 @@ namespace dnn
 					if (batchSize == 1)
 					{
 						for (auto c = 0ull; c < C; c++)
-							InputLayer->NeuronsD1[c] += FPS::df(Neurons[c]) * NeuronsD1[c];
+							InputLayer->NeuronsD1[c] += FTS::df(Neurons[c]) * NeuronsD1[c];
 					}
 					else
 					{
@@ -1098,7 +1096,7 @@ namespace dnn
 						{
 							const auto offsetN = n * CDHW;
 							for (auto c = offsetN; c < offsetN + C; c++)
-								InputLayer->NeuronsD1[c] += FPS::df(Neurons[c]) * NeuronsD1[c];
+								InputLayer->NeuronsD1[c] += FTS::df(Neurons[c]) * NeuronsD1[c];
 						});
 #ifdef DNN_STOCHASTIC
 					}
@@ -1118,7 +1116,7 @@ namespace dnn
 							{
 								offsetH = offsetC + h * strideH;
 								for (auto w = offsetH; w < offsetH + strideH; w += VectorSize)
-									mul_add(FPS::dfVec(VecFloat().load_a(&Neurons[w])), VecFloat().load_a(&NeuronsD1[w]), VecFloat().load_a(&InputLayer->NeuronsD1[w])).store_a(&InputLayer->NeuronsD1[w]);
+									mul_add(FTS::dfVec(VecFloat().load_a(&Neurons[w])), VecFloat().load_a(&NeuronsD1[w]), VecFloat().load_a(&InputLayer->NeuronsD1[w])).store_a(&InputLayer->NeuronsD1[w]);
 							}
 						}
 					}
@@ -1135,7 +1133,7 @@ namespace dnn
 								{
 									offsetH = offsetC + h * strideH;
 									for (auto w = offsetH; w < offsetH + strideH; w += VectorSize)
-										mul_add(FPS::dfVec(VecFloat().load_a(&Neurons[w])), VecFloat().load_a(&NeuronsD1[w]), VecFloat().load_a(&InputLayer->NeuronsD1[w])).store_a(&InputLayer->NeuronsD1[w]);
+										mul_add(FTS::dfVec(VecFloat().load_a(&Neurons[w])), VecFloat().load_a(&NeuronsD1[w]), VecFloat().load_a(&InputLayer->NeuronsD1[w])).store_a(&InputLayer->NeuronsD1[w]);
 								}
 							}
 						});
