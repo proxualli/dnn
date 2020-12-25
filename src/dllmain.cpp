@@ -265,6 +265,12 @@ extern "C" DNN_API void DNNGetLayerWeights(const size_t layerIndex, std::vector<
 		}
 }
 
+extern "C" DNN_API void DNNResetOptimizer(const Optimizers optimizer)
+{
+	if (model)
+		model->ResetOptimizer(optimizer);
+}
+
 extern "C" DNN_API void DNNSetOptimizer(const Optimizers optimizer)
 {
 	if (model)
