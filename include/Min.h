@@ -78,13 +78,15 @@ namespace dnn
 			ZeroGradientMulti(batchSize);
 #endif
 
+			const auto size = IsPlainFormat() ? CDHW : PaddedCDHW;
+
 #ifdef DNN_STOCHASTIC
 			if (batchSize == 1)
 			{
 				for (auto n = 0ull; n < CDHW; n++)
 				{
-					Inputs[0]->NeuronsD1[n] += NeuronsD1[n];
-					Inputs[1]->NeuronsD1[n] += NeuronsD1[n];
+					Inputs[0]->NeuronsD1[n] += Inputs[0]->Neurons[n] <= Inputs[1]->Neurons[n] ? NeuronsD1[n] : 0;
+					Inputs[1]->NeuronsD1[n] += Inputs[0]->Neurons[n] <= Inputs[1]->Neurons[n] ? 0 : NeuronsD1[n];
 				}
 			}
 			else
@@ -92,12 +94,19 @@ namespace dnn
 #endif
 				for_i(batchSize, LIGHT_COMPUTE, [=](size_t b)
 				{
-					const auto start = b * PaddedCDHW;
-					const auto end = start + CDHW;
-					for (auto n = start; n < end; n++)
+					const auto start = b * size;
+					const auto end = start + size;
+
+					const VecFloat zero = VecFloat(0);
+					VecFloat InA, InB, D1;
+					for (auto n = start; n < end; n += VectorSize)
 					{
-						Inputs[0]->NeuronsD1[n] += NeuronsD1[n];
-						Inputs[1]->NeuronsD1[n] += NeuronsD1[n];
+						InA = VecFloat().load_a(&Inputs[0]->Neurons[n]);
+						InB = VecFloat().load_a(&Inputs[1]->Neurons[n]);
+						D1 = VecFloat().load_a(&NeuronsD1[n]);
+
+						select(InA <= InB, VecFloat().load_a(&Inputs[0]->NeuronsD1[n]) + D1, zero).store_a(&Inputs[0]->NeuronsD1[n]);
+						select(InA <= InB, zero, VecFloat().load_a(&Inputs[1]->NeuronsD1[n]) + D1).store_a(&Inputs[1]->NeuronsD1[n]);
 					}
 				});
 #ifdef DNN_STOCHASTIC

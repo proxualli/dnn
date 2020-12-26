@@ -200,7 +200,7 @@ namespace dnn
             }
             else
             {
-                std::string text = "[" + group + "B" + std::to_string(id) + "B1]" + nwl +
+               return "[" + group + "B" + std::to_string(id) + "B1]" + nwl +
                     "Type=BatchNorm" + nwl +
                     "Inputs=" + inputs + nwl + nwl +
 
@@ -218,8 +218,6 @@ namespace dnn
                     "[" + group + prefix + std::to_string(id) + "]" + nwl +
                     "Type=Max" + nwl +
                     "Inputs=" + group + "B" + std::to_string(id) + "FReluB," + group + "B" + std::to_string(id) + "B1" + nwl + nwl;
-                    
-                return text;
             }
         }
 
