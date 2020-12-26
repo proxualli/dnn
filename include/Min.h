@@ -113,7 +113,6 @@ namespace dnn
 					const auto start = b * size;
 					const auto end = start + size;
 
-					const VecFloat zero = VecFloat(0);
 					VecFloat InA, InB, D1;
 					for (auto n = start; n < end; n += VectorSize)
 					{
