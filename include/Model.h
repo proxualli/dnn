@@ -587,6 +587,12 @@ namespace dnn
 			Optimizer = optimizer;
 		}
 
+		void ResetOptimizer(const Optimizers optimizer)
+		{
+			for (auto &layer : Layers)
+				layer->ResetOptimizer(optimizer);
+		}
+
 #ifdef DNN_STOCHASTIC
 		void CostFunction(const States state)
 		{
