@@ -43,9 +43,25 @@ namespace dnn
 		{
 			DNN_UNREF_PAR(batchSize);
 
-			DstMemDesc = std::make_unique<dnnl::memory::desc>(*InputLayer->DstMemDesc);
-			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(*InputLayer->DiffDstMemDesc);
-			chosenFormat = GetDataFmt(*DstMemDesc);
+			if (InputLayer->DstMemDesc->data.ndims == 2)
+			{
+				chosenFormat = dnnl::memory::format_tag::nc;
+
+				DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, chosenFormat));
+				DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, chosenFormat));
+			}
+			else
+			{
+				if (Format == dnnl::memory::format_tag::any)
+				{
+					chosenFormat = GetDataFmt(*InputLayer->DstMemDesc);
+					if (chosenFormat != GetDataFmt(*InputLayer->DiffDstMemDesc))
+						throw std::invalid_argument("Src and Diff format are different in " + std::string(magic_enum::enum_name<LayerTypes>(LayerType)) + " layer " + Name);
+				}
+
+				DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, chosenFormat));
+				DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, chosenFormat));
+			}
 		
 			for (size_t i = 1; i < Inputs.size(); i++)
 			{
@@ -83,7 +99,7 @@ namespace dnn
 #ifdef DNN_STOCHASTIC
 			if (batchSize == 1)
 			{
-				for (auto n = 0ull; n < CDHW; n++)
+				for (auto n = 0ull; n < size; n++)
 				{
 					Inputs[0]->NeuronsD1[n] += Inputs[0]->Neurons[n] <= Inputs[1]->Neurons[n] ? NeuronsD1[n] : 0;
 					Inputs[1]->NeuronsD1[n] += Inputs[0]->Neurons[n] <= Inputs[1]->Neurons[n] ? 0 : NeuronsD1[n];
