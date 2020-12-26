@@ -113,17 +113,17 @@ namespace dnn
 				{
 					const auto start = b * size;
 					const auto end = start + size;
-					
+
 					const VecFloat zero = VecFloat(0);
 					VecFloat InA, InB, D1;
-					for (auto n = start; n < end; n+= VectorSize)
+					for (auto n = start; n < end; n+=VectorSize)
 					{
 						InA = VecFloat().load_a(&Inputs[0]->Neurons[n]);
 						InB = VecFloat().load_a(&Inputs[1]->Neurons[n]);
 						D1 = VecFloat().load_a(&NeuronsD1[n]);
-						
-						select(InA >= InB, VecFloat().load_a(&Inputs[0]->NeuronsD1[n]) + D1, zero).store_a(&Inputs[0]->NeuronsD1[n]);
-						select(InA >= InB, zero, VecFloat().load_a(&Inputs[1]->NeuronsD1[n]) + D1).store_a(&Inputs[1]->NeuronsD1[n]);
+
+						if_add(InA >= InB, VecFloat().load_a(&Inputs[0]->NeuronsD1[n]), D1).store_a(&Inputs[0]->NeuronsD1[n]);
+						if_add(InA < InB, VecFloat().load_a(&Inputs[1]->NeuronsD1[n]), D1).store_a(&Inputs[1]->NeuronsD1[n]);
 					}
 				});
 #ifdef DNN_STOCHASTIC
