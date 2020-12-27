@@ -182,14 +182,13 @@ namespace dnn
                 "Inputs=" + inputs + nwl + nwl;
         }
 
-/*
         static std::string BatchNormActivation(size_t id, std::string inputs, bool relu = true, std::string group = "", std::string prefix = "B")
         {
             return "[" + group + prefix + std::to_string(id) + "]" + nwl +
                 (relu ? "Type=BatchNormRelu" + nwl : "Type=BatchNormFTS" + nwl) +
                 "Inputs=" + inputs + nwl + nwl;
         }
-*/
+/*
         static std::string BatchNormActivation(size_t id, std::string inputs, bool relu = true, std::string group = "", std::string prefix = "B")
         {
             if (relu)
@@ -220,6 +219,7 @@ namespace dnn
                     "Inputs=" + group + "B" + std::to_string(id) + "FReluB," + group + "B" + std::to_string(id) + "B1" + nwl + nwl;
             }
         }
+*/
 
         static std::string BatchNormActivationDropout(size_t id, std::string inputs, bool relu = true, Float dropout = 0.0f, std::string group = "", std::string prefix = "B")
         {

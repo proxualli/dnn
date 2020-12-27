@@ -16,7 +16,7 @@ namespace dnn
 
 		Dropout(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const Float dropout = Float(0.3)) :
 			Layer(device, format, name, LayerTypes::Dropout, 0, 0, inputs[0]->C, inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs),
-			PartialCDHW(((inputs[0]->C* inputs[0]->D* inputs[0]->H* inputs[0]->W) / VectorSize)* VectorSize),
+			PartialCDHW(((inputs[0]->C * inputs[0]->D * inputs[0]->H * inputs[0]->W) / VectorSize) * VectorSize),
 			Keep(Float(1) - dropout),
 			Scale(Float(1) / (Float(1) - dropout)),
 			DropoutDistribution(std::bernoulli_distribution(double(1) - dropout)),
