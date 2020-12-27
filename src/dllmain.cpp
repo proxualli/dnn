@@ -182,6 +182,18 @@ extern "C" DNN_API void DNNPersistOptimizer(const bool persistOptimizer)
 		model->PersistOptimizer = persistOptimizer;
 }
 
+extern "C" DNN_API void DNNResetOptimizer(const Optimizers optimizer)
+{
+	if (model)
+		model->ResetOptimizer(optimizer);
+}
+
+extern "C" DNN_API void DNNSetOptimizer(const Optimizers optimizer)
+{
+	if (model)
+		model->SetOptimizer(optimizer);
+}
+
 extern "C" DNN_API void DNNDisableLocking(const bool disable)
 {
 	if (model)
@@ -263,18 +275,6 @@ extern "C" DNN_API void DNNGetLayerWeights(const size_t layerIndex, std::vector<
 				for (size_t i = 0; i < model->Layers[layerIndex]->BiasCount; i++)
 					(*biases)[i] = model->Layers[layerIndex]->Biases[i];
 		}
-}
-
-extern "C" DNN_API void DNNResetOptimizer(const Optimizers optimizer)
-{
-	if (model)
-		model->ResetOptimizer(optimizer);
-}
-
-extern "C" DNN_API void DNNSetOptimizer(const Optimizers optimizer)
-{
-	if (model)
-		model->SetOptimizer(optimizer);
 }
 
 extern "C" DNN_API void DNNAddLearningRate(const bool clear, const size_t gotoEpoch, const Float maximumRate, const size_t batchSize, const size_t cycles, const size_t epochs, const size_t epochMultiplier, const Float minimumRate, const Float L2penalty, const Float momentum, const Float decayFactor, const size_t decayAfterEpochs, const bool horizontalFlip, const bool verticalFlip, const Float dropout, const Float cutout, const Float autoAugment, const Float colorCast, const size_t colorAngle, const Float distortion, const size_t interpolation, const Float maxScaling, const Float maxRotation)
