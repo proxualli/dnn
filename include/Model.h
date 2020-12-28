@@ -240,7 +240,6 @@ namespace dnn
 #else
 			dnnl_set_verbose(0);
 #endif
-
 #ifdef DNN_SSE41
 			dnnl::set_max_cpu_isa(dnnl::cpu_isa::sse41);
 #endif

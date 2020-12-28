@@ -254,7 +254,7 @@ DNN_TARGET_ENABLE_CXX17(${PROJECT_NAME})
 if(BUILD_SHARED_LIBS)
   target_compile_definitions(${PROJECT_NAME} PRIVATE DNN_EXPORTS DNN_DLL DNN_CACHE_PRIMITIVES DNN_AVX2 DNN_OMP cimg_use_cpp11 cimg_use_jpeg cimg_use_png cimg_use_zlib)
 else()
-  target_compile_definitions(${PROJECT_NAME} PRIVATE DNN_EXPORTS DNN_CACHE_PRIMITIVES DNN_OMP DNN_AVX2 cimg_use_cpp11 cimg_use_jpeg cimg_use_png cimg_use_zlib)
+  target_compile_definitions(${PROJECT_NAME} PRIVATE DNN_EXPORTS DNN_CACHE_PRIMITIVES DNN_AVX2 DNN_OMP cimg_use_cpp11 cimg_use_jpeg cimg_use_png cimg_use_zlib)
 endif()
 target_include_directories(${PROJECT_NAME}
     PUBLIC
@@ -268,7 +268,7 @@ DNN_TARGET_ENABLE_CXX17(test)
 if(BUILD_SHARED_LIBS)
   target_compile_definitions(test PRIVATE DNN_EXPORTS DNN_DLL DNN_CACHE_PRIMITIVES DNN_AVX2 DNN_OMP cimg_use_cpp11 cimg_use_jpeg cimg_use_png cimg_use_zlib)
 else()
-  target_compile_definitions(test PRIVATE DNN_EXPORTS DNN_CACHE_PRIMITIVES DNN_OMP DNN_AVX2 cimg_use_cpp11 cimg_use_jpeg cimg_use_png cimg_use_zlib)
+  target_compile_definitions(test PRIVATE DNN_EXPORTS DNN_CACHE_PRIMITIVES DNN_AVX2 DNN_OMP cimg_use_cpp11 cimg_use_jpeg cimg_use_png cimg_use_zlib)
 endif()
 target_include_directories(test 
     PUBLIC
