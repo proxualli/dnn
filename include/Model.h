@@ -240,14 +240,12 @@ namespace dnn
 #else
 			dnnl_set_verbose(0);
 #endif
-#ifdef DNN_SSE41
-			dnnl::set_max_cpu_isa(dnnl::cpu_isa::sse41);
-#endif
-#ifdef DNN_AVX2
-			dnnl::set_max_cpu_isa(dnnl::cpu_isa::avx2);
-#endif
-#ifdef DNN_AVX512
+#if defined(DNN_AVX512)
 			dnnl::set_max_cpu_isa(dnnl::cpu_isa::all);
+#elif defined(DNN_AVX2)
+			dnnl::set_max_cpu_isa(dnnl::cpu_isa::avx2);
+#elif defined(DNN_SSE41)
+			dnnl::set_max_cpu_isa(dnnl::cpu_isa::sse41);
 #endif
 		}
 
