@@ -177,8 +177,10 @@ namespace dnn
 		generator.init(static_cast<int>(__rdtsc()), static_cast<int>(std::hash<std::thread::id>()(std::this_thread::get_id())));
 #ifdef DNN_AVX512
 		return select(generator.random16f() < prob, VecFloat(1), VecFloat(0));
-#else
+#elif DNN_AVX2
 		return select(generator.random8f() < prob, VecFloat(1), VecFloat(0));
+#elif DNN_SSE41
+		return select(generator.random4f() < prob, VecFloat(1), VecFloat(0));
 #endif
 	}
 
