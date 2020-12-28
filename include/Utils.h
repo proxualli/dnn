@@ -32,12 +32,17 @@
 #include <utility>
 
 #ifndef MAX_VECTOR_SIZE
+#ifdef DNN_SSE41
+#define INSTRSET 5
+#define MAX_VECTOR_SIZE 128
+#endif
+#ifdef DNN_AVX2
+#define INSTRSET 8
+#define MAX_VECTOR_SIZE 256
+#endif
 #ifdef DNN_AVX512
 #define INSTRSET 9
 #define MAX_VECTOR_SIZE 512
-#else
-#define INSTRSET 8
-#define MAX_VECTOR_SIZE 256
 #endif
 #endif
 
