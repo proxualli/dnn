@@ -95,11 +95,11 @@ namespace dnn
 
 	constexpr auto PlainFmt = dnnl::memory::format_tag::nchw;
 
-#ifdef DNN_AVX512
-	typedef Vec16f VecFloat;
-	typedef Vec16fb VecFloatBool;
-	constexpr auto VectorSize = 16ull;
-	constexpr auto BlockedFmt = dnnl::memory::format_tag::nChw16c;
+#ifdef DNN_SSE41
+	typedef Vec4f VecFloat;
+	typedef Vec4fb VecFloatBool;
+	constexpr auto VectorSize = 4ull;
+	constexpr auto BlockedFmt = dnnl::memory::format_tag::nChw4c;
 #endif
 #ifdef DNN_AVX2
 	typedef Vec8f VecFloat;
@@ -107,11 +107,11 @@ namespace dnn
 	constexpr auto VectorSize = 8ull;
 	constexpr auto BlockedFmt = dnnl::memory::format_tag::nChw8c;
 #endif
-#ifdef DNN_SSE4
-	typedef Vec4f VecFloat;
-	typedef Vec4fb VecFloatBool;
-	constexpr auto VectorSize = 4ull;
-	constexpr auto BlockedFmt = dnnl::memory::format_tag::nChw4c;
+#ifdef DNN_AVX512
+	typedef Vec16f VecFloat;
+	typedef Vec16fb VecFloatBool;
+	constexpr auto VectorSize = 16ull;
+	constexpr auto BlockedFmt = dnnl::memory::format_tag::nChw16c;
 #endif
 
 	constexpr auto DivUp(const size_t& c) noexcept { return (((c - 1) / VectorSize) + 1) * VectorSize; }
