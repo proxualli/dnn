@@ -107,18 +107,18 @@ namespace dnn
 			ZeroGradientMulti(batchSize);
 #endif
 
+			const auto size = IsPlainFormat() ? CDHW : PaddedCDHW;
+
 #ifdef DNN_STOCHASTIC
 			if (batchSize == 1)
 			{
 				for (auto i = 0ull; i < Inputs.size(); i++)
-					for (auto n = 0ull; n < Inputs[i]->CDHW; n++)
+					for (auto n = 0ull; n < size; n++)
 						Inputs[i]->NeuronsD1[n] += NeuronsD1[n];
 			}
 			else
 			{
 #endif
-				const auto size = IsPlainFormat() ? CDHW : PaddedCDHW;
-
 				switch (Inputs.size())
 				{
 				case 2:
@@ -127,6 +127,7 @@ namespace dnn
 					{
 						const auto start = b * size;
 						const auto end = start + size;
+#pragma omp simd
 						for (auto n = start; n < end; n++)
 						{
 							Inputs[0]->NeuronsD1[n] += NeuronsD1[n];

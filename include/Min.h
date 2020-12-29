@@ -8,12 +8,10 @@ namespace dnn
 	private:
 		std::unique_ptr<dnnl::binary::primitive_desc> fwdDesc;
 		std::unique_ptr<dnnl::binary> fwd;
-		const size_t PartialCDHW;
-
+		
 	public:
 		Min(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs) :
-			Layer(device, format, name, LayerTypes::Min, 0, 0, inputs[0]->C, inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs),
-			PartialCDHW(((inputs[0]->C * inputs[0]->D * inputs[0]->H * inputs[0]->W) / VectorSize) * VectorSize)
+			Layer(device, format, name, LayerTypes::Min, 0, 0, inputs[0]->C, inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs)
 		{
 			assert(Inputs.size() == 2);
 
@@ -97,12 +95,13 @@ namespace dnn
 #endif
 
 			const auto size = IsPlainFormat() ? CDHW : PaddedCDHW;
+	        const auto part = (size / VectorSize) * VectorSize;
 
 #ifdef DNN_STOCHASTIC
 			if (batchSize == 1)
 			{
 				VecFloat InA, InB, D1;
-				for (auto n = 0; n < PartialCDHW; n += VectorSize)
+				for (auto n = 0; n < part; n += VectorSize)
 				{
 					InA.load_a(&Inputs[0]->Neurons[n]);
 					InB.load_a(&Inputs[1]->Neurons[n]);
@@ -111,7 +110,7 @@ namespace dnn
 					if_add(InA <= InB, VecFloat().load_a(&Inputs[0]->NeuronsD1[n]), D1).store_a(&Inputs[0]->NeuronsD1[n]);
 					if_add(InA > InB, VecFloat().load_a(&Inputs[1]->NeuronsD1[n]), D1).store_a(&Inputs[1]->NeuronsD1[n]);
 				}
-				for (auto n = PartialCDHW; n < size; n++)
+				for (auto n = part; n < size; n++)
 				{
 					Inputs[0]->NeuronsD1[n] += Inputs[0]->Neurons[n] <= Inputs[1]->Neurons[n] ? NeuronsD1[n] : 0;
 					Inputs[1]->NeuronsD1[n] += Inputs[0]->Neurons[n] <= Inputs[1]->Neurons[n] ? 0 : NeuronsD1[n];
@@ -123,7 +122,7 @@ namespace dnn
 				for_i(batchSize, LIGHT_COMPUTE, [=](size_t b)
 				{
 					const auto start = b * size;
-					const auto end = start + PartialCDHW;
+					const auto end = start + part;
 
 					VecFloat InA, InB, D1;
 					for (auto n = start; n < end; n += VectorSize)
