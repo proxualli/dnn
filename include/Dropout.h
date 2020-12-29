@@ -8,15 +8,13 @@ namespace dnn
 	private:
 		std::bernoulli_distribution DropoutDistribution;
 		FloatVector NeuronsActive;
-		const size_t PartialCDHW;
-
+	
 	public:
 		const Float Keep;
 		const Float Scale;
 
 		Dropout(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const Float dropout = Float(0.3)) :
 			Layer(device, format, name, LayerTypes::Dropout, 0, 0, inputs[0]->C, inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs),
-			PartialCDHW(((inputs[0]->C * inputs[0]->D * inputs[0]->H * inputs[0]->W) / VectorSize) * VectorSize),
 			Keep(Float(1) - dropout),
 			Scale(Float(1) / (Float(1) - dropout)),
 			DropoutDistribution(std::bernoulli_distribution(double(1) - dropout)),
@@ -68,13 +66,14 @@ namespace dnn
 		void ForwardProp(const size_t batchSize, const bool training) final override
 		{
 			const auto size = IsPlainFormat() ? CDHW : PaddedCDHW;
+	        const auto part = (size / VectorSize) * VectorSize;
 
 			if (training)
 			{
 #ifdef DNN_STOCHASTIC
 				if (batchSize == 1)
 				{
-					for (size_t i = 0; i < PartialCDHW; i += VectorSize)
+					for (auto i = 0ull; i < part; i += VectorSize)
 					{
 						const auto neuronsActive = BernoulliVecFloat(Keep);
 						neuronsActive.store_a(&NeuronsActive[i]);
@@ -83,7 +82,7 @@ namespace dnn
 						VecFloat(0).store_nt(&NeuronsD1[i]);
 #endif
 					}
-					for (size_t i = PartialCDHW; i < size; i++)
+					for (auto i = part; i < size; i++)
 					{
 						NeuronsActive[i] = Bernoulli<Float>(Keep);
 						Neurons[i] = NeuronsActive[i] * Scale * InputLayer->Neurons[i];
@@ -99,9 +98,9 @@ namespace dnn
 					for_i(batchSize, [=](size_t b)
 					{
 						const auto start = b * size;
-						const auto part = start + PartialCDHW;
+						const auto end = start + part;
 
-						for (auto i = start; i < part; i += VectorSize)
+						for (auto i = start; i < end; i += VectorSize)
 						{
 							const auto neuronsActive = BernoulliVecFloat(Keep);
 							neuronsActive.store_a(&NeuronsActive[i]);
@@ -110,7 +109,7 @@ namespace dnn
 							VecFloat(0).store_nt(&NeuronsD1[i]);
 #endif
 						}
-						for (auto i = part; i < start + size; i++)
+						for (auto i = end; i < start + size; i++)
 						{
 							NeuronsActive[i] = Bernoulli<Float>(Keep);
 							Neurons[i] = NeuronsActive[i] * Scale * InputLayer->Neurons[i];
@@ -128,9 +127,9 @@ namespace dnn
 #ifdef DNN_STOCHASTIC
 				if (batchSize == 1)
 				{
-					for (auto i = 0ull; i < PartialCDHW; i += VectorSize)
+					for (auto i = 0ull; i < part; i += VectorSize)
 						VecFloat().load_a(&InputLayer->Neurons[i]).store_a(&Neurons[i]);
-					for (auto i = PartialCDHW; i < size; i++)
+					for (auto i = part; i < size; i++)
 						Neurons[i] = InputLayer->Neurons[i];
 				}
 				else
@@ -139,10 +138,10 @@ namespace dnn
 					for_i(batchSize, LIGHT_COMPUTE, [=](size_t b)
 					{
 						const auto start = b * size;
-						const auto part = start + PartialCDHW;
-						for (auto i = start; i < part; i += VectorSize)
+						const auto end = start + part;
+						for (auto i = start; i < end; i += VectorSize)
 							(VecFloat().load_a(&InputLayer->Neurons[i])).store_a(&Neurons[i]);
-						for (auto i = part; i < start + size; i++)
+						for (auto i = end; i < start + size; i++)
 							Neurons[i] = InputLayer->Neurons[i];
 					});
 #ifdef DNN_STOCHASTIC
@@ -158,13 +157,14 @@ namespace dnn
 #endif
 
 			const auto size = IsPlainFormat() ? CDHW : PaddedCDHW;
+	        const auto part = (size / VectorSize) * VectorSize;
 
 #ifdef DNN_STOCHASTIC
 			if (batchSize == 1)
 			{
-				for (auto i = 0ull; i < PartialCDHW; i += VectorSize)
+				for (auto i = 0ull; i < part; i += VectorSize)
 					mul_add(VecFloat().load_a(&NeuronsActive[i]), VecFloat().load_a(&NeuronsD1[i]), VecFloat().load_a(&InputLayer->NeuronsD1[i])).store_a(&InputLayer->NeuronsD1[i]);
-				for (auto i = PartialCDHW; i < size; i++)
+				for (auto i = part; i < size; i++)
 					InputLayer->NeuronsD1[i] += NeuronsActive[i] * NeuronsD1[i];
 			}
 			else
@@ -173,11 +173,11 @@ namespace dnn
 				for_i(batchSize, LIGHT_COMPUTE, [=](size_t b)
 				{
 					const auto start = b * size;
-					const auto part = start + PartialCDHW;
+					const auto end = start + part;
 
-					for (auto i = start; i < part; i += VectorSize)
+					for (auto i = start; i < end; i += VectorSize)
 						mul_add(VecFloat().load_a(&NeuronsActive[i]), VecFloat().load_a(&NeuronsD1[i]), VecFloat().load_a(&InputLayer->NeuronsD1[i])).store_a(&InputLayer->NeuronsD1[i]);
-					for (auto i = part; i < start + size; i++)
+					for (auto i = end; i < start + size; i++)
 						InputLayer->NeuronsD1[i] += NeuronsActive[i] * NeuronsD1[i];
 				});
 #ifdef DNN_STOCHASTIC
