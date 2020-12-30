@@ -588,10 +588,10 @@ namespace dnn
 			Optimizer = optimizer;
 		}
 
-		void ResetOptimizer(const Optimizers optimizer)
+		void ResetOptimizer()
 		{
 			for (auto &layer : Layers)
-				layer->ResetOptimizer(optimizer);
+				layer->ResetOptimizer(Optimizer);
 		}
 
 #ifdef DNN_STOCHASTIC

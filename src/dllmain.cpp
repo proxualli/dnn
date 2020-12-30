@@ -182,10 +182,10 @@ extern "C" DNN_API void DNNPersistOptimizer(const bool persistOptimizer)
 		model->PersistOptimizer = persistOptimizer;
 }
 
-extern "C" DNN_API void DNNResetOptimizer(const Optimizers optimizer)
+extern "C" DNN_API void DNNResetOptimizer()
 {
 	if (model)
-		model->ResetOptimizer(optimizer);
+		model->ResetOptimizer();
 }
 
 extern "C" DNN_API void DNNSetOptimizer(const Optimizers optimizer)
