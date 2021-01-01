@@ -336,7 +336,24 @@ namespace dnn
 			BiasesWDM = biasesWDM;
 		}
 
-		bool IsPlainFormat() const { return Format == dnnl::memory::format_tag::ab || Format == dnnl::memory::format_tag::abc || Format == dnnl::memory::format_tag::abcd || Format == dnnl::memory::format_tag::abcde; };
+		bool IsPlainFormat() const { 
+			return Format == dnnl::memory::format_tag::ab || 
+				Format == dnnl::memory::format_tag::abc || 
+				Format == dnnl::memory::format_tag::abcd || 
+				Format == dnnl::memory::format_tag::abcde; 
+		};
+
+		bool IsNormalization() const { 
+			return LayerType == LayerTypes::BatchNorm || 
+			LayerType == LayerTypes::BatchNormFTS || 
+			LayerType == LayerTypes::BatchNormFTSDropout || 
+			LayerType == LayerTypes::BatchNormHardLogistic || 
+			LayerType == LayerTypes::BatchNormHardSwish ||
+			LayerType == LayerTypes::BatchNormHardSwishDropout || 
+			LayerType == LayerTypes::BatchNormRelu || 
+			LayerType == LayerTypes::BatchNormReluDropout || 
+			LayerType == LayerTypes::BatchNormSwish; 
+		};
 
 		std::string GetDescriptionHeader() const
 		{
@@ -1089,6 +1106,8 @@ namespace dnn
 		{
 			if (HasWeights && (disableLocking || (!disableLocking && !LockUpdate.load())))
 			{
+				GradientClipping(1);
+
 				switch (optimizer)
 				{
 				case Optimizers::AdaDelta:
@@ -1119,6 +1138,22 @@ namespace dnn
 					RAdam(rate);
 					break;
 				}
+			}
+		}
+
+		inline void GradientClipping(const Float norm = 1)
+		{
+			if (!IsNormalization() && HasWeights)
+			{
+				auto sum = Float(0);
+#pragma omp simd
+				for (auto i = 0ull; i < WeightsD1.size(); i++)
+					sum += FloatSquare(WeightsD1[i]);
+
+				const auto l2norm = std::sqrt(sum);
+#pragma omp simd
+				for (auto i = 0ull; i < WeightsD1.size(); i++)
+					WeightsD1[i] = norm * WeightsD1[i] / l2norm;
 			}
 		}
 

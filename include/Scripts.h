@@ -207,7 +207,6 @@ namespace dnn
                     "Type=DepthwiseConvolution" + nwl +
                     "Inputs=" + group + "B" + std::to_string(id) + "B1" + nwl +
                     "Kernel=3,3" + nwl +
-                    "Stride=1,1" + nwl  +
                     "Pad=1,1" + nwl +
 
                     "[" + group + "B" + std::to_string(id) + "FReluB]" + nwl +
@@ -388,7 +387,6 @@ namespace dnn
                 "Inputs=" + inputs + nwl +
                 "Activation=HardSwish" + nwl + nwl;
         }
-
        
         static std::string Generate(const ScriptParameters p)
         {
