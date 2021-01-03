@@ -98,6 +98,8 @@ namespace dnn
 			ZeroGradientMulti(batchSize);
 #endif // DNN_LEAN
 
+			const auto plain = IsPlainFormat();
+
 #ifdef DNN_STOCHASTIC
 			if (batchSize == 1)
 			{
@@ -117,8 +119,6 @@ namespace dnn
 			else
 			{
 #endif
-				const auto plain = IsPlainFormat();
-
 				for_i(batchSize, LIGHT_COMPUTE, [=](size_t b)
 				{
 					const auto outputSampleOffset = b * (plain ? CDHW : PaddedCDHW);
@@ -126,7 +126,6 @@ namespace dnn
 					for (auto input = 0ull; input < Inputs.size(); input++)
 					{
 						const auto inputSampleOffset = b * (plain ? Inputs[input]->CDHW : Inputs[input]->PaddedCDHW);
-							
 						for (auto c = channelOffset; c < channelOffset + Inputs[input]->C; c++)
 						{
 							const auto inputIndex = ((c - channelOffset) * HW) + inputSampleOffset;

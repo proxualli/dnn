@@ -113,7 +113,6 @@ namespace dnn
 #endif // DNN_LEAN
 
 			const auto size = IsPlainFormat() ? CDHW : PaddedCDHW;
-	        const auto part = (size / VectorSize) * VectorSize;
 
 #ifdef DNN_STOCHASTIC
 			if (batchSize == 1)

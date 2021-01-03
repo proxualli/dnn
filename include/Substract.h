@@ -92,12 +92,14 @@ namespace dnn
 			ZeroGradientMulti(batchSize);
 #endif // DNN_LEAN
 
+			const auto size = IsPlainFormat() ? CDHW : PaddedCDHW;
+
 #ifdef DNN_STOCHASTIC
 			if (batchSize == 1)
 			{
 				if (Inputs.size() == 2)
 				{
-					for (auto n = 0ull; n < CDHW; n++)
+					for (auto n = 0ull; n < size; n++)
 					{
 						Inputs[0]->NeuronsD1[n] += NeuronsD1[n];
 						Inputs[1]->NeuronsD1[n] -= NeuronsD1[n];
@@ -106,7 +108,7 @@ namespace dnn
 				else
 				{
 					for (auto i = 1ull; i < Inputs.size(); i++)
-						for (auto n = 0ull; n < CDHW; n++)
+						for (auto n = 0ull; n < size; n++)
 						{
 							Inputs[0]->NeuronsD1[n] += NeuronsD1[n];
 							Inputs[i]->NeuronsD1[n] -= NeuronsD1[n];
@@ -120,8 +122,8 @@ namespace dnn
 				{
 					for_i(batchSize, LIGHT_COMPUTE, [=](size_t b)
 					{
-						const auto start = b * PaddedCDHW;
-						const auto end = start + CDHW;
+						const auto start = b * size;
+						const auto end = start + size;
 						for (auto n = start; n < end; n++)
 						{
 							Inputs[0]->NeuronsD1[n] += NeuronsD1[n];
@@ -133,8 +135,8 @@ namespace dnn
 				{
 					for_i(batchSize, LIGHT_COMPUTE, [=](size_t b)
 					{
-						const auto start = b * PaddedCDHW;
-						const auto end = start + CDHW;
+						const auto start = b * size;
+						const auto end = start + size;
 						for (auto n = start; n < end; n++)
 							Inputs[0]->NeuronsD1[n] += NeuronsD1[n];
 						for (auto i = 1ull; i < Inputs.size(); i++)

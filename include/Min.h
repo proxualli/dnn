@@ -134,7 +134,7 @@ namespace dnn
 						if_add(InA <= InB, VecFloat().load_a(&Inputs[0]->NeuronsD1[n]), D1).store_a(&Inputs[0]->NeuronsD1[n]);
 						if_add(InA > InB, VecFloat().load_a(&Inputs[1]->NeuronsD1[n]), D1).store_a(&Inputs[1]->NeuronsD1[n]);
 					}
-					for (auto n = end; n <  start + size; n++)
+					for (auto n = end; n < start + size; n++)
 					{
 						Inputs[0]->NeuronsD1[n] += Inputs[0]->Neurons[n] <= Inputs[1]->Neurons[n] ? NeuronsD1[n] : 0;
 						Inputs[1]->NeuronsD1[n] += Inputs[0]->Neurons[n] <= Inputs[1]->Neurons[n] ? 0 : NeuronsD1[n];

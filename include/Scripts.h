@@ -185,45 +185,14 @@ namespace dnn
         static std::string BatchNormActivation(size_t id, std::string inputs, bool relu = true, std::string group = "", std::string prefix = "B")
         {
             return "[" + group + prefix + std::to_string(id) + "]" + nwl +
-                (relu ? "Type=BatchNormRelu" + nwl : "Type=BatchNormFTS" + nwl) +
+                (relu ? "Type=BatchNormRelu" + nwl : "Type=BatchNormHardSwish" + nwl) +
                 "Inputs=" + inputs + nwl + nwl;
         }
-/*
-        static std::string BatchNormActivation(size_t id, std::string inputs, bool relu = true, std::string group = "", std::string prefix = "B")
-        {
-            if (relu)
-            {
-                return "[" + group + prefix + std::to_string(id) + "]" + nwl +
-                    "Type=BatchNormRelu" + nwl +
-                    "Inputs=" + inputs + nwl + nwl;
-            }
-            else
-            {
-               return "[" + group + "B" + std::to_string(id) + "B1]" + nwl +
-                    "Type=BatchNorm" + nwl +
-                    "Inputs=" + inputs + nwl + nwl +
-
-                    "[" + group + "DC" + std::to_string(id) + "FReluDC]" + nwl +
-                    "Type=DepthwiseConvolution" + nwl +
-                    "Inputs=" + group + "B" + std::to_string(id) + "B1" + nwl +
-                    "Kernel=3,3" + nwl +
-                    "Pad=1,1" + nwl +
-
-                    "[" + group + "B" + std::to_string(id) + "FReluB]" + nwl +
-                    "Type=BatchNorm" + nwl +
-                    "Inputs=" + group + "DC" + std::to_string(id) + "FReluDC" + nwl + nwl +
-
-                    "[" + group + prefix + std::to_string(id) + "]" + nwl +
-                    "Type=Max" + nwl +
-                    "Inputs=" + group + "B" + std::to_string(id) + "FReluB," + group + "B" + std::to_string(id) + "B1" + nwl + nwl;
-            }
-        }
-*/
 
         static std::string BatchNormActivationDropout(size_t id, std::string inputs, bool relu = true, Float dropout = 0.0f, std::string group = "", std::string prefix = "B")
         {
             return "[" + group + prefix + std::to_string(id) + "]" + nwl +
-                (relu ? "Type=BatchNormReluDropout" + nwl : "Type=BatchNormFTSDropout" + nwl) +
+                (relu ? "Type=BatchNormReluDropout" + nwl : "Type=BatchNormHardSwishDropout" + nwl) +
                 "Inputs=" + inputs + nwl +
                 (dropout > 0.0f ? "Dropout=" + std::to_string(dropout) + nwl + nwl : nwl);
         }
@@ -387,6 +356,7 @@ namespace dnn
                 "Inputs=" + inputs + nwl +
                 "Activation=HardSwish" + nwl + nwl;
         }
+
        
         static std::string Generate(const ScriptParameters p)
         {
@@ -791,7 +761,7 @@ namespace dnn
                         auto strSE =
                             se ? GlobalAvgPooling(In("B", C + 3), group) +
                             Convolution(1, group + "GAP", DIV8(W / 4), 1, 1, 1, 1, 0, 0, group, "C", "Normal(0.01)") +
-                            BatchNormActivation(1, group + "C1", false, group) +
+                            BatchNormHardSwish(1, group + "C1", group) +
                             Convolution(2, group + "B1", DIV8(W), 1, 1, 1, 1, 0, 0, group, "C", "Normal(0.01)") +
                             HardLogistic(2, group + "C2", group) +
                             ChannelMultiply(In("B", C + 3) + "," + group + "ACT2", group) +

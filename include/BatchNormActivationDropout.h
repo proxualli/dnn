@@ -8,7 +8,6 @@ namespace dnn
 	class BatchNormActivationDropout final : public Layer
 	{
 	public:
-		const bool Scaling;
 		const Float Eps;
 		const Float Momentum;
 		const Float OneMinusMomentum;
@@ -25,8 +24,7 @@ namespace dnn
 		FloatVector InvStdDev;
 	
 		BatchNormActivationDropout<Activation, T>(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const Float dropout = Float(0.5), const bool scaling = true, const Float momentum = Float(0.99), const Float eps = Float(1e-04), const bool hasBias = true) :
-			Layer(device, format, name, T, inputs[0]->C, inputs[0]->C, inputs[0]->C, inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs, hasBias),
-			Scaling(scaling),
+			Layer(device, format, name, T, inputs[0]->C, inputs[0]->C, inputs[0]->C, inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs, hasBias, scaling),
 			Eps(eps),
 			Momentum(momentum),
 			OneMinusMomentum(Float(1) - momentum),

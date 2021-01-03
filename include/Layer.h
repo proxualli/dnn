@@ -185,6 +185,7 @@ namespace dnn
 		bool LayerBeforeCost;
 		bool SharesInput;
 		const dnnl::memory::format_tag Format;
+		const bool Scaling;
 		const bool HasBias;
 		const bool HasWeights;
 		bool UseDefaultParameters;
@@ -241,7 +242,7 @@ namespace dnn
 		std::unique_ptr<dnnl::memory::desc> WeightsMemDesc;
 		std::unique_ptr<dnnl::memory::desc> PersistWeightsMemDesc;
 
-		Layer(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const LayerTypes layerType, const size_t weightCount, const size_t biasCount, const size_t c, const size_t d, const size_t h, const size_t w, const size_t padD, const size_t padH, const size_t padW, const std::vector<Layer*>& inputs, const bool hasBias = false) :
+		Layer(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const LayerTypes layerType, const size_t weightCount, const size_t biasCount, const size_t c, const size_t d, const size_t h, const size_t w, const size_t padD, const size_t padH, const size_t padW, const std::vector<Layer*>& inputs, const bool hasBias = false, const bool scaling = false) :
 			Device(device),
 			Format(format),
 			Name(name),
@@ -256,6 +257,7 @@ namespace dnn
 			PadH(padH),
 			PadW(padW),
 			Inputs(inputs),
+			Scaling(scaling),
 			HasBias(hasBias&& biasCount > 0),
 			HasWeights(weightCount > 0),
 			WeightsFiller(Fillers::HeNormal),
@@ -354,6 +356,10 @@ namespace dnn
 			LayerType == LayerTypes::BatchNormReluDropout || 
 			LayerType == LayerTypes::BatchNormSwish; 
 		};
+
+		bool IsNormalizationUnscaled() const {
+			return IsNormalization() && !Scaling;
+		}
 
 		std::string GetDescriptionHeader() const
 		{
@@ -1106,7 +1112,7 @@ namespace dnn
 		{
 			if (HasWeights && (disableLocking || (!disableLocking && !LockUpdate.load())))
 			{
-				GradientClipping(1);
+				//GradientClipping(1);
 
 				switch (optimizer)
 				{
@@ -1141,19 +1147,34 @@ namespace dnn
 			}
 		}
 
-		inline void GradientClipping(const Float norm = 1)
+		inline void GradientClipping(const Float treshold = 1)
 		{
-			if (!IsNormalization() && HasWeights)
+			if (!IsNormalizationUnscaled() && HasWeights)
 			{
 				auto sum = Float(0);
 #pragma omp simd
 				for (auto i = 0ull; i < WeightsD1.size(); i++)
 					sum += FloatSquare(WeightsD1[i]);
 
-				const auto l2norm = std::sqrt(sum);
+				const auto l2norm = treshold / std::sqrt(sum);
 #pragma omp simd
 				for (auto i = 0ull; i < WeightsD1.size(); i++)
-					WeightsD1[i] = norm * WeightsD1[i] / l2norm;
+					if (std::abs(WeightsD1[i]) > treshold)
+						WeightsD1[i] *= l2norm;
+
+				if (HasBias)
+				{
+					sum = Float(0);
+#pragma omp simd
+					for (auto i = 0ull; i < BiasesD1.size(); i++)
+						sum += FloatSquare(BiasesD1[i]);
+
+					const auto l2norm = treshold / std::sqrt(sum);
+#pragma omp simd
+					for (auto i = 0ull; i < BiasesD1.size(); i++)
+						if (std::abs(BiasesD1[i]) > treshold)
+							BiasesD1[i] *= l2norm;
+				}
 			}
 		}
 
