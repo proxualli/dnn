@@ -105,14 +105,14 @@ namespace dnn
 						const auto end = start + part;
 						VecFloat zero = VecFloat(0);
 						VecFloat InA, InB;
-						for (auto n = start; n < part; n += VectorSize)
+						for (auto n = start; n < end; n += VectorSize)
 						{
 							InA.load_a(&Inputs[0]->Neurons[n]);
 							InB.load_a(&Inputs[1]->Neurons[n]);
 							(InA + InB).store_a(&Neurons[n]);
 							zero.store_nt(&NeuronsD1[n]);
 						}
-						for (auto n = part; n < start + size; n++)
+						for (auto n = end; n < start + size; n++)
 						{
 							Neurons[n] = Inputs[0]->Neurons[n] + Inputs[1]->Neurons[n];
 							NeuronsD1[n] = 0;
@@ -130,7 +130,7 @@ namespace dnn
 
 						VecFloat zero = VecFloat(0);
 						VecFloat InA, InB, InC;
-						for (auto n = start; n < part; n += VectorSize)
+						for (auto n = start; n < end; n += VectorSize)
 						{
 							InA.load_a(&Inputs[0]->Neurons[n]);
 							InB.load_a(&Inputs[1]->Neurons[n]);
@@ -138,7 +138,7 @@ namespace dnn
 							(InA + InB + InC).store_a(&Neurons[n]);
 							zero.store_nt(&NeuronsD1[n]);
 						}
-						for (auto n = part; n < start + size; n++)
+						for (auto n = end; n < start + size; n++)
 						{
 							Neurons[n] = Inputs[0]->Neurons[n] + Inputs[1]->Neurons[n] + Inputs[2]->Neurons[n];
 							NeuronsD1[n] = 0;
@@ -156,7 +156,7 @@ namespace dnn
 
 						VecFloat zero = VecFloat(0);
 						VecFloat InA, InB, InC, InD;
-						for (auto n = start; n < part; n += VectorSize)
+						for (auto n = start; n < end; n += VectorSize)
 						{
 							InA.load_a(&Inputs[0]->Neurons[n]);
 							InB.load_a(&Inputs[1]->Neurons[n]);
@@ -165,7 +165,7 @@ namespace dnn
 							(InA + InB + InC + InD).store_a(&Neurons[n]);
 							zero.store_nt(&NeuronsD1[n]);
 						}
-						for (auto n = part; n < start + size; n++)
+						for (auto n = end; n < start + size; n++)
 						{
 							Neurons[n] = Inputs[0]->Neurons[n] + Inputs[1]->Neurons[n] + Inputs[2]->Neurons[n] + Inputs[3]->Neurons[n];
 							NeuronsD1[n] = 0;
