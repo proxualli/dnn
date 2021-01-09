@@ -190,6 +190,7 @@ namespace dnn
 						for (auto n = start; n < end; n++)
 						{
 							NeuronsD1[n] = 0;
+							Neurons[n] = 0;
 							for (auto y = 0ull; y < inputs; y++)
 								Neurons[n] += Inputs[y]->Neurons[n];
 						}
@@ -247,6 +248,7 @@ namespace dnn
 				default:
 				{
 					for (auto i = 0ull; i < inputs; i++)
+#pragma omp simd
 						for (auto n = 0ull; n < size; n++)
 							Inputs[i]->NeuronsD1[n] += NeuronsD1[n];
 
@@ -256,7 +258,7 @@ namespace dnn
 			else
 			{
 #endif
-				switch (Inputs.size())
+				switch (inputs)
 				{
 				case 2:
 				{
@@ -410,6 +412,7 @@ namespace dnn
 					{
 						const auto start = b * size;
 						const auto end = start + size;
+#pragma omp simd
 						for (auto n = start; n < end; n++)
 						{
 							Inputs[0]->NeuronsD1[n] += NeuronsD1[n];
@@ -429,6 +432,7 @@ namespace dnn
 					{
 						const auto start = b * size;
 						const auto end = start + size;
+#pragma omp simd
 						for (auto n = start; n < end; n++)
 						{
 							Inputs[0]->NeuronsD1[n] += NeuronsD1[n];
@@ -449,6 +453,7 @@ namespace dnn
 					{
 						const auto start = b * size;
 						const auto end = start + size;
+#pragma omp simd
 						for (auto n = start; n < end; n++)
 						{
 							Inputs[0]->NeuronsD1[n] += NeuronsD1[n];
@@ -469,6 +474,7 @@ namespace dnn
 					{
 						const auto start = b * size;
 						const auto end = start + size;
+#pragma omp simd
 						for (auto n = start; n < end; n++)
 						{
 							Inputs[0]->NeuronsD1[n] += NeuronsD1[n];
