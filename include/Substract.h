@@ -93,12 +93,14 @@ namespace dnn
 #endif // DNN_LEAN
 
 			const auto size = IsPlainFormat() ? CDHW : PaddedCDHW;
+			const auto inputs = Inputs.size();
 
 #ifdef DNN_STOCHASTIC
 			if (batchSize == 1)
 			{
-				if (Inputs.size() == 2)
+				if (inputs == 2)
 				{
+#pragma omp simd
 					for (auto n = 0ull; n < size; n++)
 					{
 						Inputs[0]->NeuronsD1[n] += NeuronsD1[n];
@@ -107,23 +109,25 @@ namespace dnn
 				}
 				else
 				{
-					for (auto i = 1ull; i < Inputs.size(); i++)
-						for (auto n = 0ull; n < size; n++)
-						{
-							Inputs[0]->NeuronsD1[n] += NeuronsD1[n];
+#pragma omp simd
+					for (auto n = 0ull; n < size; n++)
+					{
+						Inputs[0]->NeuronsD1[n] += NeuronsD1[n];
+						for (auto i = 1ull; i < inputs; i++)
 							Inputs[i]->NeuronsD1[n] -= NeuronsD1[n];
-						}
+					}
 				}
 			}
 			else
 			{
 #endif
-				if (Inputs.size() == 2)
+				if (inputs == 2)
 				{
 					for_i(batchSize, LIGHT_COMPUTE, [=](size_t b)
 					{
 						const auto start = b * size;
 						const auto end = start + size;
+#pragma omp simd
 						for (auto n = start; n < end; n++)
 						{
 							Inputs[0]->NeuronsD1[n] += NeuronsD1[n];
@@ -137,11 +141,13 @@ namespace dnn
 					{
 						const auto start = b * size;
 						const auto end = start + size;
+#pragma omp simd
 						for (auto n = start; n < end; n++)
+						{
 							Inputs[0]->NeuronsD1[n] += NeuronsD1[n];
-						for (auto i = 1ull; i < Inputs.size(); i++)
-							for (auto n = start; n < end; n++)
+							for (auto i = 1ull; i < inputs; i++)
 								Inputs[i]->NeuronsD1[n] -= NeuronsD1[n];
+						}
 					});
 				}
 #ifdef DNN_STOCHASTIC
