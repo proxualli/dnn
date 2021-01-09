@@ -91,9 +91,16 @@ namespace dnn
 		{
 			if (training)
 			{
+#ifdef DNN_LEAN
+				DNN_UNREF_PAR(batchSize);
+
+				fwd->execute(Device.stream, fwdArgs);
+				Device.stream.wait();
+#else
 				const auto size = IsPlainFormat() ? CDHW : PaddedCDHW;
 				const auto part = (size / VectorSize) * VectorSize;
 				const auto inputs = Inputs.size();
+				const VecFloat zero = VecFloat(0);
 
 				switch (inputs)
 				{
@@ -103,7 +110,7 @@ namespace dnn
 					{
 						const auto start = b * size;
 						const auto end = start + part;
-						VecFloat zero = VecFloat(0);
+						
 						VecFloat InA, InB;
 						for (auto n = start; n < end; n += VectorSize)
 						{
@@ -128,7 +135,6 @@ namespace dnn
 						const auto start = b * size;
 						const auto end = start + part;
 
-						VecFloat zero = VecFloat(0);
 						VecFloat InA, InB, InC;
 						for (auto n = start; n < end; n += VectorSize)
 						{
@@ -154,7 +160,6 @@ namespace dnn
 						const auto start = b * size;
 						const auto end = start + part;
 
-						VecFloat zero = VecFloat(0);
 						VecFloat InA, InB, InC, InD;
 						for (auto n = start; n < end; n += VectorSize)
 						{
@@ -192,19 +197,12 @@ namespace dnn
 				}
 				break;
 				}
+#endif
 			}
 			else
 			{
 				fwd->execute(Device.stream, fwdArgs);
 				Device.stream.wait();
-
-#ifndef DNN_LEAN
-				if (training)
-					ZeroFloatVector(NeuronsD1.data(), batchSize * PaddedCDHW);
-#else
-				DNN_UNREF_PAR(batchSize);
-				DNN_UNREF_PAR(training);
-#endif
 			}
 		}
 
@@ -217,7 +215,6 @@ namespace dnn
 			const auto size = IsPlainFormat() ? CDHW : PaddedCDHW;
 			const auto part = (size / VectorSize) * VectorSize;
 			const auto inputs = Inputs.size();
-			
 
 #ifdef DNN_STOCHASTIC
 			if (batchSize == 1)
