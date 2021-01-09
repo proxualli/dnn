@@ -186,7 +186,6 @@ namespace dnn
 						const auto start = b * size;
 						const auto end = start + size;
 							
-#pragma omp simd
 						for (auto n = start; n < end; n++)
 						{
 							NeuronsD1[n] = 0;

@@ -127,7 +127,7 @@ namespace dnn
 					{
 						const auto start = b * size;
 						const auto end = start + size;
-#pragma omp simd
+
 						for (auto n = start; n < end; n++)
 						{
 							Inputs[0]->NeuronsD1[n] += NeuronsD1[n];
@@ -141,7 +141,7 @@ namespace dnn
 					{
 						const auto start = b * size;
 						const auto end = start + size;
-#pragma omp simd
+
 						for (auto n = start; n < end; n++)
 						{
 							Inputs[0]->NeuronsD1[n] += NeuronsD1[n];
