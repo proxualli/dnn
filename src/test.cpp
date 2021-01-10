@@ -209,7 +209,7 @@ int main()
 
     ScriptParameters p;
 
-    p.Script = Scripts::shufflenetv2;
+    p.Script = Scripts::resnet;
     p.Dataset = Datasets::cifar10;
     p.C = 3;
     p.H = 32;
@@ -218,13 +218,13 @@ int main()
     p.PadW = 4;
     p.MirrorPad = false;
     p.Groups = 3;
-    p.Iterations = 6;
+    p.Iterations = 4;
     p.Width = 10;
-    p.Relu = false;
-    p.Dropout = 0;
+    p.Relu = true;
+    p.Dropout = Float(0.33333333);
     p.Bottleneck = false;
-    p.SqueezeExcitation = true;
-    p.ChannelZeroPad = true;
+    p.SqueezeExcitation = false;
+    p.ChannelZeroPad = false;
 
     auto model = ScriptsCatalog::Generate(p);
 
