@@ -184,14 +184,26 @@ namespace dnn
 					for_i(batchSize, LIGHT_COMPUTE, [=](size_t b)
 					{
 						const auto start = b * size;
-						const auto end = start + size;
-							
-						for (auto n = start; n < end; n++)
+						const auto end = start + part;
+
+						VecFloat In; VecFloat sum;
+						for (auto n = start; n < end; n += VectorSize)
+						{
+							sum = zero;
+							for (auto i = 0ull; i < inputs; i++)
+							{
+								In.load_a(&Inputs[i]->Neurons[n]);
+								sum += In;
+							}
+							sum.store_a(&Neurons[n]);
+							zero.store_nt(&NeuronsD1[n]);
+						}
+						for (auto n = end; n < start + size; n++)
 						{
 							NeuronsD1[n] = 0;
 							Neurons[n] = 0;
-							for (auto y = 0ull; y < inputs; y++)
-								Neurons[n] += Inputs[y]->Neurons[n];
+							for (auto i = 0ull; i < inputs; i++)
+								Neurons[n] += Inputs[i]->Neurons[n];
 						}
 					});
 				}
