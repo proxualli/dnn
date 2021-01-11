@@ -108,7 +108,7 @@ namespace dnn
 				const auto size = IsPlainFormat() ? CDHW : PaddedCDHW;
 				const auto part = (size / VectorSize) * VectorSize;
 				const auto inputs = Inputs.size();
-				const VecFloat zero = VecFloat(0);
+				const auto vecZero = VecFloat(0);
 
 				switch (inputs)
 				{
@@ -125,7 +125,7 @@ namespace dnn
 							InA.load_a(&Inputs[0]->Neurons[n]);
 							InB.load_a(&Inputs[1]->Neurons[n]);
 							(InA + InB).store_a(&Neurons[n]);
-							zero.store_nt(&NeuronsD1[n]);
+							vecZero.store_nt(&NeuronsD1[n]);
 						}
 						for (auto n = end; n < start + size; n++)
 						{
@@ -150,7 +150,7 @@ namespace dnn
 							InB.load_a(&Inputs[1]->Neurons[n]);
 							InC.load_a(&Inputs[2]->Neurons[n]);
 							(InA + InB + InC).store_a(&Neurons[n]);
-							zero.store_nt(&NeuronsD1[n]);
+							vecZero.store_nt(&NeuronsD1[n]);
 						}
 						for (auto n = end; n < start + size; n++)
 						{
@@ -176,7 +176,7 @@ namespace dnn
 							InC.load_a(&Inputs[2]->Neurons[n]);
 							InD.load_a(&Inputs[3]->Neurons[n]);
 							(InA + InB + InC + InD).store_a(&Neurons[n]);
-							zero.store_nt(&NeuronsD1[n]);
+							vecZero.store_nt(&NeuronsD1[n]);
 						}
 						for (auto n = end; n < start + size; n++)
 						{
@@ -197,14 +197,14 @@ namespace dnn
 						VecFloat In; VecFloat sum;
 						for (auto n = start; n < end; n += VectorSize)
 						{
-							sum = zero;
+							sum = vecZero;
 							for (auto i = 0ull; i < inputs; i++)
 							{
 								In.load_a(&Inputs[i]->Neurons[n]);
 								sum += In;
 							}
 							sum.store_a(&Neurons[n]);
-							zero.store_nt(&NeuronsD1[n]);
+							vecZero.store_nt(&NeuronsD1[n]);
 						}
 						for (auto n = end; n < start + size; n++)
 						{

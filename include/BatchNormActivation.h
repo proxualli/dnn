@@ -210,14 +210,12 @@ namespace dnn
 							const auto part = start + partialHW;
 							for (auto i = start; i < part; i += VectorSize)
 							{
-								
 								Activation::fVec(((VecFloat().load_a(&InputLayer->Neurons[i]) - mean) * weightedInvStdDev + biases)).store_a(&Neurons[i]);
 #ifndef DNN_LEAN
 								vecZero.store_nt(&NeuronsD1[i]);
 #endif
 							}
-							const auto end = start + HW;
-							for (auto i = part; i < end; i++)
+							for (auto i = part; i < start + HW; i++)
 							{
 								Neurons[i] = Activation::f((InputLayer->Neurons[i] - mean) * weightedInvStdDev + biases);
 #ifndef DNN_LEAN

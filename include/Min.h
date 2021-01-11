@@ -99,14 +99,14 @@ namespace dnn
 				{
 					const auto start = b * size;
 					const auto end = start + part;
-					const VecFloat zero = VecFloat(0);
+					const VecFloat vecZero = VecFloat(0);
 					VecFloat InA, InB;
 					for (auto n = start; n < end; n += VectorSize)
 					{
 						InA.load_a(&Inputs[0]->Neurons[n]);
 						InB.load_a(&Inputs[1]->Neurons[n]);
 						min(InA, InB).store_a(&Neurons[n]);
-						zero.store_nt(&NeuronsD1[n]);
+						vecZero.store_nt(&NeuronsD1[n]);
 					}
 					for (auto n = end; n < start + size; n++)
 					{

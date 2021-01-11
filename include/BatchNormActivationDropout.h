@@ -225,13 +225,14 @@ namespace dnn
 						const auto weightedInvStdDev = Scaling ? invStdDev * Weights[c] : invStdDev;
 						const auto biases = Scaling && HasBias ? Biases[c] : Float(0);
 
+						auto neuronsActive = VecFloat(1);
 						for (auto n = 0ull; n < batchSize; n++)
 						{
 							const auto start = c * HW + (n * CDHW);
 							const auto part = start + partialHW;
 							for (auto i = start; i < part; i += VectorSize)
 							{
-								const auto neuronsActive = BernoulliVecFloat(Keep);
+								neuronsActive = BernoulliVecFloat(Keep);
 								neuronsActive.store_a(&NeuronsActive[i]);
 								(neuronsActive * Scale * Activation::fVec(((VecFloat().load_a(&InputLayer->Neurons[i]) - mean) * weightedInvStdDev + biases))).store_a(&Neurons[i]);
 #ifndef DNN_LEAN
@@ -295,6 +296,7 @@ namespace dnn
 						const auto weightedInvStdDev = Scaling ? invStdDev * VecFloat().load_a(&Weights[channelOffset]) : invStdDev;
 						const auto biases = Scaling && HasBias ? VecFloat().load_a(&Biases[channelOffset]) : VecFloat(0);
 
+						auto neuronsActive = VecFloat(1);
 						for (auto n = 0ull; n < batchSize; n++)
 						{
 							const auto offsetC = n * PaddedCDHW + mapOffset;
@@ -303,9 +305,8 @@ namespace dnn
 								const auto offsetH = offsetC + h * strideH;
 								for (auto w = offsetH; w < offsetH + strideH; w += VectorSize)
 								{
-									const auto neuronsActive = BernoulliVecFloat(Keep);
+									neuronsActive = BernoulliVecFloat(Keep);
 									neuronsActive.store_a(&NeuronsActive[w]);
-
 									(neuronsActive * Scale * Activation::fVec(mul_add(VecFloat().load_a(&InputLayer->Neurons[w]) - mean, weightedInvStdDev, biases))).store_a(&Neurons[w]);
 #ifndef DNN_LEAN
 									vecZero.store_nt(&NeuronsD1[w]);

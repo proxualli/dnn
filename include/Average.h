@@ -6,11 +6,13 @@ namespace dnn
 	class Average final : public Layer
 	{
 	private:
-		std::unique_ptr<dnnl::sum::primitive_desc> fwdDesc;
-		std::unique_ptr<dnnl::sum> fwd;
 		std::vector<Float> Scales;
 		std::vector<dnnl::memory::desc> srcsMemsDesc;
 		std::unordered_map<int, dnnl::memory> fwdArgs;
+		std::unique_ptr<dnnl::sum::primitive_desc> fwdDesc;
+#ifdef DNN_CACHE_PRIMITIVES
+		std::unique_ptr<dnnl::sum> fwd;
+#endif
 
 	public:
 		const Float Scale;
@@ -90,12 +92,18 @@ namespace dnn
 			for (auto i = 0ull; i < Inputs.size(); i++)
 				fwdArgs.insert({ DNNL_ARG_MULTIPLE_SRC + int(i), dnnl::memory(srcsMemsDesc[i], Device.engine, Inputs[i]->Neurons.data()) });
 
+#ifdef DNN_CACHE_PRIMITIVES
 			fwd = std::make_unique<dnnl::sum>(dnnl::sum(*fwdDesc));
+#endif
 		}
 
 		void ForwardProp(const size_t batchSize, const bool training) final override
 		{
+#ifdef DNN_CACHE_PRIMITIVES
 			fwd->execute(Device.stream, fwdArgs);
+#else
+			dnnl::sum(*fwdDesc).execute(Device.stream, fwdArgs);
+#endif
 			Device.stream.wait();
 
 #ifndef DNN_LEAN
@@ -113,26 +121,38 @@ namespace dnn
 #endif // DNN_LEAN
 
 			const auto size = IsPlainFormat() ? CDHW : PaddedCDHW;
+			const auto part = (size / VectorSize) * VectorSize;
+			const auto inputs = Inputs.size();
 
 #ifdef DNN_STOCHASTIC
 			if (batchSize == 1)
 			{
-				for (auto i = 0ull; i < Inputs.size(); i++)
-					for (auto n = 0ull; n < size; n++)
+				for (auto n = 0ull; n < part; n += VectorSize)
+					for (auto i = 0ull; i < inputs; i++)
+						mul_add(VecFloat().load_a(&NeuronsD1[n]), Scale, VecFloat().load_a(&Inputs[i]->NeuronsD1[n])).store_a(&Inputs[i]->NeuronsD1[n]);
+
+				for (auto n = part; n < size; n++)
+					for (auto i = 0ull; i < inputs; i++)
 						Inputs[i]->NeuronsD1[n] += Scale * NeuronsD1[n];
 			}
 			else
 			{
 #endif
-				switch (Inputs.size())
+				switch (inputs)
 				{
 				case 2:
 				{
 					for_i(batchSize, LIGHT_COMPUTE, [=](size_t b)
 					{
 						const auto start = b * size;
-						const auto end = start + size;
-						for (auto n = start; n < end; n++)
+						const auto end = start + part;
+
+						for (auto n = start; n < end; n+=VectorSize)
+						{
+							mul_add(VecFloat().load_a(&NeuronsD1[n]), Scale, VecFloat().load_a(&Inputs[0]->NeuronsD1[n])).store_a(&Inputs[0]->NeuronsD1[n]);
+							mul_add(VecFloat().load_a(&NeuronsD1[n]), Scale, VecFloat().load_a(&Inputs[1]->NeuronsD1[n])).store_a(&Inputs[1]->NeuronsD1[n]);
+						}
+						for (auto n = end; n < start + size; n++)
 						{
 							Inputs[0]->NeuronsD1[n] += Scale * NeuronsD1[n];
 							Inputs[1]->NeuronsD1[n] += Scale * NeuronsD1[n];
@@ -146,8 +166,15 @@ namespace dnn
 					for_i(batchSize, LIGHT_COMPUTE, [=](size_t b)
 					{
 						const auto start = b * size;
-						const auto end = start + size;
-						for (auto n = start; n < end; n++)
+						const auto end = start + part;
+
+						for (auto n = start; n < end; n += VectorSize)
+						{
+							mul_add(VecFloat().load_a(&NeuronsD1[n]), Scale, VecFloat().load_a(&Inputs[0]->NeuronsD1[n])).store_a(&Inputs[0]->NeuronsD1[n]);
+							mul_add(VecFloat().load_a(&NeuronsD1[n]), Scale, VecFloat().load_a(&Inputs[1]->NeuronsD1[n])).store_a(&Inputs[1]->NeuronsD1[n]);
+							mul_add(VecFloat().load_a(&NeuronsD1[n]), Scale, VecFloat().load_a(&Inputs[2]->NeuronsD1[n])).store_a(&Inputs[2]->NeuronsD1[n]);
+						}
+						for (auto n = end; n < start + size; n++)
 						{
 							Inputs[0]->NeuronsD1[n] += Scale * NeuronsD1[n];
 							Inputs[1]->NeuronsD1[n] += Scale * NeuronsD1[n];
@@ -161,9 +188,14 @@ namespace dnn
 					for_i(batchSize, LIGHT_COMPUTE, [=](size_t b)
 					{
 						const auto start = b * size;
-						const auto end = start + size;
-						for (auto i = 0ull; i < Inputs.size(); i++)
-							for (auto n = start; n < end; n++)
+						const auto end = start + part;
+
+						for (auto n = start; n < end; n += VectorSize)
+							for (auto i = 0ull; i < inputs; i++)
+								mul_add(VecFloat().load_a(&NeuronsD1[n]), Scale, VecFloat().load_a(&Inputs[i]->NeuronsD1[n])).store_a(&Inputs[i]->NeuronsD1[n]);
+							
+						for (auto n = end; n < start + size; n++)
+							for (auto i = 0ull; i < inputs; i++)
 								Inputs[i]->NeuronsD1[n] += Scale * NeuronsD1[n];
 					});
 				}
