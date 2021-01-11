@@ -7,7 +7,9 @@ namespace dnn
 	{
 	private:
 		std::unique_ptr<dnnl::binary::primitive_desc> fwdDesc;
+#ifdef DNN_CACHE_PRIMITIVES
 		std::unique_ptr<dnnl::binary> fwd;
+#endif
 		
 	public:
 		Min(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs) :
@@ -71,21 +73,58 @@ namespace dnn
 			}
 
 			fwdDesc = std::make_unique<dnnl::binary::primitive_desc>(dnnl::binary::primitive_desc(dnnl::binary::desc(dnnl::algorithm::binary_min, *Inputs[0]->DstMemDesc, *Inputs[1]->DstMemDesc, *InputLayer->DstMemDesc), Device.engine));
+#ifdef DNN_CACHE_PRIMITIVES
 			fwd = std::make_unique<dnnl::binary>(dnnl::binary(*fwdDesc));
+#endif
 		}
 
 		void ForwardProp(const size_t batchSize, const bool training) final override
 		{
-			fwd->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ { DNNL_ARG_SRC_0, dnnl::memory(*Inputs[0]->DstMemDesc, Device.engine, InputLayer->Neurons.data()) }, { DNNL_ARG_SRC_1, dnnl::memory(*Inputs[1]->DstMemDesc, Device.engine, InputLayer->Neurons.data()) }, { DNNL_ARG_DST, dnnl::memory(*DstMemDesc, Device.engine, Neurons.data()) }});
-			Device.stream.wait();
-
-#ifndef DNN_LEAN
 			if (training)
-				ZeroFloatVector(NeuronsD1.data(), batchSize * PaddedCDHW);
+			{
+#ifdef DNN_LEAN
+				DNN_UNREF_PAR(batchSize);
+
+#ifdef DNN_CACHE_PRIMITIVES
+				fwd->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ { DNNL_ARG_SRC_0, dnnl::memory(*Inputs[0]->DstMemDesc, Device.engine, InputLayer->Neurons.data()) }, { DNNL_ARG_SRC_1, dnnl::memory(*Inputs[1]->DstMemDesc, Device.engine, InputLayer->Neurons.data()) }, { DNNL_ARG_DST, dnnl::memory(*DstMemDesc, Device.engine, Neurons.data()) }});
 #else
-			DNN_UNREF_PAR(batchSize);
-			DNN_UNREF_PAR(training);
+				dnnl::binary(*fwdDesc).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ { DNNL_ARG_SRC_0, dnnl::memory(*Inputs[0]->DstMemDesc, Device.engine, InputLayer->Neurons.data()) }, { DNNL_ARG_SRC_1, dnnl::memory(*Inputs[1]->DstMemDesc, Device.engine, InputLayer->Neurons.data()) }, { DNNL_ARG_DST, dnnl::memory(*DstMemDesc, Device.engine, Neurons.data()) }});
 #endif
+				Device.stream.wait();
+#else
+				const auto size = IsPlainFormat() ? CDHW : PaddedCDHW;
+				const auto part = (size / VectorSize) * VectorSize;
+
+				for_i(batchSize, LIGHT_COMPUTE, [=](size_t b)
+				{
+					const auto start = b * size;
+					const auto end = start + part;
+					const VecFloat zero = VecFloat(0);
+					VecFloat InA, InB;
+					for (auto n = start; n < end; n += VectorSize)
+					{
+						InA.load_a(&Inputs[0]->Neurons[n]);
+						InB.load_a(&Inputs[1]->Neurons[n]);
+						min(InA, InB).store_a(&Neurons[n]);
+						zero.store_nt(&NeuronsD1[n]);
+					}
+					for (auto n = end; n < start + size; n++)
+					{
+						Neurons[n] = std::min(Inputs[0]->Neurons[n], Inputs[1]->Neurons[n]);
+						NeuronsD1[n] = 0;
+					}
+				});
+#endif
+			}
+			else
+			{
+#ifdef DNN_CACHE_PRIMITIVES
+				fwd->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ { DNNL_ARG_SRC_0, dnnl::memory(*Inputs[0]->DstMemDesc, Device.engine, InputLayer->Neurons.data()) }, { DNNL_ARG_SRC_1, dnnl::memory(*Inputs[1]->DstMemDesc, Device.engine, InputLayer->Neurons.data()) }, { DNNL_ARG_DST, dnnl::memory(*DstMemDesc, Device.engine, Neurons.data()) }});
+#else
+				dnnl::binary(*fwdDesc).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ { DNNL_ARG_SRC_0, dnnl::memory(*Inputs[0]->DstMemDesc, Device.engine, InputLayer->Neurons.data()) }, { DNNL_ARG_SRC_1, dnnl::memory(*Inputs[1]->DstMemDesc, Device.engine, InputLayer->Neurons.data()) }, { DNNL_ARG_DST, dnnl::memory(*DstMemDesc, Device.engine, Neurons.data()) }});
+#endif
+				Device.stream.wait();
+			}
 		}
 
 		void BackwardProp(const size_t batchSize) final override
