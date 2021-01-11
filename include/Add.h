@@ -10,7 +10,9 @@ namespace dnn
 		std::vector<dnnl::memory::desc> srcsMemsDesc;
 		std::unordered_map<int, dnnl::memory> fwdArgs;
 		std::unique_ptr<dnnl::sum::primitive_desc> fwdDesc;
+#ifdef DNN_CACHE_PRIMITIVES
 		std::unique_ptr<dnnl::sum> fwd;
+#endif
 
 	public:
 		Add(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs) :
@@ -84,7 +86,9 @@ namespace dnn
 			for (auto i = 0ull; i < Inputs.size(); i++)
 				fwdArgs.insert({ DNNL_ARG_MULTIPLE_SRC + int(i), dnnl::memory(srcsMemsDesc[i], Device.engine, Inputs[i]->Neurons.data()) });
 
+#ifdef DNN_CACHE_PRIMITIVES
 			fwd = std::make_unique<dnnl::sum>(dnnl::sum(*fwdDesc));
+#endif
 		}
 
 		void ForwardProp(const size_t batchSize, const bool training) final override
@@ -94,7 +98,11 @@ namespace dnn
 #ifdef DNN_LEAN
 				DNN_UNREF_PAR(batchSize);
 
+#ifdef DNN_CACHE_PRIMITIVES
 				fwd->execute(Device.stream, fwdArgs);
+#else
+				dnnl::sum(*fwdDesc).execute(Device.stream, fwdArgs);
+#endif
 				Device.stream.wait();
 #else
 				const auto size = IsPlainFormat() ? CDHW : PaddedCDHW;
@@ -213,7 +221,11 @@ namespace dnn
 			}
 			else
 			{
+#ifdef DNN_CACHE_PRIMITIVES
 				fwd->execute(Device.stream, fwdArgs);
+#else
+				dnnl::sum(*fwdDesc).execute(Device.stream, fwdArgs);
+#endif
 				Device.stream.wait();
 			}
 		}
