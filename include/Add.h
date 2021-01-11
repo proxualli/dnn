@@ -67,7 +67,7 @@ namespace dnn
 				DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, chosenFormat));
 			}
 
-			for (size_t i = 1; i < Inputs.size(); i++)
+			for (auto i = 1ull; i < Inputs.size(); i++)
 			{
 				assert(*DstMemDesc == *Inputs[i]->DstMemDesc);
 				if (*DstMemDesc != *Inputs[i]->DstMemDesc)
@@ -75,13 +75,13 @@ namespace dnn
 			}
 
 			srcsMemsDesc = std::vector<dnnl::memory::desc>(Inputs.size());
-			for (size_t i = 0; i < Inputs.size(); i++)
+			for (auto i = 0ull; i < Inputs.size(); i++)
 				srcsMemsDesc[i] = *Inputs[i]->DstMemDesc;
 
 			fwdDesc = std::make_unique<dnnl::sum::primitive_desc>(dnnl::sum::primitive_desc(*DstMemDesc, Scales, srcsMemsDesc, Device.engine));
 
 			fwdArgs = std::unordered_map<int, dnnl::memory>{ { DNNL_ARG_DST, dnnl::memory(*DstMemDesc, Device.engine, Neurons.data()) } };
-			for (size_t i = 0; i < Inputs.size(); i++)
+			for (auto i = 0ull; i < Inputs.size(); i++)
 				fwdArgs.insert({ DNNL_ARG_MULTIPLE_SRC + int(i), dnnl::memory(srcsMemsDesc[i], Device.engine, Inputs[i]->Neurons.data()) });
 
 			fwd = std::make_unique<dnnl::sum>(dnnl::sum(*fwdDesc));
@@ -262,7 +262,6 @@ namespace dnn
 #pragma omp simd
 						for (auto n = 0ull; n < size; n++)
 							Inputs[i]->NeuronsD1[n] += NeuronsD1[n];
-
 				}
 				}
 			}
