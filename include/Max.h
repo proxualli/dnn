@@ -102,7 +102,7 @@ namespace dnn
 				VecFloat InA, InB, D1;
 				for (auto n = 0; n < part; n+=VectorSize)
 				{
-					InAload_a(&Inputs[0]->Neurons[n]);
+					InA.load_a(&Inputs[0]->Neurons[n]);
 					InB.load_a(&Inputs[1]->Neurons[n]);
 					D1.load_a(&NeuronsD1[n]);
 					if_add(InA >= InB, VecFloat().load_a(&Inputs[0]->NeuronsD1[n]), D1).store_a(&Inputs[0]->NeuronsD1[n]);
