@@ -73,12 +73,17 @@ namespace dnn
 			{
 				assert(*DstMemDesc == *Inputs[i]->DstMemDesc);
 				if (*DstMemDesc != *Inputs[i]->DstMemDesc)
-					throw std::invalid_argument("Incompatible memory formats in Add layer");
+					throw std::invalid_argument("Incompatible memory formats in " + std::string(magic_enum::enum_name<LayerTypes>(LayerType)) + " layer");
 			}
 
-			srcsMemsDesc = std::vector<dnnl::memory::desc>(Inputs.size());
+			srcsMemsDesc = std::vector<dnnl::memory::desc>();
 			for (auto i = 0ull; i < Inputs.size(); i++)
-				srcsMemsDesc[i] = *Inputs[i]->DstMemDesc;
+			{
+				if (Inputs[i]->DstMemDesc->data.ndims == 2)
+					srcsMemsDesc.push_back(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(Inputs[i]->C) }), dnnl::memory::data_type::f32, chosenFormat));
+				else
+					srcsMemsDesc.push_back(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(Inputs[i]->C), dnnl::memory::dim(Inputs[i]->H), dnnl::memory::dim(Inputs[i]->W) }), dnnl::memory::data_type::f32, chosenFormat));
+			}
 
 			fwdDesc = std::make_unique<dnnl::sum::primitive_desc>(dnnl::sum::primitive_desc(*DstMemDesc, Scales, srcsMemsDesc, Device.engine));
 

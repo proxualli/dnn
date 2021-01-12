@@ -6,14 +6,15 @@ namespace dnn
 	class Concat final : public Layer
 	{
 	private:
-		std::unique_ptr<dnnl::concat::primitive_desc> fwdDesc;
-		std::unique_ptr<dnnl::concat> fwd;
 		std::vector<dnnl::memory::desc> srcsMemsDesc;
 		std::unordered_map<int, dnnl::memory> fwdArgs;
-		std::unordered_map<int, dnnl::memory> bwdArgs;
+		std::unique_ptr<dnnl::concat::primitive_desc> fwdDesc;
+#ifdef DNN_CACHE_PRIMITIVES
+		std::unique_ptr<dnnl::concat> fwd;
+#endif
 
 	public:
-		static size_t GetSumInputChannels(const std::vector<Layer*>& inputs)
+		static auto InputChannels(const std::vector<Layer*>& inputs)
 		{
 			auto channels = 0ull;
 			for (auto layer : inputs)
@@ -23,7 +24,7 @@ namespace dnn
 		}
 
 		Concat(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs) :
-			Layer(device, format, name, LayerTypes::Concat, 0, 0, GetSumInputChannels(inputs), inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs)
+			Layer(device, format, name, LayerTypes::Concat, 0, 0, InputChannels(inputs), inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs)
 		{
 			assert(Inputs.size() > 1);
 		}
@@ -45,19 +46,32 @@ namespace dnn
 
 		void InitializeDescriptors(const size_t batchSize) final override
 		{
-			chosenFormat = GetDataFmt(*InputLayer->DstMemDesc);
-			for (auto i = 1ull; i < Inputs.size(); i++)
-				assert(chosenFormat == GetDataFmt(*Inputs[i]->DstMemDesc));
-
 			if (InputLayer->DstMemDesc->data.ndims == 2)
 			{
+				if (Format == dnnl::memory::format_tag::any)
+					chosenFormat = dnnl::memory::format_tag::nc;
+
 				DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, chosenFormat));
 				DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, chosenFormat));
 			}
 			else
 			{
+				if (Format == dnnl::memory::format_tag::any)
+				{
+					chosenFormat = GetDataFmt(*InputLayer->DstMemDesc);
+					if (chosenFormat != GetDataFmt(*InputLayer->DiffDstMemDesc))
+						throw std::invalid_argument("Src and Diff format are different in " + std::string(magic_enum::enum_name<LayerTypes>(LayerType)) + " layer " + Name);
+				}
+
 				DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, chosenFormat));
 				DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, chosenFormat));
+			}
+
+			for (auto i = 1ull; i < Inputs.size(); i++)
+			{
+				assert(*DstMemDesc == *Inputs[i]->DstMemDesc);
+				if (*DstMemDesc != *Inputs[i]->DstMemDesc)
+					throw std::invalid_argument("Incompatible memory formats in " + std::string(magic_enum::enum_name<LayerTypes>(LayerType)) + " layer");
 			}
 
 			srcsMemsDesc = std::vector<dnnl::memory::desc>();
@@ -75,12 +89,18 @@ namespace dnn
 			for (auto i = 0ull; i < Inputs.size(); i++)
 				fwdArgs.insert({ DNNL_ARG_MULTIPLE_SRC + int(i), dnnl::memory(srcsMemsDesc[i], Device.engine, Inputs[i]->Neurons.data()) });
 
+#ifdef DNN_CACHE_PRIMITIVES
 			fwd = std::make_unique<dnnl::concat>(dnnl::concat(*fwdDesc));
+#endif
 		}
 
 		void ForwardProp(const size_t batchSize, const bool training) final override
 		{
+#ifdef DNN_CACHE_PRIMITIVES
 			fwd->execute(Device.stream, fwdArgs);
+#else
+			dnnl::concat(*fwdDesc).execute(Device.stream, fwdArgs);
+#endif
 			Device.stream.wait();
 
 #ifndef DNN_LEAN
