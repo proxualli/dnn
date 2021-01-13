@@ -65,9 +65,11 @@ namespace dnn
 		void ForwardProp(const size_t batchSize, const bool training) final override
 		{
 			const auto plain = IsPlainFormat();
+			const auto elements = plain ? batchSize * CDHW : batchSize * PaddedCDHW;
+			const auto threads = elements < 2097152ull ? 2ull : elements < 8338608ull ? LIGHT_COMPUTE : MEDIUM_COMPUTE;
 			const auto groupC = (Group - 1) * (plain ? C  : PaddedC);
 			const auto strideH = HW * VectorSize;
-
+			
 #ifdef DNN_STOCHASTIC
 			if (batchSize == 1)
 			{
@@ -149,7 +151,7 @@ namespace dnn
 				{
 					if (!plain)
 					{
-						for_i(batchSize, LIGHT_COMPUTE, [=](size_t n)
+						for_i(batchSize, threads, [=](size_t n)
 						{
 							const auto vecZero = VecFloat(0); 
 							VecFloat In;
@@ -173,7 +175,7 @@ namespace dnn
 					}
 					else
 					{
-						for_i(batchSize, LIGHT_COMPUTE, [=](size_t n)
+						for_i(batchSize, threads, [=](size_t n)
 						{
 							size_t inputOffset, outputOffset;
 							for (auto c = 0ull; c < C; c ++)
@@ -196,7 +198,7 @@ namespace dnn
 				{
 					if (!plain)
 					{
-						for_i(batchSize, LIGHT_COMPUTE, [=](size_t n)
+						for_i(batchSize, threads, [=](size_t n)
 						{
 							VecFloat In;
 							size_t inputOffset, outputOffset;
@@ -215,7 +217,7 @@ namespace dnn
 					}
 					else
 					{
-						for_i(batchSize, LIGHT_COMPUTE, [=](size_t n)
+						for_i(batchSize, threads, [=](size_t n)
 						{
 							size_t inputOffset, outputOffset;
 							for (auto c = 0ull; c < C; c ++)
@@ -241,6 +243,8 @@ namespace dnn
 #endif // DNN_LEAN
 
 			const auto plain = IsPlainFormat();
+			const auto elements = plain ? batchSize * CDHW : batchSize * PaddedCDHW;
+			const auto threads = elements < 2097152ull ? 2ull : elements < 8338608ull ? LIGHT_COMPUTE : MEDIUM_COMPUTE;
 			const auto groupC = (Group - 1) * (plain ? C : PaddedC);
 			const auto strideH = HW * VectorSize;
 
@@ -249,6 +253,7 @@ namespace dnn
 			{
 				if (!plain)
 				{
+					VecFloat In, D1;
 					size_t inputOffset, outputOffset;
 					for (auto c = 0ull; c < PaddedC; c += VectorSize)
 					{
@@ -256,7 +261,12 @@ namespace dnn
 						outputOffset = c * HW;
 
 						for (auto w = 0ull; w < strideH; w += VectorSize)
-							(VecFloat().load_a(&InputLayer->NeuronsD1[w + inputOffset]) += VecFloat().load_a(&NeuronsD1[w + outputOffset])).store_a(&InputLayer->NeuronsD1[w + inputOffset]);
+						{
+							D1.load_a(&NeuronsD1[w + outputOffset]);
+							In.load_a(&InputLayer->NeuronsD1[w + inputOffset]);
+							In += D1;
+							In.store_a(&InputLayer->NeuronsD1[w + inputOffset]);
+						}
 					}
 				}
 				else
@@ -277,8 +287,9 @@ namespace dnn
 #endif
 				if (!plain)
 				{
-					for_i(batchSize, LIGHT_COMPUTE, [=](size_t n)
+					for_i(batchSize, threads, [=](size_t n)
 					{
+						VecFloat In, D1;
 						size_t inputOffset, outputOffset;
 						for (auto c = 0ull; c < PaddedC; c += VectorSize)
 						{
@@ -286,13 +297,18 @@ namespace dnn
 							outputOffset = n * PaddedCDHW + c * HW;
 
 							for (auto w = 0ull; w < strideH; w += VectorSize)
-								(VecFloat().load_a(&InputLayer->NeuronsD1[w + inputOffset]) += VecFloat().load_a(&NeuronsD1[w + outputOffset])).store_a(&InputLayer->NeuronsD1[w + inputOffset]);
+							{
+								D1.load_a(&NeuronsD1[w + outputOffset]);
+								In.load_a(&InputLayer->NeuronsD1[w + inputOffset]);
+								In += D1;
+								In.store_a(&InputLayer->NeuronsD1[w + inputOffset]);
+							}
 						}
 					});
 				}
 				else
 				{
-					for_i(batchSize, LIGHT_COMPUTE, [=](size_t n)
+					for_i(batchSize, threads, [=](size_t n)
 					{
 						size_t inputOffset, outputOffset;
 						for (auto c = 0ull; c < C; c++)

@@ -198,27 +198,24 @@ namespace dnn
 	private:
 		std::unique_ptr<dnnl::prelu_forward::primitive_desc> fwdDescPRelu;
 		std::unique_ptr<dnnl::prelu_backward::primitive_desc> bwdDescPRelu;
-		std::unique_ptr<dnnl::prelu_forward> fwdPRelu;
-		std::unique_ptr<dnnl::prelu_backward> bwdPRelu;
-
 		std::unique_ptr<dnnl::logsoftmax_forward::primitive_desc> fwdDescLogSoftmax;
 		std::unique_ptr<dnnl::logsoftmax_backward::primitive_desc> bwdDescLogSoftmax;
-		std::unique_ptr<dnnl::logsoftmax_forward> fwdLogSoftmax;
-		std::unique_ptr<dnnl::logsoftmax_backward> bwdLogSoftmax;
-
 		std::unique_ptr<dnnl::softmax_forward::primitive_desc> fwdDescSoftmax;
 		std::unique_ptr<dnnl::softmax_backward::primitive_desc> bwdDescSoftmax;
+    	std::unique_ptr<dnnl::eltwise_forward::primitive_desc> fwdDesc;
+		std::unique_ptr<dnnl::eltwise_backward::primitive_desc> bwdDesc;
+		std::unique_ptr<dnnl::binary::primitive_desc> bwdAddDesc;
+#ifdef DNN_CACHE_PRIMITIVES
+		std::unique_ptr<dnnl::prelu_forward> fwdPRelu;
+		std::unique_ptr<dnnl::prelu_backward> bwdPRelu;
+		std::unique_ptr<dnnl::logsoftmax_forward> fwdLogSoftmax;
+		std::unique_ptr<dnnl::logsoftmax_backward> bwdLogSoftmax;
 		std::unique_ptr<dnnl::softmax_forward> fwdSoftmax;
 		std::unique_ptr<dnnl::softmax_backward> bwdSoftmax;
-
-		std::unique_ptr<dnnl::eltwise_forward::primitive_desc> fwdDesc;
-		std::unique_ptr<dnnl::eltwise_backward::primitive_desc> bwdDesc;
 		std::unique_ptr<dnnl::eltwise_forward> fwd;
 		std::unique_ptr<dnnl::eltwise_backward> bwd;
-
-		std::unique_ptr<dnnl::binary::primitive_desc> bwdAddDesc;
 		std::unique_ptr<dnnl::binary> bwdAdd;
-
+#endif
 		dnnl::algorithm algorithm;
 
 		bool reorderFwdSrc;
@@ -289,8 +286,9 @@ namespace dnn
 			}
 
 			bwdAddDesc = std::make_unique<dnnl::binary::primitive_desc>(dnnl::binary::primitive_desc(dnnl::binary::desc(dnnl::algorithm::binary_add, *InputLayer->DiffDstMemDesc, *InputLayer->DiffDstMemDesc, *InputLayer->DiffDstMemDesc), Device.engine));
+#ifdef DNN_CACHE_PRIMITIVES
 			bwdAdd = std::make_unique<dnnl::binary>(dnnl::binary(*bwdAddDesc));
-
+#endif
 			switch (ActivationFunction)
 			{
 			case Activations::PRelu:
@@ -324,9 +322,10 @@ namespace dnn
 				reorderBwdSrc = bwdDescPRelu->src_desc() != *InputLayer->DstMemDesc;
 				reorderBwdDiffSrc = bwdDescPRelu->diff_src_desc() != *InputLayer->DiffDstMemDesc;
 				reorderBwdDiffWeights = bwdDescPRelu->diff_weights_desc() != fwdDescPRelu->weights_desc();
-
+#ifdef DNN_CACHE_PRIMITIVES
 				fwdPRelu = std::make_unique<dnnl::prelu_forward>(dnnl::prelu_forward(*fwdDescPRelu));
 				bwdPRelu = std::make_unique<dnnl::prelu_backward>(dnnl::prelu_backward(*bwdDescPRelu));
+#endif
 			}
 			break;
 
@@ -335,12 +334,12 @@ namespace dnn
 				const auto axis = (H == 1 && W == 1) ? 1 : 3;
 				fwdDescLogSoftmax = std::make_unique<dnnl::logsoftmax_forward::primitive_desc>(dnnl::logsoftmax_forward::primitive_desc(dnnl::logsoftmax_forward::desc(dnnl::prop_kind::forward, *DstMemDesc, axis), Device.engine));
 				bwdDescLogSoftmax = std::make_unique<dnnl::logsoftmax_backward::primitive_desc>(dnnl::logsoftmax_backward::primitive_desc(dnnl::logsoftmax_backward::desc(*DiffDstMemDesc, *DstMemDesc, axis), Device.engine, *fwdDescLogSoftmax));
-
-				fwdLogSoftmax = std::make_unique<dnnl::logsoftmax_forward>(dnnl::logsoftmax_forward(*fwdDescLogSoftmax));
-				bwdLogSoftmax = std::make_unique<dnnl::logsoftmax_backward>(dnnl::logsoftmax_backward(*bwdDescLogSoftmax));
-
 				reorderFwdSrc = fwdDescLogSoftmax->src_desc() != *InputLayer->DstMemDesc;
 				reorderBwdDiffSrc = bwdDescLogSoftmax->diff_src_desc() != *InputLayer->DiffDstMemDesc;
+#ifdef DNN_CACHE_PRIMITIVES
+				fwdLogSoftmax = std::make_unique<dnnl::logsoftmax_forward>(dnnl::logsoftmax_forward(*fwdDescLogSoftmax));
+				bwdLogSoftmax = std::make_unique<dnnl::logsoftmax_backward>(dnnl::logsoftmax_backward(*bwdDescLogSoftmax));
+#endif
 			}
 			break;
 
@@ -349,12 +348,12 @@ namespace dnn
 				const auto axis = (H == 1 && W == 1) ? 1 : 3;
 				fwdDescSoftmax = std::make_unique<dnnl::softmax_forward::primitive_desc>(dnnl::softmax_forward::primitive_desc(dnnl::softmax_forward::desc(dnnl::prop_kind::forward, *DstMemDesc, axis), Device.engine));
 				bwdDescSoftmax = std::make_unique<dnnl::softmax_backward::primitive_desc>(dnnl::softmax_backward::primitive_desc(dnnl::softmax_backward::desc(*DiffDstMemDesc, *DstMemDesc, axis), Device.engine, *fwdDescSoftmax));
-
-				fwdSoftmax = std::make_unique<dnnl::softmax_forward>(dnnl::softmax_forward(*fwdDescSoftmax));
-				bwdSoftmax = std::make_unique<dnnl::softmax_backward>(dnnl::softmax_backward(*bwdDescSoftmax));
-
 				reorderFwdSrc = fwdDescSoftmax->src_desc() != *InputLayer->DstMemDesc;
 				reorderBwdDiffSrc = bwdDescSoftmax->diff_src_desc() != *InputLayer->DiffDstMemDesc;
+#ifdef DNN_CACHE_PRIMITIVES
+				fwdSoftmax = std::make_unique<dnnl::softmax_forward>(dnnl::softmax_forward(*fwdDescSoftmax));
+				bwdSoftmax = std::make_unique<dnnl::softmax_backward>(dnnl::softmax_backward(*bwdDescSoftmax));
+#endif
 			}
 			break;
 
@@ -459,12 +458,14 @@ namespace dnn
 				fwdDesc = std::make_unique<dnnl::eltwise_forward::primitive_desc>(dnnl::eltwise_forward::primitive_desc(dnnl::eltwise_forward::desc(dnnl::prop_kind::forward, algorithm, *InputLayer->DstMemDesc, Alpha, Beta), Device.engine));
 				bwdDesc = std::make_unique<dnnl::eltwise_backward::primitive_desc>(dnnl::eltwise_backward::primitive_desc(dnnl::eltwise_backward::desc(algorithm, *DiffDstMemDesc, *DstMemDesc, Alpha, Beta), Device.engine, *fwdDesc));
 
-				fwd = std::make_unique<dnnl::eltwise_forward>(dnnl::eltwise_forward(*fwdDesc));
-				bwd = std::make_unique<dnnl::eltwise_backward>(dnnl::eltwise_backward(*bwdDesc));
-
 				reorderFwdSrc = fwdDesc->src_desc() != *InputLayer->DstMemDesc;
 				reorderBwdSrc = bwdDesc->src_desc() != *InputLayer->DstMemDesc;
 				reorderBwdDiffSrc = bwdDesc->diff_src_desc() != *InputLayer->DiffDstMemDesc;
+
+#ifdef DNN_CACHE_PRIMITIVES
+				fwd = std::make_unique<dnnl::eltwise_forward>(dnnl::eltwise_forward(*fwdDesc));
+				bwd = std::make_unique<dnnl::eltwise_backward>(dnnl::eltwise_backward(*bwdDesc));
+#endif
 			}
 			}
 		}
@@ -521,8 +522,11 @@ namespace dnn
 				}
 
 				auto dstMem = dnnl::memory(fwdDescLogSoftmax->dst_desc(), Device.engine, Neurons.data());
-
+#ifdef DNN_CACHE_PRIMITIVES
 				fwdLogSoftmax->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DST,  dstMem } });
+#else
+				dnnl::logsoftmax_forward(*fwdDescLogSoftmax).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DST,  dstMem } });
+#endif
 				Device.stream.wait();
 
 #ifndef DNN_LEAN
@@ -543,8 +547,11 @@ namespace dnn
 				}
 
 				auto dstMem = dnnl::memory(fwdDescSoftmax->dst_desc(), Device.engine, Neurons.data());
-
+#ifdef DNN_CACHE_PRIMITIVES
 				fwdSoftmax->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DST,  dstMem } });
+#else
+				dnnl::softmax_forward(*fwdDescSoftmax).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DST,  dstMem } });
+#endif
 				Device.stream.wait();
 
 #ifndef DNN_LEAN
@@ -567,8 +574,11 @@ namespace dnn
 				auto weightsMem = dnnl::memory(fwdDescPRelu->weights_desc(), Device.engine, Biases.data());
 
 				auto dstMem = dnnl::memory(*DstMemDesc, Device.engine, Neurons.data());
-
+#ifdef DNN_CACHE_PRIMITIVES
 				fwdPRelu->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_WEIGHTS, weightsMem }, { DNNL_ARG_DST, dstMem } });
+#else
+				dnnl::prelu_forward(*fwdDescPRelu).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_WEIGHTS, weightsMem }, { DNNL_ARG_DST, dstMem } });
+#endif
 				Device.stream.wait();
 
 #ifndef DNN_LEAN
@@ -962,8 +972,11 @@ namespace dnn
 				}
 
 				auto dstMem = dnnl::memory(fwdDesc->dst_desc(), Device.engine, Neurons.data());
-
+#ifdef DNN_CACHE_PRIMITIVES
 				fwd->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DST, dstMem } });
+#else
+				dnnl::eltwise_forward(*fwdDesc).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DST, dstMem } });
+#endif
 				Device.stream.wait();
 
 #ifndef DNN_LEAN
@@ -991,8 +1004,12 @@ namespace dnn
 
 				auto memDiffSrc = SharesInput ? dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine) : dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data());
 				auto diffSrcMem = reorderBwdDiffSrc ? dnnl::memory(bwdDescLogSoftmax->diff_src_desc(), Device.engine) : memDiffSrc;
-
+#ifdef DNN_CACHE_PRIMITIVES
 				bwdLogSoftmax->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_DST, dstMem}, { DNNL_ARG_DIFF_DST, diffDstMem }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
+				
+#else
+				dnnl::logsoftmax_backward(*bwdDescLogSoftmax).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_DST, dstMem}, { DNNL_ARG_DIFF_DST, diffDstMem }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
+#endif
 				Device.stream.wait();
 
 				if (reorderBwdDiffSrc)
@@ -1003,7 +1020,11 @@ namespace dnn
 
 				if (SharesInput)
 				{
-					bwdAdd->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ { DNNL_ARG_SRC_0, dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data()) }, { DNNL_ARG_SRC_1, memDiffSrc }, { DNNL_ARG_DST, dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data()) } });
+#ifdef DNN_CACHE_PRIMITIVES
+					bwdAdd->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ { DNNL_ARG_SRC_0, dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data()) }, { DNNL_ARG_SRC_1, memDiffSrc }, { DNNL_ARG_DST, dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data()) } });		
+#else
+					dnnl::binary(*bwdAddDesc).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ { DNNL_ARG_SRC_0, dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data()) }, { DNNL_ARG_SRC_1, memDiffSrc }, { DNNL_ARG_DST, dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data()) } });
+#endif
 					Device.stream.wait();
 				}
 			}
@@ -1016,8 +1037,11 @@ namespace dnn
 
 				auto memDiffSrc = SharesInput ? dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine) : dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data());
 				auto diffSrcMem = reorderBwdDiffSrc ? dnnl::memory(bwdDescSoftmax->diff_src_desc(), Device.engine) : memDiffSrc;
-
+#ifdef DNN_CACHE_PRIMITIVES
 				bwdSoftmax->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_DST, dstMem}, { DNNL_ARG_DIFF_DST, diffDstMem }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
+#else
+				dnnl::softmax_backward(*bwdDescSoftmax).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_DST, dstMem}, { DNNL_ARG_DIFF_DST, diffDstMem }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
+#endif
 				Device.stream.wait();
 
 				if (reorderBwdDiffSrc)
@@ -1028,7 +1052,11 @@ namespace dnn
 
 				if (SharesInput)
 				{
+#ifdef DNN_CACHE_PRIMITIVES
 					bwdAdd->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ { DNNL_ARG_SRC_0, dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data()) }, { DNNL_ARG_SRC_1, memDiffSrc }, { DNNL_ARG_DST, dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data()) } });
+#else
+					dnnl::binary(*bwdAddDesc).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ { DNNL_ARG_SRC_0, dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data()) }, { DNNL_ARG_SRC_1, memDiffSrc }, { DNNL_ARG_DST, dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data()) } });
+#endif
 					Device.stream.wait();
 				}
 			}
@@ -1054,8 +1082,11 @@ namespace dnn
 				auto diffWeightsMem = reorderBwdDiffWeights ? dnnl::memory(bwdDescPRelu->diff_weights_desc(), Device.engine) : memDiffWeights;
 	
 				auto weightsMem = dnnl::memory(bwdDescPRelu->weights_desc(), Device.engine, Biases.data());
-
+#ifdef DNN_CACHE_PRIMITIVES
 				bwdPRelu->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_WEIGHTS, weightsMem }, { DNNL_ARG_DIFF_DST, diffDstMem }, { DNNL_ARG_DIFF_WEIGHTS, diffWeightsMem }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
+#else
+				dnnl::prelu_backward(*bwdDescPRelu).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_WEIGHTS, weightsMem }, { DNNL_ARG_DIFF_DST, diffDstMem }, { DNNL_ARG_DIFF_WEIGHTS, diffWeightsMem }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
+#endif
 				Device.stream.wait();
 
 				if (reorderBwdDiffWeights)
@@ -1072,7 +1103,11 @@ namespace dnn
 
 				if (SharesInput)
 				{
+#ifdef DNN_CACHE_PRIMITIVES
 					bwdAdd->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ { DNNL_ARG_SRC_0, dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data()) }, { DNNL_ARG_SRC_1, memDiffSrc }, { DNNL_ARG_DST, dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data()) } });
+#else
+					dnnl::binary(*bwdAddDesc).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ { DNNL_ARG_SRC_0, dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data()) }, { DNNL_ARG_SRC_1, memDiffSrc }, { DNNL_ARG_DST, dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data()) } });
+#endif
 					Device.stream.wait();
 				}
 			}
@@ -1352,8 +1387,11 @@ namespace dnn
 
 				auto memDiffSrc = SharesInput ? dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine) : dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data());
 				auto diffSrcMem = reorderBwdDiffSrc ? dnnl::memory(bwdDesc->diff_src_desc(), Device.engine) : memDiffSrc;
-
+#ifdef DNN_CACHE_PRIMITIVES
 				bwd->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DIFF_DST, diffDstMem }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
+#else
+				dnnl::eltwise_backward(*bwdDesc).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DIFF_DST, diffDstMem }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
+#endif
 				Device.stream.wait();
 
 				if (reorderBwdDiffSrc)
@@ -1364,7 +1402,11 @@ namespace dnn
 
 				if (SharesInput)
 				{
+#ifdef DNN_CACHE_PRIMITIVES
 					bwdAdd->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ { DNNL_ARG_SRC_0, dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data()) }, { DNNL_ARG_SRC_1, memDiffSrc }, { DNNL_ARG_DST, dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data()) } });
+#else
+					dnnl::binary(*bwdAddDesc).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ { DNNL_ARG_SRC_0, dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data()) }, { DNNL_ARG_SRC_1, memDiffSrc }, { DNNL_ARG_DST, dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data()) } });
+#endif
 					Device.stream.wait();
 				}
 			}

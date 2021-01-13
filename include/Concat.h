@@ -109,6 +109,8 @@ namespace dnn
 				Device.stream.wait();
 #else
 				const auto plain = IsPlainFormat();
+				const auto elements = plain ? batchSize * CDHW : batchSize * PaddedCDHW;
+				const auto threads = elements < 2097152ull ? 2ull : elements < 8338608ull ? LIGHT_COMPUTE : MEDIUM_COMPUTE;
 
 #ifdef DNN_STOCHASTIC
 				if (batchSize == 1)
@@ -163,7 +165,7 @@ namespace dnn
 					if (!plain)
 					{
 						const auto strideH = HW * VectorSize;
-						for_i(batchSize, LIGHT_COMPUTE, [=](size_t b)
+						for_i(batchSize, threads, [=](size_t b)
 						{
 							const auto outputSampleOffset = b * PaddedCDHW;
 							auto channelOffset = 0ull;
@@ -190,7 +192,7 @@ namespace dnn
 					}
 					else
 					{
-						for_i(batchSize, LIGHT_COMPUTE, [=](size_t b)
+						for_i(batchSize, threads, [=](size_t b)
 						{
 							const auto outputSampleOffset = b * CDHW;
 							auto channelOffset = 0ull;
@@ -234,6 +236,8 @@ namespace dnn
 #endif // DNN_LEAN
 
 			const auto plain = IsPlainFormat();
+			const auto elements = plain ? batchSize * CDHW : batchSize * PaddedCDHW;
+			const auto threads = elements < 2097152ull ? 2ull : elements < 8338608ull ? LIGHT_COMPUTE : MEDIUM_COMPUTE;
 
 #ifdef DNN_STOCHASTIC
 			if (batchSize == 1)
@@ -282,7 +286,7 @@ namespace dnn
 				if (!plain)
 				{
 					const auto strideH = HW * VectorSize;
-					for_i(batchSize, LIGHT_COMPUTE, [=](size_t b)
+					for_i(batchSize, threads, [=](size_t b)
 					{
 						const auto outputSampleOffset = b * PaddedCDHW;
 						auto channelOffset = 0ull;
@@ -308,7 +312,7 @@ namespace dnn
 				}
 				else
 				{
-					for_i(batchSize, LIGHT_COMPUTE, [=](size_t b)
+					for_i(batchSize, threads, [=](size_t b)
 					{
 						const auto outputSampleOffset = b * CDHW;
 						auto channelOffset = 0ull;
