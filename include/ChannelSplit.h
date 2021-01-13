@@ -72,7 +72,7 @@ namespace dnn
 			if (batchSize == 1)
 			{
 				const auto vecZero = VecFloat(0);
-
+				
 				for (auto c = 0ull; c < PaddedC; c += VectorSize)
 				{
 					const auto offsetC = (c + ((Group - 1) * PaddedC)) * HW;
@@ -83,11 +83,11 @@ namespace dnn
 						const auto offsetH = offsetC + h * strideH;
 						const auto offsetHHalf = offsetCHalf + h * strideH;
 
-						for (auto w = offsetH, x = offsetHHalf; w < offsetH + strideH; w += VectorSize, x += VectorSize)
+						for (auto w = 0ull; w < strideH; w += VectorSize)
 						{
-							(VecFloat().load_a(&InputLayer->NeuronsD1[w]) += VecFloat().load_a(&NeuronsD1[x])).store_a(&InputLayer->NeuronsD1[w]);
+							(VecFloat().load_a(&InputLayer->Neurons[w + offsetH])).store_a(&Neurons[w + offsetHHalf]);
 #ifndef DNN_LEAN
-							vecZero.store_nt(&NeuronsD1[x]);
+							vecZero.store_nt(&NeuronsD1[w + offsetHHalf]);
 #endif // DNN_LEAN
 						}
 					}
@@ -96,7 +96,7 @@ namespace dnn
 			else
 			{
 #endif
-				for_i(batchSize, MEDIUM_COMPUTE, [=](size_t n)
+				for_i(batchSize, LIGHT_COMPUTE, [=](size_t n)
 				{
 					const auto vecZero = VecFloat(0);
 
@@ -146,15 +146,15 @@ namespace dnn
 						const auto offsetH = offsetC + h * strideH;
 						const auto offsetHHalf = offsetCHalf + h * strideH;
 
-						for (auto w = offsetH, x = offsetHHalf; w < offsetH + strideH; w += VectorSize, x += VectorSize)
-							(VecFloat().load_a(&InputLayer->NeuronsD1[w]) += VecFloat().load_a(&NeuronsD1[x])).store_a(&InputLayer->NeuronsD1[w]);
+						for (auto w = 0ull; w < strideH; w += VectorSize)
+							(VecFloat().load_a(&InputLayer->NeuronsD1[w + offsetH]) += VecFloat().load_a(&NeuronsD1[w + offsetHHalf])).store_a(&InputLayer->NeuronsD1[w + offsetH]);
 					}
 				}
 			}
 			else
 			{
 #endif
-				for_i(batchSize, MEDIUM_COMPUTE, [=](size_t n)
+				for_i(batchSize, LIGHT_COMPUTE, [=](size_t n)
 				{
 					for (auto c = 0ull; c < PaddedC; c += VectorSize)
 					{

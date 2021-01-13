@@ -8,8 +8,10 @@ namespace dnn
 	private:
 		std::unique_ptr<dnnl::shuffle_forward::primitive_desc> fwdDesc;
 		std::unique_ptr<dnnl::shuffle_backward::primitive_desc> bwdDesc;
+#ifdef DNN_CACHE_PRIMITIVES
 		std::unique_ptr<dnnl::shuffle_forward> fwd;
 		std::unique_ptr<dnnl::shuffle_backward> bwd;
+#endif
 
 	public:
 	    const size_t Groups;
@@ -71,17 +73,21 @@ namespace dnn
 
 			fwdDesc = std::make_unique<dnnl::shuffle_forward::primitive_desc>(dnnl::shuffle_forward::primitive_desc(dnnl::shuffle_forward::desc(dnnl::prop_kind::forward_training, *DstMemDesc, 1, int(GroupSize)), Device.engine));
 			bwdDesc = std::make_unique<dnnl::shuffle_backward::primitive_desc>(dnnl::shuffle_backward::primitive_desc(dnnl::shuffle_backward::desc(*DiffDstMemDesc, 1, int(GroupSize)), Device.engine, *fwdDesc));
-
+#ifdef DNN_CACHE_PRIMITIVES
 			fwd = std::make_unique<dnnl::shuffle_forward>(dnnl::shuffle_forward(*fwdDesc));
 			bwd = std::make_unique<dnnl::shuffle_backward>(dnnl::shuffle_backward(*bwdDesc));
+#endif
 		}
 
 		void ForwardProp(const size_t batchSize, const bool training) final override
 		{
 			auto srcMem = dnnl::memory(*InputLayer->DstMemDesc, Device.engine, InputLayer->Neurons.data());
 			auto dstMem = dnnl::memory(*DstMemDesc, Device.engine, Neurons.data());
-
+#ifdef DNN_CACHE_PRIMITIVES
 			fwd->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DST, dstMem } });
+#else
+			dnnl::shuffle_forward(*fwdDesc).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DST, dstMem } });
+#endif
 			Device.stream.wait();
 
 #ifndef DNN_LEAN
@@ -102,8 +108,11 @@ namespace dnn
 
 			auto diffDstMem = dnnl::memory(*DiffDstMemDesc, Device.engine, NeuronsD1.data());
 			auto diffSrcMem = dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data());
-
+#ifdef DNN_CACHE_PRIMITIVES
 			bwd->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_DIFF_DST, diffDstMem}, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
+#else
+			dnnl::shuffle_backward(*bwdDesc).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_DIFF_DST, diffDstMem}, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
+#endif
 			Device.stream.wait();
 
 #ifdef DNN_LEAN
