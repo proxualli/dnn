@@ -7,9 +7,11 @@ namespace dnn
 	class ChannelMultiply final : public Layer
 	{
 	private:
-		std::unique_ptr<dnnl::binary::primitive_desc> fwdDesc;
-		std::unique_ptr<dnnl::binary> fwd;
 		std::unordered_map<int, dnnl::memory> fwdArgs;
+		std::unique_ptr<dnnl::binary::primitive_desc> fwdDesc;
+#ifdef DNN_CACHE_PRIMITIVES
+		std::unique_ptr<dnnl::binary> fwd;
+#endif
 
 	public:
 		ChannelMultiply(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs) :
@@ -39,25 +41,37 @@ namespace dnn
 
 		void InitializeDescriptors(const size_t batchSize) final override
 		{
-			chosenFormat = BlockedFmt;
+			if (Format == dnnl::memory::format_tag::any)
+			{
+				chosenFormat = GetDataFmt(*InputLayer->DstMemDesc);
+				if (chosenFormat != GetDataFmt(*InputLayer->DiffDstMemDesc))
+					throw std::invalid_argument("Src and Diff format are different in " + std::string(magic_enum::enum_name<LayerTypes>(LayerType)) + " layer " + Name);
+			}
 
-			if (!IsBlockedDataFmt(*Inputs[0]->DstMemDesc) || !IsBlockedDataFmt(*Inputs[1]->DstMemDesc))
-				throw std::runtime_error("incompatible format used");
+			DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, chosenFormat));
+			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, chosenFormat));
 
 			dnnl::memory::desc memDesc = dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, chosenFormat);
 
 			fwdDesc = std::make_unique<dnnl::binary::primitive_desc>(dnnl::binary::primitive_desc(dnnl::binary::desc(dnnl::algorithm::binary_mul, *Inputs[0]->DstMemDesc, *Inputs[1]->DstMemDesc, memDesc), Device.engine));
-			fwd = std::make_unique<dnnl::binary>(dnnl::binary(*fwdDesc));
 
 			DstMemDesc = std::make_unique<dnnl::memory::desc>(fwdDesc->dst_desc());
 			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(fwdDesc->dst_desc());
 
 			fwdArgs = std::unordered_map<int, dnnl::memory>{ { DNNL_ARG_SRC_0, dnnl::memory(*Inputs[0]->DstMemDesc, Device.engine, Inputs[0]->Neurons.data()) }, { DNNL_ARG_SRC_1, dnnl::memory(*Inputs[1]->DstMemDesc, Device.engine, Inputs[1]->Neurons.data()) }, { DNNL_ARG_DST, dnnl::memory(*DstMemDesc, Device.engine, Neurons.data()) } };
+
+#ifdef DNN_CACHE_PRIMITIVES
+			fwd = std::make_unique<dnnl::binary>(dnnl::binary(*fwdDesc));
+#endif
 		}
 
 		void ForwardProp(const size_t batchSize, const bool training) final override
 		{
+#ifdef DNN_CACHE_PRIMITIVES
 			fwd->execute(Device.stream, fwdArgs);
+#else
+			dnnl::binary(*fwdDesc).execute(Device.stream, fwdArgs);
+#endif
 			Device.stream.wait();
 
 #ifndef DNN_LEAN
@@ -74,49 +88,43 @@ namespace dnn
 			ZeroGradientMulti(batchSize);
 #endif // DNN_LEAN
 
-			const size_t strideH = W * VectorSize;
+			const auto plain = IsPlainFormat();
+			const auto elements = plain ? batchSize * CDHW : batchSize * PaddedCDHW;
+			const auto threads = elements < 2097152ull ? 2ull : elements < 8338608ull ? LIGHT_COMPUTE : MEDIUM_COMPUTE;
+			const size_t strideH = HW * VectorSize;
 
 #ifdef DNN_STOCHASTIC
 			if (batchSize == 1)
 			{
 				VecFloat neuronsD1;
+				size_t outputOffset;
 				for (auto c = 0ull; c < PaddedC; c += VectorSize)
 				{
-					const auto offsetC = c * HW;
-
-					for (auto h = 0ull; h < H; h++)
+					outputOffset = c * HW;
+					for (auto w = 0ull; w < strideH; w += VectorSize)
 					{
-						const auto offsetH = offsetC + h * strideH;
-
-						for (auto w = offsetH; w < offsetH + strideH; w += VectorSize)
-						{
-							neuronsD1.load_a(&NeuronsD1[w]);
-							mul_add(neuronsD1, VecFloat().load_a(&Inputs[1]->Neurons[c]), VecFloat().load_a(&Inputs[0]->NeuronsD1[w])).store_a(&Inputs[0]->NeuronsD1[w]);
-							mul_add(neuronsD1, VecFloat().load_a(&Inputs[0]->Neurons[w]), VecFloat().load_a(&Inputs[1]->NeuronsD1[c])).store_a(&Inputs[1]->NeuronsD1[c]);
-						}
+						neuronsD1.load_a(&NeuronsD1[w + outputOffset]);
+						mul_add(neuronsD1, VecFloat().load_a(&Inputs[1]->Neurons[c]), VecFloat().load_a(&Inputs[0]->NeuronsD1[w + outputOffset])).store_a(&Inputs[0]->NeuronsD1[w + outputOffset]);
+						mul_add(neuronsD1, VecFloat().load_a(&Inputs[0]->Neurons[w + outputOffset]), VecFloat().load_a(&Inputs[1]->NeuronsD1[c])).store_a(&Inputs[1]->NeuronsD1[c]);
 					}
 				}
 			}
 			else
 			{
 #endif
-				for_i(batchSize, MEDIUM_COMPUTE, [=](size_t n)
+				for_i(batchSize, threads, [=](size_t n)
 				{
+					VecFloat neuronsD1;
+					size_t outputOffset, channelOffset;
 					for (auto c = 0ull; c < PaddedC; c += VectorSize)
 					{
-						const auto offsetC = n * PaddedCDHW + c * HW;
-						const auto channelOffset = n * PaddedC + c;
-						VecFloat neuronsD1;
-						for (auto h = 0ull; h < H; h++)
+						outputOffset = n * PaddedCDHW + c * HW;
+						channelOffset = n * PaddedC + c;
+						for (auto w = 0ull; w < strideH; w += VectorSize)
 						{
-							const auto offsetH = offsetC + h * strideH;
-
-							for (auto w = offsetH; w < offsetH + strideH; w += VectorSize)
-							{
-								neuronsD1.load_a(&NeuronsD1[w]);
-								mul_add(neuronsD1, VecFloat().load_a(&Inputs[1]->Neurons[channelOffset]), VecFloat().load_a(&Inputs[0]->NeuronsD1[w])).store_a(&Inputs[0]->NeuronsD1[w]);
-								mul_add(neuronsD1, VecFloat().load_a(&Inputs[0]->Neurons[w]), VecFloat().load_a(&Inputs[1]->NeuronsD1[channelOffset])).store_a(&Inputs[1]->NeuronsD1[channelOffset]);
-							}
+							neuronsD1.load_a(&NeuronsD1[w + outputOffset]);
+							mul_add(neuronsD1, VecFloat().load_a(&Inputs[1]->Neurons[channelOffset]), VecFloat().load_a(&Inputs[0]->NeuronsD1[w + outputOffset])).store_a(&Inputs[0]->NeuronsD1[w + outputOffset]);
+							mul_add(neuronsD1, VecFloat().load_a(&Inputs[0]->Neurons[w + outputOffset]), VecFloat().load_a(&Inputs[1]->NeuronsD1[channelOffset])).store_a(&Inputs[1]->NeuronsD1[channelOffset]);
 						}
 					}
 				});
