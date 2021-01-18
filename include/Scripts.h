@@ -185,14 +185,14 @@ namespace dnn
         static std::string BatchNormActivation(size_t id, std::string inputs, bool relu = true, std::string group = "", std::string prefix = "B")
         {
             return "[" + group + prefix + std::to_string(id) + "]" + nwl +
-                (relu ? "Type=BatchNormRelu" + nwl : "Type=BatchNormFTS" + nwl) +
+                (relu ? "Type=BatchNormRelu" + nwl : "Type=BatchNormHardSwish" + nwl) +
                 "Inputs=" + inputs + nwl + nwl;
         }
 
         static std::string BatchNormActivationDropout(size_t id, std::string inputs, bool relu = true, Float dropout = 0.0f, std::string group = "", std::string prefix = "B")
         {
             return "[" + group + prefix + std::to_string(id) + "]" + nwl +
-                (relu ? "Type=BatchNormReluDropout" + nwl : "Type=BatchNormFTSDropout" + nwl) +
+                (relu ? "Type=BatchNormReluDropout" + nwl : "Type=BatchNormHardSwishDropout" + nwl) +
                 "Inputs=" + inputs + nwl +
                 (dropout > 0.0f ? "Dropout=" + std::to_string(dropout) + nwl + nwl : nwl);
         }
@@ -763,7 +763,7 @@ namespace dnn
                         auto strSE =
                             se ? GlobalAvgPooling(In("B", C + 4), group) +
                             Convolution(1, group + "GAP", DIV8(W / 4), 1, 1, 1, 1, 0, 0, group, "C", "Normal(0.01)") +
-                            BatchNormActivation(1, group + "C1", p.Relu, group) +
+                            BatchNormActivation(1, group + "C1", false, group) +
                             Convolution(2, group + "B1", DIV8(W), 1, 1, 1, 1, 0, 0, group, "C", "Normal(0.01)") +
                             HardLogistic(2, group + "C2", group) +
                             ChannelMultiply(In("B", C + 3) + "," + group + "ACT2", group) +
@@ -771,7 +771,7 @@ namespace dnn
                             Concat(A + 1, In("LCS", A) + "," + In("B", C + 4));
 
                         blocks.push_back(
-                            ChannelShuffle(A, In("CC", A), 2) +
+                            ChannelShuffle(A, In("CC", A), 4) +
                             ChannelSplit(A, In("CSH", A), 2, 1, "L") + ChannelSplit(A, In("CSH", A), 2, 2, "R") +
                             Convolution(C, In("RCS", A), DIV8(W), 1, 1, 1, 1, 0, 0) +
                             BatchNormActivation(C + 1, In("C", C), p.Relu) +
