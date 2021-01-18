@@ -141,6 +141,7 @@ namespace dnn
 				{
 					if (!plain)
 					{
+						const auto vecZero = VecFloat(0);
 						VecFloat In;
 						size_t inputOffset;
 						for (auto c = 0ull; c < InputLayer->PaddedC; c += VectorSize)
@@ -156,7 +157,6 @@ namespace dnn
 							}
 							
 						}
-						const auto vecZero = VecFloat(0);
 						for (auto c = InputLayer->PaddedC; c < PaddedC; c += VectorSize)
 						{
 							inputOffset = c * HW;
@@ -331,12 +331,12 @@ namespace dnn
 					{
 						for_i(batchSize, threads, [=](size_t n)
 						{
-								size_t inputOffset, outputOffset;
+							size_t inputOffset, outputOffset;
 							for (auto c = 0ull; c < InputLayer->C; c++)
 							{
-								outputOffset = n * CDHW + c * HW;
 								inputOffset = n * InputLayer->CDHW + c * HW;
-
+								outputOffset = n * CDHW + c * HW;
+								
 								for (auto w = 0ull; w < HW; w++)
 									InputLayer->NeuronsD1[w + inputOffset] += NeuronsD1[w + outputOffset];
 							}
