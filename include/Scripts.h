@@ -185,14 +185,14 @@ namespace dnn
         static std::string BatchNormActivation(size_t id, std::string inputs, bool relu = true, std::string group = "", std::string prefix = "B")
         {
             return "[" + group + prefix + std::to_string(id) + "]" + nwl +
-                (relu ? "Type=BatchNormRelu" + nwl : "Type=BatchNormHardSwish" + nwl) +
+                (relu ? "Type=BatchNormRelu" + nwl : "Type=BatchNormFTS" + nwl) +
                 "Inputs=" + inputs + nwl + nwl;
         }
 
         static std::string BatchNormActivationDropout(size_t id, std::string inputs, bool relu = true, Float dropout = 0.0f, std::string group = "", std::string prefix = "B")
         {
             return "[" + group + prefix + std::to_string(id) + "]" + nwl +
-                (relu ? "Type=BatchNormReluDropout" + nwl : "Type=BatchNormHardSwishDropout" + nwl) +
+                (relu ? "Type=BatchNormReluDropout" + nwl : "Type=BatchNormFTSDropout" + nwl) +
                 "Inputs=" + inputs + nwl +
                 (dropout > 0.0f ? "Dropout=" + std::to_string(dropout) + nwl + nwl : nwl);
         }
@@ -724,12 +724,14 @@ namespace dnn
                     BatchNormActivation(2, "C2", p.Relu) +
                     DepthwiseConvolution(3, "B2", 1, kernel, kernel, 1, 1, pad, pad) +
                     BatchNorm(3, "DC3") +
-                    Convolution(4, "B3", DIV8(W), 1, 1, 1, 1, 0, 0) +
-                    BatchNormActivation(4, "C4", p.Relu) +
-                    Convolution(5, "B1", DIV8(W), 1, 1, 1, 1, 0, 0) +
-                    Concat(1, "C5,B4"));
+                    DepthwiseConvolution(4, "B3", 1, kernel, kernel, 1, 1, pad, pad) +
+                    BatchNorm(4, "DC4") +
+                    Convolution(5, "B4", DIV8(W), 1, 1, 1, 1, 0, 0) +
+                    BatchNormActivation(5, "C5", p.Relu) +
+                    Convolution(6, "B1", DIV8(W), 1, 1, 1, 1, 0, 0) +
+                    Concat(1, "C6,B5"));
 
-                auto C = 6ull;
+                auto C = 7ull;
                 auto A = 1ull;
 
                 for (auto g = 1ull; g <= p.Groups; g++)  // 32*32 16*16 8*8 or 28*28 14*14 7*7
@@ -757,16 +759,16 @@ namespace dnn
 
                     for (auto i = 1ull; i < p.Iterations; i++)
                     {
-                        auto group = In("SE", C + 3);
+                        auto group = In("SE", C + 4);
                         auto strSE =
-                            se ? GlobalAvgPooling(In("B", C + 3), group) +
+                            se ? GlobalAvgPooling(In("B", C + 4), group) +
                             Convolution(1, group + "GAP", DIV8(W / 4), 1, 1, 1, 1, 0, 0, group, "C", "Normal(0.01)") +
-                            BatchNormHardSwish(1, group + "C1", group) +
+                            BatchNormActivation(1, group + "C1", p.Relu, group) +
                             Convolution(2, group + "B1", DIV8(W), 1, 1, 1, 1, 0, 0, group, "C", "Normal(0.01)") +
                             HardLogistic(2, group + "C2", group) +
                             ChannelMultiply(In("B", C + 3) + "," + group + "ACT2", group) +
                             Concat(A + 1, In("LCS", A) + "," + group + "CM") :
-                            Concat(A + 1, In("LCS", A) + "," + In("B", C + 3));
+                            Concat(A + 1, In("LCS", A) + "," + In("B", C + 4));
 
                         blocks.push_back(
                             ChannelShuffle(A, In("CC", A), 2) +
@@ -775,11 +777,13 @@ namespace dnn
                             BatchNormActivation(C + 1, In("C", C), p.Relu) +
                             DepthwiseConvolution(C + 1, In("B", C + 1), 1, kernel, kernel, 1, 1, pad, pad) +
                             BatchNorm(C + 2, In("DC", C + 1)) +
-                            Convolution(C + 2, In("B", C + 2), DIV8(W), 1, 1, 1, 1, 0, 0) +
-                            BatchNormActivation(C + 3, In("C", C + 2), p.Relu) +
+                            DepthwiseConvolution(C + 2, In("B", C + 2), 1, kernel, kernel, 1, 1, pad, pad) +
+                            BatchNorm(C + 3, In("DC", C + 2)) +
+                            Convolution(C + 3, In("B", C + 3), DIV8(W), 1, 1, 1, 1, 0, 0) +
+                            BatchNormActivation(C + 4, In("C", C + 3), p.Relu) +
                             strSE);
 
-                        A++; C += 3;
+                        A++; C += 4;
                     }
                 }
 
