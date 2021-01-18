@@ -319,8 +319,8 @@ namespace dnn
 							size_t inputOffset, outputOffset;
 							for (auto c = 0ull; c < InputLayer->PaddedC; c += VectorSize)
 							{
-								const auto outputOffset = n * PaddedCDHW + c * HW;
-								const auto inputOffset = n * InputLayer->PaddedCDHW + c * HW;
+								outputOffset = n * PaddedCDHW + c * HW;
+								inputOffset = n * InputLayer->PaddedCDHW + c * HW;
 
 								for (auto w = 0ull; w < strideH; w += VectorSize)
 									(VecFloat().load_a(&InputLayer->NeuronsD1[w + inputOffset]) + VecFloat().load_a(&NeuronsD1[w + outputOffset])).store_a(&InputLayer->NeuronsD1[w + inputOffset]);
@@ -331,10 +331,11 @@ namespace dnn
 					{
 						for_i(batchSize, threads, [=](size_t n)
 						{
+								size_t inputOffset, outputOffset;
 							for (auto c = 0ull; c < InputLayer->C; c++)
 							{
-								const auto outputOffset = n * CDHW + c * HW;
-								const auto inputOffset = n * InputLayer->CDHW + c * HW;
+								outputOffset = n * CDHW + c * HW;
+								inputOffset = n * InputLayer->CDHW + c * HW;
 
 								for (auto w = 0ull; w < HW; w++)
 									InputLayer->NeuronsD1[w + inputOffset] += NeuronsD1[w + outputOffset];
