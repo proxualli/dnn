@@ -111,25 +111,24 @@ namespace dnn
 				const auto plain = IsPlainFormat();
 				const auto elements = plain ? batchSize * CDHW : batchSize * PaddedCDHW;
 				const auto threads = elements < 2097152ull ? 2ull : elements < 8338608ull ? LIGHT_COMPUTE : MEDIUM_COMPUTE;
+				const auto strideHW = HW * VectorSize;
 
 #ifdef DNN_STOCHASTIC
 				if (batchSize == 1)
 				{
 					if (!plain)
 					{
-						const auto strideH = HW * VectorSize;
-						auto channelOffset = 0ull;
-
 						const auto vecZero = VecFloat(0);
 						VecFloat In;
+						auto channelOffset = 0ull;
+						size_t inputIndex, outputIndex;
 						for (auto input = 0ull; input < Inputs.size(); input++)
 						{
-							const auto inputSampleOffset = b * Inputs[input]->PaddedCDHW;
 							for (auto c = channelOffset; c < channelOffset + Inputs[input]->PaddedC; c += VectorSize)
 							{
-								const auto inputIndex = (c - channelOffset) * HW;
-								const auto outputIndex = c * HW;
-								for (auto w = 0ull; w < strideH; w += VectorSize)
+								inputIndex = (c - channelOffset) * HW;
+								outputIndex = c * HW;
+								for (auto w = 0ull; w < strideHW; w += VectorSize)
 								{
 									In.load_a(&Inputs[input]->Neurons[w + inputIndex]);
 									In.store_a(&Neurons[w + outputIndex]);
@@ -142,13 +141,13 @@ namespace dnn
 					else
 					{
 						auto channelOffset = 0ull;
+						size_t inputIndex, outputIndex;
 						for (auto input = 0ull; input < Inputs.size(); input++)
 						{
-							const auto inputSampleOffset = b * Inputs[input]->CDHW;
 							for (auto c = channelOffset; c < channelOffset + Inputs[input]->C; c++)
 							{
-								const auto inputIndex = (c - channelOffset) * HW;
-								const auto outputIndex = c * HW;
+								inputIndex = (c - channelOffset) * HW;
+								outputIndex = c * HW;
 								for (auto hw = 0ull; hw < HW; hw++)
 								{
 									Neurons[outputIndex + hw] = Inputs[input]->Neurons[inputIndex + hw];
@@ -164,12 +163,11 @@ namespace dnn
 #endif
 					if (!plain)
 					{
-						const auto strideH = HW * VectorSize;
 						for_i(batchSize, threads, [=](size_t b)
 						{
 							const auto outputSampleOffset = b * PaddedCDHW;
 							auto channelOffset = 0ull;
-							
+							size_t inputIndex, outputIndex;
 							const auto vecZero = VecFloat(0);
 							VecFloat In;
 							for (auto input = 0ull; input < Inputs.size(); input++)
@@ -177,9 +175,9 @@ namespace dnn
 								const auto inputSampleOffset = b * Inputs[input]->PaddedCDHW;
 								for (auto c = channelOffset; c < channelOffset + Inputs[input]->PaddedC; c += VectorSize)
 								{
-									const auto inputIndex = ((c - channelOffset) * HW) + inputSampleOffset;
-									const auto outputIndex = (c * HW) + outputSampleOffset;
-									for (auto w = 0ull; w < strideH; w += VectorSize)
+									inputIndex = ((c - channelOffset) * HW) + inputSampleOffset;
+									outputIndex = (c * HW) + outputSampleOffset;
+									for (auto w = 0ull; w < strideHW; w += VectorSize)
 									{
 										In.load_a(&Inputs[input]->Neurons[w + inputIndex]);
 										In.store_a(&Neurons[w + outputIndex]);

@@ -162,7 +162,7 @@ namespace dnn
 							inputOffset = c * HW;
 							for (auto w = 0ull; w < strideH; w += VectorSize)
 							{
-								vecZero.store_a(&Neurons[w + inputOffset])
+								vecZero.store_a(&Neurons[w + inputOffset]);
 #ifndef DNN_LEAN
 								vecZero.store_nt(&NeuronsD1[w + inputOffset]);
 #endif // DNN_LEAN

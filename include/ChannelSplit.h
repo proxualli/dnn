@@ -107,7 +107,7 @@ namespace dnn
 							outputOffset = c * HW;
 							for (auto w = 0ull; w < HW; w++)
 							{
-								Neurons[w + outputOffset] = InputLayer->Neurons[w + inputOffset]);
+								Neurons[w + outputOffset] = InputLayer->Neurons[w + inputOffset];
 #ifndef DNN_LEAN
  								NeuronsD1[w + outputOffset] = Float(0);
 #endif // DNN_LEAN
@@ -142,7 +142,7 @@ namespace dnn
 							inputOffset = (c + groupC) * HW;
 							outputOffset = c * HW;
 							for (auto w = 0ull; w < HW; w++)
-								Neurons[w + outputOffset] = InputLayer->Neurons[w + inputOffset]);
+								Neurons[w + outputOffset] = InputLayer->Neurons[w + inputOffset];
 						}
 					}
 				}				
