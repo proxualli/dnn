@@ -71,7 +71,7 @@ namespace dnn
 			const auto elements = plain ? batchSize * CDHW : batchSize * PaddedCDHW;
 			const auto threads = elements < 2097152ull ? 2ull : elements < 8338608ull ? LIGHT_COMPUTE : MEDIUM_COMPUTE;
 			const auto groupC = (Group - 1) * (plain ? C  : PaddedC);
-			const auto strideH = HW * VectorSize;
+			const auto strideHW = HW * VectorSize;
 			
 #ifdef DNN_STOCHASTIC
 			if (batchSize == 1)
@@ -88,7 +88,7 @@ namespace dnn
 						{
 							inputOffset = (c + groupC) * HW;
 							outputOffset = c * HW;
-							for (auto w = 0ull; w < strideH; w += VectorSize)
+							for (auto w = 0ull; w < strideHW; w += VectorSize)
 							{
 								In.load_a(&InputLayer->Neurons[w + inputOffset]);
 								In.store_a(&Neurons[w + outputOffset]);
@@ -127,7 +127,7 @@ namespace dnn
 						{
 							inputOffset = (c + groupC) * HW;
 							outputOffset = c * HW;
-							for (auto w = 0ull; w < strideH; w += VectorSize)
+							for (auto w = 0ull; w < strideHW; w += VectorSize)
 							{
 								In.load_a(&InputLayer->Neurons[w + inputOffset]);
 								In.store_a(&Neurons[w + outputOffset]);
@@ -165,7 +165,7 @@ namespace dnn
 								inputOffset = n * InputLayer->PaddedCDHW + (c + groupC) * HW;
 								outputOffset = n * PaddedCDHW + c * HW;
 
-								for (auto w = 0ull; w < strideH; w += VectorSize)
+								for (auto w = 0ull; w < strideHW; w += VectorSize)
 								{
 									In.load_a(&InputLayer->Neurons[w + inputOffset]);
 									In.store_a(&Neurons[w + outputOffset]);
@@ -210,7 +210,7 @@ namespace dnn
 								inputOffset = n * InputLayer->PaddedCDHW + (c + groupC) * HW;
 								outputOffset = n * PaddedCDHW + c * HW;
 
-								for (auto w = 0ull; w < strideH; w += VectorSize)
+								for (auto w = 0ull; w < strideHW; w += VectorSize)
 								{
 									In.load_a(&InputLayer->Neurons[w + inputOffset]); 
 									In.store_a(&Neurons[w + outputOffset]);
