@@ -357,15 +357,7 @@ namespace dnn
 			}
 			break;
 
-            case Activations::FTS:
-			case Activations::HardLogistic:
-			case Activations::HardSwish:
-			case Activations::Mish:
-				if (!IsPlainDataFmt(*InputLayer->DstMemDesc) && !IsBlockedDataFmt(*InputLayer->DstMemDesc))
-					throw std::invalid_argument("Input memory format not supported for this activation function");
-				break;
-
-			default:
+            default:
 			{
 				switch (ActivationFunction)
 				{

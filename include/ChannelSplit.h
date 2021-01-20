@@ -41,7 +41,7 @@ namespace dnn
 		void InitializeDescriptors(const size_t batchSize) final override
 		{
 			if (InputLayer->PaddedC % Groups != 0)
-				throw std::runtime_error("input not splittable in ChannelSplit");
+				throw std::invalid_argument("input not splittable in " + std::string(magic_enum::enum_name<LayerTypes>(LayerType)) + " layer " + Name);
 
 			if (InputLayer->DstMemDesc->data.ndims == 2)
 			{
