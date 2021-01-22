@@ -120,7 +120,10 @@ namespace dnn
 			ZeroGradientMulti(batchSize);
 #endif // DNN_LEAN
 
-			const auto size = IsPlainFormat() ? CDHW : PaddedCDHW;
+			const auto plain = IsPlainFormat();
+			const auto size = plain ? CDHW : PaddedCDHW;
+			const auto elements = batchSize * size;
+			const auto threads = elements < 2097152ull ? 2ull : elements < 8338608ull ? LIGHT_COMPUTE : MEDIUM_COMPUTE;
 			const auto part = (size / VectorSize) * VectorSize;
 			const auto inputs = Inputs.size();
 
@@ -142,7 +145,7 @@ namespace dnn
 				{
 				case 2:
 				{
-					for_i(batchSize, LIGHT_COMPUTE, [=](size_t b)
+					for_i(batchSize, threads, [=](size_t b)
 					{
 						const auto start = b * size;
 						const auto end = start + part;
@@ -163,7 +166,7 @@ namespace dnn
 
 				case 3:
 				{
-					for_i(batchSize, LIGHT_COMPUTE, [=](size_t b)
+					for_i(batchSize, threads, [=](size_t b)
 					{
 						const auto start = b * size;
 						const auto end = start + part;
@@ -185,7 +188,7 @@ namespace dnn
 				break;
 
 				default:
-					for_i(batchSize, LIGHT_COMPUTE, [=](size_t b)
+					for_i(batchSize, threads, [=](size_t b)
 					{
 						const auto start = b * size;
 						const auto end = start + part;
