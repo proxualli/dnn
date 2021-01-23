@@ -106,10 +106,9 @@ namespace dnn
 						NeuronsD1[n] = Float(0);
 #endif // DNN_LEAN
 					}
-					for (auto i = 1ull; i < inputs; i++)
-						for (auto n = 0ull; n < CDHW; n++)
-							Neurons[n] *= Inputs[i]->Neurons[n];
-			    }
+				for (auto i = 1ull; i < inputs; i++)
+					for (auto n = 0ull; n < CDHW; n++)
+						Neurons[n] *= Inputs[i]->Neurons[n];
 			}
 			else
 			{
@@ -434,9 +433,10 @@ namespace dnn
 							mul_add(VecFloat().load_a(&Inputs[1]->Neurons[w]), VecFloat().load_a(&NeuronsD1[w]), VecFloat().load_a(&Inputs[0]->NeuronsD1[w])).store_a(&Inputs[0]->NeuronsD1[w]);
 							mul_add(VecFloat().load_a(&Inputs[0]->Neurons[w]), VecFloat().load_a(&NeuronsD1[w]), VecFloat().load_a(&Inputs[1]->NeuronsD1[w])).store_a(&Inputs[1]->NeuronsD1[w]);
 						}
-						break;
+					break;
 
 					case 3:
+					{
 						VecFloat D1, InA, InB, InC;
 						for (auto w = 0ull; w < PaddedCDHW; w += VectorSize)
 						{
@@ -448,9 +448,11 @@ namespace dnn
 							mul_add(D1 * InA, InC, VecFloat().load_a(&Inputs[1]->NeuronsD1[w])).store_a(&Inputs[1]->NeuronsD1[w]);
 							mul_add(D1 * InA, InB, VecFloat().load_a(&Inputs[2]->NeuronsD1[w])).store_a(&Inputs[2]->NeuronsD1[w]);
 						}
-						break;
+					}
+					break;
 
 					case 4:
+					{
 						VecFloat D1, InA, InB, InC, InD;
 						for (auto w = 0ull; w < PaddedCDHW; w += VectorSize)
 						{
@@ -464,7 +466,8 @@ namespace dnn
 							mul_add(D1 * InA, InB * InD, VecFloat().load_a(&Inputs[2]->NeuronsD1[w])).store_a(&Inputs[2]->NeuronsD1[w]);
 							mul_add(D1 * InA, InB * InC, VecFloat().load_a(&Inputs[3]->NeuronsD1[w])).store_a(&Inputs[3]->NeuronsD1[w]);
 						}
-						break;
+					}
+					break;
 
 					default:
 						break;
@@ -478,7 +481,7 @@ namespace dnn
 							Inputs[0]->NeuronsD1[w] += NeuronsD1[w] * Inputs[1]->Neurons[w];
 							Inputs[1]->NeuronsD1[w] += NeuronsD1[w] * Inputs[0]->Neurons[w];
 						}
-						break;
+					break;
 
 					case 3:
 						for (auto w = 0ull; w < CDHW; w++)
@@ -487,7 +490,7 @@ namespace dnn
 							Inputs[1]->NeuronsD1[w] += NeuronsD1[w] * Inputs[0]->Neurons[w] * Inputs[2]->Neurons[w];
 							Inputs[2]->NeuronsD1[w] += NeuronsD1[w] * Inputs[0]->Neurons[w] * Inputs[1]->Neurons[w];
 						}
-						break;
+					break;
 
 					case 4:
 						for (auto w = 0ull; w < CDHW; w++)
@@ -497,7 +500,7 @@ namespace dnn
 							Inputs[2]->NeuronsD1[w] += NeuronsD1[w] * Inputs[0]->Neurons[w] * Inputs[1]->Neurons[w] * Inputs[3]->Neurons[w];
 							Inputs[3]->NeuronsD1[w] += NeuronsD1[w] * Inputs[0]->Neurons[w] * Inputs[1]->Neurons[w] * Inputs[2]->Neurons[w];
 						}
-						break;
+					break;
 
 					default:
 						break;
@@ -520,7 +523,7 @@ namespace dnn
 								mul_add(VecFloat().load_a(&Inputs[0]->Neurons[w]), VecFloat().load_a(&NeuronsD1[w]), VecFloat().load_a(&Inputs[1]->NeuronsD1[w])).store_a(&Inputs[1]->NeuronsD1[w]);
 							}
 						});
-						break;
+					break;
 
 					case 3:
 						for_i(batchSize, threads, [=](size_t n)
@@ -539,7 +542,7 @@ namespace dnn
 								mul_add(D1 * InA, InB, VecFloat().load_a(&Inputs[2]->NeuronsD1[w])).store_a(&Inputs[2]->NeuronsD1[w]);
 							}
 						});
-						break;
+					break;
 
 					case 4:
 						for_i(batchSize, threads, [=](size_t n)
@@ -560,7 +563,7 @@ namespace dnn
 								mul_add(D1 * InA, InB * InC, VecFloat().load_a(&Inputs[3]->NeuronsD1[w])).store_a(&Inputs[3]->NeuronsD1[w]);
 							}
 						});
-						break;
+					break;
 
 					default:
 						break;

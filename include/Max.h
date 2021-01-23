@@ -17,7 +17,7 @@ namespace dnn
 		{
 			assert(Inputs.size() == 2);
 
-			for (size_t i = 0; i < Inputs.size(); i++)
+			for (auto i = 0ull; i < Inputs.size(); i++)
 			{
 				assert(Inputs[i]->C == C);
 				assert(Inputs[i]->D == D);
@@ -43,8 +43,6 @@ namespace dnn
 
 		void InitializeDescriptors(const size_t batchSize) final override
 		{
-			DNN_UNREF_PAR(batchSize);
-
 			if (InputLayer->DstMemDesc->data.ndims == 2)
 			{
 				chosenFormat = dnnl::memory::format_tag::nc;
@@ -92,26 +90,29 @@ namespace dnn
 #endif
 				Device.stream.wait();
 #else
-				const auto size = IsPlainFormat() ? CDHW : PaddedCDHW;
+				const auto plain = IsPlainFormat();
+				const auto size = plain ? CDHW : PaddedCDHW;
 				const auto part = (size / VectorSize) * VectorSize;
+				const auto elements = size * batchSize;
+				const auto threads = elements < 2097152ull ? 2ull : elements < 8338608ull ? LIGHT_COMPUTE : MEDIUM_COMPUTE;
 						
-				for_i(batchSize, LIGHT_COMPUTE, [=](size_t b)
+				for_i(batchSize, threads, [=](size_t n)
 				{
-					const auto start = b * size;
+					const auto start = n * size;
 					const auto end = start + part;
 					const VecFloat vecZero = VecFloat(0);
-					VecFloat InA, InB;
-					for (auto n = start; n < end; n += VectorSize)
+					VecFloat In0, In1;
+					for (auto chw = start; chw < end; chw += VectorSize)
 					{
-						InA.load_a(&Inputs[0]->Neurons[n]);
-						InB.load_a(&Inputs[1]->Neurons[n]);
-						max(InA,InB).store_a(&Neurons[n]);
-						vecZero.store_nt(&NeuronsD1[n]);
+						In0.load_a(&Inputs[0]->Neurons[chw]);
+						In1.load_a(&Inputs[1]->Neurons[chw]);
+						max(In0,In1).store_a(&Neurons[chw]);
+						vecZero.store_nt(&NeuronsD1[chw]);
 					}
-					for (auto n = end; n < start + size; n++)
+					for (auto chw = end; chw < start + size; chw++)
 					{
-						Neurons[n] = std::max(Inputs[0]->Neurons[n], Inputs[1]->Neurons[n]);
-						NeuronsD1[n] = 0;
+						Neurons[chw] = std::max(Inputs[0]->Neurons[chw], Inputs[1]->Neurons[chw]);
+						NeuronsD1[chw] = 0;
 					}
 				});
 #endif
@@ -132,49 +133,52 @@ namespace dnn
 #ifdef DNN_LEAN
 			ZeroGradientMulti(batchSize);
 #endif
-			const auto size = IsPlainFormat() ? CDHW : PaddedCDHW;
-	        const auto part = (size / VectorSize) * VectorSize;
+			const auto plain = IsPlainFormat();
+			const auto size = plain ? CDHW : PaddedCDHW;
+			const auto part = (size / VectorSize) * VectorSize;
+			const auto elements = size * batchSize;
+			const auto threads = elements < 2097152ull ? 2ull : elements < 8338608ull ? LIGHT_COMPUTE : MEDIUM_COMPUTE;		
 			
 #ifdef DNN_STOCHASTIC
 			if (batchSize == 1)
 			{
-				VecFloat InA, InB, D1;
-				for (auto n = 0; n < part; n+=VectorSize)
+				VecFloat In0, In1, D1;
+				for (auto chw = 0ull; chw < part; chw+=VectorSize)
 				{
-					InA.load_a(&Inputs[0]->Neurons[n]);
-					InB.load_a(&Inputs[1]->Neurons[n]);
-					D1.load_a(&NeuronsD1[n]);
-					if_add(InA >= InB, VecFloat().load_a(&Inputs[0]->NeuronsD1[n]), D1).store_a(&Inputs[0]->NeuronsD1[n]);
-					if_add(InA < InB, VecFloat().load_a(&Inputs[1]->NeuronsD1[n]), D1).store_a(&Inputs[1]->NeuronsD1[n]);
+					In0.load_a(&Inputs[0]->Neurons[chw]);
+					In1.load_a(&Inputs[1]->Neurons[chw]);
+					D1.load_a(&NeuronsD1[chw]);
+					if_add(In0 >= In1, VecFloat().load_a(&Inputs[0]->NeuronsD1[chw]), D1).store_a(&Inputs[0]->NeuronsD1[chw]);
+					if_add(In0 < In1, VecFloat().load_a(&Inputs[1]->NeuronsD1[chw]), D1).store_a(&Inputs[1]->NeuronsD1[chw]);
 				}
-				for (auto n = part; n < size; n++)
+				for (auto chw = part; chw < size; chw++)
 				{
-					Inputs[0]->NeuronsD1[n] += Inputs[0]->Neurons[n] >= Inputs[1]->Neurons[n] ? NeuronsD1[n] : 0;
-					Inputs[1]->NeuronsD1[n] += Inputs[0]->Neurons[n] >= Inputs[1]->Neurons[n] ? 0 : NeuronsD1[n];
+					Inputs[0]->NeuronsD1[chw] += Inputs[0]->Neurons[chw] >= Inputs[1]->Neurons[chw] ? NeuronsD1[chw] : 0;
+					Inputs[1]->NeuronsD1[chw] += Inputs[0]->Neurons[chw] >= Inputs[1]->Neurons[chw] ? 0 : NeuronsD1[chw];
 				}
 			}
 			else
 			{
 #endif
-				for_i(batchSize, LIGHT_COMPUTE, [=](size_t b)
+				for_i(batchSize, threads, [=](size_t n)
 				{
-					const auto start = b * size;
+					const auto start = n * size;
 					const auto end = start + part;
 
-					VecFloat InA, InB, D1;
-					for (auto n = start; n < end; n+=VectorSize)
+					VecFloat In0, In1, D1;
+					for (auto chw = start; chw < end; chw+=VectorSize)
 					{
-						InA.load_a(&Inputs[0]->Neurons[n]);
-						InB.load_a(&Inputs[1]->Neurons[n]);
-						D1.load_a(&NeuronsD1[n]);
+						In0.load_a(&Inputs[0]->Neurons[chw]);
+						In1.load_a(&Inputs[1]->Neurons[chw]);
+						D1.load_a(&NeuronsD1[chw]);
 
-						if_add(InA >= InB, VecFloat().load_a(&Inputs[0]->NeuronsD1[n]), D1).store_a(&Inputs[0]->NeuronsD1[n]);
-						if_add(InA < InB, VecFloat().load_a(&Inputs[1]->NeuronsD1[n]), D1).store_a(&Inputs[1]->NeuronsD1[n]);
+						if_add(In0 >= In1, VecFloat().load_a(&Inputs[0]->NeuronsD1[chw]), D1).store_a(&Inputs[0]->NeuronsD1[chw]);
+						if_add(In0 < In1, VecFloat().load_a(&Inputs[1]->NeuronsD1[chw]), D1).store_a(&Inputs[1]->NeuronsD1[chw]);
 					}
-					for (auto n = end; n < start + size; n++)
+					for (auto chw = end; chw < start + size; chw++)
 					{
-						Inputs[0]->NeuronsD1[n] += Inputs[0]->Neurons[n] >= Inputs[1]->Neurons[n] ? NeuronsD1[n] : 0;
-						Inputs[1]->NeuronsD1[n] += Inputs[0]->Neurons[n] >= Inputs[1]->Neurons[n] ? 0 : NeuronsD1[n];
+						Inputs[0]->NeuronsD1[chw] += Inputs[0]->Neurons[chw] >= Inputs[1]->Neurons[chw] ? NeuronsD1[chw] : 0;
+						Inputs[1]->NeuronsD1[chw] += Inputs[0]->Neurons[chw] >= Inputs[1]->Neurons[chw] ? 0 : NeuronsD1[chw];
 					}
 				});
 #ifdef DNN_STOCHASTIC

@@ -88,7 +88,7 @@ namespace dnn
 			const auto plain = IsPlainFormat();
 			const auto elements = plain ? batchSize * CDHW : batchSize * PaddedCDHW;
 			const auto threads = elements < 2097152ull ? 2ull : elements < 8338608ull ? LIGHT_COMPUTE : MEDIUM_COMPUTE;
-			const size_t strideHW = HW * VectorSize;
+			const auto strideHW = HW * VectorSize;
 
 #ifdef DNN_STOCHASTIC
 			if (batchSize == 1)
@@ -96,28 +96,26 @@ namespace dnn
 				if (!plain)
 				{
 					VecFloat neuronsD1;
-					size_t outputOffset;
 					for (auto c = 0ull; c < PaddedC; c += VectorSize)
 					{
-						outputOffset = c * HW;
-						for (auto w = 0ull; w < strideHW; w += VectorSize)
+						const auto outputOffset = c * HW;
+						for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
 						{
-							neuronsD1.load_a(&NeuronsD1[w + outputOffset]);
-							mul_add(neuronsD1, VecFloat().load_a(&Inputs[1]->Neurons[c]), VecFloat().load_a(&Inputs[0]->NeuronsD1[w + outputOffset])).store_a(&Inputs[0]->NeuronsD1[w + outputOffset]);
-							mul_add(neuronsD1, VecFloat().load_a(&Inputs[0]->Neurons[w + outputOffset]), VecFloat().load_a(&Inputs[1]->NeuronsD1[c])).store_a(&Inputs[1]->NeuronsD1[c]);
+							neuronsD1.load_a(&NeuronsD1[hw + outputOffset]);
+							mul_add(neuronsD1, VecFloat().load_a(&Inputs[1]->Neurons[c]), VecFloat().load_a(&Inputs[0]->NeuronsD1[hw + outputOffset])).store_a(&Inputs[0]->NeuronsD1[hw + outputOffset]);
+							mul_add(neuronsD1, VecFloat().load_a(&Inputs[0]->Neurons[hw + outputOffset]), VecFloat().load_a(&Inputs[1]->NeuronsD1[c])).store_a(&Inputs[1]->NeuronsD1[c]);
 						}
 					}
 				}
 				else
 				{
-					size_t outputOffset;
 					for (auto c = 0ull; c < C; c++)
 					{
-						outputOffset = c * HW;
-						for (auto w = 0ull; w < HW; w++)
+						const auto outputOffset = c * HW;
+						for (auto hw = 0ull; hw < HW; hw++)
 						{
-							Inputs[0]->NeuronsD1[w + outputOffset] += NeuronsD1[w + outputOffset] * Inputs[1]->Neurons[c];
-							Inputs[1]->NeuronsD1[c] += NeuronsD1[w + outputOffset] * Inputs[0]->Neurons[w + outputOffset];
+							Inputs[0]->NeuronsD1[hw + outputOffset] += NeuronsD1[hw + outputOffset] * Inputs[1]->Neurons[c];
+							Inputs[1]->NeuronsD1[c] += NeuronsD1[hw + outputOffset] * Inputs[0]->Neurons[hw + outputOffset];
 						}
 					}
 				}
@@ -130,16 +128,15 @@ namespace dnn
 					for_i(batchSize, threads, [=](size_t n)
 					{
 						VecFloat neuronsD1;
-						size_t outputOffset, channelOffset;
 						for (auto c = 0ull; c < PaddedC; c += VectorSize)
 						{
-							outputOffset = n * PaddedCDHW + c * HW;
-							channelOffset = n * PaddedC + c;
-							for (auto w = 0ull; w < strideHW; w += VectorSize)
+							const auto outputOffset = n * PaddedCDHW + c * HW;
+							const auto channelOffset = n * PaddedC + c;
+							for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
 							{
-								neuronsD1.load_a(&NeuronsD1[w + outputOffset]);
-								mul_add(neuronsD1, VecFloat().load_a(&Inputs[1]->Neurons[channelOffset]), VecFloat().load_a(&Inputs[0]->NeuronsD1[w + outputOffset])).store_a(&Inputs[0]->NeuronsD1[w + outputOffset]);
-								mul_add(neuronsD1, VecFloat().load_a(&Inputs[0]->Neurons[w + outputOffset]), VecFloat().load_a(&Inputs[1]->NeuronsD1[channelOffset])).store_a(&Inputs[1]->NeuronsD1[channelOffset]);
+								neuronsD1.load_a(&NeuronsD1[hw + outputOffset]);
+								mul_add(neuronsD1, VecFloat().load_a(&Inputs[1]->Neurons[channelOffset]), VecFloat().load_a(&Inputs[0]->NeuronsD1[hw + outputOffset])).store_a(&Inputs[0]->NeuronsD1[hw + outputOffset]);
+								mul_add(neuronsD1, VecFloat().load_a(&Inputs[0]->Neurons[hw + outputOffset]), VecFloat().load_a(&Inputs[1]->NeuronsD1[channelOffset])).store_a(&Inputs[1]->NeuronsD1[channelOffset]);
 							}
 						}
 					});
@@ -148,15 +145,14 @@ namespace dnn
 				{
 					for_i(batchSize, threads, [=](size_t n)
 					{
-						size_t outputOffset, channelOffset;
 						for (auto c = 0ull; c < C; c++)
 						{
-							outputOffset = n * CDHW + c * HW;
-							channelOffset = n * C + c;
-							for (auto w = 0ull; w < HW; w++)
+							const auto outputOffset = n * CDHW + c * HW;
+							const auto channelOffset = n * C + c;
+							for (auto hw = 0ull; hw < HW; hw++)
 							{
-								Inputs[0]->NeuronsD1[w + outputOffset] += NeuronsD1[w + outputOffset] * Inputs[1]->Neurons[channelOffset];
-								Inputs[1]->NeuronsD1[channelOffset] += NeuronsD1[w + outputOffset] * Inputs[0]->Neurons[w + outputOffset];
+								Inputs[0]->NeuronsD1[hw + outputOffset] += NeuronsD1[hw + outputOffset] * Inputs[1]->Neurons[channelOffset];
+								Inputs[1]->NeuronsD1[channelOffset] += NeuronsD1[hw + outputOffset] * Inputs[0]->Neurons[hw + outputOffset];
 							}
 						}
 					});
