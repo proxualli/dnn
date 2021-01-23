@@ -12,7 +12,7 @@ namespace dnn
 			assert(Inputs.size() > 1 && Inputs.size() < 4);
 
 			if (Inputs.size() > 3)
-				throw std::invalid_argument("Maximum 3 inputs in Divide layer");
+				throw std::invalid_argument("Maximum 3 inputs in " + std::string(magic_enum::enum_name<LayerTypes>(LayerType)) + " layer " + Name);
 
 			for (size_t i = 0; i < Inputs.size(); i++)
 			{
@@ -40,22 +40,44 @@ namespace dnn
 
 		void InitializeDescriptors(const size_t batchSize) final override
 		{
-			DNN_UNREF_PAR(batchSize);
+			if (InputLayer->DstMemDesc->data.ndims == 2)
+			{
+				if (Format == dnnl::memory::format_tag::any)
+					chosenFormat = dnnl::memory::format_tag::nc;
 
-			chosenFormat = GetDataFmt(*InputLayer->DstMemDesc);
-			DstMemDesc = std::make_unique<dnnl::memory::desc>(*Inputs[0]->DstMemDesc);
-			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(*Inputs[0]->DiffDstMemDesc);
+				DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, chosenFormat));
+				DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, chosenFormat));
+			}
+			else
+			{
+				if (Format == dnnl::memory::format_tag::any)
+				{
+					chosenFormat = GetDataFmt(*InputLayer->DstMemDesc);
+					if (chosenFormat != GetDataFmt(*InputLayer->DiffDstMemDesc))
+						throw std::invalid_argument("Src and Diff format are different in " + std::string(magic_enum::enum_name<LayerTypes>(LayerType)) + " layer " + Name);
+				}
+
+				DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, chosenFormat));
+				DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, chosenFormat));
+			}
 
 			for (auto i = 1ull; i < Inputs.size(); i++)
 			{
 				assert(*DstMemDesc == *Inputs[i]->DstMemDesc);
 				if (*DstMemDesc != *Inputs[i]->DstMemDesc)
-					throw std::invalid_argument("Incompatible memory formats in Divide layer");
+					throw std::invalid_argument("Incompatible memory formats in " + std::string(magic_enum::enum_name<LayerTypes>(LayerType)) + " layer");
 			}
 		}
 
 		void ForwardProp(const size_t batchSize, const bool training) final override
 		{
+			const auto plain = IsPlainFormat();
+			const auto size = plain ? CDHW : PaddedCDHW;
+			const auto elements = batchSize * size;
+			const auto threads = elements < 2097152ull ? 2ull : elements < 8338608ull ? LIGHT_COMPUTE : MEDIUM_COMPUTE;
+			const auto part = (size / VectorSize) * VectorSize;
+			const auto inputs = Inputs.size();
+
 			DNN_UNREF_PAR(training);
 
 #ifdef DNN_STOCHASTIC
@@ -68,16 +90,16 @@ namespace dnn
 					NeuronsD1[n] = Float(0);
 #endif // DNN_LEAN
 				}
-				for (auto i = 1ull; i < Inputs.size(); i++)
+				for (auto i = 1ull; i < inputs; i++)
 					for (size_t n = 0; n < CDHW; n++)
 						Neurons[n] /= Inputs[i]->Neurons[n];
 			}
 			else
 			{
 #endif
-				if (Inputs.size() == 2)
+				if (inputs == 2)
 				{
-					for_i(batchSize, LIGHT_COMPUTE, [=](size_t b)
+					for_i(batchSize, threads, [=](size_t b)
 					{
 						const auto start = b * CDHW;
 						const auto end = start + CDHW;
@@ -93,7 +115,7 @@ namespace dnn
 				}
 				else
 				{
-					for_i(batchSize, LIGHT_COMPUTE, [=](size_t b)
+					for_i(batchSize, threads, [=](size_t b)
 					{
 						const auto start = b * CDHW;
 						const auto end = start + CDHW;
@@ -120,10 +142,17 @@ namespace dnn
 			ZeroGradientMulti(batchSize);
 #endif // DNN_LEAN
 
+			const auto plain = IsPlainFormat();
+			const auto size = plain ? CDHW : PaddedCDHW;
+			const auto elements = batchSize * size;
+			const auto threads = elements < 2097152ull ? 2ull : elements < 8338608ull ? LIGHT_COMPUTE : MEDIUM_COMPUTE;
+			const auto part = (size / VectorSize) * VectorSize;
+			const auto inputs = Inputs.size();
+
 #ifdef DNN_STOCHASTIC
 			if (batchSize == 1)
 			{
-				if (Inputs.size() == 2)
+				if (inputs == 2)
 				{
 					for (auto n = 0ull; n < CDHW; n++)
 					{
@@ -131,7 +160,7 @@ namespace dnn
 						Inputs[1]->NeuronsD1[n] += NeuronsD1[n] * Inputs[0]->Neurons[n] / FloatSquare(Inputs[1]->Neurons[n]);
 					}
 				}
-				else if (Inputs.size() == 3)
+				else if (inputs == 3)
 				{
 					for (auto n = 0ull; n < CDHW; n++)
 					{
@@ -147,9 +176,9 @@ namespace dnn
 			else
 			{
 #endif
-				if (Inputs.size() == 2)
+				if (inputs == 2)
 				{
-					for_i(batchSize, LIGHT_COMPUTE, [=](size_t b)
+					for_i(batchSize, threads, [=](size_t b)
 					{
 						const auto start = b * CDHW;
 						const auto end = start + CDHW;
@@ -160,9 +189,9 @@ namespace dnn
 						}
 					});
 				}
-				else if (Inputs.size() == 3)
+				else if (inputs == 3)
 				{
-					for_i(batchSize, LIGHT_COMPUTE, [=](size_t b)
+					for_i(batchSize, threads, [=](size_t b)
 					{
 						const auto start = b * CDHW;
 						const auto end = start + CDHW;
