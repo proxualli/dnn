@@ -372,79 +372,60 @@ namespace dnn
 				case Activations::Abs:
 					algorithm = dnnl::algorithm::eltwise_abs;
 					break;
-
 				case Activations::Clip:
 					algorithm = dnnl::algorithm::eltwise_clip;
 					break;
-
 				case Activations::BoundedRelu:
 					algorithm = dnnl::algorithm::eltwise_bounded_relu;
 					break;
-
 				case Activations::Elu:
 					algorithm = dnnl::algorithm::eltwise_elu;
 					break;
-
 				case Activations::Exp:
 					algorithm = dnnl::algorithm::eltwise_exp;
 					break;
-
 				case Activations::Gelu:
 					algorithm = dnnl::algorithm::eltwise_gelu;
 					break;
-
 				case Activations::GeluErf:
 					algorithm = dnnl::algorithm::eltwise_gelu_erf;
 					break;
-
 				case Activations::Linear:
 					algorithm = dnnl::algorithm::eltwise_linear;
 					break;
-
 				case Activations::Log:
 					algorithm = dnnl::algorithm::eltwise_log;
 					break;
-
 				case Activations::Logistic:
 					algorithm = dnnl::algorithm::eltwise_logistic;
 					break;
-
 				case Activations::LogLogistic:
 					algorithm = dnnl::algorithm::eltwise_logsigmoid;
 					break;
-
 				case Activations::Mish:
 					algorithm = dnnl::algorithm::eltwise_mish;
 					break;
-
 				case Activations::Pow:
 					algorithm = dnnl::algorithm::eltwise_pow;
 					break;
-
 				case Activations::Relu:
 					algorithm = dnnl::algorithm::eltwise_relu;
 					break;
-
 				case Activations::Round:
 					algorithm = dnnl::algorithm::eltwise_round;
 					break;
-
 				case Activations::SoftRelu:
 					algorithm = dnnl::algorithm::eltwise_soft_relu;
 					break;
-
 				case Activations::Sqrt:
 					algorithm = dnnl::algorithm::eltwise_sqrt;
 					break;
-
 				case Activations::Square:
 					algorithm = dnnl::algorithm::eltwise_square;
 					break;
-
 				case Activations::Swish:
 					algorithm = dnnl::algorithm::eltwise_swish;
 					break;
-
 				case Activations::Tanh:
 					algorithm = dnnl::algorithm::eltwise_tanh;
 					break;
@@ -495,8 +476,8 @@ namespace dnn
 		{
 			if (HasWeights)
 				Biases = FloatVector(PaddedC, Float(Alpha));
-		
-		    DNN_UNREF_PAR(weightFiller);
+			
+			DNN_UNREF_PAR(weightFiller);
 			DNN_UNREF_PAR(weightFillerScale);
 			DNN_UNREF_PAR(biasFiller);
 			DNN_UNREF_PAR(biasFillerScale);
