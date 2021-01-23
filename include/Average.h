@@ -130,13 +130,13 @@ namespace dnn
 #ifdef DNN_STOCHASTIC
 			if (batchSize == 1)
 			{
-				for (auto n = 0ull; n < part; n += VectorSize)
+				for (auto cdhw = 0ull; cdhw < part; cdhw += VectorSize)
 					for (auto i = 0ull; i < inputs; i++)
-						mul_add(VecFloat().load_a(&NeuronsD1[n]), Scale, VecFloat().load_a(&Inputs[i]->NeuronsD1[n])).store_a(&Inputs[i]->NeuronsD1[n]);
+						mul_add(VecFloat().load_a(&NeuronsD1[cdhw]), Scale, VecFloat().load_a(&Inputs[i]->NeuronsD1[cdhw])).store_a(&Inputs[i]->NeuronsD1[cdhw]);
 
-				for (auto n = part; n < size; n++)
+				for (auto cdhw = part; cdhw < size; cdhw++)
 					for (auto i = 0ull; i < inputs; i++)
-						Inputs[i]->NeuronsD1[n] += Scale * NeuronsD1[n];
+						Inputs[i]->NeuronsD1[cdhw] += Scale * NeuronsD1[cdhw];
 			}
 			else
 			{
@@ -145,20 +145,20 @@ namespace dnn
 				{
 				case 2:
 				{
-					for_i(batchSize, threads, [=](size_t b)
+					for_i(batchSize, threads, [=](size_t n)
 					{
-						const auto start = b * size;
+						const auto start = n * size;
 						const auto end = start + part;
 
-						for (auto n = start; n < end; n+=VectorSize)
+						for (auto cdhw = start; cdhw < end; cdhw+=VectorSize)
 						{
-							mul_add(VecFloat().load_a(&NeuronsD1[n]), Scale, VecFloat().load_a(&Inputs[0]->NeuronsD1[n])).store_a(&Inputs[0]->NeuronsD1[n]);
-							mul_add(VecFloat().load_a(&NeuronsD1[n]), Scale, VecFloat().load_a(&Inputs[1]->NeuronsD1[n])).store_a(&Inputs[1]->NeuronsD1[n]);
+							mul_add(VecFloat().load_a(&NeuronsD1[cdhw]), Scale, VecFloat().load_a(&Inputs[0]->NeuronsD1[cdhw])).store_a(&Inputs[0]->NeuronsD1[cdhw]);
+							mul_add(VecFloat().load_a(&NeuronsD1[cdhw]), Scale, VecFloat().load_a(&Inputs[1]->NeuronsD1[cdhw])).store_a(&Inputs[1]->NeuronsD1[cdhw]);
 						}
-						for (auto n = end; n < start + size; n++)
+						for (auto cdhw = end; cdhw < start + size; cdhw++)
 						{
-							Inputs[0]->NeuronsD1[n] += Scale * NeuronsD1[n];
-							Inputs[1]->NeuronsD1[n] += Scale * NeuronsD1[n];
+							Inputs[0]->NeuronsD1[cdhw] += Scale * NeuronsD1[cdhw];
+							Inputs[1]->NeuronsD1[cdhw] += Scale * NeuronsD1[cdhw];
 						}
 					});
 				}
@@ -166,40 +166,40 @@ namespace dnn
 
 				case 3:
 				{
-					for_i(batchSize, threads, [=](size_t b)
+					for_i(batchSize, threads, [=](size_t n)
 					{
-						const auto start = b * size;
+						const auto start = n * size;
 						const auto end = start + part;
 
-						for (auto n = start; n < end; n += VectorSize)
+						for (auto cdhw = start; cdhw < end; cdhw += VectorSize)
 						{
-							mul_add(VecFloat().load_a(&NeuronsD1[n]), Scale, VecFloat().load_a(&Inputs[0]->NeuronsD1[n])).store_a(&Inputs[0]->NeuronsD1[n]);
-							mul_add(VecFloat().load_a(&NeuronsD1[n]), Scale, VecFloat().load_a(&Inputs[1]->NeuronsD1[n])).store_a(&Inputs[1]->NeuronsD1[n]);
-							mul_add(VecFloat().load_a(&NeuronsD1[n]), Scale, VecFloat().load_a(&Inputs[2]->NeuronsD1[n])).store_a(&Inputs[2]->NeuronsD1[n]);
+							mul_add(VecFloat().load_a(&NeuronsD1[cdhw]), Scale, VecFloat().load_a(&Inputs[0]->NeuronsD1[cdhw])).store_a(&Inputs[0]->NeuronsD1[cdhw]);
+							mul_add(VecFloat().load_a(&NeuronsD1[cdhw]), Scale, VecFloat().load_a(&Inputs[1]->NeuronsD1[cdhw])).store_a(&Inputs[1]->NeuronsD1[cdhw]);
+							mul_add(VecFloat().load_a(&NeuronsD1[cdhw]), Scale, VecFloat().load_a(&Inputs[2]->NeuronsD1[cdhw])).store_a(&Inputs[2]->NeuronsD1[cdhw]);
 						}
-						for (auto n = end; n < start + size; n++)
+						for (auto cdhw = end; cdhw < start + size; cdhw++)
 						{
-							Inputs[0]->NeuronsD1[n] += Scale * NeuronsD1[n];
-							Inputs[1]->NeuronsD1[n] += Scale * NeuronsD1[n];
-							Inputs[2]->NeuronsD1[n] += Scale * NeuronsD1[n];
+							Inputs[0]->NeuronsD1[cdhw] += Scale * NeuronsD1[cdhw];
+							Inputs[1]->NeuronsD1[cdhw] += Scale * NeuronsD1[cdhw];
+							Inputs[2]->NeuronsD1[cdhw] += Scale * NeuronsD1[cdhw];
 						}
 					});
 				}
 				break;
 
 				default:
-					for_i(batchSize, threads, [=](size_t b)
+					for_i(batchSize, threads, [=](size_t n)
 					{
-						const auto start = b * size;
+						const auto start = n * size;
 						const auto end = start + part;
 
-						for (auto n = start; n < end; n += VectorSize)
+						for (auto cdhw = start; cdhw < end; cdhw += VectorSize)
 							for (auto i = 0ull; i < inputs; i++)
-								mul_add(VecFloat().load_a(&NeuronsD1[n]), Scale, VecFloat().load_a(&Inputs[i]->NeuronsD1[n])).store_a(&Inputs[i]->NeuronsD1[n]);
+								mul_add(VecFloat().load_a(&NeuronsD1[cdhw]), Scale, VecFloat().load_a(&Inputs[i]->NeuronsD1[cdhw])).store_a(&Inputs[i]->NeuronsD1[cdhw]);
 							
-						for (auto n = end; n < start + size; n++)
+						for (auto cdhw = end; cdhw < start + size; cdhw++)
 							for (auto i = 0ull; i < inputs; i++)
-								Inputs[i]->NeuronsD1[n] += Scale * NeuronsD1[n];
+								Inputs[i]->NeuronsD1[cdhw] += Scale * NeuronsD1[cdhw];
 					});
 				}
 #ifdef DNN_STOCHASTIC
