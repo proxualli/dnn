@@ -208,11 +208,11 @@ namespace dnn
 
 				batch <<
 #if defined _WIN32 || defined __CYGWIN__ || defined __MINGW32__
-					"@echo off" << std::endl <<
-					"echo Downloading " + std::string(magic_enum::enum_name<Datasets>(dataset)) + " dataset" << std::endl <<
-					"echo." << std::endl <<
-					"cd " + path.string() << std::endl <<
-					"curl -O http://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz && tar -xf cifar-10-binary.tar.gz --strip-components=1 && del /Q cifar-10-binary.tar.gz" << std::endl;
+					std::string("@echo off") << std::endl <<
+					std::string("echo loading ") + std::string(magic_enum::enum_name<Datasets>(dataset)) + std::string(" dataset...") << std::endl <<
+					std::string("echo.") << std::endl <<
+					std::string("cd ") + path.string() << std::endl <<
+					std::string("curl -O http://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz && tar -xf cifar-10-binary.tar.gz --strip-components=1 && del /Q cifar-10-binary.tar.gz") << std::endl;
 #else
 					std::string("#!/bin/bash") << std::endl <<
 					std::string("echo loading ") + std::string(magic_enum::enum_name<Datasets>(dataset)) + std::string(" dataset...") << std::endl <<
@@ -231,11 +231,11 @@ namespace dnn
 
 				batch <<
 #if defined _WIN32 || defined __CYGWIN__ || defined __MINGW32__
-					"@echo off" << std::endl <<
-					"echo Downloading " + std::string(magic_enum::enum_name<Datasets>(dataset)) + " dataset" << std::endl <<
-					"echo." << std::endl <<
-					"cd " + path.string() << std::endl <<
-					"curl -O http://www.cs.toronto.edu/~kriz/cifar-100-binary.tar.gz && tar -xf cifar-100-binary.tar.gz --strip-components=1 && del /Q cifar-100-binary.tar.gz" << std::endl;
+					std::string("@echo off") << std::endl <<
+					std::string("echo loading ") + std::string(magic_enum::enum_name<Datasets>(dataset)) + std::string(" dataset...") << std::endl <<
+					std::string("echo.") << std::endl <<
+					std::string("cd ") + path.string() << std::endl <<
+					std::string("curl -O http://www.cs.toronto.edu/~kriz/cifar-100-binary.tar.gz && tar -xf cifar-100-binary.tar.gz --strip-components=1 && del /Q cifar-100-binary.tar.gz") << std::endl;
 #else
 					std::string("#!/bin/bash") << std::endl <<
 					std::string("echo loading ") + std::string(magic_enum::enum_name<Datasets>(dataset)) + std::string(" dataset...") << std::endl <<
@@ -251,10 +251,10 @@ namespace dnn
 			{
 				batch <<
 #if defined _WIN32 || defined __CYGWIN__ || defined __MINGW32__
-					"@echo off" << std::endl <<
-					"echo Downloading " + std::string(magic_enum::enum_name<Datasets>(dataset)) + " dataset" << std::endl <<
-					"echo." << std::endl <<
-					"cd " + path.string() << std::endl <<
+					std::string("@echo off") << std::endl <<
+					std::string("echo loading ") + std::string(magic_enum::enum_name<Datasets>(dataset)) + std::string(" dataset...") << std::endl <<
+					std::string("echo.") << std::endl <<
+					std::string("cd ") + path.string() << std::endl <<
 #else
 					std::string("#!/bin/bash") << std::endl <<
 					std::string("echo loading ") + std::string(magic_enum::enum_name<Datasets>(dataset)) + std::string(" dataset...") << std::endl <<
@@ -281,10 +281,10 @@ namespace dnn
 			{
 				batch <<
 #if defined _WIN32 || defined __CYGWIN__ || defined __MINGW32__
-					"@echo off" << std::endl <<
-					"echo Downloading " + std::string(magic_enum::enum_name<Datasets>(dataset)) + " dataset" << std::endl <<
-					"echo." << std::endl <<
-					"cd " + path.string() << std::endl <<
+					std::string("@echo off") << std::endl <<
+					std::string("echo loading ") + std::string(magic_enum::enum_name<Datasets>(dataset)) + std::string(" dataset...") << std::endl <<
+					std::string("echo.") << std::endl <<
+					std::string("cd ") + path.string() << std::endl <<
 #else
 					std::string("#!/bin/bash") << std::endl <<
 					std::string("echo loading ") + std::string(magic_enum::enum_name<Datasets>(dataset)) + std::string(" dataset...") << std::endl <<
@@ -313,10 +313,10 @@ namespace dnn
 
 				batch <<
 #if defined _WIN32 || defined __CYGWIN__ || defined __MINGW32__
-					"@echo off" << std::endl <<
-					"echo Downloading " + std::string(magic_enum::enum_name<Datasets>(dataset)) + " dataset" << std::endl <<
-					"echo." << std::endl <<
-					"cd " + path.string() << std::endl <<
+					std::string("@echo off") << std::endl <<
+					std::string("echo loading ") + std::string(magic_enum::enum_name<Datasets>(dataset)) + std::string(" dataset...") << std::endl <<
+					std::string("echo.") << std::endl <<
+					std::string("cd ") + path.string() << std::endl <<
 #else
 					std::string("#!/bin/bash") << std::endl <<
 					std::string("echo loading ") + std::string(magic_enum::enum_name<Datasets>(dataset)) + std::string(" dataset...") << std::endl <<
