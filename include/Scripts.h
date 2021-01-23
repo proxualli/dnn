@@ -724,14 +724,12 @@ namespace dnn
                     BatchNormActivation(2, "C2", p.Relu) +
                     DepthwiseConvolution(3, "B2", 1, kernel, kernel, 1, 1, pad, pad) +
                     BatchNorm(3, "DC3") +
-                    DepthwiseConvolution(4, "B3", 1, kernel, kernel, 1, 1, pad, pad) +
-                    BatchNorm(4, "DC4") +
-                    Convolution(5, "B4", DIV8(W), 1, 1, 1, 1, 0, 0) +
-                    BatchNormActivation(5, "C5", p.Relu) +
-                    Convolution(6, "B1", DIV8(W), 1, 1, 1, 1, 0, 0) +
-                    Concat(1, "C6,B5"));
+                    Convolution(4, "B3", DIV8(W), 1, 1, 1, 1, 0, 0) +
+                    BatchNormActivation(4, "C4", p.Relu) +
+                    Convolution(5, "B1", DIV8(W), 1, 1, 1, 1, 0, 0) +
+                    Concat(1, "C5,B4"));
 
-                auto C = 7ull;
+                auto C = 6ull;
                 auto A = 1ull;
 
                 for (auto g = 1ull; g <= p.Groups; g++)  // 32*32 16*16 8*8 or 28*28 14*14 7*7
@@ -746,19 +744,15 @@ namespace dnn
                             BatchNormActivation(C + 1, In("C", C), p.Relu) +
                             DepthwiseConvolution(C + 1, In("B", C + 1), 1, kernel, kernel, 2, 2, pad, pad) +
                             BatchNorm(C + 2, In("DC", C + 1)) +
-                            DepthwiseConvolution(C + 2, In("B", C + 2), 1, kernel, kernel, 1, 1, pad, pad) +
-                            BatchNorm(C + 3, In("DC", C + 2)) +
-                            Convolution(C + 3, In("B", C + 3), DIV8(W), 1, 1, 1, 1, 0, 0) +
-                            BatchNormActivation(C + 4, In("C", C + 3), p.Relu) +
-                            DepthwiseConvolution(C + 4, In("CC", A), 1, kernel, kernel, 2, 2, pad, pad) +
-                            BatchNorm(C + 5, In("DC", C + 4)) +
-                            DepthwiseConvolution(C + 5, In("B", C + 5), 1, kernel, kernel, 1, 1, pad, pad) +
-                            BatchNorm(C + 6, In("DC", C + 5)) +
-                            Convolution(C + 6, In("B", C + 6), DIV8(W), 1, 1, 1, 1, 0, 0) +
-                            BatchNormActivation(C + 7, In("C", C + 6), p.Relu) +
-                            Concat(A + 1, In("B", C + 7) + "," + In("B", C + 4)));
+                            Convolution(C + 2, In("B", C + 2), DIV8(W), 1, 1, 1, 1, 0, 0) +
+                            BatchNormActivation(C + 3, In("C", C + 2), p.Relu) +
+                            DepthwiseConvolution(C + 3, In("CC", A), 1, kernel, kernel, 2, 2, pad, pad) +
+                            BatchNorm(C + 4, In("DC", C + 3)) +
+                            Convolution(C + 4, In("B", C + 4), DIV8(W), 1, 1, 1, 1, 0, 0) +
+                            BatchNormActivation(C + 5, In("C", C + 4), p.Relu) +
+                            Concat(A + 1, In("B", C + 5) + "," + In("B", C + 3)));
 
-                        A++; C += 7;
+                        A++; C += 5;
                     }
 
                     for (auto i = 1ull; i < p.Iterations; i++)
@@ -781,13 +775,11 @@ namespace dnn
                             BatchNormActivation(C + 1, In("C", C), p.Relu) +
                             DepthwiseConvolution(C + 1, In("B", C + 1), 1, kernel, kernel, 1, 1, pad, pad) +
                             BatchNorm(C + 2, In("DC", C + 1)) +
-                            DepthwiseConvolution(C + 2, In("B", C + 2), 1, kernel, kernel, 1, 1, pad, pad) +
-                            BatchNorm(C + 3, In("DC", C + 2)) +
-                            Convolution(C + 3, In("B", C + 3), DIV8(W), 1, 1, 1, 1, 0, 0) +
-                            BatchNormActivation(C + 4, In("C", C + 3), p.Relu) +
+                            Convolution(C + 2, In("B", C + 2), DIV8(W), 1, 1, 1, 1, 0, 0) +
+                            BatchNormActivation(C + 3, In("C", C + 2), p.Relu) +
                             strSE);
 
-                        A++; C += 4;
+                        A++; C += 3;
                     }
                 }
 
