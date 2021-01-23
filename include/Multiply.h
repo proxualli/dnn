@@ -71,10 +71,8 @@ namespace dnn
 			DNN_UNREF_PAR(training);
 
 			const auto plain = IsPlainFormat();
-			const auto size = plain ? CDHW : PaddedCDHW;
-			const auto elements = batchSize * size;
+			const auto elements = plain ? batchSize * CDHW : batchSize * PaddedCDHW;
 			const auto threads = elements < 2097152ull ? 2ull : elements < 8338608ull ? LIGHT_COMPUTE : MEDIUM_COMPUTE;
-			const auto part = (size / VectorSize) * VectorSize;
 			const auto inputs = Inputs.size();
 
 #ifdef DNN_STOCHASTIC
@@ -205,10 +203,8 @@ namespace dnn
 #endif // DNN_LEAN
 
 			const auto plain = IsPlainFormat();
-			const auto size = plain ? CDHW : PaddedCDHW;
-			const auto elements = batchSize * size;
+			const auto elements = plain ? batchSize * CDHW : batchSize * PaddedCDHW;
 			const auto threads = elements < 2097152ull ? 2ull : elements < 8338608ull ? LIGHT_COMPUTE : MEDIUM_COMPUTE;
-			const auto part = (size / VectorSize) * VectorSize;
 			const auto inputs = Inputs.size();
 
 #ifdef DNN_STOCHASTIC
@@ -241,16 +237,28 @@ namespace dnn
 #endif
 				if (inputs == 2)
 				{
-					for_i(batchSize, threads, [=](size_t b)
-					{
-						const auto start = b * PaddedCDHW;
-						const auto end = start + CDHW;
-						for (auto n = start; n < end; n++)
+					if (!plain)
+						for_i(batchSize, threads, [=](size_t n)
 						{
-							Inputs[0]->NeuronsD1[n] += NeuronsD1[n] * Inputs[1]->Neurons[n];
-							Inputs[1]->NeuronsD1[n] += NeuronsD1[n] * Inputs[0]->Neurons[n];
-						}
-					});
+							const auto start = n * PaddedCDHW;
+							const auto end = start + PaddedCDHW;
+							for (auto w = start; w < end; w+=VectorSize)
+							{
+								mul_add(VecFloat().load_a(&Inputs[1]->Neurons[w]), VecFloat().load_a(&NeuronsD1[w]), VecFloat().load_a(&Inputs[0]->NeuronsD1[w])).store_a(&Inputs[0]->NeuronsD1[w]);
+								mul_add(VecFloat().load_a(&Inputs[0]->Neurons[w]), VecFloat().load_a(&NeuronsD1[w]), VecFloat().load_a(&Inputs[1]->NeuronsD1[w])).store_a(&Inputs[1]->NeuronsD1[w]);
+							}
+						});
+					else
+						for_i(batchSize, threads, [=](size_t n)
+						{
+							const auto start = n * CDHW;
+							const auto end = start + CDHW;
+							for (auto w = start; w < end; w++)
+							{
+								Inputs[0]->NeuronsD1[w] += NeuronsD1[w] * Inputs[1]->Neurons[w];
+								Inputs[1]->NeuronsD1[w] += NeuronsD1[w] * Inputs[0]->Neurons[w];
+							}
+						});
 				}
 				else if (inputs == 3)
 				{
