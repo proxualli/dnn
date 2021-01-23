@@ -202,7 +202,7 @@ namespace dnn
 		std::unique_ptr<dnnl::logsoftmax_backward::primitive_desc> bwdDescLogSoftmax;
 		std::unique_ptr<dnnl::softmax_forward::primitive_desc> fwdDescSoftmax;
 		std::unique_ptr<dnnl::softmax_backward::primitive_desc> bwdDescSoftmax;
-    	std::unique_ptr<dnnl::eltwise_forward::primitive_desc> fwdDesc;
+		std::unique_ptr<dnnl::eltwise_forward::primitive_desc> fwdDesc;
 		std::unique_ptr<dnnl::eltwise_backward::primitive_desc> bwdDesc;
 		std::unique_ptr<dnnl::binary::primitive_desc> bwdAddDesc;
 #ifdef DNN_CACHE_PRIMITIVES
@@ -703,11 +703,11 @@ namespace dnn
 								for (auto c = 0ull; c < PaddedC; c += VectorSize)
 								{
 									const auto offset = c * HW;
-									for (auto w = 0ull; w < strideHW; w += VectorSize)
+									for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
 									{
-										FTS::fVec(VecFloat().load_a(&InputLayer->Neurons[w + offset])).store_a(&Neurons[w + offset]);
+										FTS::fVec(VecFloat().load_a(&InputLayer->Neurons[hw + offset])).store_a(&Neurons[hw + offset]);
 #ifndef DNN_LEAN
-										vecZero.store_nt(&NeuronsD1[w + offset]);
+										vecZero.store_nt(&NeuronsD1[hw + offset]);
 #endif // DNN_LEAN
 									}
 								}
@@ -717,11 +717,11 @@ namespace dnn
 								for (auto c = 0ull; c < C; c++)
 								{
 									const auto offset = c * HW;
-									for (auto w = 0ull; w < HW; w++)
+									for (auto hw = 0ull; hw < HW; hw++)
 									{
-										Neurons[w + offset] = FTS::f(InputLayer->Neurons[w + offset]);
+										Neurons[hw + offset] = FTS::f(InputLayer->Neurons[hw + offset]);
 #ifndef DNN_LEAN
-										NeuronsD1[w + offset] = Float(0);
+										NeuronsD1[hw + offset] = Float(0);
 #endif // DNN_LEAN
 									}
 								}								
@@ -735,8 +735,8 @@ namespace dnn
 								for (auto c = 0ull; c < PaddedC; c += VectorSize)
 								{
 									const auto offset = c * HW;
-									for (auto w = 0ull; w < strideHW; w += VectorSize)
-										FTS::fVec(VecFloat().load_a(&InputLayer->Neurons[w + offset])).store_a(&Neurons[w + offset]);
+									for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
+										FTS::fVec(VecFloat().load_a(&InputLayer->Neurons[hw + offset])).store_a(&Neurons[hw + offset]);
 								}
 							}
 							else
@@ -744,8 +744,8 @@ namespace dnn
 								for (auto c = 0ull; c < C; c++)
 								{
 									const auto offset = c * HW;
-									for (auto w = 0ull; w < HW; w++)
-										Neurons[w + offset] = FTS::f(InputLayer->Neurons[w + offset]);
+									for (auto hw = 0ull; hw < HW; hw++)
+										Neurons[hw + offset] = FTS::f(InputLayer->Neurons[hw + offset]);
 								}			
 							}
 						}
@@ -763,11 +763,11 @@ namespace dnn
 									for (auto c = 0ull; c < PaddedC; c += VectorSize)
 									{
 										const auto offset = n * PaddedCDHW + c * HW;
-										for (auto w = 0ull; w < strideHW; w += VectorSize)
+										for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
 										{
-											FTS::fVec(VecFloat().load_a(&InputLayer->Neurons[w + offset])).store_a(&Neurons[w + offset]);
+											FTS::fVec(VecFloat().load_a(&InputLayer->Neurons[hw + offset])).store_a(&Neurons[hw + offset]);
 #ifndef DNN_LEAN
-											vecZero.store_nt(&NeuronsD1[w + offset]);
+											vecZero.store_nt(&NeuronsD1[hw + offset]);
 #endif // DNN_LEAN
 										}
 									}
@@ -780,11 +780,11 @@ namespace dnn
 									for (auto c = 0ull; c < C; c++)
 									{
 										const auto offset = n * CDHW + c * HW;
-										for (auto w = 0ull; w < HW; w++)
+										for (auto hw = 0ull; hw < HW; hw++)
 										{
-											Neurons[w + offset] = FTS::f(InputLayer->Neurons[w + offset]);
+											Neurons[hw + offset] = FTS::f(InputLayer->Neurons[hw + offset]);
 #ifndef DNN_LEAN
-											NeuronsD1[w + offset] = Float(0);
+											NeuronsD1[hw + offset] = Float(0);
 #endif // DNN_LEAN
 										}
 									}
@@ -800,8 +800,8 @@ namespace dnn
 									for (auto c = 0ull; c < PaddedC; c += VectorSize)
 									{
 										const auto offset = n * PaddedCDHW + c * HW;
-										for (auto w = 0ull; w < strideHW; w += VectorSize)
-											FTS::fVec(VecFloat().load_a(&InputLayer->Neurons[w + offset])).store_a(&Neurons[w + offset]);
+										for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
+											FTS::fVec(VecFloat().load_a(&InputLayer->Neurons[hw + offset])).store_a(&Neurons[hw + offset]);
 									}
 								});
 							}
@@ -812,8 +812,8 @@ namespace dnn
 									for (auto c = 0ull; c < C; c++)
 									{
 										const auto offset = n * CDHW + c * HW;
-										for (auto w = 0ull; w < HW; w++)
-											Neurons[w + offset] = FTS::f(InputLayer->Neurons[w + offset]);
+										for (auto hw = 0ull; hw < HW; hw++)
+											Neurons[hw + offset] = FTS::f(InputLayer->Neurons[hw + offset]);
 									}
 								});
 							}
@@ -940,11 +940,11 @@ namespace dnn
 								for (auto c = 0ull; c < PaddedC; c += VectorSize)
 								{
 									const auto offset = c * HW;
-									for (auto w = 0ull; w < strideHW; w += VectorSize)
+									for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
 									{
-										HardLogistic::fVec(VecFloat().load_a(&InputLayer->Neurons[w + offset])).store_a(&Neurons[w + offset]);
+										HardLogistic::fVec(VecFloat().load_a(&InputLayer->Neurons[hw + offset])).store_a(&Neurons[hw + offset]);
 #ifndef DNN_LEAN
-										vecZero.store_nt(&NeuronsD1[w + offset]);
+										vecZero.store_nt(&NeuronsD1[hw + offset]);
 #endif // DNN_LEAN
 									}
 								}
@@ -954,11 +954,11 @@ namespace dnn
 								for (auto c = 0ull; c < C; c++)
 								{
 									const auto offset = c * HW;
-									for (auto w = 0ull; w < HW; w++)
+									for (auto hw = 0ull; hw < HW; hw++)
 									{
-										Neurons[w + offset] = HardLogistic::f(InputLayer->Neurons[w + offset]);
+										Neurons[hw + offset] = HardLogistic::f(InputLayer->Neurons[hw + offset]);
 #ifndef DNN_LEAN
-										NeuronsD1[w + offset] = Float(0);
+										NeuronsD1[hw + offset] = Float(0);
 #endif // DNN_LEAN
 									}
 								}								
@@ -972,8 +972,8 @@ namespace dnn
 								for (auto c = 0ull; c < PaddedC; c += VectorSize)
 								{
 									const auto offset = c * HW;
-									for (auto w = 0ull; w < strideHW; w += VectorSize)
-										HardLogistic::fVec(VecFloat().load_a(&InputLayer->Neurons[w + offset])).store_a(&Neurons[w + offset]);
+									for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
+										HardLogistic::fVec(VecFloat().load_a(&InputLayer->Neurons[hw + offset])).store_a(&Neurons[hw + offset]);
 								}
 							}
 							else
@@ -981,8 +981,8 @@ namespace dnn
 								for (auto c = 0ull; c < C; c++)
 								{
 									const auto offset = c * HW;
-									for (auto w = 0ull; w < HW; w++)
-										Neurons[w + offset] = HardLogistic::f(InputLayer->Neurons[w + offset]);
+									for (auto hw = 0ull; hw < HW; hw++)
+										Neurons[hw + offset] = HardLogistic::f(InputLayer->Neurons[hw + offset]);
 								}			
 							}
 						}
@@ -1000,11 +1000,11 @@ namespace dnn
 									for (auto c = 0ull; c < PaddedC; c += VectorSize)
 									{
 										const auto offset = n * PaddedCDHW + c * HW;
-										for (auto w = 0ull; w < strideHW; w += VectorSize)
+										for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
 										{
-											HardLogistic::fVec(VecFloat().load_a(&InputLayer->Neurons[w + offset])).store_a(&Neurons[w + offset]);
+											HardLogistic::fVec(VecFloat().load_a(&InputLayer->Neurons[hw + offset])).store_a(&Neurons[hw + offset]);
 #ifndef DNN_LEAN
-											vecZero.store_nt(&NeuronsD1[w + offset]);
+											vecZero.store_nt(&NeuronsD1[hw + offset]);
 #endif // DNN_LEAN
 										}
 									}
@@ -1017,11 +1017,11 @@ namespace dnn
 									for (auto c = 0ull; c < C; c++)
 									{
 										const auto offset = n * CDHW + c * HW;
-										for (auto w = 0ull; w < HW; w++)
+										for (auto hw = 0ull; hw < HW; hw++)
 										{
-											Neurons[w + offset] = HardLogistic::f(InputLayer->Neurons[w + offset]);
+											Neurons[hw + offset] = HardLogistic::f(InputLayer->Neurons[hw + offset]);
 #ifndef DNN_LEAN
-											NeuronsD1[w + offset] = Float(0);
+											NeuronsD1[hw + offset] = Float(0);
 #endif // DNN_LEAN
 										}
 									}
@@ -1037,8 +1037,8 @@ namespace dnn
 									for (auto c = 0ull; c < PaddedC; c += VectorSize)
 									{
 										const auto offset = n * PaddedCDHW + c * HW;
-										for (auto w = 0ull; w < strideHW; w += VectorSize)
-											HardLogistic::fVec(VecFloat().load_a(&InputLayer->Neurons[w + offset])).store_a(&Neurons[w + offset]);
+										for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
+											HardLogistic::fVec(VecFloat().load_a(&InputLayer->Neurons[hw + offset])).store_a(&Neurons[hw + offset]);
 									}
 								});
 							}
@@ -1049,8 +1049,8 @@ namespace dnn
 									for (auto c = 0ull; c < C; c++)
 									{
 										const auto offset = n * CDHW + c * HW;
-										for (auto w = 0ull; w < HW; w++)
-											Neurons[w + offset] = HardLogistic::f(InputLayer->Neurons[w + offset]);
+										for (auto hw = 0ull; hw < HW; hw++)
+											Neurons[hw + offset] = HardLogistic::f(InputLayer->Neurons[hw + offset]);
 									}
 								});
 							}
@@ -1177,11 +1177,11 @@ namespace dnn
 								for (auto c = 0ull; c < PaddedC; c += VectorSize)
 								{
 									const auto offset = c * HW;
-									for (auto w = 0ull; w < strideHW; w += VectorSize)
+									for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
 									{
-										HardSwish::fVec(VecFloat().load_a(&InputLayer->Neurons[w + offset])).store_a(&Neurons[w + offset]);
+										HardSwish::fVec(VecFloat().load_a(&InputLayer->Neurons[hw + offset])).store_a(&Neurons[hw + offset]);
 #ifndef DNN_LEAN
-										vecZero.store_nt(&NeuronsD1[w + offset]);
+										vecZero.store_nt(&NeuronsD1[hw + offset]);
 #endif // DNN_LEAN
 									}
 								}
@@ -1191,11 +1191,11 @@ namespace dnn
 								for (auto c = 0ull; c < C; c++)
 								{
 									const auto offset = c * HW;
-									for (auto w = 0ull; w < HW; w++)
+									for (auto hw = 0ull; hw < HW; hw++)
 									{
-										Neurons[w + offset] = HardSwish::f(InputLayer->Neurons[w + offset]);
+										Neurons[hw + offset] = HardSwish::f(InputLayer->Neurons[hw + offset]);
 #ifndef DNN_LEAN
-										NeuronsD1[w + offset] = Float(0);
+										NeuronsD1[hw + offset] = Float(0);
 #endif // DNN_LEAN
 									}
 								}								
@@ -1209,8 +1209,8 @@ namespace dnn
 								for (auto c = 0ull; c < PaddedC; c += VectorSize)
 								{
 									const auto offset = c * HW;
-									for (auto w = 0ull; w < strideHW; w += VectorSize)
-										HardSwish::fVec(VecFloat().load_a(&InputLayer->Neurons[w + offset])).store_a(&Neurons[w + offset]);
+									for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
+										HardSwish::fVec(VecFloat().load_a(&InputLayer->Neurons[hw + offset])).store_a(&Neurons[hw + offset]);
 								}
 							}
 							else
@@ -1218,8 +1218,8 @@ namespace dnn
 								for (auto c = 0ull; c < C; c++)
 								{
 									const auto offset = c * HW;
-									for (auto w = 0ull; w < HW; w++)
-										Neurons[w + offset] = HardSwish::f(InputLayer->Neurons[w + offset]);
+									for (auto hw = 0ull; hw < HW; hw++)
+										Neurons[hw + offset] = HardSwish::f(InputLayer->Neurons[hw + offset]);
 								}			
 							}
 						}
@@ -1237,11 +1237,11 @@ namespace dnn
 									for (auto c = 0ull; c < PaddedC; c += VectorSize)
 									{
 										const auto offset = n * PaddedCDHW + c * HW;
-										for (auto w = 0ull; w < strideHW; w += VectorSize)
+										for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
 										{
-											HardSwish::fVec(VecFloat().load_a(&InputLayer->Neurons[w + offset])).store_a(&Neurons[w + offset]);
+											HardSwish::fVec(VecFloat().load_a(&InputLayer->Neurons[hw + offset])).store_a(&Neurons[hw + offset]);
 #ifndef DNN_LEAN
-											vecZero.store_nt(&NeuronsD1[w + offset]);
+											vecZero.store_nt(&NeuronsD1[hw + offset]);
 #endif // DNN_LEAN
 										}
 									}
@@ -1254,11 +1254,11 @@ namespace dnn
 									for (auto c = 0ull; c < C; c++)
 									{
 										const auto offset = n * CDHW + c * HW;
-										for (auto w = 0ull; w < HW; w++)
+										for (auto hw = 0ull; hw < HW; hw++)
 										{
-											Neurons[w + offset] = HardSwish::f(InputLayer->Neurons[w + offset]);
+											Neurons[hw + offset] = HardSwish::f(InputLayer->Neurons[hw + offset]);
 #ifndef DNN_LEAN
-											NeuronsD1[w + offset] = Float(0);
+											NeuronsD1[hw + offset] = Float(0);
 #endif // DNN_LEAN
 										}
 									}
@@ -1274,8 +1274,8 @@ namespace dnn
 									for (auto c = 0ull; c < PaddedC; c += VectorSize)
 									{
 										const auto offset = n * PaddedCDHW + c * HW;
-										for (auto w = 0ull; w < strideHW; w += VectorSize)
-											HardSwish::fVec(VecFloat().load_a(&InputLayer->Neurons[w + offset])).store_a(&Neurons[w + offset]);
+										for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
+											HardSwish::fVec(VecFloat().load_a(&InputLayer->Neurons[hw + offset])).store_a(&Neurons[hw + offset]);
 									}
 								});
 							}
@@ -1286,8 +1286,8 @@ namespace dnn
 									for (auto c = 0ull; c < C; c++)
 									{
 										const auto offset = n * CDHW + c * HW;
-										for (auto w = 0ull; w < HW; w++)
-											Neurons[w + offset] = HardSwish::f(InputLayer->Neurons[w + offset]);
+										for (auto hw = 0ull; hw < HW; hw++)
+											Neurons[hw + offset] = HardSwish::f(InputLayer->Neurons[hw + offset]);
 									}
 								});
 							}
@@ -1500,8 +1500,8 @@ namespace dnn
 							for (auto c = 0ull; c < PaddedC; c += VectorSize)
 							{
 								const auto offset = c * HW;
-								for (auto w = offset; w < offset + strideHW; w += VectorSize)
-									mul_add(FTS::dfVec(VecFloat().load_a(&Neurons[w])), VecFloat().load_a(&NeuronsD1[w]), VecFloat().load_a(&InputLayer->NeuronsD1[w])).store_a(&InputLayer->NeuronsD1[w]);
+								for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
+									mul_add(FTS::dfVec(VecFloat().load_a(&Neurons[hw])), VecFloat().load_a(&NeuronsD1[hw]), VecFloat().load_a(&InputLayer->NeuronsD1[hw])).store_a(&InputLayer->NeuronsD1[hw]);
 							}
 						}
 						else
@@ -1509,8 +1509,8 @@ namespace dnn
 							for (auto c = 0ull; c < C; c++)
 							{
 								const auto offset = c * HW;
-								for (auto w = offset; w < offset + HW; w++)
-									InputLayer->NeuronsD1[w] += FTS::df(Neurons[w]) * NeuronsD1[w];
+								for (auto hw = offset; hw < offset + HW; hw++)
+									InputLayer->NeuronsD1[hw] += FTS::df(Neurons[hw]) * NeuronsD1[hw];
 							}
 						}
 					}
@@ -1524,8 +1524,8 @@ namespace dnn
 								for (auto c = 0ull; c < PaddedC; c += VectorSize)
 								{
 									const auto offset = n * PaddedCDHW + c * HW;
-									for (auto w = offset; w < offset + strideHW; w += VectorSize)
-										mul_add(FTS::dfVec(VecFloat().load_a(&Neurons[w])), VecFloat().load_a(&NeuronsD1[w]), VecFloat().load_a(&InputLayer->NeuronsD1[w])).store_a(&InputLayer->NeuronsD1[w]);
+									for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
+										mul_add(FTS::dfVec(VecFloat().load_a(&Neurons[hw])), VecFloat().load_a(&NeuronsD1[hw]), VecFloat().load_a(&InputLayer->NeuronsD1[hw])).store_a(&InputLayer->NeuronsD1[hw]);
 								}
 							});
 						}
@@ -1536,8 +1536,8 @@ namespace dnn
 								for (auto c = 0ull; c < C; c++)
 								{
 									const auto offset = n * CDHW + c * HW;
-									for (auto w = offset; w < offset + HW; w++)
-										InputLayer->NeuronsD1[w] += FTS::df(Neurons[w]) * NeuronsD1[w];
+									for (auto hw = offset; hw < offset + HW; hw++)
+										InputLayer->NeuronsD1[hw] += FTS::df(Neurons[hw]) * NeuronsD1[hw];
 								}
 							});
 						}
@@ -1593,8 +1593,8 @@ namespace dnn
 							for (auto c = 0ull; c < PaddedC; c += VectorSize)
 							{
 								const auto offset = c * HW;
-								for (auto w = offset; w < offset + strideHW; w += VectorSize)
-									mul_add(HardLogistic::dfVec(VecFloat().load_a(&Neurons[w])), VecFloat().load_a(&NeuronsD1[w]), VecFloat().load_a(&InputLayer->NeuronsD1[w])).store_a(&InputLayer->NeuronsD1[w]);
+								for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
+									mul_add(HardLogistic::dfVec(VecFloat().load_a(&Neurons[hw])), VecFloat().load_a(&NeuronsD1[hw]), VecFloat().load_a(&InputLayer->NeuronsD1[hw])).store_a(&InputLayer->NeuronsD1[hw]);
 							}
 						}
 						else
@@ -1602,8 +1602,8 @@ namespace dnn
 							for (auto c = 0ull; c < C; c++)
 							{
 								const auto offset = c * HW;
-								for (auto w = offset; w < offset + HW; w++)
-									InputLayer->NeuronsD1[w] += HardLogistic::df(Neurons[w]) * NeuronsD1[w];
+								for (auto hw = offset; hw < offset + HW; hw++)
+									InputLayer->NeuronsD1[hw] += HardLogistic::df(Neurons[hw]) * NeuronsD1[hw];
 							}
 						}
 					}
@@ -1617,8 +1617,8 @@ namespace dnn
 								for (auto c = 0ull; c < PaddedC; c += VectorSize)
 								{
 									const auto offset = n * PaddedCDHW + c * HW;
-									for (auto w = offset; w < offset + strideHW; w += VectorSize)
-										mul_add(HardLogistic::dfVec(VecFloat().load_a(&Neurons[w])), VecFloat().load_a(&NeuronsD1[w]), VecFloat().load_a(&InputLayer->NeuronsD1[w])).store_a(&InputLayer->NeuronsD1[w]);
+									for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
+										mul_add(HardLogistic::dfVec(VecFloat().load_a(&Neurons[hw])), VecFloat().load_a(&NeuronsD1[hw]), VecFloat().load_a(&InputLayer->NeuronsD1[hw])).store_a(&InputLayer->NeuronsD1[hw]);
 								}
 							});
 						}
@@ -1629,8 +1629,8 @@ namespace dnn
 								for (auto c = 0ull; c < C; c++)
 								{
 									const auto offset = n * CDHW + c * HW;
-									for (auto w = offset; w < offset + HW; w++)
-										InputLayer->NeuronsD1[w] += HardLogistic::df(Neurons[w]) * NeuronsD1[w];
+									for (auto hw = offset; hw < offset + HW; hw++)
+										InputLayer->NeuronsD1[hw] += HardLogistic::df(Neurons[hw]) * NeuronsD1[hw];
 								}
 							});
 						}
@@ -1686,8 +1686,8 @@ namespace dnn
 							for (auto c = 0ull; c < PaddedC; c += VectorSize)
 							{
 								const auto offset = c * HW;
-								for (auto w = offset; w < offset + strideHW; w += VectorSize)
-									mul_add(HardSwish::dfVec(VecFloat().load_a(&Neurons[w])), VecFloat().load_a(&NeuronsD1[w]), VecFloat().load_a(&InputLayer->NeuronsD1[w])).store_a(&InputLayer->NeuronsD1[w]);
+								for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
+									mul_add(HardSwish::dfVec(VecFloat().load_a(&Neurons[hw])), VecFloat().load_a(&NeuronsD1[hw]), VecFloat().load_a(&InputLayer->NeuronsD1[hw])).store_a(&InputLayer->NeuronsD1[hw]);
 							}
 						}
 						else
@@ -1695,8 +1695,8 @@ namespace dnn
 							for (auto c = 0ull; c < C; c++)
 							{
 								const auto offset = c * HW;
-								for (auto w = offset; w < offset + HW; w++)
-									InputLayer->NeuronsD1[w] += HardSwish::df(Neurons[w]) * NeuronsD1[w];
+								for (auto hw = offset; hw < offset + HW; hw++)
+									InputLayer->NeuronsD1[hw] += HardSwish::df(Neurons[hw]) * NeuronsD1[hw];
 							}
 						}
 					}
@@ -1710,8 +1710,8 @@ namespace dnn
 								for (auto c = 0ull; c < PaddedC; c += VectorSize)
 								{
 									const auto offset = n * PaddedCDHW + c * HW;
-									for (auto w = offset; w < offset + strideHW; w += VectorSize)
-										mul_add(HardSwish::dfVec(VecFloat().load_a(&Neurons[w])), VecFloat().load_a(&NeuronsD1[w]), VecFloat().load_a(&InputLayer->NeuronsD1[w])).store_a(&InputLayer->NeuronsD1[w]);
+									for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
+										mul_add(HardSwish::dfVec(VecFloat().load_a(&Neurons[hw])), VecFloat().load_a(&NeuronsD1[hw]), VecFloat().load_a(&InputLayer->NeuronsD1[hw])).store_a(&InputLayer->NeuronsD1[hw]);
 								}
 							});
 						}
@@ -1722,8 +1722,8 @@ namespace dnn
 								for (auto c = 0ull; c < C; c++)
 								{
 									const auto offset = n * CDHW + c * HW;
-									for (auto w = offset; w < offset + HW; w++)
-										InputLayer->NeuronsD1[w] += HardSwish::df(Neurons[w]) * NeuronsD1[w];
+									for (auto hw = offset; hw < offset + HW; hw++)
+										InputLayer->NeuronsD1[hw] += HardSwish::df(Neurons[hw]) * NeuronsD1[hw];
 								}
 							});
 						}
