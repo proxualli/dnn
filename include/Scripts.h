@@ -757,16 +757,16 @@ namespace dnn
 
                     for (auto i = 1ull; i < p.Iterations; i++)
                     {
-                        auto group = In("SE", C + 4);
+                        auto group = In("SE", C + 3);
                         auto strSE =
-                            se ? GlobalAvgPooling(In("B", C + 4), group) +
+                            se ? GlobalAvgPooling(In("B", C + 3), group) +
                             Convolution(1, group + "GAP", DIV8(W / 4), 1, 1, 1, 1, 0, 0, group, "C", "Normal(0.01)") +
                             BatchNormActivation(1, group + "C1", p.Relu, group) +
                             Convolution(2, group + "B1", DIV8(W), 1, 1, 1, 1, 0, 0, group, "C", "Normal(0.01)") +
                             Logistic(2, group + "C2", group) +
-                            ChannelMultiply(In("B", C + 4) + "," + group + "ACT2", group) +
+                            ChannelMultiply(In("B", C + 3) + "," + group + "ACT2", group) +
                             Concat(A + 1, In("LCS", A) + "," + group + "CM") :
-                            Concat(A + 1, In("LCS", A) + "," + In("B", C + 4));
+                            Concat(A + 1, In("LCS", A) + "," + In("B", C + 3));
 
                         blocks.push_back(
                             ChannelShuffle(A, In("CC", A), 2) +
