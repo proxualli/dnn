@@ -67,7 +67,7 @@ namespace dnn
 			}
 		}
 
-		void ForwardProp(const size_t batchSize, const bool training)  final override
+		void ForwardProp(const size_t batchSize, const bool training) final override
 		{
 			const auto plain = IsPlainFormat();
 			const auto size = plain ? CDHW : PaddedCDHW;
