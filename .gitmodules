@@ -13,9 +13,7 @@
 [submodule "deps/vectorclass"]
 	path = deps/vectorclass
 	url = https://github.com/zamir1001/vectorclass.git
-[submodule "deps/magic_enum"]
-	path = deps/magic_enum
-	url = https://github.com/Neargye/magic_enum.git
 [submodule "deps/oneDNN"]
 	path = deps/oneDNN
 	url = https://github.com/oneapi-src/oneDNN.git
+	branch = master
