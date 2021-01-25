@@ -218,6 +218,7 @@ extern "C" DNN_API void DNNGetImage(const size_t layerIndex, const unsigned char
 	{
 		switch (model->Layers[layerIndex]->LayerType)
 		{
+			case LayerTypes::Activation:
 			case LayerTypes::BatchNorm:
 			case LayerTypes::BatchNormFTS:
 			case LayerTypes::BatchNormFTSDropout:
@@ -235,16 +236,6 @@ extern "C" DNN_API void DNNGetImage(const size_t layerIndex, const unsigned char
 			{
 				ByteVector img = model->Layers[layerIndex]->GetImage(fillColor);
 				std::memcpy(image, img.data(), img.size());
-			}
-			break;
-
-			case LayerTypes::Activation:
-			{
-				if (model->Layers[layerIndex]->HasWeights)
-				{
-					ByteVector img = model->Layers[layerIndex]->GetImage(fillColor);
-					std::memcpy(image, img.data(), img.size());
-				}
 			}
 			break;
 
@@ -366,7 +357,8 @@ extern "C" DNN_API void DNNGetNetworkInfo(std::string* name, size_t* costIndex, 
 		
 		(*meanTrainSet).clear();
 		(*stdTrainSet).clear();
-    	switch (dataprovider->Dataset)
+		
+		switch (dataprovider->Dataset)
 		{
 		case Datasets::tinyimagenet:
 		case Datasets::cifar10:
@@ -424,7 +416,7 @@ extern "C" DNN_API void DNNGetTrainingInfo(size_t* currentCycle, size_t* totalCy
 
 		case States::Idle:
 		case States::NewEpoch:
-	    case States::SaveWeights:
+		case States::SaveWeights:
 		case States::Completed:
 		{
 			// Do nothing
