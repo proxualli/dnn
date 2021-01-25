@@ -16,6 +16,4 @@
 [submodule "deps/oneDNN"]
 	path = deps/oneDNN
 	url = https://github.com/oneapi-src/oneDNN.git
-[submodule "deps/vectorclass"]
-	path = deps/vectorclass
-	url = https://github.com/zamir1001/vectorclass.git
+
