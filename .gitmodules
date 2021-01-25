@@ -10,9 +10,6 @@
 [submodule "deps/zlib-1.2.11"]
 	path = deps/zlib-1.2.11
 	url = https://github.com/madler/zlib.git
-[submodule "deps/oneDNN"]
-	path = deps/oneDNN
-	url = https://github.com/oneapi-src/oneDNN.git
 [submodule "deps/vectorclass"]
 	path = deps/vectorclass
 	url = https://github.com/zamir1001/vectorclass.git
