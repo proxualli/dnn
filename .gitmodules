@@ -17,3 +17,6 @@
 	path = deps/magic_enum
 	url = https://github.com/Neargye/magic_enum.git
 	branch = master
+[submodule "deps/oneDNN"]
+	path = deps/oneDNN
+	url = https://github.com/oneapi-src/oneDNN.git
