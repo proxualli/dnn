@@ -1,12 +1,6 @@
-[submodule "deps/oneDNN"]
-	path = deps/oneDNN
-	url = https://github.com/oneapi-src/oneDNN
-[submodule "deps/vectorclass"]
-	path = deps/vectorclass
-	url = https://github.com/zamir1001/vectorclass.git
-[submodule "deps/magic_enum"]
-	path = deps/magic_enum
-	url = https://github.com/Neargye/magic_enum
+[submodule "deps/CImg"]
+	path = deps/CImg
+	url = https://github.com/dtschump/CImg.git
 [submodule "deps/libjpeg-turbo"]
 	path = deps/libjpeg-turbo
 	url = https://github.com/libjpeg-turbo/libjpeg-turbo.git
@@ -16,15 +10,5 @@
 [submodule "deps/zlib-1.2.11"]
 	path = deps/zlib-1.2.11
 	url = https://github.com/madler/zlib.git
-[submodule "deps/CImg"]
-	path = deps/CImg
-	url = https://github.com/dtschump/CImg.git
 
-[submodule "deps/--force"]
-	path = deps/--force
-	url = https://github.com/oneapi-src/oneDNN.git
-	branch = master
-[submodule "deps/deps/oneDNN"]
-	path = deps/deps/oneDNN
-	url = https://github.com/oneapi-src/oneDNN.git
-	branch = master
+
