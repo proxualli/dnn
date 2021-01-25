@@ -24,3 +24,7 @@
 	path = deps/--force
 	url = https://github.com/oneapi-src/oneDNN.git
 	branch = master
+[submodule "deps/deps/oneDNN"]
+	path = deps/deps/oneDNN
+	url = https://github.com/oneapi-src/oneDNN.git
+	branch = master
