@@ -1393,7 +1393,8 @@ namespace dnn
 
 		inline void SGDMomentum(const TrainingRate& rate, const size_t epoch)
 		{
-			const auto momentum = rate.Momentum;
+			const auto prop = (rate.Epochs - epoch) / rate.Epochs;
+			const auto momentum = rate.Momentum * (prop (Float(1) - rate.Momentum + rate.Momentum * prop)); // decaying momentum (Deamon SGDM)
 			const auto lr = rate.MaximumRate * WeightsLRM / rate.BatchSize;
 			const auto l2Penalty = rate.MaximumRate * WeightsLRM * rate.L2Penalty * WeightsWDM;
 
