@@ -363,8 +363,7 @@ namespace dnn
 				{
 				case Activations::FTS:
 				case Activations::HardLogistic:
-			    case Activations::HardSwish:
-			    case Activations::LogSoftmax:
+				case Activations::LogSoftmax:
 				case Activations::PRelu:
 			    case Activations::Softmax:
 				    break;
@@ -389,6 +388,9 @@ namespace dnn
 					break;
 				case Activations::GeluErf:
 					algorithm = dnnl::algorithm::eltwise_gelu_erf;
+					break;
+				case Activations::HardSwish:
+					algorithm = dnnl::algorithm::eltwise_hardswish;
 					break;
 				case Activations::Linear:
 					algorithm = dnnl::algorithm::eltwise_linear;
@@ -806,7 +808,6 @@ namespace dnn
 			}
 			break;
 
-
 			case Activations::HardLogistic:
 			{
 				if (InputLayer->DstMemDesc->data.ndims == 2)
@@ -1032,243 +1033,6 @@ namespace dnn
 										const auto offset = n * CDHW + c * HW;
 										for (auto hw = 0ull; hw < HW; hw++)
 											Neurons[hw + offset] = HardLogistic::f(InputLayer->Neurons[hw + offset]);
-									}
-								});
-							}
-						}
-					}
-#ifdef DNN_STOCHASTIC
-				}
-#endif
-			}
-			break;
-
-
-			case Activations::HardSwish:
-			{
-				if (InputLayer->DstMemDesc->data.ndims == 2)
-				{
-#ifdef DNN_STOCHASTIC
-					if (batchSize == 1)
-					{
-						if (training)
-						{
-							if (!plain)
-							{
-								const auto vecZero = VecFloat(0);
-								for (auto c = 0ull; c < PaddedC; c+=VectorSize)
-								{
-									HardSwish::fVec(VecFloat().load_a(&InputLayer->Neurons[c])).store_a(&Neurons[c]);			
-#ifndef DNN_LEAN
-									vecZero.store_nt(&NeuronsD1[c]);
-#endif // DNN_LEAN
-								}
-							}
-							else
-							{
-								for (auto c = 0ull; c < C; c++)
-								{
-									Neurons[c] = HardSwish::f(InputLayer->Neurons[c]);
-#ifndef DNN_LEAN
-									NeuronsD1[c] = Float(0);
-#endif // DNN_LEAN
-								}
-							}
-						}
-						else
-						{
-							if (!plain)
-								for (auto c = 0ull; c < PaddedC; c+=VectorSize)
-									HardSwish::fVec(VecFloat().load_a(&InputLayer->Neurons[c])).store_a(&Neurons[c]);			
-							else
-								for (auto c = 0ull; c < C; c++)
-									Neurons[c] = HardSwish::f(InputLayer->Neurons[c]);
-						}
-					}
-					else
-					{
-#endif
-						if (training)
-						{
-							if (!plain)
-							{
-								for_i(batchSize, threads, [=](size_t n)
-								{
-									const auto vecZero = VecFloat(0);
-									const auto offset = n * PaddedC;
-									for (auto c = offset; c < offset + PaddedC; c+=VectorSize)
-									{
-										HardSwish::fVec(VecFloat().load_a(&InputLayer->Neurons[c])).store_a(&Neurons[c]);
-#ifndef DNN_LEAN
-										vecZero.store_nt(&NeuronsD1[c]);
-#endif // DNN_LEAN
-									}
-								});
-							}
-							else
-							{
-								for_i(batchSize, threads, [=](size_t n)
-								{
-									const auto offset = n * C;
-									for (auto c = offset; c < offset + C; c++)
-									{
-										Neurons[c] = HardSwish::f(InputLayer->Neurons[c]);
-#ifndef DNN_LEAN
-										NeuronsD1[c] = Float(0);
-#endif // DNN_LEAN
-									}
-								});
-							}
-						}
-						else
-						{
-							if (!plain)
-							{
-								for_i(batchSize, threads, [=](size_t n)
-								{
-									const auto vecZero = VecFloat(0);
-									const auto offset = n * PaddedC;
-									for (auto c = offset; c < offset + PaddedC; c+=VectorSize)
-										HardSwish::fVec(VecFloat().load_a(&InputLayer->Neurons[c])).store_a(&Neurons[c]);
-								});
-							}
-							else
-							{
-								for_i(batchSize, threads, [=](size_t n)
-								{
-									const auto offset = n * C;
-									for (auto c = offset; c < offset + C; c++)
-										Neurons[c] = HardSwish::f(InputLayer->Neurons[c]);
-								});
-							}
-						}
-#ifdef DNN_STOCHASTIC
-					}
-#endif
-				}
-				else
-				{
-#ifdef DNN_STOCHASTIC
-					if (batchSize == 1)
-					{
-						if (training)
-						{
-							if (!plain)
-							{
-								for (auto c = 0ull; c < PaddedC; c += VectorSize)
-								{
-									const auto offset = c * HW;
-									for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
-									{
-										HardSwish::fVec(VecFloat().load_a(&InputLayer->Neurons[hw + offset])).store_a(&Neurons[hw + offset]);
-#ifndef DNN_LEAN
-										vecZero.store_nt(&NeuronsD1[hw + offset]);
-#endif // DNN_LEAN
-									}
-								}
-							}
-							else
-							{
-								for (auto c = 0ull; c < C; c++)
-								{
-									const auto offset = c * HW;
-									for (auto hw = 0ull; hw < HW; hw++)
-									{
-										Neurons[hw + offset] = HardSwish::f(InputLayer->Neurons[hw + offset]);
-#ifndef DNN_LEAN
-										NeuronsD1[hw + offset] = Float(0);
-#endif // DNN_LEAN
-									}
-								}								
-							}
-							
-						}
-						else
-						{
-							if (!plain)
-							{
-								for (auto c = 0ull; c < PaddedC; c += VectorSize)
-								{
-									const auto offset = c * HW;
-									for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
-										HardSwish::fVec(VecFloat().load_a(&InputLayer->Neurons[hw + offset])).store_a(&Neurons[hw + offset]);
-								}
-							}
-							else
-							{
-								for (auto c = 0ull; c < C; c++)
-								{
-									const auto offset = c * HW;
-									for (auto hw = 0ull; hw < HW; hw++)
-										Neurons[hw + offset] = HardSwish::f(InputLayer->Neurons[hw + offset]);
-								}			
-							}
-						}
-					}
-					else
-					{
-#endif
-						if (training)
-						{
-							if (!plain)
-							{
-								for_i(batchSize, threads, [=](size_t n)
-								{
-									const auto vecZero = VecFloat(0);
-									for (auto c = 0ull; c < PaddedC; c += VectorSize)
-									{
-										const auto offset = n * PaddedCDHW + c * HW;
-										for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
-										{
-											HardSwish::fVec(VecFloat().load_a(&InputLayer->Neurons[hw + offset])).store_a(&Neurons[hw + offset]);
-#ifndef DNN_LEAN
-											vecZero.store_nt(&NeuronsD1[hw + offset]);
-#endif // DNN_LEAN
-										}
-									}
-								});
-							}
-							else
-							{
-								for_i(batchSize, threads, [=](size_t n)
-								{
-									for (auto c = 0ull; c < C; c++)
-									{
-										const auto offset = n * CDHW + c * HW;
-										for (auto hw = 0ull; hw < HW; hw++)
-										{
-											Neurons[hw + offset] = HardSwish::f(InputLayer->Neurons[hw + offset]);
-#ifndef DNN_LEAN
-											NeuronsD1[hw + offset] = Float(0);
-#endif // DNN_LEAN
-										}
-									}
-								});
-							}
-						}
-						else
-						{
-							if (!plain)
-							{
-								for_i(batchSize, threads, [=](size_t n)
-								{
-									for (auto c = 0ull; c < PaddedC; c += VectorSize)
-									{
-										const auto offset = n * PaddedCDHW + c * HW;
-										for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
-											HardSwish::fVec(VecFloat().load_a(&InputLayer->Neurons[hw + offset])).store_a(&Neurons[hw + offset]);
-									}
-								});
-							}
-							else
-							{
-								for_i(batchSize, threads, [=](size_t n)
-								{
-									for (auto c = 0ull; c < C; c++)
-									{
-										const auto offset = n * CDHW + c * HW;
-										for (auto hw = 0ull; hw < HW; hw++)
-											Neurons[hw + offset] = HardSwish::f(InputLayer->Neurons[hw + offset]);
 									}
 								});
 							}
@@ -1612,99 +1376,6 @@ namespace dnn
 									const auto offset = n * CDHW + c * HW;
 									for (auto hw = offset; hw < offset + HW; hw++)
 										InputLayer->NeuronsD1[hw] += HardLogistic::df(Neurons[hw]) * NeuronsD1[hw];
-								}
-							});
-						}
-#ifdef DNN_STOCHASTIC
-					}
-#endif
-				}
-			}
-			break;
-
-			case Activations::HardSwish:
-			{
-				if (InputLayer->DstMemDesc->data.ndims == 2)
-				{
-#ifdef DNN_STOCHASTIC
-					if (batchSize == 1)
-					{
-						if (!plain)
-							for (auto c = 0ull; c < PaddedC; c+=VectorSize)
-								mul_add(HardSwish::dfVec(VecFloat().load_a(&Neurons[c])), VecFloat().load_a(&NeuronsD1[c]), VecFloat().load_a(&InputLayer->NeuronsD1[c])).store_a(&InputLayer->NeuronsD1[c]);
-						else
-							for (auto c = 0ull; c < C; c++)
-								InputLayer->NeuronsD1[c] += HardSwish::df(Neurons[c]) * NeuronsD1[c];
-					}
-					else
-					{
-#endif
-						if (!plain)
-							for_i(batchSize, threads, [=](size_t n)
-							{
-								const auto offset = n * PaddedC;
-								for (auto c = offset; c < offset + PaddedC; c+=VectorSize)
-									mul_add(HardSwish::dfVec(VecFloat().load_a(&Neurons[c])), VecFloat().load_a(&NeuronsD1[c]), VecFloat().load_a(&InputLayer->NeuronsD1[c])).store_a(&InputLayer->NeuronsD1[c]);
-							});
-						else
-							for_i(batchSize, threads, [=](size_t n)
-							{
-								const auto offset = n * C;
-								for (auto c = offset; c < offset + C; c++)
-									InputLayer->NeuronsD1[c] += HardSwish::df(Neurons[c]) * NeuronsD1[c];
-							});
-#ifdef DNN_STOCHASTIC
-					}
-#endif
-				}
-				else
-				{
-#ifdef DNN_STOCHASTIC
-					if (batchSize == 1)
-					{
-						if (!plain)
-						{
-							for (auto c = 0ull; c < PaddedC; c += VectorSize)
-							{
-								const auto offset = c * HW;
-								for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
-									mul_add(HardSwish::dfVec(VecFloat().load_a(&Neurons[hw])), VecFloat().load_a(&NeuronsD1[hw]), VecFloat().load_a(&InputLayer->NeuronsD1[hw])).store_a(&InputLayer->NeuronsD1[hw]);
-							}
-						}
-						else
-						{
-							for (auto c = 0ull; c < C; c++)
-							{
-								const auto offset = c * HW;
-								for (auto hw = offset; hw < offset + HW; hw++)
-									InputLayer->NeuronsD1[hw] += HardSwish::df(Neurons[hw]) * NeuronsD1[hw];
-							}
-						}
-					}
-					else
-					{
-#endif
-						if (!plain)
-						{
-							for_i(batchSize, threads, [=](size_t n)
-							{
-								for (auto c = 0ull; c < PaddedC; c += VectorSize)
-								{
-									const auto offset = n * PaddedCDHW + c * HW;
-									for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
-										mul_add(HardSwish::dfVec(VecFloat().load_a(&Neurons[hw])), VecFloat().load_a(&NeuronsD1[hw]), VecFloat().load_a(&InputLayer->NeuronsD1[hw])).store_a(&InputLayer->NeuronsD1[hw]);
-								}
-							});
-						}
-						else
-						{
-							for_i(batchSize, threads, [=](size_t n)
-							{
-								for (auto c = 0ull; c < C; c++)
-								{
-									const auto offset = n * CDHW + c * HW;
-									for (auto hw = offset; hw < offset + HW; hw++)
-										InputLayer->NeuronsD1[hw] += HardSwish::df(Neurons[hw]) * NeuronsD1[hw];
 								}
 							});
 						}
