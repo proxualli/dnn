@@ -1108,7 +1108,7 @@ namespace dnn
 			std::fill_n(BiasesD1.begin(), BiasCount, Float(0));
 		}
 
-		void UpdateWeights(const TrainingRate& rate, const Optimizers optimizer, const bool disableLocking)
+		void UpdateWeights(const TrainingRate& rate, const size_t epoch, const Optimizers optimizer, const bool disableLocking)
 		{
 			if (HasWeights && (disableLocking || (!disableLocking && !LockUpdate.load())))
 			{
@@ -1117,31 +1117,31 @@ namespace dnn
 				switch (optimizer)
 				{
 				case Optimizers::AdaDelta:
-					AdaDelta(rate);
+					AdaDelta(rate, epoch);
 					break;
 				case Optimizers::AdaGrad:
-					AdaGrad(rate);
+					AdaGrad(rate, epoch);
 					break;
 				case Optimizers::Adam:
-					Adam(rate);
+					Adam(rate, epoch);
 					break;
 				case Optimizers::Adamax:
-					Adamax(rate);
+					Adamax(rate, epoch);
 					break;
 				case Optimizers::NAG:
-					NAG(rate);
+					NAG(rate, epoch);
 					break;
 				case Optimizers::RMSProp:
-					RMSProp(rate);
+					RMSProp(rate, epoch);
 					break;
 				case Optimizers::SGD:
-					SGD(rate);
+					SGD(rate, epoch);
 					break;
 				case Optimizers::SGDMomentum:
-					SGDMomentum(rate);
+					SGDMomentum(rate, epoch);
 					break;
 				case Optimizers::RAdam:
-					RAdam(rate);
+					RAdam(rate, epoch);
 					break;
 				}
 			}
@@ -1178,7 +1178,7 @@ namespace dnn
 			}
 		}
 
-		inline void AdaDelta(const TrainingRate& rate)
+		inline void AdaDelta(const TrainingRate& rate, const size_t epoch)
 		{
 			const auto lr = -rate.MaximumRate * WeightsLRM;
 			const auto momentum = rate.Momentum;
@@ -1210,7 +1210,7 @@ namespace dnn
 			}
 		}
 
-		inline void AdaGrad(const TrainingRate& rate)
+		inline void AdaGrad(const TrainingRate& rate, const size_t epoch)
 		{
 			const auto lr = rate.MaximumRate * WeightsLRM;
 			const auto eps = AdaGradEps;
@@ -1236,7 +1236,7 @@ namespace dnn
 			}
 		}
 
-		inline void Adam(const TrainingRate& rate)
+		inline void Adam(const TrainingRate& rate, const size_t epoch)
 		{
 			const auto beta1 = rate.Momentum;
 			const auto beta2 = AdamBeta2;
@@ -1275,7 +1275,7 @@ namespace dnn
 			B2 *= beta2;
 		}
 
-		inline void Adamax(const TrainingRate& rate)
+		inline void Adamax(const TrainingRate& rate, const size_t epoch)
 		{
 			const auto lr = rate.MaximumRate * WeightsLRM / (Float(1) - B1);
 			const auto batchRecip = Float(1) / rate.BatchSize;
@@ -1313,7 +1313,7 @@ namespace dnn
 			B1 *= beta1;
 		}
 
-		inline void NAG(const TrainingRate& rate)
+		inline void NAG(const TrainingRate& rate, const size_t epoch)
 		{
 			const auto lr = rate.MaximumRate * WeightsLRM;
 			const auto l2Penalty = rate.L2Penalty * WeightsWDM * lr;
@@ -1344,7 +1344,7 @@ namespace dnn
 			}
 		}
 
-		inline void RMSProp(const TrainingRate& rate)
+		inline void RMSProp(const TrainingRate& rate, const size_t epoch)
 		{
 			const auto lr = rate.MaximumRate * WeightsLRM / rate.BatchSize;
 			const auto eps = RMSPropEps;
@@ -1372,7 +1372,7 @@ namespace dnn
 			}
 		}
 
-		inline void SGD(const TrainingRate& rate)
+		inline void SGD(const TrainingRate& rate, const size_t epoch)
 		{
 			const auto lr = rate.MaximumRate * WeightsLRM / rate.BatchSize;
 			const auto l2Penalty = rate.MaximumRate * WeightsLRM * rate.L2Penalty * WeightsWDM;
@@ -1391,7 +1391,7 @@ namespace dnn
 			}
 		}
 
-		inline void SGDMomentum(const TrainingRate& rate)
+		inline void SGDMomentum(const TrainingRate& rate, const size_t epoch)
 		{
 			const auto momentum = rate.Momentum;
 			const auto lr = rate.MaximumRate * WeightsLRM / rate.BatchSize;
@@ -1417,7 +1417,7 @@ namespace dnn
 			}
 		}
 
-		inline void RAdam(const TrainingRate& rate)
+		inline void RAdam(const TrainingRate& rate, const size_t epoch)
 		{
 			const auto batchRecip = Float(1) / rate.BatchSize;
 			const auto beta1 = rate.Momentum;

@@ -884,7 +884,7 @@ namespace dnn
 										Layers[i]->BackwardProp(BatchSize);
 										Layers[i]->bpropTime = timer.now() - timePoint;
 										timePoint = timer.now();
-										Layers[i]->UpdateWeights(CurrentTrainingRate, Optimizer, DisableLocking);
+										Layers[i]->UpdateWeights(CurrentTrainingRate, CurrentEpoch, Optimizer, DisableLocking);
 										Layers[i]->updateTime = timer.now() - timePoint;
 										updateTimeCount += Layers[i]->updateTime;
 									}
@@ -942,7 +942,7 @@ namespace dnn
 										Layers[i]->BackwardProp(BatchSize);
 										Layers[i]->bpropTime = timer.now() - timePoint;
 										timePoint = timer.now();
-										Layers[i]->UpdateWeights(CurrentTrainingRate, Optimizer, DisableLocking);
+										Layers[i]->UpdateWeights(CurrentTrainingRate, CurrentEpoch, Optimizer, DisableLocking);
 										Layers[i]->updateTime = timer.now() - timePoint;
 										updateTimeCount += Layers[i]->updateTime;
 									}
@@ -1536,7 +1536,7 @@ namespace dnn
 					Layers[i]->ResetGradients();
 					Layers[i]->BackwardProp(batchSize);
 					if (!DisableLocking)
-						Layers[i]->UpdateWeights(CurrentTrainingRate, Optimizer, DisableLocking);
+						Layers[i]->UpdateWeights(CurrentTrainingRate, CurrentEpoch, Optimizer, DisableLocking);
 				}
 				else
 					Layers[i]->BackwardProp(batchSize);
