@@ -102,7 +102,7 @@ namespace dnn
 				f(i);
 		}
 #else
-		for_(0ull, range, [&](const blocked_range &r)
+		for_(0ull, range, [&](const blocked_range& r)
 		{
 			for (auto i = r.begin(); i < r.end(); i++)
 				f(i);
@@ -123,7 +123,7 @@ namespace dnn
 #else
 		DNN_UNREF_PAR(threads);
 
-		for_(0ull, range, [&](const blocked_range & r)
+		for_(0ull, range, [&](const blocked_range& r)
 		{
 			for (auto i = r.begin(); i < r.end(); i++)
 				f(i);
