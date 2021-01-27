@@ -52,25 +52,21 @@ namespace dnn
 	{
 		assert(end >= begin);
 
-		const size_t nthreads = std::thread::hardware_concurrency();
-		size_t blockSize = (end - begin) / nthreads;
+		const auto nthreads = std::thread::hardware_concurrency();
+		auto blockSize = (end - begin) / nthreads;
 		if (blockSize * nthreads < end - begin)
 			blockSize++;
 
 		std::vector<std::future<void>> futures;
 
-		size_t blockBegin = begin;
-		size_t blockEnd = blockBegin + blockSize;
+		auto blockBegin = begin;
+		auto blockEnd = blockBegin + blockSize;
 		if (blockEnd > end) 
 			blockEnd = end;
 
-		for (size_t i = 0ull; i < nthreads; i++) 
+		for (auto i = 0ull; i < nthreads; i++) 
 		{
-			futures.push_back(std::move(std::async(std::launch::async, [blockBegin, blockEnd, &f] 
-			{
-				f(blocked_range(blockBegin, blockEnd));
-			}
-			)));
+			futures.push_back(std::move(std::async(std::launch::async, [blockBegin, blockEnd, &f] {	f(blocked_range(blockBegin, blockEnd));	})));
 
 			blockBegin += blockSize;
 			if (blockBegin >= end) 
@@ -108,7 +104,7 @@ namespace dnn
 #else
 		for_(0ull, range, [&](const blocked_range &r)
 		{
-			for (size_t i = r.begin(); i < r.end(); i++)
+			for (auto i = r.begin(); i < r.end(); i++)
 				f(i);
 		});
 #endif
@@ -129,7 +125,7 @@ namespace dnn
 
 		for_(0ull, range, [&](const blocked_range & r)
 		{
-			for (size_t i = r.begin(); i < r.end(); i++)
+			for (auto i = r.begin(); i < r.end(); i++)
 				f(i);
 		});
 #endif
