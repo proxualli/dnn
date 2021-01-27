@@ -1074,8 +1074,6 @@ namespace dnn
 		{
 #ifdef DNN_LEAN
 			ZeroGradient(batchSize);
-#else
-			DNN_UNREF_PAR(batchSize);
 #endif // DNN_LEAN
 
 			const auto plain = IsPlainFormat();
