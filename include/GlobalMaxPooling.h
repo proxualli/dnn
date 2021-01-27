@@ -61,12 +61,25 @@ namespace dnn
 
 		void InitializeDescriptors(const size_t batchSize) final override
 		{
-			std::vector<dnnl::memory::desc> memDesc = std::vector<dnnl::memory::desc>({
-				dnnl::memory::desc(dnnl::memory::dims({ int(batchSize), int(InputLayer->C), int(InputLayer->H), int(InputLayer->W) }), dnnl::memory::data_type::f32, Format),
-				dnnl::memory::desc(dnnl::memory::dims({ int(batchSize), int(C), 1, 1 }), dnnl::memory::data_type::f32, Format) });
+			if (InputLayer->DstMemDesc->data.ndims == 2)
+			{
+				if (Format == dnnl::memory::format_tag::any)
+					chosenFormat = dnnl::memory::format_tag::nc;
 
-			fwdDesc = std::make_unique<dnnl::pooling_forward::primitive_desc>(dnnl::pooling_forward::primitive_desc(dnnl::pooling_forward::desc(dnnl::prop_kind::forward, dnnl::algorithm::pooling_max, *InputLayer->DstMemDesc, memDesc[1], Stride, Kernel, Padding, Padding), Device.engine));
-			bwdDesc = std::make_unique<dnnl::pooling_backward::primitive_desc>(dnnl::pooling_backward::primitive_desc(dnnl::pooling_backward::desc(dnnl::algorithm::pooling_max, memDesc[0], fwdDesc->dst_desc(), Stride, Kernel, Padding, Padding), Device.engine, *fwdDesc));
+				DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, chosenFormat));
+				DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, chosenFormat));
+			}
+			else
+			{
+				if (Format == dnnl::memory::format_tag::any)
+					chosenFormat = GetDataFmt(*InputLayer->DstMemDesc);
+
+				DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(1), dnnl::memory::dim(1) }), dnnl::memory::data_type::f32, chosenFormat));
+				DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(1), dnnl::memory::dim(1) }), dnnl::memory::data_type::f32, chosenFormat));
+			}
+
+			fwdDesc = std::make_unique<dnnl::pooling_forward::primitive_desc>(dnnl::pooling_forward::primitive_desc(dnnl::pooling_forward::desc(dnnl::prop_kind::forward, dnnl::algorithm::pooling_max, *InputLayer->DstMemDesc, *DstMemDesc, Stride, Kernel, Padding, Padding), Device.engine));
+			bwdDesc = std::make_unique<dnnl::pooling_backward::primitive_desc>(dnnl::pooling_backward::primitive_desc(dnnl::pooling_backward::desc(dnnl::algorithm::pooling_max, *InputLayer->DiffDstMemDesc, *DiffDstMemDesc, Stride, Kernel, Padding, Padding), Device.engine, *fwdDesc));
 
 			WorkspaceMemory = std::make_unique<dnnl::memory>(dnnl::memory(fwdDesc->workspace_desc(), Device.engine));
 
@@ -75,9 +88,6 @@ namespace dnn
 
 			DstMemDesc = std::make_unique<dnnl::memory::desc>(fwdDesc->dst_desc());
 			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(bwdDesc->diff_dst_desc());
-
-			if (Format == dnnl::memory::format_tag::any)
-				chosenFormat = GetDataFmt(*DstMemDesc);
 
 			bwdAddDesc = std::make_unique<dnnl::binary::primitive_desc>(dnnl::binary::primitive_desc(dnnl::binary::desc(dnnl::algorithm::binary_add, *InputLayer->DiffDstMemDesc, *InputLayer->DiffDstMemDesc, *InputLayer->DiffDstMemDesc), Device.engine));
 
