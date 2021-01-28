@@ -159,7 +159,7 @@ namespace dnn
 	{
 		inline static Float f(const Float& x, const Float& alpha = Float(-0.2)) noexcept { return x >= Float(0) ? x * Logistic::f(x) + alpha : alpha; }
 		inline static Float df(const Float& x, const Float& alpha = Float(-0.2)) noexcept { return x >= Float(0) ? Logistic::f(x) * (Float(1) - x) + x : Float(0); }
-		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(Float(-0.2))) noexcept { return select(x >= VecFloat(Float(0)), x * Logistic::fVec(x) + alpha, alpha); }
+		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(Float(-0.2))) noexcept { return select(x >= VecFloat(0), x * Logistic::fVec(x) + alpha, alpha); }
 		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(Float(-0.2))) noexcept { return select(x >= VecFloat(0), Logistic::fVec(x) * (VecFloat(1) - x) + x, VecFloat(0)); }
 	};
 
