@@ -168,6 +168,8 @@ extern "C" DNN_API bool DNNSetFormat(const bool plain)
 {
 	if (model)
 		return model->SetFormat(plain);
+		
+	return false;
 }
 
 extern "C" DNN_API void DNNGetConfusionMatrix(const size_t costLayerIndex, std::vector<std::vector<size_t>>* confusionMatrix)
