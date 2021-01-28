@@ -184,7 +184,7 @@ namespace dnn
 		//std::vector<Layer*> Outputs;
 		bool LayerBeforeCost;
 		bool SharesInput;
-		const dnnl::memory::format_tag Format;
+		dnnl::memory::format_tag Format;
 		const bool Scaling;
 		const bool HasBias;
 		const bool HasWeights;
