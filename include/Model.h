@@ -257,7 +257,7 @@ namespace dnn
 		
 		bool SetFormat(bool plain = false)
 		{
-			if ((model->TaskState.load() != TaskStates::Running) && (model->State.load() != States::Training) && (model->State.load() != States::Testing))
+			if ((TaskState.load() != TaskStates::Running) && (State.load() != States::Training) && (State.load() != States::Testing))
 			{
 				Format = plain ? dnnl::memory::format_tag::nchw : dnnl::memory::format_tag::any;
 				for (auto &layer : Layers)
