@@ -1,9 +1,9 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.5.0 FATAL_ERROR)
 
-PROJECT(NNPACK-download NONE)
+PROJECT(nnpack-download NONE)
 
 INCLUDE(ExternalProject)
-ExternalProject_Add(NNPACK
+ExternalProject_Add(nnpack
 	GIT_REPOSITORY https://github.com/zulma46/NNPACK.git
 	GIT_TAG main
 	SOURCE_DIR "${DNN_DEPENDENCIES_SOURCE_DIR}/NNPACK"
