@@ -300,6 +300,7 @@ include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/oneDNN/src)
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/vectorclass)
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/magic_enum/include)
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/CImg)
+include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/NNPACK)
 
 # ---[ Configure ZLIB
 IF(NOT TARGET zlib)
@@ -365,6 +366,14 @@ IF(NOT TARGET magic_enum)
     "${MAGIC_ENUM_SOURCE_DIR}"
     "${DNN_DEPENDENCIES_BINARY_DIR}/magic_enum")
 ENDIF()
+
+# ---[ Configure NNPACK
+IF(NOT TARGET NNPACK)
+  ADD_SUBDIRECTORY(
+    "${NNPACK_SOURCE_DIR}"
+    "${DNN_DEPENDENCIES_BINARY_DIR}/NNPACK")
+ENDIF()
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC NNPACK)
 
 TARGET_LINK_LIBRARIES(test PUBLIC ${PROJECT_NAME})
 
