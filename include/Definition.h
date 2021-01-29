@@ -682,8 +682,8 @@ namespace dnn
 
 					auto ok = false;
 					auto datasets = magic_enum::enum_names<Datasets>();
-					for (auto dataset : datasets)
-						if (params == std::string(dataset))
+					for (auto set : datasets)
+						if (params == std::string(set))
 							ok = true;
 					if (!ok)
 					{

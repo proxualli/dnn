@@ -41,7 +41,7 @@ namespace dnn
 		const size_t DilationKernelW;
 
 		Convolution(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const size_t c, const size_t kernelH, const size_t kernelW, const size_t strideH, const size_t strideW, const size_t dilationH, const size_t dilationW, const size_t padH, const size_t padW, const size_t groups, const bool hasBias) :
-			Layer(device, format, name, LayerTypes::Convolution, groups* (inputs[0]->C / groups)* (c / groups)* kernelH* kernelW, c, c, inputs[0]->D, (((inputs[0]->H - (1 + (kernelH - 1) * dilationH)) + (padH * 2)) / strideH) + 1, (((inputs[0]->W - (1 + (kernelW - 1) * dilationW)) + (padW * 2)) / strideW) + 1, 0, padH, padW, inputs, hasBias),
+			Layer(device, format, name, LayerTypes::Convolution, groups * (inputs[0]->C / groups) * (c / groups) * kernelH * kernelW, c, c, inputs[0]->D, (((inputs[0]->H - (1 + (kernelH - 1) * dilationH)) + (padH * 2)) / strideH) + 1, (((inputs[0]->W - (1 + (kernelW - 1) * dilationW)) + (padW * 2)) / strideW) + 1, 0, padH, padW, inputs, hasBias),
 			Groups(groups),
 			KernelH(kernelH),
 			KernelW(kernelW),
@@ -164,6 +164,8 @@ namespace dnn
 
 			if (Format == dnnl::memory::format_tag::any)
 				chosenFormat = GetDataFmt(*DstMemDesc);
+			else
+				chosenFormat = PlainFmt;
 
 			reorderFwdSrc = fwdDesc->src_desc() != *InputLayer->DstMemDesc;
 			

@@ -339,7 +339,7 @@ namespace dnn
 		}
 
 		bool IsPlainFormat() const { 
-			return Format == dnnl::memory::format_tag::ab || 
+			return chosenFormat == dnnl::memory::format_tag::ab || 
 				Format == dnnl::memory::format_tag::abc || 
 				Format == dnnl::memory::format_tag::abcd || 
 				Format == dnnl::memory::format_tag::abcde; 

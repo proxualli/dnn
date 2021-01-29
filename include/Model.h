@@ -260,9 +260,9 @@ namespace dnn
 			if (TaskState.load() == TaskStates::Stopped)
 			{
 				Format = plain ? dnnl::memory::format_tag::nchw : dnnl::memory::format_tag::any;
-				for (auto &layer : Layers)
+				for (auto& layer : Layers)
 					layer->Format = Format;
-
+				
 				return true;
 			}
 			else
