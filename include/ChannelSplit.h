@@ -1,6 +1,5 @@
 #pragma once
 #include "Layer.h"
-#include <stdexcept>
 
 namespace dnn
 {
