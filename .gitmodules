@@ -19,3 +19,6 @@
 [submodule "deps/vectorclass"]
 	path = deps/vectorclass
 	url = https://github.com/zamir1001/vectorclass.git
+[submodule "deps/NNPACK"]
+	path = deps/NNPACK
+	url = https://github.com/zulma46/NNPACK.git
