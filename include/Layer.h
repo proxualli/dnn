@@ -151,8 +151,8 @@ namespace dnn
 	{
 		const dnnl::engine engine;
 		dnnl::stream stream;
-
-		Device(const dnnl::engine& eng, dnnl::stream str) : engine(eng), stream(str) {}
+		
+		Device(const dnnl::engine& eng, dnnl::stream str) : engine(eng), stream(str) { }
 	};
 	
 	class Layer
@@ -1152,12 +1152,12 @@ namespace dnn
 			if (!IsNormalizationUnscaled() && HasWeights)
 			{
 				auto sum = Float(0);
-#pragma omp simd
+				PRAGMA_OMP_SIMD()
 				for (auto i = 0ull; i < WeightsD1.size(); i++)
 					sum += FloatSquare(WeightsD1[i]);
 
 				const auto l2norm = treshold / std::sqrt(sum);
-#pragma omp simd
+				PRAGMA_OMP_SIMD()
 				for (auto i = 0ull; i < WeightsD1.size(); i++)
 					if (std::abs(WeightsD1[i]) > treshold)
 						WeightsD1[i] *= l2norm;
@@ -1165,12 +1165,12 @@ namespace dnn
 				if (HasBias)
 				{
 					sum = Float(0);
-#pragma omp simd
+					PRAGMA_OMP_SIMD()
 					for (auto i = 0ull; i < BiasesD1.size(); i++)
 						sum += FloatSquare(BiasesD1[i]);
 
 					const auto l2norm = treshold / std::sqrt(sum);
-#pragma omp simd
+					PRAGMA_OMP_SIMD()
 					for (auto i = 0ull; i < BiasesD1.size(); i++)
 						if (std::abs(BiasesD1[i]) > treshold)
 							BiasesD1[i] *= l2norm;
@@ -1186,7 +1186,7 @@ namespace dnn
 			const auto eps = AdaDeltaEps;
 			const auto batchRecip = Float(1) / rate.BatchSize;
 
-#pragma omp simd
+			PRAGMA_OMP_SIMD()
 			for (auto i = 0ull; i < Weights.size(); i++)
 			{
 				WeightsPar1[i] = (momentum * WeightsPar1[i]) + (oneMinMomentum * FloatSquare(WeightsD1[i] * batchRecip));
@@ -1199,7 +1199,7 @@ namespace dnn
 			{
 				const auto lr = -rate.MaximumRate * BiasesLRM;
 
-#pragma omp simd
+				PRAGMA_OMP_SIMD()
 				for (auto i = 0ull; i < BiasCount; i++)
 				{
 					BiasesPar1[i] = (momentum * BiasesPar1[i]) + (oneMinMomentum * FloatSquare(BiasesD1[i] * batchRecip));
@@ -1216,7 +1216,7 @@ namespace dnn
 			const auto eps = AdaGradEps;
 			const auto batchRecip = Float(1) / rate.BatchSize;
 
-#pragma omp simd
+			PRAGMA_OMP_SIMD()
 			for (auto i = 0ull; i < Weights.size(); i++)
 			{
 				WeightsPar1[i] += FloatSquare(WeightsD1[i] * batchRecip);
@@ -1227,7 +1227,7 @@ namespace dnn
 			{
 				const auto lr = rate.MaximumRate * BiasesLRM;
 
-#pragma omp simd
+				PRAGMA_OMP_SIMD()
 				for (auto i = 0ull; i < BiasCount; i++)
 				{
 					BiasesPar1[i] += FloatSquare(BiasesD1[i] * batchRecip);
@@ -1250,7 +1250,7 @@ namespace dnn
 			const auto oneMinusB2 = Float(1) - b2;
 			const auto batchRecip = Float(1) / rate.BatchSize;
 
-#pragma omp simd
+			PRAGMA_OMP_SIMD()
 			for (auto i = 0ull; i < Weights.size(); i++)
 			{
 				WeightsPar1[i] = (beta1 * WeightsPar1[i]) + (oneMinusBeta1 * WeightsD1[i]);
@@ -1262,7 +1262,7 @@ namespace dnn
 			{
 				const auto lr = rate.MaximumRate * BiasesLRM;
 
-#pragma omp simd
+				PRAGMA_OMP_SIMD()
 				for (auto i = 0ull; i < BiasCount; i++)
 				{
 					BiasesPar1[i] = (beta1 * BiasesPar1[i]) + (oneMinusBeta1 * BiasesD1[i]);
@@ -1321,7 +1321,7 @@ namespace dnn
 			const auto momentumPlusOne = momentum + Float(1);
 			const auto batchRecip = Float(1) / rate.BatchSize * lr;
 
-#pragma omp simd
+			PRAGMA_OMP_SIMD()
 			for (auto i = 0ull; i < Weights.size(); i++)
 			{
 				const auto V = momentum * WeightsPar1[i] - (WeightsD1[i] * batchRecip + Weights[i] * l2Penalty);
@@ -1334,7 +1334,7 @@ namespace dnn
 				const auto lr = rate.MaximumRate * BiasesLRM;
 				const auto batchRecip = Float(1) / rate.BatchSize * lr;
 
-#pragma omp simd
+				PRAGMA_OMP_SIMD()
 				for (auto i = 0ull; i < BiasCount; i++)
 				{
 					const auto V = momentum * BiasesPar1[i] - BiasesD1[i] * batchRecip;
@@ -1352,7 +1352,7 @@ namespace dnn
 			const auto oneMinusMomentum = Float(1) - momentum;
 			const auto batchRecip = Float(1) / rate.BatchSize;
 
-#pragma omp simd
+			PRAGMA_OMP_SIMD()
 			for (auto i = 0ull; i < Weights.size(); i++)
 			{
 				WeightsPar1[i] = (momentum * WeightsPar1[i]) + (oneMinusMomentum * FloatSquare(WeightsD1[i] * batchRecip));
@@ -1363,7 +1363,7 @@ namespace dnn
 			{
 				const auto lr = rate.MaximumRate * BiasesLRM / rate.BatchSize;
 
-#pragma omp simd
+				PRAGMA_OMP_SIMD()
 				for (auto i = 0ull; i < BiasCount; i++)
 				{
 					BiasesPar1[i] = (momentum * BiasesPar1[i]) + (oneMinusMomentum * FloatSquare(BiasesD1[i] * batchRecip));
@@ -1377,7 +1377,7 @@ namespace dnn
 			const auto lr = rate.MaximumRate * WeightsLRM / rate.BatchSize;
 			const auto l2Penalty = rate.MaximumRate * WeightsLRM * rate.L2Penalty * WeightsWDM;
 
-#pragma omp simd
+			PRAGMA_OMP_SIMD()
 			for (auto i = 0ull; i < Weights.size(); i++)
 				Weights[i] -= (lr * WeightsD1[i]) - (l2Penalty * Weights[i]);
 
@@ -1385,7 +1385,7 @@ namespace dnn
 			{
 				const auto lr = rate.MaximumRate * BiasesLRM / rate.BatchSize;;
 
-#pragma omp simd
+				PRAGMA_OMP_SIMD()
 				for (auto i = 0ull; i < BiasCount; i++)
 					Biases[i] -= lr * BiasesD1[i];
 			}
@@ -1399,7 +1399,7 @@ namespace dnn
 			const auto lr = rate.MaximumRate * WeightsLRM / rate.BatchSize;
 			const auto l2Penalty = rate.MaximumRate * WeightsLRM * rate.L2Penalty * WeightsWDM;
 
-#pragma omp simd
+			PRAGMA_OMP_SIMD()
 			for (auto i = 0ull; i < Weights.size(); i++)
 			{
 				WeightsPar1[i] = (momentum * WeightsPar1[i]) - (lr * WeightsD1[i]) - (l2Penalty * Weights[i]);
@@ -1410,7 +1410,7 @@ namespace dnn
 			{
 				const auto lr = rate.MaximumRate * BiasesLRM / rate.BatchSize;
 
-#pragma omp simd
+				PRAGMA_OMP_SIMD()
 				for (auto i = 0ull; i < BiasCount; i++)
 				{
 					BiasesPar1[i] = momentum * BiasesPar1[i] - lr * BiasesD1[i];
@@ -1440,7 +1440,7 @@ namespace dnn
 			{
 				const auto rt = std::sqrt(((pt - Float(4)) * (pt - Float(2)) * pInf) / ((pInf - Float(4)) * (pInf - Float(2)) * pt));
 
-#pragma omp simd
+				PRAGMA_OMP_SIMD()
 				for (auto i = 0ull; i < Weights.size(); i++)
 				{
 					WeightsPar1[i] = (beta1 * WeightsPar1[i]) + (oneMinusBeta1 * WeightsD1[i]);  // mt
@@ -1452,7 +1452,7 @@ namespace dnn
 				{
 					const auto lr = rate.MaximumRate * BiasesLRM;
 
-#pragma omp simd
+					PRAGMA_OMP_SIMD()
 					for (auto i = 0ull; i < BiasCount; i++)
 					{
 						BiasesPar1[i] = (beta1 * BiasesPar1[i]) + (oneMinusBeta1 * BiasesD1[i]);
@@ -1463,7 +1463,7 @@ namespace dnn
 			}
 			else
 			{
-#pragma omp simd
+				PRAGMA_OMP_SIMD()
 				for (auto i = 0ull; i < Weights.size(); i++)
 				{
 					WeightsPar1[i] = (beta1 * WeightsPar1[i]) + (oneMinusBeta1 * WeightsD1[i]);  // mt
@@ -1475,7 +1475,7 @@ namespace dnn
 				{
 					const auto lr = rate.MaximumRate * BiasesLRM;
 
-#pragma omp simd
+					PRAGMA_OMP_SIMD()
 					for (auto i = 0ull; i < BiasCount; i++)
 					{
 						BiasesPar1[i] = (beta1 * BiasesPar1[i]) + (oneMinusBeta1 * BiasesD1[i]);

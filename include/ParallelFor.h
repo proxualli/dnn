@@ -1,8 +1,6 @@
 #pragma once
 
-#if defined DNN_OMP
-#include <omp.h>
-#else
+#ifndef DNN_OMP
 #include <cassert>
 #include <cstdio>
 #include <limits>
@@ -15,7 +13,7 @@
 #endif
 
 #ifndef DNN_UNREF_PAR
-  #if defined(_MSC_VER)
+  #ifdef _MSC_VER
 	#define DNN_UNREF_PAR(P) UNREFERENCED_PARAMETER(P)
   #else
 	#define DNN_UNREF_PAR(P) (void)P
@@ -24,7 +22,7 @@
 
 namespace dnn
 {
-#if !defined DNN_OMP
+#ifndef DNN_OMP
 	struct blocked_range 
 	{
 		typedef size_t const_iterator;
@@ -94,10 +92,10 @@ namespace dnn
 	template <typename Func>
 	inline void for_i(const size_t range, const Func& f)
 	{
-#if defined DNN_OMP
-		#pragma omp parallel num_threads(omp_get_max_threads())
+#ifdef DNN_OMP
+		PRAGMA_OMP_PARALLEL_THREADS(omp_get_max_threads())
 		{
-			#pragma omp for schedule(static,1)
+			PRAGMA_OMP_FOR_SCHEDULE_STATIC(1)
 			for (auto i = 0ll; i < static_cast<long long>(range); i++)
 				f(i);
 		}
@@ -113,10 +111,10 @@ namespace dnn
 	template <typename Func>
 	inline void for_i(const size_t range, const size_t threads, const Func& f)
 	{
-#if defined DNN_OMP
-		#pragma omp parallel num_threads(static_cast<int>(threads))
+#ifdef DNN_OMP
+		PRAGMA_OMP_PARALLEL_THREADS(static_cast<int>(threads))
 		{
-			#pragma omp for schedule(static,1)
+			PRAGMA_OMP_FOR_SCHEDULE_STATIC(1)
 			for (auto i = 0ll; i < static_cast<long long>(range); i++)
 				f(i);
 		}

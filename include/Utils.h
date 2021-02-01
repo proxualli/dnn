@@ -1,5 +1,5 @@
 ﻿#pragma once
-#if defined _WIN32 || defined __CYGWIN__ || defined __MINGW32__
+#if defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW32__)
 #include "stdafx.h"
 #else
 #include <sys/sysinfo.h>
@@ -58,19 +58,19 @@
 
 #include "magic_enum.hpp"
 
-#include "AlignedAllocator.h"
-#include "ParallelFor.h"
+#ifdef DNN_OMP
+#include <omp.h>
+#endif
 
 #include "dnnl.hpp"
 #include "dnnl_debug.h"
 
-#if DNNL_GPU_RUNTIME == DNNL_RUNTIME_OCL
-#include "dnnl_ocl.hpp"
-#elif DNNL_GPU_RUNTIME == DNNL_RUNTIME_SYCL
-#include "dnnl_sycl.hpp"
-#endif
+#define for_ for
+#define CONCAt2(a, b) a##b
+#define CONCAT2(a, b) CONCAt2(a, b)
+#define CHAIn2(a, b) a b
+#define CHAIN2(a, b) CHAIn2(a, b)
 
-#if DNNL_CPU_THREADING_RUNTIME == DNNL_RUNTIME_OMP
 #ifdef _MSC_VER
 #define PRAGMA_MACRo(x) __pragma(x)
 #define PRAGMA_MACRO(x) PRAGMA_MACRo(x)
@@ -79,19 +79,41 @@
 #define PRAGMA_MACRO(x) PRAGMA_MACRo(x)
 #endif
 
-// MSVC doesn't support collapse clause in omp parallel
-#if defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER)
+#if DNNL_CPU_THREADING_RUNTIME == DNNL_RUNTIME_OMP
+#define PRAGMA_OMP(...) PRAGMA_MACRO(CHAIN2(omp, __VA_ARGS__))
+#define PRAGMA_OMP_SIMD(...) PRAGMA_MACRO(CHAIN2(omp, simd __VA_ARGS__))
+#define PRAGMA_OMP_PARALLEL_FOR_COLLAPSE(n) PRAGMA_MACRO(omp parallel for collapse(n))
+#define PRAGMA_OMP_PARALLEL_THREADS(n) PRAGMA_MACRO(omp parallel num_threads(n))
+#define PRAGMA_OMP_FOR_SCHEDULE_STATIC(n) PRAGMA_MACRO(omp for schedule(static,n))
+#define OMP_GET_THREAD_NUM() omp_get_thread_num()
+#define OMP_GET_NUM_THREADS() omp_get_num_threads()
+#else
 #define collapse(x)
+#define PRAGMA_OMP(...)
+#define PRAGMA_OMP_SIMD(...)
+#define PRAGMA_OMP_PARALLEL_FOR_COLLAPSE(n)
+#define PRAGMA_OMP_PARALLEL_THREADS(n)
+#define PRAGMA_OMP_FOR_SCHEDULE_STATIC(n)
+#define OMP_GET_THREAD_NUM() 0
+#define OMP_GET_NUM_THREADS() 1
 #endif
 
-#define PRAGMA_OMP_PARALLEL_FOR_COLLAPSE(n) PRAGMA_MACRO(omp parallel for collapse(n))
-#else // DNNL_CPU_THREADING_RUNTIME == DNNL_RUNTIME_OMP
-#define PRAGMA_OMP_PARALLEL_FOR_COLLAPSE(n)
-#endif
+#if (defined(__clang_major__) \
+        && (__clang_major__ < 3 \
+                || (__clang_major__ == 3 && __clang_minor__ < 9))) \
+        || (defined(__INTEL_COMPILER) && __INTEL_COMPILER < 1700) \
+        || (!defined(__INTEL_COMPILER) && !defined(__clang__) \
+                && (defined(_MSC_VER) || __GNUC__ < 6 \
+                        || (__GNUC__ == 6 && __GNUC_MINOR__ < 1)))
+#define simdlen(x)
+#endif // long simdlen if
+
+#include "AlignedAllocator.h"
+#include "ParallelFor.h"
 
 namespace dnn
 {
-#if defined(_MSC_VER)
+#ifdef _MSC_VER
 	#define DNN_ALIGN(alignment) __declspec(align(alignment))
 #else
 	#define DNN_ALIGN(alignment) __attribute__((__aligned__(alignment)))
@@ -116,14 +138,14 @@ namespace dnn
 	constexpr auto GetColorFromRange(const Float& range, const Float& minimum, const Float& value) noexcept { return Saturate<Float>(Float(255) - ((value - minimum) * range)); }
 	constexpr auto GetColorRange(const Float& min, const Float& max) noexcept { return (min == max) ? Float(0) : Float(255) / ((std::signbit(min) && std::signbit(max)) ? -(min + max) : (max - min)); }
 	
-#if defined _WIN32 || defined __CYGWIN__ || defined __MINGW32__
+#if defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW32__)
 	static const auto nwl = std::string("\r\n");
 #else // assuming Linux
 	static const auto nwl = std::string("\n");
 #endif
 	static const auto tab = std::string("\t");
 	static const auto dtab = std::string("\t\t");
-
+	
 	constexpr auto PlainFmt = dnnl::memory::format_tag::nchw;
 
 #if defined(DNN_AVX512)
@@ -307,7 +329,7 @@ namespace dnn
 
 	static auto GetTotalFreeMemory()
 	{
-#if defined _WIN32 || defined __CYGWIN__ || defined __MINGW32__
+#if defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW32__)
 		MEMORYSTATUSEX statusEx;
 		statusEx.dwLength = sizeof(MEMORYSTATUSEX);
 		GlobalMemoryStatusEx(&statusEx);
@@ -397,124 +419,4 @@ namespace dnn
 		auto endIndex = startIndex + sizeof(buffer);
 		std::reverse(startIndex, endIndex);
 	}
-
-	inline dnnl::memory::dim product(const dnnl::memory::dims &dims) 
-	{
-    	return std::accumulate(dims.begin(), dims.end(), (dnnl::memory::dim)1, std::multiplies<dnnl::memory::dim>());
-    }
-
-	// Read from memory, write to handle
-	inline void read_from_dnnl_memory(void *handle, dnnl::memory &mem) 
-	{
-    	dnnl::engine eng = mem.get_engine();
-    	size_t size = mem.get_desc().get_size();
-
-#ifdef DNNL_WITH_SYCL
-    bool is_cpu_sycl = (DNNL_CPU_RUNTIME == DNNL_RUNTIME_SYCL
-            && eng.get_kind() == dnnl::engine::kind::cpu);
-    bool is_gpu_sycl = (DNNL_GPU_RUNTIME == DNNL_RUNTIME_SYCL
-            && eng.get_kind() == dnnl::engine::kind::gpu);
-    if (is_cpu_sycl || is_gpu_sycl) {
-        auto mkind = dnnl::sycl_interop::get_memory_kind(mem);
-        if (mkind == dnnl::sycl_interop::memory_kind::buffer) {
-            auto buffer = dnnl::sycl_interop::get_buffer<uint8_t>(mem);
-            auto src = buffer.get_access<cl::sycl::access::mode::read>();
-            uint8_t *src_ptr = src.get_pointer();
-            for (size_t i = 0; i < size; ++i)
-                ((uint8_t *)handle)[i] = src_ptr[i];
-        } else {
-            assert(mkind == dnnl::sycl_interop::memory_kind::usm);
-            uint8_t *src_ptr = (uint8_t *)mem.get_data_handle();
-            if (is_cpu_sycl) {
-                for (size_t i = 0; i < size; ++i)
-                    ((uint8_t *)handle)[i] = src_ptr[i];
-            } else {
-                auto sycl_queue
-                        = dnnl::sycl_interop::get_queue(dnnl::stream(eng));
-                sycl_queue.memcpy(handle, src_ptr, size).wait();
-            }
-        }
-        return;
-    }
-#endif
-#if DNNL_GPU_RUNTIME == DNNL_RUNTIME_OCL
-    if (eng.get_kind() == dnnl::engine::kind::gpu) {
-        dnnl::stream s(eng);
-        cl_command_queue q = dnnl::ocl_interop::get_command_queue(s);
-        cl_mem m = dnnl::ocl_interop::get_mem_object(mem);
-
-        cl_int ret = clEnqueueReadBuffer(
-                q, m, CL_TRUE, 0, size, handle, 0, NULL, NULL);
-        if (ret != CL_SUCCESS)
-            throw std::runtime_error("clEnqueueReadBuffer failed.");
-        return;
-    }
-#endif
-
-    if (eng.get_kind() == dnnl::engine::kind::cpu) {
-        uint8_t *src = static_cast<uint8_t *>(mem.get_data_handle());
-        for (size_t i = 0; i < size; ++i)
-            ((uint8_t *)handle)[i] = src[i];
-        return;
-    }
-
-    assert(!"not expected");
-}
-
-// Read from handle, write to memory
-inline void write_to_dnnl_memory(void *handle, dnnl::memory &mem) {
-    dnnl::engine eng = mem.get_engine();
-    size_t size = mem.get_desc().get_size();
-
-#ifdef DNNL_WITH_SYCL
-    bool is_cpu_sycl = (DNNL_CPU_RUNTIME == DNNL_RUNTIME_SYCL
-            && eng.get_kind() == dnnl::engine::kind::cpu);
-    bool is_gpu_sycl = (DNNL_GPU_RUNTIME == DNNL_RUNTIME_SYCL
-            && eng.get_kind() == dnnl::engine::kind::gpu);
-    if (is_cpu_sycl || is_gpu_sycl) {
-        auto mkind = dnnl::sycl_interop::get_memory_kind(mem);
-        if (mkind == dnnl::sycl_interop::memory_kind::buffer) {
-            auto buffer = dnnl::sycl_interop::get_buffer<uint8_t>(mem);
-            auto dst = buffer.get_access<cl::sycl::access::mode::write>();
-            uint8_t *dst_ptr = dst.get_pointer();
-            for (size_t i = 0; i < size; ++i)
-                dst_ptr[i] = ((uint8_t *)handle)[i];
-        } else {
-            assert(mkind == dnnl::sycl_interop::memory_kind::usm);
-            uint8_t *dst_ptr = (uint8_t *)mem.get_data_handle();
-            if (is_cpu_sycl) {
-                for (size_t i = 0; i < size; ++i)
-                    dst_ptr[i] = ((uint8_t *)handle)[i];
-            } else {
-                auto sycl_queue
-                        = dnnl::sycl_interop::get_queue(dnnl::stream(eng));
-                sycl_queue.memcpy(dst_ptr, handle, size).wait();
-            }
-        }
-        return;
-    }
-#endif
-#if DNNL_GPU_RUNTIME == DNNL_RUNTIME_OCL
-    if (eng.get_kind() == dnnl::engine::kind::gpu) {
-        dnnl::stream s(eng);
-        cl_command_queue q = dnnl::ocl_interop::get_command_queue(s);
-        cl_mem m = dnnl::ocl_interop::get_mem_object(mem);
-
-        cl_int ret = clEnqueueWriteBuffer(
-                q, m, CL_TRUE, 0, size, handle, 0, NULL, NULL);
-        if (ret != CL_SUCCESS)
-            throw std::runtime_error("clEnqueueWriteBuffer failed.");
-        return;
-    }
-#endif
-
-    if (eng.get_kind() == dnnl::engine::kind::cpu) {
-        uint8_t *dst = static_cast<uint8_t *>(mem.get_data_handle());
-        for (size_t i = 0; i < size; ++i)
-            dst[i] = ((uint8_t *)handle)[i];
-        return;
-    }
-
-    assert(!"not expected");
-}
 }
