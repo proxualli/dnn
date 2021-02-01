@@ -70,7 +70,6 @@
 #include "dnnl_sycl.hpp"
 #endif
 
-#define for_ for
 #define CONCAt2(a, b) a##b
 #define CONCAT2(a, b) CONCAt2(a, b)
 #define CHAIn2(a, b) a b
