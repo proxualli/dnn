@@ -2047,7 +2047,7 @@ namespace dnn
 						alpha = Float(0);
 						break;
 					default:
-					    alpha = Float(0);
+						alpha = Float(0);
 						beta = Float(0);
 					}
 				}

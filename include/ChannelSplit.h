@@ -144,7 +144,7 @@ namespace dnn
 			else
 			{
 #endif
-                if (training)
+				if (training)
 				{
 					if (!plain)
 					{

@@ -115,7 +115,7 @@ namespace dnn
 		inline static VecFloat dfVec(const VecFloat& x) noexcept { return select(x > VecFloat(0), VecFloat(1), VecFloat(0)); }
 	};
 
-    struct Selu
+	struct Selu
 	{
 		inline static Float f(const Float& x) noexcept { return Float(1.0507009873554804934193349852946) * (x > Float(0) ? x : Float(1.6732632423543772848170429916717) * (std::exp(x) - Float(1))); }
 		inline static Float df(const Float& x) noexcept { return x > Float(0) ? Float(1.0507009873554804934193349852946) : Float(1.7580993408473768599402175208123) * std::exp(x); }
@@ -366,7 +366,7 @@ namespace dnn
 				case Activations::HardLogistic:
 				case Activations::LogSoftmax:
 				case Activations::PRelu:
-			    case Activations::Softmax:
+				case Activations::Softmax:
 				    break;
 
 				case Activations::Abs:
