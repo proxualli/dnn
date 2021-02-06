@@ -176,6 +176,7 @@ namespace dnn
 							for (auto i = start; i < part; i += VectorSize)
 								vecMean += VecFloat().load_a(&InputLayer->Neurons[i]);
 							const auto end = start + HW;
+							PRAGMA_OMP_SIMD()
 							for (auto i = part; i < end; i++)
 								mean += InputLayer->Neurons[i];
 						}
@@ -191,6 +192,7 @@ namespace dnn
 							for (auto i = start; i < part; i += VectorSize)
 								vecVariance += square(VecFloat().load_a(&InputLayer->Neurons[i]) - mean);
 							const auto end = start + HW;
+							PRAGMA_OMP_SIMD()
 							for (auto i = part; i < end; i++)
 								variance += FloatSquare(InputLayer->Neurons[i] - mean);
 						}

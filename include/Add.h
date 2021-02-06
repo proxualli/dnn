@@ -272,6 +272,7 @@ namespace dnn
 						In += D1;
 						In.store_a(&Inputs[1]->NeuronsD1[cdhw]);
 					}
+					PRAGMA_OMP_SIMD()
 					for (auto cdhw = part; cdhw < size; cdhw++)
 					{
 						Inputs[0]->NeuronsD1[cdhw] += NeuronsD1[cdhw];
@@ -385,6 +386,7 @@ namespace dnn
 							In += D1;
 							In.store_a(&Inputs[3]->NeuronsD1[cdhw]);
 						}
+						PRAGMA_OMP_SIMD()
 						for (auto cdhw = end; cdhw < start + size; cdhw++)
 						{
 							Inputs[0]->NeuronsD1[cdhw] += NeuronsD1[cdhw];
@@ -428,6 +430,7 @@ namespace dnn
 							In += D1;
 							In.store_a(&Inputs[4]->NeuronsD1[cdhw]);
 						}
+						PRAGMA_OMP_SIMD()
 						for (auto cdhw = end; cdhw < start + size; cdhw++)
 						{
 							Inputs[0]->NeuronsD1[cdhw] += NeuronsD1[cdhw];
@@ -521,6 +524,7 @@ namespace dnn
 							Inputs[7]->NeuronsD1[cdhw] += NeuronsD1[cdhw];
 						}
 						for (auto i = 8ull; i < inputs; i++)
+							PRAGMA_OMP_SIMD()
 							for (auto cdhw = start; cdhw < end; cdhw++)
 								Inputs[i]->NeuronsD1[cdhw] += NeuronsD1[cdhw];
 					});

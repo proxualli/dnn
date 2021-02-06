@@ -217,13 +217,13 @@ int main(int argc, char* argv[])
     p.Script = Scripts::shufflenetv2;
     p.Dataset = Datasets::cifar10;
     p.C = 3;
-    p.H = 56;
-    p.W = 56;
-    p.PadH = 8;
-    p.PadW = 8;
+    p.H = 32;
+    p.W = 32;
+    p.PadH = 4;
+    p.PadW = 4;
     p.MirrorPad = false;
-    p.Groups = 4;
-    p.Iterations = 5;
+    p.Groups = 3;
+    p.Iterations = 6;
     p.Width = 10;
     p.Relu = true;
     p.Dropout = Float(0);
@@ -264,7 +264,7 @@ int main(int argc, char* argv[])
 
             DNNSetNewEpochDelegate(&NewEpoch);
             DNNPersistOptimizer(persistOptimizer);
-            DNNAddLearningRateSGDR(true, 1, 0.05f, 128, 1, 200, 1, 0.0001f, 0.0005f, 0.9f, 1.0f, 20, true, false, 0.0f, 0.7f, 0.7f, 0.7f, 20, 0.7f, 0, 10.0f, 12.0f);
+            DNNAddLearningRateSGDR(true, 1, 0.05f, 160, 1, 200, 1, 0.0001f, 0.0005f, 0.9f, 1.0f, 20, true, false, 0.0f, 0.7f, 0.7f, 0.7f, 20, 0.7f, 0, 10.0f, 12.0f);
             DNNTraining();
 
             GetTrainingProgress(1, *trainingSamples, *testingSamples);

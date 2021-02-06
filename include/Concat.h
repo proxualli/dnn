@@ -164,16 +164,16 @@ namespace dnn
 #endif
 					if (!plain)
 					{
-						for_i(batchSize, threads, [=](size_t b)
+						for_i(batchSize, threads, [=](size_t n)
 						{
-							const auto outputSampleOffset = b * PaddedCDHW;
+							const auto outputSampleOffset = n * PaddedCDHW;
 							auto channelOffset = 0ull;
 							size_t inputIndex, outputIndex;
 							const auto vecZero = VecFloat(0);
 							VecFloat In;
 							for (auto input = 0ull; input < Inputs.size(); input++)
 							{
-								const auto inputSampleOffset = b * Inputs[input]->PaddedCDHW;
+								const auto inputSampleOffset = n * Inputs[input]->PaddedCDHW;
 								for (auto c = channelOffset; c < channelOffset + Inputs[input]->PaddedC; c += VectorSize)
 								{
 									inputIndex = ((c - channelOffset) * HW) + inputSampleOffset;
@@ -191,14 +191,14 @@ namespace dnn
 					}
 					else
 					{
-						for_i(batchSize, threads, [=](size_t b)
+						for_i(batchSize, threads, [=](size_t n)
 						{
-							const auto outputSampleOffset = b * CDHW;
+							const auto outputSampleOffset = n * CDHW;
 							auto channelOffset = 0ull;
 							size_t inputIndex, outputIndex;
 							for (auto input = 0ull; input < Inputs.size(); input++)
 							{
-								const auto inputSampleOffset = b * Inputs[input]->CDHW;
+								const auto inputSampleOffset = n * Inputs[input]->CDHW;
 								for (auto c = channelOffset; c < channelOffset + Inputs[input]->C; c++)
 								{
 									inputIndex = ((c - channelOffset) * HW) + inputSampleOffset;
@@ -288,15 +288,15 @@ namespace dnn
 				if (!plain)
 				{
 					const auto strideH = HW * VectorSize;
-					for_i(batchSize, threads, [=](size_t b)
+					for_i(batchSize, threads, [=](size_t n)
 					{
-						const auto outputSampleOffset = b * PaddedCDHW;
+						const auto outputSampleOffset = n * PaddedCDHW;
 						auto channelOffset = 0ull;
 						size_t inputIndex, outputIndex;
 						VecFloat inputD1, D1;
 						for (auto input = 0ull; input < Inputs.size(); input++)
 						{
-							const auto inputSampleOffset = b * Inputs[input]->PaddedCDHW;
+							const auto inputSampleOffset = n * Inputs[input]->PaddedCDHW;
 							for (auto c = channelOffset; c < channelOffset + Inputs[input]->PaddedC; c += VectorSize)
 							{
 							    inputIndex = ((c - channelOffset) * HW) + inputSampleOffset;
@@ -315,14 +315,14 @@ namespace dnn
 				}
 				else
 				{
-					for_i(batchSize, threads, [=](size_t b)
+					for_i(batchSize, threads, [=](size_t n)
 					{
-						const auto outputSampleOffset = b * CDHW;
+						const auto outputSampleOffset = n * CDHW;
 						auto channelOffset = 0ull;
 						size_t inputIndex, outputIndex;
 						for (auto input = 0ull; input < Inputs.size(); input++)
 						{
-							const auto inputSampleOffset = b * Inputs[input]->CDHW;
+							const auto inputSampleOffset = n * Inputs[input]->CDHW;
 							for (auto c = channelOffset; c < channelOffset + Inputs[input]->C; c++)
 							{
 								inputIndex = ((c - channelOffset) * HW) + inputSampleOffset;

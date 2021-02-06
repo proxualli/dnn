@@ -110,6 +110,7 @@ namespace dnn
 #endif // DNN_LEAN
 					}
 				for (auto i = 1ull; i < inputs; i++)
+					PRAGMA_OMP_SIMD()
 					for (auto cdhw = 0ull; cdhw < CDHW; cdhw++)
 						Neurons[cdhw] /= Inputs[i]->Neurons[cdhw];
 			}
@@ -233,6 +234,7 @@ namespace dnn
 							{
 								const auto start = n * CDHW;
 								const auto end = start + CDHW;
+								PRAGMA_OMP_SIMD()
 								for (auto cdhw = start; cdhw < end; cdhw++)
 								{
 									Neurons[cdhw] = Inputs[0]->Neurons[cdhw] / Inputs[1]->Neurons[cdhw] / Inputs[2]->Neurons[cdhw];
@@ -248,6 +250,7 @@ namespace dnn
 							{
 								const auto start = n * CDHW;
 								const auto end = start + CDHW;
+								PRAGMA_OMP_SIMD()
 								for (auto cdhw = start; cdhw < end; cdhw++)
 								{
 									Neurons[cdhw] = Inputs[0]->Neurons[cdhw] / Inputs[1]->Neurons[cdhw] / Inputs[2]->Neurons[cdhw] / Inputs[3]->Neurons[cdhw];
@@ -378,6 +381,7 @@ namespace dnn
 							{
 								const auto start = n * CDHW;
 								const auto end = start + CDHW;
+								PRAGMA_OMP_SIMD()
 								for (auto cdhw = start; cdhw < end; cdhw++)
 									Neurons[cdhw] = Inputs[0]->Neurons[cdhw] / Inputs[1]->Neurons[cdhw] / Inputs[2]->Neurons[cdhw];
 							});
@@ -388,6 +392,7 @@ namespace dnn
 							{
 								const auto start = n * CDHW;
 								const auto end = start + CDHW;
+								PRAGMA_OMP_SIMD()
 								for (auto cdhw = start; cdhw < end; cdhw++)
 									Neurons[cdhw] = Inputs[0]->Neurons[cdhw] / Inputs[1]->Neurons[cdhw] / Inputs[2]->Neurons[cdhw] / Inputs[3]->Neurons[cdhw];
 							});
@@ -442,6 +447,7 @@ namespace dnn
 						break;
 
 					case 3:
+						PRAGMA_OMP_SIMD()
 						for (auto cdhw = 0ull; cdhw < PaddedCDHW; cdhw++)
 						{
 							Inputs[0]->NeuronsD1[cdhw] += NeuronsD1[cdhw] / (Inputs[1]->Neurons[cdhw] * Inputs[2]->Neurons[cdhw]);
@@ -451,6 +457,7 @@ namespace dnn
 						break;
 
 					case 4:
+						PRAGMA_OMP_SIMD()
 						for (auto cdhw = 0ull; cdhw < PaddedCDHW; cdhw++)
 						{
 							Inputs[0]->NeuronsD1[cdhw] += NeuronsD1[cdhw] / (Inputs[1]->Neurons[cdhw] * Inputs[2]->Neurons[cdhw] * Inputs[3]->Neurons[cdhw]);
@@ -466,6 +473,7 @@ namespace dnn
 					switch (inputs)
 					{
 					case 2:
+						PRAGMA_OMP_SIMD()
 						for (auto cdhw = 0ull; cdhw < CDHW; cdhw++)
 						{
 							Inputs[0]->NeuronsD1[cdhw] += NeuronsD1[cdhw] / Inputs[1]->Neurons[cdhw];
@@ -474,6 +482,7 @@ namespace dnn
 						break;
 
 					case 3:
+						PRAGMA_OMP_SIMD()
 						for (auto cdhw = 0ull; cdhw < CDHW; cdhw++)
 						{
 							Inputs[0]->NeuronsD1[cdhw] += NeuronsD1[cdhw] / (Inputs[1]->Neurons[cdhw] * Inputs[2]->Neurons[cdhw]);
@@ -483,6 +492,7 @@ namespace dnn
 						break;
 
 					case 4:
+						PRAGMA_OMP_SIMD()
 						for (auto cdhw = 0ull; cdhw < CDHW; cdhw++)
 						{
 							Inputs[0]->NeuronsD1[cdhw] += NeuronsD1[cdhw] / (Inputs[1]->Neurons[cdhw] * Inputs[2]->Neurons[cdhw] * Inputs[3]->Neurons[cdhw]);
@@ -533,6 +543,7 @@ namespace dnn
 						{
 							const auto start = n * PaddedCDHW;
 							const auto end = start + PaddedCDHW;
+							PRAGMA_OMP_SIMD()
 							for (auto cdhw = start; cdhw < end; cdhw++)
 							{
 								Inputs[0]->NeuronsD1[cdhw] += NeuronsD1[cdhw] / (Inputs[1]->Neurons[cdhw] * Inputs[2]->Neurons[cdhw] * Inputs[3]->Neurons[cdhw]);
@@ -553,6 +564,7 @@ namespace dnn
 						{
 							const auto start = n * CDHW;
 							const auto end = start + CDHW;
+							PRAGMA_OMP_SIMD()
 							for (auto cdhw = start; cdhw < end; cdhw++)
 							{
 								Inputs[0]->NeuronsD1[cdhw] += NeuronsD1[cdhw] / Inputs[1]->Neurons[cdhw];
@@ -580,6 +592,7 @@ namespace dnn
 						{
 							const auto start = n * CDHW;
 							const auto end = start + CDHW;
+							PRAGMA_OMP_SIMD()
 							for (auto cdhw = start; cdhw < end; cdhw++)
 							{
 								Inputs[0]->NeuronsD1[cdhw] += NeuronsD1[cdhw] / (Inputs[1]->Neurons[cdhw] * Inputs[2]->Neurons[cdhw] * Inputs[3]->Neurons[cdhw]);

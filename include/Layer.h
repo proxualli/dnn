@@ -87,11 +87,11 @@ namespace dnn
 		Average = 2,
 		AvgPooling = 3,
 		BatchNorm = 4,
-		BatchNormFTS = 5,
-		BatchNormFTSDropout = 6,
-		BatchNormHardLogistic = 7,
-		BatchNormHardSwish = 8,
-		BatchNormHardSwishDropout = 9,
+		BatchNormHardLogistic = 5,
+		BatchNormHardSwish = 6,
+		BatchNormHardSwishDropout = 7,
+		BatchNormMish = 8,
+		BatchNormMishDropout = 9,
 		BatchNormRelu = 10,
 		BatchNormReluDropout = 11,
 		BatchNormSwish = 12,
@@ -347,8 +347,8 @@ namespace dnn
 
 		bool IsNormalization() const { 
 			return LayerType == LayerTypes::BatchNorm || 
-			LayerType == LayerTypes::BatchNormFTS || 
-			LayerType == LayerTypes::BatchNormFTSDropout || 
+			LayerType == LayerTypes::BatchNormMish || 
+			LayerType == LayerTypes::BatchNormMishDropout || 
 			LayerType == LayerTypes::BatchNormHardLogistic || 
 			LayerType == LayerTypes::BatchNormHardSwish ||
 			LayerType == LayerTypes::BatchNormHardSwishDropout || 
@@ -429,7 +429,10 @@ namespace dnn
 
 		inline void ReleaseGradient()
 		{
-			NeuronsD1.resize(0);
+			NeuronsD1.clear();
+			NeuronsD1.shrink_to_fit();
+			//NeuronsD1.resize(0);
+			FloatVector().swap(NeuronsD1);
 		}
 #endif // DNN_LEAN
 
@@ -517,6 +520,7 @@ namespace dnn
 						{
 							NeuronsMean = sum / ncdhw;
 							sum = Float(0);
+							PRAGMA_OMP_SIMD()
 							for (auto i = 0ull; i < ncdhw; i++)
 								sum += FloatSquare(Neurons[i] - NeuronsMean);
 
@@ -1320,11 +1324,12 @@ namespace dnn
 			const auto momentum = rate.Momentum;
 			const auto momentumPlusOne = momentum + Float(1);
 			const auto batchRecip = Float(1) / rate.BatchSize * lr;
+			const auto meanD1 = std::accumulate(std::begin(WeightsD1), std::end(WeightsD1), Float(0)) / std::size(WeightsD1);
 
 			PRAGMA_OMP_SIMD()
 			for (auto i = 0ull; i < Weights.size(); i++)
 			{
-				const auto V = momentum * WeightsPar1[i] - (WeightsD1[i] * batchRecip + Weights[i] * l2Penalty);
+				const auto V = momentum * WeightsPar1[i] - ((WeightsD1[i] - meanD1) * batchRecip + Weights[i] * l2Penalty);
 				Weights[i] += -momentum * WeightsPar1[i] + momentumPlusOne * V;
 				WeightsPar1[i] = V;
 			}
@@ -1333,11 +1338,12 @@ namespace dnn
 			{
 				const auto lr = rate.MaximumRate * BiasesLRM;
 				const auto batchRecip = Float(1) / rate.BatchSize * lr;
+				const auto meanD1 = std::accumulate(std::begin(BiasesD1), std::end(BiasesD1), Float(0)) / BiasCount;
 
 				PRAGMA_OMP_SIMD()
 				for (auto i = 0ull; i < BiasCount; i++)
 				{
-					const auto V = momentum * BiasesPar1[i] - BiasesD1[i] * batchRecip;
+					const auto V = momentum * BiasesPar1[i] - (BiasesD1[i] - meanD1) * batchRecip;
 					Biases[i] += -momentum * BiasesPar1[i] + momentumPlusOne * V;
 					BiasesPar1[i] = V;
 				}
@@ -1508,7 +1514,6 @@ namespace dnn
 					auto weightsMem = dnnl::memory(*PersistWeightsMemDesc, Device.engine, weights.data());
 					dnnl::reorder(memWeights, weightsMem).execute(Device.stream, { {DNNL_ARG_FROM, memWeights}, {DNNL_ARG_TO, weightsMem} });
 					Device.stream.wait();
-					
 					os.write(reinterpret_cast<const char*>(weights.data()), std::streamsize(WeightCount * sizeof(Float)));
 					if (HasBias)
 						os.write(reinterpret_cast<const char*>(Biases.data()), std::streamsize(BiasCount * sizeof(Float)));
@@ -1526,7 +1531,6 @@ namespace dnn
 							os.write(reinterpret_cast<const char*>(weightsPar1.data()), std::streamsize(WeightCount * sizeof(Float)));
 							if (HasBias)
 								os.write(reinterpret_cast<const char*>(BiasesPar1.data()), std::streamsize(BiasCount * sizeof(Float)));
-
 							auto weightsPar2 = FloatVector(WeightCount);
 							auto memWeightsPar2 = dnnl::memory(*WeightsMemDesc, Device.engine, WeightsPar2.data());
 							auto weightsPar2Mem = dnnl::memory(*PersistWeightsMemDesc, Device.engine, weightsPar2.data());
@@ -1548,7 +1552,6 @@ namespace dnn
 							os.write(reinterpret_cast<const char*>(weightsPar1.data()), std::streamsize(WeightCount * sizeof(Float)));
 							if (HasBias)
 								os.write(reinterpret_cast<const char*>(BiasesPar1.data()), std::streamsize(BiasCount * sizeof(Float)));
-
 							auto weightsPar2 = FloatVector(WeightCount);
 							auto memWeightsPar2 = dnnl::memory(*WeightsMemDesc, Device.engine, WeightsPar2.data());
 							auto weightsPar2Mem = dnnl::memory(*PersistWeightsMemDesc, Device.engine, weightsPar2.data());
@@ -1557,7 +1560,6 @@ namespace dnn
 							os.write(reinterpret_cast<const char*>(weightsPar2.data()), std::streamsize(WeightCount * sizeof(Float)));
 							if (HasBias)
 								os.write(reinterpret_cast<const char*>(BiasesPar2.data()), std::streamsize(BiasCount * sizeof(Float)));
-
 							os.write(reinterpret_cast<const char*>(&B1), std::streamsize(sizeof(Float)));
 							os.write(reinterpret_cast<const char*>(&B2), std::streamsize(sizeof(Float)));
 						}
@@ -1573,7 +1575,6 @@ namespace dnn
 							os.write(reinterpret_cast<const char*>(weightsPar1.data()), std::streamsize(WeightCount * sizeof(Float)));
 							if (HasBias)
 								os.write(reinterpret_cast<const char*>(BiasesPar1.data()), std::streamsize(BiasCount * sizeof(Float)));
-
 							auto weightsPar2 = FloatVector(WeightCount);
 							auto memWeightsPar2 = dnnl::memory(*WeightsMemDesc, Device.engine, WeightsPar2.data());
 							auto weightsPar2Mem = dnnl::memory(*PersistWeightsMemDesc, Device.engine, weightsPar2.data());
@@ -1582,7 +1583,6 @@ namespace dnn
 							os.write(reinterpret_cast<const char*>(weightsPar2.data()), std::streamsize(WeightCount * sizeof(Float)));
 							if (HasBias)
 								os.write(reinterpret_cast<const char*>(BiasesPar2.data()), std::streamsize(BiasCount * sizeof(Float)));
-
 							os.write(reinterpret_cast<const char*>(&B1), std::streamsize(sizeof(Float)));
 						}
 						break;
@@ -1613,7 +1613,6 @@ namespace dnn
 							os.write(reinterpret_cast<const char*>(weightsPar1.data()), std::streamsize(WeightCount * sizeof(Float)));
 							if (HasBias)
 								os.write(reinterpret_cast<const char*>(BiasesPar1.data()), std::streamsize(BiasCount * sizeof(Float)));
-
 							auto weightsPar2 = FloatVector(WeightCount);
 							auto memWeightsPar2 = dnnl::memory(*WeightsMemDesc, Device.engine, WeightsPar2.data());
 							auto weightsPar2Mem = dnnl::memory(*PersistWeightsMemDesc, Device.engine, weightsPar2.data());
@@ -1622,7 +1621,6 @@ namespace dnn
 							os.write(reinterpret_cast<const char*>(weightsPar2.data()), std::streamsize(WeightCount * sizeof(Float)));
 							if (HasBias)
 								os.write(reinterpret_cast<const char*>(BiasesPar2.data()), std::streamsize(BiasCount * sizeof(Float)));
-
 							os.write(reinterpret_cast<const char*>(&B1), std::streamsize(sizeof(Float)));
 							os.write(reinterpret_cast<const char*>(&B2), std::streamsize(sizeof(Float)));
 							os.write(reinterpret_cast<const char*>(&Moments), std::streamsize(sizeof(size_t)));
@@ -1647,7 +1645,6 @@ namespace dnn
 							os.write(reinterpret_cast<const char*>(WeightsPar1.data()), std::streamsize(WeightCount * sizeof(Float)));
 							if (HasBias)
 								os.write(reinterpret_cast<const char*>(BiasesPar1.data()), std::streamsize(BiasCount * sizeof(Float)));
-
 							os.write(reinterpret_cast<const char*>(WeightsPar2.data()), std::streamsize(WeightCount * sizeof(Float)));
 							if (HasBias)
 								os.write(reinterpret_cast<const char*>(BiasesPar2.data()), std::streamsize(BiasCount * sizeof(Float)));
@@ -1741,7 +1738,6 @@ namespace dnn
 							Device.stream.wait();
 							if (HasBias)
 								is.read(reinterpret_cast<char*>(BiasesPar1.data()), std::streamsize(BiasCount * sizeof(Float)));
-
 							auto weightsPar2 = FloatVector(WeightCount);
 							is.read(reinterpret_cast<char*>(weightsPar2.data()), std::streamsize(WeightCount * sizeof(Float)));
 							auto memWeightsPar2 = dnnl::memory(*PersistWeightsMemDesc, Device.engine, weightsPar2.data());
@@ -1763,7 +1759,6 @@ namespace dnn
 							Device.stream.wait();
 							if (HasBias)
 								is.read(reinterpret_cast<char*>(BiasesPar1.data()), std::streamsize(BiasCount * sizeof(Float)));
-
 							auto weightsPar2 = FloatVector(WeightCount);
 							is.read(reinterpret_cast<char*>(weightsPar2.data()), std::streamsize(WeightCount * sizeof(Float)));
 							auto memWeightsPar2 = dnnl::memory(*PersistWeightsMemDesc, Device.engine, weightsPar2.data());
@@ -1772,7 +1767,6 @@ namespace dnn
 							Device.stream.wait();
 							if (HasBias)
 								is.read(reinterpret_cast<char*>(BiasesPar2.data()), std::streamsize(BiasCount * sizeof(Float)));
-
 							is.read(reinterpret_cast<char*>(&B1), std::streamsize(sizeof(Float)));
 							is.read(reinterpret_cast<char*>(&B2), std::streamsize(sizeof(Float)));
 						}
@@ -1788,7 +1782,6 @@ namespace dnn
 							Device.stream.wait();
 							if (HasBias)
 								is.read(reinterpret_cast<char*>(BiasesPar1.data()), std::streamsize(BiasCount * sizeof(Float)));
-
 							auto weightsPar2 = FloatVector(WeightCount);
 							is.read(reinterpret_cast<char*>(weightsPar2.data()), std::streamsize(WeightCount * sizeof(Float)));
 							auto memWeightsPar2 = dnnl::memory(*PersistWeightsMemDesc, Device.engine, weightsPar2.data());
@@ -1797,7 +1790,6 @@ namespace dnn
 							Device.stream.wait();
 							if (HasBias)
 								is.read(reinterpret_cast<char*>(BiasesPar2.data()), std::streamsize(BiasCount * sizeof(Float)));
-
 							is.read(reinterpret_cast<char*>(&B1), std::streamsize(sizeof(Float)));
 						}
 						break;
@@ -1828,7 +1820,6 @@ namespace dnn
 							Device.stream.wait();
 							if (HasBias)
 								is.read(reinterpret_cast<char*>(BiasesPar1.data()), std::streamsize(BiasCount * sizeof(Float)));
-
 							auto weightsPar2 = FloatVector(WeightCount);
 							is.read(reinterpret_cast<char*>(weightsPar2.data()), std::streamsize(WeightCount * sizeof(Float)));
 							auto memWeightsPar2 = dnnl::memory(*PersistWeightsMemDesc, Device.engine, weightsPar2.data());
@@ -1837,7 +1828,6 @@ namespace dnn
 							Device.stream.wait();
 							if (HasBias)
 								is.read(reinterpret_cast<char*>(BiasesPar2.data()), std::streamsize(BiasCount * sizeof(Float)));
-
 							is.read(reinterpret_cast<char*>(&B1), std::streamsize(sizeof(Float)));
 							is.read(reinterpret_cast<char*>(&B2), std::streamsize(sizeof(Float)));
 							is.read(reinterpret_cast<char*>(&Moments), std::streamsize(sizeof(size_t)));
@@ -2003,7 +1993,7 @@ namespace dnn
 					
 		virtual size_t GetNeuronsSize(const size_t batchSize) const
 		{
-			size_t neuronsSize = 0;
+			auto neuronsSize = 0ull;
 
 #ifndef DNN_LEAN
 			neuronsSize += PaddedCDHW * batchSize * sizeof(Float) * 2;
