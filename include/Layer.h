@@ -1324,12 +1324,11 @@ namespace dnn
 			const auto momentum = rate.Momentum;
 			const auto momentumPlusOne = momentum + Float(1);
 			const auto batchRecip = Float(1) / rate.BatchSize * lr;
-			const auto meanD1 = std::accumulate(std::begin(WeightsD1), std::end(WeightsD1), Float(0)) / std::size(WeightsD1);
-
+			
 			PRAGMA_OMP_SIMD()
 			for (auto i = 0ull; i < Weights.size(); i++)
 			{
-				const auto V = momentum * WeightsPar1[i] - ((WeightsD1[i] - meanD1) * batchRecip + Weights[i] * l2Penalty);
+				const auto V = momentum * WeightsPar1[i] - (WeightsD1[i] * batchRecip + Weights[i] * l2Penalty);
 				Weights[i] += -momentum * WeightsPar1[i] + momentumPlusOne * V;
 				WeightsPar1[i] = V;
 			}
@@ -1338,12 +1337,11 @@ namespace dnn
 			{
 				const auto lr = rate.MaximumRate * BiasesLRM;
 				const auto batchRecip = Float(1) / rate.BatchSize * lr;
-				const auto meanD1 = std::accumulate(std::begin(BiasesD1), std::end(BiasesD1), Float(0)) / BiasCount;
-
+				
 				PRAGMA_OMP_SIMD()
 				for (auto i = 0ull; i < BiasCount; i++)
 				{
-					const auto V = momentum * BiasesPar1[i] - (BiasesD1[i] - meanD1) * batchRecip;
+					const auto V = momentum * BiasesPar1[i] - BiasesD1[i] * batchRecip;
 					Biases[i] += -momentum * BiasesPar1[i] + momentumPlusOne * V;
 					BiasesPar1[i] = V;
 				}
