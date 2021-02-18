@@ -242,8 +242,8 @@ namespace dnn
 
 		ByteVector GetImage(const Byte fillColor) final override
 		{
-			const auto rangeWeights = GetColorRange(WeightsMin, WeightsMax);
-			const auto rangeBiases = GetColorRange(BiasesMin, BiasesMax);
+			const auto rangeWeights = GetColorRange(WeightsStats.Min, WeightsStats.Max);
+			const auto rangeBiases = GetColorRange(BiasesStats.Min, BiasesStats.Max);
 
 			FloatVector weights;
 			if (*WeightsMemDesc != *PersistWeightsMemDesc)
@@ -270,14 +270,14 @@ namespace dnn
 				const auto start = y * width;
 				const auto end = start + width;
 				for (auto x = start; x < end; x++)
-					image[x] = GetColorFromRange(rangeWeights, WeightsMin, weights[x]);
+					image[x] = GetColorFromRange(rangeWeights, WeightsStats.Min, weights[x]);
 			}
 
 			if (HasBias)
 			{
 				const auto offset = (height + 1) * width;
 				for (auto x = 0ull; x < width; x++)
-					image[x + offset] = GetColorFromRange(rangeBiases, BiasesMin, Biases[x]);
+					image[x + offset] = GetColorFromRange(rangeBiases, BiasesStats.Min, Biases[x]);
 			}
 
 			return image;

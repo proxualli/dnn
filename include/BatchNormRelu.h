@@ -339,8 +339,8 @@ namespace dnn
 		{
 			if (Scaling)
 			{
-				const auto rangeWeights = GetColorRange(WeightsMin, WeightsMax);
-				const auto rangeBiases = GetColorRange(BiasesMin, BiasesMax);
+				const auto rangeWeights = GetColorRange(WeightsStats.Min, WeightsStats.Max);
+				const auto rangeBiases = GetColorRange(BiasesStats.Min, BiasesStats.Max);
 
 				const auto width = BiasCount;
 				const auto height = WeightCount / BiasCount;
@@ -353,14 +353,14 @@ namespace dnn
 					const auto start = y * width;
 					const auto end = start + width;
 					for (auto x = start; x < end; x++)
-						image[x] = GetColorFromRange(rangeWeights, WeightsMin, Weights[x]);
+						image[x] = GetColorFromRange(rangeWeights, WeightsStats.Min, Weights[x]);
 				}
 
 				if (HasBias)
 				{
 					const auto offset = (height + 1) * width;
 					for (auto x = 0ull; x < width; x++)
-						image[x + offset] = GetColorFromRange(rangeBiases, BiasesMin, Biases[x]);
+						image[x + offset] = GetColorFromRange(rangeBiases, BiasesStats.Min, Biases[x]);
 				}
 
 				return image;

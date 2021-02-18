@@ -155,6 +155,30 @@ namespace dnn
 		Device(const dnnl::engine& eng, dnnl::stream str) : engine(eng), stream(str) { }
 	};
 	
+	struct Stats
+	{
+		Float Mean;
+		Float StdDev;
+		Float Min;
+		Float Max;
+
+		Stats() :
+		   Mean(0),
+		   StdDev(0),
+		   Min(0),
+		   Max(0)
+		{
+		}
+
+		Stats(const Float mean, const Float stddev, const Float min, const Float  max) :
+			Mean(mean),
+			StdDev(stddev),
+			Min(min),
+			Max(max)
+		{
+		}
+	};
+
 	class Layer
 	{
 	protected:
@@ -220,18 +244,11 @@ namespace dnn
 		Float RAdamEps;
 		Float RAdamBeta1;
 		Float RAdamBeta2;
-		Float NeuronsMin;
-		Float NeuronsMax;
-		Float NeuronsStdDev;
-		Float NeuronsMean;
-		Float WeightsMin;
-		Float WeightsMax;
-		Float WeightsStdDev;
-		Float WeightsMean;
-		Float BiasesMin;
-		Float BiasesMax;
-		Float BiasesStdDev;
-		Float BiasesMean;
+
+		Stats NeuronsStats;
+		Stats WeightsStats;
+		Stats BiasesStats;
+		
 		std::atomic<bool> LockUpdate;
 		std::atomic<bool> RefreshingStats;
 		std::chrono::duration<Float> fpropTime;
@@ -304,18 +321,9 @@ namespace dnn
 			RefreshingStats(false),
 			LayerBeforeCost(false),
 			SharesInput(false),
-			NeuronsMin(Float(0)),
-			NeuronsMax(Float(0)),
-			NeuronsStdDev(Float(0)),
-			NeuronsMean(Float(0)),
-			WeightsMin(Float(0)),
-			WeightsMax(Float(0)),
-			WeightsStdDev(Float(0)),
-			WeightsMean(Float(0)),
-			BiasesMin(Float(0)),
-			BiasesMax(Float(0)),
-			BiasesStdDev(Float(0)),
-			BiasesMean(Float(0)),
+			NeuronsStats(),
+			WeightsStats(),
+			BiasesStats(),
 			fpropTime(std::chrono::duration<Float>(Float(0))),
 			bpropTime(std::chrono::duration<Float>(Float(0))),
 			updateTime(std::chrono::duration<Float>(Float(0)))
@@ -338,14 +346,16 @@ namespace dnn
 			BiasesWDM = biasesWDM;
 		}
 
-		bool IsPlainFormat() const { 
+		bool IsPlainFormat() const 
+		{ 
 			return chosenFormat == dnnl::memory::format_tag::ab || 
 				Format == dnnl::memory::format_tag::abc || 
 				Format == dnnl::memory::format_tag::abcd || 
 				Format == dnnl::memory::format_tag::abcde; 
 		};
 
-		bool IsNormalization() const { 
+		bool IsNormalization() const 
+		{ 
 			return LayerType == LayerTypes::BatchNorm || 
 			LayerType == LayerTypes::BatchNormMish || 
 			LayerType == LayerTypes::BatchNormMishDropout || 
@@ -357,7 +367,8 @@ namespace dnn
 			LayerType == LayerTypes::BatchNormSwish; 
 		};
 
-		bool IsNormalizationUnscaled() const {
+		bool IsNormalizationUnscaled() const 
+		{
 			return IsNormalization() && !Scaling;
 		}
 
@@ -465,8 +476,8 @@ namespace dnn
 				{
 					const auto ncdhw = batchSize * CDHW;
 
-					NeuronsMin = std::numeric_limits<Float>::max();
-					NeuronsMax = std::numeric_limits<Float>::lowest();
+					NeuronsStats.Min = std::numeric_limits<Float>::max();
+					NeuronsStats.Max = std::numeric_limits<Float>::lowest();
 
 					float sum = Float(0);
 
@@ -476,10 +487,10 @@ namespace dnn
 						for (auto i = 0ull; i < ncdhw; i += VectorSize)
 						{
 							neurons.load_a(&Neurons[i]);
-							NeuronsMin = std::min(NeuronsMin, horizontal_min(neurons));
-							NeuronsMax = std::max(NeuronsMax, horizontal_max(neurons));
+							NeuronsStats.Min = std::min(NeuronsStats.Min, horizontal_min(neurons));
+							NeuronsStats.Max = std::max(NeuronsStats.Max, horizontal_max(neurons));
 
-							if ((NeuronsMin < -NEURONS_LIMIT) || (NeuronsMax > NEURONS_LIMIT))
+							if ((NeuronsStats.Min < -NEURONS_LIMIT) || (NeuronsStats.Max > NEURONS_LIMIT))
 								goto FAIL;
 
 							sum += horizontal_add(neurons);
@@ -487,18 +498,18 @@ namespace dnn
 
 						if (!std::isnan(sum) && !std::isinf(sum))
 						{
-							NeuronsMean = sum / ncdhw;
+							NeuronsStats.Mean = sum / ncdhw;
 							VecFloat vecSum = VecFloat(0);
 							for (auto i = 0ull; i < ncdhw; i += VectorSize)
 							{
 								neurons.load_a(&Neurons[i]);
-								vecSum += square(neurons - NeuronsMean);
+								vecSum += square(neurons - NeuronsStats.Mean);
 							}
 							sum = horizontal_add(vecSum);
 							if (!std::isnan(sum) && !std::isinf(sum))
-								NeuronsStdDev = std::sqrt(sum / ncdhw);
+								NeuronsStats.StdDev = std::sqrt(sum / ncdhw);
 							else
-								NeuronsStdDev = Float(0);
+								NeuronsStats.StdDev = Float(0);
 						}
 						else
 							goto FAIL;
@@ -507,10 +518,10 @@ namespace dnn
 					{
 						for (auto i = 0ull; i < ncdhw; i++)
 						{
-							NeuronsMin = std::min(NeuronsMin, Neurons[i]);
-							NeuronsMax = std::max(NeuronsMax, Neurons[i]);
+							NeuronsStats.Min = std::min(NeuronsStats.Min, Neurons[i]);
+							NeuronsStats.Max = std::max(NeuronsStats.Max, Neurons[i]);
 
-							if ((NeuronsMin < -NEURONS_LIMIT) || (NeuronsMax > NEURONS_LIMIT))
+							if ((NeuronsStats.Min < -NEURONS_LIMIT) || (NeuronsStats.Max > NEURONS_LIMIT))
 								goto FAIL;
 
 							sum += Neurons[i];
@@ -518,16 +529,16 @@ namespace dnn
 
 						if (!std::isnan(sum) && !std::isinf(sum))
 						{
-							NeuronsMean = sum / ncdhw;
+							NeuronsStats.Mean = sum / ncdhw;
 							sum = Float(0);
 							PRAGMA_OMP_SIMD()
 							for (auto i = 0ull; i < ncdhw; i++)
-								sum += FloatSquare(Neurons[i] - NeuronsMean);
+								sum += FloatSquare(Neurons[i] - NeuronsStats.Mean);
 
 							if (!std::isnan(sum) && !std::isinf(sum))
-								NeuronsStdDev = std::sqrt(sum / ncdhw);
+								NeuronsStats.StdDev = std::sqrt(sum / ncdhw);
 							else
-								NeuronsStdDev = Float(0);
+								NeuronsStats.StdDev = Float(0);
 						}
 						else
 							goto FAIL;
@@ -536,16 +547,16 @@ namespace dnn
 
 				if (HasWeights)
 				{
-					WeightsMin = std::numeric_limits<Float>::max();
-					WeightsMax = std::numeric_limits<Float>::lowest();
+					WeightsStats.Min = std::numeric_limits<Float>::max();
+					WeightsStats.Max = std::numeric_limits<Float>::lowest();
 					float sum = Float(0);
 
 					for (auto i = 0ull; i < Weights.size(); i++)
 					{
-						WeightsMin = std::min(WeightsMin, Weights[i]);
-						WeightsMax = std::max(WeightsMax, Weights[i]);
+						WeightsStats.Min = std::min(WeightsStats.Min, Weights[i]);
+						WeightsStats.Max = std::max(WeightsStats.Max, Weights[i]);
 
-						if ((WeightsMin < -WEIGHTS_LIMIT) || (WeightsMax > WEIGHTS_LIMIT))
+						if ((WeightsStats.Min < -WEIGHTS_LIMIT) || (WeightsStats.Max > WEIGHTS_LIMIT))
 							goto FAIL;
 
 						sum += Weights[i];
@@ -553,30 +564,30 @@ namespace dnn
 
 					if (!std::isnan(sum) && !std::isinf(sum))
 					{
-						WeightsMean = sum / Weights.size();
+						WeightsStats.Mean = sum / Weights.size();
 						sum = Float(0);
 						for (auto i = 0ull; i < Weights.size(); i++)
-							sum += FloatSquare(Weights[i] - WeightsMean);
+							sum += FloatSquare(Weights[i] - WeightsStats.Mean);
 
 						if (!std::isnan(sum) && !std::isinf(sum))
-							WeightsStdDev = std::sqrt(sum / Weights.size());
+							WeightsStats.StdDev = std::sqrt(sum / Weights.size());
 						else
-							WeightsStdDev = Float(0);
+							WeightsStats.StdDev = Float(0);
 					}
 					else
 						goto FAIL;
 
 					if (HasBias)
 					{
-						BiasesMin = std::numeric_limits<Float>::max();
-						BiasesMax = std::numeric_limits<Float>::lowest();
+						BiasesStats.Min = std::numeric_limits<Float>::max();
+						BiasesStats.Max = std::numeric_limits<Float>::lowest();
 						sum = Float(0);
 						for (auto i = 0ull; i < BiasCount; i++)
 						{
-							BiasesMin = std::min(BiasesMin, Biases[i]);
-							BiasesMax = std::max(BiasesMax, Biases[i]);
+							BiasesStats.Min = std::min(BiasesStats.Min, Biases[i]);
+							BiasesStats.Max = std::max(BiasesStats.Max, Biases[i]);
 
-							if ((BiasesMin < -WEIGHTS_LIMIT) || (BiasesMax > WEIGHTS_LIMIT))
+							if ((BiasesStats.Min < -WEIGHTS_LIMIT) || (BiasesStats.Max > WEIGHTS_LIMIT))
 								goto FAIL;
 
 							sum += Biases[i];
@@ -584,15 +595,15 @@ namespace dnn
 
 						if (!std::isnan(sum) && !std::isinf(sum))
 						{
-							BiasesMean = sum / BiasCount;
+							BiasesStats.Mean = sum / BiasCount;
 							sum = Float(0);
 							for (auto i = 0ull; i < BiasCount; i++)
-								sum += FloatSquare(Biases[i] - BiasesMean);
+								sum += FloatSquare(Biases[i] - BiasesStats.Mean);
 
 							if (!std::isnan(sum) && !std::isinf(sum))
-								BiasesStdDev = std::sqrt(sum / BiasCount);
+								BiasesStats.StdDev = std::sqrt(sum / BiasCount);
 							else
-								BiasesStdDev = Float(0);
+								BiasesStats.StdDev = Float(0);
 						}
 						else
 							goto FAIL;
@@ -604,15 +615,20 @@ namespace dnn
 				return true;
 
 			FAIL:
-				NeuronsMin = Float(0);
-				NeuronsMax = Float(0);
-				NeuronsMean = Float(0);
-				NeuronsStdDev = Float(0);
+				NeuronsStats.Min = Float(0);
+				NeuronsStats.Max = Float(0);
+				NeuronsStats.Mean = Float(0);
+				NeuronsStats.StdDev = Float(0);
 
-				BiasesMin = Float(0);
-				BiasesMax = Float(0);
-				BiasesMean = Float(0);
-				BiasesStdDev = Float(0);
+				WeightsStats.Min = Float(0);
+				WeightsStats.Max = Float(0);
+				WeightsStats.Mean = Float(0);
+				WeightsStats.StdDev = Float(0);
+
+				BiasesStats.Min = Float(0);
+				BiasesStats.Max = Float(0);
+				BiasesStats.Mean = Float(0);
+				BiasesStats.StdDev = Float(0);
 
 				RefreshingStats.store(false);
 
@@ -1397,8 +1413,9 @@ namespace dnn
 
 		inline void SGDMomentum(const TrainingRate& rate, const size_t epoch)
 		{
+			//const auto part = rate.Epochs / 4;
 			//const auto prop = (rate.Epochs - epoch) / rate.Epochs;
-			//const auto momentum = rate.Momentum * (prop / (Float(1) - rate.Momentum + rate.Momentum * prop)); // decaying momentum (Deamon SGDM)
+			//const auto momentum = epoch >= 150 ? rate.Momentum * (prop / (Float(1) - rate.Momentum + rate.Momentum * prop)) : rate.Momentum; // decaying momentum (Deamon SGDM)
 			const auto momentum = rate.Momentum;
 			const auto lr = rate.MaximumRate * WeightsLRM / rate.BatchSize;
 			const auto l2Penalty = rate.MaximumRate * WeightsLRM * rate.L2Penalty * WeightsWDM;

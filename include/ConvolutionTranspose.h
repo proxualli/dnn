@@ -266,8 +266,8 @@ namespace dnn
 
 		ByteVector GetImage(const Byte fillColor) final override
 		{
-			const auto rangeWeights = GetColorRange(WeightsMin, WeightsMax);
-			const auto rangeBiases = GetColorRange(BiasesMin, BiasesMax);
+			const auto rangeWeights = GetColorRange(WeightsStats.Min, WeightsStats.Max);
+			const auto rangeBiases = GetColorRange(BiasesStats.Min, BiasesStats.Max);
 
 			FloatVector weights;
 			if (*WeightsMemDesc != *PersistWeightsMemDesc)
@@ -302,10 +302,10 @@ namespace dnn
 						const auto idx = (c * InputLayer->C + r) * KernelH * KernelW;
 						for (size_t y = 0; y < KernelH; y++)
 							for (size_t x = 0; x < KernelW; x++)
-								image[((top + y) * width) + left + x] = GetColorFromRange(rangeWeights, WeightsMin, weights[idx + (y * KernelW) + x]);
+								image[((top + y) * width) + left + x] = GetColorFromRange(rangeWeights, WeightsStats.Min, weights[idx + (y * KernelW) + x]);
 					}
 					if (HasBias)
-						image[left + biasOffset] = GetColorFromRange(rangeBiases, BiasesMin, Biases[c]);
+						image[left + biasOffset] = GetColorFromRange(rangeBiases, BiasesStats.Min, Biases[c]);
 				}
 
 				return image;
@@ -333,10 +333,10 @@ namespace dnn
 
 						for (auto y = 0ull; y < KernelH; y++)
 							for (auto x = 0ull; x < KernelW; x++)
-								image[x + mapOffset + ((1 + y) * width) + channelOffset] = GetColorFromRange(rangeWeights, WeightsMin, weights[x + (y * KernelW) + mapIndex]);
+								image[x + mapOffset + ((1 + y) * width) + channelOffset] = GetColorFromRange(rangeWeights, WeightsStats.Min, weights[x + (y * KernelW) + mapIndex]);
 
 						if (HasBias)
-							image[mapOffset + ((2 + KernelW) * width) + channelOffset] = GetColorFromRange(rangeBiases, BiasesMin, Biases[c]);
+							image[mapOffset + ((2 + KernelW) * width) + channelOffset] = GetColorFromRange(rangeBiases, BiasesStats.Min, Biases[c]);
 
 						mapping++;
 					}

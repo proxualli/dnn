@@ -196,6 +196,8 @@ extern "C" DNN_API void DNNResetOptimizer()
 		model->ResetOptimizer();
 }
 
+
+
 extern "C" DNN_API void DNNSetOptimizer(const Optimizers optimizer)
 {
 	if (model)
@@ -483,7 +485,7 @@ extern "C" DNN_API void DNNGetTestingInfo(size_t* batchSize, size_t* sampleIndex
 	}
 }
 
-extern "C" DNN_API void DNNRefreshStatistics(const size_t layerIndex, std::string* description, Float* neuronsStdDev, Float* neuronsMean, Float* neuronsMin, Float* neuronsMax, Float* weightsStdDev, Float* weightsMean, Float* weightsMin, Float* weightsMax, Float* biasesStdDev, Float* biasesMean, Float* biasesMin, Float* biasesMax, Float* fpropLayerTime, Float* bpropLayerTime, Float* updateLayerTime, Float* fpropTime, Float* bpropTime, Float* updateTime, bool* locked)
+extern "C" DNN_API void DNNRefreshStatistics(const size_t layerIndex, std::string* description, Stats* neuronsStats, Stats* weightsStats, Stats* biasesStats, Float* fpropLayerTime, Float* bpropLayerTime, Float* updateLayerTime, Float* fpropTime, Float* bpropTime, Float* updateTime, bool* locked)
 {
 	if (model)
 	{
@@ -502,20 +504,10 @@ extern "C" DNN_API void DNNRefreshStatistics(const size_t layerIndex, std::strin
 
 		*description = model->Layers[layerIndex]->GetDescription();
 
-		*neuronsStdDev = model->Layers[layerIndex]->NeuronsStdDev;
-		*neuronsMean = model->Layers[layerIndex]->NeuronsMean;
-		*neuronsMin = model->Layers[layerIndex]->NeuronsMin;
-		*neuronsMax = model->Layers[layerIndex]->NeuronsMax;
-
-		*weightsStdDev = model->Layers[layerIndex]->WeightsStdDev;
-		*weightsMean = model->Layers[layerIndex]->WeightsMean;
-		*weightsMin = model->Layers[layerIndex]->WeightsMin;
-		*weightsMax = model->Layers[layerIndex]->WeightsMax;
-		*biasesStdDev = model->Layers[layerIndex]->BiasesStdDev;
-		*biasesMean = model->Layers[layerIndex]->BiasesMean;
-		*biasesMin = model->Layers[layerIndex]->BiasesMin;
-		*biasesMax = model->Layers[layerIndex]->BiasesMax;
-
+		*neuronsStats = model->Layers[layerIndex]->NeuronsStats;
+		*weightsStats = model->Layers[layerIndex]->WeightsStats;
+		*biasesStats = model->Layers[layerIndex]->BiasesStats;
+		
 		*fpropLayerTime = Float(std::chrono::duration_cast<std::chrono::microseconds>(model->Layers[layerIndex]->fpropTime).count()) / 1000;
 		*bpropLayerTime = Float(std::chrono::duration_cast<std::chrono::microseconds>(model->Layers[layerIndex]->bpropTime).count()) / 1000;
 		*updateLayerTime = Float(std::chrono::duration_cast<std::chrono::microseconds>(model->Layers[layerIndex]->updateTime).count()) / 1000;
