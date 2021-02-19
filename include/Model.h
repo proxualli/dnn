@@ -324,10 +324,10 @@ namespace dnn
 		{
 			auto list = std::vector<Layer*>();
 
-			bool exists;
 			for (auto &name : inputs)
 			{
-				exists = false;
+				auto exists = false;
+
 				for (auto &layer : Layers)
 				{
 					if (layer->Name == name)

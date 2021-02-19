@@ -137,10 +137,10 @@ extern "C" DNN_API void DNNGetLayerInputs(const size_t layerIndex, std::vector<s
 {
 	if (model && layerIndex < model->Layers.size())
 	{
-		for (size_t i = 0; i < model->Layers[layerIndex]->Inputs.size(); i++)
+		for (auto i = 0ull; i < model->Layers[layerIndex]->Inputs.size(); i++)
 		{
 			auto inputLayerName = model->Layers[layerIndex]->Inputs[i]->Name;
-			for (size_t index = 0; index < model->Layers.size(); index++)
+			for (auto index = 0ull; index < model->Layers.size(); index++)
 				if (model->Layers[index]->Name == inputLayerName)
 					inputs->push_back(index);
 		}
@@ -196,8 +196,6 @@ extern "C" DNN_API void DNNResetOptimizer()
 		model->ResetOptimizer();
 }
 
-
-
 extern "C" DNN_API void DNNSetOptimizer(const Optimizers optimizer)
 {
 	if (model)
@@ -244,7 +242,7 @@ extern "C" DNN_API void DNNGetImage(const size_t layerIndex, const unsigned char
 			case LayerTypes::DepthwiseConvolution:
 			case LayerTypes::PartialDepthwiseConvolution:
 			{
-				ByteVector img = model->Layers[layerIndex]->GetImage(fillColor);
+				auto img = model->Layers[layerIndex]->GetImage(fillColor);
 				std::memcpy(image, img.data(), img.size());
 			}
 			break;
@@ -266,16 +264,15 @@ extern "C" DNN_API bool DNNGetInputSnapShot(std::vector<Float>* snapshot, std::v
 
 extern "C" DNN_API void DNNGetLayerWeights(const size_t layerIndex, std::vector<Float>* weights, std::vector<Float>* biases)
 {
-	if (model)
-		if (layerIndex < model->Layers.size() && model->Layers[layerIndex]->HasWeights)
-		{
-			for (size_t i = 0; i < model->Layers[layerIndex]->WeightCount; i++)
-				(*weights)[i] = model->Layers[layerIndex]->Weights[i];
+	if (model && layerIndex < model->Layers.size() && model->Layers[layerIndex]->HasWeights)
+	{
+		for (auto i = 0ull; i < model->Layers[layerIndex]->WeightCount; i++)
+			(*weights)[i] = model->Layers[layerIndex]->Weights[i];
 	
-			if (model->Layers[layerIndex]->HasBias)
-				for (size_t i = 0; i < model->Layers[layerIndex]->BiasCount; i++)
-					(*biases)[i] = model->Layers[layerIndex]->Biases[i];
-		}
+		if (model->Layers[layerIndex]->HasBias)
+			for (auto i = 0ull; i < model->Layers[layerIndex]->BiasCount; i++)
+				(*biases)[i] = model->Layers[layerIndex]->Biases[i];
+	}
 }
 
 extern "C" DNN_API void DNNAddLearningRate(const bool clear, const size_t gotoEpoch, const Float maximumRate, const size_t batchSize, const size_t cycles, const size_t epochs, const size_t epochMultiplier, const Float minimumRate, const Float L2penalty, const Float momentum, const Float decayFactor, const size_t decayAfterEpochs, const bool horizontalFlip, const bool verticalFlip, const Float dropout, const Float cutout, const Float autoAugment, const Float colorCast, const size_t colorAngle, const Float distortion, const size_t interpolation, const Float maxScaling, const Float maxRotation)
@@ -373,10 +370,10 @@ extern "C" DNN_API void DNNGetNetworkInfo(std::string* name, size_t* costIndex, 
 		case Datasets::tinyimagenet:
 		case Datasets::cifar10:
 		case Datasets::cifar100:
-			for (size_t i = 0; i < 3; i++)
+			for (auto c = 0ull; c < 3ull; c++)
 			{
-				(*meanTrainSet).push_back(dataprovider->Mean[i]);
-				(*stdTrainSet).push_back(dataprovider->StdDev[i]);
+				(*meanTrainSet).push_back(dataprovider->Mean[c]);
+				(*stdTrainSet).push_back(dataprovider->StdDev[c]);
 			}
 			break;
 		case Datasets::fashionmnist:
@@ -487,7 +484,7 @@ extern "C" DNN_API void DNNGetTestingInfo(size_t* batchSize, size_t* sampleIndex
 
 extern "C" DNN_API void DNNRefreshStatistics(const size_t layerIndex, std::string* description, Stats* neuronsStats, Stats* weightsStats, Stats* biasesStats, Float* fpropLayerTime, Float* bpropLayerTime, Float* updateLayerTime, Float* fpropTime, Float* bpropTime, Float* updateTime, bool* locked)
 {
-	if (model)
+	if (model && layerIndex < model->Layers.size())
 	{
 		while (model->BatchSizeChanging.load() || model->ResettingWeights.load())
 			std::this_thread::sleep_for(std::chrono::milliseconds(250));
@@ -507,7 +504,7 @@ extern "C" DNN_API void DNNRefreshStatistics(const size_t layerIndex, std::strin
 		*neuronsStats = model->Layers[layerIndex]->NeuronsStats;
 		*weightsStats = model->Layers[layerIndex]->WeightsStats;
 		*biasesStats = model->Layers[layerIndex]->BiasesStats;
-		
+
 		*fpropLayerTime = Float(std::chrono::duration_cast<std::chrono::microseconds>(model->Layers[layerIndex]->fpropTime).count()) / 1000;
 		*bpropLayerTime = Float(std::chrono::duration_cast<std::chrono::microseconds>(model->Layers[layerIndex]->bpropTime).count()) / 1000;
 		*updateLayerTime = Float(std::chrono::duration_cast<std::chrono::microseconds>(model->Layers[layerIndex]->updateTime).count()) / 1000;
@@ -550,9 +547,9 @@ extern "C" DNN_API void DNNGetLayerInfo(const size_t layerIndex, size_t* inputsC
 		*fH = 1;
 		*fW = 1;
 		*dropout = Float(0);
-		*labelTrue = Float(1.0);
-		*labelFalse = Float(0.0);
-		*weight = Float(1.0);
+		*labelTrue = Float(1);
+		*labelFalse = Float(0);
+		*weight = Float(1);
 		*groupIndex = 0;
 		*labelIndex = 0;
 		*inputC = model->Layers[layerIndex]->InputLayer != nullptr ? model->Layers[layerIndex]->InputLayer->C : 0;
