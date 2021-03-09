@@ -112,7 +112,7 @@ namespace dnn
         bool DropoutVisible() const { return Script == Scripts::densenet || Script == Scripts::resnet; }
         bool CompressionVisible() const { return Script == Scripts::densenet; }
         bool BottleneckVisible() const { return Script == Scripts::densenet || Script == Scripts::resnet; }
-        bool SqueezeExcitationVisible() const { return Script == Scripts::mobilenetv3; }
+        bool SqueezeExcitationVisible() const { return Script == Scripts::mobilenetv3 || Script == Scripts::shufflenetv2; }
         bool ChannelZeroPadVisible() const { return Script == Scripts::resnet; }
 
         auto GetName() const
@@ -269,15 +269,15 @@ namespace dnn
                     Concat(id, In("ADC", id) + "," + In("BDC", id), group, prefix) :
                     PartialDepthwiseConvolution(id, inputs, 1, 2, 3, 3, strideX, strideY, 1, 1, "A") + PartialDepthwiseConvolution(id, inputs, 2, 2, 5, 5, strideX, strideY, 2, 2, "B") +
                     Concat(id, In("ADC", id) + "," + In("BDC", id), group, prefix);
-            /*
-            case 2:
-                return useChannelSplit ? ChannelSplit(id, inputs, 3, 1, "Q1") + ChannelSplit(id, inputs, 3, 2, "Q2") + ChannelSplit(id, inputs, 3, 3, "Q3") +
-                    DepthwiseConvolution(id, In("Q1CS", id), 1, 3, 3, strideX, strideY, 1, 1, "A") + DepthwiseConvolution(id, In("Q2CS", id), 1, 5, 5, strideX, strideY, 2, 2, "B") + DepthwiseConvolution(id, In("Q3CS", id), 1, 7, 7, strideX, strideY, 3, 3, "C") +
-                    Concat(id, In("ADC", id) + "," + In("BDC", id) + "," + In("CDC", id), group, prefix) :
-                    PartialDepthwiseConvolution(id, inputs, 1, 3, 3, 3, strideX, strideY, 1, 1, "A") + PartialDepthwiseConvolution(id, inputs, 2, 3, 5, 5, strideX, strideY, 2, 2, "B") +
-                    PartialDepthwiseConvolution(id, inputs, 3, 3, 7, 7, strideX, strideY, 3, 3, "C") +
-                    Concat(id, In("ADC", id) + "," + In("BDC", id) + "," + In("CDC", id), group, prefix);
-            */
+                /*
+                case 2:
+                    return useChannelSplit ? ChannelSplit(id, inputs, 3, 1, "Q1") + ChannelSplit(id, inputs, 3, 2, "Q2") + ChannelSplit(id, inputs, 3, 3, "Q3") +
+                        DepthwiseConvolution(id, In("Q1CS", id), 1, 3, 3, strideX, strideY, 1, 1, "A") + DepthwiseConvolution(id, In("Q2CS", id), 1, 5, 5, strideX, strideY, 2, 2, "B") + DepthwiseConvolution(id, In("Q3CS", id), 1, 7, 7, strideX, strideY, 3, 3, "C") +
+                        Concat(id, In("ADC", id) + "," + In("BDC", id) + "," + In("CDC", id), group, prefix) :
+                        PartialDepthwiseConvolution(id, inputs, 1, 3, 3, 3, strideX, strideY, 1, 1, "A") + PartialDepthwiseConvolution(id, inputs, 2, 3, 5, 5, strideX, strideY, 2, 2, "B") +
+                        PartialDepthwiseConvolution(id, inputs, 3, 3, 7, 7, strideX, strideY, 3, 3, "C") +
+                        Concat(id, In("ADC", id) + "," + In("BDC", id) + "," + In("CDC", id), group, prefix);
+                */
             default:
                 return useChannelSplit ? ChannelSplit(id, inputs, 4, 1, "Q1") + ChannelSplit(id, inputs, 4, 2, "Q2") + ChannelSplit(id, inputs, 4, 3, "Q3") + ChannelSplit(id, inputs, 4, 4, "Q4") +
                     DepthwiseConvolution(id, In("Q1CS", id), 1, 3, 3, strideX, strideY, 1, 1, "A") + DepthwiseConvolution(id, In("Q2CS", id), 1, 5, 5, strideX, strideY, 2, 2, "B") +
@@ -411,7 +411,7 @@ namespace dnn
 
                 channels += p.GrowthRate;
 
-                for (auto g = 1ull; g <= p.Groups; g++)  // 32*32 16*16 8*8 or 28*28 14*14 7*7
+                for (auto g = 1ull; g <= p.Groups; g++)
                 {
                     for (auto i = 1ull; i < p.Iterations; i++)
                     {
@@ -514,7 +514,7 @@ namespace dnn
                 auto A = 1ull;
                 auto C = 5ull;
 
-                for (auto g = 1ull; g <= p.Groups; g++)  // 32*32 16*16 8*8 or 28*28 14*14 7*7
+                for (auto g = 1ull; g <= p.Groups; g++)
                 {
                     auto mix = 0ull; // g - 1ull;
 
@@ -626,7 +626,7 @@ namespace dnn
                         Add(1, "C3,C4"));
                 }
 
-                for (auto g = 0ull; g < p.Groups; g++)  // 32*32 16*16 8*8 or 28*28 14*14 7*7
+                for (auto g = 0ull; g < p.Groups; g++)
                 {
                     if (g > 0)
                     {
@@ -732,7 +732,7 @@ namespace dnn
                 auto C = 6ull;
                 auto A = 1ull;
 
-                for (auto g = 1ull; g <= p.Groups; g++)  // 32*32 16*16 8*8 or 28*28 14*14 7*7
+                for (auto g = 1ull; g <= p.Groups; g++)
                 {
                     if (g > 1)
                     {
