@@ -293,7 +293,7 @@ namespace dnn
 			const auto rangeWeights = GetColorRange(WeightsStats.Min, WeightsStats.Max);
 			const auto rangeBiases = GetColorRange(BiasesStats.Min, BiasesStats.Max);
 
-			FloatVector weights;
+			auto weights = FloatVector();
 			if (*WeightsMemDesc != *PersistWeightsMemDesc)
 			{
 				weights = FloatVector(WeightsMemDesc->get_size());

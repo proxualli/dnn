@@ -70,7 +70,7 @@ namespace dnn
 
 		std::string GetDescription() const final override
 		{
-			std::string description = GetDescriptionHeader();
+			auto description = GetDescriptionHeader();
 
 			description.append(nwl + std::string(" Cost:") + dtab + std::string(magic_enum::enum_name<Costs>(CostFunction)));
 			description.append(nwl + std::string(" Channels:") + tab + std::to_string(C));
@@ -196,7 +196,7 @@ namespace dnn
 							NeuronsD1[i] = Float(0);
 #endif
 						}
-						for (size_t b = 0; b < batchSize; b++)
+						for (auto b = 0ull; b < batchSize; b++)
 						{
 							const auto label = SampleLabels[b][LabelIndex] + (b * C);
 							Neurons[label] = -InputLayer->Neurons[label];
@@ -230,7 +230,7 @@ namespace dnn
 							NeuronsD1[i] = Float(0);
 #endif
 						}
-						for (size_t b = 0; b < batchSize; b++)
+						for (auto b = 0ull; b < batchSize; b++)
 						{
 							const auto label = SampleLabels[b][LabelIndex] + (b * C);
 							Neurons[label] = -std::log(InputLayer->Neurons[label]);
@@ -250,7 +250,7 @@ namespace dnn
 					for (auto i = 0ull; i < C; i++)
 						Neurons[i] = std::abs(InputLayer->Neurons[i] - LabelFalse);
 
-					const size_t label = SampleLabel[LabelIndex];
+					const auto label = SampleLabel[LabelIndex];
 					Neurons[label] = std::abs(InputLayer->Neurons[label] - LabelTrue);
 				}
 				else
@@ -312,7 +312,7 @@ namespace dnn
 					for (auto i = 0ull; i < C; i++)
 						Neurons[i] = FloatSquare(InputLayer->Neurons[i] - LabelFalse);
 
-					const size_t label = SampleLabel[LabelIndex];
+					const auto label = SampleLabel[LabelIndex];
 					Neurons[label] = FloatSquare(InputLayer->Neurons[label] - LabelTrue);
 				}
 				else
@@ -362,7 +362,7 @@ namespace dnn
 						NeuronsD1[i] = Float(0);
 #endif
 					}
-					for (size_t b = 0; b < batchSize; b++)
+					for (auto b = 0ull; b < batchSize; b++)
 					{
 						const auto label = SampleLabels[b][LabelIndex] + (b * C);
 						const auto ty = LabelTrue * InputLayer->Neurons[label];
@@ -393,7 +393,7 @@ namespace dnn
 					for (auto i = 0ull; i < C; i++)
 						InputLayer->NeuronsD1[i] = (InputLayer->Neurons[i] - LabelFalse) / (InputLayer->Neurons[i] * (Float(1) - InputLayer->Neurons[i]));
 
-					const size_t label = SampleLabel[LabelIndex];
+					const auto label = SampleLabel[LabelIndex];
 					InputLayer->NeuronsD1[label] = (InputLayer->Neurons[label] - LabelTrue) / (InputLayer->Neurons[label] * (Float(1) - InputLayer->Neurons[label]));
 				}
 				else
@@ -423,7 +423,7 @@ namespace dnn
 						for (auto i = 0ull; i < C; i++)
 							InputLayer->NeuronsD1[i] = std::exp(InputLayer->Neurons[i]) - (Eps / (C - 1));
 
-						const size_t label = SampleLabel[LabelIndex];
+						const auto label = SampleLabel[LabelIndex];
 						InputLayer->NeuronsD1[label] = std::exp(InputLayer->Neurons[label]) - ((Float(1) - Eps) + (Eps / C));
 					}
 					else
@@ -482,7 +482,7 @@ namespace dnn
 						const auto sign = InputLayer->Neurons[i] - LabelFalse;
 						InputLayer->NeuronsD1[i] = sign < 0 ? -factor : sign > 0 ? factor : 0;
 					}
-					const size_t label = SampleLabel[LabelIndex];
+					const auto label = SampleLabel[LabelIndex];
 					const auto sign = InputLayer->Neurons[label] - LabelTrue;
 					InputLayer->NeuronsD1[label] = sign < 0 ? -factor : sign > 0 ? factor : 0;
 				}
@@ -519,7 +519,7 @@ namespace dnn
 						const auto sign = InputLayer->Neurons[i] - LabelFalse;
 						InputLayer->NeuronsD1[i] = sign < -Eps ? -factor : sign > Eps ? factor : 0;
 					}
-					const size_t label = SampleLabel[LabelIndex];
+					const auto label = SampleLabel[LabelIndex];
 					const auto sign = InputLayer->Neurons[label] - LabelTrue;
 					InputLayer->NeuronsD1[label] = sign < -Eps ? -factor : sign > Eps ? factor : 0;
 				}
@@ -554,7 +554,7 @@ namespace dnn
 					for (auto i = 0ull; i < C; i++)
 						InputLayer->NeuronsD1[i] = (InputLayer->Neurons[i] - LabelFalse) * factor;
 
-					const size_t label = SampleLabel[LabelIndex];
+					const auto label = SampleLabel[LabelIndex];
 					InputLayer->NeuronsD1[label] = (InputLayer->Neurons[label] - LabelTrue) * factor;
 				}
 				else
@@ -599,7 +599,7 @@ namespace dnn
 
 						InputLayer->NeuronsD1[i] = ty <= 0 ? -Float(1) : ty < Float(1) ? ty - Float(1) : Float(0);
 					}
-					for (size_t b = 0; b < batchSize; b++)
+					for (auto b = 0ull; b < batchSize; b++)
 					{
 						const auto label = SampleLabels[b][LabelIndex] + (b * C);
 						const auto ty = LabelTrue * InputLayer->Neurons[label];

@@ -297,7 +297,7 @@ namespace dnn
 			}
 			else
 			{
-				const size_t strideH = HW * VectorSize;
+				const auto strideH = HW * VectorSize;
 #ifdef DNN_STOCHASTIC
 				if (batchSize == 1)
 				{
