@@ -280,7 +280,7 @@ namespace dnn
 						const auto diff = std::abs(InputLayer->Neurons[i] - LabelFalse);
 						Neurons[i] = diff > Eps ? diff : Float(0);
 					}
-					const size_t label = SampleLabel[LabelIndex];
+					const auto label = SampleLabel[LabelIndex];
 					const auto diff = std::abs(InputLayer->Neurons[label] - LabelTrue);
 					Neurons[label] = diff > Eps ? diff : Float(0);
 				}
