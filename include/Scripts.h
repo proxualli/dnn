@@ -751,13 +751,11 @@ namespace dnn
                         blocks.push_back(
                             Convolution(C, In("CC", A), DIV8(W), 1, 1, 1, 1, 0, 0) +
                             BatchNormActivation(C + 1, In("C", C), p.Relu) +
-                            Resampling(C + 1, In("B", C + 1))  +
-                            DepthwiseConvolution(C + 1, In("R", C + 1), 1, kernel, kernel, 1, 1, pad, pad) +
+                            DepthwiseConvolution(C + 1, In("B", C + 1), 1, kernel, kernel, 2, 2, pad, pad) +
                             BatchNorm(C + 2, In("DC", C + 1)) +
                             Convolution(C + 2, In("B", C + 2), DIV8(W), 1, 1, 1, 1, 0, 0) +
                             BatchNormActivation(C + 3, In("C", C + 2), p.Relu) +
-                            Resampling(C + 3, In("CC", A)) +
-                            DepthwiseConvolution(C + 3, In("R", C + 3), 1, kernel, kernel, 1, 1, pad, pad) +
+                            DepthwiseConvolution(C + 3, In("CC", A), 1, kernel, kernel, 2, 2, pad, pad) +
                             BatchNorm(C + 4, In("DC", C + 3)) +
                             Convolution(C + 4, In("B", C + 4), DIV8(W), 1, 1, 1, 1, 0, 0) +
                             BatchNormActivation(C + 5, In("C", C + 4), p.Relu) +
