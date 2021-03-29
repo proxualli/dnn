@@ -150,9 +150,9 @@ namespace dnn
 	struct Tanh
 	{
 		inline static Float f(const Float& x) noexcept { const Float tmpExp2 = std::exp(Float(2) * x);  return (tmpExp2 - Float(1)) / (tmpExp2 + Float(1)); }
-		inline static Float df(const Float& x) noexcept { return Float(1) - FloatSquare(x); }
+		inline static Float df(const Float& x) noexcept { const auto y = Tanh::f(x); return Float(1) - FloatSquare(y); }
 		inline static VecFloat fVec(const VecFloat& x) noexcept { const VecFloat tmpExp2 = exp(VecFloat(2) * x);  return (tmpExp2 - VecFloat(1)) / (tmpExp2 + VecFloat(1)); }
-		inline static VecFloat dfVec(const VecFloat& x) noexcept { return (VecFloat(1) - square(x)); }
+		inline static VecFloat dfVec(const VecFloat& x) noexcept { const auto y = Tanh::fVec(x); return (VecFloat(1) - square(y)); }
 	};
 	 
 	struct FTS
