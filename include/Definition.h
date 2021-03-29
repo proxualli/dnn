@@ -287,8 +287,11 @@ namespace dnn
 
 							switch(activationFunction)
 							{
+							case Activations::BoundedRelu:
+							case Activations::Elu:
 							case Activations::FTS:
-							break;
+							case Activations::Linear:
+								break;
 
 							case Activations::PRelu:
 								if (alpha == 0)
@@ -324,24 +327,13 @@ namespace dnn
 								break;
 
 							case Activations::Clip:
-							case Activations::Linear:
-								if (alpha == 0 && beta == 0)
+							    if (alpha == 0 && beta == 0)
 								{
 									msg = CheckMsg(line - 1, col, "Activation used without Alpha and Beta parameter.");
 									goto FAIL;
 								}
 								break;
-
-							case Activations::BoundedRelu:
-							case Activations::Swish:
-								if (beta == 0)
-								{
-									msg = CheckMsg(line - 1, col, "BoundedRelu Activation doesn't have a Beta parameter.");
-									goto FAIL;
-								}
-								break;
-
-							case Activations::Elu:
+															
 							case Activations::Relu:
 								if (alpha < 0)
 								{
@@ -497,11 +489,13 @@ namespace dnn
 								case Activations::BoundedRelu:
 									if (alpha == 0)
 										alpha = 6;
+									break;
 								case Activations::Elu:
 								case Activations::Linear:
 								case Activations::Swish:
 									if (alpha == 0)
 										alpha = 1;
+									break;
 								}
 								model->Layers.push_back(std::make_unique<Activation>(model->Device, model->Format, name, activationFunction, inputs, alpha, beta));
 								break;
