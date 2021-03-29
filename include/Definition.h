@@ -327,6 +327,7 @@ namespace dnn
 								break;
 
 							case Activations::Clip:
+							case Activations::ClipV2:
 							    if (alpha == 0 && beta == 0)
 								{
 									msg = CheckMsg(line - 1, col, "Activation used without Alpha and Beta parameter.");
