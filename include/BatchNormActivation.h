@@ -308,10 +308,10 @@ namespace dnn
 
 				for_i(C, [=](size_t c)
 				{
-					const auto mean = VecFloat().load_a(&Mean[c]);
-					const auto invStdDev = VecFloat().load_a(&InvStdDev[c]);
-					const auto weightedInvStdDev = Scaling ? invStdDev * VecFloat().load_a(&Weights[c]) : invStdDev;
-					const auto biases = Scaling && HasBias ? VecFloat().load_a(&Biases[c]) : VecFloat(0);
+					const auto mean = Mean[c];
+					const auto invStdDev = InvStdDev[c];
+					const auto weightedInvStdDev = Scaling ? invStdDev * Weights[c] : invStdDev;
+					const auto biases = Scaling && HasBias ? Biases[c] : Float(0);
 				
 					auto diffGamma = VecFloat(0);
 					auto diffBeta = VecFloat(0);
