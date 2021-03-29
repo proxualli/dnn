@@ -327,15 +327,14 @@ namespace dnn
 						const auto part = start + partialHW;
 						for (auto hw = start; hw < part; hw += VectorSize)
 						{
-							diffSrc = Activation::dfVec(mul_add(VecFloat().load_a(&InputLayer->Neurons[hw]) - mean, weightedInvStdDev, biases)) * VecFloat().load_a(&NeuronsD1[hw]);
+							diffSrc = Activation::dfVec((VecFloat().load_a(&InputLayer->Neurons[hw]) - mean) * weightedInvStdDev + biases) * VecFloat().load_a(&NeuronsD1[hw]);
 
 							diffGamma = mul_add(VecFloat().load_a(&InputLayer->Neurons[hw]) - mean, diffSrc, diffGamma);
 							diffBeta += diffSrc;
 						}
 						for (auto hw = part; hw < start + HW; hw++)
 						{
-							auto weightedInvStdDev = Scaling ? InvStdDev[c] * Weights[c] : InvStdDev[c];
-							diffSrcFloat = Activation::df(((InputLayer->Neurons[hw] - Mean[c]) * weightedInvStdDev) + Biases[c]) * NeuronsD1[hw];
+							diffSrcFloat = Activation::df(((InputLayer->Neurons[hw] - mean) * weightedInvStdDev) + biases) * NeuronsD1[hw];
 
 							diffGammaFloat += (InputLayer->Neurons[hw] - Mean[c]) * diffSrcFloat;
 							diffBetaFloat += diffSrcFloat;
@@ -364,7 +363,7 @@ namespace dnn
 						const auto part = start + partialHW;
 						for (auto hw = start; hw < part; hw += VectorSize)
 						{
-							diffSrc = Activation::dfVec(mul_add(VecFloat().load_a(&InputLayer->Neurons[hw]) - mean, weightedInvStdDev, biases)) * VecFloat().load_a(&NeuronsD1[hw]);
+							diffSrc = Activation::dfVec((VecFloat().load_a(&InputLayer->Neurons[hw]) - mean) * weightedInvStdDev + biases) * VecFloat().load_a(&NeuronsD1[hw]);
 
 							// if not using global stats!
 							diffSrc -= mul_add(VecFloat().load_a(&InputLayer->Neurons[hw]) - mean, diffGammaFloat, diffBetaFloat);
@@ -375,7 +374,7 @@ namespace dnn
 						for (auto hw = part; hw < start + HW; hw++)
 						{
 							
-							diffSrcFloat = Activation::df(((InputLayer->Neurons[hw] - Mean[c]) * weightedInvStdDev) + Biases[c]) * NeuronsD1[hw];
+							diffSrcFloat = Activation::df(((InputLayer->Neurons[hw] - mean) * weightedInvStdDev) + biases) * NeuronsD1[hw];
 
 							// if not using global stats!
 							diffSrcFloat -= (InputLayer->Neurons[hw] - Mean[c]) * diffGammaFloat + diffBetaFloat;
