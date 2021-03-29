@@ -352,19 +352,18 @@ namespace dnn
 					{
 						const auto start = c * HW + (n * CDHW);
 						const auto part = start + partialHW;
-						for (auto i = start; i < part; i += VectorSize)
+						for (auto hw = start; hw < part; hw += VectorSize)
 						{
-							diffSrc = VecFloat().load_a(&NeuronsActive[i]) * Activation::dfVec((VecFloat().load_a(&InputLayer->Neurons[i]) - mean) * weightedInvStdDev + biases) * VecFloat().load_a(&NeuronsD1[i]);
+							diffSrc = VecFloat().load_a(&NeuronsActive[hw]) * Activation::dfVec((VecFloat().load_a(&InputLayer->Neurons[hw]) - mean) * weightedInvStdDev + biases) * VecFloat().load_a(&NeuronsD1[hw]);
 
-							diffGamma = mul_add(VecFloat().load_a(&InputLayer->Neurons[i]) - mean, diffSrc, diffGamma);
+							diffGamma = mul_add(VecFloat().load_a(&InputLayer->Neurons[hw]) - mean, diffSrc, diffGamma);
 							diffBeta += diffSrc;
 						}
-						const auto end = start + HW;
-						for (auto i = part; i < end; i++)
+						for (auto hw = part; hw < start + HW; hw++)
 						{
-							diffSrcFloat = NeuronsActive[i] * Activation::df((InputLayer->Neurons[i] - mean) * weightedInvStdDev + biases) * NeuronsD1[i];
+							diffSrcFloat = NeuronsActive[hw] * Activation::df((InputLayer->Neurons[hw] - mean) * weightedInvStdDev + biases) * NeuronsD1[hw];
 
-							diffGammaFloat += (InputLayer->Neurons[i] - mean) * diffSrcFloat;
+							diffGammaFloat += (InputLayer->Neurons[hw] - mean) * diffSrcFloat;
 							diffBetaFloat += diffSrcFloat;
 						}
 					}
@@ -389,27 +388,25 @@ namespace dnn
 					{
 						const auto start = c * HW + (n * CDHW);
 						const auto part = start + partialHW;
-						for (auto i = start; i < part; i += VectorSize)
+						for (auto hw = start; hw < part; hw += VectorSize)
 						{
-							diffSrc = VecFloat().load_a(&NeuronsActive[i]) * Activation::dfVec((VecFloat().load_a(&InputLayer->Neurons[i]) - mean) * weightedInvStdDev + biases) * VecFloat().load_a(&NeuronsD1[i]);
+							diffSrc = VecFloat().load_a(&NeuronsActive[hw]) * Activation::dfVec((VecFloat().load_a(&InputLayer->Neurons[hw]) - mean) * weightedInvStdDev + biases) * VecFloat().load_a(&NeuronsD1[hw]);
 
 							// if not using global stats!
-							diffSrc -= mul_add(VecFloat().load_a(&InputLayer->Neurons[i]) - mean, diffGammaFloat, diffBetaFloat);
+							diffSrc -= mul_add(VecFloat().load_a(&InputLayer->Neurons[hw]) - mean, diffGammaFloat, diffBetaFloat);
 
 							//diffSrc *= gamma;
-							mul_add(diffSrc, gamma, VecFloat().load_a(&InputLayer->NeuronsD1[i])).store_a(&InputLayer->NeuronsD1[i]);
+							mul_add(diffSrc, gamma, VecFloat().load_a(&InputLayer->NeuronsD1[hw])).store_a(&InputLayer->NeuronsD1[hw]);
 						}
-
-						const auto end = start + HW;
-						for (auto i = part; i < end; i++)
+						for (auto hw = part; hw < start + HW; hw++)
 						{
-							diffSrcFloat = NeuronsActive[i] * Activation::df((InputLayer->Neurons[i] - mean) * weightedInvStdDev + biases) * NeuronsD1[i];
+							diffSrcFloat = NeuronsActive[hw] * Activation::df((InputLayer->Neurons[hw] - mean) * weightedInvStdDev + biases) * NeuronsD1[hw];
 
 							// if not using global stats!
-							diffSrcFloat -= (InputLayer->Neurons[i] - mean) * diffGammaFloat + diffBetaFloat;
+							diffSrcFloat -= (InputLayer->Neurons[hw] - mean) * diffGammaFloat + diffBetaFloat;
 
 							//diffSrc *= gamma;
-							InputLayer->NeuronsD1[i] += diffSrcFloat * gamma;
+							InputLayer->NeuronsD1[hw] += diffSrcFloat * gamma;
 						}
 					}
 				});
