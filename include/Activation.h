@@ -91,28 +91,20 @@ namespace dnn
 		inline static VecFloat dfVec(const VecFloat& x) noexcept { return VecFloat(1) / (exp(x) + VecFloat(1)); }
 	};
 
-	struct LRelu // alpha >= 0
+	struct Relu // alpha >= 0
 	{
-		inline static Float f(const Float& x, const Float& alpha) noexcept { return x > Float(0) ? x : x * alpha; } 
-		inline static Float df(const Float& x, const Float& alpha) noexcept { return x > Float(0) ? Float(1) : alpha; }
-		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha) noexcept { return select(x > VecFloat(0), x, x * alpha); }
-		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha) noexcept { return select(x > VecFloat(0), VecFloat(1), alpha); }
+		inline static Float f(const Float& x, const Float& alpha = Float(0)) noexcept { return x > Float(0) ? x : x * alpha; } 
+		inline static Float df(const Float& x, const Float& alpha = Float(0)) noexcept { return x > Float(0) ? Float(1) : alpha; }
+		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0)) noexcept { return select(x > VecFloat(0), x, x * alpha); }
+		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0)) noexcept { return select(x > VecFloat(0), VecFloat(1), alpha); }
 	};
 
 	struct Mish
 	{
 		inline static Float f(const Float& x) noexcept { return x * std::tanh(std::log1p(std::exp(x))); }
-		inline static Float df(const Float& x) noexcept { const Float tmpExp = std::exp(x); const Float tmpSoftplus = std::log1p(tmpExp); const Float tmpSech = Float(1) / std::cosh(tmpSoftplus); return std::tanh(tmpSoftplus) + x * tmpExp * FloatSquare(tmpSech) / (tmpExp + Float(1)); }
+		inline static Float df(const Float& x) noexcept { const auto tmpExp = std::exp(x); const auto tmpSoftplus = std::log1p(tmpExp); const auto tmpSech = Float(1) / std::cosh(tmpSoftplus); return std::tanh(tmpSoftplus) + x * tmpExp * FloatSquare(tmpSech) / (tmpExp + Float(1)); }
 		inline static VecFloat fVec(const VecFloat& x) noexcept { return x * tanh(log1p(exp(x))); }
-		inline static VecFloat dfVec(const VecFloat& x) noexcept { const VecFloat tmpExp = exp(x); const VecFloat tmpSoftplus = log1p(tmpExp); const VecFloat tmpSech = VecFloat(1) / cosh(tmpSoftplus); return tanh(tmpSoftplus) + x * tmpExp * square(tmpSech) / (tmpExp + VecFloat(1)); }
-	};
-
-	struct Relu
-	{
-		inline static Float f(const Float& x) noexcept { return std::max(x, Float(0)); }
-		inline static Float df(const Float& x) noexcept { return x > Float(0) ? Float(1) : Float(0); }
-		inline static VecFloat fVec(const VecFloat& x) noexcept { return max(x, VecFloat(0)); }
-		inline static VecFloat dfVec(const VecFloat& x) noexcept { return select(x > VecFloat(0), VecFloat(1), VecFloat(0)); }
+		inline static VecFloat dfVec(const VecFloat& x) noexcept { const auto tmpExp = exp(x); const auto tmpSoftplus = log1p(tmpExp); const auto tmpSech = VecFloat(1) / cosh(tmpSoftplus); return tanh(tmpSoftplus) + x * tmpExp * square(tmpSech) / (tmpExp + VecFloat(1)); }
 	};
 
 	struct Selu
@@ -125,10 +117,10 @@ namespace dnn
 
 	struct SoftPlus
 	{
-		inline static Float f(const Float& x, const Float& beta = Float(1), const Float& treshold = Float(20)) noexcept { const Float y = beta * x; return y > treshold ? x : std::log1p(std::exp(y)) / beta; }
-		inline static Float df(const Float& x, const Float& beta = Float(1), const Float& treshold = Float(20)) noexcept { const Float y = beta * x;  const Float tmpExp = std::exp(y); return y > treshold ? x : x * (tmpExp - Float(1)) / tmpExp; }
-		inline static VecFloat fVec(const VecFloat& x, const VecFloat& beta = VecFloat(1), const VecFloat& treshold = VecFloat(20)) noexcept { const VecFloat y = beta * x; return select(y > treshold, x, log1p(exp(y)) / beta); }
-		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& beta = VecFloat(1), const VecFloat& treshold = VecFloat(20)) noexcept { const VecFloat y = beta * x; const VecFloat tmpExp = exp(y); return select(y > treshold, x, x * (tmpExp - VecFloat(1)) / tmpExp); }
+		inline static Float f(const Float& x, const Float& beta = Float(1), const Float& treshold = Float(20)) noexcept { const auto y = beta * x; return y > treshold ? x : std::log1p(std::exp(y)) / beta; }
+		inline static Float df(const Float& x, const Float& beta = Float(1), const Float& treshold = Float(20)) noexcept { const auto y = beta * x;  const auto tmpExp = std::exp(y); return y > treshold ? x : x * (tmpExp - Float(1)) / tmpExp; }
+		inline static VecFloat fVec(const VecFloat& x, const VecFloat& beta = VecFloat(1), const VecFloat& treshold = VecFloat(20)) noexcept { const auto y = beta * x; return select(y > treshold, x, log1p(exp(y)) / beta); }
+		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& beta = VecFloat(1), const VecFloat& treshold = VecFloat(20)) noexcept { const auto y = beta * x; const auto tmpExp = exp(y); return select(y > treshold, x, x * (tmpExp - VecFloat(1)) / tmpExp); }
 	};
 	
 	struct SoftSign
@@ -149,9 +141,9 @@ namespace dnn
 
 	struct Tanh
 	{
-		inline static Float f(const Float& x) noexcept { const Float tmpExp2 = std::exp(Float(2) * x);  return (tmpExp2 - Float(1)) / (tmpExp2 + Float(1)); }
+		inline static Float f(const Float& x) noexcept { const auto y = std::exp(Float(2) * x);  return (y - Float(1)) / (y + Float(1)); }
 		inline static Float df(const Float& x) noexcept { const auto y = Tanh::f(x); return Float(1) - FloatSquare(y); }
-		inline static VecFloat fVec(const VecFloat& x) noexcept { const VecFloat tmpExp2 = exp(VecFloat(2) * x);  return (tmpExp2 - VecFloat(1)) / (tmpExp2 + VecFloat(1)); }
+		inline static VecFloat fVec(const VecFloat& x) noexcept { const auto y = exp(VecFloat(2) * x);  return (y - VecFloat(1)) / (y + VecFloat(1)); }
 		inline static VecFloat dfVec(const VecFloat& x) noexcept { const auto y = Tanh::fVec(x); return (VecFloat(1) - square(y)); }
 	};
 	 
