@@ -70,9 +70,9 @@ namespace dnn
 	struct Logistic
 	{
 		inline static Float f(const Float& x) noexcept { return (Float(1) / (Float(1) + std::exp(-x))); }
-		inline static Float df(const Float& x) noexcept { return (Logistic::f(x) * (Float(1) - Logistic::f(x))); }
+		inline static Float df(const Float& x) noexcept { const auto y = Logistic::f(x); return (  y * (Float(1) - y)); }
 		inline static VecFloat fVec(const VecFloat& x) noexcept { return (VecFloat(1) / (VecFloat(1) + exp(-x))); }
-		inline static VecFloat dfVec(const VecFloat& x) noexcept { return Logistic::fVec(x) * (VecFloat(1) - Logistic::fVec(x)); }
+		inline static VecFloat dfVec(const VecFloat& x) noexcept { const auto y = Logistic::fVec(x); return y * (VecFloat(1) - y); }
 	};
 
 	struct SoftRelu
