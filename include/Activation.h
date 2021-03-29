@@ -134,9 +134,9 @@ namespace dnn
 	struct Swish
 	{
 		inline static Float f(const Float& x, const Float& alpha = Float(1)) noexcept { return x / (std::exp(-alpha * x) + Float(1)); }
-		inline static Float df(const Float& x, const Float& alpha = Float(1)) noexcept { return x + ((Float(1) - x) / (std::exp(-alpha * x) + Float(1))); }
+		inline static Float df(const Float& x, const Float& alpha = Float(1)) noexcept { return (Float(1) / (std::exp(-alpha * x) + Float(1))) * (Float(1) + alpha * x * (Float(1) - (Float(1) / (std::exp(-alpha * x) + Float(1))))); }
 		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(1)) noexcept { return x / (exp(-alpha * x) + VecFloat(1)); }
-		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(1)) noexcept { return x + ((VecFloat(1) - x) / (exp(-alpha * x) + VecFloat(1))); }
+		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(1)) noexcept { return (VecFloat(1) / (exp(-alpha * x) + VecFloat(1))) * (VecFloat(1) + alpha * x * (VecFloat(1) - (VecFloat(1) / (exp(-alpha * x) + VecFloat(1))))); }
 	};
 
 	struct Tanh
