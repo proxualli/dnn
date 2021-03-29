@@ -21,10 +21,10 @@ namespace dnn
 
 	struct Elu 
 	{
-		inline static Float f(const Float& x) noexcept { return x > Float(0) ? x : std::exp(x) - Float(1); }
-		inline static Float df(const Float& x) noexcept { return x > Float(0) ? Float(1) : std::exp(x); }
-		inline static VecFloat fVec(const VecFloat& x) noexcept { return select(x > VecFloat(0), x, exp(x) - VecFloat(1)); }
-		inline static VecFloat dfVec(const VecFloat& x) noexcept { return select(x > VecFloat(0), VecFloat(1), exp(x)); }
+		inline static Float f(const Float& x, const Float& alpha = Float(1)) noexcept { return x > Float(0) ? x : alpha * (std::exp(x) - Float(1)); }
+		inline static Float df(const Float& x, const Float& alpha = Float(1)) noexcept { return x > Float(0) ? Float(1) : alpha * std::exp(x); }
+		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(1)) noexcept { return select(x > VecFloat(0), x, alpha * (exp(x) - VecFloat(1))); }
+		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(1)) noexcept { return select(x > VecFloat(0), VecFloat(1), alpha * exp(x)); }
 	};
 
 	struct HardLogistic
@@ -160,29 +160,30 @@ namespace dnn
 		Abs = 0,
 		BoundedRelu = 1,
 		Clip = 2,
-		Elu = 3,
-		Exp = 4,
-		FTS = 5,
-		Gelu = 6,
-		GeluErf = 7,
-		HardLogistic = 8,
-		HardSwish = 9,
-		Linear = 10,
-		Log = 11,
-		Logistic = 12,
-		LogLogistic = 13,
-		LogSoftmax = 14,
-		Mish = 15,
-		Pow = 16,
-		PRelu = 17,
-		Relu = 18,
-		Round = 19,
-		Softmax = 20,
-		SoftRelu = 21,
-		Sqrt = 22,
-		Square = 23,
-		Swish = 24,
-		Tanh = 25
+		ClipV2 = 3,
+		Elu = 4,
+		Exp = 5,
+		FTS = 6,
+		Gelu = 7,
+		GeluErf = 8,
+		HardLogistic = 9,
+		HardSwish = 10,
+		Linear = 11,
+		Log = 12,
+		Logistic = 13,
+		LogLogistic = 14,
+		LogSoftmax = 15,
+		Mish = 16,
+		Pow = 17,
+		PRelu = 18,
+		Relu = 19,
+		Round = 20,
+		Softmax = 21,
+		SoftRelu = 22,
+		Sqrt = 23,
+		Square = 24,
+		Swish = 25,
+		Tanh = 26
 	};
 
 	class Activation final : public Layer
@@ -366,6 +367,9 @@ namespace dnn
 					break;
 				case Activations::Clip:
 					algorithm = dnnl::algorithm::eltwise_clip;
+					break;
+				case Activations::ClipV2:
+					algorithm = dnnl::algorithm::eltwise_clip_v2;
 					break;
 				case Activations::BoundedRelu:
 					algorithm = dnnl::algorithm::eltwise_bounded_relu;

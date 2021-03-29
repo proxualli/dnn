@@ -492,6 +492,17 @@ namespace dnn
 							case LayerTypes::Input:
 								break;
 							case LayerTypes::Activation:
+								switch (activationFunction)
+								{
+								case Activations::BoundedRelu:
+									if (alpha == 0)
+										alpha = 6;
+								case Activations::Elu:
+								case Activations::Linear:
+								case Activations::Swish:
+									if (alpha == 0)
+										alpha = 1;
+								}
 								model->Layers.push_back(std::make_unique<Activation>(model->Device, model->Format, name, activationFunction, inputs, alpha, beta));
 								break;
 							case LayerTypes::Add:
