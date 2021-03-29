@@ -6,9 +6,9 @@ namespace dnn
 	struct Abs
 	{
 		inline static Float f(const Float& x) noexcept { return std::abs(x); }
-		inline static Float df(const Float& x) noexcept { return x / std::abs(x); }
+		inline static Float df(const Float& x) noexcept { return x > Float(0) ? Float(1) : x < Float(0) ? Float(-1) : Float(0); }
 		inline static VecFloat fVec(const VecFloat& x) noexcept { return abs(x); }
-		inline static VecFloat dfVec(const VecFloat& x) noexcept { return x / abs(x); }
+		inline static VecFloat dfVec(const VecFloat& x) noexcept { return select(x > VecFloat(0), VecFloat(1), select(x < VecFloat(0), VecFloat(-1), VecFloat(0))); }
 	};
 
 	struct ASinh
@@ -19,12 +19,12 @@ namespace dnn
 		inline static VecFloat dfVec(const VecFloat& x) noexcept { return VecFloat(1) / cosh(x); }
 	};
 
-	struct Elu
+	struct Elu 
 	{
 		inline static Float f(const Float& x) noexcept { return x > Float(0) ? x : std::exp(x) - Float(1); }
-		inline static Float df(const Float& x) noexcept { return x > Float(0) ? Float(1) : x + Float(1); }
+		inline static Float df(const Float& x) noexcept { return x > Float(0) ? Float(1) : std::exp(x); }
 		inline static VecFloat fVec(const VecFloat& x) noexcept { return select(x > VecFloat(0), x, exp(x) - VecFloat(1)); }
-		inline static VecFloat dfVec(const VecFloat& x) noexcept { return select(x > VecFloat(0), VecFloat(1), x + VecFloat(1)); }
+		inline static VecFloat dfVec(const VecFloat& x) noexcept { return select(x > VecFloat(0), VecFloat(1), exp(x)); }
 	};
 
 	struct HardLogistic
@@ -48,7 +48,7 @@ namespace dnn
 		inline static Float f(const Float& x) noexcept { return x * Relu6::f(x + Float(3)) * Float(1.0 / 6.0); }
 		inline static Float df(const Float& x) noexcept { return x < Float(-3) ? Float(0) : x > Float(3) ? Float(1) : (Float(1.0 / 3.0) * x + Float(0.5)); }
 		inline static VecFloat fVec(const VecFloat& x) noexcept { return x * Relu6::fVec(x + VecFloat(3)) * VecFloat(Float(1.0 / 6.0)); }
-		inline static VecFloat dfVec(const VecFloat& x) noexcept { return select(x < VecFloat(-3), VecFloat(0), select(x > VecFloat(3), VecFloat(1), (VecFloat(Float(1.0 / 3.0))* x + VecFloat(Float(0.5))))); }
+		inline static VecFloat dfVec(const VecFloat& x) noexcept { return select(x < VecFloat(-3), VecFloat(0), select(x > VecFloat(3), VecFloat(1), (VecFloat(Float(1.0 / 3.0)) * x + VecFloat(Float(0.5))))); }
 	};
 
 	struct Identity
@@ -59,7 +59,7 @@ namespace dnn
 		inline static VecFloat dfVec(const VecFloat&) noexcept { return VecFloat(1); }
 	};
 
-    struct Log
+	struct Log
 	{
 		inline static Float f(const Float& x) noexcept { return std::log(x); }
 		inline static Float df(const Float& x) noexcept { return Float(1) / x; }
@@ -70,9 +70,9 @@ namespace dnn
 	struct Logistic
 	{
 		inline static Float f(const Float& x) noexcept { return (Float(1) / (Float(1) + std::exp(-x))); }
-		inline static Float df(const Float& x) noexcept { return (x * (Float(1) - x)); }
+		inline static Float df(const Float& x) noexcept { return (Logistic::f(x) * (Float(1) - Logistic::f(x))); }
 		inline static VecFloat fVec(const VecFloat& x) noexcept { return (VecFloat(1) / (VecFloat(1) + exp(-x))); }
-		inline static VecFloat dfVec(const VecFloat& x) noexcept { return x * (VecFloat(1) - x); }
+		inline static VecFloat dfVec(const VecFloat& x) noexcept { return Logistic::fVec(x) * (VecFloat(1) - Logistic::fVec(x)); }
 	};
 
 	struct SoftRelu
@@ -91,9 +91,9 @@ namespace dnn
 		inline static VecFloat dfVec(const VecFloat& x) noexcept { return VecFloat(1) / (exp(x) + VecFloat(1)); }
 	};
 
-	struct LRelu
+	struct LRelu // alpha >= 0
 	{
-		inline static Float f(const Float& x, const Float& alpha) noexcept { return x > Float(0) ? x : x * alpha; }
+		inline static Float f(const Float& x, const Float& alpha) noexcept { return x > Float(0) ? x : x * alpha; } 
 		inline static Float df(const Float& x, const Float& alpha) noexcept { return x > Float(0) ? Float(1) : alpha; }
 		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha) noexcept { return select(x > VecFloat(0), x, x * alpha); }
 		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha) noexcept { return select(x > VecFloat(0), VecFloat(1), alpha); }
