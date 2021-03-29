@@ -298,7 +298,6 @@ namespace dnn
 								}
 								break;
 
-							case Activations::Swish:
 							case Activations::Mish:
 							case Activations::Abs:
 							case Activations::Exp:
@@ -334,6 +333,7 @@ namespace dnn
 								break;
 
 							case Activations::BoundedRelu:
+							case Activations::Swish:
 								if (beta == 0)
 								{
 									msg = CheckMsg(line - 1, col, "BoundedRelu Activation doesn't have a Beta parameter.");
