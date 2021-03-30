@@ -291,6 +291,7 @@ namespace dnn
 							case Activations::Elu:
 							case Activations::FTS:
 							case Activations::Linear:
+							case Activations::Swish:
 								break;
 
 							case Activations::PRelu:
@@ -496,6 +497,8 @@ namespace dnn
 								case Activations::Swish:
 									if (alpha == 0)
 										alpha = 1;
+									break;
+								default:
 									break;
 								}
 								model->Layers.push_back(std::make_unique<Activation>(model->Device, model->Format, name, activationFunction, inputs, alpha, beta));
