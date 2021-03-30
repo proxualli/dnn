@@ -730,7 +730,7 @@ namespace dnn
                             Convolution(2, group + "B1", DIV8(W), 1, 1, 1, 1, 0, 0, group) +
                             BatchNormHardLogistic(2, group + "C2", group) +
                             ChannelMultiply(In("B", C + 3) + "," + group + "B2", group) +
-                            Concat(A + 1, In("LCS", A) + "," + group + "CM")) :
+                            Concat(A + 1, In("LCS", A) + "," + group + "CM") :
                             Concat(A + 1, In("LCS", A) + "," + In("B", C + 3));
 
                         blocks.push_back(
