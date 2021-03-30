@@ -363,7 +363,7 @@ namespace dnn
                     blocks.push_back(
                         BatchNormActivation(1, "C1", p.Relu, channels) +
                         Convolution(2, "B1", DIV8(4 * p.GrowthRate), 1, 1, 1, 1, 0, 0) +
-                        BatchNormActivation(2, "C2", p.Relu) +
+                        BatchNormActivation(2, "C2", p.Relu, DIV8(4 * p.GrowthRate)) +
                         Convolution(3, "B2", DIV8(p.GrowthRate), 3, 3, 1, 1, 1, 1) +
                         (p.Dropout > 0 ? Dropout(3, "C3") + Concat(1, "C1,D3") : Concat(1, "C1,C3")));
                 }
@@ -389,7 +389,7 @@ namespace dnn
                             blocks.push_back(
                                 BatchNormActivation(C, In("CC", CC), p.Relu, channels) +
                                 Convolution(C, In("B", C), DIV8(4 * p.GrowthRate), 1, 1, 1, 1, 0, 0) +
-                                BatchNormActivation(C + 1, In("C", C), p.Relu, channels) +
+                                BatchNormActivation(C + 1, In("C", C), p.Relu, DIV8(4 * p.GrowthRate)) +
                                 Convolution(C + 1, In("B", C + 1), DIV8(p.GrowthRate), 3, 3, 1, 1, 1, 1) +
                                 (p.Dropout > 0 ? Dropout(C + 1, In("C", C + 1)) + Concat(CC + 1, In("CC", CC) + "," + In("D", C + 1)) : Concat(CC + 1, In("CC", CC) + "," + In("C", C + 1))));
 
@@ -430,7 +430,7 @@ namespace dnn
                             blocks.push_back(
                                 BatchNormActivation(C, In("P", g), p.Relu, channels) +
                                 Convolution(C, In("B", C), DIV8(4 * p.GrowthRate), 1, 1, 1, 1, 0, 0) +
-                                BatchNormActivation(C + 1, In("C", C), p.Relu, channels) +
+                                BatchNormActivation(C + 1, In("C", C), p.Relu, DIV8(4 * p.GrowthRate)) +
                                 Convolution(C + 1, In("B", C + 1), DIV8(p.GrowthRate), 3, 3, 1, 1, 1, 1) +
                                 (p.Dropout > 0 ? Dropout(C + 1, In("C", C + 1)) + Concat(CC, In("B", C) + "," + In("D", C + 1)) : Concat(CC, In("B", C) + "," + In("C", C + 1))));
 
@@ -476,7 +476,7 @@ namespace dnn
                     Convolution(2, "B1", DIV8(6 * W), 1, 1, 1, 1, 0, 0) +
                     BatchNormActivation(2, "C2", p.Relu, DIV8(6 * W)) +
                     DepthwiseMixedConvolution(0, 3, "B2", 1, 1, channelsplit) +
-                    BatchNormActivation(3, "DC3", DIV8(6 * W)) +
+                    BatchNormActivation(3, "DC3", p.Relu, DIV8(6 * W)) +
                     Convolution(4, "B3", DIV8(W), 1, 1, 1, 1, 0, 0) +
                     BatchNorm(4, "C4"));
 
