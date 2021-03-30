@@ -725,7 +725,7 @@ namespace dnn
                         auto group = In("SE", C + 3);
                         auto strSE =
                             se ? GlobalAvgPooling(In("B", C + 3), group) +
-                            Convolution(1, group + "GAP", DIV8(W / 4), 1, 1, 1, 1, 0, 0, group +
+                            Convolution(1, group + "GAP", DIV8(W / 4), 1, 1, 1, 1, 0, 0, group) +
                             BatchNormActivation(1, group + "C1", p.Relu, DIV8(W / 4), group) +
                             Convolution(2, group + "B1", DIV8(W), 1, 1, 1, 1, 0, 0, group) +
                             BatchNormHardLogistic(2, group + "C2", group) +
