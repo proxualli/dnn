@@ -218,14 +218,59 @@ namespace dnn
 		destination.resize(elements);
 		ZeroFloatVector(destination.data(), elements);
 	}
+
+	int PhysicalSeedType() 
+	{
+		int abcd[4];                       // return values from cpuid instruction
+
+		cpuid(abcd, 7);                   // call cpuid function 7
+		if (abcd[1] & (1 << 18)) 
+			return 3; // ebx bit 18: RDSEED available
+
+		cpuid(abcd, 1);                   // call cpuid function 1
+		if (abcd[2] & (1 << 30)) 
+			return 2; // ecx bit 30: RDRAND available
+		if (abcd[3] & (1 << 4)) 
+			return 1; // edx bit  4: RDTSC available
+
+		return 0;
+	}
 	
-#ifdef _MSC_VER
-#pragma intrinsic(__rdtsc)
-#endif
+	static int physicalSeedType = -1;
+	template<typename T>
+	T Seed()
+	{
+		if (physicalSeedType < 0) 
+			physicalSeedType = PhysicalSeedType();
+		
+		uint32_t ran = 0;                  // random number
+		switch (physicalSeedType) 
+		{
+		case 1:                            // use RDTSC instruction
+			ran = (uint32_t)__rdtsc();
+			break;
+		case 2:                            // use RDRAND instruction
+			while (_rdrand32_step(&ran) == 0) {}
+			break;
+		case 3:                            // use RDSEED instruction */
+			while (_rdseed32_step(&ran) == 0) {}
+			break;
+		}
+		
+		return static_cast<T>(ran);                   // return random number
+	}
+	/*
+    template<typename T>
+	inline static T Seed()
+	{
+		return static_cast<T>(__rdtsc());
+	}
+	*/
+
 	inline static auto BernoulliVecFloat(const Float prob = Float(0.5)) noexcept
 	{
 		static thread_local auto generator = Ranvec1(3);
-		generator.init(static_cast<int>(__rdtsc()), static_cast<int>(std::hash<std::thread::id>()(std::this_thread::get_id())));
+		generator.init(Seed<int>(), static_cast<int>(std::hash<std::thread::id>()(std::this_thread::get_id())));
 #if defined(DNN_AVX512)
 		return select(generator.random16f() < prob, VecFloat(1), VecFloat(0));
 #elif defined(DNN_AVX2)
@@ -235,33 +280,24 @@ namespace dnn
 #endif
 	}
 
-#ifdef _MSC_VER
-#pragma intrinsic(__rdtsc)
-#endif
 	template<typename T>
 	static auto Bernoulli(const Float prob = Float(0.5)) noexcept
 	{
-		static thread_local auto generator = std::mt19937(static_cast<unsigned>(__rdtsc()));
+		static thread_local auto generator = std::mt19937(Seed<unsigned>());
 		return static_cast<T>(std::bernoulli_distribution(double(prob))(generator));
 	}
 
-#ifdef _MSC_VER
-#pragma intrinsic(__rdtsc)
-#endif
 	template<typename T>
 	static auto UniformInt(const T min, const T max) noexcept
 	{
-		static thread_local auto generator = std::mt19937(static_cast<unsigned>(__rdtsc()));
+		static thread_local auto generator = std::mt19937(Seed<unsigned>());
 		return std::uniform_int_distribution<T>(min, max)(generator);
 	}
 
-#ifdef _MSC_VER
-#pragma intrinsic(__rdtsc)
-#endif
 	template<typename T>
 	static auto UniformReal(const T min, const T max) noexcept
 	{
-		static thread_local auto generator = std::mt19937(static_cast<unsigned>(__rdtsc()));
+		static thread_local auto generator = std::mt19937(Seed<unsigned>());
 		return std::uniform_real_distribution<T>(min, max)(generator);
 	}
 		
