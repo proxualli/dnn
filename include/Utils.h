@@ -221,12 +221,11 @@ namespace dnn
 
 	int PhysicalSeedType() 
 	{
-		int abcd[4];                       // return values from cpuid instruction
+		int abcd[4];                      // return values from cpuid instruction
 
 		cpuid(abcd, 7);                   // call cpuid function 7
 		if (abcd[1] & (1 << 18)) 
 			return 3; // ebx bit 18: RDSEED available
-
 		cpuid(abcd, 1);                   // call cpuid function 1
 		if (abcd[2] & (1 << 30)) 
 			return 2; // ecx bit 30: RDRAND available
@@ -260,7 +259,7 @@ namespace dnn
 		return static_cast<T>(ran);                   // return random number
 	}
 	/*
-    template<typename T>
+	template<typename T>
 	inline static T Seed()
 	{
 		return static_cast<T>(__rdtsc());
