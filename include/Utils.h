@@ -219,7 +219,7 @@ namespace dnn
 		ZeroFloatVector(destination.data(), elements);
 	}
 
-	int PhysicalSeedType() 
+	static int PhysicalSeedType() 
 	{
 		int abcd[4];                      // return values from cpuid instruction
 
