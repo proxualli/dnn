@@ -10,6 +10,8 @@ namespace dnn
 		std::unique_ptr<dnnl::binary::primitive_desc> fwdDesc;
 #ifdef DNN_CACHE_PRIMITIVES
 		std::unique_ptr<dnnl::binary> fwd;
+		Byte first = 0;
+		Byte second = 1;
 #endif
 
 	public:
@@ -19,8 +21,16 @@ namespace dnn
 			assert(Inputs.size() == 2);
 
 			assert(Inputs[0]->C == Inputs[1]->C);
-			assert(Inputs[1]->H == 1);
-			assert(Inputs[1]->W == 1);
+			assert(Inputs[0]->H == 1 || Inputs[1]->H == 1);
+			assert(Inputs[0]->W == 1 || Inputs[1]->W == 1);
+			assert(Inputs[0]->H != 1 || Inputs[1]->H != 1);
+			assert(Inputs[0]->W != 1 || Inputs[1]->W != 1);
+
+			if (Inputs[0]->H == 1 && Inputs[0]->W == 1)
+			{
+				first = Byte(1);
+				second = Byte(0);
+			}
 		}
 
 		std::string GetDescription() const final override
@@ -42,8 +52,8 @@ namespace dnn
 		{
 			if (Format == dnnl::memory::format_tag::any)
 			{
-				chosenFormat = GetDataFmt(*InputLayer->DstMemDesc);
-				if (chosenFormat != GetDataFmt(*InputLayer->DiffDstMemDesc))
+				chosenFormat = GetDataFmt(*Inputs[first]->DstMemDesc);
+				if (chosenFormat != GetDataFmt(*Inputs[first]->DiffDstMemDesc))
 					throw std::invalid_argument("Src and Diff format are different in " + std::string(magic_enum::enum_name<LayerTypes>(LayerType)) + " layer " + Name);
 			}
 			else
@@ -52,12 +62,12 @@ namespace dnn
 			DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, chosenFormat));
 			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, chosenFormat));
 
-			fwdDesc = std::make_unique<dnnl::binary::primitive_desc>(dnnl::binary::primitive_desc(dnnl::binary::desc(dnnl::algorithm::binary_mul, *Inputs[0]->DstMemDesc, *Inputs[1]->DstMemDesc, *DstMemDesc), Device.engine));
+			fwdDesc = std::make_unique<dnnl::binary::primitive_desc>(dnnl::binary::primitive_desc(dnnl::binary::desc(dnnl::algorithm::binary_mul, *Inputs[first]->DstMemDesc, *Inputs[second]->DstMemDesc, *DstMemDesc), Device.engine));
 
 			DstMemDesc = std::make_unique<dnnl::memory::desc>(fwdDesc->dst_desc());
 			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(fwdDesc->dst_desc());
 
-			fwdArgs = std::unordered_map<int, dnnl::memory>{ { DNNL_ARG_SRC_0, dnnl::memory(*Inputs[0]->DstMemDesc, Device.engine, Inputs[0]->Neurons.data()) }, { DNNL_ARG_SRC_1, dnnl::memory(*Inputs[1]->DstMemDesc, Device.engine, Inputs[1]->Neurons.data()) }, { DNNL_ARG_DST, dnnl::memory(*DstMemDesc, Device.engine, Neurons.data()) } };
+			fwdArgs = std::unordered_map<int, dnnl::memory>{ { DNNL_ARG_SRC_0, dnnl::memory(*Inputs[first]->DstMemDesc, Device.engine, Inputs[first]->Neurons.data()) }, { DNNL_ARG_SRC_1, dnnl::memory(*Inputs[second]->DstMemDesc, Device.engine, Inputs[second]->Neurons.data()) }, { DNNL_ARG_DST, dnnl::memory(*DstMemDesc, Device.engine, Neurons.data()) } };
 
 #ifdef DNN_CACHE_PRIMITIVES
 			fwd = std::make_unique<dnnl::binary>(dnnl::binary(*fwdDesc));
@@ -104,8 +114,8 @@ namespace dnn
 						for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
 						{
 							neuronsD1.load_a(&NeuronsD1[hw + outputOffset]);
-							mul_add(neuronsD1, VecFloat().load_a(&Inputs[1]->Neurons[c]), VecFloat().load_a(&Inputs[0]->NeuronsD1[hw + outputOffset])).store_a(&Inputs[0]->NeuronsD1[hw + outputOffset]);
-							mul_add(neuronsD1, VecFloat().load_a(&Inputs[0]->Neurons[hw + outputOffset]), VecFloat().load_a(&Inputs[1]->NeuronsD1[c])).store_a(&Inputs[1]->NeuronsD1[c]);
+							mul_add(neuronsD1, VecFloat().load_a(&Inputs[second]->Neurons[c]), VecFloat().load_a(&Inputs[first]->NeuronsD1[hw + outputOffset])).store_a(&Inputs[first]->NeuronsD1[hw + outputOffset]);
+							mul_add(neuronsD1, VecFloat().load_a(&Inputs[first]->Neurons[hw + outputOffset]), VecFloat().load_a(&Inputs[second]->NeuronsD1[c])).store_a(&Inputs[second]->NeuronsD1[c]);
 						}
 					}
 				}
@@ -116,8 +126,8 @@ namespace dnn
 						const auto outputOffset = c * HW;
 						for (auto hw = 0ull; hw < HW; hw++)
 						{
-							Inputs[0]->NeuronsD1[hw + outputOffset] += NeuronsD1[hw + outputOffset] * Inputs[1]->Neurons[c];
-							Inputs[1]->NeuronsD1[c] += NeuronsD1[hw + outputOffset] * Inputs[0]->Neurons[hw + outputOffset];
+							Inputs[first]->NeuronsD1[hw + outputOffset] += NeuronsD1[hw + outputOffset] * Inputs[second]->Neurons[c];
+							Inputs[second]->NeuronsD1[c] += NeuronsD1[hw + outputOffset] * Inputs[first]->Neurons[hw + outputOffset];
 						}
 					}
 				}
@@ -137,8 +147,8 @@ namespace dnn
 							for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
 							{
 								neuronsD1.load_a(&NeuronsD1[hw + outputOffset]);
-								mul_add(neuronsD1, VecFloat().load_a(&Inputs[1]->Neurons[channelOffset]), VecFloat().load_a(&Inputs[0]->NeuronsD1[hw + outputOffset])).store_a(&Inputs[0]->NeuronsD1[hw + outputOffset]);
-								mul_add(neuronsD1, VecFloat().load_a(&Inputs[0]->Neurons[hw + outputOffset]), VecFloat().load_a(&Inputs[1]->NeuronsD1[channelOffset])).store_a(&Inputs[1]->NeuronsD1[channelOffset]);
+								mul_add(neuronsD1, VecFloat().load_a(&Inputs[second]->Neurons[channelOffset]), VecFloat().load_a(&Inputs[first]->NeuronsD1[hw + outputOffset])).store_a(&Inputs[first]->NeuronsD1[hw + outputOffset]);
+								mul_add(neuronsD1, VecFloat().load_a(&Inputs[first]->Neurons[hw + outputOffset]), VecFloat().load_a(&Inputs[second]->NeuronsD1[channelOffset])).store_a(&Inputs[second]->NeuronsD1[channelOffset]);
 							}
 						}
 					});
@@ -153,8 +163,8 @@ namespace dnn
 							const auto channelOffset = n * C + c;
 							for (auto hw = 0ull; hw < HW; hw++)
 							{
-								Inputs[0]->NeuronsD1[hw + outputOffset] += NeuronsD1[hw + outputOffset] * Inputs[1]->Neurons[channelOffset];
-								Inputs[1]->NeuronsD1[channelOffset] += NeuronsD1[hw + outputOffset] * Inputs[0]->Neurons[hw + outputOffset];
+								Inputs[first]->NeuronsD1[hw + outputOffset] += NeuronsD1[hw + outputOffset] * Inputs[second]->Neurons[channelOffset];
+								Inputs[second]->NeuronsD1[channelOffset] += NeuronsD1[hw + outputOffset] * Inputs[first]->Neurons[hw + outputOffset];
 							}
 						}
 					});
