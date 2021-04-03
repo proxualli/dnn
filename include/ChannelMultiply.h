@@ -11,22 +11,22 @@ namespace dnn
 #ifdef DNN_CACHE_PRIMITIVES
 		std::unique_ptr<dnnl::binary> fwd;
 #endif
-		auto GetFirt()
+		auto GetFirt(const std::vector<Layer*>& inputs)
 		{
-			return (Inputs[0]->H == 1 && Inputs[0]->W == 1) ? Byte(1) : Byte(0);
+			return (inputs[0]->H == 1 && inputs[0]->W == 1) ? Byte(1) : Byte(0);
 		}
-		auto GetSecond()
+		auto GetSecond(const std::vector<Layer*>& inputs)
 		{
-			return (Inputs[0]->H == 1 && Inputs[0]->W == 1) ? Byte(0) : Byte(1);
+			return (inputs[0]->H == 1 && inputs[0]->W == 1) ? Byte(0) : Byte(1);
 		}
 
 	public:
 		const Byte first, second;
 
 		ChannelMultiply(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs) :
-			Layer(device, format, name, LayerTypes::ChannelMultiply, 0, 0, inputs[GetFirt()]->C, inputs[GetFirt()]->D, inputs[GetFirt()]->H, inputs[GetFirt()]->W, 0, 0, 0, inputs),
-			first(GetFirt()),
-			second(GetSecond())
+			Layer(device, format, name, LayerTypes::ChannelMultiply, 0, 0, inputs[GetFirt(inputs)]->C, inputs[GetFirt(inputs)]->D, inputs[GetFirt(inputs)]->H, inputs[GetFirt(inputs)]->W, 0, 0, 0, inputs),
+			first(GetFirt(inputs)),
+			second(GetSecond(inputs))
 		{
 			assert(Inputs.size() == 2);
 
