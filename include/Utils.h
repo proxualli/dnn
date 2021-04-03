@@ -219,14 +219,14 @@ namespace dnn
 		ZeroFloatVector(destination.data(), elements);
 	}
 
-	static int PhysicalSeedType() 
+	static int PhysicalSeedType() noexcept
 	{
-		int abcd[4];                      // return values from cpuid instruction
+		int abcd[4];						// return values from cpuid instruction
 
-		cpuid(abcd, 7);                   // call cpuid function 7
+		cpuid(abcd, 7);						// call cpuid function 7
 		if (abcd[1] & (1 << 18)) 
 			return 3; // ebx bit 18: RDSEED available
-		cpuid(abcd, 1);                   // call cpuid function 1
+		cpuid(abcd, 1);						// call cpuid function 1
 		if (abcd[2] & (1 << 30)) 
 			return 2; // ecx bit 30: RDRAND available
 		if (abcd[3] & (1 << 4)) 
@@ -237,30 +237,30 @@ namespace dnn
 	
 	static int physicalSeedType = -1;
 	template<typename T>
-	T Seed()
+	T Seed() noexcept
 	{
 		if (physicalSeedType < 0) 
 			physicalSeedType = PhysicalSeedType();
 		
-		uint32_t ran = 0;                  // random number
+		uint32_t ran = 0;					// random number
 		switch (physicalSeedType) 
 		{
-		case 1:                            // use RDTSC instruction
+		case 1:								// use RDTSC instruction
 			ran = (uint32_t)__rdtsc();
 			break;
-		case 2:                            // use RDRAND instruction
+		case 2:								// use RDRAND instruction
 			while (_rdrand32_step(&ran) == 0) {}
 			break;
-		case 3:                            // use RDSEED instruction */
+		case 3:								// use RDSEED instruction */
 			while (_rdseed32_step(&ran) == 0) {}
 			break;
 		}
 		
-		return static_cast<T>(ran);                   // return random number
+		return static_cast<T>(ran);			// return random number
 	}
 	/*
 	template<typename T>
-	inline static T Seed()
+	inline static T Seed() noexcept
 	{
 		return static_cast<T>(__rdtsc());
 	}
