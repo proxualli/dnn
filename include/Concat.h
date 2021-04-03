@@ -12,9 +12,7 @@ namespace dnn
 #ifdef DNN_CACHE_PRIMITIVES
 		std::unique_ptr<dnnl::concat> fwd;
 #endif
-
-	public:
-		static auto InputChannels(const std::vector<Layer*>& inputs)
+		auto InputChannels(const std::vector<Layer*>& inputs)
 		{
 			auto channels = 0ull;
 			for (auto layer : inputs)
@@ -22,6 +20,9 @@ namespace dnn
 
 			return channels;
 		}
+
+	public:
+		
 
 		Concat(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs) :
 			Layer(device, format, name, LayerTypes::Concat, 0, 0, InputChannels(inputs), inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs)
