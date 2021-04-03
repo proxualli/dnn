@@ -10,13 +10,23 @@ namespace dnn
 		std::unique_ptr<dnnl::binary::primitive_desc> fwdDesc;
 #ifdef DNN_CACHE_PRIMITIVES
 		std::unique_ptr<dnnl::binary> fwd;
-		Byte first = 0;
-		Byte second = 1;
 #endif
+		auto GetFirt()
+		{
+			return (Inputs[0]->H == 1 && Inputs[0]->W == 1) ? Byte(1) : Byte(0);
+		}
+		auto GetSecond()
+		{
+			return (Inputs[0]->H == 1 && Inputs[0]->W == 1) ? Byte(0) : Byte(1);
+		}
 
 	public:
+		const Byte first, second;
+
 		ChannelMultiply(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs) :
-			Layer(device, format, name, LayerTypes::ChannelMultiply, 0, 0, inputs[0]->C, inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs)
+			Layer(device, format, name, LayerTypes::ChannelMultiply, 0, 0, inputs[GetFirt()]->C, inputs[GetFirt()]->D, inputs[GetFirt()]->H, inputs[GetFirt()]->W, 0, 0, 0, inputs),
+			first(GetFirt()),
+			second(GetSecond())
 		{
 			assert(Inputs.size() == 2);
 
@@ -25,12 +35,6 @@ namespace dnn
 			assert(Inputs[0]->W == 1 || Inputs[1]->W == 1);
 			assert(Inputs[0]->H != 1 || Inputs[1]->H != 1);
 			assert(Inputs[0]->W != 1 || Inputs[1]->W != 1);
-
-			if (Inputs[0]->H == 1 && Inputs[0]->W == 1)
-			{
-				first = Byte(1);
-				second = Byte(0);
-			}
 		}
 
 		std::string GetDescription() const final override
