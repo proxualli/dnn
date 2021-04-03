@@ -235,15 +235,15 @@ namespace dnn
 		return 0;
 	}
 	
-	static int physicalSeedType = -1;
+	static int PhysicalSeedType = -1;
 	template<typename T>
 	T Seed() noexcept
 	{
-		if (physicalSeedType < 0) 
-			physicalSeedType = GetPhysicalSeedType();
+		if (PhysicalSeedType < 0) 
+			PhysicalSeedType = GetPhysicalSeedType();
 		
 		uint32_t ran = 0;					// random number
-		switch (physicalSeedType) 
+		switch (PhysicalSeedType) 
 		{
 		case 1:								// use RDTSC instruction
 			ran = (uint32_t)__rdtsc();
