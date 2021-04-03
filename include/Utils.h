@@ -219,7 +219,7 @@ namespace dnn
 		ZeroFloatVector(destination.data(), elements);
 	}
 
-	static int PhysicalSeedType() noexcept
+	static int GetPhysicalSeedType() noexcept
 	{
 		int abcd[4];						// return values from cpuid instruction
 
@@ -240,7 +240,7 @@ namespace dnn
 	T Seed() noexcept
 	{
 		if (physicalSeedType < 0) 
-			physicalSeedType = PhysicalSeedType();
+			physicalSeedType = GetPhysicalSeedType();
 		
 		uint32_t ran = 0;					// random number
 		switch (physicalSeedType) 
@@ -456,6 +456,7 @@ namespace dnn
 		std::reverse(startIndex, endIndex);
 	}
 
+	// from oneDNN sample code
 	// Read from memory, write to handle
 	inline void read_from_dnnl_memory(void* handle, dnnl::memory& mem) {
 		dnnl::engine eng = mem.get_engine();
