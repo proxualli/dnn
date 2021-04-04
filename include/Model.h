@@ -1446,7 +1446,7 @@ namespace dnn
 
 			const auto resize = DataProv->TestingSamples[0].Depth != SampleD || DataProv->TestingSamples[0].Height != SampleH || DataProv->TestingSamples[0].Width != SampleW;
 
-			for_i(batchSize, MEDIUM_COMPUTE, [=, &SampleLabels](const size_t batchIndex)
+			for_i(batchSize, [=, &SampleLabels](const size_t batchIndex)
 			{
 				const auto sampleIndex = ((index + batchIndex) >= DataProv->TestingSamplesCount) ? batchIndex : index + batchIndex;
 
