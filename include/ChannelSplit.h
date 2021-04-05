@@ -71,7 +71,7 @@ namespace dnn
 			const auto plain = IsPlainFormat();
 			const auto elements = plain ? batchSize * CDHW : batchSize * PaddedCDHW;
 			const auto threads = elements < 2097152ull ? 2ull : elements < 8338608ull ? LIGHT_COMPUTE : MEDIUM_COMPUTE;
-			const auto groupC = (Group - 1) * (plain ? C  : PaddedC);
+			const auto groupC = (Group - 1) * C;
 			const auto strideHW = HW * VectorSize;
 			
 #ifdef DNN_STOCHASTIC
@@ -234,7 +234,7 @@ namespace dnn
 			const auto plain = IsPlainFormat();
 			const auto elements = plain ? batchSize * CDHW : batchSize * PaddedCDHW;
 			const auto threads = elements < 2097152ull ? 2ull : elements < 8338608ull ? LIGHT_COMPUTE : MEDIUM_COMPUTE;
-			const auto groupC = (Group - 1) * (plain ? C : PaddedC);
+			const auto groupC = (Group - 1) * C;
 			const auto strideHW = HW * VectorSize;
 
 #ifdef DNN_STOCHASTIC
@@ -277,7 +277,7 @@ namespace dnn
 						VecFloat In, D1;
 						for (auto c = 0ull; c < PaddedC; c += VectorSize)
 						{
-							const auto inputOffset = n * InputLayer->CDHW + (c + groupC) * HW;
+							const auto inputOffset = n * InputLayer->PaddedCDHW + (c + groupC) * HW;
 							const auto outputOffset = n * PaddedCDHW + c * HW;
 							for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
 							{
