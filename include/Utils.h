@@ -220,6 +220,13 @@ namespace dnn
 		ZeroFloatVector(destination.data(), elements);
 	}
 
+#ifdef DNN_FAST_SEED
+	template<typename T>
+	inline static T Seed() noexcept
+	{
+		return static_cast<T>(__rdtsc());
+	}
+#else
 	static int GetPhysicalSeedType() noexcept
 	{
 		int abcd[4];						// return values from cpuid instruction
@@ -259,13 +266,7 @@ namespace dnn
 		
 		return static_cast<T>(ran);			// return random number
 	}
-	/*
-	template<typename T>
-	inline static T Seed() noexcept
-	{
-		return static_cast<T>(__rdtsc());
-	}
-	*/
+#endif
 
 	inline static auto BernoulliVecFloat(const Float prob = Float(0.5)) noexcept
 	{
@@ -338,7 +339,7 @@ namespace dnn
 		return static_cast<std::streamsize>(end - start);
 	}
 
-	inline static auto StringToLower(std::string text)
+	inline static const auto StringToLower(std::string text)
 	{
 		std::transform(text.begin(), text.end(), text.begin(), ::tolower);
 		return text;
@@ -346,7 +347,7 @@ namespace dnn
 
 	static auto IsStringBool(std::string text)
 	{
-		auto textLower = StringToLower(text);
+		const auto textLower = StringToLower(text);
 		
 		if (textLower == "true" || textLower == "yes" || textLower == "false" || textLower == "no")
 			return true;
@@ -356,7 +357,7 @@ namespace dnn
 
 	static auto StringToBool(std::string text)
 	{
-		auto textLower = StringToLower(text);
+		const auto textLower = StringToLower(text);
 		
 		if (textLower == "true" || textLower == "yes")
 			return true;
