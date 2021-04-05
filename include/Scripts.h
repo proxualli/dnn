@@ -122,13 +122,13 @@ namespace dnn
             switch (Script)
             {
             case Scripts::densenet:
-                return common + std::to_string(GrowthRate) + (Dropout > 0 ? std::string("-dropout") : std::string("")) + (Compression > 0 ? std::string("-compression") : std::string("")) + (Bottleneck ? std::string("-bottleneck") : std::string("")) + StringToLower(std::string(magic_enum::enum_name<Activations>(Activation)));
+                return common + std::to_string(GrowthRate) + (Dropout > 0 ? std::string("-dropout") : std::string("")) + (Compression > 0 ? std::string("-compression") : std::string("")) + (Bottleneck ? std::string("-bottleneck") : std::string("")) + std::string("-") + StringToLower(std::string(magic_enum::enum_name<Activations>(Activation)));
             case Scripts::mobilenetv3:
-                return common + std::to_string(Width) + StringToLower(std::string(magic_enum::enum_name<Activations>(Activation))) + (SqueezeExcitation ? std::string("-se") : std::string(""));
+                return common + std::to_string(Width) + std::string("-") + StringToLower(std::string(magic_enum::enum_name<Activations>(Activation))) + (SqueezeExcitation ? std::string("-se") : std::string(""));
             case Scripts::resnet:
-                return common + std::to_string(Width) + (Dropout > 0 ? std::string("-dropout") : std::string("")) + (Bottleneck ? std::string("-bottleneck") : std::string("")) + (ChannelZeroPad ? std::string("-channelzeropad") : std::string("")) + StringToLower(std::string(magic_enum::enum_name<Activations>(Activation)));
+                return common + std::to_string(Width) + (Dropout > 0 ? std::string("-dropout") : std::string("")) + (Bottleneck ? std::string("-bottleneck") : std::string("")) + (ChannelZeroPad ? std::string("-channelzeropad") : std::string("")) + std::string("-") + StringToLower(std::string(magic_enum::enum_name<Activations>(Activation)));
             case Scripts::shufflenetv2:
-                return common + std::to_string(Width) + StringToLower(std::string(magic_enum::enum_name<Activations>(Activation))) + (SqueezeExcitation ? std::string("-se") : std::string(""));
+                return common + std::to_string(Width) + std::string("-") + StringToLower(std::string(magic_enum::enum_name<Activations>(Activation))) + (SqueezeExcitation ? std::string("-se") : std::string(""));
             default:
                 return common;
             }
