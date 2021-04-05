@@ -23,7 +23,7 @@ namespace dnn
 		bool reorderBwdDiffWeights;
 
 	public:
-		Dense(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const size_t c, const std::vector<Layer*>& inputs, const bool hasBias) :
+		Dense(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const UInt c, const std::vector<Layer*>& inputs, const bool hasBias) :
 			Layer(device, format, name, LayerTypes::Dense, c * inputs[0]->CDHW, c, c, 1, 1, 1, 0, 0, 0, inputs, hasBias),
 			reorderFwdSrc(false),
 			reorderBwdSrc(false),
@@ -54,17 +54,17 @@ namespace dnn
 			return description;
 		}
 
-		size_t FanIn() const final override
+		UInt FanIn() const final override
 		{
 			return InputLayer->CDHW;
 		}
 
-		size_t FanOut() const final override
+		UInt FanOut() const final override
 		{
 			return CDHW;
 		}
 
-		void InitializeDescriptors(const size_t batchSize) final override
+		void InitializeDescriptors(const UInt batchSize) final override
 		{
 			std::vector<dnnl::memory::desc> memDesc;
 			if (InputLayer->DstMemDesc->data.ndims == 2)
@@ -131,7 +131,7 @@ namespace dnn
 #endif
 		}
 
-		void ForwardProp(const size_t batchSize, const bool training) final override
+		void ForwardProp(const UInt batchSize, const bool training) final override
 		{
 			auto memSrc = dnnl::memory(*InputLayer->DstMemDesc, Device.engine, InputLayer->Neurons.data());
 			auto srcMem = reorderFwdSrc ? dnnl::memory(fwdDesc->src_desc(), Device.engine) : memSrc;
@@ -164,7 +164,7 @@ namespace dnn
 #endif		
 		}
 
-		void BackwardProp(const size_t batchSize) final override
+		void BackwardProp(const UInt batchSize) final override
 		{
 #ifdef DNN_LEAN
 			ZeroGradient(batchSize);

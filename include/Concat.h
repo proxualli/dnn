@@ -35,17 +35,17 @@ namespace dnn
 			return GetDescriptionHeader();
 		}
 
-		size_t FanIn() const final override
+		UInt FanIn() const final override
 		{
 			return 1;
 		}
 
-		size_t FanOut() const final override
+		UInt FanOut() const final override
 		{
 			return 1;
 		}
 
-		void InitializeDescriptors(const size_t batchSize) final override
+		void InitializeDescriptors(const UInt batchSize) final override
 		{
 			if (InputLayer->DstMemDesc->data.ndims == 2)
 			{
@@ -96,7 +96,7 @@ namespace dnn
 #endif
 		}
 
-		void ForwardProp(const size_t batchSize, const bool training) final override
+		void ForwardProp(const UInt batchSize, const bool training) final override
 		{
 			if (training)
 			{
@@ -123,7 +123,7 @@ namespace dnn
 						const auto vecZero = VecFloat(0);
 						VecFloat In;
 						auto channelOffset = 0ull;
-						size_t inputIndex, outputIndex;
+						UInt inputIndex, outputIndex;
 						for (auto input = 0ull; input < Inputs.size(); input++)
 						{
 							for (auto c = channelOffset; c < channelOffset + Inputs[input]->PaddedC; c += VectorSize)
@@ -143,7 +143,7 @@ namespace dnn
 					else
 					{
 						auto channelOffset = 0ull;
-						size_t inputIndex, outputIndex;
+						UInt inputIndex, outputIndex;
 						for (auto input = 0ull; input < Inputs.size(); input++)
 						{
 							for (auto c = channelOffset; c < channelOffset + Inputs[input]->C; c++)
@@ -165,11 +165,11 @@ namespace dnn
 #endif
 					if (!plain)
 					{
-						for_i(batchSize, threads, [=](size_t n)
+						for_i(batchSize, threads, [=](UInt n)
 						{
 							const auto outputSampleOffset = n * PaddedCDHW;
 							auto channelOffset = 0ull;
-							size_t inputIndex, outputIndex;
+							UInt inputIndex, outputIndex;
 							const auto vecZero = VecFloat(0);
 							VecFloat In;
 							for (auto input = 0ull; input < Inputs.size(); input++)
@@ -192,11 +192,11 @@ namespace dnn
 					}
 					else
 					{
-						for_i(batchSize, threads, [=](size_t n)
+						for_i(batchSize, threads, [=](UInt n)
 						{
 							const auto outputSampleOffset = n * CDHW;
 							auto channelOffset = 0ull;
-							size_t inputIndex, outputIndex;
+							UInt inputIndex, outputIndex;
 							for (auto input = 0ull; input < Inputs.size(); input++)
 							{
 								const auto inputSampleOffset = n * Inputs[input]->CDHW;
@@ -230,7 +230,7 @@ namespace dnn
 			}
 		}
 
-		void BackwardProp(const size_t batchSize) final override
+		void BackwardProp(const UInt batchSize) final override
 		{
 #ifdef DNN_LEAN
 			ZeroGradientMulti(batchSize);
@@ -247,7 +247,7 @@ namespace dnn
 				{
 					const auto strideH = HW * VectorSize;
 					auto channelOffset = 0ull;
-					size_t inputIndex, outputIndex;
+					UInt inputIndex, outputIndex;
 					VecFloat inputD1, D1;
 					for (auto input = 0ull; input < Inputs.size(); input++)
 					{
@@ -269,7 +269,7 @@ namespace dnn
 				else
 				{
 					auto channelOffset = 0ull;
-					size_t inputIndex, outputIndex;
+					UInt inputIndex, outputIndex;
 					for (auto input = 0ull; input < Inputs.size(); input++)
 					{
 						for (auto c = channelOffset; c < channelOffset + Inputs[input]->C; c++)
@@ -289,11 +289,11 @@ namespace dnn
 				if (!plain)
 				{
 					const auto strideH = HW * VectorSize;
-					for_i(batchSize, threads, [=](size_t n)
+					for_i(batchSize, threads, [=](UInt n)
 					{
 						const auto outputSampleOffset = n * PaddedCDHW;
 						auto channelOffset = 0ull;
-						size_t inputIndex, outputIndex;
+						UInt inputIndex, outputIndex;
 						VecFloat inputD1, D1;
 						for (auto input = 0ull; input < Inputs.size(); input++)
 						{
@@ -316,11 +316,11 @@ namespace dnn
 				}
 				else
 				{
-					for_i(batchSize, threads, [=](size_t n)
+					for_i(batchSize, threads, [=](UInt n)
 					{
 						const auto outputSampleOffset = n * CDHW;
 						auto channelOffset = 0ull;
-						size_t inputIndex, outputIndex;
+						UInt inputIndex, outputIndex;
 						for (auto input = 0ull; input < Inputs.size(); input++)
 						{
 							const auto inputSampleOffset = n * Inputs[input]->CDHW;

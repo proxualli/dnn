@@ -12,7 +12,7 @@ namespace dnn
 			assert(Inputs.size() > 1);
 			assert(Inputs.size() < 5);
 
-			for (size_t i = 0; i < Inputs.size(); i++)
+			for (UInt i = 0; i < Inputs.size(); i++)
 			{
 				assert(Inputs[i]->C == C);
 				assert(Inputs[i]->D == D);
@@ -26,17 +26,17 @@ namespace dnn
 			return GetDescriptionHeader();
 		}
 
-		size_t FanIn() const final override
+		UInt FanIn() const final override
 		{
 			return 1;
 		}
 
-		size_t FanOut() const final override
+		UInt FanOut() const final override
 		{
 			return 1;
 		}
 
-		void InitializeDescriptors(const size_t batchSize) final override
+		void InitializeDescriptors(const UInt batchSize) final override
 		{
 			if (InputLayer->DstMemDesc->data.ndims == 2)
 			{
@@ -68,7 +68,7 @@ namespace dnn
 			}
 		}
 
-		void ForwardProp(const size_t batchSize, const bool training) final override
+		void ForwardProp(const UInt batchSize, const bool training) final override
 		{
 			const auto plain = IsPlainFormat();
 			const auto size = plain ? CDHW : PaddedCDHW;
@@ -124,7 +124,7 @@ namespace dnn
 						switch (inputs)
 						{
 						case 2:
-							for_i(batchSize, threads, [=](size_t n)
+							for_i(batchSize, threads, [=](UInt n)
 							{
 								const auto start = n * PaddedCDHW;
 								const auto end = start + PaddedCDHW;
@@ -143,7 +143,7 @@ namespace dnn
 							break;
 
 						case 3:
-							for_i(batchSize, threads, [=](size_t n)
+							for_i(batchSize, threads, [=](UInt n)
 							{
 								const auto start = n * PaddedCDHW;
 								const auto end = start + PaddedCDHW;
@@ -163,7 +163,7 @@ namespace dnn
 							break;
 
 						case 4:
-							for_i(batchSize, threads, [=](size_t n)
+							for_i(batchSize, threads, [=](UInt n)
 							{
 								const auto start = n * PaddedCDHW;
 								const auto end = start + PaddedCDHW;
@@ -184,7 +184,7 @@ namespace dnn
 							break;
 
 						default:
-							for_i(batchSize, threads, [=](size_t n)
+							for_i(batchSize, threads, [=](UInt n)
 							{
 								const auto start = n * PaddedCDHW;
 								const auto end = start + PaddedCDHW;
@@ -215,7 +215,7 @@ namespace dnn
 						switch (inputs)
 						{
 						case 2:
-							for_i(batchSize, threads, [=](size_t n)
+							for_i(batchSize, threads, [=](UInt n)
 							{
 								const auto start = n * CDHW;
 								const auto end = start + CDHW;
@@ -230,7 +230,7 @@ namespace dnn
 							break;
 
 						case 3:
-							for_i(batchSize, threads, [=](size_t n)
+							for_i(batchSize, threads, [=](UInt n)
 							{
 								const auto start = n * CDHW;
 								const auto end = start + CDHW;
@@ -246,7 +246,7 @@ namespace dnn
 							break;
 
 						case 4:
-							for_i(batchSize, threads, [=](size_t n)
+							for_i(batchSize, threads, [=](UInt n)
 							{
 								const auto start = n * CDHW;
 								const auto end = start + CDHW;
@@ -262,7 +262,7 @@ namespace dnn
 							break;
 
 						default:
-							for_i(batchSize, threads, [=](size_t n)
+							for_i(batchSize, threads, [=](UInt n)
 							{
 								const auto start = n * CDHW;
 								const auto end = start + CDHW;
@@ -288,7 +288,7 @@ namespace dnn
 						switch (inputs)
 						{
 						case 2:
-							for_i(batchSize, threads, [=](size_t n)
+							for_i(batchSize, threads, [=](UInt n)
 							{
 								const auto start = n * PaddedCDHW;
 								const auto end = start + PaddedCDHW;
@@ -304,7 +304,7 @@ namespace dnn
 							break;
 
 						case 3:
-							for_i(batchSize, threads, [=](size_t n)
+							for_i(batchSize, threads, [=](UInt n)
 							{
 								const auto start = n * PaddedCDHW;
 								const auto end = start + PaddedCDHW;
@@ -321,7 +321,7 @@ namespace dnn
 							break;
 
 						case 4:
-							for_i(batchSize, threads, [=](size_t n)
+							for_i(batchSize, threads, [=](UInt n)
 							{
 								const auto start = n * PaddedCDHW;
 								const auto end = start + PaddedCDHW;
@@ -339,7 +339,7 @@ namespace dnn
 							break;
 
 						default:
-							for_i(batchSize, threads, [=](size_t n)
+							for_i(batchSize, threads, [=](UInt n)
 							{
 								const auto start = n * PaddedCDHW;
 								const auto end = start + PaddedCDHW;
@@ -367,7 +367,7 @@ namespace dnn
 						switch (inputs)
 						{
 						case 2:
-							for_i(batchSize, threads, [=](size_t n)
+							for_i(batchSize, threads, [=](UInt n)
 							{
 								const auto start = n * CDHW;
 								const auto end = start + CDHW;
@@ -377,7 +377,7 @@ namespace dnn
 							break;
 
 						case 3:
-							for_i(batchSize, threads, [=](size_t n)
+							for_i(batchSize, threads, [=](UInt n)
 							{
 								const auto start = n * CDHW;
 								const auto end = start + CDHW;
@@ -388,7 +388,7 @@ namespace dnn
 							break;
 
 						case 4:
-							for_i(batchSize, threads, [=](size_t n)
+							for_i(batchSize, threads, [=](UInt n)
 							{
 								const auto start = n * CDHW;
 								const auto end = start + CDHW;
@@ -399,7 +399,7 @@ namespace dnn
 							break;
 
 						default:
-							for_i(batchSize, threads, [=](size_t n)
+							for_i(batchSize, threads, [=](UInt n)
 							{
 								const auto start = n * CDHW;
 								const auto end = start + CDHW;
@@ -418,7 +418,7 @@ namespace dnn
 #endif
 		}
 
-		void BackwardProp(const size_t batchSize) final override
+		void BackwardProp(const UInt batchSize) final override
 		{
 #ifdef DNN_LEAN
 			ZeroGradientMulti(batchSize);
@@ -512,7 +512,7 @@ namespace dnn
 					switch (inputs)
 					{
 					case 2:
-						for_i(batchSize, threads, [=](size_t n)
+						for_i(batchSize, threads, [=](UInt n)
 						{
 							const auto start = n * PaddedCDHW;
 							const auto end = start + PaddedCDHW;
@@ -525,7 +525,7 @@ namespace dnn
 						break;
 
 					case 3:
-						for_i(batchSize, threads, [=](size_t n)
+						for_i(batchSize, threads, [=](UInt n)
 						{
 							const auto start = n * PaddedCDHW;
 							const auto end = start + PaddedCDHW;
@@ -539,7 +539,7 @@ namespace dnn
 						break;
 
 					case 4:
-						for_i(batchSize, threads, [=](size_t n)
+						for_i(batchSize, threads, [=](UInt n)
 						{
 							const auto start = n * PaddedCDHW;
 							const auto end = start + PaddedCDHW;
@@ -560,7 +560,7 @@ namespace dnn
 					switch (inputs)
 					{
 					case 2:
-						for_i(batchSize, threads, [=](size_t n)
+						for_i(batchSize, threads, [=](UInt n)
 						{
 							const auto start = n * CDHW;
 							const auto end = start + CDHW;
@@ -574,7 +574,7 @@ namespace dnn
 						break;
 
 					case 3:
-						for_i(batchSize, threads, [=](size_t n)
+						for_i(batchSize, threads, [=](UInt n)
 						{
 							const auto start = n * CDHW;
 							const auto end = start + CDHW;
@@ -588,7 +588,7 @@ namespace dnn
 						break;
 
 					case 4:
-						for_i(batchSize, threads, [=](size_t n)
+						for_i(batchSize, threads, [=](UInt n)
 						{
 							const auto start = n * CDHW;
 							const auto end = start + CDHW;

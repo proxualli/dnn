@@ -39,10 +39,10 @@ namespace dnn
 		VectorT Data;
 
 	public:
-		size_t Channels;
-		size_t Depth;
-		size_t Height;
-		size_t Width;
+		UInt Channels;
+		UInt Depth;
+		UInt Height;
+		UInt Width;
 		
 		Image() :
 			Channels(0),
@@ -53,7 +53,7 @@ namespace dnn
 		{
 		}
 
-		Image(const size_t c, const size_t d, const size_t h, const size_t w, const VectorT& image) :
+		Image(const UInt c, const UInt d, const UInt h, const UInt w, const VectorT& image) :
 			Channels(c),
 			Depth(d),
 			Height(h),
@@ -62,7 +62,7 @@ namespace dnn
 		{
 		}
 
-		Image(const size_t c, const size_t d, const size_t h, const size_t w, const T* image) :
+		Image(const UInt c, const UInt d, const UInt h, const UInt w, const T* image) :
 			Channels(c),
 			Depth(d),
 			Height(h),
@@ -72,7 +72,7 @@ namespace dnn
 			std::memcpy(Data.data(), image, c * d * h * w * sizeof(T));
 		}
 
-		Image(const size_t c, const size_t d, const size_t h, const size_t w) :
+		Image(const UInt c, const UInt d, const UInt h, const UInt w) :
 			Channels(c),
 			Depth(d),
 			Height(h),
@@ -83,12 +83,12 @@ namespace dnn
 
 		~Image() = default;
 
-		T& operator()(const size_t c, const size_t d, const size_t h, const size_t w)
+		T& operator()(const UInt c, const UInt d, const UInt h, const UInt w)
 		{
 			return Data[w + (h * Width) + (d * Height * Width) + (c * Depth * Height * Width)];
 		}
 
-		const T& operator()(const size_t c, const size_t d, const size_t h, const size_t w) const
+		const T& operator()(const UInt c, const UInt d, const UInt h, const UInt w) const
 		{
 			return Data[w + (h * Width) + (d * Height * Width) + (c * Depth * Height * Width)];
 		}
@@ -141,7 +141,7 @@ namespace dnn
 			return Image(image._spectrum, image._depth, image._height, image._width, image.data());
 		}
 
-		static Image AutoAugment(const Image& image, const size_t padD, const size_t padH, const size_t padW, const std::vector<Float>& mean, const bool mirrorPad)
+		static Image AutoAugment(const Image& image, const UInt padD, const UInt padH, const UInt padW, const std::vector<Float>& mean, const bool mirrorPad)
 		{
 			Image dstImage(image);
 
@@ -614,7 +614,7 @@ namespace dnn
 			return dstImage;
 		}
 
-		static Image ColorCast(const Image& image, const size_t angle)
+		static Image ColorCast(const Image& image, const UInt angle)
 		{
 			auto srcImage = ImageToCImgFloat(image);
 
@@ -665,7 +665,7 @@ namespace dnn
 			return dstImage;
 		}
 
-		static Image Crop(const Image& image, const Position position, const size_t depth, const size_t height, const size_t width, const std::vector<Float>& mean)
+		static Image Crop(const Image& image, const Position position, const UInt depth, const UInt height, const UInt width, const std::vector<Float>& mean)
 		{
 			Image dstImage(image.Channels, depth, height, width);
 
@@ -793,7 +793,7 @@ namespace dnn
 			return dstImage;
 		}
 
-		static Float GetChannelMean(const Image& image, const size_t c)
+		static Float GetChannelMean(const Image& image, const UInt c)
 		{
 			auto mean = Float(0);
 
@@ -805,7 +805,7 @@ namespace dnn
 			return mean /= image.ChannelSize();
 		}
 
-		static Float GetChannelVariance(const Image& image, const size_t c)
+		static Float GetChannelVariance(const Image& image, const UInt c)
 		{
 			const auto mean = Image::GetChannelMean(image, c);
 
@@ -819,7 +819,7 @@ namespace dnn
 			return variance /= image.ChannelSize();
 		}
 
-		static Float GetChannelStdDev(const Image& image, const size_t c)
+		static Float GetChannelStdDev(const Image& image, const UInt c)
 		{
 			return std::max(std::sqrt(Image::GetChannelVariance(image, c)), Float(1) / std::sqrt(Float(image.ChannelSize())));
 		}
@@ -893,7 +893,7 @@ namespace dnn
 				return dstImage;
 		}
 
-		static Image MirrorPad(const Image& image, const size_t depth, const size_t height, const size_t width)
+		static Image MirrorPad(const Image& image, const UInt depth, const UInt height, const UInt width)
 		{
 			Image dstImage(image.Channels, image.Depth + (depth * 2), image.Height + (height * 2), image.Width + (width * 2));
 
@@ -994,19 +994,19 @@ namespace dnn
 			return dstImage;
 		}
 
-		inline static Image Padding(const Image& image, const size_t padD, const size_t padH, const size_t padW, const std::vector<Float>& mean, const bool mirrorPad = false)
+		inline static Image Padding(const Image& image, const UInt padD, const UInt padH, const UInt padW, const std::vector<Float>& mean, const bool mirrorPad = false)
 		{
 			return mirrorPad ? Image::MirrorPad(image, padD, padH, padW) : Image::ZeroPad(image, padD, padH, padW, mean);
 		}
 
-		static Image Posterize(const Image& image, const size_t levels = 16)
+		static Image Posterize(const Image& image, const UInt levels = 16)
 		{
 			Image dstImage(image.Channels, image.Depth, image.Height, image.Width);
 
 			auto palette = std::vector<Byte>(256);
 			const auto q = 256ull / levels;
 			for (auto c = 0ull; c < 255ull; c++)
-				palette[c] = Saturate<size_t>((((c / q) * q) * levels) / (levels - 1));
+				palette[c] = Saturate<UInt>((((c / q) * q) * levels) / (levels - 1));
 
 			for (auto c = 0ull; c < dstImage.Channels; c++)
 				for (auto d = 0ull; d < dstImage.Depth; d++)
@@ -1017,7 +1017,7 @@ namespace dnn
 			return dstImage;
 		}
 		
-		static Image RandomCrop(const Image& image, const size_t depth, const size_t height, const size_t width, const std::vector<Float>& mean)
+		static Image RandomCrop(const Image& image, const UInt depth, const UInt height, const UInt width, const std::vector<Float>& mean)
 		{
 			Image dstImage(image.Channels, depth, height, width);
 
@@ -1034,13 +1034,13 @@ namespace dnn
 			const auto minH = std::min(dstImage.Height, image.Height);
 			const auto minW = std::min(dstImage.Width, image.Width);
 			
-			const auto srcDdelta = dstImage.Depth < image.Depth ? UniformInt<size_t>(0, image.Depth - dstImage.Depth) : 0ull;
-			const auto srcHdelta = dstImage.Height < image.Height ? UniformInt<size_t>(0, image.Height - dstImage.Height) : 0ull;
-			const auto srcWdelta = dstImage.Width < image.Width ? UniformInt<size_t>(0, image.Width - dstImage.Width) : 0ull;
+			const auto srcDdelta = dstImage.Depth < image.Depth ? UniformInt<UInt>(0, image.Depth - dstImage.Depth) : 0ull;
+			const auto srcHdelta = dstImage.Height < image.Height ? UniformInt<UInt>(0, image.Height - dstImage.Height) : 0ull;
+			const auto srcWdelta = dstImage.Width < image.Width ? UniformInt<UInt>(0, image.Width - dstImage.Width) : 0ull;
 			
-			const auto dstDdelta = dstImage.Depth > image.Depth ? UniformInt<size_t>(0, dstImage.Depth - image.Depth) : 0ull;
-			const auto dstHdelta = dstImage.Height > image.Height ? UniformInt<size_t>(0, dstImage.Height - image.Height) : 0ull;
-			const auto dstWdelta = dstImage.Width > image.Width ? UniformInt<size_t>(0, dstImage.Width - image.Width) : 0ull;
+			const auto dstDdelta = dstImage.Depth > image.Depth ? UniformInt<UInt>(0, dstImage.Depth - image.Depth) : 0ull;
+			const auto dstHdelta = dstImage.Height > image.Height ? UniformInt<UInt>(0, dstImage.Height - image.Height) : 0ull;
+			const auto dstWdelta = dstImage.Width > image.Width ? UniformInt<UInt>(0, dstImage.Width - image.Width) : 0ull;
 
 			for (auto c = 0ull; c < dstImage.Channels; c++)
 				for (auto d = 0ull; d < minD; d++)
@@ -1055,10 +1055,10 @@ namespace dnn
 		{
 			Image dstImage(image);
 
-			const auto centerH = UniformInt<size_t>(0, dstImage.Height);
-			const auto centerW = UniformInt<size_t>(0, dstImage.Width);
-			const auto rangeH = UniformInt<size_t>(dstImage.Height / 8, dstImage.Height / 4);
-			const auto rangeW = UniformInt<size_t>(dstImage.Width / 8, dstImage.Width / 4);
+			const auto centerH = UniformInt<UInt>(0, dstImage.Height);
+			const auto centerW = UniformInt<UInt>(0, dstImage.Width);
+			const auto rangeH = UniformInt<UInt>(dstImage.Height / 8, dstImage.Height / 4);
+			const auto rangeW = UniformInt<UInt>(dstImage.Width / 8, dstImage.Width / 4);
 			const auto startH = long(centerH) - long(rangeH) > 0 ? centerH - rangeH : 0ull;
 			const auto startW = long(centerW) - long(rangeW) > 0 ? centerW - rangeW : 0ull;
 			const auto endH = centerH + rangeH < dstImage.Height ? centerH + rangeH : dstImage.Height;
@@ -1076,7 +1076,7 @@ namespace dnn
 			return dstImage;
 		}
 
-		static Image Resize(const Image& image, const size_t depth, const size_t height, const size_t width, const Interpolation interpolation)
+		static Image Resize(const Image& image, const UInt depth, const UInt height, const UInt width, const Interpolation interpolation)
 		{
 			auto srcImage = ImageToCImg(image);
 
@@ -1179,13 +1179,13 @@ namespace dnn
 				if (deltaW < 0)
 					cimg_forYZC(srcImage, y, z, c)
 					{
-						std::memmove(srcImage.data(0, y, z, c), srcImage.data(-deltaW, y, z, c), size_t(srcImage._width + deltaW) * sizeof(T));
+						std::memmove(srcImage.data(0, y, z, c), srcImage.data(-deltaW, y, z, c), UInt(srcImage._width + deltaW) * sizeof(T));
 						std::memset(srcImage.data(srcImage._width + deltaW, y, z, c), isFloat ? 0 : (int)mean[c], -deltaW * sizeof(T));
 					}
 				else
 					cimg_forYZC(srcImage, y, z, c)
 					{
-						std::memmove(srcImage.data(deltaW, y, z, c), srcImage.data(0, y, z, c), size_t(srcImage._width - deltaW) * sizeof(T));
+						std::memmove(srcImage.data(deltaW, y, z, c), srcImage.data(0, y, z, c), UInt(srcImage._width - deltaW) * sizeof(T));
 						std::memset(srcImage.data(0, y, z, c), isFloat ? 0 : (int)mean[c], deltaW * sizeof(T));
 					}
 			}
@@ -1195,14 +1195,14 @@ namespace dnn
 				if (deltaH < 0)
 					cimg_forZC(srcImage, z, c)
 					{
-						std::memmove(srcImage.data(0, 0, z, c), srcImage.data(0, -deltaH, z, c), size_t(srcImage._width) * size_t(srcImage._height + deltaH) * sizeof(T));
-						std::memset(srcImage.data(0, srcImage._height + deltaH, z, c), isFloat ? 0 : (int)mean[c], -deltaH * size_t(srcImage._width) * sizeof(T));
+						std::memmove(srcImage.data(0, 0, z, c), srcImage.data(0, -deltaH, z, c), UInt(srcImage._width) * UInt(srcImage._height + deltaH) * sizeof(T));
+						std::memset(srcImage.data(0, srcImage._height + deltaH, z, c), isFloat ? 0 : (int)mean[c], -deltaH * UInt(srcImage._width) * sizeof(T));
 					}
 				else
 					cimg_forZC(srcImage, z, c)
 					{
-						std::memmove(srcImage.data(0, deltaH, z, c), srcImage.data(0, 0, z, c), size_t(srcImage._width) * size_t(srcImage._height - deltaH) * sizeof(T));
-						std::memset(srcImage.data(0, 0, z, c), isFloat ? 0 : (int)mean[c], deltaH * size_t(srcImage._width) * sizeof(T));
+						std::memmove(srcImage.data(0, deltaH, z, c), srcImage.data(0, 0, z, c), UInt(srcImage._width) * UInt(srcImage._height - deltaH) * sizeof(T));
+						std::memset(srcImage.data(0, 0, z, c), isFloat ? 0 : (int)mean[c], deltaH * UInt(srcImage._width) * sizeof(T));
 					}
 			}
 
@@ -1224,7 +1224,7 @@ namespace dnn
 			return dstImage;
 		}
 		
-		static Image ZeroPad(const Image& image, const size_t depth, const size_t height, const size_t width, const std::vector<Float>& mean)
+		static Image ZeroPad(const Image& image, const UInt depth, const UInt height, const UInt width, const std::vector<Float>& mean)
 		{
 			Image dstImage(image.Channels, image.Depth + (depth * 2), image.Height + (height * 2), image.Width + (width * 2));
 

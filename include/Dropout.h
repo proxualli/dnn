@@ -33,17 +33,17 @@ namespace dnn
 			return description;
 		}
 
-		size_t FanIn() const final override
+		UInt FanIn() const final override
 		{
 			return 1;
 		}
 
-		size_t FanOut() const final override
+		UInt FanOut() const final override
 		{
 			return 1;
 		}
 
-		void InitializeDescriptors(const size_t batchSize) final override
+		void InitializeDescriptors(const UInt batchSize) final override
 		{
 			DNN_UNREF_PAR(batchSize);
 
@@ -53,7 +53,7 @@ namespace dnn
 			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(*InputLayer->DiffDstMemDesc);
 		}
 
-		void SetBatchSize(const size_t batchSize) final override
+		void SetBatchSize(const UInt batchSize) final override
 		{
 			Layer::SetBatchSize(batchSize);
 
@@ -63,7 +63,7 @@ namespace dnn
 					NeuronsActive[n * PaddedCDHW + i] = Float(1);
 		}
 
-		void ForwardProp(const size_t batchSize, const bool training) final override
+		void ForwardProp(const UInt batchSize, const bool training) final override
 		{
 			const auto size = IsPlainFormat() ? CDHW : PaddedCDHW;
 	        const auto part = (size / VectorSize) * VectorSize;
@@ -95,7 +95,7 @@ namespace dnn
 
 				{
 #endif
-					for_i(batchSize, [=](size_t b)
+					for_i(batchSize, [=](UInt b)
 					{
 						const auto start = b * size;
 						const auto end = start + part;
@@ -135,7 +135,7 @@ namespace dnn
 				else
 				{
 #endif
-					for_i(batchSize, LIGHT_COMPUTE, [=](size_t b)
+					for_i(batchSize, LIGHT_COMPUTE, [=](UInt b)
 					{
 						const auto start = b * size;
 						const auto end = start + part;
@@ -150,7 +150,7 @@ namespace dnn
 			}
 		}
 
-		void BackwardProp(const size_t batchSize) final override
+		void BackwardProp(const UInt batchSize) final override
 		{
 #ifdef DNN_LEAN
 			ZeroGradient(batchSize);
@@ -170,7 +170,7 @@ namespace dnn
 			else
 			{
 #endif
-				for_i(batchSize, LIGHT_COMPUTE, [=](size_t b)
+				for_i(batchSize, LIGHT_COMPUTE, [=](UInt b)
 				{
 					const auto start = b * size;
 					const auto end = start + part;

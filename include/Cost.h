@@ -16,31 +16,31 @@ namespace dnn
 	class Cost : public Layer
 	{
 	private:
-		std::vector<size_t> SampleLabel;
-		std::vector<std::vector<size_t>> SampleLabels;
+		std::vector<UInt> SampleLabel;
+		std::vector<std::vector<UInt>> SampleLabels;
 		bool isLogSoftmax;
 
 	public:
 		const Costs CostFunction;
-		const size_t GroupIndex;
-		const size_t LabelIndex;
+		const UInt GroupIndex;
+		const UInt LabelIndex;
 		const Float LabelTrue;
 		const Float LabelFalse;
 		const Float Weight;
 		const Float Eps;
 
-		size_t TrainErrors;
+		UInt TrainErrors;
 		Float TrainLoss;
 		Float AvgTrainLoss;
 		Float TrainErrorPercentage;
-		size_t TestErrors;
+		UInt TestErrors;
 		Float TestLoss;
 		Float AvgTestLoss;
 		Float TestErrorPercentage;
 
-		std::vector<std::vector<size_t>> ConfusionMatrix;
+		std::vector<std::vector<UInt>> ConfusionMatrix;
 
-		Cost(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const Costs cost, const size_t groupIndex, const size_t labelIndex, const size_t c, const std::vector<Layer*>& inputs, const Float labelTrue, const Float labelFalse, const Float weight, const Float eps) :
+		Cost(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const Costs cost, const UInt groupIndex, const UInt labelIndex, const UInt c, const std::vector<Layer*>& inputs, const Float labelTrue, const Float labelFalse, const Float weight, const Float eps) :
 			Layer(device, format, name, LayerTypes::Cost, 0, 0, c, 1, 1, 1, 0, 0, 0, inputs),
 			CostFunction(cost),
 			GroupIndex(groupIndex),
@@ -65,7 +65,7 @@ namespace dnn
 			TestLoss = Float(0);
 			AvgTestLoss = Float(0);
 
-			ConfusionMatrix = std::vector<std::vector<size_t>>(C, std::vector<size_t>(C, 0));
+			ConfusionMatrix = std::vector<std::vector<UInt>>(C, std::vector<UInt>(C, 0));
 		}
 
 		std::string GetDescription() const final override
@@ -83,17 +83,17 @@ namespace dnn
 			return description;
 		}
 
-		size_t FanIn() const final override
+		UInt FanIn() const final override
 		{
 			return 1;
 		}
 
-		size_t FanOut() const final override
+		UInt FanOut() const final override
 		{
 			return 1;
 		}
 
-		void InitializeDescriptors(const size_t batchSize) final override
+		void InitializeDescriptors(const UInt batchSize) final override
 		{
 			chosenFormat = dnnl::memory::format_tag::nc;
 			DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ int(batchSize), int(C) }), dnnl::memory::data_type::f32, chosenFormat));
@@ -102,12 +102,12 @@ namespace dnn
 			isLogSoftmax = static_cast<Activation*>(InputLayer)->ActivationFunction == Activations::LogSoftmax;
 		}
 
-		void SetSampleLabel(const std::vector<size_t>& sampleLabel)
+		void SetSampleLabel(const std::vector<UInt>& sampleLabel)
 		{
 			SampleLabel = sampleLabel;
 		}
 
-		void SetSampleLabels(const std::vector<std::vector<size_t>>& sampleLabels)
+		void SetSampleLabels(const std::vector<std::vector<UInt>>& sampleLabels)
 		{
 			SampleLabels = sampleLabels;
 		}
@@ -124,10 +124,10 @@ namespace dnn
 			TestLoss = Float(0);
 			AvgTestLoss = Float(0);
 
-			ConfusionMatrix = std::vector<std::vector<size_t>>(C, std::vector<size_t>(C, 0));
+			ConfusionMatrix = std::vector<std::vector<UInt>>(C, std::vector<UInt>(C, 0));
 		}
 
-		void ForwardProp(const size_t batchSize, const bool training) final override
+		void ForwardProp(const UInt batchSize, const bool training) final override
 		{
 			DNN_UNREF_PAR(training);
 
@@ -377,7 +377,7 @@ namespace dnn
 			}
 		}
 
-		void BackwardProp(const size_t batchSize) final override
+		void BackwardProp(const UInt batchSize) final override
 		{
 #ifdef DNN_LEAN
 			ZeroGradient(batchSize);

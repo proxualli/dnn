@@ -18,18 +18,18 @@ namespace dnn
 		std::filesystem::path StorageDirectory;
 		std::filesystem::path DatasetsDirectory;
 		Datasets Dataset;
-		size_t C;
+		UInt C;
 		std::vector<Float> Mean;
 		std::vector<Float> StdDev;
-		size_t TrainingSamplesCount;
-		size_t TestingSamplesCount;
-		size_t Hierarchies;
-		std::vector<size_t> ClassCount;
+		UInt TrainingSamplesCount;
+		UInt TestingSamplesCount;
+		UInt Hierarchies;
+		std::vector<UInt> ClassCount;
 		std::vector<std::string> ClassNames;
 		std::vector<Image<Byte>> TrainingSamples;
 		std::vector<Image<Byte>> TestingSamples;
-		std::vector<std::vector<size_t>> TrainingLabels;
-		std::vector<std::vector<size_t>> TestingLabels;
+		std::vector<std::vector<UInt>> TrainingLabels;
+		std::vector<std::vector<UInt>> TestingLabels;
 
 		Dataprovider(const std::string& directory) :
 			StorageDirectory(std::filesystem::path(directory)),
@@ -425,12 +425,12 @@ namespace dnn
 			{
 			case Datasets::cifar10:
 			{
-				ClassCount = std::vector<size_t>({ 10 });
+				ClassCount = std::vector<UInt>({ 10 });
 				Hierarchies = ClassCount.size();
 				TrainingSamplesCount = 50000;
 				TestingSamplesCount = 10000;
-				TrainingLabels = std::vector<std::vector<size_t>>(TrainingSamplesCount, std::vector<size_t>(Hierarchies, 0));
-				TestingLabels = std::vector<std::vector<size_t>>(TestingSamplesCount, std::vector<size_t>(Hierarchies, 0));
+				TrainingLabels = std::vector<std::vector<UInt>>(TrainingSamplesCount, std::vector<UInt>(Hierarchies, 0));
+				TestingLabels = std::vector<std::vector<UInt>>(TestingSamplesCount, std::vector<UInt>(Hierarchies, 0));
 				Mean = std::vector<Float>({ Float(125.3), Float(123.0), Float(113.9) });
 				StdDev = std::vector<Float>({ Float(63.0), Float(62.1), Float(66.7) });
 				TrainingSamples = std::vector<Image<Byte>>(TrainingSamplesCount);
@@ -444,7 +444,7 @@ namespace dnn
 				const auto pathTestPatterns = (DatasetsDirectory / std::string(magic_enum::enum_name<Datasets>(dataset)) / "test_batch.bin").string();
 
 				auto ok = true;
-				for_i(5, [=, &ok](size_t batch)
+				for_i(5, [=, &ok](UInt batch)
 				{
 					auto infile = std::ifstream(pathTrainPatterns[batch], std::ios::binary | std::ios::in);
 
@@ -455,7 +455,7 @@ namespace dnn
 						infile.close();
 
 						const auto offset = batch * 10000;
-						for (size_t index = 0; index < 10000; index++)
+						for (UInt index = 0; index < 10000; index++)
 						{
 							TrainingSamples[index + offset] = Image<Byte>(3, 1, 32, 32, &TrainPatterns[3073 * index + 1]);
 							TrainingLabels[index + offset][0] = TrainPatterns[3073 * index];
@@ -477,7 +477,7 @@ namespace dnn
 					infile.read(reinterpret_cast<char*>(TestPatterns), 30730000);
 					infile.close();
 
-					for (size_t index = 0; index < TestingSamplesCount; index++)
+					for (UInt index = 0; index < TestingSamplesCount; index++)
 					{
 						TestingSamples[index] = Image<Byte>(3, 1, 32, 32, &TestPatterns[3073 * index + 1]);
 						TestingLabels[index][0] = TestPatterns[3073 * index];
@@ -492,12 +492,12 @@ namespace dnn
 
 			case Datasets::cifar100:
 			{
-				ClassCount = std::vector<size_t>({ 20, 100 });
+				ClassCount = std::vector<UInt>({ 20, 100 });
 				Hierarchies = ClassCount.size();
 				TrainingSamplesCount = 50000;
 				TestingSamplesCount = 10000;
-				TrainingLabels = std::vector<std::vector<size_t>>(TrainingSamplesCount, std::vector<size_t>(Hierarchies));
-				TestingLabels = std::vector<std::vector<size_t>>(TestingSamplesCount, std::vector<size_t>(Hierarchies));
+				TrainingLabels = std::vector<std::vector<UInt>>(TrainingSamplesCount, std::vector<UInt>(Hierarchies));
+				TestingLabels = std::vector<std::vector<UInt>>(TestingSamplesCount, std::vector<UInt>(Hierarchies));
 				Mean = std::vector<Float>({ Float(129.3), Float(124.1), Float(112.4) });
 				StdDev = std::vector<Float>({ Float(68.2),  Float(65.4),  Float(70.4) });
 				TrainingSamples = std::vector<Image<Byte>>(TrainingSamplesCount);
@@ -512,7 +512,7 @@ namespace dnn
 					infile.read(reinterpret_cast<char*>(TrainPatterns), 153700000);
 					infile.close();
 
-					for (size_t index = 0; index < 50000; index++)
+					for (UInt index = 0; index < 50000; index++)
 					{
 						TrainingSamples[index] = Image<Byte>(3, 1, 32, 32, &TrainPatterns[3074 * index + 2]);
 						TrainingLabels[index][0] = TrainPatterns[3074 * index];
@@ -531,7 +531,7 @@ namespace dnn
 					infile.read(reinterpret_cast<char*>(TestPatterns), 30740000);
 					infile.close();
 
-					for (size_t index = 0; index < TestingSamplesCount; index++)
+					for (UInt index = 0; index < TestingSamplesCount; index++)
 					{
 						TestingSamples[index] = Image<Byte>(3, 1, 32, 32, &TestPatterns[3074 * index + 2]);
 						TestingLabels[index][0] = TestPatterns[3074 * index];
@@ -548,12 +548,12 @@ namespace dnn
 			case Datasets::fashionmnist:
 			case Datasets::mnist:
 			{
-				ClassCount = std::vector<size_t>({ 10 });
+				ClassCount = std::vector<UInt>({ 10 });
 				Hierarchies = ClassCount.size();
 				TrainingSamplesCount = 60000;
 				TestingSamplesCount = 10000;
-				TrainingLabels = std::vector<std::vector<size_t>>(TrainingSamplesCount, std::vector<size_t>(Hierarchies));
-				TestingLabels = std::vector<std::vector<size_t>>(TestingSamplesCount, std::vector<size_t>(Hierarchies));
+				TrainingLabels = std::vector<std::vector<UInt>>(TrainingSamplesCount, std::vector<UInt>(Hierarchies));
+				TestingLabels = std::vector<std::vector<UInt>>(TestingSamplesCount, std::vector<UInt>(Hierarchies));
 				const auto pathTrainPatterns = (DatasetsDirectory / std::string(magic_enum::enum_name<Datasets>(dataset)) / "train-images-idx3-ubyte").string();
 				const auto pathTrainLabels = (DatasetsDirectory / std::string(magic_enum::enum_name<Datasets>(dataset)) / "train-labels-idx1-ubyte").string();
 				const auto pathTestPatterns = (DatasetsDirectory / std::string(magic_enum::enum_name<Datasets>(dataset))  / "t10k-images-idx3-ubyte").string();
@@ -575,10 +575,10 @@ namespace dnn
 						infile.read(reinterpret_cast<char*>(fileBuf), 47040000);
 						infile.close();
 
-						for (size_t i = 0; i < TrainingSamplesCount; i++)
+						for (UInt i = 0; i < TrainingSamplesCount; i++)
 						{
 							TrainingSamples.push_back(Image<Byte>(1, 1, 28, 28, &fileBuf[i * 784]));
-							TrainingLabels[i][0] = static_cast<size_t>(fileBufLabels[i]);
+							TrainingLabels[i][0] = static_cast<UInt>(fileBufLabels[i]);
 						}
 
 						delete[] fileBuf;
@@ -610,10 +610,10 @@ namespace dnn
 						infile.read(reinterpret_cast<char*>(fileBuf), 7840000);
 						infile.close();
 
-						for (size_t i = 0; i < TestingSamplesCount; i++)
+						for (UInt i = 0; i < TestingSamplesCount; i++)
 						{
 							TestingSamples.push_back(Image<Byte>(1, 1, 28, 28, &fileBuf[i * 784]));
-							TestingLabels[i][0] = static_cast<size_t>(fileBufLabels[i]);
+							TestingLabels[i][0] = static_cast<UInt>(fileBufLabels[i]);
 						}
 
 						delete[] fileBuf;
@@ -633,18 +633,18 @@ namespace dnn
 
 			case Datasets::tinyimagenet:
 			{
-				ClassCount = std::vector<size_t>({ 200 });
+				ClassCount = std::vector<UInt>({ 200 });
 				Hierarchies = ClassCount.size();
 				TrainingSamplesCount = 100000;
 				TestingSamplesCount = 10000;
-				TrainingLabels = std::vector<std::vector<size_t>>(TrainingSamplesCount, std::vector<size_t>(Hierarchies, 0));
-				TestingLabels = std::vector<std::vector<size_t>>(TestingSamplesCount, std::vector<size_t>(Hierarchies, 0));
+				TrainingLabels = std::vector<std::vector<UInt>>(TrainingSamplesCount, std::vector<UInt>(Hierarchies, 0));
+				TestingLabels = std::vector<std::vector<UInt>>(TestingSamplesCount, std::vector<UInt>(Hierarchies, 0));
 				Mean = std::vector<Float>({ Float(117.56279), Float(109.588692), Float(96.981331) });
 				StdDev = std::vector<Float>({ Float(69.272858), Float(67.387779), Float(70.635902) });
 				TrainingSamples = std::vector<Image<Byte>>(TrainingSamplesCount);
 				TestingSamples = std::vector<Image<Byte>>(TestingSamplesCount);
 				auto labels = std::vector<std::string>(TestingSamplesCount);
-				auto labels_idx = std::vector<size_t>(TestingSamplesCount);
+				auto labels_idx = std::vector<UInt>(TestingSamplesCount);
 				ClassNames = std::vector<std::string>();
 
 				auto infile = std::ifstream((DatasetsDirectory / std::string(magic_enum::enum_name<Datasets>(dataset))  / "wnids.txt").string());
@@ -658,10 +658,10 @@ namespace dnn
 				else
 					return false;
 
-                for_i(200ull, [=](size_t item)
+                for_i(200ull, [=](UInt item)
 				{
 					const auto offset = item * 500;
-					for (size_t i = 0; i < 500; i++)
+					for (UInt i = 0; i < 500; i++)
 					{
 						const auto pos = i + offset;
 						const auto fileName = (DatasetsDirectory / std::string(magic_enum::enum_name<Datasets>(dataset))  / "train" / ClassNames[item] / "images" / (ClassNames[item] + "_" + std::to_string(i) + ".JPEG")).string();
@@ -684,7 +684,7 @@ namespace dnn
 						std::getline(ss, token, '\t');
 
 						labels[index] = token;
-						for (size_t x = 0; x < 200; x++)
+						for (UInt x = 0; x < 200; x++)
 						{
 							if (ClassNames[x] == token)
 							{
@@ -699,7 +699,7 @@ namespace dnn
 				else
 					return false;
 
-				for_i(TestingSamplesCount, [=](size_t i)
+				for_i(TestingSamplesCount, [=](UInt i)
 				{
 					const auto fileName = (DatasetsDirectory / std::string(magic_enum::enum_name<Datasets>(dataset))  / "val" / "images" / ("val_" + std::to_string(i) + ".JPEG")).string();
 					//const auto fileName = (DatasetsDirectory() / std::string(magic_enum::enum_name<Datasets>(dataset))  / "test" / "images" / ("test_" + std::to_string(i) + ".JPEG")).string();

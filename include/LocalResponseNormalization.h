@@ -22,12 +22,12 @@ namespace dnn
 	public:
 		const bool AcrossChannels;
 		const dnnl::algorithm Algorithm;
-		const size_t LocalSize;
+		const UInt LocalSize;
 		const Float Alpha;
 		const Float Beta;
 		const Float K;
 
-		LocalResponseNormalization(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const bool acrossChannels = false, const size_t localSize = 5, const Float alpha = Float(1), const Float beta = Float(5), const Float k = Float(1)) :
+		LocalResponseNormalization(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const bool acrossChannels = false, const UInt localSize = 5, const Float alpha = Float(1), const Float beta = Float(5), const Float k = Float(1)) :
 			Layer(device, format, name, LayerTypes::LocalResponseNormalization, 0, 0, inputs[0]->C, inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs),
 			AcrossChannels(acrossChannels),
 			Algorithm(acrossChannels ? dnnl::algorithm::lrn_across_channels : dnnl::algorithm::lrn_within_channel),
@@ -55,17 +55,17 @@ namespace dnn
 			return description;
 		}
 
-		size_t FanIn() const final override
+		UInt FanIn() const final override
 		{
 			return 1;
 		}
 
-		size_t FanOut() const final override
+		UInt FanOut() const final override
 		{
 			return 1;
 		}
 
-		void InitializeDescriptors(const size_t batchSize) final override
+		void InitializeDescriptors(const UInt batchSize) final override
 		{
 			if (InputLayer->DstMemDesc->data.ndims == 2)
 			{
@@ -105,7 +105,7 @@ namespace dnn
 #endif
 		}
 
-		void ForwardProp(const size_t batchSize, const bool training)  final override
+		void ForwardProp(const UInt batchSize, const bool training)  final override
 		{
 			auto memSrc = dnnl::memory(*InputLayer->DstMemDesc, Device.engine, InputLayer->Neurons.data());
 			auto srcMem = reorderFwdSrc ? dnnl::memory(fwdDesc->src_desc(), Device.engine) : memSrc;
@@ -129,7 +129,7 @@ namespace dnn
 #endif
 		}
 
-		void BackwardProp(const size_t batchSize) final override
+		void BackwardProp(const UInt batchSize) final override
 		{
 #ifdef DNN_LEAN
 			ZeroGradient(batchSize);

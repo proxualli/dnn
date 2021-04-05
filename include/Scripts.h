@@ -32,13 +32,13 @@ namespace dnn
         // Model defaullt parameters
         Scripts Script;
         Datasets Dataset;
-        size_t C;
-        size_t D = 1;
-        size_t H;
-        size_t W;
-        size_t PadD = 0;
-        size_t PadH = 0;
-        size_t PadW = 0;
+        UInt C;
+        UInt D = 1;
+        UInt H;
+        UInt W;
+        UInt PadD = 0;
+        UInt PadH = 0;
+        UInt PadW = 0;
         bool MirrorPad = false;
         bool MeanStdNormalization = true;
         Fillers WeightsFiller = Fillers::HeNormal;
@@ -56,11 +56,11 @@ namespace dnn
         Float Alpha = Float(0);
         Float Beta = Float(0);
         // Model common parameters
-        size_t Groups;
-        size_t Iterations;
+        UInt Groups;
+        UInt Iterations;
         // Model specific parameters
-        size_t Width;
-        size_t GrowthRate;
+        UInt Width;
+        UInt GrowthRate;
         Float Dropout;
         Float Compression;
         bool Bottleneck;
@@ -68,7 +68,7 @@ namespace dnn
         bool ChannelZeroPad;
         bool Relu = true;
 
-        size_t Classes() const 
+        UInt Classes() const 
         {
             switch (Dataset)
             {
@@ -90,7 +90,7 @@ namespace dnn
             return PadH > 0 || PadW > 0; 
         }
         
-        size_t Depth() const 
+        UInt Depth() const 
         {
             switch (Script)
             {
@@ -153,7 +153,7 @@ namespace dnn
             return std::string(magic_enum::enum_name<Fillers>(filler));
         }
       
-        static size_t DIV8(size_t channels)
+        static UInt DIV8(UInt channels)
         {
             if (channels % 8ull == 0ull)
                 return channels;
@@ -162,36 +162,36 @@ namespace dnn
         }
 
         /*
-        static size_t GetKernel(size_t index)
+        static UInt GetKernel(UInt index)
         {
-            size_t kernel = 1ull;
-            for (size_t k = 0ull; k < index; k++)
+            UInt kernel = 1ull;
+            for (UInt k = 0ull; k < index; k++)
                 kernel += 2;
 
             return kernel;
         }
         */
        
-        static std::string In(std::string prefix, size_t id)
+        static std::string In(std::string prefix, UInt id)
         {
             return prefix + std::to_string(id);
         }
 
-        static std::string BatchNorm(size_t id, std::string inputs, std::string group = "", std::string prefix = "B")
+        static std::string BatchNorm(UInt id, std::string inputs, std::string group = "", std::string prefix = "B")
         {
             return "[" + group + prefix + std::to_string(id) + "]" + nwl +
                 "Type=BatchNorm" + nwl +
                 "Inputs=" + inputs + nwl + nwl;
         }
 
-        static std::string BatchNormActivation(size_t id, std::string inputs, bool relu = true, std::string group = "", std::string prefix = "B")
+        static std::string BatchNormActivation(UInt id, std::string inputs, bool relu = true, std::string group = "", std::string prefix = "B")
         {
             return "[" + group + prefix + std::to_string(id) + "]" + nwl +
                 (relu ? "Type=BatchNormRelu" + nwl : "Type=BatchNormHardSwish" + nwl) +
                 "Inputs=" + inputs + nwl + nwl;
         }
 
-        static std::string BatchNormActivationDropout(size_t id, std::string inputs, bool relu = true, Float dropout = 0.0f, std::string group = "", std::string prefix = "B")
+        static std::string BatchNormActivationDropout(UInt id, std::string inputs, bool relu = true, Float dropout = 0.0f, std::string group = "", std::string prefix = "B")
         {
             return "[" + group + prefix + std::to_string(id) + "]" + nwl +
                 (relu ? "Type=BatchNormReluDropout" + nwl : "Type=BatchNormHardSwishDropout" + nwl) +
@@ -199,14 +199,14 @@ namespace dnn
                 (dropout > 0.0f ? "Dropout=" + std::to_string(dropout) + nwl + nwl : nwl);
         }
 
-        static std::string BatchNormHardLogistic(size_t id, std::string inputs, std::string group = "", std::string prefix = "B")
+        static std::string BatchNormHardLogistic(UInt id, std::string inputs, std::string group = "", std::string prefix = "B")
         {
             return "[" + group + prefix + std::to_string(id) + "]" + nwl +
                 "Type=BatchNormHardLogistic" + nwl +
                 "Inputs=" + inputs + nwl + nwl;
         }
 
-        static std::string Convolution(size_t id, std::string inputs, size_t channels, size_t kernelX = 3, size_t kernelY = 3, size_t strideX = 1, size_t strideY = 1, size_t padX = 1, size_t padY = 1, std::string group = "", std::string prefix = "C", std::string weightsFiller = "")
+        static std::string Convolution(UInt id, std::string inputs, UInt channels, UInt kernelX = 3, UInt kernelY = 3, UInt strideX = 1, UInt strideY = 1, UInt padX = 1, UInt padY = 1, std::string group = "", std::string prefix = "C", std::string weightsFiller = "")
         {
             return "[" + group + prefix + std::to_string(id) + "]" + nwl +
                 "Type=Convolution" + nwl +
@@ -218,7 +218,7 @@ namespace dnn
                 (weightsFiller != "" ? "WeightsFiller=" + weightsFiller + nwl + nwl : nwl);
         }
 
-        static std::string DepthwiseConvolution(size_t id, std::string inputs, size_t multiplier = 1, size_t kernelX = 3, size_t kernelY = 3, size_t strideX = 1, size_t strideY = 1, size_t padX = 1, size_t padY = 1, std::string group = "", std::string prefix = "DC", std::string weightsFiller = "")
+        static std::string DepthwiseConvolution(UInt id, std::string inputs, UInt multiplier = 1, UInt kernelX = 3, UInt kernelY = 3, UInt strideX = 1, UInt strideY = 1, UInt padX = 1, UInt padY = 1, std::string group = "", std::string prefix = "DC", std::string weightsFiller = "")
         {
             return "[" + group + prefix + std::to_string(id) + "]" + nwl +
                 "Type=DepthwiseConvolution" + nwl +
@@ -230,7 +230,7 @@ namespace dnn
                 (weightsFiller != "" ? "WeightsFiller=" + weightsFiller + nwl + nwl : nwl);
         }
 
-        static std::string PartialDepthwiseConvolution(size_t id, std::string inputs, size_t part = 1, size_t groups = 1, size_t kernelX = 3, size_t kernelY = 3, size_t strideX = 1, size_t strideY = 1, size_t padX = 1, size_t padY = 1, std::string group = "", std::string prefix = "DC", std::string weightsFiller = "")
+        static std::string PartialDepthwiseConvolution(UInt id, std::string inputs, UInt part = 1, UInt groups = 1, UInt kernelX = 3, UInt kernelY = 3, UInt strideX = 1, UInt strideY = 1, UInt padX = 1, UInt padY = 1, std::string group = "", std::string prefix = "DC", std::string weightsFiller = "")
         {
             return "[" + group + prefix + std::to_string(id) + "]" + nwl +
                 "Type=PartialDepthwiseConvolution" + nwl +
@@ -243,7 +243,7 @@ namespace dnn
                 (weightsFiller != "" ? "WeightsFiller=" + weightsFiller + nwl + nwl : nwl);
         }
 
-        static std::string DepthwiseMixedConvolution(size_t g, size_t id, std::string inputs, size_t strideX = 1, size_t strideY = 1, bool useChannelSplit = true, std::string group = "", std::string prefix = "DC")
+        static std::string DepthwiseMixedConvolution(UInt g, UInt id, std::string inputs, UInt strideX = 1, UInt strideY = 1, bool useChannelSplit = true, std::string group = "", std::string prefix = "DC")
         {
             switch (g)
             {
@@ -276,7 +276,7 @@ namespace dnn
             }
         }
 
-        static std::string ChannelSplit(size_t id, std::string inputs, size_t groups, size_t part, std::string group = "", std::string prefix = "CS")
+        static std::string ChannelSplit(UInt id, std::string inputs, UInt groups, UInt part, std::string group = "", std::string prefix = "CS")
         {
             return "[" + group + prefix + std::to_string(id) + "]" + nwl +
                 "Type=ChannelSplit" + nwl +
@@ -285,7 +285,7 @@ namespace dnn
                 "Group=" + std::to_string(part) + nwl + nwl;
         }
 
-        static std::string ChannelShuffle(size_t id, std::string inputs, size_t groups = 2, std::string group = "", std::string prefix = "CSH")
+        static std::string ChannelShuffle(UInt id, std::string inputs, UInt groups = 2, std::string group = "", std::string prefix = "CSH")
         {
             return "[" + group + prefix + std::to_string(id) + "]" + nwl +
                 "Type=ChannelShuffle" + nwl +
@@ -293,7 +293,7 @@ namespace dnn
                 "Groups=" + std::to_string(groups) + nwl + nwl;
         }
 
-        static std::string Concat(size_t id, std::string inputs, std::string group = "", std::string prefix = "CC")
+        static std::string Concat(UInt id, std::string inputs, std::string group = "", std::string prefix = "CC")
         {
             return "[" + group + prefix + std::to_string(id) + "]" + nwl +
                 "Type=Concat" + nwl +
@@ -307,7 +307,7 @@ namespace dnn
                 "Inputs=" + input + nwl + nwl;
         }
 
-        static std::string Add(size_t id, std::string inputs, std::string group = "", std::string prefix = "A")
+        static std::string Add(UInt id, std::string inputs, std::string group = "", std::string prefix = "A")
         {
             return "[" + group + prefix + std::to_string(id) + "]" + nwl +
                 "Type=Add" + nwl +
@@ -321,14 +321,14 @@ namespace dnn
                 "Inputs=" + inputs + nwl + nwl;
         }
 
-        static std::string Dropout(size_t id, std::string inputs, std::string group = "", std::string prefix = "D")
+        static std::string Dropout(UInt id, std::string inputs, std::string group = "", std::string prefix = "D")
         {
             return "[" + group + prefix + std::to_string(id) + "]" + nwl +
                 "Type=Dropout" + nwl +
                 "Inputs=" + inputs + nwl + nwl;
         }
 
-        static string Logistic(size_t id, std::string inputs, string group = "", std::string prefix = "ACT")
+        static string Logistic(UInt id, std::string inputs, string group = "", std::string prefix = "ACT")
         {
             return "[" + group + prefix + std::to_string(id) + "]" + nwl +
                "Type=Activation" + nwl +
@@ -420,7 +420,7 @@ namespace dnn
 
                     if (g < p.Groups)
                     {
-                        channels = DIV8((size_t)std::floor(2.0 * channels * p.Compression));
+                        channels = DIV8((UInt)std::floor(2.0 * channels * p.Compression));
 
                         if (p.Dropout > 0)
                             blocks.push_back(
@@ -581,7 +581,7 @@ namespace dnn
                         BatchNormActivation(1, "C1", p.Relu) +
                         Convolution(2, "B1", DIV8(W), 1, 1, 1, 1, 0, 0) +
                         BatchNormActivation(2, "C2", p.Relu) +
-                        Convolution(3, "B2", DIV8((size_t)(K * W / 4)), 3, 3, 1, 1, 1, 1) +
+                        Convolution(3, "B2", DIV8((UInt)(K * W / 4)), 3, 3, 1, 1, 1, 1) +
                         (p.Dropout > 0 ? BatchNormActivationDropout(3, "C3") : BatchNormActivation(3, "C3", p.Relu)) +
                         Convolution(4, "B3", DIV8(W), 1, 1, 1, 1, 0, 0) +
                         Convolution(5, "B1", DIV8(W), 1, 1, 1, 1, 0, 0) +
@@ -651,7 +651,7 @@ namespace dnn
                                 BatchNormActivation(C, In("A", A), p.Relu) +
                                 Convolution(C, In("B", C), DIV8(W), 1, 1, 1, 1, 0, 0) +
                                 BatchNormActivation(C + 1, In("C", C), p.Relu) +
-                                Convolution(C + 1, In("B", C + 1), DIV8((size_t)(K * W / 4)), 3, 3, 1, 1, 1, 1) +
+                                Convolution(C + 1, In("B", C + 1), DIV8((UInt)(K * W / 4)), 3, 3, 1, 1, 1, 1) +
                                 (p.Dropout > 0 ? BatchNormActivationDropout(C + 2, In("C", C + 1)) : BatchNormActivation(C + 2, In("C", C + 1), p.Relu)) +
                                 Convolution(C + 2, In("B", C + 2), DIV8(W), 1, 1, 1, 1, 0, 0) +
                                 Add(A + 1, In("C", C + 2) + "," + In("A", A)));

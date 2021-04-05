@@ -30,16 +30,16 @@ namespace dnn
 		bool reorderBwdDiffWeights;
 
 	public:
-		const size_t KernelH;
-		const size_t KernelW;
-		const size_t StrideH;
-		const size_t StrideW;
-		const size_t DilationH;
-		const size_t DilationW;
-		const size_t DilationKernelH;
-		const size_t DilationKernelW;
+		const UInt KernelH;
+		const UInt KernelW;
+		const UInt StrideH;
+		const UInt StrideW;
+		const UInt DilationH;
+		const UInt DilationW;
+		const UInt DilationKernelH;
+		const UInt DilationKernelW;
 
-		ConvolutionTranspose(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const size_t c, const size_t kernelH, const size_t kernelW, const size_t strideH, const size_t strideW, const size_t dilationH, const size_t dilationW, const size_t padH, const size_t padW, const bool hasBias) :
+		ConvolutionTranspose(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const UInt c, const UInt kernelH, const UInt kernelW, const UInt strideH, const UInt strideW, const UInt dilationH, const UInt dilationW, const UInt padH, const UInt padW, const bool hasBias) :
 			Layer(device, format, name, LayerTypes::ConvolutionTranspose, inputs[0]->C* c* kernelH* kernelW, c, c, inputs[0]->D, strideH* ((inputs[0]->H - 1) + (1 + (kernelH - 1) * dilationH) - (padH * 2)), strideW* ((inputs[0]->W - 1) + (1 + (kernelW - 1) * dilationW) - (padW * 2)), 0, padH, padW, inputs, hasBias),
 			KernelH(kernelH),
 			KernelW(kernelW),
@@ -86,17 +86,17 @@ namespace dnn
 			return description;
 		}
 
-		size_t FanIn() const final override
+		UInt FanIn() const final override
 		{
 			return InputLayer->C * KernelH * KernelW;
 		}
 
-		size_t FanOut() const final override
+		UInt FanOut() const final override
 		{
 			return C * (KernelH * StrideW) * (KernelH * StrideW);
 		}
 
-		void InitializeDescriptors(const size_t batchSize) final override
+		void InitializeDescriptors(const UInt batchSize) final override
 		{
 			std::vector<dnnl::memory::desc> memDesc = std::vector<dnnl::memory::desc>({
 				dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(InputLayer->C), dnnl::memory::dim(InputLayer->H), dnnl::memory::dim(InputLayer->W) }), dnnl::memory::data_type::f32, Format),
@@ -153,7 +153,7 @@ namespace dnn
 #endif
 		}
 
-		void ForwardProp(const size_t batchSize, const bool training) final override
+		void ForwardProp(const UInt batchSize, const bool training) final override
 		{
 			auto memSrc = dnnl::memory(*InputLayer->DstMemDesc, Device.engine, InputLayer->Neurons.data());
 			auto srcMem = reorderFwdSrc ? dnnl::memory(fwdDesc->src_desc(), Device.engine) : memSrc;
@@ -187,7 +187,7 @@ namespace dnn
 #endif // DNN_LEAN
 		}
 
-		void BackwardProp(const size_t batchSize) final override
+		void BackwardProp(const UInt batchSize) final override
 		{
 #ifdef DNN_LEAN
 			ZeroGradient(batchSize);
@@ -293,15 +293,15 @@ namespace dnn
 				const auto biasOffset = height * width;
 				auto image = ByteVector(biasOffset + width, fillColor);
 
-				for (size_t c = 0; c < C; c++)
+				for (UInt c = 0; c < C; c++)
 				{
 					const auto left = c * pitchH + border;
-					for (size_t r = 0; r < InputLayer->C; r++)
+					for (UInt r = 0; r < InputLayer->C; r++)
 					{
 						const auto top = r * pitchW + border;
 						const auto idx = (c * InputLayer->C + r) * KernelH * KernelW;
-						for (size_t y = 0; y < KernelH; y++)
-							for (size_t x = 0; x < KernelW; x++)
+						for (UInt y = 0; y < KernelH; y++)
+							for (UInt x = 0; x < KernelW; x++)
 								image[((top + y) * width) + left + x] = GetColorFromRange(rangeWeights, WeightsStats.Min, weights[idx + (y * KernelW) + x]);
 					}
 					if (HasBias)

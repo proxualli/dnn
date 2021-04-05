@@ -27,7 +27,7 @@ namespace dnn
 		const Float FactorW;
 
 		Resampling(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const Algorithms algorithm, const Float factorH, const Float factorW) :
-			Layer(device, format, name, LayerTypes::Resampling, 0, 0, inputs[0]->C, inputs[0]->D, static_cast<size_t>(inputs[0]->H* double(factorH)), static_cast<size_t>(inputs[0]->W* double(factorW)), 0, 0, 0, inputs),
+			Layer(device, format, name, LayerTypes::Resampling, 0, 0, inputs[0]->C, inputs[0]->D, static_cast<UInt>(inputs[0]->H* double(factorH)), static_cast<UInt>(inputs[0]->W* double(factorW)), 0, 0, 0, inputs),
 			Algorithm(algorithm),
 			FactorH(factorH),
 			FactorW(factorW)
@@ -47,17 +47,17 @@ namespace dnn
 			return description;
 		}
 
-		size_t FanIn() const final override
+		UInt FanIn() const final override
 		{
 			return 1;
 		}
 
-		size_t FanOut() const final override
+		UInt FanOut() const final override
 		{
 			return 1;
 		}
 
-		void InitializeDescriptors(const size_t batchSize) final override
+		void InitializeDescriptors(const UInt batchSize) final override
 		{
 			dnnl::algorithm algorithm;
 			switch (Algorithm)
@@ -98,7 +98,7 @@ namespace dnn
 #endif
 		}
 
-		void ForwardProp(const size_t batchSize, const bool training) final override
+		void ForwardProp(const UInt batchSize, const bool training) final override
 		{
 			auto memSrc = dnnl::memory(*InputLayer->DstMemDesc, Device.engine, InputLayer->Neurons.data());
 			auto dstMem = dnnl::memory(*DstMemDesc, Device.engine, Neurons.data());
@@ -119,7 +119,7 @@ namespace dnn
 #endif
 		}
 
-		void BackwardProp(const size_t batchSize) final override
+		void BackwardProp(const UInt batchSize) final override
 		{
 #ifdef DNN_LEAN
 			ZeroGradient(batchSize);

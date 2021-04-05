@@ -7,13 +7,13 @@ namespace dnn
 	
 	struct TrainingRate
 	{
-		size_t BatchSize;
-		size_t Cycles;
-		size_t Epochs;
-		size_t EpochMultiplier;
-		size_t DecayAfterEpochs;
-		size_t Interpolation;
-		size_t ColorAngle;
+		UInt BatchSize;
+		UInt Cycles;
+		UInt Epochs;
+		UInt EpochMultiplier;
+		UInt DecayAfterEpochs;
+		UInt Interpolation;
+		UInt ColorAngle;
 		Float ColorCast;
 		Float Distortion;
 		Float Dropout;
@@ -35,7 +35,7 @@ namespace dnn
 			Epochs(200),
 			EpochMultiplier(1),
 			DecayAfterEpochs(1),
-			Interpolation(size_t(Interpolation::Cubic)),
+			Interpolation(UInt(Interpolation::Cubic)),
 			ColorAngle(0),
 			ColorCast(Float(0)),
 			Distortion(Float(0)),
@@ -54,7 +54,7 @@ namespace dnn
 		{
 		}
 
-		TrainingRate(const Float maximumRate, const size_t batchSize, const size_t cycles, const size_t epochs, const size_t epochMultiplier, const Float minimumRate, const Float L2penalty, const Float momentum, const Float decayFactor, const size_t decayAfterEpochs, const bool horizontalFlip, const bool verticalFlip, const Float dropout, const Float cutout, const Float autoAugment, const Float colorCast, const size_t colorAngle, const Float distortion, const size_t interpolation, const Float scaling, const Float rotation) :
+		TrainingRate(const Float maximumRate, const UInt batchSize, const UInt cycles, const UInt epochs, const UInt epochMultiplier, const Float minimumRate, const Float L2penalty, const Float momentum, const Float decayFactor, const UInt decayAfterEpochs, const bool horizontalFlip, const bool verticalFlip, const Float dropout, const Float cutout, const Float autoAugment, const Float colorCast, const UInt colorAngle, const Float distortion, const UInt interpolation, const Float scaling, const Float rotation) :
 			MaximumRate(maximumRate),
 			BatchSize(batchSize),
 			Cycles(cycles),
@@ -191,19 +191,19 @@ namespace dnn
 	public:
 		const std::string Name;
 		const LayerTypes LayerType;
-		const size_t WeightCount;
-		const size_t BiasCount;
-		const size_t C;
-		const size_t D;
-		const size_t H;
-		const size_t W;
-		const size_t HW;
-		const size_t CDHW;
-		const size_t PaddedC;
-		const size_t PaddedCDHW;
-		const size_t PadD;
-		const size_t PadH;
-		const size_t PadW;
+		const UInt WeightCount;
+		const UInt BiasCount;
+		const UInt C;
+		const UInt D;
+		const UInt H;
+		const UInt W;
+		const UInt HW;
+		const UInt CDHW;
+		const UInt PaddedC;
+		const UInt PaddedCDHW;
+		const UInt PadD;
+		const UInt PadH;
+		const UInt PadW;
 		const bool HasPadding;
 		const std::vector<Layer*> Inputs;
 		Layer* InputLayer;
@@ -233,7 +233,7 @@ namespace dnn
 		FloatVector WeightsPar2;
 		FloatVector BiasesPar1;
 		FloatVector BiasesPar2;
-		size_t Moments;
+		UInt Moments;
 		Float B1;
 		Float B2;
 		Float AdaDeltaEps;
@@ -259,7 +259,7 @@ namespace dnn
 		std::unique_ptr<dnnl::memory::desc> WeightsMemDesc;
 		std::unique_ptr<dnnl::memory::desc> PersistWeightsMemDesc;
 
-		Layer(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const LayerTypes layerType, const size_t weightCount, const size_t biasCount, const size_t c, const size_t d, const size_t h, const size_t w, const size_t padD, const size_t padH, const size_t padW, const std::vector<Layer*>& inputs, const bool hasBias = false, const bool scaling = false) :
+		Layer(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const LayerTypes layerType, const UInt weightCount, const UInt biasCount, const UInt c, const UInt d, const UInt h, const UInt w, const UInt padD, const UInt padH, const UInt padW, const std::vector<Layer*>& inputs, const bool hasBias = false, const bool scaling = false) :
 			Device(device),
 			Format(format),
 			Name(name),
@@ -415,24 +415,24 @@ namespace dnn
 
 		virtual std::string GetDescription() const = 0;
 
-		virtual size_t FanIn() const = 0;
+		virtual UInt FanIn() const = 0;
 
-		virtual size_t FanOut() const = 0;
+		virtual UInt FanOut() const = 0;
 
 		virtual bool Lockable() const
 		{
 			return WeightCount > 0;
 		}
 
-		virtual void InitializeDescriptors(const size_t) = 0;
+		virtual void InitializeDescriptors(const UInt) = 0;
 
 #ifdef DNN_LEAN
-		inline void ZeroGradient(const size_t batchSize)
+		inline void ZeroGradient(const UInt batchSize)
 		{
 			ZeroFloatVectorAllocate(InputLayer->NeuronsD1, batchSize * InputLayer->PaddedCDHW);
 		}
 
-		inline void ZeroGradientMulti(const size_t batchSize)
+		inline void ZeroGradientMulti(const UInt batchSize)
 		{
 			for (auto& inputLayer : Inputs)
 			    ZeroFloatVectorAllocate(inputLayer->NeuronsD1, batchSize * inputLayer->PaddedCDHW);
@@ -447,7 +447,7 @@ namespace dnn
 		}
 #endif // DNN_LEAN
 
-		virtual void SetBatchSize(const size_t batchSize)
+		virtual void SetBatchSize(const UInt batchSize)
 		{
 			while (RefreshingStats.load())
 				std::this_thread::sleep_for(std::chrono::milliseconds(250));
@@ -462,11 +462,11 @@ namespace dnn
 			InitializeDescriptors(batchSize);
 		}
 
-		virtual void ForwardProp(const size_t batchSize, const bool training) = 0;
+		virtual void ForwardProp(const UInt batchSize, const bool training) = 0;
 
-		virtual void BackwardProp(const size_t batchSize) = 0;
+		virtual void BackwardProp(const UInt batchSize) = 0;
 
-		bool RefreshStatistics(const size_t batchSize)
+		bool RefreshStatistics(const UInt batchSize)
 		{
 			if (!RefreshingStats.load())
 			{
@@ -479,7 +479,7 @@ namespace dnn
 					NeuronsStats.Min = std::numeric_limits<Float>::max();
 					NeuronsStats.Max = std::numeric_limits<Float>::lowest();
 					
-					Float sum = Float(0);
+					auto sum = Float(0);
 					
 					if (ncdhw % VectorSize == 0ull)
 					{
@@ -500,7 +500,7 @@ namespace dnn
 						{
 							NeuronsStats.Mean = sum / ncdhw;
 							
-							VecFloat vecSum = VecFloat(0);
+							auto vecSum = VecFloat(0);
 							
 							for (auto i = 0ull; i < ncdhw; i += VectorSize)
 							{
@@ -554,7 +554,7 @@ namespace dnn
 					WeightsStats.Min = std::numeric_limits<Float>::max();
 					WeightsStats.Max = std::numeric_limits<Float>::lowest();
 					
-					Float sum = Float(0);
+					auto sum = Float(0);
 
 					for (auto i = 0ull; i < Weights.size(); i++)
 					{
@@ -977,7 +977,7 @@ namespace dnn
 					auto max = 2 * std::abs(WeightsScale);
 					std::generate_n(weights.begin(), WeightCount, [&]()
 					{
-						Float value = Float(0);
+						auto value = Float(0);
 						do { value = distribution(RandomEngine); } while ((value < -max) || (value > max));
 						return value;
 					});
@@ -1134,7 +1134,7 @@ namespace dnn
 			std::fill_n(BiasesD1.begin(), BiasCount, Float(0));
 		}
 
-		void UpdateWeights(const TrainingRate& rate, const size_t epoch, const Optimizers optimizer, const bool disableLocking)
+		void UpdateWeights(const TrainingRate& rate, const UInt epoch, const Optimizers optimizer, const bool disableLocking)
 		{
 			if (HasWeights && (disableLocking || (!disableLocking && !LockUpdate.load())))
 			{
@@ -1204,7 +1204,7 @@ namespace dnn
 			}
 		}
 
-		inline void AdaDelta(const TrainingRate& rate, const size_t epoch)
+		inline void AdaDelta(const TrainingRate& rate, const UInt epoch)
 		{
 			const auto lr = -rate.MaximumRate * WeightsLRM;
 			const auto momentum = rate.Momentum;
@@ -1236,7 +1236,7 @@ namespace dnn
 			}
 		}
 
-		inline void AdaGrad(const TrainingRate& rate, const size_t epoch)
+		inline void AdaGrad(const TrainingRate& rate, const UInt epoch)
 		{
 			const auto lr = rate.MaximumRate * WeightsLRM;
 			const auto eps = AdaGradEps;
@@ -1262,7 +1262,7 @@ namespace dnn
 			}
 		}
 
-		inline void Adam(const TrainingRate& rate, const size_t epoch)
+		inline void Adam(const TrainingRate& rate, const UInt epoch)
 		{
 			const auto beta1 = rate.Momentum;
 			const auto beta2 = AdamBeta2;
@@ -1301,7 +1301,7 @@ namespace dnn
 			B2 *= beta2;
 		}
 
-		inline void Adamax(const TrainingRate& rate, const size_t epoch)
+		inline void Adamax(const TrainingRate& rate, const UInt epoch)
 		{
 			const auto lr = rate.MaximumRate * WeightsLRM / (Float(1) - B1);
 			const auto batchRecip = Float(1) / rate.BatchSize;
@@ -1339,7 +1339,7 @@ namespace dnn
 			B1 *= beta1;
 		}
 
-		inline void NAG(const TrainingRate& rate, const size_t epoch)
+		inline void NAG(const TrainingRate& rate, const UInt epoch)
 		{
 			const auto lr = rate.MaximumRate * WeightsLRM;
 			const auto l2Penalty = rate.L2Penalty * WeightsWDM * lr;
@@ -1370,7 +1370,7 @@ namespace dnn
 			}
 		}
 
-		inline void RMSProp(const TrainingRate& rate, const size_t epoch)
+		inline void RMSProp(const TrainingRate& rate, const UInt epoch)
 		{
 			const auto lr = rate.MaximumRate * WeightsLRM / rate.BatchSize;
 			const auto eps = RMSPropEps;
@@ -1398,7 +1398,7 @@ namespace dnn
 			}
 		}
 
-		inline void SGD(const TrainingRate& rate, const size_t epoch)
+		inline void SGD(const TrainingRate& rate, const UInt epoch)
 		{
 			const auto lr = rate.MaximumRate * WeightsLRM / rate.BatchSize;
 			const auto l2Penalty = rate.MaximumRate * WeightsLRM * rate.L2Penalty * WeightsWDM;
@@ -1417,10 +1417,8 @@ namespace dnn
 			}
 		}
 
-		inline void SGDMomentum(const TrainingRate& rate, const size_t epoch)
+		inline void SGDMomentum(const TrainingRate& rate, const UInt epoch)
 		{
-			//const auto prop = (rate.Epochs - epoch) / rate.Epochs;
-			//const auto momentum = epoch >= 150 ? rate.Momentum * (prop / (Float(1) - rate.Momentum + rate.Momentum * prop)) : rate.Momentum; // decaying momentum (Deamon SGDM)
 			const auto momentum = rate.Momentum;
 			const auto lr = rate.MaximumRate * WeightsLRM / rate.BatchSize;
 			const auto l2Penalty = rate.MaximumRate * WeightsLRM * rate.L2Penalty * WeightsWDM;
@@ -1445,7 +1443,7 @@ namespace dnn
 			}
 		}
 
-		inline void RAdam(const TrainingRate& rate, const size_t epoch)
+		inline void RAdam(const TrainingRate& rate, const UInt epoch)
 		{
 			const auto batchRecip = Float(1) / rate.BatchSize;
 			const auto beta1 = rate.Momentum;
@@ -1516,7 +1514,7 @@ namespace dnn
 			B2 *= beta2;
 		}
 
-		/*size_t OffsetPaddedMem(const size_t n, const size_t c, const size_t h, const size_t w) const
+		/*UInt OffsetPaddedMem(const UInt n, const UInt c, const UInt h, const UInt w) const
 		{
 			return n * PaddedCDHW + (c / VectorSize) * HW * VectorSize + h * W * VectorSize + w * VectorSize + (c % VectorSize);
 		}*/
@@ -1643,7 +1641,7 @@ namespace dnn
 								os.write(reinterpret_cast<const char*>(BiasesPar2.data()), std::streamsize(BiasCount * sizeof(Float)));
 							os.write(reinterpret_cast<const char*>(&B1), std::streamsize(sizeof(Float)));
 							os.write(reinterpret_cast<const char*>(&B2), std::streamsize(sizeof(Float)));
-							os.write(reinterpret_cast<const char*>(&Moments), std::streamsize(sizeof(size_t)));
+							os.write(reinterpret_cast<const char*>(&Moments), std::streamsize(sizeof(UInt)));
 						}
 						break;
 
@@ -1717,7 +1715,7 @@ namespace dnn
 								os.write(reinterpret_cast<const char*>(BiasesPar2.data()), std::streamsize(BiasCount * sizeof(Float)));
 							os.write(reinterpret_cast<const char*>(&B1), std::streamsize(sizeof(Float)));
 							os.write(reinterpret_cast<const char*>(&B2), std::streamsize(sizeof(Float)));
-							os.write(reinterpret_cast<const char*>(&Moments), std::streamsize(sizeof(size_t)));
+							os.write(reinterpret_cast<const char*>(&Moments), std::streamsize(sizeof(UInt)));
 						}
 						break;
 
@@ -1850,7 +1848,7 @@ namespace dnn
 								is.read(reinterpret_cast<char*>(BiasesPar2.data()), std::streamsize(BiasCount * sizeof(Float)));
 							is.read(reinterpret_cast<char*>(&B1), std::streamsize(sizeof(Float)));
 							is.read(reinterpret_cast<char*>(&B2), std::streamsize(sizeof(Float)));
-							is.read(reinterpret_cast<char*>(&Moments), std::streamsize(sizeof(size_t)));
+							is.read(reinterpret_cast<char*>(&Moments), std::streamsize(sizeof(UInt)));
 						}
 						break;
 
@@ -1924,7 +1922,7 @@ namespace dnn
 								is.read(reinterpret_cast<char*>(BiasesPar2.data()), std::streamsize(BiasCount * sizeof(Float)));
 							is.read(reinterpret_cast<char*>(&B1), std::streamsize(sizeof(Float)));
 							is.read(reinterpret_cast<char*>(&B2), std::streamsize(sizeof(Float)));
-							is.read(reinterpret_cast<char*>(&Moments), std::streamsize(sizeof(size_t)));
+							is.read(reinterpret_cast<char*>(&Moments), std::streamsize(sizeof(UInt)));
 						}
 						break;
 
@@ -1937,7 +1935,7 @@ namespace dnn
 
 		virtual std::streamsize GetWeightsSize(const bool persistOptimizer = false, const Optimizers optimizer = Optimizers::SGD) const
 		{
-			std::streamsize weightsSize = 0;
+			auto weightsSize = std::streamsize(0);
 
 			if (HasWeights)
 			{
@@ -1992,12 +1990,11 @@ namespace dnn
 
 					case Optimizers::RAdam:
 					{
-						weightsSize += 3 * WeightCount * sizeof(Float) + 2 * sizeof(Float) + sizeof(size_t);
+						weightsSize += 3 * WeightCount * sizeof(Float) + 2 * sizeof(Float) + sizeof(UInt);
 						if (HasBias)
 							weightsSize += 3 * BiasCount * sizeof(Float);
 					}
 					break;
-
 					}
 				}
 				else
@@ -2011,7 +2008,7 @@ namespace dnn
 			return weightsSize;
 		}
 					
-		virtual size_t GetNeuronsSize(const size_t batchSize) const
+		virtual UInt GetNeuronsSize(const UInt batchSize) const
 		{
 			auto neuronsSize = 0ull;
 

@@ -60,7 +60,7 @@ using namespace dnn;
 std::unique_ptr<dnn::Model> model;
 std::unique_ptr<dnn::Dataprovider> dataprovider;
 
-extern "C" DNN_API void DNNSetNewEpochDelegate(void(*newEpoch)(size_t, size_t, size_t, bool, bool, Float, Float, Float, Float, size_t, Float, size_t, Float, Float, Float, size_t, Float, Float, Float, Float, Float, size_t, Float, Float, Float, size_t))
+extern "C" DNN_API void DNNSetNewEpochDelegate(void(*newEpoch)(UInt, UInt, UInt, bool, bool, Float, Float, Float, Float, UInt, Float, UInt, Float, Float, Float, UInt, Float, Float, Float, Float, Float, UInt, Float, Float, Float, UInt))
 {																	     
 	if (model)
 		model->NewEpoch = newEpoch;
@@ -133,7 +133,7 @@ extern "C" DNN_API int DNNLoadDefinition(const std::string& fileName, const Opti
 	return 0;
 }
 
-extern "C" DNN_API void DNNGetLayerInputs(const size_t layerIndex, std::vector<size_t> * inputs)
+extern "C" DNN_API void DNNGetLayerInputs(const UInt layerIndex, std::vector<UInt>* inputs)
 {
 	if (model && layerIndex < model->Layers.size())
 	{
@@ -172,7 +172,7 @@ extern "C" DNN_API bool DNNSetFormat(const bool plain)
 	return false;
 }
 
-extern "C" DNN_API void DNNGetConfusionMatrix(const size_t costLayerIndex, std::vector<std::vector<size_t>>* confusionMatrix)
+extern "C" DNN_API void DNNGetConfusionMatrix(const UInt costLayerIndex, std::vector<std::vector<UInt>>* confusionMatrix)
 {
 	if (model && costLayerIndex < model->CostLayers.size())
 		(*confusionMatrix) = model->CostLayers[costLayerIndex]->ConfusionMatrix;
@@ -214,13 +214,13 @@ extern "C" DNN_API void DNNResetWeights()
 		model->ResetWeights();
 }
 
-extern "C" DNN_API void DNNResetLayerWeights(const size_t layerIndex)
+extern "C" DNN_API void DNNResetLayerWeights(const UInt layerIndex)
 {
 	if (model && layerIndex < model->Layers.size())
 		model->Layers[layerIndex]->ResetWeights(model->WeightsFiller, model->WeightsScale, model->BiasesFiller, model->BiasesScale);
 }
 
-extern "C" DNN_API void DNNGetImage(const size_t layerIndex, const unsigned char fillColor, unsigned char* image)
+extern "C" DNN_API void DNNGetImage(const UInt layerIndex, const unsigned char fillColor, unsigned char* image)
 {
 	if (model && layerIndex < model->Layers.size() && !model->BatchSizeChanging.load() && !model->ResettingWeights.load())
 	{
@@ -253,7 +253,7 @@ extern "C" DNN_API void DNNGetImage(const size_t layerIndex, const unsigned char
 	}
 }
 
-extern "C" DNN_API bool DNNGetInputSnapShot(std::vector<Float>* snapshot, std::vector<size_t>* label)
+extern "C" DNN_API bool DNNGetInputSnapShot(std::vector<Float>* snapshot, std::vector<UInt>* label)
 {
 	if (model)
 		if ((model->TaskState.load() == TaskStates::Running) && ((model->State.load() == States::Training) || (model->State.load() == States::Testing)))
@@ -262,7 +262,7 @@ extern "C" DNN_API bool DNNGetInputSnapShot(std::vector<Float>* snapshot, std::v
 	return false;
 }
 
-extern "C" DNN_API void DNNGetLayerWeights(const size_t layerIndex, std::vector<Float>* weights, std::vector<Float>* biases)
+extern "C" DNN_API void DNNGetLayerWeights(const UInt layerIndex, std::vector<Float>* weights, std::vector<Float>* biases)
 {
 	if (model && layerIndex < model->Layers.size() && model->Layers[layerIndex]->HasWeights)
 	{
@@ -275,13 +275,13 @@ extern "C" DNN_API void DNNGetLayerWeights(const size_t layerIndex, std::vector<
 	}
 }
 
-extern "C" DNN_API void DNNAddLearningRate(const bool clear, const size_t gotoEpoch, const Float maximumRate, const size_t batchSize, const size_t cycles, const size_t epochs, const size_t epochMultiplier, const Float minimumRate, const Float L2penalty, const Float momentum, const Float decayFactor, const size_t decayAfterEpochs, const bool horizontalFlip, const bool verticalFlip, const Float dropout, const Float cutout, const Float autoAugment, const Float colorCast, const size_t colorAngle, const Float distortion, const size_t interpolation, const Float maxScaling, const Float maxRotation)
+extern "C" DNN_API void DNNAddLearningRate(const bool clear, const UInt gotoEpoch, const Float maximumRate, const UInt batchSize, const UInt cycles, const UInt epochs, const UInt epochMultiplier, const Float minimumRate, const Float L2penalty, const Float momentum, const Float decayFactor, const UInt decayAfterEpochs, const bool horizontalFlip, const bool verticalFlip, const Float dropout, const Float cutout, const Float autoAugment, const Float colorCast, const UInt colorAngle, const Float distortion, const UInt interpolation, const Float maxScaling, const Float maxRotation)
 {
 	if (model)
 		model->AddTrainingRate(TrainingRate(maximumRate, batchSize, cycles, epochs, epochMultiplier, minimumRate, L2penalty, momentum, decayFactor, decayAfterEpochs, horizontalFlip, verticalFlip, dropout, cutout, autoAugment, colorCast, colorAngle, distortion, interpolation, maxScaling, maxRotation), clear, gotoEpoch);
 }
 
-extern "C" DNN_API void DNNAddLearningRateSGDR(const bool clear, const size_t gotoEpoch, const Float maximumRate, const size_t batchSize, const size_t cycles, const size_t epochs, const size_t epochMultiplier, const Float minimumRate, const Float L2penalty, const Float momentum, const Float decayFactor, const size_t decayAfterEpochs, const bool horizontalFlip, const bool verticalFlip, const Float dropout, const Float cutout, const Float autoAugment, const Float colorCast, const size_t colorAngle, const Float distortion, const size_t interpolation, const Float maxScaling, const Float maxRotation)
+extern "C" DNN_API void DNNAddLearningRateSGDR(const bool clear, const UInt gotoEpoch, const Float maximumRate, const UInt batchSize, const UInt cycles, const UInt epochs, const UInt epochMultiplier, const Float minimumRate, const Float L2penalty, const Float momentum, const Float decayFactor, const UInt decayAfterEpochs, const bool horizontalFlip, const bool verticalFlip, const Float dropout, const Float cutout, const Float autoAugment, const Float colorCast, const UInt colorAngle, const Float distortion, const UInt interpolation, const Float maxScaling, const Float maxRotation)
 {
 	if (model)
 		model->AddTrainingRateSGDR(TrainingRate(maximumRate, batchSize, cycles, epochs, epochMultiplier, minimumRate, L2penalty, momentum, decayFactor, decayAfterEpochs, horizontalFlip, verticalFlip, dropout, cutout, autoAugment, colorCast, colorAngle, distortion, interpolation, maxScaling, maxRotation), clear, gotoEpoch);
@@ -323,13 +323,13 @@ extern "C" DNN_API void DNNResume()
 		model->ResumeTask();
 }
 
-extern "C" DNN_API void DNNSetCostIndex(const size_t costLayerIndex)
+extern "C" DNN_API void DNNSetCostIndex(const UInt costLayerIndex)
 {
 	if (model && costLayerIndex < model->CostLayers.size())
 		model->CostIndex = costLayerIndex;
 }
 
-extern "C" DNN_API void DNNGetCostInfo(const size_t costLayerIndex, size_t* trainErrors, Float* trainLoss, Float* avgTrainLoss, Float* trainErrorPercentage, size_t* testErrors, Float* testLoss, Float* avgTestLoss, Float* testErrorPercentage)
+extern "C" DNN_API void DNNGetCostInfo(const UInt costLayerIndex, UInt* trainErrors, Float* trainLoss, Float* avgTrainLoss, Float* trainErrorPercentage, UInt* testErrors, Float* testLoss, Float* avgTestLoss, Float* testErrorPercentage)
 {
 	if (model && costLayerIndex < model->CostLayers.size())
 	{
@@ -345,7 +345,7 @@ extern "C" DNN_API void DNNGetCostInfo(const size_t costLayerIndex, size_t* trai
 	}
 }
 
-extern "C" DNN_API void DNNGetNetworkInfo(std::string* name, size_t* costIndex, size_t* costLayerCount, size_t* groupIndex, size_t* labelIndex, size_t* hierarchies, bool* meanStdNormalization, Costs* lossFunction, Datasets* dataset, size_t* layerCount, size_t* trainingSamples, size_t* testingSamples, std::vector<Float>* meanTrainSet, std::vector<Float>* stdTrainSet)
+extern "C" DNN_API void DNNGetNetworkInfo(std::string* name, UInt* costIndex, UInt* costLayerCount, UInt* groupIndex, UInt* labelIndex, UInt* hierarchies, bool* meanStdNormalization, Costs* lossFunction, Datasets* dataset, UInt* layerCount, UInt* trainingSamples, UInt* testingSamples, std::vector<Float>* meanTrainSet, std::vector<Float>* stdTrainSet)
 {
 	if (model)
 	{
@@ -385,7 +385,7 @@ extern "C" DNN_API void DNNGetNetworkInfo(std::string* name, size_t* costIndex, 
 	}
 }
 
-extern "C" DNN_API void DNNGetTrainingInfo(size_t* currentCycle, size_t* totalCycles, size_t* currentEpoch, size_t* totalEpochs, bool* horizontalFlip, bool* verticalFlip, Float* inputDropOut, Float* inputCutout, Float* autoAugment, Float* colorCast, size_t* colorAngle, Float* distortion, size_t* interpolation, Float* scaling, Float* rotation, size_t* sampleIndex, size_t* batchSize, Float* maximumRate, Float* momentum, Float* l2Penalty, Float* avgTrainLoss, Float* trainErrorPercentage, size_t* trainErrors, Float* avgTestLoss, Float* testErrorPercentage, size_t* testErrors, Float* sampleSpeed, States* networkState, TaskStates* taskState)
+extern "C" DNN_API void DNNGetTrainingInfo(UInt* currentCycle, UInt* totalCycles, UInt* currentEpoch, UInt* totalEpochs, bool* horizontalFlip, bool* verticalFlip, Float* inputDropOut, Float* inputCutout, Float* autoAugment, Float* colorCast, UInt* colorAngle, Float* distortion, UInt* interpolation, Float* scaling, Float* rotation, UInt* sampleIndex, UInt* batchSize, Float* maximumRate, Float* momentum, Float* l2Penalty, Float* avgTrainLoss, Float* trainErrorPercentage, UInt* trainErrors, Float* avgTestLoss, Float* testErrorPercentage, UInt* testErrors, Float* sampleSpeed, States* networkState, TaskStates* taskState)
 {
 	if (model)
 	{
@@ -458,7 +458,7 @@ extern "C" DNN_API void DNNGetTrainingInfo(size_t* currentCycle, size_t* totalCy
 	}
 }
 
-extern "C" DNN_API void DNNGetTestingInfo(size_t* batchSize, size_t* sampleIndex, Float* avgTestLoss, Float* testErrorPercentage, size_t* testErrors, Float* sampleSpeed, States* networkState, TaskStates* taskState)
+extern "C" DNN_API void DNNGetTestingInfo(UInt* batchSize, UInt* sampleIndex, Float* avgTestLoss, Float* testErrorPercentage, UInt* testErrors, Float* sampleSpeed, States* networkState, TaskStates* taskState)
 {
 	if (model)
 	{
@@ -482,7 +482,7 @@ extern "C" DNN_API void DNNGetTestingInfo(size_t* batchSize, size_t* sampleIndex
 	}
 }
 
-extern "C" DNN_API void DNNRefreshStatistics(const size_t layerIndex, std::string* description, Stats* neuronsStats, Stats* weightsStats, Stats* biasesStats, Float* fpropLayerTime, Float* bpropLayerTime, Float* updateLayerTime, Float* fpropTime, Float* bpropTime, Float* updateTime, bool* locked)
+extern "C" DNN_API void DNNRefreshStatistics(const UInt layerIndex, std::string* description, Stats* neuronsStats, Stats* weightsStats, Stats* biasesStats, Float* fpropLayerTime, Float* bpropLayerTime, Float* updateLayerTime, Float* fpropTime, Float* bpropTime, Float* updateTime, bool* locked)
 {
 	if (model && layerIndex < model->Layers.size())
 	{
@@ -516,7 +516,7 @@ extern "C" DNN_API void DNNRefreshStatistics(const size_t layerIndex, std::strin
 	}
 }
 
-extern "C" DNN_API void DNNGetLayerInfo(const size_t layerIndex, size_t* inputsCount, LayerTypes* layerType, Activations* activationFunction, Costs* cost, std::string* name, std::string* description, size_t* neuronCount, size_t* weightCount, size_t* biasesCount, size_t* multiplier, size_t* groups, size_t* group, size_t* localSize, size_t* c, size_t* d, size_t* h, size_t* w, size_t* kernelH, size_t* kernelW, size_t* strideH, size_t* strideW, size_t* dilationH, size_t* dilationW, size_t* padD, size_t* padH, size_t* padW, Float* dropout, Float* labelTrue, Float* labelFalse, Float* weight, size_t* groupIndex, size_t* labelIndex, size_t* inputC, Float* alpha, Float* beta, Float* k, Algorithms* algorithm, Float* fH, Float* fW, bool* hasBias, bool* scaling, bool* acrossChannels, bool* locked, bool* lockable)
+extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, UInt* inputsCount, LayerTypes* layerType, Activations* activationFunction, Costs* cost, std::string* name, std::string* description, UInt* neuronCount, UInt* weightCount, UInt* biasesCount, UInt* multiplier, UInt* groups, UInt* group, UInt* localSize, UInt* c, UInt* d, UInt* h, UInt* w, UInt* kernelH, UInt* kernelW, UInt* strideH, UInt* strideW, UInt* dilationH, UInt* dilationW, UInt* padD, UInt* padH, UInt* padW, Float* dropout, Float* labelTrue, Float* labelFalse, Float* weight, UInt* groupIndex, UInt* labelIndex, UInt* inputC, Float* alpha, Float* beta, Float* k, Algorithms* algorithm, Float* fH, Float* fW, bool* hasBias, bool* scaling, bool* acrossChannels, bool* locked, bool* lockable)
 {
 	if (model && layerIndex < model->Layers.size())
 	{
@@ -855,7 +855,7 @@ extern "C" DNN_API int DNNSaveNetworkWeights(const std::string& fileName, const 
 	return -10;
 }
 
-extern "C" DNN_API int DNNLoadLayerWeights(const std::string& fileName, const size_t layerIndex, const bool persistOptimizer)
+extern "C" DNN_API int DNNLoadLayerWeights(const std::string& fileName, const UInt layerIndex, const bool persistOptimizer)
 {
 	if (model)
 	{
@@ -868,7 +868,7 @@ extern "C" DNN_API int DNNLoadLayerWeights(const std::string& fileName, const si
 	return -10;
 }
 
-extern "C" DNN_API int DNNSaveLayerWeights(const std::string& fileName, const size_t layerIndex, const bool persistOptimizer)
+extern "C" DNN_API int DNNSaveLayerWeights(const std::string& fileName, const UInt layerIndex, const bool persistOptimizer)
 {
 	if (model && layerIndex < model->Layers.size())
 		return model->SaveLayerWeights(fileName, layerIndex, persistOptimizer);
@@ -882,7 +882,7 @@ extern "C" DNN_API void DNNSetLocked(const bool locked)
 		model->SetLocking(locked);
 }
 
-extern "C" DNN_API void DNNSetLayerLocked(const size_t layerIndex, const bool locked)
+extern "C" DNN_API void DNNSetLayerLocked(const UInt layerIndex, const bool locked)
 {
 	if (model)
 		 model->SetLayerLocking(layerIndex, locked);

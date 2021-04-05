@@ -120,14 +120,14 @@ namespace dnn
 
 			auto model = static_cast<Model*>(nullptr);
 			auto dataset = Datasets::cifar10;
-			auto classes = size_t(10);
-			auto c = size_t(0);
-			auto d = size_t(1);
-			auto h = size_t(0);
-			auto w = size_t(0);
-			auto padD = size_t(0);
-			auto padH = size_t(0);
-			auto padW = size_t(0);
+			auto classes = UInt(10);
+			auto c = UInt(0);
+			auto d = UInt(1);
+			auto h = UInt(0);
+			auto w = UInt(0);
+			auto padD = UInt(0);
+			auto padH = UInt(0);
+			auto padW = UInt(0);
 			auto inputsStr = std::vector<std::string>();
 			auto layerType = LayerTypes::Input;
 			auto isNormalizationLayer = false;
@@ -151,32 +151,32 @@ namespace dnn
 			auto alpha = Float(0);
 			auto beta = Float(0);
 			bool acrossChannels = false;
-			auto localSize = size_t(5);
+			auto localSize = UInt(5);
 			auto k = Float(1);
-			auto multiplier = size_t(1);
-			auto group = size_t(1);
-			auto groups = size_t(1);
+			auto multiplier = UInt(1);
+			auto group = UInt(1);
+			auto groups = UInt(1);
 			auto factorH = Float(1);
 			auto factorW = Float(1);
 			auto algorithm = Algorithms::Linear;
-			auto groupIndex = size_t(0);
-			auto labelIndex = size_t(0);
+			auto groupIndex = UInt(0);
+			auto labelIndex = UInt(0);
 			auto weight = Float(1);
 			auto labelTrue = Float(0.9);
 			auto labelFalse = Float(0.1);
 			auto costFunction = Costs::CategoricalCrossEntropy;
 			auto activationFunction = Activations::Linear;
-			auto kernelH = size_t(1);
-			auto kernelW = size_t(1);
-			auto dilationH = size_t(1);
-			auto dilationW = size_t(1);
-			auto strideH = size_t(1);
-			auto strideW = size_t(1);
+			auto kernelH = UInt(1);
+			auto kernelW = UInt(1);
+			auto dilationH = UInt(1);
+			auto dilationW = UInt(1);
+			auto strideH = UInt(1);
+			auto strideW = UInt(1);
 
 			auto iss = std::istringstream(definition);
 			std::string strLine = "", modelName = "", layerName = "", params = "";
-			auto layerNames = std::vector<std::pair<std::string, size_t>>();
-			size_t line = 0, col = 0, modelMandatory = 0, layerMandatory = 0;
+			auto layerNames = std::vector<std::pair<std::string, UInt>>();
+			UInt line = 0, col = 0, modelMandatory = 0, layerMandatory = 0;
 			auto isModel = true;
 			
 			while (SafeGetline(iss, strLine))
@@ -748,7 +748,7 @@ namespace dnn
 
 					auto list = std::istringstream(params);
 					std::string item;
-					auto values = std::vector<size_t>();
+					auto values = std::vector<UInt>();
 
 					try
 					{
@@ -824,7 +824,7 @@ namespace dnn
 
 					auto list = std::istringstream(params);
 					std::string item;
-					auto values = std::vector<size_t>();
+					auto values = std::vector<UInt>();
 
 					try
 					{
@@ -864,7 +864,7 @@ namespace dnn
 
 					auto list = std::istringstream(params);
 					std::string item;
-					auto values = std::vector<size_t>();
+					auto values = std::vector<UInt>();
 
 					try
 					{
@@ -2110,7 +2110,7 @@ namespace dnn
 
 					auto list = std::istringstream(params);
 					std::string item;
-					auto values = std::vector<size_t>();
+					auto values = std::vector<UInt>();
 
 					try
 					{
@@ -2156,7 +2156,7 @@ namespace dnn
 
 					auto list = std::istringstream(params);
 					std::string item;
-					auto values = std::vector<size_t>();
+					auto values = std::vector<UInt>();
 
 					try
 					{
@@ -2202,7 +2202,7 @@ namespace dnn
 
 					auto list = std::istringstream(params);
 					std::string item;
-					auto values = std::vector<size_t>();
+					auto values = std::vector<UInt>();
 
 					try
 					{
@@ -2248,7 +2248,7 @@ namespace dnn
 
 					auto list = std::istringstream(params);
 					std::string item;
-					auto values = std::vector<size_t>();
+					auto values = std::vector<UInt>();
 
 					try
 					{

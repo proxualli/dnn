@@ -160,9 +160,9 @@ namespace dnn
 		Abs = 0,
 		BoundedRelu = 1,
 		Clip = 2,
-		ClipV2 = 3,
-		Elu = 4,
-		Exp = 5,
+		ClipV2 = 3,			//
+		Elu = 4,			//
+		Exp = 5,			//
 		FTS = 6,
 		Gelu = 7,
 		GeluErf = 8,
@@ -170,20 +170,20 @@ namespace dnn
 		HardSwish = 10,
 		Linear = 11,
 		Log = 12,
-		Logistic = 13,
+		Logistic = 13,		//
 		LogLogistic = 14,
 		LogSoftmax = 15,
 		Mish = 16,
 		Pow = 17,
 		PRelu = 18,
-		Relu = 19,
+		Relu = 19,			//
 		Round = 20,
 		Softmax = 21,
 		SoftRelu = 22,
-		Sqrt = 23,
+		Sqrt = 23,			//
 		Square = 24,
 		Swish = 25,
-		Tanh = 26
+		Tanh = 26			//
 	};
 
 	class Activation final : public Layer
@@ -249,17 +249,17 @@ namespace dnn
 			return description;
 		}
 
-		size_t FanIn() const final override
+		UInt FanIn() const final override
 		{
 			return 1;
 		}
 
-		size_t FanOut() const final override
+		UInt FanOut() const final override
 		{
 			return 1;
 		}
 
-		void InitializeDescriptors(const size_t batchSize) final override
+		void InitializeDescriptors(const UInt batchSize) final override
 		{
 			if (InputLayer->DstMemDesc->data.ndims == 2)
 			{
@@ -482,7 +482,7 @@ namespace dnn
 			DNN_UNREF_PAR(biasFillerScale);
 		}
 
-		void ForwardProp(const size_t batchSize, const bool training) final override
+		void ForwardProp(const UInt batchSize, const bool training) final override
 		{
 			const auto plain = IsPlainFormat();
 			const auto elements = plain ? batchSize * CDHW : batchSize * PaddedCDHW;
@@ -617,7 +617,7 @@ namespace dnn
 						{
 							if (!plain)
 							{
-								for_i(batchSize, threads, [=](size_t n)
+								for_i(batchSize, threads, [=](UInt n)
 								{
 									const auto vecZero = VecFloat(0);
 									const auto offset = n * PaddedC;
@@ -632,7 +632,7 @@ namespace dnn
 							}
 							else
 							{
-								for_i(batchSize, threads, [=](size_t n)
+								for_i(batchSize, threads, [=](UInt n)
 								{
 									const auto offset = n * C;
 									for (auto c = offset; c < offset + C; c++)
@@ -649,7 +649,7 @@ namespace dnn
 						{
 							if (!plain)
 							{
-								for_i(batchSize, threads, [=](size_t n)
+								for_i(batchSize, threads, [=](UInt n)
 								{
 									const auto vecZero = VecFloat(0);
 									const auto offset = n * PaddedC;
@@ -659,7 +659,7 @@ namespace dnn
 							}
 							else
 							{
-								for_i(batchSize, threads, [=](size_t n)
+								for_i(batchSize, threads, [=](UInt n)
 								{
 									const auto offset = n * C;
 									for (auto c = offset; c < offset + C; c++)
@@ -737,7 +737,7 @@ namespace dnn
 						{
 							if (!plain)
 							{
-								for_i(batchSize, threads, [=](size_t n)
+								for_i(batchSize, threads, [=](UInt n)
 								{
 									const auto vecZero = VecFloat(0);
 									for (auto c = 0ull; c < PaddedC; c += VectorSize)
@@ -755,7 +755,7 @@ namespace dnn
 							}
 							else
 							{
-								for_i(batchSize, threads, [=](size_t n)
+								for_i(batchSize, threads, [=](UInt n)
 								{
 									for (auto c = 0ull; c < C; c++)
 									{
@@ -775,7 +775,7 @@ namespace dnn
 						{
 							if (!plain)
 							{
-								for_i(batchSize, threads, [=](size_t n)
+								for_i(batchSize, threads, [=](UInt n)
 								{
 									for (auto c = 0ull; c < PaddedC; c += VectorSize)
 									{
@@ -787,7 +787,7 @@ namespace dnn
 							}
 							else
 							{
-								for_i(batchSize, threads, [=](size_t n)
+								for_i(batchSize, threads, [=](UInt n)
 								{
 									for (auto c = 0ull; c < C; c++)
 									{
@@ -853,7 +853,7 @@ namespace dnn
 						{
 							if (!plain)
 							{
-								for_i(batchSize, threads, [=](size_t n)
+								for_i(batchSize, threads, [=](UInt n)
 								{
 									const auto vecZero = VecFloat(0);
 									const auto offset = n * PaddedC;
@@ -868,7 +868,7 @@ namespace dnn
 							}
 							else
 							{
-								for_i(batchSize, threads, [=](size_t n)
+								for_i(batchSize, threads, [=](UInt n)
 								{
 									const auto offset = n * C;
 									for (auto c = offset; c < offset + C; c++)
@@ -885,7 +885,7 @@ namespace dnn
 						{
 							if (!plain)
 							{
-								for_i(batchSize, threads, [=](size_t n)
+								for_i(batchSize, threads, [=](UInt n)
 								{
 									const auto vecZero = VecFloat(0);
 									const auto offset = n * PaddedC;
@@ -895,7 +895,7 @@ namespace dnn
 							}
 							else
 							{
-								for_i(batchSize, threads, [=](size_t n)
+								for_i(batchSize, threads, [=](UInt n)
 								{
 									const auto offset = n * C;
 									for (auto c = offset; c < offset + C; c++)
@@ -973,7 +973,7 @@ namespace dnn
 						{
 							if (!plain)
 							{
-								for_i(batchSize, threads, [=](size_t n)
+								for_i(batchSize, threads, [=](UInt n)
 								{
 									const auto vecZero = VecFloat(0);
 									for (auto c = 0ull; c < PaddedC; c += VectorSize)
@@ -991,7 +991,7 @@ namespace dnn
 							}
 							else
 							{
-								for_i(batchSize, threads, [=](size_t n)
+								for_i(batchSize, threads, [=](UInt n)
 								{
 									for (auto c = 0ull; c < C; c++)
 									{
@@ -1011,7 +1011,7 @@ namespace dnn
 						{
 							if (!plain)
 							{
-								for_i(batchSize, threads, [=](size_t n)
+								for_i(batchSize, threads, [=](UInt n)
 								{
 									for (auto c = 0ull; c < PaddedC; c += VectorSize)
 									{
@@ -1023,7 +1023,7 @@ namespace dnn
 							}
 							else
 							{
-								for_i(batchSize, threads, [=](size_t n)
+								for_i(batchSize, threads, [=](UInt n)
 								{
 									for (auto c = 0ull; c < C; c++)
 									{
@@ -1067,7 +1067,7 @@ namespace dnn
 			}
 		}
 
-		void BackwardProp(const size_t batchSize) final override
+		void BackwardProp(const UInt batchSize) final override
 		{
 #ifdef DNN_LEAN
 			ZeroGradient(batchSize);
@@ -1213,14 +1213,14 @@ namespace dnn
 					{
 #endif
 						if (!plain)
-							for_i(batchSize, threads, [=](size_t n)
+							for_i(batchSize, threads, [=](UInt n)
 							{
 								const auto offset = n * PaddedC;
 								for (auto c = offset; c < offset + PaddedC; c+=VectorSize)
 									mul_add(FTS::dfVec(VecFloat().load_a(&InputLayer->Neurons[c])), VecFloat().load_a(&NeuronsD1[c]), VecFloat().load_a(&InputLayer->NeuronsD1[c])).store_a(&InputLayer->NeuronsD1[c]);
 							});
 						else
-							for_i(batchSize, threads, [=](size_t n)
+							for_i(batchSize, threads, [=](UInt n)
 							{
 								const auto offset = n * C;
 								for (auto c = offset; c < offset + C; c++)
@@ -1259,7 +1259,7 @@ namespace dnn
 #endif
 						if (!plain)
 						{
-							for_i(batchSize, threads, [=](size_t n)
+							for_i(batchSize, threads, [=](UInt n)
 							{
 								for (auto c = 0ull; c < PaddedC; c += VectorSize)
 								{
@@ -1271,7 +1271,7 @@ namespace dnn
 						}
 						else
 						{
-							for_i(batchSize, threads, [=](size_t n)
+							for_i(batchSize, threads, [=](UInt n)
 							{
 								for (auto c = 0ull; c < C; c++)
 								{
@@ -1306,14 +1306,14 @@ namespace dnn
 					{
 #endif
 						if (!plain)
-							for_i(batchSize, threads, [=](size_t n)
+							for_i(batchSize, threads, [=](UInt n)
 							{
 								const auto offset = n * PaddedC;
 								for (auto c = offset; c < offset + PaddedC; c+=VectorSize)
 									mul_add(HardLogistic::dfVec(VecFloat().load_a(&InputLayer->Neurons[c])), VecFloat().load_a(&NeuronsD1[c]), VecFloat().load_a(&InputLayer->NeuronsD1[c])).store_a(&InputLayer->NeuronsD1[c]);
 							});
 						else
-							for_i(batchSize, threads, [=](size_t n)
+							for_i(batchSize, threads, [=](UInt n)
 							{
 								const auto offset = n * C;
 								for (auto c = offset; c < offset + C; c++)
@@ -1352,7 +1352,7 @@ namespace dnn
 #endif
 						if (!plain)
 						{
-							for_i(batchSize, threads, [=](size_t n)
+							for_i(batchSize, threads, [=](UInt n)
 							{
 								for (auto c = 0ull; c < PaddedC; c += VectorSize)
 								{
@@ -1364,7 +1364,7 @@ namespace dnn
 						}
 						else
 						{
-							for_i(batchSize, threads, [=](size_t n)
+							for_i(batchSize, threads, [=](UInt n)
 							{
 								for (auto c = 0ull; c < C; c++)
 								{

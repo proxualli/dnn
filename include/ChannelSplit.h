@@ -6,10 +6,10 @@ namespace dnn
 	class ChannelSplit final : public Layer
 	{
 	public:
-		const size_t Group;
-		const size_t Groups;
+		const UInt Group;
+		const UInt Groups;
 
-		ChannelSplit(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const size_t group, const size_t groups) :
+		ChannelSplit(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const UInt group, const UInt groups) :
 			Layer(device, format, name, LayerTypes::ChannelSplit, 0, 0, inputs[0]->C / groups, inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs),
 			Group(group),
 			Groups(groups)
@@ -31,17 +31,17 @@ namespace dnn
 			return description;
 		}
 
-		size_t FanIn() const final override
+		UInt FanIn() const final override
 		{
 			return 1;
 		}
 
-		size_t FanOut() const final override
+		UInt FanOut() const final override
 		{
 			return 1;
 		}
 
-		void InitializeDescriptors(const size_t batchSize) final override
+		void InitializeDescriptors(const UInt batchSize) final override
 		{
 			if (InputLayer->DstMemDesc->data.ndims == 2)
 			{
@@ -66,7 +66,7 @@ namespace dnn
 			}
 		}
 
-		void ForwardProp(const size_t batchSize, const bool training) final override
+		void ForwardProp(const UInt batchSize, const bool training) final override
 		{
 			const auto plain = IsPlainFormat();
 			const auto elements = plain ? batchSize * CDHW : batchSize * PaddedCDHW;
@@ -149,7 +149,7 @@ namespace dnn
 				{
 					if (!plain)
 					{
-						for_i(batchSize, threads, [=](size_t n)
+						for_i(batchSize, threads, [=](UInt n)
 						{
 							const auto vecZero = VecFloat(0); 
 							VecFloat In;						
@@ -170,7 +170,7 @@ namespace dnn
 					}
 					else
 					{
-						for_i(batchSize, threads, [=](size_t n)
+						for_i(batchSize, threads, [=](UInt n)
 						{
 							for (auto c = 0ull; c < C; c ++)
 							{
@@ -191,7 +191,7 @@ namespace dnn
 				{
 					if (!plain)
 					{
-						for_i(batchSize, threads, [=](size_t n)
+						for_i(batchSize, threads, [=](UInt n)
 						{
 							VecFloat In;
 							for (auto c = 0ull; c < PaddedC; c += VectorSize)
@@ -208,7 +208,7 @@ namespace dnn
 					}
 					else
 					{
-						for_i(batchSize, threads, [=](size_t n)
+						for_i(batchSize, threads, [=](UInt n)
 						{
 							for (auto c = 0ull; c < C; c ++)
 							{
@@ -225,7 +225,7 @@ namespace dnn
 #endif
 		}
 
-		void BackwardProp(const size_t batchSize) final override
+		void BackwardProp(const UInt batchSize) final override
 		{
 #ifdef DNN_LEAN
 			ZeroGradient(batchSize);
@@ -272,7 +272,7 @@ namespace dnn
 #endif
 				if (!plain)
 				{
-					for_i(batchSize, threads, [=](size_t n)
+					for_i(batchSize, threads, [=](UInt n)
 					{
 						VecFloat In, D1;
 						for (auto c = 0ull; c < PaddedC; c += VectorSize)
@@ -291,7 +291,7 @@ namespace dnn
 				}
 				else
 				{
-					for_i(batchSize, threads, [=](size_t n)
+					for_i(batchSize, threads, [=](UInt n)
 					{
 						for (auto c = 0ull; c < C; c++)
 						{

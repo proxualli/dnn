@@ -42,17 +42,17 @@ namespace dnn
 			return GetDescriptionHeader();
 		}
 
-		size_t FanIn() const final override
+		UInt FanIn() const final override
 		{
 			return 1;
 		}
 
-		size_t FanOut() const final override
+		UInt FanOut() const final override
 		{
 			return 1;
 		}
 
-		void InitializeDescriptors(const size_t batchSize) final override
+		void InitializeDescriptors(const UInt batchSize) final override
 		{
 			if (Format == dnnl::memory::format_tag::any)
 			{
@@ -78,7 +78,7 @@ namespace dnn
 #endif
 		}
 
-		void ForwardProp(const size_t batchSize, const bool training) final override
+		void ForwardProp(const UInt batchSize, const bool training) final override
 		{
 #ifdef DNN_CACHE_PRIMITIVES
 			fwd->execute(Device.stream, fwdArgs);
@@ -95,7 +95,7 @@ namespace dnn
 #endif
 		}
 
-		void BackwardProp(const size_t batchSize) final override
+		void BackwardProp(const UInt batchSize) final override
 		{
 #ifdef DNN_LEAN
 			ZeroGradientMulti(batchSize);
@@ -141,7 +141,7 @@ namespace dnn
 #endif
 				if (!plain)
 				{
-					for_i(batchSize, threads, [=](size_t n)
+					for_i(batchSize, threads, [=](UInt n)
 					{
 						VecFloat neuronsD1;
 						for (auto c = 0ull; c < PaddedC; c += VectorSize)
@@ -159,7 +159,7 @@ namespace dnn
 				}
 				else
 				{
-					for_i(batchSize, threads, [=](size_t n)
+					for_i(batchSize, threads, [=](UInt n)
 					{
 						for (auto c = 0ull; c < C; c++)
 						{

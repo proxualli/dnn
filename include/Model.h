@@ -55,12 +55,12 @@ namespace dnn
 
 	struct CheckMsg
 	{
-		size_t Row;
-		size_t Column;
+		UInt Row;
+		UInt Column;
 		bool Error;
 		std::string Message;
 		
-		CheckMsg(const size_t row = 0, const size_t column = 0, const std::string& message = "", const bool error = true) :
+		CheckMsg(const UInt row = 0, const UInt column = 0, const std::string& message = "", const bool error = true) :
 			Row(row),
 			Column(column),
 			Message(message),
@@ -73,12 +73,12 @@ namespace dnn
 	{
 	private:
 		std::future<void> task;
-		std::vector<size_t> RandomTrainingSamples;
+		std::vector<UInt> RandomTrainingSamples;
 		std::vector<bool> TrainingSamplesHFlip;
 		std::vector<bool> TrainingSamplesVFlip;
 		std::vector<bool> TestingSamplesHFlip;
 		std::vector<bool> TestingSamplesVFlip;
-
+		
 	public:
 		const std::string Name;
 		const dnnl::engine Engine;
@@ -90,30 +90,30 @@ namespace dnn
 		std::atomic<TaskStates> TaskState;
 		Costs CostFuction;
 		Optimizers Optimizer;
-		size_t CostIndex;
-		size_t LabelIndex;
-		size_t GroupIndex;
-		size_t TotalCycles;
-		size_t TotalEpochs;
-		size_t CurrentCycle;
-		size_t CurrentEpoch;
-		size_t SampleIndex;
-		//size_t LogInterval;
-		size_t BatchSize;
-		size_t GoToEpoch;
-		size_t AdjustedTrainingSamplesCount;
-		size_t AdjustedTestingSamplesCount;
-		size_t TrainSkipCount;
-		size_t TestSkipCount;
-		size_t TrainOverflowCount;
-		size_t TestOverflowCount;
-		size_t SampleC;
-		size_t SampleD;
-		size_t SampleH;
-		size_t SampleW;
-		size_t PadD;
-		size_t PadH;
-		size_t PadW;
+		UInt CostIndex;
+		UInt LabelIndex;
+		UInt GroupIndex;
+		UInt TotalCycles;
+		UInt TotalEpochs;
+		UInt CurrentCycle;
+		UInt CurrentEpoch;
+		UInt SampleIndex;
+		//UInt LogInterval;
+		UInt BatchSize;
+		UInt GoToEpoch;
+		UInt AdjustedTrainingSamplesCount;
+		UInt AdjustedTestingSamplesCount;
+		UInt TrainSkipCount;
+		UInt TestSkipCount;
+		UInt TrainOverflowCount;
+		UInt TestOverflowCount;
+		UInt SampleC;
+		UInt SampleD;
+		UInt SampleH;
+		UInt SampleW;
+		UInt PadD;
+		UInt PadH;
+		UInt PadW;
 		bool MirrorPad;
 		bool RandomCrop;
 		bool MeanStdNormalization;
@@ -130,8 +130,8 @@ namespace dnn
 		Float BatchNormMomentum;
 		Float BatchNormEps;
 		Float Dropout;
-		size_t TrainErrors;
-		size_t TestErrors;
+		UInt TrainErrors;
+		UInt TestErrors;
 		Float TrainLoss;
 		Float TestLoss;
 		Float AvgTrainLoss;
@@ -152,11 +152,11 @@ namespace dnn
 		std::chrono::duration<Float> fpropTime;
 		std::chrono::duration<Float> bpropTime;
 		std::chrono::duration<Float> updateTime;
-		std::atomic<size_t> FirstUnlockedLayer;
+		std::atomic<UInt> FirstUnlockedLayer;
 		std::atomic<bool> BatchSizeChanging;
 		std::atomic<bool> ResettingWeights;
 
-		void(*NewEpoch)(size_t, size_t, size_t, bool, bool, Float, Float, Float, Float, size_t, Float, size_t, Float, Float, Float, size_t, Float, Float, Float, Float, Float, size_t, Float, Float, Float, size_t);
+		void(*NewEpoch)(UInt, UInt, UInt, bool, bool, Float, Float, Float, Float, UInt, Float, UInt, Float, Float, Float, UInt, Float, Float, Float, Float, Float, UInt, Float, Float, Float, UInt);
 
 		Model(const std::string& name, Dataprovider* dataprovider) :
 			Name(name),
@@ -430,7 +430,7 @@ namespace dnn
 			}
 		}
 
-		void SetLayerLocking(const size_t layerIndex, const bool locked)
+		void SetLayerLocking(const UInt layerIndex, const bool locked)
 		{
 			if (layerIndex < Layers.size() && Layers[layerIndex]->Lockable() && !DisableLocking)
 			{
@@ -461,9 +461,9 @@ namespace dnn
 			return weightsSize;
 		}
 
-		auto GetNeuronsSize(const size_t batchSize) const
+		auto GetNeuronsSize(const UInt batchSize) const
 		{
-			size_t neuronsSize = 0;
+			UInt neuronsSize = 0;
 
 			for (auto &layer : Layers)
 				neuronsSize += layer->GetNeuronsSize(batchSize);
@@ -480,7 +480,7 @@ namespace dnn
 			return false;
 		}
 
-		void AddTrainingRate(const TrainingRate rate, const bool clear, const size_t gotoEpoch)
+		void AddTrainingRate(const TrainingRate rate, const bool clear, const UInt gotoEpoch)
 		{
 			if (clear)
 				TrainingRates.clear();
@@ -509,7 +509,7 @@ namespace dnn
 				TrainingRates.push_back(TrainingRate(newRate, rate.BatchSize, rate.Cycles, rate.Epochs - (totIteration * decayAfterEopchs), rate.EpochMultiplier, rate.MinimumRate, rate.L2Penalty, rate.Momentum, Float(1), decayAfterEopchs, rate.HorizontalFlip, rate.VerticalFlip, rate.Dropout, rate.Cutout, rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
 		}
 
-		void AddTrainingRateSGDR(const TrainingRate rate, const bool clear, const size_t gotoEpoch)
+		void AddTrainingRateSGDR(const TrainingRate rate, const bool clear, const UInt gotoEpoch)
 		{
 			if (clear)
 				TrainingRates.clear();
@@ -629,7 +629,7 @@ namespace dnn
 			}
 		}
 
-		void Recognized(const States state, const std::vector<size_t>& sampleLabel)
+		void Recognized(const States state, const std::vector<UInt>& sampleLabel)
 		{
 			for (auto cost : CostLayers)
 			{
@@ -661,7 +661,7 @@ namespace dnn
 		}
 #endif
 
-		void CostFunctionBatch(const States state, const size_t batchSize, const bool overflow, const size_t skipCount)
+		void CostFunctionBatch(const States state, const UInt batchSize, const bool overflow, const UInt skipCount)
 		{
 			for (auto cost : CostLayers)
 			{
@@ -684,7 +684,7 @@ namespace dnn
 			}
 		}
 
-		void RecognizedBatch(const States state, const size_t batchSize, const bool overflow, const size_t skipCount, const std::vector<std::vector<size_t>>& sampleLabels)
+		void RecognizedBatch(const States state, const UInt batchSize, const bool overflow, const UInt skipCount, const std::vector<std::vector<UInt>>& sampleLabels)
 		{
 			for (auto cost : CostLayers)
 			{
@@ -723,7 +723,7 @@ namespace dnn
 			}
 		}
 
-		void SetBatchSize(const size_t batchSize)
+		void SetBatchSize(const UInt batchSize)
 		{
 			if (!BatchSizeChanging.load() && !ResettingWeights.load())
 			{
@@ -789,7 +789,7 @@ namespace dnn
 				auto learningRateEpochs = CurrentTrainingRate.Epochs;
 				auto learningRateIndex = 0ull;
 
-				RandomTrainingSamples = std::vector<size_t>(DataProv->TrainingSamplesCount);
+				RandomTrainingSamples = std::vector<UInt>(DataProv->TrainingSamplesCount);
 				for (auto i = 0ull; i < DataProv->TrainingSamplesCount; i++)
 					RandomTrainingSamples[i] = i;
 
@@ -854,7 +854,7 @@ namespace dnn
 					{
 						State.store(States::Training);
 
-						const auto shuffleCount = UniformInt<size_t>(16, 32);
+						const auto shuffleCount = UniformInt<UInt>(16, 32);
 						for (auto shuffle = 0ull; shuffle < shuffleCount; shuffle++)
 							std::shuffle(std::begin(RandomTrainingSamples), std::end(RandomTrainingSamples), std::mt19937(physicalSeed()));
 
@@ -1225,7 +1225,7 @@ namespace dnn
 			}
 		}
 
-		bool GetInputSnapShot(std::vector<Float>* snapshot, std::vector<size_t>* label)
+		bool GetInputSnapShot(std::vector<Float>* snapshot, std::vector<UInt>* label)
 		{
 			if (!Layers[0]->Neurons.empty() && !BatchSizeChanging.load() && !ResettingWeights.load())
 			{
@@ -1253,7 +1253,7 @@ namespace dnn
 		}
 
 #ifdef DNN_STOCHASTIC
-		std::vector<size_t> TrainSample(const size_t index)
+		std::vector<UInt> TrainSample(const UInt index)
 		{
 			const auto randomIndex = RandomTrainingSamples[index];
 
@@ -1304,7 +1304,7 @@ namespace dnn
 			return SampleLabel;
 		}
 
-		std::vector<size_t> TestSample(const size_t index)
+		std::vector<UInt> TestSample(const UInt index)
 		{
 			auto SampleLabel = DataProv->TestingLabels[index];
 
@@ -1332,7 +1332,7 @@ namespace dnn
 			return SampleLabel;
 		}
 
-		std::vector<size_t> TestAugmentedSample(const size_t index)
+		std::vector<UInt> TestAugmentedSample(const UInt index)
 		{
 			auto SampleLabel = DataProv->TestingLabels[index];
 
@@ -1382,13 +1382,13 @@ namespace dnn
 		}
 #endif
 
-		std::vector<std::vector<size_t>> TrainBatch(const size_t index, const size_t batchSize)
+		std::vector<std::vector<UInt>> TrainBatch(const UInt index, const UInt batchSize)
 		{
-			auto SampleLabels = std::vector<std::vector<size_t>>(batchSize, std::vector<size_t>(DataProv->Hierarchies));
+			auto SampleLabels = std::vector<std::vector<UInt>>(batchSize, std::vector<UInt>(DataProv->Hierarchies));
 
 			const auto resize = DataProv->TrainingSamples[0].Depth != SampleD || DataProv->TrainingSamples[0].Height != SampleH || DataProv->TrainingSamples[0].Width != SampleW;
 
-			for_i(batchSize, [=, &SampleLabels](const size_t batchIndex)
+			for_i(batchSize, [=, &SampleLabels](const UInt batchIndex)
 			{
 				const auto randomIndex = (index + batchIndex >= DataProv->TrainingSamplesCount) ? RandomTrainingSamples[batchIndex] : RandomTrainingSamples[index + batchIndex];
 
@@ -1440,13 +1440,13 @@ namespace dnn
 			return SampleLabels;
 		}
 
-		std::vector<std::vector<size_t>> TestBatch(const size_t index, const size_t batchSize)
+		std::vector<std::vector<UInt>> TestBatch(const UInt index, const UInt batchSize)
 		{
-			auto SampleLabels = std::vector<std::vector<size_t>>(batchSize, std::vector<size_t>(DataProv->Hierarchies));
+			auto SampleLabels = std::vector<std::vector<UInt>>(batchSize, std::vector<UInt>(DataProv->Hierarchies));
 
 			const auto resize = DataProv->TestingSamples[0].Depth != SampleD || DataProv->TestingSamples[0].Height != SampleH || DataProv->TestingSamples[0].Width != SampleW;
 
-			for_i(batchSize, [=, &SampleLabels](const size_t batchIndex)
+			for_i(batchSize, MEDIUM_COMPUTE, [=, &SampleLabels](const UInt batchIndex)
 			{
 				const auto sampleIndex = ((index + batchIndex) >= DataProv->TestingSamplesCount) ? batchIndex : index + batchIndex;
 
@@ -1476,13 +1476,13 @@ namespace dnn
 			return SampleLabels;
 		}
 
-		std::vector<std::vector<size_t>> TestAugmentedBatch(const size_t index, const size_t batchSize)
+		std::vector<std::vector<UInt>> TestAugmentedBatch(const UInt index, const UInt batchSize)
 		{
-			auto SampleLabels = std::vector<std::vector<size_t>>(batchSize, std::vector<size_t>(DataProv->Hierarchies));
+			auto SampleLabels = std::vector<std::vector<UInt>>(batchSize, std::vector<UInt>(DataProv->Hierarchies));
 
 			const auto resize = DataProv->TestingSamples[0].Depth != SampleD || DataProv->TestingSamples[0].Height != SampleH || DataProv->TestingSamples[0].Width != SampleW;
 
-			for_i(batchSize, [=, &SampleLabels](const size_t batchIndex)
+			for_i(batchSize, [=, &SampleLabels](const UInt batchIndex)
 			{
 				const auto sampleIndex = ((index + batchIndex) >= DataProv->TestingSamplesCount) ? batchIndex : index + batchIndex;
 
@@ -1535,13 +1535,13 @@ namespace dnn
 		}
 	
 		
-		void ForwardProp(const size_t batchSize)
+		void ForwardProp(const UInt batchSize)
 		{
 			for (auto &layer : Layers)
 				layer->ForwardProp(batchSize, State.load() == States::Training);
 		}
 
-		void BackwardProp(const size_t batchSize)
+		void BackwardProp(const UInt batchSize)
 		{
 			for (auto i = Layers.size() - 1; i > 0ull; --i)
 			{
@@ -1594,7 +1594,7 @@ namespace dnn
 			return -1;
 		}
 
-		int SaveLayerWeights(std::string fileName, const size_t layerIndex, const bool persistOptimizer = false) const
+		int SaveLayerWeights(std::string fileName, const UInt layerIndex, const bool persistOptimizer = false) const
 		{
 			auto os = std::ofstream(fileName, std::ios::out | std::ios::binary | std::ios::trunc);
 
@@ -1610,7 +1610,7 @@ namespace dnn
 			return -1;
 		}
 
-		int LoadLayerWeights(std::string fileName, const size_t layerIndex, const bool persistOptimizer = false)
+		int LoadLayerWeights(std::string fileName, const UInt layerIndex, const bool persistOptimizer = false)
 		{
 			if (GetFileSize(fileName) == Layers[layerIndex]->GetWeightsSize(persistOptimizer, Optimizer))
 			{

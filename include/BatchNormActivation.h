@@ -60,17 +60,17 @@ namespace dnn
 			return description;
 		}
 
-		size_t FanIn() const final override
+		UInt FanIn() const final override
 		{ 
 			return 1; 
 		}
 
-		size_t FanOut() const final override 
+		UInt FanOut() const final override 
 		{ 
 			return 1; 
 		}
 
-		void InitializeDescriptors(const size_t batchSize) final override
+		void InitializeDescriptors(const UInt batchSize) final override
 		{
 			if (InputLayer->DstMemDesc->data.ndims == 2)
 			{
@@ -100,7 +100,7 @@ namespace dnn
 			return WeightCount > 0 && Scaling;
 		}
 
-		void ForwardProp(const size_t batchSize, const bool training) final override
+		void ForwardProp(const UInt batchSize, const bool training) final override
 		{
 			const auto strideH = W * VectorSize;
 
@@ -110,7 +110,7 @@ namespace dnn
 				{
 					const auto partialHW = (HW / VectorSize) * VectorSize;
 
-					for_i(C, [=](size_t c)
+					for_i(C, [=](UInt c)
 					{
 						const auto invStdDev = Float(1) / std::sqrt(RunningVariance[c] + Eps);
 						const auto weightedInvStdDev = Scaling ? invStdDev * Weights[c] : invStdDev;
@@ -129,7 +129,7 @@ namespace dnn
 				}
 				else
 				{
-					for_i(PaddedC / VectorSize, [=](size_t c)
+					for_i(PaddedC / VectorSize, [=](UInt c)
 					{
 						const auto channelOffset = c * VectorSize;
 						const auto mapOffset = channelOffset * HW;
@@ -162,7 +162,7 @@ namespace dnn
 				{
 					const auto partialHW = (HW / VectorSize) * VectorSize;
 
-					for_i(C, [=](size_t c)
+					for_i(C, [=](UInt c)
 					{
 						auto vecMean = VecFloat(0);
 						auto mean = Float(0);
@@ -228,7 +228,7 @@ namespace dnn
 				else
 				{
 
-					for_i(PaddedC / VectorSize, [=](size_t c)
+					for_i(PaddedC / VectorSize, [=](UInt c)
 					{
 						const auto channelOffset = c * VectorSize;
 						const auto mapOffset = channelOffset * HW;
@@ -291,7 +291,7 @@ namespace dnn
 			}
 		}
 
-		void BackwardProp(const size_t batchSize) final override
+		void BackwardProp(const UInt batchSize) final override
 		{
 #ifdef DNN_LEAN
 			ZeroGradient(batchSize);
@@ -303,7 +303,7 @@ namespace dnn
 			{
 				const auto partialHW = (HW / VectorSize) * VectorSize;
 
-				for_i(C, [=](size_t c)
+				for_i(C, [=](UInt c)
 				{
 					const auto weightedInvStdDev = Scaling ? InvStdDev[c] * Weights[c] : InvStdDev[c];
 					const auto biases = Scaling && HasBias ? Biases[c] : Float(0);
@@ -382,7 +382,7 @@ namespace dnn
 			}
 			else
 			{
-				for_i(PaddedC / VectorSize, [=](size_t c)
+				for_i(PaddedC / VectorSize, [=](UInt c)
 				{
 					const auto channelOffset = c * VectorSize;
 					const auto mapOffset = channelOffset * HW;

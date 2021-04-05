@@ -6,7 +6,7 @@ namespace dnn
 	class ChannelZeroPad final : public Layer
 	{
 	public:
-		ChannelZeroPad(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const size_t c) :
+		ChannelZeroPad(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const UInt c) :
 			Layer(device, format, name, LayerTypes::ChannelZeroPad, 0, 0, c, inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs)
 		{
 			assert(Inputs.size() == 1);
@@ -20,17 +20,17 @@ namespace dnn
 			return GetDescriptionHeader();
 		}
 
-		size_t FanIn() const final override
+		UInt FanIn() const final override
 		{
 			return 1;
 		}
 
-		size_t FanOut() const final override
+		UInt FanOut() const final override
 		{
 			return 1;
 		}
 
-		void InitializeDescriptors(const size_t batchSize) final override
+		void InitializeDescriptors(const UInt batchSize) final override
 		{
 			if (InputLayer->DstMemDesc->data.ndims == 2)
 			{
@@ -59,7 +59,7 @@ namespace dnn
 				throw std::invalid_argument("Incompatible memory formats in " + std::string(magic_enum::enum_name<LayerTypes>(LayerType)) + " layer " + InputLayer->Name);
 		}
 
-		void ForwardProp(const size_t batchSize, const bool training) final override
+		void ForwardProp(const UInt batchSize, const bool training) final override
 		{
 			const auto plain = IsPlainFormat();
 			const auto elements = plain ? batchSize * CDHW : batchSize * PaddedCDHW;
@@ -98,7 +98,7 @@ namespace dnn
 #endif
 					if (!plain)
 					{
-						for_i(batchSize, threads, [=](size_t n)
+						for_i(batchSize, threads, [=](UInt n)
 						{
 							const auto outputOffset = n * PaddedCDHW;
 							const auto inputOffset = n * InputLayer->PaddedCDHW;
@@ -114,7 +114,7 @@ namespace dnn
 					}
 					else
 					{
-						for_i(batchSize, threads, [=](size_t n)
+						for_i(batchSize, threads, [=](UInt n)
 						{
 							const auto outputOffset = n * CDHW;
 							const auto inputOffset = n * InputLayer->CDHW;
@@ -143,7 +143,7 @@ namespace dnn
 					{
 						const auto vecZero = VecFloat(0);
 						VecFloat In;
-						size_t inputOffset;
+						UInt inputOffset;
 						for (auto c = 0ull; c < InputLayer->PaddedC; c += VectorSize)
 						{
 							inputOffset = c * HW;
@@ -192,11 +192,11 @@ namespace dnn
 #endif
 					if (!plain)
 					{
-						for_i(batchSize, threads, [=](size_t n)
+						for_i(batchSize, threads, [=](UInt n)
 						{
 							const auto vecZero = VecFloat(0);
 							VecFloat In;
-							size_t inputOffset, outputOffset;
+							UInt inputOffset, outputOffset;
 							for (auto c = 0ull; c < InputLayer->PaddedC; c += VectorSize)
 							{
 								inputOffset = n * InputLayer->PaddedCDHW + c * HW;
@@ -227,9 +227,9 @@ namespace dnn
 					}
 					else
 					{
-						for_i(batchSize, threads, [=](size_t n)
+						for_i(batchSize, threads, [=](UInt n)
 						{
-							size_t inputOffset, outputOffset;
+							UInt inputOffset, outputOffset;
 							for (auto c = 0ull; c < InputLayer->C; c++)
 							{
 								inputOffset = n * InputLayer->CDHW + c * HW;
@@ -262,7 +262,7 @@ namespace dnn
 #endif
 		}
 
-		void BackwardProp(const size_t batchSize) final override
+		void BackwardProp(const UInt batchSize) final override
 		{
 #ifdef DNN_LEAN
 			ZeroGradient(batchSize);
@@ -283,7 +283,7 @@ namespace dnn
 				else
 				{
 #endif
-					for_i(batchSize, LIGHT_COMPUTE, [=](size_t n)
+					for_i(batchSize, LIGHT_COMPUTE, [=](UInt n)
 					{
 						const auto offsetN = n * CDHW;
 						const auto offsetNinput = n * InputLayer->CDHW;
@@ -301,7 +301,7 @@ namespace dnn
 #ifdef DNN_STOCHASTIC
 				if (batchSize == 1)
 				{
-					size_t inputOffset;
+					UInt inputOffset;
 					for (auto c = 0ull; c < InputLayer->PaddedC; c += VectorSize)
 					{
 						inputOffset = c * HW;
@@ -314,9 +314,9 @@ namespace dnn
 #endif
 					if (!plain)
 					{
-						for_i(batchSize, threads, [=](size_t n)
+						for_i(batchSize, threads, [=](UInt n)
 						{
-							size_t inputOffset, outputOffset;
+							UInt inputOffset, outputOffset;
 							for (auto c = 0ull; c < InputLayer->PaddedC; c += VectorSize)
 							{
 								outputOffset = n * PaddedCDHW + c * HW;
@@ -329,9 +329,9 @@ namespace dnn
 					}
 					else
 					{
-						for_i(batchSize, threads, [=](size_t n)
+						for_i(batchSize, threads, [=](UInt n)
 						{
-							size_t inputOffset, outputOffset;
+							UInt inputOffset, outputOffset;
 							for (auto c = 0ull; c < InputLayer->C; c++)
 							{
 								inputOffset = n * InputLayer->CDHW + c * HW;

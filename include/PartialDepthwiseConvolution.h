@@ -26,19 +26,19 @@ namespace dnn
 		bool reorderBwdDiffWeights;
 
 	public:
-		const size_t Group;
-		const size_t Groups;
-		const size_t Multiplier;
-		const size_t KernelH;
-		const size_t KernelW;
-		const size_t StrideH;
-		const size_t StrideW;
-		const size_t DilationH;
-		const size_t DilationW;
-		const size_t DilationKernelH;
-		const size_t DilationKernelW;
+		const UInt Group;
+		const UInt Groups;
+		const UInt Multiplier;
+		const UInt KernelH;
+		const UInt KernelW;
+		const UInt StrideH;
+		const UInt StrideW;
+		const UInt DilationH;
+		const UInt DilationW;
+		const UInt DilationKernelH;
+		const UInt DilationKernelW;
 				
-		PartialDepthwiseConvolution(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const size_t group, const size_t groups, const size_t kernelH, const size_t kernelW, const size_t strideH = 1, const size_t strideW = 1, const size_t dilationH = 1, const size_t dilationW = 1, const size_t padH = 0, const size_t padW = 0, const size_t multiplier = 1, const bool hasBias = true) :
+		PartialDepthwiseConvolution(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const UInt group, const UInt groups, const UInt kernelH, const UInt kernelW, const UInt strideH = 1, const UInt strideW = 1, const UInt dilationH = 1, const UInt dilationW = 1, const UInt padH = 0, const UInt padW = 0, const UInt multiplier = 1, const bool hasBias = true) :
 			Layer(device, format, name, LayerTypes::PartialDepthwiseConvolution, multiplier* inputs[0]->C / groups * kernelH * kernelW, multiplier* inputs[0]->C / groups, multiplier* inputs[0]->C / groups, inputs[0]->D, ((((inputs[0]->H - (1 + (kernelH - 1) * dilationH)) + (padH * 2)) / strideH) + 1), ((((inputs[0]->W - (1 + (kernelW - 1) * dilationW)) + (padW * 2)) / strideW) + 1), 0, padH, padW, inputs, hasBias),
 			Group(group),
 			Groups(groups),
@@ -97,17 +97,17 @@ namespace dnn
 			return description;
 		}
 
-		size_t FanIn() const final override
+		UInt FanIn() const final override
 		{
 			return Groups * KernelH * KernelW;
 		}
 
-		size_t FanOut() const final override
+		UInt FanOut() const final override
 		{
 			return Multiplier * KernelH * KernelW / StrideH * StrideW;
 		}
 
-		void InitializeDescriptors(const size_t batchSize) final override
+		void InitializeDescriptors(const UInt batchSize) final override
 		{
 			if (InputLayer->PaddedC % Groups != 0)
 				throw std::invalid_argument("input not splittable in PartialDepthwiseConvolution");
@@ -167,7 +167,7 @@ namespace dnn
 #endif
 		}
 
-		void ForwardProp(const size_t batchSize, const bool training) final override
+		void ForwardProp(const UInt batchSize, const bool training) final override
 		{
 			auto memSrc = dnnl::memory(partSrc, Device.engine, InputLayer->Neurons.data());
 			auto srcMem = reorderFwdSrc ? dnnl::memory(fwdDesc->src_desc(), Device.engine) : memSrc;
@@ -198,7 +198,7 @@ namespace dnn
 #endif // DNN_LEAN
 		}
 
-		void BackwardProp(const size_t batchSize) final override
+		void BackwardProp(const UInt batchSize) final override
 		{
 #ifdef DNN_LEAN
 			ZeroGradient(batchSize);

@@ -26,17 +26,17 @@ namespace dnn
 		bool reorderBwdDiffWeights;
 		
 	public:
-		const size_t Groups;
-		const size_t KernelH;
-		const size_t KernelW;
-		const size_t StrideH;
-		const size_t StrideW;
-		const size_t DilationH;
-		const size_t DilationW;
-		const size_t DilationKernelH;
-		const size_t DilationKernelW;
+		const UInt Groups;
+		const UInt KernelH;
+		const UInt KernelW;
+		const UInt StrideH;
+		const UInt StrideW;
+		const UInt DilationH;
+		const UInt DilationW;
+		const UInt DilationKernelH;
+		const UInt DilationKernelW;
 
-		Convolution(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const size_t c, const size_t kernelH, const size_t kernelW, const size_t strideH, const size_t strideW, const size_t dilationH, const size_t dilationW, const size_t padH, const size_t padW, const size_t groups, const bool hasBias) :
+		Convolution(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const UInt c, const UInt kernelH, const UInt kernelW, const UInt strideH, const UInt strideW, const UInt dilationH, const UInt dilationW, const UInt padH, const UInt padW, const UInt groups, const bool hasBias) :
 			Layer(device, format, name, LayerTypes::Convolution, groups * (inputs[0]->C / groups) * (c / groups) * kernelH * kernelW, c, c, inputs[0]->D, (((inputs[0]->H - (1 + (kernelH - 1) * dilationH)) + (padH * 2)) / strideH) + 1, (((inputs[0]->W - (1 + (kernelW - 1) * dilationW)) + (padW * 2)) / strideW) + 1, 0, padH, padW, inputs, hasBias),
 			Groups(groups),
 			KernelH(kernelH),
@@ -97,17 +97,17 @@ namespace dnn
 			return description;
 		}
 
-		size_t FanIn() const  final override
+		UInt FanIn() const  final override
 		{
 			return InputLayer->C / Groups * KernelH * KernelW;
 		}
 
-		size_t FanOut() const final override
+		UInt FanOut() const final override
 		{
 			return C / Groups * KernelH * KernelW / StrideH * StrideW;
 		}
 
-		void InitializeDescriptors(const size_t batchSize) final override
+		void InitializeDescriptors(const UInt batchSize) final override
 		{
 			std::vector<dnnl::memory::desc> memDesc;
 
@@ -180,7 +180,7 @@ namespace dnn
 #endif
 		}
 
-		void ForwardProp(const size_t batchSize, const bool training) final override
+		void ForwardProp(const UInt batchSize, const bool training) final override
 		{	
 			auto memSrc = dnnl::memory(*InputLayer->DstMemDesc, Device.engine, InputLayer->Neurons.data());
 			auto srcMem = reorderFwdSrc ? dnnl::memory(fwdDesc->src_desc(), Device.engine) : memSrc;
@@ -211,7 +211,7 @@ namespace dnn
 #endif // DNN_LEAN			
 		}
 
-		void BackwardProp(const size_t batchSize) final override
+		void BackwardProp(const UInt batchSize) final override
 		{
 #ifdef DNN_LEAN
 			ZeroGradient(batchSize);

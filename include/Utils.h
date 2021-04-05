@@ -125,6 +125,7 @@ namespace dnn
 	#define DNN_SIMD_ALIGN DNN_ALIGN(64)
 
 	typedef float Float;
+	typedef size_t UInt;
 	typedef unsigned char Byte;
 	typedef std::vector<Float, AlignedAllocator<Float, 64ull>> FloatVector;
 	typedef std::vector<Byte, AlignedAllocator<Byte, 64ull>> ByteVector;
@@ -169,7 +170,7 @@ namespace dnn
 	constexpr auto BlockedFmt = dnnl::memory::format_tag::nChw4c;
 #endif
 
-	constexpr auto DivUp(const size_t& c) noexcept { return (((c - 1) / VectorSize) + 1) * VectorSize; }
+	constexpr auto DivUp(const UInt& c) noexcept { return (((c - 1) / VectorSize) + 1) * VectorSize; }
 	constexpr auto IsPlainDataFmt(const dnnl::memory::desc& md) noexcept { return md.data.format_kind == dnnl_blocked && md.data.format_desc.blocking.inner_nblks == 0; }
 	constexpr auto IsBlockedDataFmt(const dnnl::memory::desc& md) noexcept { return md.data.format_kind == dnnl_blocked && md.data.format_desc.blocking.inner_nblks == 1 && md.data.format_desc.blocking.inner_idxs[0] == 1 && (md.data.format_desc.blocking.inner_blks[0] == 4 || md.data.format_desc.blocking.inner_blks[0] == 8 || md.data.format_desc.blocking.inner_blks[0] == 16); }
 
@@ -199,7 +200,7 @@ namespace dnn
 		return dnnl::memory::format_tag::undef;
 	}
 
-	inline static void ZeroFloatVector(Float* destination, const size_t elements) noexcept
+	inline static void ZeroFloatVector(Float* destination, const UInt elements) noexcept
 	{
 		if (elements < 1048576ull)
 			::memset(destination, 0, elements * sizeof(Float));
@@ -207,13 +208,13 @@ namespace dnn
 		{
 			const auto threads = elements < 2097152ull ? 2ull : elements < 8338608ull ? LIGHT_COMPUTE : MEDIUM_COMPUTE;
 			const auto part = elements / threads;
-			for_i(threads, [=](const size_t thread) { ::memset(destination + part * thread, 0, part * sizeof(Float)); });
+			for_i(threads, [=](const UInt thread) { ::memset(destination + part * thread, 0, part * sizeof(Float)); });
 			if (elements % threads != 0)
 				::memset(destination + part * threads, 0, (elements - part * threads) * sizeof(Float));
 		}
 	}
 
-	inline static void ZeroFloatVectorAllocate(FloatVector& destination, const size_t elements) noexcept
+	inline static void ZeroFloatVectorAllocate(FloatVector& destination, const UInt elements) noexcept
 	{
 		destination.resize(elements);
 		ZeroFloatVector(destination.data(), elements);
@@ -376,10 +377,10 @@ namespace dnn
 		if (sysinfo(&info) == 0)
 		{
 			std::cout << std::string("Available memory: ") << std::to_string(info.freeram*info.mem_unit/1024/1024) << std::string("/") << std::to_string(info.totalram*info.mem_unit/1024/1024) << " MB" << std::endl;
-			return static_cast<size_t>(info.freeram * info.mem_unit);
+			return static_cast<UInt>(info.freeram * info.mem_unit);
 		}
 		else
-			return static_cast<size_t>(0);
+			return static_cast<UInt>(0);
 #endif
 	}
 	
@@ -460,7 +461,7 @@ namespace dnn
 	// Read from memory, write to handle
 	inline void read_from_dnnl_memory(void* handle, dnnl::memory& mem) {
 		dnnl::engine eng = mem.get_engine();
-		size_t size = mem.get_desc().get_size();
+		auto size = mem.get_desc().get_size();
 
 		if (!handle) throw std::runtime_error("handle is nullptr.");
 
@@ -477,7 +478,7 @@ namespace dnn
 				uint8_t* src_ptr = src.get_pointer();
 				if (!src_ptr)
 					throw std::runtime_error("get_pointer returned nullptr.");
-				for (size_t i = 0; i < size; ++i)
+				for (auto i = 0ull; i < size; ++i)
 					((uint8_t*)handle)[i] = src_ptr[i];
 			}
 			else {
@@ -486,7 +487,7 @@ namespace dnn
 				if (!src_ptr)
 					throw std::runtime_error("get_data_handle returned nullptr.");
 				if (is_cpu_sycl) {
-					for (size_t i = 0; i < size; ++i)
+					for (auto i = 0ull; i < size; ++i)
 						((uint8_t*)handle)[i] = src_ptr[i];
 				}
 				else {
@@ -515,7 +516,7 @@ namespace dnn
 		if (eng.get_kind() == dnnl::engine::kind::cpu) {
 			uint8_t* src = static_cast<uint8_t*>(mem.get_data_handle());
 			if (!src) throw std::runtime_error("get_data_handle returned nullptr.");
-			for (size_t i = 0; i < size; ++i)
+			for (auto i = 0ull; i < size; ++i)
 				((uint8_t*)handle)[i] = src[i];
 			return;
 		}
@@ -526,7 +527,7 @@ namespace dnn
 	// Read from handle, write to memory
 	inline void write_to_dnnl_memory(void* handle, dnnl::memory& mem) {
 		dnnl::engine eng = mem.get_engine();
-		size_t size = mem.get_desc().get_size();
+		auto size = mem.get_desc().get_size();
 
 		if (!handle) throw std::runtime_error("handle is nullptr.");
 
@@ -543,7 +544,7 @@ namespace dnn
 				uint8_t* dst_ptr = dst.get_pointer();
 				if (!dst_ptr)
 					throw std::runtime_error("get_pointer returned nullptr.");
-				for (size_t i = 0; i < size; ++i)
+				for (auto i = 0ull; i < size; ++i)
 					dst_ptr[i] = ((uint8_t*)handle)[i];
 			}
 			else {
@@ -552,7 +553,7 @@ namespace dnn
 				if (!dst_ptr)
 					throw std::runtime_error("get_data_handle returned nullptr.");
 				if (is_cpu_sycl) {
-					for (size_t i = 0; i < size; ++i)
+					for (auto i = 0ull; i < size; ++i)
 						dst_ptr[i] = ((uint8_t*)handle)[i];
 				}
 				else {
@@ -581,7 +582,7 @@ namespace dnn
 		if (eng.get_kind() == dnnl::engine::kind::cpu) {
 			uint8_t* dst = static_cast<uint8_t*>(mem.get_data_handle());
 			if (!dst) throw std::runtime_error("get_data_handle returned nullptr.");
-			for (size_t i = 0; i < size; ++i)
+			for (auto i = 0ull; i < size; ++i)
 				dst[i] = ((uint8_t*)handle)[i];
 			return;
 		}
