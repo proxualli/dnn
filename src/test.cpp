@@ -61,7 +61,7 @@ DNN_API int DNNSaveLayerWeights(const std::string& fileName, const UInt layerInd
 DNN_API void DNNGetLayerWeights(const UInt layerIndex, std::vector<Float>* weights, std::vector<Float>* biases);
 DNN_API void DNNSetCostIndex(const UInt index);
 DNN_API void DNNGetCostInfo(const UInt costIndex, UInt* trainErrors, Float* trainLoss, Float* avgTrainLoss, Float* trainErrorPercentage, UInt* testErrors, Float* testLoss, Float* avgTestLoss, Float* testErrorPercentage);
-DNN_API void DNNGetImage(const UInt layer, const unsigned char fillColor, unsigned char* image);
+DNN_API void DNNGetImage(const UInt layer, const Byte fillColor, Byte* image);
 
 
 void NewEpoch(UInt CurrentCycle, UInt CurrentEpoch, UInt TotalEpochs, bool HorizontalFlip, bool VerticalFlip, Float Dropout, Float Cutout, Float AutoAugment, Float ColorCast, UInt ColorAngle, Float Distortion, UInt Interpolation, Float Scaling, Float Rotation, Float MaximumRate, UInt BatchSize, Float Momentum, Float L2Penalty, Float AvgTrainLoss, Float TrainErrorPercentage, Float TrainAccuracy, UInt TrainErrors, Float AvgTestLoss, Float TestErrorPercentage, Float TestAccuracy, UInt TestErrors)
