@@ -320,6 +320,7 @@ namespace dnn
 							case Activations::Sqrt:
 							case Activations::Square:
 							case Activations::Tanh:
+							case Activations::TanhExp:
 								if (alpha != 0 || beta != 0)
 								{
 									msg = CheckMsg(line - 1, col, "This Activation cannot have an Alpha or Beta parameter.");
@@ -550,6 +551,14 @@ namespace dnn
 								break;
 							case LayerTypes::BatchNormSwishDropout:
 								model->Layers.push_back(std::make_unique<BatchNormActivationDropout<Swish, LayerTypes::BatchNormSwishDropout>>(model->Device, model->Format, name, inputs, dropout, scaling, momentum, eps, biases));
+								model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesScale, biasesLRM, biasesWDM);
+								break;
+							case LayerTypes::BatchNormTanhExp:
+								model->Layers.push_back(std::make_unique<BatchNormActivation<TanhExp, LayerTypes::BatchNormTanhExp>>(model->Device, model->Format, name, inputs, scaling, momentum, eps, biases));
+								model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesScale, biasesLRM, biasesWDM);
+								break;
+							case LayerTypes::BatchNormTanhExpDropout:
+								model->Layers.push_back(std::make_unique<BatchNormActivationDropout<TanhExp, LayerTypes::BatchNormTanhExpDropout>>(model->Device, model->Format, name, inputs, dropout, scaling, momentum, eps, biases));
 								model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesScale, biasesLRM, biasesWDM);
 								break;
 							case LayerTypes::ChannelMultiply:

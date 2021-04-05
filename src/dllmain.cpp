@@ -237,6 +237,8 @@ extern "C" DNN_API void DNNGetImage(const UInt layerIndex, const Byte fillColor,
 			case LayerTypes::BatchNormReluDropout:
 			case LayerTypes::BatchNormSwish:
 			case LayerTypes::BatchNormSwishDropout:
+			case LayerTypes::BatchNormTanhExp:
+			case LayerTypes::BatchNormTanhExpDropout:
 			case LayerTypes::Convolution:
 			case LayerTypes::ConvolutionTranspose:
 			case LayerTypes::Dense:
@@ -688,6 +690,26 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, UInt* inputsCount
 				*dropout = Float(1) - bn->Keep;
 			}
 		}
+		break;
+
+		case LayerTypes::BatchNormTanhExp:
+		{
+			auto bn = dynamic_cast<BatchNormActivation<TanhExp, LayerTypes::BatchNormTanhExp>*>(model->Layers[layerIndex].get());
+			if (bn)
+				*scaling = bn->Scaling;
+		}
+		break;
+
+		case LayerTypes::BatchNormTanhExpDropout:
+		{
+			auto bn = dynamic_cast<BatchNormActivationDropout<TanhExp, LayerTypes::BatchNormTanhExpDropout>*>(model->Layers[layerIndex].get());
+			if (bn)
+			{
+				*scaling = bn->Scaling;
+				*dropout = Float(1) - bn->Keep;
+			}
+		}
+
 		break;
 
 		case LayerTypes::Dropout:

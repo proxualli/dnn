@@ -147,6 +147,15 @@ namespace dnn
 		inline static VecFloat dfVec(const VecFloat& x) noexcept { const auto y = Tanh::fVec(x); return (VecFloat(1) - square(y)); }
 	};
 	 
+	struct TanhExp
+	{
+		
+		inline static Float f(const Float& x) noexcept { return x * std::tanh(std::exp(x)); }
+		inline static Float df(const Float& x) noexcept { const auto y = std::tanh(std::exp(x)); return y - (x * std::exp(x) * (FloatSquare(y) - Float(1))); }
+		inline static VecFloat fVec(const VecFloat& x) noexcept { return x * tanh(exp(x)); }
+		inline static VecFloat dfVec(const VecFloat& x) noexcept { const auto y = tanh(exp(x)); return y - (x * exp(x) * (square(y) - VecFloat(1))); }
+	};
+
 	struct FTS
 	{
 		inline static Float f(const Float& x, const Float& alpha = Float(-0.2)) noexcept { return x >= Float(0) ? x * Logistic::f(x) + alpha : alpha; }
@@ -183,7 +192,8 @@ namespace dnn
 		Sqrt = 23,			//
 		Square = 24,
 		Swish = 25,
-		Tanh = 26			//
+		Tanh = 26,			//
+		TanhExp = 27
 	};
 
 	class Activation final : public Layer
@@ -360,6 +370,7 @@ namespace dnn
 				case Activations::LogSoftmax:
 				case Activations::PRelu:
 				case Activations::Softmax:
+				case Activations::TanhExp:
 				    break;
 
 				case Activations::Abs:
@@ -1041,6 +1052,242 @@ namespace dnn
 			}
 			break;
 
+			case Activations::TanhExp:
+			{
+				if (InputLayer->DstMemDesc->data.ndims == 2)
+				{
+#ifdef DNN_STOCHASTIC
+					if (batchSize == 1)
+					{
+						if (training)
+						{
+							if (!plain)
+							{
+								const auto vecZero = VecFloat(0);
+								for (auto c = 0ull; c < PaddedC; c += VectorSize)
+								{
+									TanhExp::fVec(VecFloat().load_a(&InputLayer->Neurons[c])).store_a(&Neurons[c]);
+#ifndef DNN_LEAN
+									vecZero.store_nt(&NeuronsD1[c]);
+#endif // DNN_LEAN
+								}
+							}
+							else
+							{
+								for (auto c = 0ull; c < C; c++)
+								{
+									Neurons[c] = TanhExp::f(InputLayer->Neurons[c]);
+#ifndef DNN_LEAN
+									NeuronsD1[c] = Float(0);
+#endif // DNN_LEAN
+								}
+							}
+						}
+						else
+						{
+							if (!plain)
+								for (auto c = 0ull; c < PaddedC; c += VectorSize)
+									TanhExp::fVec(VecFloat().load_a(&InputLayer->Neurons[c])).store_a(&Neurons[c]);
+							else
+								for (auto c = 0ull; c < C; c++)
+									Neurons[c] = TanhExp::f(InputLayer->Neurons[c]);
+						}
+					}
+					else
+					{
+#endif
+						if (training)
+						{
+							if (!plain)
+							{
+								for_i(batchSize, threads, [=](UInt n)
+									{
+										const auto vecZero = VecFloat(0);
+										const auto offset = n * PaddedC;
+										for (auto c = offset; c < offset + PaddedC; c += VectorSize)
+										{
+											TanhExp::fVec(VecFloat().load_a(&InputLayer->Neurons[c])).store_a(&Neurons[c]);
+#ifndef DNN_LEAN
+											vecZero.store_nt(&NeuronsD1[c]);
+#endif // DNN_LEAN
+										}
+									});
+							}
+							else
+							{
+								for_i(batchSize, threads, [=](UInt n)
+									{
+										const auto offset = n * C;
+										for (auto c = offset; c < offset + C; c++)
+										{
+											Neurons[c] = TanhExp::f(InputLayer->Neurons[c]);
+#ifndef DNN_LEAN
+											NeuronsD1[c] = Float(0);
+#endif // DNN_LEAN
+										}
+									});
+							}
+						}
+						else
+						{
+							if (!plain)
+							{
+								for_i(batchSize, threads, [=](UInt n)
+									{
+										const auto vecZero = VecFloat(0);
+										const auto offset = n * PaddedC;
+										for (auto c = offset; c < offset + PaddedC; c += VectorSize)
+											TanhExp::fVec(VecFloat().load_a(&InputLayer->Neurons[c])).store_a(&Neurons[c]);
+									});
+							}
+							else
+							{
+								for_i(batchSize, threads, [=](UInt n)
+									{
+										const auto offset = n * C;
+										for (auto c = offset; c < offset + C; c++)
+											Neurons[c] = TanhExp::f(InputLayer->Neurons[c]);
+									});
+							}
+						}
+#ifdef DNN_STOCHASTIC
+					}
+#endif
+				}
+				else
+				{
+#ifdef DNN_STOCHASTIC
+					if (batchSize == 1)
+					{
+						if (training)
+						{
+							if (!plain)
+							{
+								for (auto c = 0ull; c < PaddedC; c += VectorSize)
+								{
+									const auto offset = c * HW;
+									for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
+									{
+										TanhExp::fVec(VecFloat().load_a(&InputLayer->Neurons[hw + offset])).store_a(&Neurons[hw + offset]);
+#ifndef DNN_LEAN
+										vecZero.store_nt(&NeuronsD1[hw + offset]);
+#endif // DNN_LEAN
+									}
+								}
+							}
+							else
+							{
+								for (auto c = 0ull; c < C; c++)
+								{
+									const auto offset = c * HW;
+									for (auto hw = 0ull; hw < HW; hw++)
+									{
+										Neurons[hw + offset] = TanhExp::f(InputLayer->Neurons[hw + offset]);
+#ifndef DNN_LEAN
+										NeuronsD1[hw + offset] = Float(0);
+#endif // DNN_LEAN
+									}
+								}
+							}
+
+						}
+						else
+						{
+							if (!plain)
+							{
+								for (auto c = 0ull; c < PaddedC; c += VectorSize)
+								{
+									const auto offset = c * HW;
+									for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
+										TanhExp::fVec(VecFloat().load_a(&InputLayer->Neurons[hw + offset])).store_a(&Neurons[hw + offset]);
+								}
+							}
+							else
+							{
+								for (auto c = 0ull; c < C; c++)
+								{
+									const auto offset = c * HW;
+									for (auto hw = 0ull; hw < HW; hw++)
+										Neurons[hw + offset] = TanhExp::f(InputLayer->Neurons[hw + offset]);
+								}
+							}
+						}
+					}
+					else
+					{
+#endif
+						if (training)
+						{
+							if (!plain)
+							{
+								for_i(batchSize, threads, [=](UInt n)
+									{
+										const auto vecZero = VecFloat(0);
+										for (auto c = 0ull; c < PaddedC; c += VectorSize)
+										{
+											const auto offset = n * PaddedCDHW + c * HW;
+											for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
+											{
+												TanhExp::fVec(VecFloat().load_a(&InputLayer->Neurons[hw + offset])).store_a(&Neurons[hw + offset]);
+#ifndef DNN_LEAN
+												vecZero.store_nt(&NeuronsD1[hw + offset]);
+#endif // DNN_LEAN
+											}
+										}
+									});
+							}
+							else
+							{
+								for_i(batchSize, threads, [=](UInt n)
+									{
+										for (auto c = 0ull; c < C; c++)
+										{
+											const auto offset = n * CDHW + c * HW;
+											for (auto hw = 0ull; hw < HW; hw++)
+											{
+												Neurons[hw + offset] = TanhExp::f(InputLayer->Neurons[hw + offset]);
+#ifndef DNN_LEAN
+												NeuronsD1[hw + offset] = Float(0);
+#endif // DNN_LEAN
+											}
+										}
+									});
+							}
+						}
+						else
+						{
+							if (!plain)
+							{
+								for_i(batchSize, threads, [=](UInt n)
+									{
+										for (auto c = 0ull; c < PaddedC; c += VectorSize)
+										{
+											const auto offset = n * PaddedCDHW + c * HW;
+											for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
+												TanhExp::fVec(VecFloat().load_a(&InputLayer->Neurons[hw + offset])).store_a(&Neurons[hw + offset]);
+										}
+									});
+							}
+							else
+							{
+								for_i(batchSize, threads, [=](UInt n)
+									{
+										for (auto c = 0ull; c < C; c++)
+										{
+											const auto offset = n * CDHW + c * HW;
+											for (auto hw = 0ull; hw < HW; hw++)
+												Neurons[hw + offset] = TanhExp::f(InputLayer->Neurons[hw + offset]);
+										}
+									});
+							}
+						}
+					}
+#ifdef DNN_STOCHASTIC
+				}
+#endif
+			}
+			break;
+
 			default:
 			{
 				auto memSrc = dnnl::memory(*InputLayer->DstMemDesc, Device.engine, InputLayer->Neurons.data());
@@ -1381,6 +1628,98 @@ namespace dnn
 			}
 			break;
 
+			case Activations::TanhExp:
+			{
+				if (InputLayer->DstMemDesc->data.ndims == 2)
+				{
+#ifdef DNN_STOCHASTIC
+					if (batchSize == 1)
+					{
+						if (!plain)
+							for (auto c = 0ull; c < PaddedC; c += VectorSize)
+								mul_add(TanhExp::dfVec(VecFloat().load_a(&InputLayer->Neurons[c])), VecFloat().load_a(&NeuronsD1[c]), VecFloat().load_a(&InputLayer->NeuronsD1[c])).store_a(&InputLayer->NeuronsD1[c]);
+						else
+							for (auto c = 0ull; c < C; c++)
+								InputLayer->NeuronsD1[c] += TanhExp::df(InputLayer->Neurons[c]) * NeuronsD1[c];
+					}
+					else
+					{
+#endif
+						if (!plain)
+							for_i(batchSize, threads, [=](UInt n)
+								{
+									const auto offset = n * PaddedC;
+									for (auto c = offset; c < offset + PaddedC; c += VectorSize)
+										mul_add(TanhExp::dfVec(VecFloat().load_a(&InputLayer->Neurons[c])), VecFloat().load_a(&NeuronsD1[c]), VecFloat().load_a(&InputLayer->NeuronsD1[c])).store_a(&InputLayer->NeuronsD1[c]);
+								});
+						else
+							for_i(batchSize, threads, [=](UInt n)
+								{
+									const auto offset = n * C;
+									for (auto c = offset; c < offset + C; c++)
+										InputLayer->NeuronsD1[c] += TanhExp::df(InputLayer->Neurons[c]) * NeuronsD1[c];
+								});
+#ifdef DNN_STOCHASTIC
+					}
+#endif
+				}
+				else
+				{
+#ifdef DNN_STOCHASTIC
+					if (batchSize == 1)
+					{
+						if (!plain)
+						{
+							for (auto c = 0ull; c < PaddedC; c += VectorSize)
+							{
+								const auto offset = c * HW;
+								for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
+									mul_add(TanhExp::dfVec(VecFloat().load_a(&InputLayer->Neurons[hw])), VecFloat().load_a(&NeuronsD1[hw]), VecFloat().load_a(&InputLayer->NeuronsD1[hw])).store_a(&InputLayer->NeuronsD1[hw]);
+							}
+						}
+						else
+						{
+							for (auto c = 0ull; c < C; c++)
+							{
+								const auto offset = c * HW;
+								for (auto hw = offset; hw < offset + HW; hw++)
+									InputLayer->NeuronsD1[hw] += TanhExp::df(InputLayer->Neurons[hw]) * NeuronsD1[hw];
+							}
+						}
+					}
+					else
+					{
+#endif
+						if (!plain)
+						{
+							for_i(batchSize, threads, [=](UInt n)
+								{
+									for (auto c = 0ull; c < PaddedC; c += VectorSize)
+									{
+										const auto offset = n * PaddedCDHW + c * HW;
+										for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
+											mul_add(TanhExp::dfVec(VecFloat().load_a(&InputLayer->Neurons[hw])), VecFloat().load_a(&NeuronsD1[hw]), VecFloat().load_a(&InputLayer->NeuronsD1[hw])).store_a(&InputLayer->NeuronsD1[hw]);
+									}
+								});
+						}
+						else
+						{
+							for_i(batchSize, threads, [=](UInt n)
+								{
+									for (auto c = 0ull; c < C; c++)
+									{
+										const auto offset = n * CDHW + c * HW;
+										for (auto hw = offset; hw < offset + HW; hw++)
+											InputLayer->NeuronsD1[hw] += TanhExp::df(InputLayer->Neurons[hw]) * NeuronsD1[hw];
+									}
+								});
+						}
+#ifdef DNN_STOCHASTIC
+					}
+#endif
+				}
+			}
+			break;
 			default:
 			{
 				auto memSrc = dnnl::memory(*InputLayer->DstMemDesc, Device.engine, InputLayer->Neurons.data());
