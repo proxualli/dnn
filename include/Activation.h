@@ -137,7 +137,7 @@ namespace dnn
 		inline static Float f(const Float& x) noexcept { return std::tanh(x); }
 		inline static VecFloat fVec(const VecFloat& x) noexcept { return tanh(x); }
 #else
-		inline static Float f(const Float& x) noexcept { const auto y = std::exp(Float(2) * x);  return (y - Float(1)) / (y + Float(1)); 
+		inline static Float f(const Float& x) noexcept { const auto y = std::exp(Float(2) * x); return (y - Float(1)) / (y + Float(1)); }
 		inline static VecFloat fVec(const VecFloat& x) noexcept { const auto y = exp(VecFloat(2) * x);  return (y - VecFloat(1)) / (y + VecFloat(1)); }
 #endif
 		inline static Float df(const Float& x) noexcept { const auto y = Tanh::f(x); return Float(1) - FloatSquare(y); }
