@@ -49,8 +49,8 @@
 
 #include "vectorclass.h"
 #include "vectormath_hyp.h"
-#include "vectormath_exp.h"
-#include "vectormath_trig.h"
+//#include "vectormath_exp.h"
+//#include "vectormath_trig.h"
 #include "add-on/random/ranvec1.h"
 
 #define MAGIC_ENUM_RANGE_MIN 0
