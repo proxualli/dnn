@@ -99,14 +99,6 @@ namespace dnn
 		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0)) noexcept { return select(x > VecFloat(0), VecFloat(1), alpha); }
 	};
 
-	struct Mish
-	{
-		inline static Float f(const Float& x) noexcept { return x * std::tanh(std::log1p(std::exp(x))); }
-		inline static Float df(const Float& x) noexcept { const auto tmpExp = std::exp(x); const auto tmpSoftplus = std::log1p(tmpExp); const auto tmpSech = Float(1) / std::cosh(tmpSoftplus); return std::tanh(tmpSoftplus) + x * tmpExp * FloatSquare(tmpSech) / (tmpExp + Float(1)); }
-		inline static VecFloat fVec(const VecFloat& x) noexcept { return x * tanh(log1p(exp(x))); }
-		inline static VecFloat dfVec(const VecFloat& x) noexcept { const auto tmpExp = exp(x); const auto tmpSoftplus = log1p(tmpExp); const auto tmpSech = VecFloat(1) / cosh(tmpSoftplus); return tanh(tmpSoftplus) + x * tmpExp * square(tmpSech) / (tmpExp + VecFloat(1)); }
-	};
-
 	struct Selu
 	{
 		inline static Float f(const Float& x) noexcept { return Float(1.0507009873554804934193349852946) * (x > Float(0) ? x : Float(1.6732632423543772848170429916717) * (std::exp(x) - Float(1))); }
@@ -155,6 +147,15 @@ namespace dnn
 		inline static VecFloat fVec(const VecFloat& x) noexcept { return x * Tanh::fVec(exp(x)); }
 		inline static VecFloat dfVec(const VecFloat& x) noexcept { const auto y = exp(x); const auto z = Tanh::fVec(y); return z - (x * y * (square(z) - VecFloat(1))); }
 	};
+
+	struct Mish
+	{
+		inline static Float f(const Float& x) noexcept { return x * Tanh::f(std::log1p(std::exp(x))); }
+		inline static Float df(const Float& x) noexcept { const auto tmpExp = std::exp(x); const auto tmpSoftplus = std::log1p(tmpExp); const auto tmpSech = Float(1) / std::cosh(tmpSoftplus); return Tanh::f(tmpSoftplus) + x * tmpExp * FloatSquare(tmpSech) / (tmpExp + Float(1)); }
+		inline static VecFloat fVec(const VecFloat& x) noexcept { return x * Tanh::fVec(log1p(exp(x))); }
+		inline static VecFloat dfVec(const VecFloat& x) noexcept { const auto tmpExp = exp(x); const auto tmpSoftplus = log1p(tmpExp); const auto tmpSech = VecFloat(1) / cosh(tmpSoftplus); return Tanh::fVec(tmpSoftplus) + x * tmpExp * square(tmpSech) / (tmpExp + VecFloat(1)); }
+	};
+
 
 	struct FTS
 	{
