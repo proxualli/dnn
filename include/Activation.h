@@ -133,17 +133,9 @@ namespace dnn
 
 	struct Tanh
 	{
-#if defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW32__)
 		inline static Float f(const Float& x) noexcept { return std::tanh(x); }
-		inline static VecFloat fVec(const VecFloat& x) noexcept { return tanh(x); }
-#else
-        inline static Float f(const Float& x) noexcept { const auto y = std::exp(Float(2) * x); return (y - Float(1)) / (y + Float(1)); }
-		inline static VecFloat fVec(const VecFloat& x) noexcept { const auto y = exp(VecFloat(2) * x);  return (y - VecFloat(1)) / (y + VecFloat(1)); }
-
-		//inline static Float f(const Float& x) noexcept { const auto y = std::exp(x); const auto z = std::exp(-x); return (y - z) / (y + z); }
-		//inline static VecFloat fVec(const VecFloat& x) noexcept { const auto y = exp(x); const auto z = exp(-x); return (y - z) / (y + z); }
-#endif
 		inline static Float df(const Float& x) noexcept { return Float(1) - FloatSquare(Tanh::f(x)); }
+		inline static VecFloat fVec(const VecFloat& x) noexcept { return tanh(x); }
 		inline static VecFloat dfVec(const VecFloat& x) noexcept { return (VecFloat(1) - square(Tanh::fVec(x))); }
 	};
 	 
@@ -151,9 +143,9 @@ namespace dnn
 	{
 		
 		inline static Float f(const Float& x) noexcept { return x * Tanh::f(std::exp(x)); }
-		inline static Float df(const Float& x) noexcept { const auto y = std::exp(x);  const auto z = std::tanh(y); return z - (x * y * (FloatSquare(z) - Float(1))); }
+		inline static Float df(const Float& x) noexcept { const auto y = std::exp(x);  const auto z = Tanh::f(y); return z - (x * y * (FloatSquare(z) - Float(1))); }
 		inline static VecFloat fVec(const VecFloat& x) noexcept { return x * Tanh::fVec(exp(x)); }
-		inline static VecFloat dfVec(const VecFloat& x) noexcept { const auto y = exp(x); const auto z = tanh(y); return z - (x * y * (square(z) - VecFloat(1))); }
+		inline static VecFloat dfVec(const VecFloat& x) noexcept { const auto y = exp(x); const auto z = Tanh::fVec(y); return z - (x * y * (square(z) - VecFloat(1))); }
 	};
 
 	struct Mish
