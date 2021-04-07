@@ -150,8 +150,8 @@ namespace dnn
 	struct TanhExp
 	{
 		
-		inline static Float f(const Float& x) noexcept { return x * std::tanh(std::exp(x)); }
-		inline static Float df(const Float& x) noexcept { const auto y = std::exp(x);  const auto z = std::tanh(y); return z - (x * y * (FloatSquare(z) - Float(1))); }
+		inline static Float f(const Float& x) noexcept { return x * Tanh::f(std::exp(x)); }
+		inline static Float df(const Float& x) noexcept { const auto y = std::exp(x);  const auto z = Tanh::f(y); return z - (x * y * (FloatSquare(z) - Float(1))); }
 		inline static VecFloat fVec(const VecFloat& x) noexcept { return x * Tanh::fVec(exp(x)); }
 		inline static VecFloat dfVec(const VecFloat& x) noexcept { const auto y = exp(x); const auto z = Tanh::fVec(y); return z - (x * y * (square(z) - VecFloat(1))); }
 	};
