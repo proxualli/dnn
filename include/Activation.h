@@ -133,15 +133,15 @@ namespace dnn
 
 	struct Tanh
 	{
-#if defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW32__)
+//#if defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW32__)
 		inline static Float f(const Float& x) noexcept { return std::tanh(x); }
-		inline static VecFloat fVec(const VecFloat& x) noexcept { return tanh(x); }
-#else
-		inline static Float f(const Float& x) noexcept { const auto y = std::exp(Float(2) * x); return (y - Float(1)) / (y + Float(1)); }
-		inline static VecFloat fVec(const VecFloat& x) noexcept { const auto y = exp(VecFloat(2) * x);  return (y - VecFloat(1)) / (y + VecFloat(1)); }
-#endif
 		inline static Float df(const Float& x) noexcept { return Float(1) - FloatSquare(std::tanh(x)); }
+		inline static VecFloat fVec(const VecFloat& x) noexcept { return tanh(x); }
 		inline static VecFloat dfVec(const VecFloat& x) noexcept { return (VecFloat(1) - square(tanh(x))); }
+//#else
+		//inline static Float f(const Float& x) noexcept { const auto y = std::exp(Float(2) * x); return (y - Float(1)) / (y + Float(1)); }
+		//inline static VecFloat fVec(const VecFloat& x) noexcept { const auto y = exp(VecFloat(2) * x);  return (y - VecFloat(1)) / (y + VecFloat(1)); }
+//#endif
 	};
 	 
 	struct TanhExp
