@@ -171,6 +171,40 @@ namespace dnn
 	constexpr auto BlockedFmt = dnnl::memory::format_tag::nChw4c;
 #endif
 
+static inline VecFloat tanh(VecFloat const x0) {
+// The limit of abs(x) is 89.0, as defined by max_x in vectormath_exp.h for 0.5*exp(x).
+
+    // Coefficients
+    const float r0 = -3.33332819422E-1f;
+    const float r1 =  1.33314422036E-1f;
+    const float r2 = -5.37397155531E-2f;
+    const float r3 =  2.06390887954E-2f;
+    const float r4 = -5.70498872745E-3f;
+
+    // data vectors
+    VecFloat x, x2, y1, y2;
+
+    x = abs(x0);
+    auto x_small = x <= 0.625f;                  // use polynomial approximation if abs(x) <= 5/8
+
+    if (horizontal_or(x_small)) {
+        // At least one element needs small method
+        x2 = x*x;
+        y1 = polynomial_4(x2, r0, r1, r2, r3, r4);
+        y1 = mul_add(y1, x2*x, x);               // y1 = x + (x2*x)*y1;
+    }
+    if (!horizontal_and(x_small)) {
+        // At least one element needs big method
+        y2 = exp(x+x);                           // exp(2*x)
+        y2 = 1.0f - 2.0f / (y2 + 1.0f);          // tanh(x)
+    }
+    auto x_big = x > 44.4f;
+    y1 = select(x_small, y1, y2);                // choose method
+    y1 = select(x_big,  1.0f, y1);               // avoid overflow
+    y1 = sign_combine(y1, x0);                   // get original sign
+    return y1;
+}
+
 	constexpr auto DivUp(const UInt& c) noexcept { return (((c - 1) / VectorSize) + 1) * VectorSize; }
 	constexpr auto IsPlainDataFmt(const dnnl::memory::desc& md) noexcept { return md.data.format_kind == dnnl_blocked && md.data.format_desc.blocking.inner_nblks == 0; }
 	constexpr auto IsBlockedDataFmt(const dnnl::memory::desc& md) noexcept { return md.data.format_kind == dnnl_blocked && md.data.format_desc.blocking.inner_nblks == 1 && md.data.format_desc.blocking.inner_idxs[0] == 1 && (md.data.format_desc.blocking.inner_blks[0] == 4 || md.data.format_desc.blocking.inner_blks[0] == 8 || md.data.format_desc.blocking.inner_blks[0] == 16); }
