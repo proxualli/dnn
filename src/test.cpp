@@ -225,7 +225,7 @@ int main(int argc, char* argv[])
     p.Groups = 3;
     p.Iterations = 6;
     p.Width = 10;
-    p.Activation = Activations::TanhExp;
+    p.Activation = Activations::HardSwish;
     p.Dropout = Float(0);
     p.Bottleneck = false;
     p.SqueezeExcitation = true;
