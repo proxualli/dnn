@@ -1,6 +1,8 @@
 #pragma once
 #include "Layer.h"
 
+#include <immintrin.h>
+
 namespace dnn
 {
 	struct Abs
@@ -144,8 +146,8 @@ namespace dnn
 		
 		inline static Float f(const Float& x) noexcept { return x * std::tanh(std::exp(x)); }
 		inline static Float df(const Float& x) noexcept { const auto y = std::exp(x);  const auto z = std::tanh(y); return z - (x * y * (FloatSquare(z) - Float(1))); }
-		inline static VecFloat fVec(const VecFloat& x) noexcept { return x * tanh(exp(x)); }
-		inline static VecFloat dfVec(const VecFloat& x) noexcept { const auto y = exp(x); const auto z = tanh(y); return z - (x * y * (square(z) - VecFloat(1))); }
+		inline static VecFloat fVec(const VecFloat& x) noexcept { return x * VecFloat(_mm256_tanh_ps(exp(x).operator __m256())); }
+		inline static VecFloat dfVec(const VecFloat& x) noexcept { const auto y = exp(x); const auto z = VecFloat(_mm256_tanh_ps(y.operator __m256())); return z - (x * y * (square(z) - VecFloat(1))); }
 	};
 
 	struct Mish

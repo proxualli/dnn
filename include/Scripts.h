@@ -173,7 +173,7 @@ namespace dnn
                 "Inputs=" + inputs + nwl + nwl;
         }
 
-        static std::string BatchNormActivation(UInt id, std::string inputs, std::string activation = "Relu", std::string group = "", std::string prefix = "B")
+        static std::string BatchNormActivation(UInt id, std::string inputs, std::string activation = std::string("Relu"), std::string group = "", std::string prefix = "B")
         {
             return "[" + group + prefix + std::to_string(id) + "]" + nwl +
                 "Type=BatchNorm" + activation + nwl +
