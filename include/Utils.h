@@ -5,6 +5,7 @@
 #include <sys/sysinfo.h>
 #endif
 
+
 #include <algorithm>
 #include <array>
 #include <atomic>
@@ -46,6 +47,8 @@
 #define MAX_VECTOR_SIZE 512
 #endif
 #endif
+
+#include <instrset.h>
 
 #include "vectorclass.h"
 #include "vectormath_common.h"
@@ -130,7 +133,6 @@ namespace dnn
 	typedef unsigned char Byte;
 	typedef std::vector<Float, AlignedAllocator<Float, 64ull>> FloatVector;
 	typedef std::vector<Byte, AlignedAllocator<Byte, 64ull>> ByteVector;
-
 	//constexpr bool IS_LITTLE_ENDIAN = std::endian::native == std::endian::little;
 	constexpr auto NEURONS_LIMIT = Float(1000);   // limit for all the neurons and derivative [-NEURONS_LIMIT,NEURONS_LIMIT]
 	constexpr auto WEIGHTS_LIMIT = Float(100);    // limit for all the weights and biases [-WEIGHTS_LIMIT,WEIGHTS_LIMIT]
@@ -231,7 +233,7 @@ namespace dnn
 	static int GetPhysicalSeedType() noexcept
 	{
 		int abcd[4];						// return values from cpuid instruction
-
+		
 		cpuid(abcd, 7);						// call cpuid function 7
 		if (abcd[1] & (1 << 18)) 
 			return 3; // ebx bit 18: RDSEED available
@@ -248,7 +250,7 @@ namespace dnn
 	template<typename T>
 	T Seed() noexcept
 	{
-		if (PhysicalSeedType < 0) 
+		if (PhysicalSeedType < 0)
 			PhysicalSeedType = GetPhysicalSeedType();
 		
 		uint32_t ran = 0;					// random number

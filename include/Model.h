@@ -856,7 +856,7 @@ namespace dnn
 
 						const auto shuffleCount = UniformInt<UInt>(16, 32);
 						for (auto shuffle = 0ull; shuffle < shuffleCount; shuffle++)
-							std::shuffle(std::begin(RandomTrainingSamples), std::end(RandomTrainingSamples), std::mt19937(physicalSeed()));
+							std::shuffle(std::begin(RandomTrainingSamples), std::end(RandomTrainingSamples), std::mt19937(Seed<unsigned>()));
 
 						for (auto cost : CostLayers)
 							cost->Reset();

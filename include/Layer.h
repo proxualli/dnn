@@ -294,7 +294,7 @@ namespace dnn
 			PaddedCDHW(layerType != LayerTypes::Input ? (DivUp(c) * d * h * w) : c * d * h * w),
 			HasPadding(padD > 0 || padH > 0 || padW > 0),
 			InputLayer(inputs.size() > 0 ? inputs[0] : nullptr),
-			RandomEngine(std::mt19937(physicalSeed())),
+			RandomEngine(std::mt19937(Seed<unsigned>())),
 			Neurons(FloatVector()),
 			NeuronsD1(FloatVector()),
 			Weights(FloatVector(weightCount)),
