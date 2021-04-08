@@ -223,9 +223,9 @@ int main(int argc, char* argv[])
     p.PadW = 4;
     p.MirrorPad = false;
     p.Groups = 3;
-    p.Iterations = 6;
-    p.Width = 10;
-    p.Activation = Activations::HardSwish;
+    p.Iterations = 3;
+    p.Width = 5;
+    p.Activation = Activations::TanhExp;
     p.Dropout = Float(0);
     p.Bottleneck = false;
     p.SqueezeExcitation = true;
