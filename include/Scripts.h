@@ -317,22 +317,7 @@ namespace dnn
                 "Inputs=" + inputs + nwl + nwl;
         }
 
-        static string Logistic(UInt id, std::string inputs, string group = "", std::string prefix = "ACT")
-        {
-            return "[" + group + prefix + std::to_string(id) + "]" + nwl +
-               "Type=Activation" + nwl +
-               "Inputs=" + inputs + nwl + 
-               "Activation=Logistic" + nwl + nwl;
-        }
-             
-        static std::string HardLogistic(UInt id, std::string inputs, std::string group = "", std::string prefix = "ACT")
-        {
-            return "[" + group + prefix + std::to_string(id) + "]" + nwl +
-                "Type=Activation" + nwl +
-                "Inputs=" + inputs + nwl +
-                "Activation=HardLogistic" + nwl + nwl;
-        }
-
+        
         static std::string Generate(const ScriptParameters p)
         {
             const auto userLocale = std::setlocale(LC_ALL, "C");
@@ -426,7 +411,7 @@ namespace dnn
                                 "[P" + std::to_string(g) + "]" + nwl + "Type=AvgPooling" + nwl + "Inputs=D" + std::to_string(C) + nwl + "Kernel=2,2" + nwl + "Stride=2,2" + nwl + nwl);
                         else
                             blocks.push_back(
-                                Convolution(C, "CC" + to_string(CC), channels, 1, 1, 1, 1, 0, 0) +
+                                Convolution(C, In("CC", CC), channels, 1, 1, 1, 1, 0, 0) +
                                 "[P" + std::to_string(g) + "]" + nwl + "Type=AvgPooling" + nwl + "Inputs=C" + std::to_string(C) + nwl + "Kernel=2,2" + nwl + "Stride=2,2" + nwl + nwl);
                         C++;
                         CC++;
