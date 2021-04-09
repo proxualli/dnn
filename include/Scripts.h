@@ -289,6 +289,16 @@ namespace dnn
                 "Inputs=" + inputs + nwl + nwl;
         }
 
+        static std::string AvgPooling(UInt id, std::string input, std::string kernel = "3,3", std::string stride = "2,2", std::string pad = "1,1", std::string group = "", std::string prefix = "P")
+        {
+            return "[" + group + prefix + std::to_string(id) + "]" + nwl +
+                "Type=AvgPooling" + nwl +
+                "Inputs=" + input + nwl +
+                "Kernel=" + kernel + nwl +
+                "Stride=" + stride + nwl +
+                "Pad=" + pad + nwl + nwl;
+        }
+
         static std::string GlobalAvgPooling(std::string input, std::string group = "", std::string prefix = "GAP")
         {
             return "[" + group + prefix + "]" + nwl +
@@ -408,11 +418,11 @@ namespace dnn
                             blocks.push_back(
                                 Convolution(C, In("CC", CC), channels, 1, 1, 1, 1, 0, 0) +
                                 Dropout(C, In("C", C)) +
-                                "[P" + std::to_string(g) + "]" + nwl + "Type=AvgPooling" + nwl + "Inputs=D" + std::to_string(C) + nwl + "Kernel=2,2" + nwl + "Stride=2,2" + nwl + nwl);
+                                AvgPooling(g, In("D", C), "2,2", "2,2", "0,0"));
                         else
                             blocks.push_back(
                                 Convolution(C, In("CC", CC), channels, 1, 1, 1, 1, 0, 0) +
-                                "[P" + std::to_string(g) + "]" + nwl + "Type=AvgPooling" + nwl + "Inputs=C" + std::to_string(C) + nwl + "Kernel=2,2" + nwl + "Stride=2,2" + nwl + nwl);
+                                AvgPooling(g, In("C", C), "2,2", "2,2", "0,0"));
                         C++;
                         CC++;
 
@@ -589,12 +599,12 @@ namespace dnn
                         W *= 2;
 
                         auto strChannelZeroPad = p.ChannelZeroPad ?
-                            ("[AVG" + std::to_string(g) + "]" + nwl + "Type=AvgPooling" + nwl + "Inputs=A" + std::to_string(A) + nwl + "Kernel=3,3" + nwl + "Stride=2,2" + nwl + "Pad=1,1" + nwl + nwl +
-                                "[CZP" + std::to_string(g) + "]" + nwl + "Type=ChannelZeroPad" + nwl + "Inputs=AVG" + std::to_string(g) + nwl + "Channels=" + std::to_string(W) + nwl + nwl +
-                                Add(A + 1, In("C", C + 1 + bn) + "," + In("CZP", g))) :
-                            "[AVG" + std::to_string(g) + "]" + nwl + "Type=AvgPooling" + nwl + "Inputs=B" + std::to_string(C) + nwl + "Kernel=2,2" + nwl + "Stride=2,2" + nwl + nwl +
-                            (Convolution(C + 2 + bn, In("AVG", g), DIV8(W), 1, 1, 1, 1, 0, 0) +
-                                Add(A + 1, In("C", C + 1 + bn) + "," + In("C", C + 2 + bn)));
+                            (AvgPooling(g, In("A", A)) +
+                            "[CZP" + std::to_string(g) + "]" + nwl + "Type=ChannelZeroPad" + nwl + "Inputs=P" + std::to_string(g) + nwl + "Channels=" + std::to_string(W) + nwl + nwl +
+                            Add(A + 1, In("C", C + 1 + bn) + "," + In("CZP", g))) :
+                            AvgPooling(g, In("B", C)) +
+                            (Convolution(C + 2 + bn, In("P", g), DIV8(W), 1, 1, 1, 1, 0, 0) +
+                            Add(A + 1, In("C", C + 1 + bn) + "," + In("C", C + 2 + bn)));
 
                         if (p.Bottleneck)
                         {
