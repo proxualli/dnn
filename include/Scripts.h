@@ -327,7 +327,24 @@ namespace dnn
                 "Inputs=" + inputs + nwl + nwl;
         }
 
-        
+        static std::string Activation(std::string inputs, std::string activation = "Relu", std::string group = "", std::string prefix = "ACT")
+        {
+            return "[" + group + prefix + "]" + nwl +
+                "Type=Activation" + nwl +
+                "Inputs=" + inputs + nwl +
+                "Activation=" + activation + nwl + nwl;
+        }
+
+        static std::string Cost(std::string inputs, UInt channels, std::string cost = "CategoricalCrossEntropy", Float eps = 0.0f, std::string group = "", std::string prefix = "Cost")
+        {
+            return "[" + group + prefix + "]" + nwl +
+                "Type=Cost" + nwl +
+                "Inputs=" + inputs + nwl +
+                "Cost=" + cost + nwl +
+                "Channels=" + to_string(channels) +
+                "Eps=" + to_string(eps) + nwl + nwl;
+        }
+
         static std::string Generate(const ScriptParameters p)
         {
             const auto userLocale = std::setlocale(LC_ALL, "C");
@@ -458,8 +475,8 @@ namespace dnn
                     Convolution(C, In("CC", CC), p.Classes(), 1, 1, 1, 1, 0, 0) +
                     BatchNorm(C + 1, In("C", C)) +
                     GlobalAvgPooling(In("B", C + 1)) +
-                    "[ACT]" + nwl + "Type=Activation" + nwl + "Inputs=GAP" + nwl + "Activation=LogSoftmax" + nwl + nwl +
-                    "[Cost]" + nwl + "Type=Cost" + nwl + "Inputs=ACT" + nwl + "Cost=CategoricalCrossEntropy" + nwl + "Channels=" + to_string(p.Classes());
+                    Activation("GAP", "LogSoftmax") +
+                    Cost("ACT", p.Classes(), "CategoricalCrossEntropy", 0.125f);
             }
             break;
 
@@ -552,8 +569,8 @@ namespace dnn
                     Convolution(C, In("B", C), p.Classes(), 1, 1, 1, 1, 0, 0) +
                     BatchNorm(C + 1, In("C", C)) +
                     GlobalAvgPooling(In("B", C + 1)) +
-                    "[ACT]" + nwl + "Type=Activation" + nwl + "Inputs=GAP" + nwl + "Activation=LogSoftmax" + nwl + nwl +
-                    "[Cost]" + nwl + "Type=Cost" + nwl + "Inputs=ACT" + nwl + "Cost=CategoricalCrossEntropy" + nwl + "Channels=" + to_string(p.Classes());
+                    Activation("GAP", "LogSoftmax") +
+                    Cost("ACT", p.Classes(), "CategoricalCrossEntropy", 0.125f);
             }
             break;
 
@@ -670,8 +687,8 @@ namespace dnn
                     Convolution(C, In("B", C), p.Classes(), 1, 1, 1, 1, 0, 0) +
                     BatchNorm(C + 1, In("C", C)) +
                     GlobalAvgPooling(In("B", C + 1)) +
-                    "[ACT]" + nwl + "Type=Activation" + nwl + "Inputs=GAP" + nwl + "Activation=LogSoftmax" + nwl + nwl +
-                    "[Cost]" + nwl + "Type=Cost" + nwl + "Inputs=ACT" + nwl + "Cost=CategoricalCrossEntropy" + nwl + "Channels=" + std::to_string(p.Classes());
+                    Activation("GAP", "LogSoftmax") +
+                    Cost("ACT", p.Classes(), "CategoricalCrossEntropy", 0.125f);
             }
             break;
 
@@ -756,8 +773,8 @@ namespace dnn
                     Convolution(C, In("CC", A), p.Classes(), 1, 1, 1, 1, 0, 0) +
                     BatchNorm(C + 1, In("C", C)) +
                     GlobalAvgPooling(In("B", C + 1)) +
-                    "[ACT]" + nwl + "Type=Activation" + nwl + "Inputs=GAP" + nwl + "Activation=LogSoftmax" + nwl + nwl +
-                    "[Cost]" + nwl + "Type=Cost" + nwl + "Inputs=ACT" + nwl + "Cost=CategoricalCrossEntropy" + nwl + "Channels=" + std::to_string(p.Classes()) + nwl + "Eps=0.125";
+                    Activation("GAP", "LogSoftmax") +
+                    Cost("ACT", p.Classes(), "CategoricalCrossEntropy", 0.125f);
             }
             break;
 
