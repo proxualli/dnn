@@ -600,7 +600,7 @@ namespace dnn
 
                         auto strChannelZeroPad = p.ChannelZeroPad ?
                             (AvgPooling(g, In("A", A)) +
-                            "[CZP" + std::to_string(g) + "]" + nwl + "Type=ChannelZeroPad" + nwl + "Inputs=P" + std::to_string(g) + nwl + "Channels=" + std::to_string(W) + nwl + nwl +
+                            "[CZP" + std::to_string(g) + "]" + nwl + "Type=ChannelZeroPad" + nwl + "Inputs=" + In("P", g) + nwl + "Channels=" + std::to_string(W) + nwl + nwl +
                             Add(A + 1, In("C", C + 1 + bn) + "," + In("CZP", g))) :
                             AvgPooling(g, In("B", C)) +
                             (Convolution(C + 2 + bn, In("P", g), DIV8(W), 1, 1, 1, 1, 0, 0) +
