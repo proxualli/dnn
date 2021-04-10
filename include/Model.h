@@ -1,6 +1,4 @@
 #pragma once
-#include "Dataprovider.h"
-#include "Layer.h"
 #include "Activation.h"
 #include "Add.h"
 #include "Average.h"
