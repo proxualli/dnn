@@ -74,10 +74,10 @@ MACRO(DNN_TARGET_ENABLE_CXX17 target)
     CXX_STANDARD 17
     CXX_STANDARD_REQUIRED YES
     CXX_EXTENSIONS ON)
-  target_compile_options(${target} PRIVATE
+  target_compile_options(${target} PUBLIC
     "$<$<CONFIG:RELEASE>:${release_flags}>"
     "$<$<CONFIG:DEBUG>:${debug_flags}>")
-  target_link_options(${target} PRIVATE
+  target_link_options(${target} PUBLIC
     "$<$<COMPILE_LANGUAGE:CXX>:${linkflags}>"
     "$<$<COMPILE_LANGUAGE:C>:${linkflags}>")
 ENDMACRO()
