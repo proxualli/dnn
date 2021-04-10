@@ -74,10 +74,10 @@ MACRO(DNN_TARGET_ENABLE_CXX17 target)
     CXX_STANDARD 17
     CXX_STANDARD_REQUIRED YES
     CXX_EXTENSIONS ON)
-  target_compile_options(${target} PUBLIC
+  target_compile_options(${target} PRIVATE
     "$<$<CONFIG:RELEASE>:${release_flags}>"
     "$<$<CONFIG:DEBUG>:${debug_flags}>")
-  target_link_options(${target} PUBLIC
+  target_link_options(${target} PRIVATE
     "$<$<COMPILE_LANGUAGE:CXX>:${linkflags}>"
     "$<$<COMPILE_LANGUAGE:C>:${linkflags}>")
 ENDMACRO()
@@ -356,10 +356,13 @@ IF(NOT TARGET magic_enum)
     "${DNN_DEPENDENCIES_BINARY_DIR}/magic_enum")
 ENDIF()
 
-TARGET_LINK_LIBRARIES(test PUBLIC ${PROJECT_NAME})
+TARGET_LINK_LIBRARIES(test PUBLIC ${PROJECT_NAME} zlib)
 
 install(TARGETS test DESTINATION bin)
 if(WIN32 OR MSVC AND BUILD_SHARED_LIBS)
+  install(TARGETS zlib LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+      PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+else()
   install(TARGETS zlib LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
       PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 endif()
