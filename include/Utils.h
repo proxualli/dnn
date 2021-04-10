@@ -1,10 +1,11 @@
 ﻿#pragma once
 #if defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW32__)
 #include "stdafx.h"
+#include <intrin.h>
 #else
 #include <sys/sysinfo.h>
+#include <x86intrin.h>                 // Gcc or Clang compiler
 #endif
-
 
 #include <algorithm>
 #include <array>
@@ -47,8 +48,6 @@
 #define MAX_VECTOR_SIZE 512
 #endif
 #endif
-
-#include "instrset.h"
 
 #include "vectorclass.h"
 #include "vectormath_common.h"
