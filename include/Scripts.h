@@ -341,7 +341,7 @@ namespace dnn
                 "Type=Cost" + nwl +
                 "Inputs=" + inputs + nwl +
                 "Cost=" + cost + nwl +
-                "Channels=" + to_string(channels) + nwl +
+                "Channels=" + std::to_string(channels) + nwl +
                 "Eps=" + to_string(eps) + nwl + nwl;
         }
 
