@@ -342,7 +342,7 @@ namespace dnn
                 "Inputs=" + inputs + nwl +
                 "Cost=" + cost + nwl +
                 "Channels=" + std::to_string(channels) + nwl +
-                "Eps=" + to_string(eps) + nwl + nwl;
+                "Eps=" + std::to_string(eps) + nwl + nwl;
         }
 
         static std::string Generate(const ScriptParameters p)
