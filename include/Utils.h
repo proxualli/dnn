@@ -48,7 +48,7 @@
 #endif
 #endif
 
-#include <instrset.h>
+#include "instrset.h"
 
 #include "vectorclass.h"
 #include "vectormath_common.h"
