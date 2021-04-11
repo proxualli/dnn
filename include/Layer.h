@@ -359,18 +359,7 @@ namespace dnn
 
 		bool IsNormalization() const 
 		{ 
-			return LayerType == LayerTypes::BatchNorm ||
-				LayerType == LayerTypes::BatchNormMish ||
-				LayerType == LayerTypes::BatchNormMishDropout ||
-				LayerType == LayerTypes::BatchNormHardLogistic ||
-				LayerType == LayerTypes::BatchNormHardSwish ||
-				LayerType == LayerTypes::BatchNormHardSwishDropout ||
-				LayerType == LayerTypes::BatchNormRelu ||
-				LayerType == LayerTypes::BatchNormReluDropout ||
-				LayerType == LayerTypes::BatchNormSwish ||
-				LayerType == LayerTypes::BatchNormSwishDropout ||
-				LayerType == LayerTypes::BatchNormTanhExp ||
-				LayerType == LayerTypes::BatchNormTanhExpDropout;
+			return std::string(magic_enum::enum_name<LayerTypes>(LayerType)).find("BatchNorm", 0) != std::string::npos;
 		};
 
 		bool IsNormalizationUnscaled() const 
