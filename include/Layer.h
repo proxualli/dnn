@@ -362,11 +362,6 @@ namespace dnn
 			return std::string(magic_enum::enum_name<LayerTypes>(LayerType)).find("BatchNorm", 0) != std::string::npos;
 		};
 
-		bool IsBatchNormUnscaled() const 
-		{
-			return IsBatchNorm() && !Scaling;
-		}
-
 		std::string GetDescriptionHeader() const
 		{
 			auto description = std::string("");
@@ -1170,7 +1165,7 @@ namespace dnn
 
 		inline void GradientClipping(const Float treshold = 1)
 		{
-			if (!IsBatchNormUnscaled() && HasWeights)
+			if (!(IsBatchNorm() && !Scaling) && HasWeights)
 			{
 				auto sum = Float(0);
 				PRAGMA_OMP_SIMD()
