@@ -155,7 +155,6 @@ namespace dnn
 		inline static VecFloat dfVec(const VecFloat& x) noexcept { const auto tmpExp = exp(x); const auto tmpSoftplus = log1p(tmpExp); const auto tmpSech = VecFloat(1) / cosh(tmpSoftplus); return tanh(tmpSoftplus) + x * tmpExp * square(tmpSech) / (tmpExp + VecFloat(1)); }
 	};
 
-
 	struct FTS
 	{
 		inline static Float f(const Float& x, const Float& alpha = Float(-0.2)) noexcept { return x >= Float(0) ? x * Logistic::f(x) + alpha : alpha; }
@@ -1720,6 +1719,7 @@ namespace dnn
 				}
 			}
 			break;
+
 			default:
 			{
 				auto memSrc = dnnl::memory(*InputLayer->DstMemDesc, Device.engine, InputLayer->Neurons.data());
