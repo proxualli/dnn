@@ -357,14 +357,14 @@ namespace dnn
 				Format == dnnl::memory::format_tag::abcde; 
 		};
 
-		bool IsNormalization() const 
+		bool IsBatchNorm() const 
 		{ 
 			return std::string(magic_enum::enum_name<LayerTypes>(LayerType)).find("BatchNorm", 0) != std::string::npos;
 		};
 
-		bool IsNormalizationUnscaled() const 
+		bool IsBatchNormUnscaled() const 
 		{
-			return IsNormalization() && !Scaling;
+			return IsBatchNorm() && !Scaling;
 		}
 
 		std::string GetDescriptionHeader() const
@@ -1170,7 +1170,7 @@ namespace dnn
 
 		inline void GradientClipping(const Float treshold = 1)
 		{
-			if (!IsNormalizationUnscaled() && HasWeights)
+			if (!IsBatchNormUnscaled() && HasWeights)
 			{
 				auto sum = Float(0);
 				PRAGMA_OMP_SIMD()
