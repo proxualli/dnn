@@ -1,10 +1,26 @@
 #pragma once
-#include "Model.h"
+#include <algorithm>
+#include <locale>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
-using namespace std;
+#define MAGIC_ENUM_RANGE_MIN 0
+#define MAGIC_ENUM_RANGE_MAX 255
+#include "magic_enum.hpp"
 
-namespace dnn
+namespace scripts
 {
+    typedef float Float;
+    typedef size_t UInt;
+    typedef unsigned char Byte;
+
+#if defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW32__)
+    static const auto nwl = std::string("\r\n");
+#else // assuming Linux
+    static const auto nwl = std::string("\n");
+#endif
+
     enum class Scripts
     {
         densenet = 0,
@@ -12,7 +28,46 @@ namespace dnn
         resnet = 2,
         shufflenetv2 = 3
     };
-  
+
+    enum class Datasets
+    {
+        cifar10 = 0,
+        cifar100 = 1,
+        fashionmnist = 2,
+        mnist = 3,
+        tinyimagenet = 4
+    };
+
+    enum class Fillers
+    {
+        Constant = 0,
+        HeNormal = 1,
+        HeUniform = 2,
+        LeCunNormal = 3,
+        LeCunUniform = 4,
+        Normal = 5,
+        TruncatedNormal = 6,
+        Uniform = 7,
+        XavierNormal = 8,
+        XavierUniform = 9
+    };
+
+    enum class Activations
+    {
+        FRelu = 1,
+        HardSwish = 10,
+        Mish = 16,
+        Relu = 19,
+        Swish = 25,
+        TanhExp = 27
+    };
+
+    static const auto StringToLower(std::string text)
+    {
+        std::transform(text.begin(), text.end(), text.begin(), ::tolower);
+        return text;
+    };
+
     constexpr auto ScaleVisible(const Fillers filler)
     {
         switch (filler)
@@ -30,8 +85,8 @@ namespace dnn
     struct ScriptParameters
     {
         // Model defaullt parameters
-        Scripts Script;
-        Datasets Dataset;
+        scripts::Scripts Script;
+        scripts::Datasets Dataset;
         UInt C;
         UInt D = 1;
         UInt H;
@@ -41,12 +96,12 @@ namespace dnn
         UInt PadW = 0;
         bool MirrorPad = false;
         bool MeanStdNormalization = true;
-        Fillers WeightsFiller = Fillers::HeNormal;
+        scripts::Fillers WeightsFiller = Fillers::HeNormal;
         Float WeightsScale = Float(0.05);
         Float WeightsLRM = Float(1);
         Float WeightsWDM = Float(1);
         bool HasBias = false;
-        Fillers BiasesFiller = Fillers::Constant;
+        scripts::Fillers BiasesFiller = Fillers::Constant;
         Float BiasesScale = Float(0);
         Float BiasesLRM = Float(1);
         Float BiasesWDM = Float(1);
@@ -66,9 +121,9 @@ namespace dnn
         bool Bottleneck;
         bool SqueezeExcitation;
         bool ChannelZeroPad;
-        Activations Activation = Activations::Relu;
+        scripts::Activations Activation = Activations::Relu;
 
-        UInt Classes() const 
+        UInt Classes() const
         {
             switch (Dataset)
             {
@@ -85,12 +140,12 @@ namespace dnn
             }
         }
 
-        bool RandomCrop() const 
-        { 
-            return PadH > 0 || PadW > 0; 
+        bool RandomCrop() const
+        {
+            return PadH > 0 || PadW > 0;
         }
-        
-        UInt Depth() const 
+
+        UInt Depth() const
         {
             switch (Script)
             {
@@ -118,17 +173,17 @@ namespace dnn
         auto GetName() const
         {
             auto common = std::string(magic_enum::enum_name<Scripts>(Script)) + std::string("-") + std::to_string(H) + std::string("x") + std::to_string(W) + std::string("-") + std::to_string(Groups) + std::string("-") + std::to_string(Iterations) + std::string("-");
-            
+
             switch (Script)
             {
             case Scripts::densenet:
-                return common + std::to_string(GrowthRate) + (Dropout > 0 ? std::string("-dropout") : std::string("")) + (Compression > 0 ? std::string("-compression") : std::string("")) + (Bottleneck ? std::string("-bottleneck") : std::string("")) + std::string("-") + StringToLower(std::string(magic_enum::enum_name<Activations>(Activation)));
+                return common + std::to_string(GrowthRate) + (Dropout > 0 ? std::string("-dropout") : std::string("")) + (Compression > 0 ? std::string("-compression") : std::string("")) + (Bottleneck ? std::string("-bottleneck") : std::string("")) + std::string("-") + StringToLower(std::string(magic_enum::enum_name<scripts::Activations>(Activation)));
             case Scripts::mobilenetv3:
-                return common + std::to_string(Width) + std::string("-") + StringToLower(std::string(magic_enum::enum_name<Activations>(Activation))) + (SqueezeExcitation ? std::string("-se") : std::string(""));
+                return common + std::to_string(Width) + std::string("-") + StringToLower(std::string(magic_enum::enum_name<scripts::Activations>(Activation))) + (SqueezeExcitation ? std::string("-se") : std::string(""));
             case Scripts::resnet:
-                return common + std::to_string(Width) + (Dropout > 0 ? std::string("-dropout") : std::string("")) + (Bottleneck ? std::string("-bottleneck") : std::string("")) + (ChannelZeroPad ? std::string("-channelzeropad") : std::string("")) + std::string("-") + StringToLower(std::string(magic_enum::enum_name<Activations>(Activation)));
+                return common + std::to_string(Width) + (Dropout > 0 ? std::string("-dropout") : std::string("")) + (Bottleneck ? std::string("-bottleneck") : std::string("")) + (ChannelZeroPad ? std::string("-channelzeropad") : std::string("")) + std::string("-") + StringToLower(std::string(magic_enum::enum_name<scripts::Activations>(Activation)));
             case Scripts::shufflenetv2:
-                return common + std::to_string(Width) + std::string("-") + StringToLower(std::string(magic_enum::enum_name<Activations>(Activation))) + (SqueezeExcitation ? std::string("-se") : std::string(""));
+                return common + std::to_string(Width) + std::string("-") + StringToLower(std::string(magic_enum::enum_name<scripts::Activations>(Activation))) + (SqueezeExcitation ? std::string("-se") : std::string(""));
             default:
                 return common;
             }
@@ -145,14 +200,14 @@ namespace dnn
 
         static auto to_string(const Datasets dataset)
         {
-            return std::string(magic_enum::enum_name<Datasets>(dataset));
+            return std::string(magic_enum::enum_name<scripts::Datasets>(dataset));
         }
 
         static auto to_string(const Fillers filler)
         {
-            return std::string(magic_enum::enum_name<Fillers>(filler));
+            return std::string(magic_enum::enum_name<scripts::Fillers>(filler));
         }
-      
+
         static UInt DIV8(UInt channels)
         {
             if (channels % 8ull == 0ull)
@@ -179,18 +234,48 @@ namespace dnn
                 "Type=BatchNorm" + activation + nwl +
                 "Inputs=" + inputs + nwl + nwl;
         }
-
+        /*
         static std::string BatchNormActivation(UInt id, std::string inputs, Activations activation = Activations::Relu, std::string group = "", std::string prefix = "B")
         {
             return "[" + group + prefix + std::to_string(id) + "]" + nwl +
                 "Type=BatchNorm" + std::string(magic_enum::enum_name<Activations>(activation)) + nwl +
                 "Inputs=" + inputs + nwl + nwl;
         }
+        */
+        static std::string BatchNormActivation(UInt id, std::string inputs, scripts::Activations activation = scripts::Activations::Relu, std::string group = "", std::string prefix = "B")
+        {
+            if (activation != scripts::Activations::FRelu)
+            {
+                return "[" + group + prefix + std::to_string(id) + "]" + nwl +
+                    "Type=BatchNorm" + std::string(magic_enum::enum_name<scripts::Activations>(activation)) + nwl +
+                    "Inputs=" + inputs + nwl + nwl;
+            }
+            else
+            {
+                return "[" + group + "B" + std::to_string(id) + "B1]" + nwl +
+                    "Type=BatchNorm" + nwl +
+                    "Inputs=" + inputs + nwl + nwl +
 
-        static std::string BatchNormActivationDropout(UInt id, std::string inputs, Activations activation = Activations::Relu, Float dropout = 0.0f, std::string group = "", std::string prefix = "B")
+                    "[" + group + "DC" + std::to_string(id) + "DC]" + nwl +
+                    "Type=DepthwiseConvolution" + nwl +
+                    "Inputs=" + group + "B" + std::to_string(id) + "B1" + nwl +
+                    "Kernel=3,3" + nwl +
+                    "Pad=1,1" + nwl + nwl +
+
+                    "[" + group + "B" + std::to_string(id) + "B2]" + nwl +
+                    "Type=BatchNorm" + nwl +
+                    "Inputs=" + group + "DC" + std::to_string(id) + "DC" + nwl + nwl +
+
+                    "[" + group + prefix + std::to_string(id) + "]" + nwl +
+                    "Type=Max" + nwl +
+                    "Inputs=" + group + "B" + std::to_string(id) + "B2," + group + "B" + std::to_string(id) + "B1" + nwl + nwl;
+            }
+        }
+
+        static std::string BatchNormActivationDropout(UInt id, std::string inputs, scripts::Activations activation = scripts::Activations::Relu, Float dropout = 0.0f, std::string group = "", std::string prefix = "B")
         {
             return "[" + group + prefix + std::to_string(id) + "]" + nwl +
-                "Type=BatchNorm" + std::string(magic_enum::enum_name<Activations>(activation)) + std::string("Dropout") + nwl +
+                "Type=BatchNorm" + std::string(magic_enum::enum_name<scripts::Activations>(activation)) + std::string("Dropout") + nwl +
                 "Inputs=" + inputs + nwl +
                 (dropout > 0.0f ? "Dropout=" + std::to_string(dropout) + nwl + nwl : nwl);
         }
@@ -513,7 +598,7 @@ namespace dnn
                         auto strSE =
                             se ? GlobalAvgPooling(In("B", C + 1), group) +
                             Convolution(1, group + "GAP", DIV8((6 * W) / 4), 1, 1, 1, 1, 0, 0, group) +
-                            BatchNormActivation(1, group + "C1", p.Activation, group) +
+                            BatchNormActivation(1, group + "C1", p.Activation == Activations::FRelu ? Activations::HardSwish : p.Activation, group) +
                             Convolution(2, group + "B1", DIV8(6 * W), 1, 1, 1, 1, 0, 0, group) +
                             BatchNormActivation(2, group + "C2", "HardLogistic", group) +
                             ChannelMultiply(In("B", C + 1) + "," + group + "B2", group) +
@@ -540,7 +625,7 @@ namespace dnn
                         auto strSE =
                             se ? GlobalAvgPooling(In("B", C + 1), group) +
                             Convolution(1, group + "GAP", DIV8((6 * W) / 4), 1, 1, 1, 1, 0, 0, group) +
-                            BatchNormActivation(1, group + "C1", p.Activation, group) +
+                            BatchNormActivation(1, group + "C1", p.Activation == Activations::FRelu ? Activations::HardSwish : p.Activation, group) +
                             Convolution(2, group + "B1", DIV8(6 * W), 1, 1, 1, 1, 0, 0, group) +
                             BatchNormActivation(2, group + "C2", "HardLogistic", group) +
                             ChannelMultiply(In("B", C + 1) + "," + group + "B2", group) +
@@ -744,7 +829,7 @@ namespace dnn
                         auto strSE =
                             se ? GlobalAvgPooling(In("B", C + 3), group) +
                             Convolution(1, group + "GAP", DIV8(W / 4), 1, 1, 1, 1, 0, 0, group) +
-                            BatchNormActivation(1, group + "C1", p.Activation, group) +
+                            BatchNormActivation(1, group + "C1", p.Activation == Activations::FRelu ? Activations::HardSwish : p.Activation, group) +
                             Convolution(2, group + "B1", DIV8(W), 1, 1, 1, 1, 0, 0, group) +
                             BatchNormActivation(2, group + "C2", "HardLogistic", group) +
                             ChannelMultiply(In("B", C + 3) + "," + group + "B2", group) +

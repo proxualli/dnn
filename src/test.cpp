@@ -212,10 +212,10 @@ int main(int argc, char* argv[])
 {
     CheckMsg msg;
 
-    ScriptParameters p;
+    scripts::ScriptParameters p;
 
-    p.Script = Scripts::shufflenetv2;
-    p.Dataset = Datasets::cifar10;
+    p.Script = scripts::Scripts::shufflenetv2;
+    p.Dataset = scripts::Datasets::cifar10;
     p.C = 3;
     p.H = 32;
     p.W = 32;
@@ -225,7 +225,7 @@ int main(int argc, char* argv[])
     p.Groups = 3;
     p.Iterations = 6;
     p.Width = 10;
-    p.Activation = Activations::HardSwish;
+    p.Activation = scripts::Activations::HardSwish;
     p.Dropout = Float(0);
     p.Bottleneck = false;
     p.SqueezeExcitation = true;
