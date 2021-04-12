@@ -19,8 +19,8 @@ static std::string path = std::string(getenv("USERPROFILE")) + std::string("\\Do
 static std::string path = std::string(getenv("HOME")) + std::string("/convnet/");
 #endif
 
-using namespace dnn;
-
+namespace dnn
+{
 
 DNN_API bool DNNStochasticEnabled();
 DNN_API void DNNSetLocked(const bool locked);
@@ -291,4 +291,5 @@ int main(int argc, char* argv[])
     }
     else
         std::cout << std::endl << "Could not load model" << std::endl << msg.Message << std::endl << model << std::endl;
+}
 }
