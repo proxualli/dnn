@@ -9,9 +9,9 @@
 #endif
 #endif
 
-#include "Scripts.h"
 #include "Utils.h"
-
+#include "Model.h"
+#include "Scripts.h"
 
 #ifdef _WIN32
 static std::string path = std::string(getenv("USERPROFILE")) + std::string("\\Documents\\convnet\\");
@@ -19,8 +19,7 @@ static std::string path = std::string(getenv("USERPROFILE")) + std::string("\\Do
 static std::string path = std::string(getenv("HOME")) + std::string("/convnet/");
 #endif
 
-namespace dnn
-{
+using namespace dnn;
 
 DNN_API bool DNNStochasticEnabled();
 DNN_API void DNNSetLocked(const bool locked);
@@ -291,5 +290,4 @@ int main(int argc, char* argv[])
     }
     else
         std::cout << std::endl << "Could not load model" << std::endl << msg.Message << std::endl << model << std::endl;
-}
 }
