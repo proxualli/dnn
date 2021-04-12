@@ -28,7 +28,7 @@ DNN_API void DNNPersistOptimizer(const bool persist);
 DNN_API void DNNDisableLocking(const bool disable);
 DNN_API void DNNGetConfusionMatrix(const UInt costLayerIndex, std::vector<std::vector<UInt>>* confusionMatrix);
 DNN_API void DNNGetLayerInputs(const UInt layerIndex, std::vector<UInt>* inputs);
-DNN_API void DNNGetLayerInfo(const UInt layerIndex, UInt* inputsCount, dnn::LayerTypes* layerType, dnn::Activations* activationFunction, dnn::Costs* cost, std::string* name, std::string* description, UInt* neuronCount, UInt* weightCount, UInt* biasesCount, UInt* multiplier, UInt* groups, UInt* group, UInt* localSize, UInt* c, UInt* d, UInt* h, UInt* w, UInt* kernelH, UInt* kernelW, UInt* strideH, UInt* strideW, UInt* dilationH, UInt* dilationW, UInt* padD, UInt* padH, UInt* padW, Float* dropout, Float* labelTrue, Float* labelFalse, Float* weight, UInt* groupIndex, UInt* labelIndex, UInt* inputC, Float* alpha, Float* beta, Float* k, Algorithms* algorithm, Float* fH, Float* fW, bool* hasBias, bool* scaling, bool* acrossChannels, bool* locked, bool* lockable);
+DNN_API void DNNGetLayerInfo(const UInt layerIndex, UInt* inputsCount, LayerTypes* layerType, Activations* activationFunction, Costs* cost, std::string* name, std::string* description, UInt* neuronCount, UInt* weightCount, UInt* biasesCount, UInt* multiplier, UInt* groups, UInt* group, UInt* localSize, UInt* c, UInt* d, UInt* h, UInt* w, UInt* kernelH, UInt* kernelW, UInt* strideH, UInt* strideW, UInt* dilationH, UInt* dilationW, UInt* padD, UInt* padH, UInt* padW, Float* dropout, Float* labelTrue, Float* labelFalse, Float* weight, UInt* groupIndex, UInt* labelIndex, UInt* inputC, Float* alpha, Float* beta, Float* k, Algorithms* algorithm, Float* fH, Float* fW, bool* hasBias, bool* scaling, bool* acrossChannels, bool* locked, bool* lockable);
 DNN_API void DNNSetNewEpochDelegate(void(*newEpoch)(UInt, UInt, UInt, bool, bool, Float, Float, Float, Float, UInt, Float, UInt, Float, Float, Float, UInt, Float, Float, Float, Float, Float, UInt, Float, Float, Float, UInt));
 DNN_API void DNNModelDispose();
 DNN_API bool DNNBatchNormalizationUsed();
@@ -44,15 +44,15 @@ DNN_API void DNNPause();
 DNN_API void DNNResume();
 DNN_API void DNNTesting();
 DNN_API void DNNGetTrainingInfo(UInt* currentCycle, UInt* totalCycles, UInt* currentEpoch, UInt* totalEpochs, bool* verticalMirror, bool* horizontalMirror, Float* dropout, Float* cutout, Float* autoAugment, Float* colorCast, UInt* colorAngle, Float* distortion, UInt* interpolation, Float* scaling, Float* rotation, UInt* sampleIndex, UInt* batchSize, Float* rate, Float* momentum, Float* l2Penalty, Float* avgTrainLoss, Float* trainErrorPercentage, UInt* trainErrors, Float* avgTestLoss, Float* testErrorPercentage, UInt* testErrors, Float* sampleSpeed, dnn::States* networkState, dnn::TaskStates* taskState);
-DNN_API void DNNGetTestingInfo(UInt* batchSize, UInt* sampleIndex, Float* avgTestLoss, Float* testErrorPercentage, UInt* testErrors, Float* sampleSpeed, dnn::States* networkState, dnn::TaskStates* taskState);
-DNN_API void DNNGetNetworkInfo(std::string* name, UInt* costIndex, UInt* costLayerCount, UInt* groupIndex, UInt* labelIndex, UInt* hierarchies, bool* meanStdNormalization, dnn::Costs* lossFunction, dnn::Datasets* dataset, UInt* layerCount, UInt* trainingSamples, UInt* testingSamples, std::vector<Float>* meanTrainSet, std::vector<Float>* stdTrainSet);
+DNN_API void DNNGetTestingInfo(UInt* batchSize, UInt* sampleIndex, Float* avgTestLoss, Float* testErrorPercentage, UInt* testErrors, Float* sampleSpeed, States* networkState, TaskStates* taskState);
+DNN_API void DNNGetNetworkInfo(std::string* name, UInt* costIndex, UInt* costLayerCount, UInt* groupIndex, UInt* labelIndex, UInt* hierarchies, bool* meanStdNormalization, Costs* lossFunction, Datasets* dataset, UInt* layerCount, UInt* trainingSamples, UInt* testingSamples, std::vector<Float>* meanTrainSet, std::vector<Float>* stdTrainSet);
 DNN_API bool DNNSetFormat(const bool plain);
-DNN_API void DNNSetOptimizer(const dnn::Optimizers strategy);
-DNN_API void DNNRefreshStatistics(const UInt layerIndex, std::string* description, dnn::Stats* neuronsStats, dnn::Stats* weightsStats, dnn::Stats* biasesStats, Float* fpropLayerTime, Float* bpropLayerTime, Float* updateLayerTime, Float* fpropTime, Float* bpropTime, Float* updateTime, bool* locked);
+DNN_API void DNNSetOptimizer(const Optimizers strategy);
+DNN_API void DNNRefreshStatistics(const UInt layerIndex, std::string* description, Stats* neuronsStats, Stats* weightsStats, Stats* biasesStats, Float* fpropLayerTime, Float* bpropLayerTime, Float* updateLayerTime, Float* fpropTime, Float* bpropTime, Float* updateTime, bool* locked);
 DNN_API bool DNNGetInputSnapShot(std::vector<Float>* snapshot, std::vector<UInt>* label);
-DNN_API bool DNNCheckDefinition(std::string& definition, dnn::CheckMsg& checkMsg);
-DNN_API int DNNLoadDefinition(const std::string& fileName, const dnn::Optimizers optimizer, dnn::CheckMsg& checkMsg);
-DNN_API int DNNReadDefinition(const std::string& definition, const dnn::Optimizers optimizer, dnn::CheckMsg& checkMsg);
+DNN_API bool DNNCheckDefinition(std::string& definition, CheckMsg& checkMsg);
+DNN_API int DNNLoadDefinition(const std::string& fileName, const Optimizers optimizer, CheckMsg& checkMsg);
+DNN_API int DNNReadDefinition(const std::string& definition, const Optimizers optimizer, CheckMsg& checkMsg);
 DNN_API void DNNDataprovider(const std::string& directory);
 DNN_API int DNNLoadNetworkWeights(const std::string& fileName, const bool persistOptimizer);
 DNN_API int DNNSaveNetworkWeights(const std::string& fileName, const bool persistOptimizer);
@@ -61,7 +61,7 @@ DNN_API int DNNSaveLayerWeights(const std::string& fileName, const UInt layerInd
 DNN_API void DNNGetLayerWeights(const UInt layerIndex, std::vector<Float>* weights, std::vector<Float>* biases);
 DNN_API void DNNSetCostIndex(const UInt index);
 DNN_API void DNNGetCostInfo(const UInt costIndex, UInt* trainErrors, Float* trainLoss, Float* avgTrainLoss, Float* trainErrorPercentage, UInt* testErrors, Float* testLoss, Float* avgTestLoss, Float* testErrorPercentage);
-DNN_API void DNNGetImage(const UInt layer, const dnn::Byte fillColor, dnn::Byte* image);
+DNN_API void DNNGetImage(const UInt layer, const Byte fillColor, Byte* image);
 
 
 void NewEpoch(UInt CurrentCycle, UInt CurrentEpoch, UInt TotalEpochs, bool HorizontalFlip, bool VerticalFlip, Float Dropout, Float Cutout, Float AutoAugment, Float ColorCast, UInt ColorAngle, Float Distortion, UInt Interpolation, Float Scaling, Float Rotation, Float MaximumRate, UInt BatchSize, Float Momentum, Float L2Penalty, Float AvgTrainLoss, Float TrainErrorPercentage, Float TrainAccuracy, UInt TrainErrors, Float AvgTestLoss, Float TestErrorPercentage, Float TestAccuracy, UInt TestErrors)
@@ -137,18 +137,18 @@ void GetTrainingProgress(int seconds = 5, UInt trainingSamples = 50000, UInt tes
     int barWidth = 40;
     float progress = 0.0;
   
-    while (*state != dnn::States::Completed)
+    while (*state != States::Completed)
     {
-        std::this_thread::sleep_for(std::chrono::seconds(*state == dnn::States::Testing ? 1 : seconds));
+        std::this_thread::sleep_for(std::chrono::seconds(*state == States::Testing ? 1 : seconds));
         
         DNNGetTrainingInfo(cycle, totalCycles, epoch, totalEpochs, horizontalMirror, verticalMirror, dropout, cutout, autoAugment, colorCast, colorAngle, distortion, interpolation, scaling, rotation, sampleIndex, batchSize, rate, momentum, l2Penalty, avgTrainLoss, trainErrorPercentage, trainErrors, avgTestLoss, testErrorPercentage, testErrors, sampleSpeed, state, taskState);
        
-        if (*state == dnn::States::Testing)
+        if (*state == States::Testing)
             progress = Float(*sampleIndex) / testingSamples; 
         else
             progress = Float(*sampleIndex) / trainingSamples; 
 
-        if (*state != dnn::States::Completed)
+        if (*state != States::Completed)
         {
             std::cout << "[";
             int pos = int(barWidth * progress);
@@ -163,7 +163,7 @@ void GetTrainingProgress(int seconds = 5, UInt trainingSamples = 50000, UInt tes
                         std::cout << " ";
             }
             std::cout << "] " << int(progress * 100.0) << "%  Cycle:" << std::to_string(*cycle) << "  Epoch:" << std::to_string(*epoch) << "  Error:";
-            if (*state == dnn::States::Testing)
+            if (*state == States::Testing)
                 std::cout << FloatToStringFixed(*testErrorPercentage, 2);
             else
                 std::cout << FloatToStringFixed(*trainErrorPercentage, 2);
