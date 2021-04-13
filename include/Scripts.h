@@ -825,27 +825,6 @@ namespace scripts
 
                 for (auto g = 1ull; g <= p.Groups; g++)
                 {
-                    if (g > 1)
-                    {
-                        se = p.SqueezeExcitation;
-                        W *= 2;
-
-                        blocks.push_back(
-                            Convolution(C, In("CC", A), DIV8(W), 1, 1, 1, 1, 0, 0) +
-                            BatchNormActivation(C + 1, In("C", C), p.Activation, DIV8(W)) +
-                            DepthwiseConvolution(C + 1, In("B", C + 1), 1, kernel, kernel, 2, 2, pad, pad) +
-                            BatchNorm(C + 2, In("DC", C + 1)) +
-                            Convolution(C + 2, In("B", C + 2), DIV8(W), 1, 1, 1, 1, 0, 0) +
-                            BatchNormActivation(C + 3, In("C", C + 2), p.Activation, DIV8(W)) +
-                            DepthwiseConvolution(C + 3, In("CC", A), 1, kernel, kernel, 2, 2, pad, pad) +
-                            BatchNorm(C + 4, In("DC", C + 3)) +
-                            Convolution(C + 4, In("B", C + 4), DIV8(W), 1, 1, 1, 1, 0, 0) +
-                            BatchNormActivation(C + 5, In("C", C + 4), p.Activation, DIV8(W)) +
-                            Concat(A + 1, In("B", C + 5) + "," + In("B", C + 3)));
-
-                        A++; C += 5;
-                    }
-
                     for (auto i = 1ull; i < p.Iterations; i++)
                     {
                         auto group = In("SE", C + 3);
@@ -872,6 +851,24 @@ namespace scripts
 
                         A++; C += 3;
                     }
+
+                    se = p.SqueezeExcitation;
+                    W *= 2;
+
+                    blocks.push_back(
+                        Convolution(C, In("CC", A), DIV8(W), 1, 1, 1, 1, 0, 0) +
+                        BatchNormActivation(C + 1, In("C", C), p.Activation, DIV8(W)) +
+                        DepthwiseConvolution(C + 1, In("B", C + 1), 1, kernel, kernel, 2, 2, pad, pad) +
+                        BatchNorm(C + 2, In("DC", C + 1)) +
+                        Convolution(C + 2, In("B", C + 2), DIV8(W), 1, 1, 1, 1, 0, 0) +
+                        BatchNormActivation(C + 3, In("C", C + 2), p.Activation, DIV8(W)) +
+                        DepthwiseConvolution(C + 3, In("CC", A), 1, kernel, kernel, 2, 2, pad, pad) +
+                        BatchNorm(C + 4, In("DC", C + 3)) +
+                        Convolution(C + 4, In("B", C + 4), DIV8(W), 1, 1, 1, 1, 0, 0) +
+                        BatchNormActivation(C + 5, In("C", C + 4), p.Activation, DIV8(W)) +
+                        Concat(A + 1, In("B", C + 5) + "," + In("B", C + 3)));
+
+                    A++; C += 5;
                 }
 
                 for (auto block : blocks)
