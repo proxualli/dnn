@@ -735,7 +735,7 @@ namespace scripts
                         {
 
                             blocks.push_back(
-                                BatchNormActivation(C, In("A", A), p.Activation, DIV8(W)) +
+                                BatchNormActivation(C, In("A", A), p.Activation, DIV8(W/2)) +
                                 Convolution(C, In("B", C), DIV8(W), 1, 1, 1, 1, 0, 0) +
                                 BatchNormActivation(C + 1, In("C", C), p.Activation, DIV8(W)) +
                                 Convolution(C + 1, In("B", C + 1), DIV8(W), 3, 3, 2, 2, 1, 1) +
@@ -746,7 +746,7 @@ namespace scripts
                         else
                         {
                             blocks.push_back(
-                                BatchNormActivation(C, In("A", A), p.Activation, DIV8(W)) +
+                                BatchNormActivation(C, In("A", A), p.Activation, DIV8(W/2)) +
                                 Convolution(C, In("B", C), DIV8(W), 3, 3, 2, 2, 1, 1) +
                                 (p.Dropout > 0 ? BatchNormActivationDropout(C + 1, In("C", C), p.Activation) : BatchNormActivation(C + 1, In("C", C), p.Activation, DIV8(W))) +
                                 Convolution(C + 1, In("B", C + 1), DIV8(W), 3, 3, 1, 1, 1, 1) +
