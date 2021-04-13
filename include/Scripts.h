@@ -281,7 +281,7 @@ namespace scripts
 
                     "[" + group + prefix + std::to_string(id) + "]" + nwl +
                     "Type=Max" + nwl +
-                    "Inputs=" + group + "B" + std::to_string(id) + "B2," + group + "B" + std::to_string(id) + "B1" + nwl + nwl;
+                    "Inputs=" + group + "B" + std::to_string(id) + "B3," + group + "B" + std::to_string(id) + "B1" + nwl + nwl;
             }
         }
 
