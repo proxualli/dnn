@@ -178,13 +178,13 @@ namespace scripts
             switch (Script)
             {
             case Scripts::densenet:
-                return common + std::to_string(GrowthRate) + (Dropout > 0 ? std::string("-dropout") : std::string("")) + (Compression > 0 ? std::string("-compression") : std::string("")) + (Bottleneck ? std::string("-bottleneck") : std::string("")) + std::string("-") + StringToLower(std::string(magic_enum::enum_name<scripts::Activations>(Activation)));
+                return common + std::to_string(GrowthRate) + (Dropout > 0 ? std::string("-dropout") : std::string("")) + (Compression > 0 ? std::string("-compression") : std::string("")) + (Bottleneck ? std::string("-bottleneck") : std::string("")) + std::string("-") + StringToLower(std::string(magic_enum::enum_name<Activations>(Activation)));
             case Scripts::mobilenetv3:
-                return common + std::to_string(Width) + std::string("-") + StringToLower(std::string(magic_enum::enum_name<scripts::Activations>(Activation))) + (SqueezeExcitation ? std::string("-se") : std::string(""));
+                return common + std::to_string(Width) + std::string("-") + StringToLower(std::string(magic_enum::enum_name<Activations>(Activation))) + (SqueezeExcitation ? std::string("-se") : std::string(""));
             case Scripts::resnet:
-                return common + std::to_string(Width) + (Dropout > 0 ? std::string("-dropout") : std::string("")) + (Bottleneck ? std::string("-bottleneck") : std::string("")) + (ChannelZeroPad ? std::string("-channelzeropad") : std::string("")) + std::string("-") + StringToLower(std::string(magic_enum::enum_name<scripts::Activations>(Activation)));
+                return common + std::to_string(Width) + (Dropout > 0 ? std::string("-dropout") : std::string("")) + (Bottleneck ? std::string("-bottleneck") : std::string("")) + (ChannelZeroPad ? std::string("-channelzeropad") : std::string("")) + std::string("-") + StringToLower(std::string(magic_enum::enum_name<Activations>(Activation)));
             case Scripts::shufflenetv2:
-                return common + std::to_string(Width) + std::string("-") + StringToLower(std::string(magic_enum::enum_name<scripts::Activations>(Activation))) + (SqueezeExcitation ? std::string("-se") : std::string(""));
+                return common + std::to_string(Width) + std::string("-") + StringToLower(std::string(magic_enum::enum_name<Activations>(Activation))) + (SqueezeExcitation ? std::string("-se") : std::string(""));
             default:
                 return common;
             }
@@ -201,12 +201,12 @@ namespace scripts
 
         static auto to_string(const Datasets dataset)
         {
-            return std::string(magic_enum::enum_name<scripts::Datasets>(dataset));
+            return std::string(magic_enum::enum_name<Datasets>(dataset));
         }
 
         static auto to_string(const Fillers filler)
         {
-            return std::string(magic_enum::enum_name<scripts::Fillers>(filler));
+            return std::string(magic_enum::enum_name<Fillers>(filler));
         }
 
         static UInt DIV8(UInt channels)
@@ -235,6 +235,7 @@ namespace scripts
                 "Type=BatchNorm" + activation + nwl +
                 "Inputs=" + inputs + nwl + nwl;
         }
+
         /*
         static std::string BatchNormActivation(UInt id, std::string inputs, Activations activation = Activations::Relu, std::string group = "", std::string prefix = "B")
         {
@@ -243,7 +244,8 @@ namespace scripts
                 "Inputs=" + inputs + nwl + nwl;
         }
         */
-        static std::string BatchNormActivation(UInt id, std::string inputs, scripts::Activations activation = scripts::Activations::Relu, std::string group = "", std::string prefix = "B")
+
+        static std::string BatchNormActivation(UInt id, std::string inputs, scripts::Activations activation = scripts::Activations::Relu, UInt channels = 1, std::string group = "", std::string prefix = "B")
         {
             if (activation != scripts::Activations::FRelu)
             {
@@ -266,6 +268,16 @@ namespace scripts
                     "[" + group + "B" + std::to_string(id) + "B2]" + nwl +
                     "Type=BatchNorm" + nwl +
                     "Inputs=" + group + "DC" + std::to_string(id) + "DC" + nwl + nwl +
+
+                    "[" + group + "C" + std::to_string(id) + "C]" + nwl +
+                    "Type=Convolution" + nwl +
+                    "Inputs=" + group + "B" + std::to_string(id) + "B2" + nwl +
+                    "Channels=" + std::to_string(channels) + nwl +
+                    "Kernel=1,1" + nwl + nwl +
+
+                    "[" + group + "B" + std::to_string(id) + "B3]" + nwl +
+                    "Type=BatchNorm" + nwl +
+                    "Inputs=" + group + "C" + std::to_string(id) + "C" + nwl + nwl +
 
                     "[" + group + prefix + std::to_string(id) + "]" + nwl +
                     "Type=Max" + nwl +
@@ -465,16 +477,16 @@ namespace scripts
                 if (p.Bottleneck)
                 {
                     blocks.push_back(
-                        BatchNormActivation(1, "C1", p.Activation) +
+                        BatchNormActivation(1, "C1", p.Activation, channels) +
                         Convolution(2, "B1", DIV8(4 * p.GrowthRate), 1, 1, 1, 1, 0, 0) +
-                        BatchNormActivation(2, "C2", p.Activation) +
+                        BatchNormActivation(2, "C2", p.Activation, DIV8(4 * p.GrowthRate)) +
                         Convolution(3, "B2", DIV8(p.GrowthRate), 3, 3, 1, 1, 1, 1) +
                         (p.Dropout > 0 ? Dropout(3, "C3") + Concat(1, "C1,D3") : Concat(1, "C1,C3")));
                 }
                 else
                 {
                     blocks.push_back(
-                        BatchNormActivation(1, "C1", p.Activation) +
+                        BatchNormActivation(1, "C1", p.Activation, channels) +
                         Convolution(2, "B1", DIV8(p.GrowthRate), 3, 3, 1, 1, 1, 1) +
                         (p.Dropout > 0 ? Dropout(2, "C2") + Concat(1, "C1,D2") : Concat(1, "C1,C2")));
                 }
@@ -491,9 +503,9 @@ namespace scripts
                         if (p.Bottleneck)
                         {
                             blocks.push_back(
-                                BatchNormActivation(C, In("CC", CC), p.Activation) +
+                                BatchNormActivation(C, In("CC", CC), p.Activation, channels) +
                                 Convolution(C, In("B", C), DIV8(4 * p.GrowthRate), 1, 1, 1, 1, 0, 0) +
-                                BatchNormActivation(C + 1, In("C", C), p.Activation) +
+                                BatchNormActivation(C + 1, In("C", C), p.Activation, DIV8(4 * p.GrowthRate)) +
                                 Convolution(C + 1, In("B", C + 1), DIV8(p.GrowthRate), 3, 3, 1, 1, 1, 1) +
                                 (p.Dropout > 0 ? Dropout(C + 1, In("C", C + 1)) + Concat(CC + 1, In("CC", CC) + "," + In("D", C + 1)) : Concat(CC + 1, In("CC", CC) + "," + In("C", C + 1))));
 
@@ -502,7 +514,7 @@ namespace scripts
                         else
                         {
                             blocks.push_back(
-                                BatchNormActivation(C, In("CC", CC), p.Activation) +
+                                BatchNormActivation(C, In("CC", CC), p.Activation, channels) +
                                 Convolution(C, In("B", C), DIV8(p.GrowthRate), 3, 3, 1, 1, 1, 1) +
                                 (p.Dropout > 0 ? Dropout(C, In("C", C)) + Concat(CC + 1, In("CC", CC) + "," + In("D", C)) : Concat(CC + 1, In("CC", CC) + "," + In("C", C))));
 
@@ -532,9 +544,9 @@ namespace scripts
                         if (p.Bottleneck)
                         {
                             blocks.push_back(
-                                BatchNormActivation(C, In("P", g), p.Activation) +
+                                BatchNormActivation(C, In("P", g), p.Activation, channels) +
                                 Convolution(C, In("B", C), DIV8(4 * p.GrowthRate), 1, 1, 1, 1, 0, 0) +
-                                BatchNormActivation(C + 1, In("C", C), p.Activation) +
+                                BatchNormActivation(C + 1, In("C", C), p.Activation, DIV8(4 * p.GrowthRate)) +
                                 Convolution(C + 1, In("B", C + 1), DIV8(p.GrowthRate), 3, 3, 1, 1, 1, 1) +
                                 (p.Dropout > 0 ? Dropout(C + 1, In("C", C + 1)) + Concat(CC, In("B", C) + "," + In("D", C + 1)) : Concat(CC, In("B", C) + "," + In("C", C + 1))));
 
@@ -543,7 +555,7 @@ namespace scripts
                         else
                         {
                             blocks.push_back(
-                                BatchNormActivation(C, In("P", g), p.Activation) +
+                                BatchNormActivation(C, In("P", g), p.Activation, channels) +
                                 Convolution(C, In("B", C), DIV8(p.GrowthRate), 3, 3, 1, 1, 1, 1) +
                                 (p.Dropout > 0 ? Dropout(C, In("C", C)) + Concat(CC, In("B", C) + "," + In("D", C)) : Concat(CC, In("B", C) + "," + In("C", C))));
 
@@ -574,13 +586,13 @@ namespace scripts
 
                 net +=
                     Convolution(1, "Input", DIV8(W), 3, 3, 1, 1, 1, 1) +
-                    BatchNormActivation(1, "C1", p.Activation);
+                    BatchNormActivation(1, "C1", p.Activation, DIV8(W));
 
                 blocks.push_back(
                     Convolution(2, "B1", DIV8(6 * W), 1, 1, 1, 1, 0, 0) +
-                    BatchNormActivation(2, "C2", p.Activation) +
+                    BatchNormActivation(2, "C2", p.Activation, DIV8(6 * W)) +
                     DepthwiseMixedConvolution(0, 3, "B2", 1, 1, channelsplit) +
-                    BatchNormActivation(3, "DC3", p.Activation) +
+                    BatchNormActivation(3, "DC3", p.Activation, DIV8(6 * W)) +
                     Convolution(4, "B3", DIV8(W), 1, 1, 1, 1, 0, 0) +
                     BatchNorm(4, "C4"));
 
@@ -599,7 +611,7 @@ namespace scripts
                         auto strSE =
                             se ? GlobalAvgPooling(In("B", C + 1), group) +
                             Convolution(1, group + "GAP", DIV8((6 * W) / 4), 1, 1, 1, 1, 0, 0, group) +
-                            BatchNormActivation(1, group + "C1", p.Activation == Activations::FRelu ? Activations::HardSwish : p.Activation, group) +
+                            BatchNormActivation(1, group + "C1", p.Activation == Activations::FRelu ? Activations::HardSwish : p.Activation, DIV8((6 * W) / 4), group) +
                             Convolution(2, group + "B1", DIV8(6 * W), 1, 1, 1, 1, 0, 0, group) +
                             BatchNormActivation(2, group + "C2", "HardLogistic", group) +
                             ChannelMultiply(In("B", C + 1) + "," + group + "B2", group) +
@@ -608,9 +620,9 @@ namespace scripts
 
                         blocks.push_back(
                             Convolution(C, In("A", A), DIV8(6 * W), 1, 1, 1, 1, 0, 0) +
-                            BatchNormActivation(C, In("C", C), p.Activation) +
+                            BatchNormActivation(C, In("C", C), p.Activation, DIV8(6 * W)) +
                             DepthwiseMixedConvolution(mix, C + 1, In("B", C), 2, 2, channelsplit) +
-                            BatchNormActivation(C + 1, In("DC", C + 1), p.Activation) +
+                            BatchNormActivation(C + 1, In("DC", C + 1), p.Activation, DIV8(6 * W)) +
                             strSE +
                             BatchNorm(C + 2, In("C", C + 2)));
 
@@ -626,7 +638,7 @@ namespace scripts
                         auto strSE =
                             se ? GlobalAvgPooling(In("B", C + 1), group) +
                             Convolution(1, group + "GAP", DIV8((6 * W) / 4), 1, 1, 1, 1, 0, 0, group) +
-                            BatchNormActivation(1, group + "C1", p.Activation == Activations::FRelu ? Activations::HardSwish : p.Activation, group) +
+                            BatchNormActivation(1, group + "C1", p.Activation == Activations::FRelu ? Activations::HardSwish : p.Activation, DIV8((6 * W) / 4), group) +
                             Convolution(2, group + "B1", DIV8(6 * W), 1, 1, 1, 1, 0, 0, group) +
                             BatchNormActivation(2, group + "C2", "HardLogistic", group) +
                             ChannelMultiply(In("B", C + 1) + "," + group + "B2", group) +
@@ -635,9 +647,9 @@ namespace scripts
 
                         blocks.push_back(
                             Convolution(C, strOutputLayer, DIV8(6 * W), 1, 1, 1, 1, 0, 0) +
-                            BatchNormActivation(C, In("C", C), p.Activation) +
+                            BatchNormActivation(C, In("C", C), p.Activation, DIV8(6 * W)) +
                             DepthwiseMixedConvolution(mix, C + 1, In("B", C), 1, 1, channelsplit) +
-                            BatchNormActivation(C + 1, In("DC", C + 1), p.Activation) +
+                            BatchNormActivation(C + 1, In("DC", C + 1), p.Activation, DIV8(6 * W)) +
                             strSE +
                             BatchNorm(C + 2, In("C", C + 2)) +
                             Add(A + 1, In("B", C + 2) + "," + strOutputLayer));
@@ -651,7 +663,7 @@ namespace scripts
                     net += block;
 
                 net +=
-                    BatchNormActivation(C, In("A", A), p.Activation) +
+                    BatchNormActivation(C, In("A", A), p.Activation, DIV8(W)) +
                     Convolution(C, In("B", C), p.Classes(), 1, 1, 1, 1, 0, 0) +
                     BatchNorm(C + 1, In("C", C)) +
                     GlobalAvgPooling(In("B", C + 1)) +
@@ -673,11 +685,11 @@ namespace scripts
                 if (p.Bottleneck)
                 {
                     blocks.push_back(
-                        BatchNormActivation(1, "C1", p.Activation) +
+                        BatchNormActivation(1, "C1", p.Activation, DIV8(W)) +
                         Convolution(2, "B1", DIV8(W), 1, 1, 1, 1, 0, 0) +
-                        BatchNormActivation(2, "C2", p.Activation) +
+                        BatchNormActivation(2, "C2", p.Activation, DIV8(W)) +
                         Convolution(3, "B2", DIV8((UInt)(K * W / 4)), 3, 3, 1, 1, 1, 1) +
-                        (p.Dropout > 0 ? BatchNormActivationDropout(3, "C3", p.Activation) : BatchNormActivation(3, "C3", p.Activation)) +
+                        (p.Dropout > 0 ? BatchNormActivationDropout(3, "C3", p.Activation) : BatchNormActivation(3, "C3", p.Activation, DIV8((UInt)(K * W / 4)))) +
                         Convolution(4, "B3", DIV8(W), 1, 1, 1, 1, 0, 0) +
                         Convolution(5, "B1", DIV8(W), 1, 1, 1, 1, 0, 0) +
                         Add(1, "C4,C5"));
@@ -687,9 +699,9 @@ namespace scripts
                 else
                 {
                     blocks.push_back(
-                        BatchNormActivation(1, "C1", p.Activation) +
+                        BatchNormActivation(1, "C1", p.Activation, DIV8(W)) +
                         Convolution(2, "B1", DIV8(W), 3, 3, 1, 1, 1, 1) +
-                        (p.Dropout > 0 ? BatchNormActivationDropout(2, "C2", p.Activation) : BatchNormActivation(2, "C2", p.Activation)) +
+                        (p.Dropout > 0 ? BatchNormActivationDropout(2, "C2", p.Activation) : BatchNormActivation(2, "C2", p.Activation, DIV8(W))) +
                         Convolution(3, "B2", DIV8(W), 3, 3, 1, 1, 1, 1) +
                         Convolution(4, "B1", DIV8(W), 1, 1, 1, 1, 0, 0) +
                         Add(1, "C3,C4"));
@@ -713,20 +725,20 @@ namespace scripts
                         {
 
                             blocks.push_back(
-                                BatchNormActivation(C, In("A", A), p.Activation) +
+                                BatchNormActivation(C, In("A", A), p.Activation, DIV8(W)) +
                                 Convolution(C, In("B", C), DIV8(W), 1, 1, 1, 1, 0, 0) +
-                                BatchNormActivation(C + 1, In("C", C), p.Activation) +
+                                BatchNormActivation(C + 1, In("C", C), p.Activation, DIV8(W)) +
                                 Convolution(C + 1, In("B", C + 1), DIV8(W), 3, 3, 2, 2, 1, 1) +
-                                (p.Dropout > 0 ? BatchNormActivationDropout(C + 2, In("C", C + 1), p.Activation) : BatchNormActivation(C + 2, In("C", C + 1), p.Activation)) +
+                                (p.Dropout > 0 ? BatchNormActivationDropout(C + 2, In("C", C + 1), p.Activation) : BatchNormActivation(C + 2, In("C", C + 1), p.Activation, DIV8(W))) +
                                 Convolution(C + 2, In("B", C + 2), DIV8(W), 1, 1, 1, 1, 0, 0) +
                                 strChannelZeroPad);
                         }
                         else
                         {
                             blocks.push_back(
-                                BatchNormActivation(C, In("A", A), p.Activation) +
+                                BatchNormActivation(C, In("A", A), p.Activation, DIV8(W)) +
                                 Convolution(C, In("B", C), DIV8(W), 3, 3, 2, 2, 1, 1) +
-                                (p.Dropout > 0 ? BatchNormActivationDropout(C + 1, In("C", C), p.Activation) : BatchNormActivation(C + 1, In("C", C), p.Activation)) +
+                                (p.Dropout > 0 ? BatchNormActivationDropout(C + 1, In("C", C), p.Activation) : BatchNormActivation(C + 1, In("C", C), p.Activation, DIV8(W))) +
                                 Convolution(C + 1, In("B", C + 1), DIV8(W), 3, 3, 1, 1, 1, 1) +
                                 strChannelZeroPad);
                         }
@@ -743,20 +755,20 @@ namespace scripts
                         if (p.Bottleneck)
                         {
                             blocks.push_back(
-                                BatchNormActivation(C, In("A", A), p.Activation) +
+                                BatchNormActivation(C, In("A", A), p.Activation, DIV8(W)) +
                                 Convolution(C, In("B", C), DIV8(W), 1, 1, 1, 1, 0, 0) +
-                                BatchNormActivation(C + 1, In("C", C), p.Activation) +
+                                BatchNormActivation(C + 1, In("C", C), p.Activation, DIV8(W)) +
                                 Convolution(C + 1, In("B", C + 1), DIV8((UInt)(K * W / 4)), 3, 3, 1, 1, 1, 1) +
-                                (p.Dropout > 0 ? BatchNormActivationDropout(C + 2, In("C", C + 1), p.Activation) : BatchNormActivation(C + 2, In("C", C + 1), p.Activation)) +
+                                (p.Dropout > 0 ? BatchNormActivationDropout(C + 2, In("C", C + 1), p.Activation) : BatchNormActivation(C + 2, In("C", C + 1), p.Activation, DIV8((UInt)(K * W / 4)))) +
                                 Convolution(C + 2, In("B", C + 2), DIV8(W), 1, 1, 1, 1, 0, 0) +
                                 Add(A + 1, In("C", C + 2) + "," + In("A", A)));
                         }
                         else
                         {
                             blocks.push_back(
-                                BatchNormActivation(C, In("A", A), p.Activation) +
+                                BatchNormActivation(C, In("A", A), p.Activation, DIV8(W)) +
                                 Convolution(C, In("B", C), DIV8(W), 3, 3, 1, 1, 1, 1) +
-                                (p.Dropout > 0 ? BatchNormActivationDropout(C + 1, In("C", C), p.Activation) : BatchNormActivation(C + 1, In("C", C), p.Activation)) +
+                                (p.Dropout > 0 ? BatchNormActivationDropout(C + 1, In("C", C), p.Activation) : BatchNormActivation(C + 1, In("C", C), p.Activation, DIV8(W))) +
                                 Convolution(C + 1, In("B", C + 1), DIV8(W), 3, 3, 1, 1, 1, 1) +
                                 Add(A + 1, In("C", C + 1) + "," + In("A", A)));
                         }
@@ -769,7 +781,7 @@ namespace scripts
                     net += block;
 
                 net +=
-                    BatchNormActivation(C, In("A", A), p.Activation) +
+                    BatchNormActivation(C, In("A", A), p.Activation, DIV8(W)) +
                     Convolution(C, In("B", C), p.Classes(), 1, 1, 1, 1, 0, 0) +
                     BatchNorm(C + 1, In("C", C)) +
                     GlobalAvgPooling(In("B", C + 1)) +
@@ -788,13 +800,13 @@ namespace scripts
                 net += Convolution(1, "Input", DIV8(W), kernel, kernel, 1, 1, pad, pad);
 
                 blocks.push_back(
-                    BatchNormActivation(1, "C1", p.Activation) +
+                    BatchNormActivation(1, "C1", p.Activation, DIV8(W)) +
                     Convolution(2, "B1", DIV8(W), 1, 1, 1, 1, 0, 0) +
-                    BatchNormActivation(2, "C2", p.Activation) +
+                    BatchNormActivation(2, "C2", p.Activation, DIV8(W)) +
                     DepthwiseConvolution(3, "B2", 1, kernel, kernel, 1, 1, pad, pad) +
                     BatchNorm(3, "DC3") +
                     Convolution(4, "B3", DIV8(W), 1, 1, 1, 1, 0, 0) +
-                    BatchNormActivation(4, "C4", p.Activation) +
+                    BatchNormActivation(4, "C4", p.Activation, DIV8(W)) +
                     Convolution(5, "B1", DIV8(W), 1, 1, 1, 1, 0, 0) +
                     Concat(1, "C5,B4"));
 
@@ -810,15 +822,15 @@ namespace scripts
 
                         blocks.push_back(
                             Convolution(C, In("CC", A), DIV8(W), 1, 1, 1, 1, 0, 0) +
-                            BatchNormActivation(C + 1, In("C", C), p.Activation) +
+                            BatchNormActivation(C + 1, In("C", C), p.Activation, DIV8(W)) +
                             DepthwiseConvolution(C + 1, In("B", C + 1), 1, kernel, kernel, 2, 2, pad, pad) +
                             BatchNorm(C + 2, In("DC", C + 1)) +
                             Convolution(C + 2, In("B", C + 2), DIV8(W), 1, 1, 1, 1, 0, 0) +
-                            BatchNormActivation(C + 3, In("C", C + 2), p.Activation) +
+                            BatchNormActivation(C + 3, In("C", C + 2), p.Activation, DIV8(W)) +
                             DepthwiseConvolution(C + 3, In("CC", A), 1, kernel, kernel, 2, 2, pad, pad) +
                             BatchNorm(C + 4, In("DC", C + 3)) +
                             Convolution(C + 4, In("B", C + 4), DIV8(W), 1, 1, 1, 1, 0, 0) +
-                            BatchNormActivation(C + 5, In("C", C + 4), p.Activation) +
+                            BatchNormActivation(C + 5, In("C", C + 4), p.Activation, DIV8(W)) +
                             Concat(A + 1, In("B", C + 5) + "," + In("B", C + 3)));
 
                         A++; C += 5;
@@ -830,7 +842,7 @@ namespace scripts
                         auto strSE =
                             se ? GlobalAvgPooling(In("B", C + 3), group) +
                             Convolution(1, group + "GAP", DIV8(W / 4), 1, 1, 1, 1, 0, 0, group) +
-                            BatchNormActivation(1, group + "C1", p.Activation == Activations::FRelu ? Activations::HardSwish : p.Activation, group) +
+                            BatchNormActivation(1, group + "C1", p.Activation == Activations::FRelu ? Activations::HardSwish : p.Activation, DIV8(W / 4), group) +
                             Convolution(2, group + "B1", DIV8(W), 1, 1, 1, 1, 0, 0, group) +
                             BatchNormActivation(2, group + "C2", "HardLogistic", group) +
                             ChannelMultiply(In("B", C + 3) + "," + group + "B2", group) +
@@ -841,11 +853,11 @@ namespace scripts
                             ChannelShuffle(A, In("CC", A), 2) +
                             ChannelSplit(A, In("CSH", A), 2, 1, "L") + ChannelSplit(A, In("CSH", A), 2, 2, "R") +
                             Convolution(C, In("RCS", A), DIV8(W), 1, 1, 1, 1, 0, 0) +
-                            BatchNormActivation(C + 1, In("C", C), p.Activation) +
+                            BatchNormActivation(C + 1, In("C", C), p.Activation, DIV8(W)) +
                             DepthwiseConvolution(C + 1, In("B", C + 1), 1, kernel, kernel, 1, 1, pad, pad) +
                             BatchNorm(C + 2, In("DC", C + 1)) +
                             Convolution(C + 2, In("B", C + 2), DIV8(W), 1, 1, 1, 1, 0, 0) +
-                            BatchNormActivation(C + 3, In("C", C + 2), p.Activation) +
+                            BatchNormActivation(C + 3, In("C", C + 2), p.Activation, DIV8(W)) +
                             strSE);
 
                         A++; C += 3;
