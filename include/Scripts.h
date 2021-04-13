@@ -287,10 +287,20 @@ namespace scripts
 
         static std::string BatchNormActivationDropout(UInt id, std::string inputs, scripts::Activations activation = scripts::Activations::Relu, Float dropout = 0.0f, std::string group = "", std::string prefix = "B")
         {
-            return "[" + group + prefix + std::to_string(id) + "]" + nwl +
-                "Type=BatchNorm" + std::string(magic_enum::enum_name<scripts::Activations>(activation)) + std::string("Dropout") + nwl +
-                "Inputs=" + inputs + nwl +
-                (dropout > 0.0f ? "Dropout=" + std::to_string(dropout) + nwl + nwl : nwl);
+            if (activation != scripts::Activations::FRelu)
+            {
+                return "[" + group + prefix + std::to_string(id) + "]" + nwl +
+                    "Type=BatchNorm" + std::string(magic_enum::enum_name<scripts::Activations>(activation)) + "Dropout" + nwl +
+                    "Inputs=" + inputs + nwl +
+                    (dropout > 0.0f ? "Dropout=" + std::to_string(dropout) + nwl + nwl : nwl);
+            }
+            else
+            {
+                return "[" + group + prefix + std::to_string(id) + "]" + nwl +
+                    "Type=BatchNormHardSwishDropout" + nwl +
+                    "Inputs=" + inputs + nwl +
+                    (dropout > 0.0f ? "Dropout=" + std::to_string(dropout) + nwl + nwl : nwl);
+            }
         }
 
         static std::string Convolution(UInt id, std::string inputs, UInt channels, UInt kernelX = 3, UInt kernelY = 3, UInt strideX = 1, UInt strideY = 1, UInt padX = 1, UInt padY = 1, std::string group = "", std::string prefix = "C", std::string weightsFiller = "")
