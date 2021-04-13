@@ -1,6 +1,6 @@
 #!/bin/bash
-sudo apt-get update
-sudo apt-get install build-essential curl unzip clang nasm graphviz doxygen cmake ninja-build
+sudo apt update && sudo apt upgrade
+sudo apt install build-essential curl unzip clang nasm graphviz doxygen cmake ninja-build
 
 export CC=clang and export CXX=clang++
 export KMP_AFFINITY=granularity=fine,compact,1,0
