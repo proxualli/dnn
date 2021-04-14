@@ -5,66 +5,88 @@ namespace dnn
 {
 	class Model;
 	
+	enum class Optimizers
+	{
+		AdaDelta = 0,
+		AdaGrad = 1,
+		Adam = 2,
+		Adamax = 3,
+		NAG = 4,
+		RMSProp = 5,
+		SGD = 6,
+		SGDMomentum = 7,
+		RAdam = 8
+	};
+
 	struct TrainingRate
 	{
+		UInt Optimizer;
+		Float Momentum;
+		Float L2Penalty;
+		Float Beta1;
+		Float Beta2;
 		UInt BatchSize;
 		UInt Cycles;
 		UInt Epochs;
 		UInt EpochMultiplier;
+		Float MaximumRate;
+		Float MinimumRate;
 		UInt DecayAfterEpochs;
-		UInt Interpolation;
-		UInt ColorAngle;
-		Float ColorCast;
-		Float Distortion;
+		Float DecayFactor;
+		bool HorizontalFlip;
+		bool VerticalFlip;
 		Float Dropout;
 		Float Cutout;
 		Float AutoAugment;
-		Float MaximumRate;
-		Float MinimumRate;
-		Float L2Penalty;
-		Float Momentum;
-		Float DecayFactor;
+		Float ColorCast;
+		UInt ColorAngle;
+		Float Distortion;
+		UInt Interpolation;
 		Float Scaling;
 		Float Rotation;
-		bool HorizontalFlip;
-		bool VerticalFlip;
-
+	
 		TrainingRate() :
+			Optimizer(UInt(Optimizers::AdaDelta)),
+			Momentum(Float(0.9)),
+			L2Penalty(Float(0.0005)),
+			Beta1(Float(0.9)),
+			Beta2(Float(0.999)),
 			BatchSize(1),
 			Cycles(1),
 			Epochs(200),
 			EpochMultiplier(1),
+			MaximumRate(Float(0.05)),
+			MinimumRate(Float(0.0001)),
 			DecayAfterEpochs(1),
-			Interpolation(UInt(Interpolation::Cubic)),
-			ColorAngle(0),
-			ColorCast(Float(0)),
-			Distortion(Float(0)),
+			DecayFactor(Float(1)),
+			HorizontalFlip(false),
+			VerticalFlip(false),
 			Dropout(Float(0)),
 			Cutout(Float(0)),
 			AutoAugment(Float(0)),
-			MaximumRate(Float(0.05)),
-			MinimumRate(Float(0.0001)),
-			L2Penalty(Float(0.0005)),
-			Momentum(Float(0.9)),
-			DecayFactor(Float(1)),
+			ColorCast(Float(0)),
+			ColorAngle(0),
+			Distortion(Float(0)),
+			Interpolation(UInt(Interpolation::Cubic)),
 			Scaling(Float(10.0)),
-			Rotation(Float(10.0)),
-			HorizontalFlip(false),
-			VerticalFlip(false)
+			Rotation(Float(10.0))			
 		{
 		}
 
-		TrainingRate(const Float maximumRate, const UInt batchSize, const UInt cycles, const UInt epochs, const UInt epochMultiplier, const Float minimumRate, const Float L2penalty, const Float momentum, const Float decayFactor, const UInt decayAfterEpochs, const bool horizontalFlip, const bool verticalFlip, const Float dropout, const Float cutout, const Float autoAugment, const Float colorCast, const UInt colorAngle, const Float distortion, const UInt interpolation, const Float scaling, const Float rotation) :
-			MaximumRate(maximumRate),
+		TrainingRate(const UInt optimizer, Float momentum, Float l2Penalty, Float beta1, Float beta2, const UInt batchSize, const UInt cycles, const UInt epochs, const UInt epochMultiplier, const Float maximumRate, const Float minimumRate, const UInt decayAfterEpochs, const Float decayFactor, const bool horizontalFlip, const bool verticalFlip, const Float dropout, const Float cutout, const Float autoAugment, const Float colorCast, const UInt colorAngle, const Float distortion, const UInt interpolation, const Float scaling, const Float rotation) :
+			Optimizer(optimizer),
+			Momentum(momentum),
+			L2Penalty(l2Penalty),
+			Beta1(beta1),
+			Beta2(beta2),
 			BatchSize(batchSize),
 			Cycles(cycles),
 			Epochs(epochs),
 			EpochMultiplier(epochMultiplier),
+			MaximumRate(maximumRate),
 			MinimumRate(minimumRate),
-			L2Penalty(L2penalty),
-			Momentum(momentum),
-			DecayFactor(decayFactor),
 			DecayAfterEpochs(decayAfterEpochs),
+			DecayFactor(decayFactor),
 			HorizontalFlip(horizontalFlip),
 			VerticalFlip(verticalFlip),
 			Dropout(dropout),
@@ -75,7 +97,7 @@ namespace dnn
 			Distortion(distortion),
 			Interpolation(interpolation),
 			Scaling(scaling),
-			Rotation(rotation)
+			Rotation(rotation)			
 		{
 		}
 	};
@@ -122,20 +144,7 @@ namespace dnn
 		Resampling = 37,
 		Substract = 38
 	};
-
-	enum class Optimizers
-	{
-		AdaDelta = 0,
-		AdaGrad = 1,
-		Adam = 2,
-		Adamax = 3,
-		NAG = 4,
-		RMSProp = 5,
-		SGD = 6,
-		SGDMomentum = 7,
-		RAdam = 8
-	};
-
+	
 	enum class Fillers
 	{
 		Constant = 0,

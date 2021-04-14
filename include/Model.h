@@ -486,25 +486,26 @@ namespace dnn
 			TotalCycles = 1;
 			GoToEpoch = gotoEpoch;
 
-			auto decayAfterEopchs = rate.DecayAfterEpochs;
-			if (rate.Epochs < decayAfterEopchs)
-				decayAfterEopchs = rate.Epochs;
+			auto decayAfterEpochs = rate.DecayAfterEpochs;
+			if (rate.Epochs < decayAfterEpochs)
+				decayAfterEpochs = rate.Epochs;
 
-			auto totIteration = rate.Epochs / decayAfterEopchs;
+			auto totIteration = rate.Epochs / decayAfterEpochs;
 			auto newRate = rate.MaximumRate;
 
 			for (auto i = 0ull; i < totIteration; i++)
 			{
 				if ((i + 1) >= gotoEpoch)
-					TrainingRates.push_back(TrainingRate(newRate, rate.BatchSize, rate.Cycles, decayAfterEopchs, rate.EpochMultiplier, rate.MinimumRate, rate.L2Penalty, rate.Momentum, Float(1), 1, rate.HorizontalFlip, rate.VerticalFlip, rate.Dropout, rate.Cutout, rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
+					TrainingRates.push_back(TrainingRate(rate.Optimizer, rate.Momentum, rate.L2Penalty, rate.Beta1, rate.Beta2, rate.BatchSize, rate.Cycles, rate.Epochs, rate.EpochMultiplier, newRate, rate.MinimumRate, decayAfterEpochs, Float(1), rate.HorizontalFlip, rate.VerticalFlip, rate.Dropout, rate.Cutout, rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
+
 				if (newRate * rate.DecayFactor > rate.MinimumRate)
 					newRate *= rate.DecayFactor;
 				else
 					newRate = rate.MinimumRate;
 			}
 
-			if ((totIteration * decayAfterEopchs) < rate.Epochs)
-				TrainingRates.push_back(TrainingRate(newRate, rate.BatchSize, rate.Cycles, rate.Epochs - (totIteration * decayAfterEopchs), rate.EpochMultiplier, rate.MinimumRate, rate.L2Penalty, rate.Momentum, Float(1), decayAfterEopchs, rate.HorizontalFlip, rate.VerticalFlip, rate.Dropout, rate.Cutout, rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
+			if ((totIteration * decayAfterEpochs) < rate.Epochs)
+				TrainingRates.push_back(TrainingRate(rate.Optimizer, rate.Momentum, rate.L2Penalty, rate.Beta1, rate.Beta2, rate.BatchSize, rate.Cycles, rate.Epochs - (totIteration * decayAfterEpochs), rate.EpochMultiplier, newRate, rate.MinimumRate, decayAfterEpochs, Float(1), rate.HorizontalFlip, rate.VerticalFlip, rate.Dropout, rate.Cutout, rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
 		}
 
 		void AddTrainingRateSGDR(const TrainingRate rate, const bool clear, const UInt gotoEpoch)
@@ -527,7 +528,8 @@ namespace dnn
 
 					epoch++;
 					if (epoch >= gotoEpoch)
-						TrainingRates.push_back(TrainingRate(newRate, rate.BatchSize, c + 1, 1, rate.EpochMultiplier, minRate, rate.L2Penalty, rate.Momentum, Float(1), 1, rate.HorizontalFlip, rate.VerticalFlip, rate.Dropout, rate.Cutout, rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
+						TrainingRates.push_back(TrainingRate(rate.Optimizer, rate.Momentum, rate.L2Penalty, rate.Beta1, rate.Beta2, rate.BatchSize, c + 1, 1, rate.EpochMultiplier, newRate, minRate, 1, Float(1), rate.HorizontalFlip, rate.VerticalFlip, rate.Dropout, rate.Cutout, rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
+		
 				}
 
 				if (rate.DecayFactor != Float(1))
@@ -1065,7 +1067,7 @@ namespace dnn
 							// save the weights
 							State.store(States::SaveWeights);
 							std::filesystem::create_directories(DataProv->StorageDirectory / std::string("definitions") / (Name + std::string("-weights")));
-							SaveWeights((DataProv->StorageDirectory / std::string("definitions") / (Name + std::string("-weights")) / (std::to_string(CurrentCycle) + std::string("-") + std::to_string(CurrentEpoch) + std::string("(") + std::to_string(TestErrors) + std::string(").weights"))).string(), PersistOptimizer);
+							SaveWeights((DataProv->StorageDirectory / std::string("definitions") / (Name + std::string("-weights")) / (std::to_string(CurrentCycle) + std::string("-") + std::to_string(CurrentEpoch) + std::string("-") + std::string(magic_enum::enum_name<Optimizers>(Optimizer)) + std::string("(") + std::to_string(TestErrors) + std::string(").weights"))).string(), PersistOptimizer);
 
 							//auto fileName = (DataProv->StorageDirectory / "Definitions" /  (Name + "-weights") / (Name + " (epoch " + std::to_string(CurrentEpoch) + " - " + std::to_string(TestErrors) + " errors).weights")).string();
 							//if (TestErrors <= BestScore)

@@ -278,16 +278,16 @@ extern "C" DNN_API void DNNGetLayerWeights(const UInt layerIndex, std::vector<Fl
 	}
 }
 
-extern "C" DNN_API void DNNAddLearningRate(const bool clear, const UInt gotoEpoch, const Float maximumRate, const UInt batchSize, const UInt cycles, const UInt epochs, const UInt epochMultiplier, const Float minimumRate, const Float L2penalty, const Float momentum, const Float decayFactor, const UInt decayAfterEpochs, const bool horizontalFlip, const bool verticalFlip, const Float dropout, const Float cutout, const Float autoAugment, const Float colorCast, const UInt colorAngle, const Float distortion, const UInt interpolation, const Float maxScaling, const Float maxRotation)
+extern "C" DNN_API void DNNAddLearningRate(const bool clear, const UInt gotoEpoch, const UInt optimizer, const Float momentum, const Float L2penalty, const Float beta1, const Float beta2, const UInt batchSize, const UInt cycles, const UInt epochs, const UInt epochMultiplier, const Float maximumRate, const Float minimumRate, const Float decayFactor, const UInt decayAfterEpochs, const bool horizontalFlip, const bool verticalFlip, const Float dropout, const Float cutout, const Float autoAugment, const Float colorCast, const UInt colorAngle, const Float distortion, const UInt interpolation, const Float scaling, const Float rotation)
 {
 	if (model)
-		model->AddTrainingRate(TrainingRate(maximumRate, batchSize, cycles, epochs, epochMultiplier, minimumRate, L2penalty, momentum, decayFactor, decayAfterEpochs, horizontalFlip, verticalFlip, dropout, cutout, autoAugment, colorCast, colorAngle, distortion, interpolation, maxScaling, maxRotation), clear, gotoEpoch);
+		model->AddTrainingRate(TrainingRate(optimizer, momentum, L2penalty, beta1, beta2, batchSize, cycles, epochs, epochMultiplier, maximumRate, minimumRate, decayAfterEpochs, decayFactor, horizontalFlip, verticalFlip, dropout, cutout, autoAugment, colorCast, colorAngle, distortion, interpolation, scaling, rotation), clear, gotoEpoch);
 }
 
-extern "C" DNN_API void DNNAddLearningRateSGDR(const bool clear, const UInt gotoEpoch, const Float maximumRate, const UInt batchSize, const UInt cycles, const UInt epochs, const UInt epochMultiplier, const Float minimumRate, const Float L2penalty, const Float momentum, const Float decayFactor, const UInt decayAfterEpochs, const bool horizontalFlip, const bool verticalFlip, const Float dropout, const Float cutout, const Float autoAugment, const Float colorCast, const UInt colorAngle, const Float distortion, const UInt interpolation, const Float maxScaling, const Float maxRotation)
+extern "C" DNN_API void DNNAddLearningRateSGDR(const bool clear, const UInt gotoEpoch, const UInt optimizer, const Float momentum, const Float L2penalty, const Float beta1, const Float beta2, const UInt batchSize, const UInt cycles, const UInt epochs, const UInt epochMultiplier, const Float maximumRate, const Float minimumRate, const Float decayFactor, const UInt decayAfterEpochs, const bool horizontalFlip, const bool verticalFlip, const Float dropout, const Float cutout, const Float autoAugment, const Float colorCast, const UInt colorAngle, const Float distortion, const UInt interpolation, const Float saling, const Float rotation)
 {
 	if (model)
-		model->AddTrainingRateSGDR(TrainingRate(maximumRate, batchSize, cycles, epochs, epochMultiplier, minimumRate, L2penalty, momentum, decayFactor, decayAfterEpochs, horizontalFlip, verticalFlip, dropout, cutout, autoAugment, colorCast, colorAngle, distortion, interpolation, maxScaling, maxRotation), clear, gotoEpoch);
+		model->AddTrainingRateSGDR(TrainingRate(optimizer, momentum, L2penalty, beta1, beta2, batchSize, cycles, epochs, epochMultiplier, maximumRate, minimumRate, decayAfterEpochs, decayFactor, horizontalFlip, verticalFlip, dropout, cutout, autoAugment, colorCast, colorAngle, distortion, interpolation, saling, rotation), clear, gotoEpoch);
 }
 
 extern "C" DNN_API void DNNTraining()
