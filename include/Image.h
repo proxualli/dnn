@@ -14,6 +14,13 @@ namespace dnn
 	constexpr auto FloatLevel(const int level, const Float minValue = Float(0.1), const Float maxValue = Float(1.9)) noexcept { return (Float(level) * (maxValue - minValue) / MaximumLevels) + minValue; }
 	constexpr auto IntLevel(const int level, const int minValue = 0, const int maxValue = MaximumLevels) noexcept { return (level * (maxValue - minValue) / MaximumLevels) + minValue; }
 
+	enum class Interpolation
+	{
+		Cubic = 0,
+		Linear = 1,
+		Nearest = 2
+	};
+
 	enum class Position
 	{
 		TopLeft = 0,
@@ -22,14 +29,7 @@ namespace dnn
 		BottomRight = 3,
 		Center = 4
 	};
-
-	enum class Interpolation
-	{
-		Cubic = 0,
-		Linear = 1,
-		Nearest = 2
-	};
-
+	
 	template<typename T>
 	struct Image
 	{

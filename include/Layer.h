@@ -20,7 +20,7 @@ namespace dnn
 
 	struct TrainingRate
 	{
-		UInt Optimizer;
+		Optimizers Optimizer;
 		Float Momentum;
 		Float L2Penalty;
 		Float Beta1;
@@ -41,12 +41,12 @@ namespace dnn
 		Float ColorCast;
 		UInt ColorAngle;
 		Float Distortion;
-		UInt Interpolation;
+		Interpolation Interpolation;
 		Float Scaling;
 		Float Rotation;
 	
 		TrainingRate() :
-			Optimizer(UInt(Optimizers::AdaDelta)),
+			Optimizer(Optimizers::NAG),
 			Momentum(Float(0.9)),
 			L2Penalty(Float(0.0005)),
 			Beta1(Float(0.9)),
@@ -67,13 +67,13 @@ namespace dnn
 			ColorCast(Float(0)),
 			ColorAngle(0),
 			Distortion(Float(0)),
-			Interpolation(UInt(Interpolation::Cubic)),
+			Interpolation(Interpolation::Cubic),
 			Scaling(Float(10.0)),
 			Rotation(Float(10.0))			
 		{
 		}
 
-		TrainingRate(const UInt optimizer, Float momentum, Float l2Penalty, Float beta1, Float beta2, const UInt batchSize, const UInt cycles, const UInt epochs, const UInt epochMultiplier, const Float maximumRate, const Float minimumRate, const UInt decayAfterEpochs, const Float decayFactor, const bool horizontalFlip, const bool verticalFlip, const Float dropout, const Float cutout, const Float autoAugment, const Float colorCast, const UInt colorAngle, const Float distortion, const UInt interpolation, const Float scaling, const Float rotation) :
+		TrainingRate(const Optimizers optimizer, Float momentum, Float l2Penalty, Float beta1, Float beta2, const UInt batchSize, const UInt cycles, const UInt epochs, const UInt epochMultiplier, const Float maximumRate, const Float minimumRate, const UInt decayAfterEpochs, const Float decayFactor, const bool horizontalFlip, const bool verticalFlip, const Float dropout, const Float cutout, const Float autoAugment, const Float colorCast, const UInt colorAngle, const Float distortion, const dnn::Interpolation interpolation, const Float scaling, const Float rotation) :
 			Optimizer(optimizer),
 			Momentum(momentum),
 			L2Penalty(l2Penalty),

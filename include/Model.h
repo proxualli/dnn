@@ -1067,7 +1067,7 @@ namespace dnn
 							// save the weights
 							State.store(States::SaveWeights);
 							std::filesystem::create_directories(DataProv->StorageDirectory / std::string("definitions") / (Name + std::string("-weights")));
-							SaveWeights((DataProv->StorageDirectory / std::string("definitions") / (Name + std::string("-weights")) / (std::to_string(CurrentCycle) + std::string("-") + std::to_string(CurrentEpoch) + std::string("-") + std::string(magic_enum::enum_name<Optimizers>(Optimizer)) + std::string("(") + std::to_string(TestErrors) + std::string(").weights"))).string(), PersistOptimizer);
+							SaveWeights((DataProv->StorageDirectory / std::string("definitions") / (Name + std::string("-weights")) / (std::to_string(CurrentCycle) + std::string("-") + std::to_string(CurrentEpoch) + std::string("-") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(Optimizer))) + std::string("(") + std::to_string(TestErrors) + std::string(").weights"))).string(), PersistOptimizer);
 
 							//auto fileName = (DataProv->StorageDirectory / "Definitions" /  (Name + "-weights") / (Name + " (epoch " + std::to_string(CurrentEpoch) + " - " + std::to_string(TestErrors) + " errors).weights")).string();
 							//if (TestErrors <= BestScore)
@@ -1084,7 +1084,7 @@ namespace dnn
 								cycle = TrainingRates[learningRateIndex+1].Cycles;*/
 
 							State.store(States::NewEpoch);
-							NewEpoch(CurrentCycle, CurrentEpoch, TotalEpochs, CurrentTrainingRate.HorizontalFlip, CurrentTrainingRate.VerticalFlip, CurrentTrainingRate.Dropout, CurrentTrainingRate.Cutout, CurrentTrainingRate.AutoAugment, CurrentTrainingRate.ColorCast, CurrentTrainingRate.ColorAngle, CurrentTrainingRate.Distortion, CurrentTrainingRate.Interpolation, CurrentTrainingRate.Scaling, CurrentTrainingRate.Rotation, CurrentTrainingRate.MaximumRate, CurrentTrainingRate.BatchSize, CurrentTrainingRate.Momentum, CurrentTrainingRate.L2Penalty, AvgTrainLoss, TrainErrorPercentage, Float(100) - TrainErrorPercentage, TrainErrors, AvgTestLoss, TestErrorPercentage, Float(100) - TestErrorPercentage, TestErrors);
+							NewEpoch(CurrentCycle, CurrentEpoch, TotalEpochs, CurrentTrainingRate.HorizontalFlip, CurrentTrainingRate.VerticalFlip, CurrentTrainingRate.Dropout, CurrentTrainingRate.Cutout, CurrentTrainingRate.AutoAugment, CurrentTrainingRate.ColorCast, CurrentTrainingRate.ColorAngle, CurrentTrainingRate.Distortion, static_cast<UInt>(CurrentTrainingRate.Interpolation), CurrentTrainingRate.Scaling, CurrentTrainingRate.Rotation, CurrentTrainingRate.MaximumRate, CurrentTrainingRate.BatchSize, CurrentTrainingRate.Momentum, CurrentTrainingRate.L2Penalty, AvgTrainLoss, TrainErrorPercentage, Float(100) - TrainErrorPercentage, TrainErrors, AvgTestLoss, TestErrorPercentage, Float(100) - TestErrorPercentage, TestErrors);
 						}
 						else
 							break;

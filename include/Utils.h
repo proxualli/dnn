@@ -254,7 +254,7 @@ namespace dnn
 		switch (PhysicalSeedType) 
 		{
 		case 1:								// use RDTSC instruction
-			ran = (uint32_t)__rdtsc();
+			ran = static_cast<uint32_t>__rdtsc();
 			break;
 		case 2:								// use RDRAND instruction
 			while (_rdrand32_step(&ran) == 0) {}
