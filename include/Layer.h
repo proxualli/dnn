@@ -25,6 +25,7 @@ namespace dnn
 		Float L2Penalty;
 		Float Beta1;
 		Float Beta2;
+		Float Eps;
 		UInt BatchSize;
 		UInt Cycles;
 		UInt Epochs;
@@ -51,6 +52,7 @@ namespace dnn
 			L2Penalty(Float(0.0005)),
 			Beta1(Float(0.9)),
 			Beta2(Float(0.999)),
+			Eps(Float(0.0001)),
 			BatchSize(1),
 			Cycles(1),
 			Epochs(200),
@@ -73,12 +75,13 @@ namespace dnn
 		{
 		}
 
-		TrainingRate(const Optimizers optimizer, Float momentum, Float l2Penalty, Float beta1, Float beta2, const UInt batchSize, const UInt cycles, const UInt epochs, const UInt epochMultiplier, const Float maximumRate, const Float minimumRate, const UInt decayAfterEpochs, const Float decayFactor, const bool horizontalFlip, const bool verticalFlip, const Float dropout, const Float cutout, const Float autoAugment, const Float colorCast, const UInt colorAngle, const Float distortion, const dnn::Interpolation interpolation, const Float scaling, const Float rotation) :
+		TrainingRate(const Optimizers optimizer, const Float momentum, const Float l2Penalty, const Float beta1, const Float beta2, const Float eps, const UInt batchSize, const UInt cycles, const UInt epochs, const UInt epochMultiplier, const Float maximumRate, const Float minimumRate, const UInt decayAfterEpochs, const Float decayFactor, const bool horizontalFlip, const bool verticalFlip, const Float dropout, const Float cutout, const Float autoAugment, const Float colorCast, const UInt colorAngle, const Float distortion, const dnn::Interpolation interpolation, const Float scaling, const Float rotation) :
 			Optimizer(optimizer),
 			Momentum(momentum),
 			L2Penalty(l2Penalty),
 			Beta1(beta1),
 			Beta2(beta2),
+			Eps(eps),
 			BatchSize(batchSize),
 			Cycles(cycles),
 			Epochs(epochs),
