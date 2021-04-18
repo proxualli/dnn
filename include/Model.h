@@ -154,7 +154,7 @@ namespace dnn
 		std::atomic<bool> BatchSizeChanging;
 		std::atomic<bool> ResettingWeights;
 
-		void(*NewEpoch)(UInt, UInt, UInt, bool, bool, Float, Float, Float, Float, UInt, Float, UInt, Float, Float, Float, UInt, Float, Float, Float, Float, Float, UInt, Float, Float, Float, UInt);
+		void(*NewEpoch)(UInt, UInt, UInt, UInt, Float, Float, bool, bool, Float, Float, Float, Float, UInt, Float, UInt, Float, Float, Float, UInt, Float, Float, Float, Float, Float, UInt, Float, Float, Float, UInt);
 
 		Model(const std::string& name, Dataprovider* dataprovider) :
 			Name(name),
@@ -299,23 +299,6 @@ namespace dnn
 			}
 
 			return true;
-		}
-
-		void SetHyperParameters(const Float adaDeltaEps, const Float adaGradEps, const Float adamEps, const Float adamBeta2, const Float adamaxEps, const Float adamaxBeta2, const Float rmsPropEps, const Float radamEps, const Float radamBeta1, const Float radamBeta2)
-		{
-			for (auto& layer : Layers)
-			{
-				layer->AdaDeltaEps = adaDeltaEps;
-				layer->AdaGradEps = adaGradEps;
-				layer->AdamEps = adamEps;
-				layer->AdamBeta2 = adamBeta2;
-				layer->AdamaxEps = adamaxEps;
-				layer->AdamaxBeta2 = adamaxBeta2;
-				layer->RMSPropEps = rmsPropEps;
-				layer->RAdamEps = radamEps;
-				layer->RAdamBeta1 = radamBeta1;
-				layer->RAdamBeta2 = radamBeta2;
-			}
 		}
 
 		std::vector<Layer*> GetLayerInputs(const std::vector<std::string>& inputs) const
@@ -496,7 +479,7 @@ namespace dnn
 			for (auto i = 0ull; i < totIteration; i++)
 			{
 				if ((i + 1) >= gotoEpoch)
-					TrainingRates.push_back(TrainingRate(rate.Optimizer, rate.Momentum, rate.L2Penalty, rate.Beta1, rate.Beta2, rate.Eps, rate.BatchSize, rate.Cycles, rate.Epochs, rate.EpochMultiplier, newRate, rate.MinimumRate, decayAfterEpochs, Float(1), rate.HorizontalFlip, rate.VerticalFlip, rate.Dropout, rate.Cutout, rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
+					TrainingRates.push_back(TrainingRate(rate.Optimizer, rate.Momentum, rate.L2Penalty, rate.Beta2, rate.Eps, rate.BatchSize, rate.Cycles, rate.Epochs, rate.EpochMultiplier, newRate, rate.MinimumRate, decayAfterEpochs, Float(1), rate.HorizontalFlip, rate.VerticalFlip, rate.Dropout, rate.Cutout, rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
 
 				if (newRate * rate.DecayFactor > rate.MinimumRate)
 					newRate *= rate.DecayFactor;
@@ -505,7 +488,7 @@ namespace dnn
 			}
 
 			if ((totIteration * decayAfterEpochs) < rate.Epochs)
-				TrainingRates.push_back(TrainingRate(rate.Optimizer, rate.Momentum, rate.L2Penalty, rate.Beta1, rate.Beta2, rate.Eps, rate.BatchSize, rate.Cycles, rate.Epochs - (totIteration * decayAfterEpochs), rate.EpochMultiplier, newRate, rate.MinimumRate, decayAfterEpochs, Float(1), rate.HorizontalFlip, rate.VerticalFlip, rate.Dropout, rate.Cutout, rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
+				TrainingRates.push_back(TrainingRate(rate.Optimizer, rate.Momentum, rate.L2Penalty, rate.Beta2, rate.Eps, rate.BatchSize, rate.Cycles, rate.Epochs - (totIteration * decayAfterEpochs), rate.EpochMultiplier, newRate, rate.MinimumRate, decayAfterEpochs, Float(1), rate.HorizontalFlip, rate.VerticalFlip, rate.Dropout, rate.Cutout, rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
 		}
 
 		void AddTrainingRateSGDR(const TrainingRate rate, const bool clear, const UInt gotoEpoch)
@@ -528,7 +511,7 @@ namespace dnn
 
 					epoch++;
 					if (epoch >= gotoEpoch)
-						TrainingRates.push_back(TrainingRate(rate.Optimizer, rate.Momentum, rate.L2Penalty, rate.Beta1, rate.Beta2, rate.Eps, rate.BatchSize, c + 1, 1, rate.EpochMultiplier, newRate, minRate, 1, Float(1), rate.HorizontalFlip, rate.VerticalFlip, rate.Dropout, rate.Cutout, rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
+						TrainingRates.push_back(TrainingRate(rate.Optimizer, rate.Momentum, rate.L2Penalty, rate.Beta2, rate.Eps, rate.BatchSize, c + 1, 1, rate.EpochMultiplier, newRate, minRate, 1, Float(1), rate.HorizontalFlip, rate.VerticalFlip, rate.Dropout, rate.Cutout, rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
 		
 				}
 
@@ -752,8 +735,6 @@ namespace dnn
 				TaskState.store(TaskStates::Running);
 				State.store(States::Idle);
 
-				//auto oldWeightSaveFileName = std::string();
-                
 				auto timer = std::chrono::high_resolution_clock();
 				auto timePoint = timer.now();
 				auto timePointGlobal = timer.now();
@@ -775,7 +756,7 @@ namespace dnn
 				CurrentTrainingRate = TrainingRates[0];
 				Rate = CurrentTrainingRate.MaximumRate;
 				CurrentCycle = CurrentTrainingRate.Cycles;
-				
+
 				if (CurrentTrainingRate.BatchSize > BatchSize)
 					if (GetTotalFreeMemory() < GetNeuronsSize(CurrentTrainingRate.BatchSize - BatchSize))
 					{                           
@@ -808,8 +789,8 @@ namespace dnn
 					TestingSamplesHFlip.push_back(Bernoulli<bool>());
 					TestingSamplesVFlip.push_back(Bernoulli<bool>());
 				}
-
-				SetOptimizer(Optimizer);
+				
+				SetOptimizer(CurrentTrainingRate.Optimizer);
 				if (!PersistOptimizer)
 					for (auto& layer : Layers)
 						layer->ResetOptimizer(Optimizer);
@@ -837,6 +818,17 @@ namespace dnn
 							SetBatchSize(CurrentTrainingRate.BatchSize);
 
 						learningRateEpochs += CurrentTrainingRate.Epochs;
+
+						if (CurrentTrainingRate.Optimizer != Optimizer)
+						{
+							SetOptimizer(CurrentTrainingRate.Optimizer);
+							if (!PersistOptimizer)
+								for (auto& layer : Layers)
+									layer->ResetOptimizer(Optimizer);
+							else
+								for (auto& layer : Layers)
+									layer->CheckOptimizer(Optimizer);
+						}
 					}
 
 					CurrentEpoch++;
@@ -898,7 +890,7 @@ namespace dnn
 										Layers[i]->BackwardProp(BatchSize);
 										Layers[i]->bpropTime = timer.now() - timePoint;
 										timePoint = timer.now();
-										Layers[i]->UpdateWeights(CurrentTrainingRate, CurrentEpoch, Optimizer, DisableLocking);
+										Layers[i]->UpdateWeights(CurrentTrainingRate, Optimizer, DisableLocking);
 										Layers[i]->updateTime = timer.now() - timePoint;
 										updateTimeCount += Layers[i]->updateTime;
 									}
@@ -956,7 +948,7 @@ namespace dnn
 										Layers[i]->BackwardProp(BatchSize);
 										Layers[i]->bpropTime = timer.now() - timePoint;
 										timePoint = timer.now();
-										Layers[i]->UpdateWeights(CurrentTrainingRate, CurrentEpoch, Optimizer, DisableLocking);
+										Layers[i]->UpdateWeights(CurrentTrainingRate, Optimizer, DisableLocking);
 										Layers[i]->updateTime = timer.now() - timePoint;
 										updateTimeCount += Layers[i]->updateTime;
 									}
@@ -1066,25 +1058,15 @@ namespace dnn
 
 							// save the weights
 							State.store(States::SaveWeights);
-							std::filesystem::create_directories(DataProv->StorageDirectory / std::string("definitions") / (Name + std::string("-weights")));
-							SaveWeights((DataProv->StorageDirectory / std::string("definitions") / (Name + std::string("-weights")) / (std::to_string(CurrentCycle) + std::string("-") + std::to_string(CurrentEpoch) + std::string("-") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(Optimizer))) + std::string("(") + std::to_string(TestErrors) + std::string(").weights"))).string(), PersistOptimizer);
+							auto directory = DataProv->StorageDirectory / std::string("definitions") / (Name + std::string("-weights"));
+							auto fileName = (directory / (std::to_string(CurrentCycle) + std::string("-") + std::to_string(CurrentEpoch) + std::string("-") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(Optimizer))) + std::string("-") + std::to_string(TestErrors) + std::string(".weights"))).string();
 
-							//auto fileName = (DataProv->StorageDirectory / "Definitions" /  (Name + "-weights") / (Name + " (epoch " + std::to_string(CurrentEpoch) + " - " + std::to_string(TestErrors) + " errors).weights")).string();
-							//if (TestErrors <= BestScore)
-							//{
-							//	BestScore = TestErrors;
-							//	oldWeightSaveFileName = fileName;
-							//}
-							/*if (!oldWeightSaveFileName.empty() && file_exist(oldWeightSaveFileName))
-							DeleteFile(oldWeightSaveFileName);
-							oldWeightSaveFileName = fileName;*/
-
-							//auto cycle = CurrentCycle;
-							/*if (CurrentEpoch - (GoToEpoch - 1) == learningRateEpochs)
-								cycle = TrainingRates[learningRateIndex+1].Cycles;*/
-
+							std::filesystem::create_directories(directory);
+							SaveWeights(fileName, PersistOptimizer);
+							
 							State.store(States::NewEpoch);
-							NewEpoch(CurrentCycle, CurrentEpoch, TotalEpochs, CurrentTrainingRate.HorizontalFlip, CurrentTrainingRate.VerticalFlip, CurrentTrainingRate.Dropout, CurrentTrainingRate.Cutout, CurrentTrainingRate.AutoAugment, CurrentTrainingRate.ColorCast, CurrentTrainingRate.ColorAngle, CurrentTrainingRate.Distortion, static_cast<UInt>(CurrentTrainingRate.Interpolation), CurrentTrainingRate.Scaling, CurrentTrainingRate.Rotation, CurrentTrainingRate.MaximumRate, CurrentTrainingRate.BatchSize, CurrentTrainingRate.Momentum, CurrentTrainingRate.L2Penalty, AvgTrainLoss, TrainErrorPercentage, Float(100) - TrainErrorPercentage, TrainErrors, AvgTestLoss, TestErrorPercentage, Float(100) - TestErrorPercentage, TestErrors);
+
+							NewEpoch(CurrentCycle, CurrentEpoch, TotalEpochs, static_cast<UInt>(CurrentTrainingRate.Optimizer), CurrentTrainingRate.Beta2, CurrentTrainingRate.Eps, CurrentTrainingRate.HorizontalFlip, CurrentTrainingRate.VerticalFlip, CurrentTrainingRate.Dropout, CurrentTrainingRate.Cutout, CurrentTrainingRate.AutoAugment, CurrentTrainingRate.ColorCast, CurrentTrainingRate.ColorAngle, CurrentTrainingRate.Distortion, static_cast<UInt>(CurrentTrainingRate.Interpolation), CurrentTrainingRate.Scaling, CurrentTrainingRate.Rotation, CurrentTrainingRate.MaximumRate, CurrentTrainingRate.BatchSize, CurrentTrainingRate.Momentum, CurrentTrainingRate.L2Penalty, AvgTrainLoss, TrainErrorPercentage, Float(100) - TrainErrorPercentage, TrainErrors, AvgTestLoss, TestErrorPercentage, Float(100) - TestErrorPercentage, TestErrors);
 						}
 						else
 							break;
@@ -1533,8 +1515,7 @@ namespace dnn
 
 			return SampleLabels;
 		}
-	
-		
+			
 		void ForwardProp(const UInt batchSize)
 		{
 			for (auto &layer : Layers)
@@ -1550,7 +1531,7 @@ namespace dnn
 					Layers[i]->ResetGradients();
 					Layers[i]->BackwardProp(batchSize);
 					if (!DisableLocking)
-						Layers[i]->UpdateWeights(CurrentTrainingRate, CurrentEpoch, Optimizer, DisableLocking);
+						Layers[i]->UpdateWeights(CurrentTrainingRate, Optimizer, DisableLocking);
 				}
 				else
 					Layers[i]->BackwardProp(batchSize);

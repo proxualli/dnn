@@ -114,7 +114,7 @@ namespace dnn
 			return defNorm;
 		}
 
-		static Model* Read(const std::string& definition, CheckMsg& msg, const bool onlyCheck = false, Dataprovider* dataprovider = nullptr, const Optimizers optimizer = Optimizers::NAG)
+		static Model* Read(const std::string& definition, CheckMsg& msg, const bool onlyCheck = false, Dataprovider* dataprovider = nullptr)
 		{
 			auto userLocale = std::setlocale(LC_ALL, "C");
 
@@ -2363,10 +2363,7 @@ namespace dnn
 				}
 			}
 			else
-			{
 				model->ResetWeights();
-				model->Optimizer = optimizer;
-			}
 
 			std::setlocale(LC_ALL, userLocale);
             
@@ -2395,9 +2392,9 @@ namespace dnn
 			return checkMsg.Error;
 		}
 
-		static Model* ReadDefinition(const std::string& definition, const Optimizers optimizer, Dataprovider* dataprovider, CheckMsg& checkMsg)
+		static Model* ReadDefinition(const std::string& definition, Dataprovider* dataprovider, CheckMsg& checkMsg)
 		{
-			Model* model = Read(Normalize(definition), checkMsg, false, dataprovider, optimizer);
+			Model* model = Read(Normalize(definition), checkMsg, false, dataprovider);
 
 			if (checkMsg.Error)
 			{
@@ -2407,7 +2404,7 @@ namespace dnn
 			return model;
 		}
 
-		static Model* LoadDefinition(const std::string& fileName, const Optimizers optimizer, Dataprovider* dataprovider, CheckMsg& checkMsg)
+		static Model* LoadDefinition(const std::string& fileName, Dataprovider* dataprovider, CheckMsg& checkMsg)
 		{
 			Model* model = nullptr;
 
@@ -2418,7 +2415,7 @@ namespace dnn
 				stream << file.rdbuf();
 				auto buffer = stream.str();
 				file.close();
-				model = ReadDefinition(buffer, optimizer, dataprovider, checkMsg);
+				model = ReadDefinition(buffer, dataprovider, checkMsg);
 			}
 
 			return model;
