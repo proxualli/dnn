@@ -432,12 +432,12 @@ namespace dnn
 			}
 		}		
 	
-		auto GetWeightsSize(const bool persistOptimizer) const
+		auto GetWeightsSize(const bool persistOptimizer, const Optimizers optimizer) const
 		{
 			std::streamsize weightsSize = 0;
 
 			for (auto &layer : Layers)
-				weightsSize += layer->GetWeightsSize(persistOptimizer, Optimizer);
+				weightsSize += layer->GetWeightsSize(persistOptimizer, optimizer);
 
 			return weightsSize;
 		}
@@ -479,7 +479,7 @@ namespace dnn
 			for (auto i = 0ull; i < totIteration; i++)
 			{
 				if ((i + 1) >= gotoEpoch)
-					TrainingRates.push_back(TrainingRate(rate.Optimizer, rate.Momentum, rate.L2Penalty, rate.Beta2, rate.Eps, rate.BatchSize, rate.Cycles, rate.Epochs, rate.EpochMultiplier, newRate, rate.MinimumRate, decayAfterEpochs, Float(1), rate.HorizontalFlip, rate.VerticalFlip, rate.Dropout, rate.Cutout, rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
+					TrainingRates.push_back(TrainingRate(rate.Optimizer, rate.Momentum, rate.Beta2, rate.L2Penalty, rate.Eps, rate.BatchSize, rate.Cycles, rate.Epochs, rate.EpochMultiplier, newRate, rate.MinimumRate, decayAfterEpochs, Float(1), rate.HorizontalFlip, rate.VerticalFlip, rate.Dropout, rate.Cutout, rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
 
 				if (newRate * rate.DecayFactor > rate.MinimumRate)
 					newRate *= rate.DecayFactor;
@@ -488,7 +488,7 @@ namespace dnn
 			}
 
 			if ((totIteration * decayAfterEpochs) < rate.Epochs)
-				TrainingRates.push_back(TrainingRate(rate.Optimizer, rate.Momentum, rate.L2Penalty, rate.Beta2, rate.Eps, rate.BatchSize, rate.Cycles, rate.Epochs - (totIteration * decayAfterEpochs), rate.EpochMultiplier, newRate, rate.MinimumRate, decayAfterEpochs, Float(1), rate.HorizontalFlip, rate.VerticalFlip, rate.Dropout, rate.Cutout, rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
+				TrainingRates.push_back(TrainingRate(rate.Optimizer, rate.Momentum, rate.Beta2, rate.L2Penalty, rate.Eps, rate.BatchSize, rate.Cycles, rate.Epochs - (totIteration * decayAfterEpochs), rate.EpochMultiplier, newRate, rate.MinimumRate, decayAfterEpochs, Float(1), rate.HorizontalFlip, rate.VerticalFlip, rate.Dropout, rate.Cutout, rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
 		}
 
 		void AddTrainingRateSGDR(const TrainingRate rate, const bool clear, const UInt gotoEpoch)
@@ -511,7 +511,7 @@ namespace dnn
 
 					epoch++;
 					if (epoch >= gotoEpoch)
-						TrainingRates.push_back(TrainingRate(rate.Optimizer, rate.Momentum, rate.L2Penalty, rate.Beta2, rate.Eps, rate.BatchSize, c + 1, 1, rate.EpochMultiplier, newRate, minRate, 1, Float(1), rate.HorizontalFlip, rate.VerticalFlip, rate.Dropout, rate.Cutout, rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
+						TrainingRates.push_back(TrainingRate(rate.Optimizer, rate.Momentum, rate.Beta2, rate.L2Penalty, rate.Eps, rate.BatchSize, c + 1, 1, rate.EpochMultiplier, newRate, minRate, 1, Float(1), rate.HorizontalFlip, rate.VerticalFlip, rate.Dropout, rate.Cutout, rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
 		
 				}
 
@@ -1557,8 +1557,13 @@ namespace dnn
 
 		int LoadWeights(std::string fileName, const bool persistOptimizer = false)
 		{
-			if (GetFileSize(fileName) == GetWeightsSize(persistOptimizer))
+			const Optimizers optimizer = GetOptimizerFromString(fileName);
+
+			if (GetFileSize(fileName) == GetWeightsSize(persistOptimizer, optimizer))
 			{
+				if (optimizer != Optimizer)
+					SetOptimizer(optimizer);
+
 				auto is = std::ifstream(fileName, std::ios::in | std::ios::binary);
 
 				if (!is.bad() && is.is_open())
@@ -1608,6 +1613,35 @@ namespace dnn
 			}
 
 			return -1;
+		}
+
+		Optimizers GetOptimizerFromString(std::string fileName) const
+		{
+			if (fileName.find("-adadelta") != std::string::npos)
+				return Optimizers::AdaDelta;
+
+			if (fileName.find("-adagrad") != std::string::npos)
+				return Optimizers::AdaGrad;
+
+			if (fileName.find("-adam") != std::string::npos)
+				return Optimizers::Adam;
+
+			if (fileName.find("-adamax") != std::string::npos)
+				return Optimizers::Adamax;
+
+			if (fileName.find("-nag") != std::string::npos)
+				return Optimizers::NAG;
+
+			if (fileName.find("-rmsprop") != std::string::npos)
+				return Optimizers::RMSProp;
+
+			if (fileName.find("-sgd") != std::string::npos)
+				return Optimizers::SGD;
+
+			if (fileName.find("-sgdmomentum") != std::string::npos)
+				return Optimizers::SGDMomentum;
+
+			return Optimizers::SGD;
 		}
 	};
 }

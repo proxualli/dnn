@@ -21,8 +21,8 @@ namespace dnn
 	{
 		Optimizers Optimizer;
 		Float Momentum;
-		Float L2Penalty;
 		Float Beta2;
+		Float L2Penalty;
 		Float Eps;
 		UInt BatchSize;
 		UInt Cycles;
@@ -47,8 +47,8 @@ namespace dnn
 		TrainingRate() :
 			Optimizer(Optimizers::NAG),
 			Momentum(Float(0.9)),
-			L2Penalty(Float(0.0005)),
 			Beta2(Float(0.999)),
+			L2Penalty(Float(0.0005)),
 			Eps(Float(1E-08)),
 			BatchSize(1),
 			Cycles(1),
@@ -72,11 +72,11 @@ namespace dnn
 		{
 		}
 
-		TrainingRate(const Optimizers optimizer, const Float momentum, const Float l2Penalty, const Float beta2, const Float eps, const UInt batchSize, const UInt cycles, const UInt epochs, const UInt epochMultiplier, const Float maximumRate, const Float minimumRate, const UInt decayAfterEpochs, const Float decayFactor, const bool horizontalFlip, const bool verticalFlip, const Float dropout, const Float cutout, const Float autoAugment, const Float colorCast, const UInt colorAngle, const Float distortion, const dnn::Interpolation interpolation, const Float scaling, const Float rotation) :
+		TrainingRate(const Optimizers optimizer, const Float momentum, const Float beta2, const Float l2Penalty, const Float eps, const UInt batchSize, const UInt cycles, const UInt epochs, const UInt epochMultiplier, const Float maximumRate, const Float minimumRate, const UInt decayAfterEpochs, const Float decayFactor, const bool horizontalFlip, const bool verticalFlip, const Float dropout, const Float cutout, const Float autoAugment, const Float colorCast, const UInt colorAngle, const Float distortion, const dnn::Interpolation interpolation, const Float scaling, const Float rotation) :
 			Optimizer(optimizer),
 			Momentum(momentum),
-			L2Penalty(l2Penalty),
 			Beta2(beta2),
+			L2Penalty(l2Penalty),
 			Eps(eps),
 			BatchSize(batchSize),
 			Cycles(cycles),
@@ -372,8 +372,6 @@ namespace dnn
 			if (visible)
 			{
 				description.append(nwl + std::string(" Weights:") + tab + std::to_string(WeightCount));
-				description.append(nwl + std::string(" Weights:") + tab + std::to_string(WeightsMemDesc->get_size()));
-				description.append(nwl + std::string(" Weights:") + tab + std::to_string(WeightsD1.size()));
 				description.append(nwl + std::string("  lr mult:") + tab + FloatToString(WeightsLRM));
 				description.append(nwl + std::string("  wd mult:") + tab + FloatToString(WeightsWDM));
 
