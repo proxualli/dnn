@@ -164,7 +164,7 @@ namespace dnn
 			Format(dnnl::memory::format_tag::any),
 			PersistOptimizer(false),
 			DisableLocking(true),
-			Optimizer(Optimizers::AdaDelta),
+			Optimizer(Optimizers::SGD),
 			TaskState(TaskStates::Stopped),
 			State(States::Idle),
 			Dataset(Datasets::cifar10),			// Dataset
@@ -583,10 +583,13 @@ namespace dnn
 
 		void SetOptimizer(const Optimizers optimizer)
 		{
-			for (auto &layer : Layers)
-				layer->SetOptimizer(optimizer);
+			if (optimizer != Optimizer)
+			{
+				for (auto& layer : Layers)
+					layer->SetOptimizer(optimizer);
 
-			Optimizer = optimizer;
+				Optimizer = optimizer;
+			}
 		}
 
 		void ResetOptimizer()
@@ -1561,8 +1564,7 @@ namespace dnn
 
 			if (GetFileSize(fileName) == GetWeightsSize(persistOptimizer, optimizer))
 			{
-				if (optimizer != Optimizer)
-					SetOptimizer(optimizer);
+				SetOptimizer(optimizer);
 
 				auto is = std::ifstream(fileName, std::ios::in | std::ios::binary);
 
