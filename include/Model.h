@@ -479,7 +479,7 @@ namespace dnn
 			for (auto i = 0ull; i < totIteration; i++)
 			{
 				if ((i + 1) >= gotoEpoch)
-					TrainingRates.push_back(TrainingRate(rate.Optimizer, rate.Momentum, rate.Beta2, rate.L2Penalty, rate.Eps, rate.BatchSize, rate.Cycles, rate.Epochs, rate.EpochMultiplier, newRate, rate.MinimumRate, decayAfterEpochs, Float(1), rate.HorizontalFlip, rate.VerticalFlip, rate.Dropout, rate.Cutout, rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
+					TrainingRates.push_back(TrainingRate(rate.Optimizer, rate.Momentum, rate.Beta2, rate.L2Penalty, rate.Eps, rate.BatchSize, 1, rate.Epochs, 1, newRate, rate.MinimumRate, decayAfterEpochs, Float(1), rate.HorizontalFlip, rate.VerticalFlip, rate.Dropout, rate.Cutout, rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
 
 				if (newRate * rate.DecayFactor > rate.MinimumRate)
 					newRate *= rate.DecayFactor;
@@ -488,7 +488,7 @@ namespace dnn
 			}
 
 			if ((totIteration * decayAfterEpochs) < rate.Epochs)
-				TrainingRates.push_back(TrainingRate(rate.Optimizer, rate.Momentum, rate.Beta2, rate.L2Penalty, rate.Eps, rate.BatchSize, rate.Cycles, rate.Epochs - (totIteration * decayAfterEpochs), rate.EpochMultiplier, newRate, rate.MinimumRate, decayAfterEpochs, Float(1), rate.HorizontalFlip, rate.VerticalFlip, rate.Dropout, rate.Cutout, rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
+				TrainingRates.push_back(TrainingRate(rate.Optimizer, rate.Momentum, rate.Beta2, rate.L2Penalty, rate.Eps, rate.BatchSize, 1, rate.Epochs - (totIteration * decayAfterEpochs), 1, newRate, rate.MinimumRate, decayAfterEpochs, Float(1), rate.HorizontalFlip, rate.VerticalFlip, rate.Dropout, rate.Cutout, rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
 		}
 
 		void AddTrainingRateSGDR(const TrainingRate rate, const bool clear, const UInt gotoEpoch)
@@ -502,7 +502,7 @@ namespace dnn
 			auto maxRate = rate.MaximumRate;
 			auto minRate = rate.MinimumRate;
 			auto epoch = 0ull;
-			for (auto c = 0ull; c < rate.Cycles; c++)
+			for (auto c = 0ull; c < TotalCycles; c++)
 			{
 				const auto total = rate.Epochs * (c > 0 ? (rate.EpochMultiplier != 1 ? c * rate.EpochMultiplier : 1) : 1);
 				for (auto i = 0ull; i < total; i++)

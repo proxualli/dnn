@@ -382,7 +382,7 @@ extern "C" DNN_API void DNNGetNetworkInfo(std::string* name, UInt* costIndex, UI
 	}
 }
 
-extern "C" DNN_API void DNNGetTrainingInfo(UInt* currentCycle, UInt* totalCycles, UInt* currentEpoch, UInt* totalEpochs, bool* horizontalFlip, bool* verticalFlip, Float* inputDropOut, Float* inputCutout, Float* autoAugment, Float* colorCast, UInt* colorAngle, Float* distortion, Interpolation* interpolation, Float* scaling, Float* rotation, UInt* sampleIndex, UInt* batchSize, Float* maximumRate, Float* momentum, Float* l2Penalty, Float* avgTrainLoss, Float* trainErrorPercentage, UInt* trainErrors, Float* avgTestLoss, Float* testErrorPercentage, UInt* testErrors, Float* sampleSpeed, States* networkState, TaskStates* taskState)
+extern "C" DNN_API void DNNGetTrainingInfo(UInt* currentCycle, UInt* totalCycles, UInt* currentEpoch, UInt* totalEpochs, bool* horizontalFlip, bool* verticalFlip, Float* dropout, Float* cutout, Float* autoAugment, Float* colorCast, UInt* colorAngle, Float* distortion, Interpolation* interpolation, Float* scaling, Float* rotation, UInt* sampleIndex, UInt* batchSize, Float* maximumRate, Optimizers* optimizer, Float* momentum, Float* l2Penalty, Float* avgTrainLoss, Float* trainErrorPercentage, UInt* trainErrors, Float* avgTestLoss, Float* testErrorPercentage, UInt* testErrors, Float* sampleSpeed, States* networkState, TaskStates* taskState)
 {
 	if (model)
 	{
@@ -435,8 +435,8 @@ extern "C" DNN_API void DNNGetTrainingInfo(UInt* currentCycle, UInt* totalCycles
 		*sampleIndex = model->SampleIndex;
 		*horizontalFlip = model->CurrentTrainingRate.HorizontalFlip;
 		*verticalFlip = model->CurrentTrainingRate.VerticalFlip;
-		*inputDropOut = model->CurrentTrainingRate.Dropout;
-		*inputCutout = model->CurrentTrainingRate.Cutout;
+		*dropout = model->CurrentTrainingRate.Dropout;
+		*cutout = model->CurrentTrainingRate.Cutout;
 		*autoAugment = model->CurrentTrainingRate.AutoAugment;
 		*colorCast = model->CurrentTrainingRate.ColorCast;
 		*colorAngle = model->CurrentTrainingRate.ColorAngle;
@@ -445,6 +445,7 @@ extern "C" DNN_API void DNNGetTrainingInfo(UInt* currentCycle, UInt* totalCycles
 		*scaling = model->CurrentTrainingRate.Scaling;
 		*rotation = model->CurrentTrainingRate.Rotation;
 		*maximumRate = model->CurrentTrainingRate.MaximumRate;
+		*optimizer = model->Optimizer;
 		*momentum = model->CurrentTrainingRate.Momentum;
 		*l2Penalty = model->CurrentTrainingRate.L2Penalty;
 		*batchSize = model->BatchSize;
