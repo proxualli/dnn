@@ -278,10 +278,10 @@ extern "C" DNN_API void DNNAddLearningRate(const bool clear, const UInt gotoEpoc
 		model->AddTrainingRate(TrainingRate(optimizer, momentum, beta2, L2penalty, eps, batchSize, cycles, epochs, epochMultiplier, maximumRate, minimumRate, decayAfterEpochs, decayFactor, horizontalFlip, verticalFlip, dropout, cutout, autoAugment, colorCast, colorAngle, distortion, interpolation, scaling, rotation), clear, gotoEpoch);
 }
 
-extern "C" DNN_API void DNNAddLearningRateSGDR(const bool clear, const UInt gotoCycle, const UInt gotoEpoch, const Optimizers optimizer, const Float momentum, const Float beta2, const Float L2penalty, const Float eps, const UInt batchSize, const UInt cycles, const UInt epochs, const UInt epochMultiplier, const Float maximumRate, const Float minimumRate, const Float decayFactor, const UInt decayAfterEpochs, const bool horizontalFlip, const bool verticalFlip, const Float dropout, const Float cutout, const Float autoAugment, const Float colorCast, const UInt colorAngle, const Float distortion, const Interpolation interpolation, const Float saling, const Float rotation)
+extern "C" DNN_API void DNNAddLearningRateSGDR(const bool clear, const UInt gotoEpoch, const Optimizers optimizer, const Float momentum, const Float beta2, const Float L2penalty, const Float eps, const UInt batchSize, const UInt cycles, const UInt epochs, const UInt epochMultiplier, const Float maximumRate, const Float minimumRate, const Float decayFactor, const UInt decayAfterEpochs, const bool horizontalFlip, const bool verticalFlip, const Float dropout, const Float cutout, const Float autoAugment, const Float colorCast, const UInt colorAngle, const Float distortion, const Interpolation interpolation, const Float saling, const Float rotation)
 {
 	if (model)
-		model->AddTrainingRateSGDR(TrainingRate(optimizer, momentum, beta2, L2penalty, eps, batchSize, cycles, epochs, epochMultiplier, maximumRate, minimumRate, decayAfterEpochs, decayFactor, horizontalFlip, verticalFlip, dropout, cutout, autoAugment, colorCast, colorAngle, distortion, interpolation, saling, rotation), clear, gotoCycle, gotoEpoch);
+		model->AddTrainingRateSGDR(TrainingRate(optimizer, momentum, beta2, L2penalty, eps, batchSize, cycles, epochs, epochMultiplier, maximumRate, minimumRate, decayAfterEpochs, decayFactor, horizontalFlip, verticalFlip, dropout, cutout, autoAugment, colorCast, colorAngle, distortion, interpolation, saling, rotation), clear, gotoEpoch);
 }
 
 extern "C" DNN_API void DNNTraining()
