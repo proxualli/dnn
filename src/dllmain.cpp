@@ -867,7 +867,15 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, UInt* inputsCount
 	}
 }
 
-extern "C" DNN_API int DNNLoadNetworkWeights(const std::string& fileName, const bool persistOptimizer)
+extern "C" DNN_API Optimizers GetOptimizer()
+{
+	if (model)
+		return model->Optimizer;
+
+	return Optimizers::SGD;
+}
+
+extern "C" DNN_API int DNNLoadWeights(const std::string& fileName, const bool persistOptimizer)
 {
 	if (model)
 		return model->LoadWeights(fileName, persistOptimizer);
@@ -875,7 +883,7 @@ extern "C" DNN_API int DNNLoadNetworkWeights(const std::string& fileName, const 
 	return -10;
 }
 
-extern "C" DNN_API int DNNSaveNetworkWeights(const std::string& fileName, const bool persistOptimizer)
+extern "C" DNN_API int DNNSaveWeights(const std::string& fileName, const bool persistOptimizer)
 {
 	if (model)
 		return model->SaveWeights(fileName, persistOptimizer);
