@@ -491,7 +491,7 @@ namespace dnn
 				TrainingRates.push_back(TrainingRate(rate.Optimizer, rate.Momentum, rate.Beta2, rate.L2Penalty, rate.Eps, rate.BatchSize, 1, rate.Epochs - (totIteration * decayAfterEpochs), 1, newRate, rate.MinimumRate, decayAfterEpochs, Float(1), rate.HorizontalFlip, rate.VerticalFlip, rate.Dropout, rate.Cutout, rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
 		}
 
-		void AddTrainingRateSGDR(const TrainingRate rate, const bool clear, const UInt gotoEpoch)
+		void AddTrainingRateSGDR(const TrainingRate rate, const bool clear, const UInt gotoCycle, const UInt gotoEpoch)
 		{
 			if (clear)
 				TrainingRates.clear();
