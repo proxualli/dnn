@@ -514,7 +514,7 @@ namespace dnn
 						TrainingRates.push_back(TrainingRate(rate.Optimizer, rate.Momentum, rate.Beta2, rate.L2Penalty, rate.Eps, rate.BatchSize, c + 1, 1, rate.EpochMultiplier, newRate, minRate, 1, Float(1), rate.HorizontalFlip, rate.VerticalFlip, rate.Dropout, rate.Cutout, rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
 		
 				}
-
+				
 				if (rate.DecayFactor != Float(1))
 				{
 					maxRate *= rate.DecayFactor;
@@ -1062,7 +1062,7 @@ namespace dnn
 							// save the weights
 							State.store(States::SaveWeights);
 							auto directory = DataProv->StorageDirectory / std::string("definitions") / (Name + std::string("-weights"));
-							auto fileName = (directory / (std::to_string(CurrentCycle) + std::string("-") + std::to_string(CurrentEpoch) + std::string("-") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(Optimizer))) + std::string("-") + std::to_string(TestErrors) + std::string(".weights"))).string();
+							auto fileName = (directory / (std::to_string(CurrentCycle) + std::string("-") + std::to_string(CurrentEpoch) + std::string("-") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(Optimizer))) + std::string("-") + std::to_string(TestErrors) + std::string(".bin"))).string();
 
 							std::filesystem::create_directories(directory);
 							SaveWeights(fileName, PersistOptimizer);

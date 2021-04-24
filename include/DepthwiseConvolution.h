@@ -39,7 +39,7 @@ namespace dnn
 		const UInt DilationKernelW;
 				
 		DepthwiseConvolution(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const UInt kernelH, const UInt kernelW, const UInt strideH, const UInt strideW, const UInt dilationH, const UInt dilationW, const UInt padH, const UInt padW, const UInt multiplier, const bool hasBias) :
-			Layer(device, format, name, LayerTypes::DepthwiseConvolution, multiplier* inputs[0]->C* kernelH* kernelW, multiplier* inputs[0]->C, multiplier* inputs[0]->C, inputs[0]->D, ((((inputs[0]->H - (1 + (kernelH - 1) * dilationH)) + (padH * 2)) / strideH) + 1), ((((inputs[0]->W - (1 + (kernelW - 1) * dilationW)) + (padW * 2)) / strideW) + 1), 0, padH, padW, inputs, hasBias),
+			Layer(device, format, name, LayerTypes::DepthwiseConvolution, multiplier * inputs[0]->C * kernelH * kernelW, multiplier * inputs[0]->C, multiplier * inputs[0]->C, inputs[0]->D, ((((inputs[0]->H - (1 + (kernelH - 1) * dilationH)) + (padH * 2)) / strideH) + 1), ((((inputs[0]->W - (1 + (kernelW - 1) * dilationW)) + (padW * 2)) / strideW) + 1), 0, padH, padW, inputs, hasBias),
 			Multiplier(multiplier),
 			KernelH(kernelH),
 			KernelW(kernelW),
