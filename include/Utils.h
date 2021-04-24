@@ -36,16 +36,28 @@
 #ifdef DNN_SSE41
 #define INSTRSET 5
 #define MAX_VECTOR_SIZE 128
-#endif
+#endif // DNN_SSE41
+
+#ifdef DNN_AVX
+#define INSTRSET 7
+#define MAX_VECTOR_SIZE 256
+#endif //DNN_AVX2
+
 #ifdef DNN_AVX2
 #define INSTRSET 8
 #define MAX_VECTOR_SIZE 256
-#endif
+#endif //DNN_AVX2
+
 #ifdef DNN_AVX512
 #define INSTRSET 9
 #define MAX_VECTOR_SIZE 512
-#endif
-#endif
+#endif //DNN_AVX512
+
+#ifdef DNN_AVX512BW
+#define INSTRSET 10
+#define MAX_VECTOR_SIZE 512
+#endif //DNN_AVX512
+#endif // MAX_VECTOR_SIZE
 
 #include "instrset.h"
 #include "vectorclass.h"

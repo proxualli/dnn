@@ -239,11 +239,14 @@ namespace dnn
 			dnnl_set_verbose(0);
 #endif
 			
-#if defined(DNN_AVX512)
+#if defined(DNN_AVX512) || defined(DNN_AVX512BW)
 			dnnl::set_max_cpu_isa(dnnl::cpu_isa::all);
 			dnnl::set_cpu_isa_hints(dnnl::cpu_isa_hints::prefer_ymm);
 #elif defined(DNN_AVX2)
 			dnnl::set_max_cpu_isa(dnnl::cpu_isa::avx2);
+			dnnl::set_cpu_isa_hints(dnnl::cpu_isa_hints::prefer_ymm);
+#elif defined(DNN_AVX)
+			dnnl::set_max_cpu_isa(dnnl::cpu_isa::avx);
 			dnnl::set_cpu_isa_hints(dnnl::cpu_isa_hints::prefer_ymm);
 #elif defined(DNN_SSE41)
 			dnnl::set_max_cpu_isa(dnnl::cpu_isa::sse41);
