@@ -41,7 +41,7 @@
 #ifdef DNN_AVX
 #define INSTRSET 7
 #define MAX_VECTOR_SIZE 256
-#endif //DNN_AVX2
+#endif //DNN_AVX
 
 #ifdef DNN_AVX2
 #define INSTRSET 8
@@ -56,7 +56,7 @@
 #ifdef DNN_AVX512BW
 #define INSTRSET 10
 #define MAX_VECTOR_SIZE 512
-#endif //DNN_AVX512
+#endif //DNN_AVX512BW
 #endif // MAX_VECTOR_SIZE
 
 #include "instrset.h"
