@@ -169,18 +169,17 @@ namespace dnn
 	static const auto dtab = std::string("\t\t");
 	
 	constexpr auto PlainFmt = dnnl::memory::format_tag::nchw;
-
-#if defined(DNN_AVX512)
+#if defined(DNN_AVX512BW) || defined(DNN_AVX512)
 	typedef Vec16f VecFloat;
 	typedef Vec16fb VecFloatBool;
 	constexpr auto VectorSize = 16ull;
 	constexpr auto BlockedFmt = dnnl::memory::format_tag::nChw16c;
-#elif defined(DNN_AVX2)
+#elif defined(DNN_AVX2) || defined(DNN_AVX)
 	typedef Vec8f VecFloat;
 	typedef Vec8fb VecFloatBool;
 	constexpr auto VectorSize = 8ull;
 	constexpr auto BlockedFmt = dnnl::memory::format_tag::nChw8c;
-#elif defined(DNN_SSE41)
+#elif defined(DNN_SSE42) || defined(DNN_SSE41)
 	typedef Vec4f VecFloat;
 	typedef Vec4fb VecFloatBool;
 	constexpr auto VectorSize = 4ull;
