@@ -305,7 +305,7 @@ namespace dnn
 				{
 					auto memWeights = dnnl::memory(*WeightsMemDesc, Device.engine, Biases.data());
 
-					auto weights = FloatVector(fwdDescPRelu->weights_desc().get_size());
+					auto weights = FloatVector(fwdDescPRelu->weights_desc().get_size() / sizeof(Float));
 					auto weightsMem = dnnl::memory(fwdDescPRelu->weights_desc(), Device.engine, weights.data());
 
 					dnnl::reorder(memWeights, weightsMem).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_FROM, memWeights}, { DNNL_ARG_TO, weightsMem } });
