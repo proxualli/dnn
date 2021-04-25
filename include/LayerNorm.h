@@ -59,6 +59,8 @@ namespace dnn
 		{
 			auto description = GetDescriptionHeader() + GetWeightsDescription(Scaling);
 
+			description.append(nwl + std::string(" Eps:") + dtab + FloatToStringScientific(Eps));
+
 			auto mean = Float(0);
 			auto variance = Float(0);
 			for (auto e = 0ull; e < Mean.size(); e++)
