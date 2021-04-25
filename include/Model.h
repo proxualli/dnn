@@ -248,7 +248,7 @@ namespace dnn
 #elif defined(DNN_AVX)
 			dnnl::set_max_cpu_isa(dnnl::cpu_isa::avx);
 			dnnl::set_cpu_isa_hints(dnnl::cpu_isa_hints::prefer_ymm);
-#elif defined(DNN_SSE41)
+#elif defined(DNN_SSE42) || defined(DNN_SSE41)
 			dnnl::set_max_cpu_isa(dnnl::cpu_isa::sse41);
 			dnnl::set_cpu_isa_hints(dnnl::cpu_isa_hints::no_hints);
 #endif

@@ -38,6 +38,11 @@
 #define MAX_VECTOR_SIZE 128
 #endif // DNN_SSE41
 
+#ifdef DNN_SSE42
+#define INSTRSET 6
+#define MAX_VECTOR_SIZE 128
+#endif // DNN_SSE42
+
 #ifdef DNN_AVX
 #define INSTRSET 7
 #define MAX_VECTOR_SIZE 256
