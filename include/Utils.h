@@ -168,7 +168,7 @@ namespace dnn
 	static const auto tab = std::string("\t");
 	static const auto dtab = std::string("\t\t");
 	
-	constexpr auto PlainFmt = dnnl::memory::format_tag::nchw;
+	
 #if defined(DNN_AVX512BW) || defined(DNN_AVX512)
 	typedef Vec16f VecFloat;
 	typedef Vec16fb VecFloatBool;
@@ -189,6 +189,7 @@ namespace dnn
 	constexpr auto DivUp(const UInt& c) noexcept { return (((c - 1) / VectorSize) + 1) * VectorSize; }
 	constexpr auto IsPlainDataFmt(const dnnl::memory::desc& md) noexcept { return md.data.format_kind == dnnl_blocked && md.data.format_desc.blocking.inner_nblks == 0; }
 	constexpr auto IsBlockedDataFmt(const dnnl::memory::desc& md) noexcept { return md.data.format_kind == dnnl_blocked && md.data.format_desc.blocking.inner_nblks == 1 && md.data.format_desc.blocking.inner_idxs[0] == 1 && (md.data.format_desc.blocking.inner_blks[0] == 4 || md.data.format_desc.blocking.inner_blks[0] == 8 || md.data.format_desc.blocking.inner_blks[0] == 16); }
+	constexpr auto PlainFmt = dnnl::memory::format_tag::nchw;
 
 	constexpr auto GetDataFmt(const dnnl::memory::desc& md) noexcept
 	{
