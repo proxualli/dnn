@@ -609,6 +609,10 @@ namespace dnn
 							case LayerTypes::GlobalMaxPooling:
 								model->Layers.push_back(std::make_unique<GlobalMaxPooling>(model->Device, model->Format, name, inputs));
 								break;
+							case LayerTypes::LayerNorm:
+								model->Layers.push_back(std::make_unique<LayerNorm>(model->Device, model->Format, name, inputs, scaling, momentum, eps, biases));
+								model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesScale, biasesLRM, biasesWDM);
+								break;
 							case LayerTypes::LocalResponseNormalization:
 								model->Layers.push_back(std::make_unique<LocalResponseNormalization>(model->Device, model->Format, name, inputs, acrossChannels, localSize, alpha, beta, k));
 								break;
@@ -790,14 +794,14 @@ namespace dnn
 						msg = CheckMsg(line, col, "First Dim (Channels) value must be 1 or 3.");
 						goto FAIL;
 					}
-					if (values[1] < 28 || values[1] > 512)
+					if (values[1] < 28 || values[1] > 4096)
 					{
-						msg = CheckMsg(line, col, "Second Dim (Height) value must be in the range [28-512].");
+						msg = CheckMsg(line, col, "Second Dim (Height) value must be in the range [28-4096].");
 						goto FAIL;
 					}
-					if (values[2] < 28 || values[2] > 512)
+					if (values[2] < 28 || values[2] > 4096)
 					{
-						msg = CheckMsg(line, col, "Third Dim (Width) value must be in the range [28-512].");
+						msg = CheckMsg(line, col, "Third Dim (Width) value must be in the range [28-4096].");
 					}
 
 					model->SampleC = values[0];
@@ -976,6 +980,7 @@ namespace dnn
 						case LayerTypes::BatchNormReluDropout:
 						case LayerTypes::BatchNormSwish:
 						case LayerTypes::BatchNormSwishDropout:
+						case LayerTypes::LayerNorm:
 							isNormalizationLayer = true;
 							break;
 						default:

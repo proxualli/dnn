@@ -238,6 +238,7 @@ extern "C" DNN_API void DNNGetImage(const UInt layerIndex, const Byte fillColor,
 			case LayerTypes::Dense:
 			case LayerTypes::DepthwiseConvolution:
 			case LayerTypes::PartialDepthwiseConvolution:
+			case LayerTypes::LayerNorm:
 			{
 				auto img = model->Layers[layerIndex]->GetImage(fillColor);
 				std::memcpy(image, img.data(), img.size());
@@ -858,6 +859,14 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, UInt* inputsCount
 				*dilationH = conv->DilationH;
 				*dilationW = conv->DilationW;
 			}
+		}
+		break;
+
+		case LayerTypes::LayerNorm:
+		{
+			auto ln = dynamic_cast<LayerNorm*>(model->Layers[layerIndex].get());
+			if (ln)
+				*scaling = ln->Scaling;
 		}
 		break;
 
