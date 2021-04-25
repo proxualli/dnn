@@ -22,7 +22,6 @@ namespace dnn
 		std::unique_ptr<dnnl::binary> bwdAdd;
 #endif
 		
-
 		bool reorderFwdSrc;
 		bool reorderBwdSrc;
 		bool reorderBwdDiffSrc;
@@ -118,7 +117,7 @@ namespace dnn
 
 			if (*WeightsMemDesc != fwdDesc->weights_desc())
 			{
-				auto weights = FloatVector(fwdDesc->weights_desc().get_size());
+				auto weights = FloatVector(fwdDesc->weights_desc().get_size() / sizeof(Float));
 				auto memWeights = dnnl::memory(*WeightsMemDesc, Device.engine, Weights.data());
 				auto weightsMem = dnnl::memory(fwdDesc->weights_desc(), Device.engine, weights.data());
 
@@ -272,7 +271,7 @@ namespace dnn
 			FloatVector weights;
 			if (*WeightsMemDesc != *PersistWeightsMemDesc)
 			{
-				weights = FloatVector(WeightsMemDesc->get_size());
+				weights = FloatVector(WeightsMemDesc->get_size() / sizeof(Float));
 
 				auto memWeights = dnnl::memory(*WeightsMemDesc, Device.engine, Weights.data());
 				auto weightsMem = dnnl::memory(*PersistWeightsMemDesc, Device.engine, weights.data());

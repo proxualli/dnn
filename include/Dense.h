@@ -96,7 +96,7 @@ namespace dnn
 
 			if (*WeightsMemDesc != fwdDesc->weights_desc())
 			{
-				auto weights = FloatVector(fwdDesc->weights_desc().get_size(), Float(0));
+				auto weights = FloatVector(fwdDesc->weights_desc().get_size() / sizeof(Float), Float(0));
 				auto memWeights = dnnl::memory(*WeightsMemDesc, Device.engine, Weights.data());
 				auto weightsMem = dnnl::memory(fwdDesc->weights_desc(), Device.engine, weights.data());
 
@@ -248,7 +248,7 @@ namespace dnn
 			FloatVector weights;
 			if (*WeightsMemDesc != *PersistWeightsMemDesc)
 			{
-				weights = FloatVector(WeightsMemDesc->get_size());
+				weights = FloatVector(WeightsMemDesc->get_size() / sizeof(Float));
 
 				auto memWeights = dnnl::memory(*WeightsMemDesc, Device.engine, Weights.data());
 				auto weightsMem = dnnl::memory(*PersistWeightsMemDesc, Device.engine, weights.data());

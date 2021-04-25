@@ -789,15 +789,15 @@ namespace dnn
 		{
 			if (HasWeights)
 			{
-				WeightsD1.resize(WeightsMemDesc->get_size(), Float(0));
+				WeightsD1.resize(WeightsMemDesc->get_size() / sizeof(Float), Float(0));
 
 				switch (optimizer)
 				{
 				case Optimizers::AdaDelta:
 				case Optimizers::Adam:
 				case Optimizers::Adamax:
-					WeightsPar1 = FloatVector(WeightsMemDesc->get_size(), Float(0));
-					WeightsPar2 = FloatVector(WeightsMemDesc->get_size(), Float(0));
+					WeightsPar1 = FloatVector(WeightsMemDesc->get_size() / sizeof(Float), Float(0));
+					WeightsPar2 = FloatVector(WeightsMemDesc->get_size() / sizeof(Float), Float(0));
 					if (HasBias)
 					{
 						BiasesPar1 = FloatVector(BiasCount, Float(0));
@@ -811,7 +811,7 @@ namespace dnn
 				case Optimizers::NAG:
 				case Optimizers::RMSProp:
 				case Optimizers::SGDMomentum:
-					WeightsPar1 = FloatVector(WeightsMemDesc->get_size(), Float(0));
+					WeightsPar1 = FloatVector(WeightsMemDesc->get_size() / sizeof(Float), Float(0));
 					WeightsPar2.resize(0);
 					if (HasBias)
 					{
@@ -837,7 +837,7 @@ namespace dnn
 		{
 			if (HasWeights)
 			{
-				WeightsD1.resize(WeightsMemDesc->get_size(), Float(0));
+				WeightsD1.resize(WeightsMemDesc->get_size() / sizeof(Float), Float(0));
 
 				if (HasBias)
 					BiasesD1.resize(BiasCount, Float(0));
@@ -847,8 +847,8 @@ namespace dnn
 				case Optimizers::AdaDelta:
 				case Optimizers::Adam:
 				case Optimizers::Adamax:
-					WeightsPar1.resize(WeightsMemDesc->get_size(), Float(0));
-					WeightsPar2.resize(WeightsMemDesc->get_size(), Float(0));
+					WeightsPar1.resize(WeightsMemDesc->get_size() / sizeof(Float), Float(0));
+					WeightsPar2.resize(WeightsMemDesc->get_size() / sizeof(Float), Float(0));
 					if (HasBias)
 					{
 						BiasesPar1.resize(BiasCount, Float(0));
@@ -860,7 +860,7 @@ namespace dnn
 				case Optimizers::NAG:
 				case Optimizers::RMSProp:
 				case Optimizers::SGDMomentum:
-					WeightsPar1.resize(WeightsMemDesc->get_size(), Float(0));
+					WeightsPar1.resize(WeightsMemDesc->get_size() / sizeof(Float), Float(0));
 					WeightsPar2.resize(0);
 					if (HasBias)
 					{
@@ -982,8 +982,8 @@ namespace dnn
 
 				if (*PersistWeightsMemDesc != *WeightsMemDesc)
 				{
-					Weights.resize(WeightsMemDesc->get_size());
-					WeightsD1.resize(WeightsMemDesc->get_size());
+					Weights.resize(WeightsMemDesc->get_size() / sizeof(Float));
+					WeightsD1.resize(WeightsMemDesc->get_size() / sizeof(Float));
 
 					auto memWeights = dnnl::memory(*PersistWeightsMemDesc, Device.engine, weights.data());
 					auto weightsMem = dnnl::memory(*WeightsMemDesc, Device.engine, Weights.data());
