@@ -27,6 +27,7 @@ namespace dnn
 		const Float Eps;
 		const Float Momentum;
 		const Float OneMinusMomentum;
+		const UInt DHW;
 
 		FloatVector Mean;
 		FloatVector RunningMean;
@@ -36,6 +37,7 @@ namespace dnn
 
 		LayerNorm(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const bool scaling = true, const Float momentum = Float(0.99), const Float eps = Float(1e-04), const bool hasBias = true) :
 			Layer(device, format, name, LayerTypes::BatchNorm, inputs[0]->C, inputs[0]->C, inputs[0]->C, inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs, hasBias, scaling),
+			DHW(D * H * W),
 			Eps(eps),
 			Momentum(momentum),
 			OneMinusMomentum(Float(1) - momentum),
@@ -47,11 +49,11 @@ namespace dnn
 		{
 			assert(Inputs.size() == 1);
 
-			Mean = FloatVector(PaddedC, Float(0));
-			RunningMean = FloatVector(PaddedC, Float(0));
-			Variance = FloatVector(PaddedC, Float(1));
-			RunningVariance = FloatVector(PaddedC, Float(1));
-			InvStdDev = FloatVector(PaddedC);
+			Mean = FloatVector(DHW, Float(0));
+			RunningMean = FloatVector(DHW, Float(0));
+			Variance = FloatVector(DHW, Float(1));
+			RunningVariance = FloatVector(DHW, Float(1));
+			InvStdDev = FloatVector(DHW);
 
 			if (Scaling)
 			{
@@ -76,13 +78,13 @@ namespace dnn
 
 			auto mean = Float(0);
 			auto variance = Float(0);
-			for (auto c = 0ull; c < C; c++)
+			for (auto e = 0ull; e < DHW; e++)
 			{
-				mean += RunningMean[c];
-				variance += RunningVariance[c];
+				mean += RunningMean[e];
+				variance += RunningVariance[e];
 			}
-			mean /= C;
-			variance /= C;
+			mean /= DHW;
+			variance /= DHW;
 
 			description.append(nwl + std::string(" Mean:") + dtab + FloatToStringFixed(mean));
 			description.append(nwl + std::string(" Variance:") + tab + FloatToStringFixed(variance));
@@ -245,11 +247,11 @@ namespace dnn
 #endif
 				Device.stream.wait();
 
-				const Float unbiasedFactor = Float(batchSize * HW) / Float(batchSize * HW - 1);
-				for (auto c = 0ull; c < C; c++)
+				const Float unbiasedFactor = Float(batchSize * C) / Float(batchSize * C - 1);
+				for (auto e = 0ull; e < DHW; e++)
 				{
-					RunningMean[c] = (Momentum * RunningMean[c]) + (OneMinusMomentum * Mean[c]);
-					RunningVariance[c] = (Momentum * RunningVariance[c]) + (OneMinusMomentum * Variance[c] * unbiasedFactor);
+					RunningMean[e] = (Momentum * RunningMean[e]) + (OneMinusMomentum * Mean[e]);
+					RunningVariance[e] = (Momentum * RunningVariance[e]) + (OneMinusMomentum * Variance[e] * unbiasedFactor);
 				}
 
 #ifndef DNN_LEAN
