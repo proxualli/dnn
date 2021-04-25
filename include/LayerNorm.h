@@ -27,16 +27,12 @@ namespace dnn
 		const Float Eps;
 		const Float Momentum;
 		const Float OneMinusMomentum;
-		const UInt DHW;
-
+		
 		FloatVector Mean;
-		//FloatVector RunningMean;
 		FloatVector Variance;
-		//FloatVector RunningVariance;
-
+		
 		LayerNorm(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const bool scaling = true, const Float momentum = Float(0.99), const Float eps = Float(1e-04), const bool hasBias = true) :
 			Layer(device, format, name, LayerTypes::BatchNorm, inputs[0]->C, inputs[0]->C, inputs[0]->C, inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs, hasBias, scaling),
-			DHW(D * H * W),
 			Eps(eps),
 			Momentum(momentum),
 			OneMinusMomentum(Float(1) - momentum),
@@ -48,11 +44,9 @@ namespace dnn
 		{
 			assert(Inputs.size() == 1);
 
-			Mean = FloatVector(DHW, Float(0));
-			//RunningMean = FloatVector(DHW, Float(0));
-			Variance = FloatVector(DHW, Float(1));
-			//RunningVariance = FloatVector(DHW, Float(1));
-
+			Mean = FloatVector(1, Float(0));
+			Variance = FloatVector(1, Float(1));
+			
 			if (Scaling)
 			{
 				ScaleShift = FloatVector(2 * PaddedC, Float(1));
@@ -74,20 +68,18 @@ namespace dnn
 			description.append(nwl + std::string(" Momentum:") + tab + FloatToString(Momentum));
 			description.append(nwl + std::string(" Eps:") + dtab + FloatToStringScientific(Eps));
 
-			/*
 			auto mean = Float(0);
 			auto variance = Float(0);
-			for (auto e = 0ull; e < DHW; e++)
+			for (auto e = 0ull; e < Mean.size(); e++)
 			{
 				mean += Mean[e];
 				variance += Variance[e];
 			}
-			mean /= DHW;
-			variance /= DHW;
-			*/
-
-			//description.append(nwl + std::string(" Mean:") + dtab + FloatToStringFixed(mean));
-			//description.append(nwl + std::string(" Variance:") + tab + FloatToStringFixed(variance));
+			mean /= Mean.size();
+			variance /= Mean.size();
+			
+			description.append(nwl + std::string(" Mean:") + dtab + FloatToStringFixed(mean));
+			description.append(nwl + std::string(" Variance:") + tab + FloatToStringFixed(variance));
 
 			return description;
 		}
@@ -100,17 +92,6 @@ namespace dnn
 		UInt FanOut() const final override
 		{
 			return 1;
-		}
-
-
-		void SetBatchSize(const UInt batchSize) final override
-		{
-			Layer::SetBatchSize(batchSize);
-			
-			Mean = FloatVector(DHW * batchSize, Float(0));
-			//RunningMean = FloatVector(DHW * batchSize, Float(0));
-			Variance = FloatVector(DHW * batchSize, Float(1));
-			//RunningVariance = FloatVector(DHW * batchSize, Float(1));
 		}
 
 		void InitializeDescriptors(const UInt batchSize) final override
@@ -143,6 +124,9 @@ namespace dnn
 				Flags = Scaling ? dnnl::normalization_flags::use_scale_shift : static_cast<dnnl::normalization_flags>(0U);
 
 			fwdDesc = std::make_unique<dnnl::layer_normalization_forward::primitive_desc>(dnnl::layer_normalization_forward::primitive_desc(dnnl::layer_normalization_forward::desc(inference ? dnnl::prop_kind::forward_inference : dnnl::prop_kind::forward_training, *DstMemDesc, Eps, Flags), Device.engine));
+
+			Mean = FloatVector(fwdDesc->mean_desc().get_size() / sizeof(Float), Float(0));
+			Variance = FloatVector(fwdDesc->variance_desc().get_size() / sizeof(Float), Float(1));
 
 			reorderFwdSrc = fwdDesc->src_desc() != *InputLayer->DstMemDesc;
 
@@ -258,14 +242,6 @@ namespace dnn
 #endif
 				Device.stream.wait();
 
-				/*
-				const Float unbiasedFactor = Float(batchSize * C) / Float(batchSize * C - 1);
-				for (auto e = 0ull; e < DHW; e++)
-				{
-					RunningMean[e] = (Momentum * RunningMean[e]) + (OneMinusMomentum * Mean[e]);
-					RunningVariance[e] = (Momentum * RunningVariance[e]) + (OneMinusMomentum * Variance[e] * unbiasedFactor);
-				}
-				*/
 #ifndef DNN_LEAN
 				ZeroFloatVector(NeuronsD1.data(), batchSize * PaddedCDHW);
 #else
@@ -386,9 +362,6 @@ namespace dnn
 			Weights = FloatVector(PaddedC, Float(1));
 			Biases = FloatVector(PaddedC, Float(0));
 
-			//RunningMean = FloatVector(PaddedC, Float(0));
-			//RunningVariance = FloatVector(PaddedC, Float(1));
-
 			DNN_UNREF_PAR(weightFiller);
 			DNN_UNREF_PAR(weightFillerScale);
 			DNN_UNREF_PAR(biasFiller);
@@ -397,9 +370,6 @@ namespace dnn
 
 		void Save(std::ostream& os, const bool persistOptimizer = false, const Optimizers optimizer = Optimizers::SGD) override
 		{
-			//os.write(reinterpret_cast<const char*>(RunningMean.data()), std::streamsize(DHW * sizeof(Float)));
-			//os.write(reinterpret_cast<const char*>(RunningVariance.data()), std::streamsize(DHW * sizeof(Float)));
-
 			if (Scaling)
 			{
 				for (auto c = 0ull; c < C; c++)
@@ -414,9 +384,6 @@ namespace dnn
 
 		void Load(std::istream& is, const bool persistOptimizer = false, const Optimizers optimizer = Optimizers::SGD) override
 		{
-			//is.read(reinterpret_cast<char*>(RunningMean.data()), std::streamsize(DHW * sizeof(Float)));
-			//is.read(reinterpret_cast<char*>(RunningVariance.data()), std::streamsize(DHW * sizeof(Float)));
-
 			Layer::Load(is, persistOptimizer, optimizer);
 			
 			if (Scaling)
