@@ -17,7 +17,6 @@ namespace dnn
 #endif
 		FloatVector ScaleShift;
 		FloatVector DiffScaleShift;
-
 		bool inference;
 		bool reorderFwdSrc;
 		bool reorderBwdSrc;
@@ -25,17 +24,12 @@ namespace dnn
 
 	public:
 		const Float Eps;
-		const Float Momentum;
-		const Float OneMinusMomentum;
-		
 		FloatVector Mean;
 		FloatVector Variance;
 		
-		LayerNorm(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const bool scaling = true, const Float momentum = Float(0.99), const Float eps = Float(1e-04), const bool hasBias = true) :
+		LayerNorm(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const bool scaling = true, const Float eps = Float(1e-04), const bool hasBias = true) :
 			Layer(device, format, name, LayerTypes::LayerNorm, inputs[0]->C, inputs[0]->C, inputs[0]->C, inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs, hasBias, scaling),
 			Eps(eps),
-			Momentum(momentum),
-			OneMinusMomentum(Float(1) - momentum),
 			Flags(static_cast<dnnl::normalization_flags>(0U)),
 			inference(false),
 			reorderFwdSrc(false),
@@ -64,9 +58,6 @@ namespace dnn
 		std::string GetDescription() const final override
 		{
 			auto description = GetDescriptionHeader() + GetWeightsDescription(Scaling);
-
-			description.append(nwl + std::string(" Momentum:") + tab + FloatToString(Momentum));
-			description.append(nwl + std::string(" Eps:") + dtab + FloatToStringScientific(Eps));
 
 			auto mean = Float(0);
 			auto variance = Float(0);
@@ -394,11 +385,6 @@ namespace dnn
 					ScaleShift[C + c] = Biases[c];
 				}
 			}
-		}
-		
-		std::streamsize GetWeightsSize(const bool persistOptimizer = false, const Optimizers optimizer = Optimizers::SGD) const override
-		{
-			return Layer::GetWeightsSize(persistOptimizer, optimizer);
 		}
 	};
 }

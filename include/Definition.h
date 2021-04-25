@@ -610,7 +610,7 @@ namespace dnn
 								model->Layers.push_back(std::make_unique<GlobalMaxPooling>(model->Device, model->Format, name, inputs));
 								break;
 							case LayerTypes::LayerNorm:
-								model->Layers.push_back(std::make_unique<LayerNorm>(model->Device, model->Format, name, inputs, scaling, momentum, eps, biases));
+								model->Layers.push_back(std::make_unique<LayerNorm>(model->Device, model->Format, name, inputs, scaling, eps, biases));
 								model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesScale, biasesLRM, biasesWDM);
 								break;
 							case LayerTypes::LocalResponseNormalization:
