@@ -40,7 +40,7 @@ namespace dnn
 		Float ColorCast;
 		UInt ColorAngle;
 		Float Distortion;
-		Interpolation Interpolation;
+		dnn::Interpolation Interpolation;
 		Float Scaling;
 		Float Rotation;
 	
