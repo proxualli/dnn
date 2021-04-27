@@ -14,14 +14,14 @@ namespace dnn
 	constexpr auto FloatLevel(const int level, const Float minValue = Float(0.1), const Float maxValue = Float(1.9)) noexcept { return (Float(level) * (maxValue - minValue) / MaximumLevels) + minValue; }
 	constexpr auto IntLevel(const int level, const int minValue = 0, const int maxValue = MaximumLevels) noexcept { return (level * (maxValue - minValue) / MaximumLevels) + minValue; }
 
-	enum class Interpolation
+	enum class Interpolations
 	{
 		Cubic = 0,
 		Linear = 1,
 		Nearest = 2
 	};
 
-	enum class Position
+	enum class Positions
 	{
 		TopLeft = 0,
 		TopRight = 1,
@@ -178,9 +178,9 @@ namespace dnn
 				if (Bernoulli<bool>(Float(0.7)))
 				{
 					if (Bernoulli<bool>())
-						dstImage = Rotate(dstImage, FloatLevel(2, 0, 20), Interpolation::Cubic, mean);
+						dstImage = Rotate(dstImage, FloatLevel(2, 0, 20), Interpolations::Cubic, mean);
 					else
-						dstImage = Rotate(dstImage, -FloatLevel(2, 0, 20), Interpolation::Cubic, mean);
+						dstImage = Rotate(dstImage, -FloatLevel(2, 0, 20), Interpolations::Cubic, mean);
 				}
 
 				if (Bernoulli<bool>(Float(0.3)))
@@ -218,9 +218,9 @@ namespace dnn
 				if (Bernoulli<bool>())
 				{
 					if (Bernoulli<bool>())
-						dstImage = Rotate(dstImage, FloatLevel(6, 0, 20), Interpolation::Cubic, mean);
+						dstImage = Rotate(dstImage, FloatLevel(6, 0, 20), Interpolations::Cubic, mean);
 					else
-						dstImage = Rotate(dstImage, -FloatLevel(6, 0, 20), Interpolation::Cubic, mean);
+						dstImage = Rotate(dstImage, -FloatLevel(6, 0, 20), Interpolations::Cubic, mean);
 				}
 
 				if (Bernoulli<bool>(Float(0.7)))
@@ -248,9 +248,9 @@ namespace dnn
 				if (Bernoulli<bool>(Float(0.2)))
 				{
 					if (Bernoulli<bool>())
-						dstImage = Rotate(dstImage, FloatLevel(4, 0, 20), Interpolation::Cubic, mean);
+						dstImage = Rotate(dstImage, FloatLevel(4, 0, 20), Interpolations::Cubic, mean);
 					else
-						dstImage = Rotate(dstImage, -FloatLevel(4, 0, 20), Interpolation::Cubic, mean);
+						dstImage = Rotate(dstImage, -FloatLevel(4, 0, 20), Interpolations::Cubic, mean);
 				}
 
 				if (Bernoulli<bool>(Float(0.3)))
@@ -665,7 +665,7 @@ namespace dnn
 			return dstImage;
 		}
 
-		static Image Crop(const Image& image, const Position position, const UInt depth, const UInt height, const UInt width, const std::vector<Float>& mean)
+		static Image Crop(const Image& image, const Positions position, const UInt depth, const UInt height, const UInt width, const std::vector<Float>& mean)
 		{
 			Image dstImage(image.Channels, depth, height, width);
 
@@ -687,7 +687,7 @@ namespace dnn
 
 			switch (position)
 			{
-			case Position::Center:
+			case Positions::Center:
 			{
 				const auto srcHdelta = dstImage.Height < image.Height ? (image.Height - dstImage.Height) / 2 : 0ull;
 				const auto dstHdelta = dstImage.Height > image.Height ? (dstImage.Height - image.Height) / 2 : 0ull;
@@ -702,7 +702,7 @@ namespace dnn
 			}
 			break;
 
-			case Position::TopLeft:
+			case Positions::TopLeft:
 			{
 				for (auto c = 0ull; c < dstImage.Channels; c++)
 					for (auto d = 0ull; d < minDepth; d++)
@@ -712,7 +712,7 @@ namespace dnn
 			}
 			break;
 
-			case Position::TopRight:
+			case Positions::TopRight:
 			{
 				const auto srcWdelta = dstImage.Width < image.Width ? (image.Width - dstImage.Width) : 0ull;
 				const auto dstWdelta = dstImage.Width > image.Width ? (dstImage.Width - image.Width) : 0ull;
@@ -725,7 +725,7 @@ namespace dnn
 			}
 			break;
 
-			case Position::BottomRight:
+			case Positions::BottomRight:
 			{
 				const auto srcHdelta = dstImage.Height < image.Height ? (image.Height - dstImage.Height) : 0ull;
 				const auto dstHdelta = dstImage.Height > image.Height ? (dstImage.Height - image.Height) : 0ull;
@@ -740,7 +740,7 @@ namespace dnn
 			}
 			break;
 
-			case Position::BottomLeft:
+			case Positions::BottomLeft:
 			{
 				const auto srcHdelta = dstImage.Height < image.Height ? (image.Height - dstImage.Height) : 0ull;
 				const auto dstHdelta = dstImage.Height > image.Height ? (dstImage.Height - image.Height) : 0ull;
@@ -757,13 +757,13 @@ namespace dnn
 			return dstImage;
 		}
 
-		static Image Distorted(const Image& image, const Float scale, const Float angle, const Interpolation interpolation, const std::vector<Float>& mean)
+		static Image Distorted(const Image& image, const Float scale, const Float angle, const Interpolations interpolation, const std::vector<Float>& mean)
 		{
 			const auto zoom = scale / Float(100) * UniformReal<Float>( Float(-1), Float(1));
 			const auto height = image.Height + int(std::round(Float(image.Height) * zoom));
 			const auto width = image.Width + int(std::round(Float(image.Width) * zoom));
 
-			return Image::Crop(Image::Rotate(Image::Resize(image, image.Depth, height, width, interpolation), angle * UniformReal<Float>( Float(-1), Float(1)), interpolation, mean), Position::Center, image.Depth, image.Height, image.Width, mean);
+			return Image::Crop(Image::Rotate(Image::Resize(image, image.Depth, height, width, interpolation), angle * UniformReal<Float>( Float(-1), Float(1)), interpolation, mean), Positions::Center, image.Depth, image.Height, image.Width, mean);
 		}
 
 		static Image Dropout(const Image& image, const Float dropout, const std::vector<Float>& mean)
@@ -1076,19 +1076,19 @@ namespace dnn
 			return dstImage;
 		}
 
-		static Image Resize(const Image& image, const UInt depth, const UInt height, const UInt width, const Interpolation interpolation)
+		static Image Resize(const Image& image, const UInt depth, const UInt height, const UInt width, const Interpolations interpolation)
 		{
 			auto srcImage = ImageToCImg(image);
 
 			switch (interpolation)
 			{
-			case Interpolation::Cubic:
+			case Interpolations::Cubic:
 				srcImage.resize(int(width), int(height), int(depth), int(image.Channels), 5, 0);
 				break;
-			case Interpolation::Linear:
+			case Interpolations::Linear:
 				srcImage.resize(int(width), int(height), int(depth), int(image.Channels), 3, 0);
 				break;
-			case Interpolation::Nearest:
+			case Interpolations::Nearest:
 				srcImage.resize(int(width), int(height), int(depth), int(image.Channels), 1, 0);
 				break;
 			}
@@ -1098,26 +1098,26 @@ namespace dnn
 			return dstImage;
 		}
 
-		static Image Rotate(const Image& image, const Float angle, const Interpolation interpolation, const std::vector<Float>& mean)
+		static Image Rotate(const Image& image, const Float angle, const Interpolations interpolation, const std::vector<Float>& mean)
 		{
 			auto srcImage = ImageToCImg(ZeroPad(image, image.Depth / 2, image.Height / 2, image.Width / 2, mean));
 
 			switch (interpolation)
 			{
-			case Interpolation::Cubic:
+			case Interpolations::Cubic:
 				srcImage.rotate(angle, 2, 0);
 				break;
-			case Interpolation::Linear:
+			case Interpolations::Linear:
 				srcImage.rotate(angle, 1, 0);
 				break;
-			case Interpolation::Nearest:
+			case Interpolations::Nearest:
 				srcImage.rotate(angle, 0, 0);
 				break;
 			}
 			
 			auto dstImage = CImgToImage(srcImage);
 
-			return Crop(dstImage, Position::Center, image.Depth, image.Height, image.Width, mean);
+			return Crop(dstImage, Positions::Center, image.Depth, image.Height, image.Width, mean);
 		}
 			
 		// magnitude = 0   // blurred image

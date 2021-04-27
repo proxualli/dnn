@@ -40,7 +40,7 @@ namespace dnn
 		Float ColorCast;
 		UInt ColorAngle;
 		Float Distortion;
-		dnn::Interpolation Interpolation;
+		Interpolations Interpolation;
 		Float Scaling;
 		Float Rotation;
 	
@@ -66,13 +66,13 @@ namespace dnn
 			ColorCast(Float(0)),
 			ColorAngle(0),
 			Distortion(Float(0)),
-			Interpolation(Interpolation::Cubic),
+			Interpolation(Interpolations::Cubic),
 			Scaling(Float(10.0)),
 			Rotation(Float(10.0))			
 		{
 		}
 
-		TrainingRate(const Optimizers optimizer, const Float momentum, const Float beta2, const Float l2Penalty, const Float eps, const UInt batchSize, const UInt cycles, const UInt epochs, const UInt epochMultiplier, const Float maximumRate, const Float minimumRate, const UInt decayAfterEpochs, const Float decayFactor, const bool horizontalFlip, const bool verticalFlip, const Float dropout, const Float cutout, const Float autoAugment, const Float colorCast, const UInt colorAngle, const Float distortion, const dnn::Interpolation interpolation, const Float scaling, const Float rotation) :
+		TrainingRate(const Optimizers optimizer, const Float momentum, const Float beta2, const Float l2Penalty, const Float eps, const UInt batchSize, const UInt cycles, const UInt epochs, const UInt epochMultiplier, const Float maximumRate, const Float minimumRate, const UInt decayAfterEpochs, const Float decayFactor, const bool horizontalFlip, const bool verticalFlip, const Float dropout, const Float cutout, const Float autoAugment, const Float colorCast, const UInt colorAngle, const Float distortion, const Interpolations interpolation, const Float scaling, const Float rotation) :
 			Optimizer(optimizer),
 			Momentum(momentum),
 			Beta2(beta2),

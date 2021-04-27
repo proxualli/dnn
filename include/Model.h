@@ -1260,7 +1260,7 @@ namespace dnn
 				dstImageByte = Image<Byte>::ColorCast(dstImageByte, CurrentTrainingRate.ColorAngle);
 
 			if (dstImageByte.Depth != SampleD || dstImageByte.Height != SampleH || dstImageByte.Width != SampleW)
-				dstImageByte = Image<Byte>::Resize(dstImageByte, SampleD, SampleH, SampleW, Interpolation(CurrentTrainingRate.Interpolation));
+				dstImageByte = Image<Byte>::Resize(dstImageByte, SampleD, SampleH, SampleW, Interpolations(CurrentTrainingRate.Interpolation));
 
 			if (DataProv->C == 3 && Bernoulli<bool>(CurrentTrainingRate.AutoAugment))
 				dstImageByte = Image<Byte>::AutoAugment(dstImageByte, PadD, PadH, PadW, DataProv->Mean, MirrorPad);
@@ -1268,7 +1268,7 @@ namespace dnn
 				dstImageByte = Image<Byte>::Padding(dstImageByte, PadD, PadH, PadW, DataProv->Mean, MirrorPad);
 
 			if (Bernoulli<bool>(CurrentTrainingRate.Distortion))
-				dstImageByte = Image<Byte>::Distorted(dstImageByte, CurrentTrainingRate.Scaling, CurrentTrainingRate.Rotation, Interpolation(CurrentTrainingRate.Interpolation), DataProv->Mean);
+				dstImageByte = Image<Byte>::Distorted(dstImageByte, CurrentTrainingRate.Scaling, CurrentTrainingRate.Rotation, Interpolations(CurrentTrainingRate.Interpolation), DataProv->Mean);
 
 			if (Bernoulli<bool>(CurrentTrainingRate.Cutout))
 				dstImageByte = Image<Byte>::RandomCutout(dstImageByte, DataProv->Mean);
@@ -1300,12 +1300,12 @@ namespace dnn
 			auto dstImageByte = DataProv->TestingSamples[index];
 
 			if (dstImageByte.Depth != SampleD || dstImageByte.Height != SampleH || dstImageByte.Width != SampleW)
-				dstImageByte = Image<Byte>::Resize(dstImageByte, SampleD, SampleH, SampleW, Interpolation(CurrentTrainingRate.Interpolation));
+				dstImageByte = Image<Byte>::Resize(dstImageByte, SampleD, SampleH, SampleW, Interpolations(CurrentTrainingRate.Interpolation));
 
 			dstImageByte = Image<Byte>::Padding(dstImageByte, PadD, PadH, PadW, DataProv->Mean, MirrorPad);
 
 			if (RandomCrop)
-				dstImageByte = Image<Byte>::Crop(dstImageByte, Position::Center, SampleD, SampleH, SampleW, DataProv->Mean);
+				dstImageByte = Image<Byte>::Crop(dstImageByte, Positions::Center, SampleD, SampleH, SampleW, DataProv->Mean);
 
 			for (auto c = 0ull; c < dstImageByte.Channels; c++)
 			{
@@ -1337,7 +1337,7 @@ namespace dnn
 				dstImageByte = Image<Byte>::VerticalMirror(dstImageByte);
 
 			if (dstImageByte.Depth != SampleD || dstImageByte.Height != SampleH || dstImageByte.Width != SampleW)
-				dstImageByte = Image<Byte>::Resize(dstImageByte, SampleD, SampleH, SampleW, Interpolation(CurrentTrainingRate.Interpolation));
+				dstImageByte = Image<Byte>::Resize(dstImageByte, SampleD, SampleH, SampleW, Interpolations(CurrentTrainingRate.Interpolation));
 
 			if (DataProv->C == 3 && Bernoulli<bool>(CurrentTrainingRate.AutoAugment))
 				dstImageByte = Image<Byte>::AutoAugment(dstImageByte, PadD, PadH, PadW, DataProv->Mean, MirrorPad);
@@ -1345,13 +1345,13 @@ namespace dnn
 				dstImageByte = Image<Byte>::Padding(dstImageByte, PadD, PadH, PadW, DataProv->Mean, MirrorPad);
 
 			if (Bernoulli<bool>(CurrentTrainingRate.Distortion))
-				dstImageByte = Image<Byte>::Distorted(dstImageByte, CurrentTrainingRate.Scaling, CurrentTrainingRate.Rotation, Interpolation(CurrentTrainingRate.Interpolation), DataProv->Mean);
+				dstImageByte = Image<Byte>::Distorted(dstImageByte, CurrentTrainingRate.Scaling, CurrentTrainingRate.Rotation, Interpolations(CurrentTrainingRate.Interpolation), DataProv->Mean);
 
 			if (Bernoulli<bool>(CurrentTrainingRate.Cutout))
 				dstImageByte = Image<Byte>::RandomCutout(dstImageByte, DataProv->Mean);
 
 			if (RandomCrop)
-				dstImageByte = Image<Byte>::Crop(dstImageByte, Position::Center, SampleD, SampleH, SampleW, DataProv->Mean);
+				dstImageByte = Image<Byte>::Crop(dstImageByte, Positions::Center, SampleD, SampleH, SampleW, DataProv->Mean);
 
 			if (CurrentTrainingRate.Dropout > Float(0))
 				dstImageByte = Image<Byte>::Dropout(dstImageByte, CurrentTrainingRate.Dropout, DataProv->Mean);
@@ -1395,7 +1395,7 @@ namespace dnn
 					dstImageByte = Image<Byte>::ColorCast(dstImageByte, CurrentTrainingRate.ColorAngle);
 
 				if (resize)
-					dstImageByte = Image<Byte>::Resize(dstImageByte, SampleD, SampleH, SampleW, Interpolation(CurrentTrainingRate.Interpolation));
+					dstImageByte = Image<Byte>::Resize(dstImageByte, SampleD, SampleH, SampleW, Interpolations(CurrentTrainingRate.Interpolation));
 
 				if (DataProv->C == 3 && Bernoulli<bool>(CurrentTrainingRate.AutoAugment))
 					dstImageByte = Image<Byte>::AutoAugment(dstImageByte, PadD, PadH, PadW, DataProv->Mean, MirrorPad);
@@ -1403,7 +1403,7 @@ namespace dnn
 					dstImageByte = Image<Byte>::Padding(dstImageByte, PadD, PadH, PadW, DataProv->Mean, MirrorPad);
 
 				if (Bernoulli<bool>(CurrentTrainingRate.Distortion))
-					dstImageByte = Image<Byte>::Distorted(dstImageByte, CurrentTrainingRate.Scaling, CurrentTrainingRate.Rotation, Interpolation(CurrentTrainingRate.Interpolation), DataProv->Mean);
+					dstImageByte = Image<Byte>::Distorted(dstImageByte, CurrentTrainingRate.Scaling, CurrentTrainingRate.Rotation, Interpolations(CurrentTrainingRate.Interpolation), DataProv->Mean);
 
 				if (Bernoulli<bool>(CurrentTrainingRate.Cutout))
 					dstImageByte = Image<Byte>::RandomCutout(dstImageByte, DataProv->Mean);
@@ -1444,11 +1444,11 @@ namespace dnn
 				auto dstImageByte = DataProv->TestingSamples[sampleIndex];
 
 				if (resize)
-					dstImageByte = Image<Byte>::Resize(dstImageByte, SampleD, SampleH, SampleW, Interpolation(CurrentTrainingRate.Interpolation));
+					dstImageByte = Image<Byte>::Resize(dstImageByte, SampleD, SampleH, SampleW, Interpolations(CurrentTrainingRate.Interpolation));
 
 				dstImageByte = Image<Byte>::Padding(dstImageByte, PadD, PadH, PadW, DataProv->Mean, MirrorPad);
 
-				dstImageByte = Image<Byte>::Crop(dstImageByte, Position::Center, SampleD, SampleH, SampleW, DataProv->Mean);
+				dstImageByte = Image<Byte>::Crop(dstImageByte, Positions::Center, SampleD, SampleH, SampleW, DataProv->Mean);
 
 				for (auto c = 0ull; c < dstImageByte.Channels; c++)
 				{
@@ -1489,7 +1489,7 @@ namespace dnn
 					dstImageByte = Image<Byte>::VerticalMirror(dstImageByte);
 
 				if (resize)
-					dstImageByte = Image<Byte>::Resize(dstImageByte, SampleD, SampleH, SampleW, Interpolation(CurrentTrainingRate.Interpolation));
+					dstImageByte = Image<Byte>::Resize(dstImageByte, SampleD, SampleH, SampleW, Interpolations(CurrentTrainingRate.Interpolation));
 
 				if (DataProv->C == 3 && Bernoulli<bool>(CurrentTrainingRate.AutoAugment))
 					dstImageByte = Image<Byte>::AutoAugment(dstImageByte, PadD, PadH, PadW, DataProv->Mean, MirrorPad);
@@ -1497,13 +1497,13 @@ namespace dnn
 					dstImageByte = Image<Byte>::Padding(dstImageByte, PadD, PadH, PadW, DataProv->Mean, MirrorPad);
 
 				if (Bernoulli<bool>(CurrentTrainingRate.Distortion))
-					dstImageByte = Image<Byte>::Distorted(dstImageByte, CurrentTrainingRate.Scaling, CurrentTrainingRate.Rotation, Interpolation(CurrentTrainingRate.Interpolation), DataProv->Mean);
+					dstImageByte = Image<Byte>::Distorted(dstImageByte, CurrentTrainingRate.Scaling, CurrentTrainingRate.Rotation, Interpolations(CurrentTrainingRate.Interpolation), DataProv->Mean);
 
 				if (Bernoulli<bool>(CurrentTrainingRate.Cutout))
 					dstImageByte = Image<Byte>::RandomCutout(dstImageByte, DataProv->Mean);
 
 				if (RandomCrop)
-					dstImageByte = Image<Byte>::Crop(dstImageByte, Position::Center, SampleD, SampleH, SampleW, DataProv->Mean);
+					dstImageByte = Image<Byte>::Crop(dstImageByte, Positions::Center, SampleD, SampleH, SampleW, DataProv->Mean);
 
 				if (CurrentTrainingRate.Dropout > Float(0))
 					dstImageByte = Image<Byte>::Dropout(dstImageByte, CurrentTrainingRate.Dropout, DataProv->Mean);

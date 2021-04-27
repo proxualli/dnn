@@ -17,6 +17,7 @@ namespace dnn
 #endif
 		FloatVector ScaleShift;
 		FloatVector DiffScaleShift;
+
 		bool inference;
 		bool reorderFwdSrc;
 		bool reorderBwdSrc;
@@ -27,7 +28,7 @@ namespace dnn
 		FloatVector Mean;
 		FloatVector Variance;
 		
-		LayerNorm(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const bool scaling = true, const Float eps = Float(1e-04), const bool hasBias = true) :
+		LayerNorm(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const bool scaling = true, const Float eps = Float(1e-06), const bool hasBias = true) :
 			Layer(device, format, name, LayerTypes::LayerNorm, inputs[0]->C, inputs[0]->C, inputs[0]->C, inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs, hasBias, scaling),
 			Eps(eps),
 			Flags(static_cast<dnnl::normalization_flags>(0U)),
@@ -167,7 +168,6 @@ namespace dnn
 
 				auto memMean = dnnl::memory(fwdDesc->mean_desc(), Device.engine, Mean.data());
 				auto memVariance = dnnl::memory(fwdDesc->variance_desc(), Device.engine, Variance.data());
-
 				auto dstMem = dnnl::memory(*DstMemDesc, Device.engine, Neurons.data());
 
 				if (Scaling)
