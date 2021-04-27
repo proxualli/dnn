@@ -1066,7 +1066,7 @@ namespace dnn
 							// save the weights
 							State.store(States::SaveWeights);
 							auto directory = DataProv->StorageDirectory / std::string("definitions") / (Name + std::string("-weights"));
-							auto fileName = (directory / (std::to_string(CurrentCycle) + std::string("-") + std::to_string(CurrentEpoch) + std::string("-") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(Optimizer))) + std::string("-") + std::to_string(TestErrors) + std::string(".bin"))).string();
+							auto fileName = (directory / (std::to_string(CurrentEpoch) + std::string("-") + std::to_string(CurrentCycle) + std::string("-") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(Optimizer))) + std::string("-") + std::to_string(TestErrors) + std::string(".bin"))).string();
 
 							std::filesystem::create_directories(directory);
 							SaveWeights(fileName, PersistOptimizer);
