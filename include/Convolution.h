@@ -145,9 +145,9 @@ namespace dnn
 			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(fwdDesc->dst_desc());
 
 			if (Format == dnnl::memory::format_tag::any)
-				chosenFormat = GetDataFmt(*DstMemDesc);
+				ChosenFormat = GetDataFmt(*DstMemDesc);
 			else
-				chosenFormat = PlainFmt;
+				ChosenFormat = PlainFmt;
 
 			if (*WeightsMemDesc != fwdDesc->weights_desc())
 			{

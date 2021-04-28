@@ -197,7 +197,7 @@ namespace dnn
 	{
 	protected:
 		dnn::Device Device;
-		dnnl::memory::format_tag chosenFormat;
+		dnnl::memory::format_tag ChosenFormat;
 		std::mt19937 RandomEngine;
 		
 	public:
@@ -239,10 +239,10 @@ namespace dnn
 		FloatVector NeuronsD1;
 		FloatVector Weights;
 		FloatVector WeightsD1;
-		FloatVector Biases;
-		FloatVector BiasesD1;
 		FloatVector WeightsPar1;
 		FloatVector WeightsPar2;
+		FloatVector Biases;
+		FloatVector BiasesD1;
 		FloatVector BiasesPar1;
 		FloatVector BiasesPar2;
 		Float B1;
@@ -318,7 +318,7 @@ namespace dnn
 			bpropTime(std::chrono::duration<Float>(Float(0))),
 			updateTime(std::chrono::duration<Float>(Float(0)))
 		{
-			chosenFormat = format;
+			ChosenFormat = format;
 		}
 
 		virtual ~Layer() = default;
@@ -338,7 +338,7 @@ namespace dnn
 
 		bool IsPlainFormat() const 
 		{ 
-			return chosenFormat == dnnl::memory::format_tag::ab || chosenFormat == dnnl::memory::format_tag::abc || chosenFormat == dnnl::memory::format_tag::abcd || chosenFormat == dnnl::memory::format_tag::abcde; 
+			return ChosenFormat == dnnl::memory::format_tag::ab || ChosenFormat == dnnl::memory::format_tag::abc || ChosenFormat == dnnl::memory::format_tag::abcd || ChosenFormat == dnnl::memory::format_tag::abcde; 
 		}
 
 		bool IsBatchNorm() const 
@@ -361,7 +361,7 @@ namespace dnn
 
 			description.append(nwl + std::string(" Features:") + tab + std::to_string(C) + std::string("x") + std::to_string(H) + std::string("x") + std::to_string(W));
 			description.append(nwl + std::string(" Neurons:") + tab + std::to_string(CDHW));
-			description.append(nwl + std::string(" Format:") + tab + std::string(dnnl_fmt_tag2str(static_cast<dnnl_format_tag_t>(chosenFormat))));
+			description.append(nwl + std::string(" Format:") + tab + std::string(dnnl_fmt_tag2str(static_cast<dnnl_format_tag_t>(ChosenFormat))));
 
 			return description;
 		}

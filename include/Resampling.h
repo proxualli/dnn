@@ -84,9 +84,9 @@ namespace dnn
 			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(fwdDesc->dst_desc());
 
 			if (Format == dnnl::memory::format_tag::any)
-				chosenFormat = GetDataFmt(*DstMemDesc);
+				ChosenFormat = GetDataFmt(*DstMemDesc);
 			else
-				chosenFormat = PlainFmt;
+				ChosenFormat = PlainFmt;
 
 			bwdDesc = std::make_unique<dnnl::resampling_backward::primitive_desc>(dnnl::resampling_backward::primitive_desc(dnnl::resampling_backward::desc(algorithm, factor, memDesc[0], *DiffDstMemDesc), Device.engine, *fwdDesc));
 			bwdAddDesc = std::make_unique<dnnl::binary::primitive_desc>(dnnl::binary::primitive_desc(dnnl::binary::desc(dnnl::algorithm::binary_add, *InputLayer->DiffDstMemDesc, *InputLayer->DiffDstMemDesc, *InputLayer->DiffDstMemDesc), Device.engine));

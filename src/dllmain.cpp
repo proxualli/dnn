@@ -1,5 +1,11 @@
 #include "Definition.h"
 
+using namespace dnn;
+
+std::unique_ptr<dnn::Model> model;
+std::unique_ptr<dnn::Dataprovider> dataprovider;
+
+
 #ifdef DNN_DLL
 #if defined _WIN32 || defined __CYGWIN__ || defined __MINGW32__
 #if defined DNN_LOG 
@@ -55,10 +61,6 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
 #define DNN_API
 #endif
 
-using namespace dnn;
-
-std::unique_ptr<dnn::Model> model;
-std::unique_ptr<dnn::Dataprovider> dataprovider;
 
 extern "C" DNN_API void DNNSetNewEpochDelegate(void(*newEpoch)(UInt, UInt, UInt, UInt, Float, Float, bool, bool, Float, Float, Float, Float, UInt, Float, UInt, Float, Float, Float, UInt, Float, Float, Float, Float, Float, UInt, Float, Float, Float, UInt))
 {																	     
