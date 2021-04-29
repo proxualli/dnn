@@ -5,33 +5,6 @@
 #include <sys/sysinfo.h>
 #endif
 
-#include <algorithm>
-#include <array>
-#include <atomic>
-//#include <bit>
-#include <cstdio>
-#include <cstring>
-#include <cmath>
-#include <exception>
-#include <filesystem>
-#include <functional> 
-#include <future>
-#include <fstream>
-#include <iostream>
-#include <iomanip>
-#include <locale>
-#include <clocale>
-#include <memory>
-#include <numeric>
-#include <random>
-#include <sstream>
-#include <stdexcept>
-#include <string>
-#include <unordered_map>
-#include <vector>
-#include <utility>
-
-
 #ifndef MAX_VECTOR_SIZE
 #ifdef DNN_SSE41
 #define INSTRSET 5
@@ -71,6 +44,32 @@
 #include "vectormath_hyp.h"
 #include "vectormath_trig.h"
 #include "add-on/random/ranvec1.h"
+
+#include <algorithm>
+#include <array>
+#include <atomic>
+//#include <bit>
+#include <cstdio>
+#include <cstring>
+#include <cmath>
+#include <exception>
+#include <filesystem>
+#include <functional> 
+#include <future>
+#include <fstream>
+#include <iostream>
+#include <iomanip>
+#include <locale>
+#include <clocale>
+#include <memory>
+#include <numeric>
+#include <random>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <unordered_map>
+#include <vector>
+#include <utility>
 
 #define MAGIC_ENUM_RANGE_MIN 0
 #define MAGIC_ENUM_RANGE_MAX 255
@@ -442,7 +441,7 @@ namespace dnn
 		// The sentry object performs various tasks,
 		// such as thread synchronization and updating the stream state.
 
-		auto se = std::istream::sentry(is, true);
+		auto& se = std::istream::sentry(is, true);
 		auto sb = is.rdbuf();
 
 		for (;;) 

@@ -5,7 +5,6 @@ using namespace dnn;
 std::unique_ptr<dnn::Model> model;
 std::unique_ptr<dnn::Dataprovider> dataprovider;
 
-
 #ifdef DNN_DLL
 #if defined _WIN32 || defined __CYGWIN__ || defined __MINGW32__
 #if defined DNN_LOG 

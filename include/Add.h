@@ -524,7 +524,6 @@ namespace dnn
 							Inputs[7]->NeuronsD1[cdhw] += NeuronsD1[cdhw];
 						}
 						for (auto i = 8ull; i < inputs; i++)
-							PRAGMA_OMP_SIMD()
 							for (auto cdhw = start; cdhw < end; cdhw++)
 								Inputs[i]->NeuronsD1[cdhw] += NeuronsD1[cdhw];
 					});
