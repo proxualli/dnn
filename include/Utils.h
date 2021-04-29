@@ -441,7 +441,7 @@ namespace dnn
 		// The sentry object performs various tasks,
 		// such as thread synchronization and updating the stream state.
 
-		auto& se = std::istream::sentry(is, true);
+		auto se = std::istream::sentry(is, true);
 		auto sb = is.rdbuf();
 
 		for (;;) 
