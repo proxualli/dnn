@@ -263,6 +263,7 @@ namespace dnn
 		Layer(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const LayerTypes layerType, const UInt weightCount, const UInt biasCount, const UInt c, const UInt d, const UInt h, const UInt w, const UInt padD, const UInt padH, const UInt padW, const std::vector<Layer*>& inputs, const bool hasBias = false, const bool scaling = false) :
 			Device(device),
 			Format(format),
+			ChosenFormat(format),
 			Name(name),
 			LayerType(layerType),
 			WeightCount(weightCount),
@@ -318,7 +319,6 @@ namespace dnn
 			bpropTime(std::chrono::duration<Float>(Float(0))),
 			updateTime(std::chrono::duration<Float>(Float(0)))
 		{
-			ChosenFormat = format;
 		}
 
 		virtual ~Layer() = default;
