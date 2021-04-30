@@ -3,7 +3,7 @@
 
 namespace dnn
 {
-	class LocalResponseNormalization final : public Layer
+	class LocalResponseNorm final : public Layer
 	{
 	private:
 		std::unique_ptr<dnnl::lrn_forward::primitive_desc> fwdDesc;
@@ -27,8 +27,8 @@ namespace dnn
 		const Float Beta;
 		const Float K;
 
-		LocalResponseNormalization(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const bool acrossChannels = false, const UInt localSize = 5, const Float alpha = Float(1), const Float beta = Float(5), const Float k = Float(1)) :
-			Layer(device, format, name, LayerTypes::LocalResponseNormalization, 0, 0, inputs[0]->C, inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs),
+		LocalResponseNorm(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const bool acrossChannels = false, const UInt localSize = 5, const Float alpha = Float(1), const Float beta = Float(5), const Float k = Float(1)) :
+			Layer(device, format, name, LayerTypes::LocalResponseNorm, 0, 0, inputs[0]->C, inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs),
 			AcrossChannels(acrossChannels),
 			Algorithm(acrossChannels ? dnnl::algorithm::lrn_across_channels : dnnl::algorithm::lrn_within_channel),
 			LocalSize(localSize),

@@ -613,8 +613,8 @@ namespace dnn
 								model->Layers.push_back(std::make_unique<LayerNorm>(model->Device, model->Format, name, inputs, scaling, eps, biases));
 								model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesScale, biasesLRM, biasesWDM);
 								break;
-							case LayerTypes::LocalResponseNormalization:
-								model->Layers.push_back(std::make_unique<LocalResponseNormalization>(model->Device, model->Format, name, inputs, acrossChannels, localSize, alpha, beta, k));
+							case LayerTypes::LocalResponseNorm:
+								model->Layers.push_back(std::make_unique<LocalResponseNorm>(model->Device, model->Format, name, inputs, acrossChannels, localSize, alpha, beta, k));
 								break;
 							case LayerTypes::Max:
 								model->Layers.push_back(std::make_unique<Max>(model->Device, model->Format, name, inputs));
@@ -1481,7 +1481,7 @@ namespace dnn
 				}
 				else if (strLine.rfind("Alpha=") == 0)
 				{
-					if (layerType != LayerTypes::Input && layerType != LayerTypes::Activation && layerType != LayerTypes::LocalResponseNormalization)
+					if (layerType != LayerTypes::Input && layerType != LayerTypes::Activation && layerType != LayerTypes::LocalResponseNorm)
 					{
 						msg = CheckMsg(line, col, "Alpha cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
 						goto FAIL;
@@ -1510,7 +1510,7 @@ namespace dnn
 				}
 				else if (strLine.rfind("Beta=") == 0)
 				{
-					if (layerType != LayerTypes::Input && layerType != LayerTypes::Activation && layerType != LayerTypes::LocalResponseNormalization)
+					if (layerType != LayerTypes::Input && layerType != LayerTypes::Activation && layerType != LayerTypes::LocalResponseNorm)
 					{
 						msg = CheckMsg(line, col, "Beta cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
 						goto FAIL;
@@ -1545,7 +1545,7 @@ namespace dnn
 						goto FAIL;
 					}
 
-					if (layerType != LayerTypes::LocalResponseNormalization)
+					if (layerType != LayerTypes::LocalResponseNorm)
 					{
 						msg = CheckMsg(line, col, "AcrossChannels cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
 						goto FAIL;
@@ -1569,7 +1569,7 @@ namespace dnn
 						goto FAIL;
 					}
 
-					if (layerType != LayerTypes::LocalResponseNormalization)
+					if (layerType != LayerTypes::LocalResponseNorm)
 					{
 						msg = CheckMsg(line, col, "K cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
 						goto FAIL;
@@ -1601,7 +1601,7 @@ namespace dnn
 						goto FAIL;
 					}
 
-					if (layerType != LayerTypes::LocalResponseNormalization)
+					if (layerType != LayerTypes::LocalResponseNorm)
 					{
 						msg = CheckMsg(line, col, "LocalSize cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
 						goto FAIL;

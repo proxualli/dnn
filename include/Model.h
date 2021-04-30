@@ -23,7 +23,7 @@
 #include "GlobalMaxPooling.h"
 #include "Input.h"
 #include "LayerNorm.h"
-#include "LocalResponseNormalization.h"
+#include "LocalResponseNorm.h"
 #include "Max.h"
 #include "MaxPooling.h"
 #include "Min.h"

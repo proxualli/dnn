@@ -571,9 +571,9 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, UInt* inputsCount
 		}
 		break;
 
-		case LayerTypes::LocalResponseNormalization:
+		case LayerTypes::LocalResponseNorm:
 		{
-			auto lrn = dynamic_cast<LocalResponseNormalization*>(model->Layers[layerIndex].get());
+			auto lrn = dynamic_cast<LocalResponseNorm*>(model->Layers[layerIndex].get());
 			if (lrn)
 			{
 				*acrossChannels = lrn->AcrossChannels;
