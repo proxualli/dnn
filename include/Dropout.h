@@ -7,7 +7,7 @@ namespace dnn
 	{
 	private:
 		std::bernoulli_distribution DropoutDistribution;
-		FloatVector NeuronsActive;
+		FloatArray NeuronsActive;
 	
 	public:
 		const Float Keep;
@@ -18,7 +18,7 @@ namespace dnn
 			Keep(Float(1) - dropout),
 			Scale(Float(1) / (Float(1) - dropout)),
 			DropoutDistribution(std::bernoulli_distribution(double(1) - dropout)),
-			NeuronsActive(FloatVector())
+			NeuronsActive(FloatArray())
 		{
 			assert(Inputs.size() == 1);
 		}
@@ -57,7 +57,7 @@ namespace dnn
 		{
 			Layer::SetBatchSize(batchSize);
 
-			ZeroFloatVectorAllocate(NeuronsActive, batchSize * PaddedCDHW);
+			ResizeArray(NeuronsActive, batchSize * PaddedCDHW);
 			for (auto n = 0ull; n < batchSize; n++)
 				for (auto i = 0ull; i < CDHW; i++)
 					NeuronsActive[n * PaddedCDHW + i] = Float(1);

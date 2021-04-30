@@ -256,7 +256,7 @@ namespace dnn
 				}
 
 #ifndef DNN_LEAN
-				ZeroFloatVector(NeuronsD1.data(), batchSize * PaddedCDHW);
+				ZeroArray(NeuronsD1.data(), batchSize * PaddedCDHW);
 #else
 				DNN_UNREF_PAR(batchSize);
 #endif // DNN_LEAN
@@ -335,7 +335,7 @@ namespace dnn
 #endif // DNN_LEAN		
 		}
 
-		ByteVector GetImage(const Byte fillColor) final override
+		ByteArray GetImage(const Byte fillColor) final override
 		{
 			if (Scaling)
 			{
@@ -346,7 +346,7 @@ namespace dnn
 				const auto height = WeightCount / BiasCount;
 				const auto totalSize = width * (height + 3);
 
-				auto image = ByteVector(totalSize, fillColor);
+				auto image = ByteArray(totalSize, fillColor);
 
 				for (auto y = 0ull; y < height; y++)
 				{
@@ -366,7 +366,7 @@ namespace dnn
 				return image;
 			}
 			else
-				return ByteVector();
+				return ByteArray();
 		}
 
 		void ResetWeights(const Fillers weightFiller, const Float weightFillerScale, const Fillers biasFiller, const Float biasFillerScale) override

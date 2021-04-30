@@ -455,7 +455,7 @@ namespace dnn
 			}
 		}
 
-		ByteVector GetImage(const Byte fillColor) final override
+		ByteArray GetImage(const Byte fillColor) final override
 		{
 			if (HasWeights)
 			{
@@ -465,7 +465,7 @@ namespace dnn
 				const auto height = 1;
 				const auto totalSize = width * (height + 3);
 
-				auto image = ByteVector(totalSize, fillColor);
+				auto image = ByteArray(totalSize, fillColor);
 
 				for (auto y = 0ull; y < height; y++)
 				{
@@ -478,7 +478,7 @@ namespace dnn
 				return image;
 			}
 			else
-				return ByteVector();
+				return ByteArray();
 		}
 
 		void ResetWeights(const Fillers weightFiller, const Float weightFillerScale, const Fillers biasFiller, const Float biasFillerScale) override
@@ -522,7 +522,7 @@ namespace dnn
 
 #ifndef DNN_LEAN
 				if (training)
-					ZeroFloatVector(NeuronsD1.data(), batchSize * PaddedCDHW);
+					ZeroArray(NeuronsD1.data(), batchSize * PaddedCDHW);
 #endif
 			}
 			break;
@@ -547,7 +547,7 @@ namespace dnn
 
 #ifndef DNN_LEAN
 				if (training)
-					ZeroFloatVector(NeuronsD1.data(), batchSize * PaddedCDHW);
+					ZeroArray(NeuronsD1.data(), batchSize * PaddedCDHW);
 #endif
 			}
 			break;
@@ -574,7 +574,7 @@ namespace dnn
 
 #ifndef DNN_LEAN
 				if (training)
-					ZeroFloatVector(NeuronsD1.data(), batchSize * PaddedCDHW);
+					ZeroArray(NeuronsD1.data(), batchSize * PaddedCDHW);
 #endif
 			}
 			break;
@@ -1233,7 +1233,7 @@ namespace dnn
 
 #ifndef DNN_LEAN
 				if (training)
-					ZeroFloatVector(NeuronsD1.data(), batchSize * PaddedCDHW);
+					ZeroArray(NeuronsD1.data(), batchSize * PaddedCDHW);
 #endif
 			}
 			}

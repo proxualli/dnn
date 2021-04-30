@@ -142,36 +142,60 @@ namespace dnn
 #endif
 	#define DNN_SIMD_ALIGN DNN_ALIGN(64)
 
-	template <typename T, std::size_t alignment, typename Allocator = AlignedAllocator<T, alignment>> class AlignedVector {
+	template <typename T, std::size_t alignment, typename Allocator = AlignedAllocator<T, alignment>> class AlignedArray
+	{
+	static_assert(std::is_same_v<T, typename Allocator::value_type>, "array<T, Allocator>");
 	protected:
-		std::vector<T, Allocator> Data;
+		std::vector<T, Allocator> arr;
+		typedef typename Allocator::size_type size_type;
+	public:
+		AlignedArray() { arr = std::vector<T, Allocator>(); }
+		AlignedArray(size_type n, T value = T()) { arr = std::vector<T, Allocator>(n, value); }
+		inline T* data() noexcept { return arr.data(); }
+		inline const T* data() const noexcept { return arr.data(); }
+		inline size_type size() const noexcept { return arr.size(); }
+		inline void resize(size_type n, T value = T()) { arr.resize(n, value); }
+		inline T& operator[] (size_type i) noexcept { return arr[i]; }
+		inline const T& operator[] (size_type i) const noexcept { return arr[i]; }
+		inline bool empty() const noexcept { return arr.empty(); }
+		inline void clear() noexcept { arr.clear(); }
+		inline void shrink_to_fit() noexcept { arr.shrink_to_fit(); }
+		inline void swap(AlignedArray& other) noexcept { std::vector<T, Allocator>().swap(other.arr); }
+	};
+
+	template <typename T, std::size_t alignment, typename Allocator = AlignedAllocator<T, alignment>> class AlignedVector
+	{
+	static_assert(std::is_same_v<T, typename Allocator::value_type>, "vector<T, Allocator>");
+	protected:
+		std::vector<T, Allocator> vec;
 		typedef typename std::vector<T, Allocator>::iterator iterator;
 		typedef typename std::vector<T, Allocator>::const_iterator const_iterator;
 		typedef typename Allocator::size_type size_type;
 	public:
-		AlignedVector() { Data = std::vector<T, Allocator>(); }
-		AlignedVector(size_type n, T value = T()) { Data = std::vector<T, Allocator>(n, value); }
-		inline T* data() noexcept { return Data.data(); }
-		inline const T* data() const noexcept { return Data.data(); }
-		inline size_type size() const noexcept { return Data.size(); }
-		inline void resize(size_type n, T value = T()) { Data.resize(n, value); }
-		inline T& operator[] (size_type i) noexcept { return Data[i]; }
-		inline const T& operator[] (size_type i) const noexcept { return Data[i]; }
-		inline iterator begin() noexcept { return Data.begin(); }
-		inline const_iterator cbegin() const noexcept { return Data.cbegin(); }
-		inline iterator end() noexcept { return Data.end(); }
-		inline const_iterator cend() const noexcept { return Data.cend(); }
-		inline bool empty() const noexcept { return Data.empty(); }
-		inline void clear() noexcept { Data.clear(); }
-		inline void shrink_to_fit() noexcept { Data.shrink_to_fit(); }
-		inline void swap(AlignedVector& other) noexcept { std::vector<T, Allocator>().swap(other.Data); }
+		AlignedVector() { vec = std::vector<T, Allocator>(); }
+		AlignedVector(size_type n, T value = T()) { vec = std::vector<T, Allocator>(n, value); }
+		inline T* data() noexcept { return vec.data(); }
+		inline const T* data() const noexcept { return vec.data(); }
+		inline size_type size() const noexcept { return vec.size(); }
+		inline void resize(size_type n, T value = T()) { vec.resize(n, value); }
+		inline T& operator[] (size_type i) noexcept { return vec[i]; }
+		inline const T& operator[] (size_type i) const noexcept { return vec[i]; }
+		inline iterator begin() noexcept { return vec.begin(); }
+		inline const_iterator cbegin() const noexcept { return vec.cbegin(); }
+		inline iterator end() noexcept { return vec.end(); }
+		inline const_iterator cend() const noexcept { return vec.cend(); }
+		inline bool empty() const noexcept { return vec.empty(); }
+		inline void clear() noexcept { vec.clear(); }
+		inline void shrink_to_fit() noexcept { vec.shrink_to_fit(); }
+		inline void swap(AlignedVector& other) noexcept { std::vector<T, Allocator>().swap(other.vec); }
 	};
 
 	typedef float Float;
 	typedef size_t UInt;
 	typedef unsigned char Byte;
+	typedef AlignedArray<Float, 64ull> FloatArray;
 	typedef AlignedVector<Float, 64ull> FloatVector;
-	typedef AlignedVector<Byte, 64ull> ByteVector;
+	typedef AlignedArray<Byte, 64ull> ByteArray;
 	//constexpr bool IS_LITTLE_ENDIAN = std::endian::native == std::endian::little;
 	constexpr auto NEURONS_LIMIT = Float(1000);   // limit for all the neurons and derivative [-NEURONS_LIMIT,NEURONS_LIMIT]
 	constexpr auto WEIGHTS_LIMIT = Float(100);    // limit for all the weights and biases [-WEIGHTS_LIMIT,WEIGHTS_LIMIT]
@@ -192,7 +216,6 @@ namespace dnn
 #endif
 	static const auto tab = std::string("\t");
 	static const auto dtab = std::string("\t\t");
-	
 	
 #if defined(DNN_AVX512BW) || defined(DNN_AVX512)
 	typedef Vec16f VecFloat;
@@ -242,7 +265,7 @@ namespace dnn
 		return dnnl::memory::format_tag::undef;
 	}
 
-	inline static void ZeroFloatVector(Float* destination, const UInt elements) noexcept
+	inline static void ZeroArray(Float* destination, const UInt elements, const int initValue = int(0)) noexcept
 	{
 		if (elements < 1048576ull)
 			::memset(destination, 0, elements * sizeof(Float));
@@ -250,16 +273,16 @@ namespace dnn
 		{
 			const auto threads = elements < 2097152ull ? 2ull : elements < 8338608ull ? LIGHT_COMPUTE : MEDIUM_COMPUTE;
 			const auto part = elements / threads;
-			for_i(threads, [=](const UInt thread) { ::memset(destination + part * thread, 0, part * sizeof(Float)); });
+			for_i(threads, [=](const UInt thread) { ::memset(destination + part * thread, initValue, part * sizeof(Float)); });
 			if (elements % threads != 0)
-				::memset(destination + part * threads, 0, (elements - part * threads) * sizeof(Float));
+				::memset(destination + part * threads, initValue, (elements - part * threads) * sizeof(Float));
 		}
 	}
-
-	inline static void ZeroFloatVectorAllocate(FloatVector& destination, const UInt elements) noexcept
+	
+	inline static void ResizeArray(FloatArray& destination, const UInt elements, const int initValue = int(0)) noexcept
 	{
 		destination.resize(elements);
-		ZeroFloatVector(destination.data(), elements);
+		ZeroArray(destination.data(), elements, initValue);
 	}
 
 #ifdef DNN_FAST_SEED

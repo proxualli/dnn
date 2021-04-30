@@ -185,7 +185,7 @@ namespace dnn
 
 #ifndef DNN_LEAN
 			if (training)
-				ZeroFloatVector(NeuronsD1.data(), batchSize * PaddedCDHW);
+				ZeroArray(NeuronsD1.data(), batchSize * PaddedCDHW);
 #else
 			DNN_UNREF_PAR(batchSize);
 #endif // DNN_LEAN
@@ -268,7 +268,7 @@ namespace dnn
 #endif // DNN_LEAN
 		}
 
-		ByteVector GetImage(const Byte fillColor) final override
+		ByteArray GetImage(const Byte fillColor) final override
 		{
 			const auto rangeWeights = GetColorRange(WeightsStats.Min, WeightsStats.Max);
 			const auto rangeBiases = GetColorRange(BiasesStats.Min, BiasesStats.Max);
@@ -279,7 +279,7 @@ namespace dnn
 			const auto height = pitchW + border;
 			const auto biasOffset = height * width;
 
-			auto image = ByteVector(biasOffset + width, fillColor);
+			auto image = ByteArray(biasOffset + width, fillColor);
 			FloatVector weights;
 
 			if (*WeightsMemDesc != *PersistWeightsMemDesc)

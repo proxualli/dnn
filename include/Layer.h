@@ -235,8 +235,8 @@ namespace dnn
 		Float BiasesScale;
 		Float BiasesLRM;
 		Float BiasesWDM;
-		FloatVector Neurons;
-		FloatVector NeuronsD1;
+		FloatArray Neurons;
+		FloatArray NeuronsD1;
 		FloatVector Weights;
 		FloatVector WeightsD1;
 		FloatVector WeightsPar1;
@@ -294,8 +294,8 @@ namespace dnn
 			HasPadding(padD > 0 || padH > 0 || padW > 0),
 			InputLayer(inputs.size() > 0 ? inputs[0] : nullptr),
 			RandomEngine(std::mt19937(Seed<unsigned>())),
-			Neurons(FloatVector()),
-			NeuronsD1(FloatVector()),
+			Neurons(FloatArray()),
+			NeuronsD1(FloatArray()),
 			Weights(FloatVector(weightCount)),
 			WeightsD1(FloatVector(weightCount)),
 			Biases(FloatVector(biasCount)),
@@ -403,13 +403,13 @@ namespace dnn
 #ifdef DNN_LEAN
 		inline void ZeroGradient(const UInt batchSize)
 		{
-			ZeroFloatVectorAllocate(InputLayer->NeuronsD1, batchSize * InputLayer->PaddedCDHW);
+			ResizeArray(InputLayer->NeuronsD1, batchSize * InputLayer->PaddedCDHW);
 		}
 
 		inline void ZeroGradientMulti(const UInt batchSize)
 		{
 			for (auto& inputLayer : Inputs)
-			    ZeroFloatVectorAllocate(inputLayer->NeuronsD1, batchSize * inputLayer->PaddedCDHW);
+				ResizeArray(inputLayer->NeuronsD1, batchSize * inputLayer->PaddedCDHW);
 		}
 
 		inline void ReleaseGradient()
@@ -417,7 +417,7 @@ namespace dnn
 			NeuronsD1.resize(0);
 			NeuronsD1.clear();
 			NeuronsD1.shrink_to_fit();
-			FloatVector().swap(NeuronsD1);
+			FloatArray().swap(NeuronsD1);
 		}
 #endif // DNN_LEAN
 
@@ -426,9 +426,9 @@ namespace dnn
 			while (RefreshingStats.load())
 				std::this_thread::sleep_for(std::chrono::milliseconds(250));
 
-			ZeroFloatVectorAllocate(Neurons, batchSize * PaddedCDHW);
+			ResizeArray(Neurons, batchSize * PaddedCDHW);
 #ifndef DNN_LEAN
-			ZeroFloatVectorAllocate(NeuronsD1, batchSize * PaddedCDHW);
+			ResizeArray(NeuronsD1, batchSize * PaddedCDHW);
 #else
 			ReleaseGradient();
 #endif // DNN_LEAN
@@ -1799,7 +1799,7 @@ namespace dnn
 			return neuronsSize;
 		}
 
-		virtual ByteVector GetImage(const Byte) { return ByteVector(); }
+		virtual ByteArray GetImage(const Byte) { return ByteArray(); }
 	};
 
 }

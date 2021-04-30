@@ -205,7 +205,7 @@ namespace dnn
 
 #ifndef DNN_LEAN
 			if (training)
-				ZeroFloatVector(NeuronsD1.data(), batchSize * PaddedCDHW);
+				ZeroArray(NeuronsD1.data(), batchSize * PaddedCDHW);
 #else
 			DNN_UNREF_PAR(batchSize);
 #endif // DNN_LEAN			
@@ -288,7 +288,7 @@ namespace dnn
 #endif // DNN_LEAN		
 		}
 
-		ByteVector GetImage(const Byte fillColor) final override
+		ByteArray GetImage(const Byte fillColor) final override
 		{
 			const auto rangeWeights = GetColorRange(WeightsStats.Min, WeightsStats.Max);
 			const auto rangeBiases = GetColorRange(BiasesStats.Min, BiasesStats.Max);
@@ -315,7 +315,7 @@ namespace dnn
 				const auto width = C * pitchH + border;
 				const auto height = (InputLayer->C / Groups) * pitchW + border;
 				const auto biasOffset = height * width;
-				auto image = ByteVector(biasOffset + width, fillColor);
+				auto image = ByteArray(biasOffset + width, fillColor);
 
 				for (auto g = 0ull; g < Groups; g++)
 				{
@@ -347,7 +347,7 @@ namespace dnn
 					const auto width = C * pitchH + border;
 					const auto height = InputLayer->C * pitchW + border;
 					const auto biasOffset = height * width;
-					auto image = ByteVector(biasOffset + width, fillColor);
+					auto image = ByteArray(biasOffset + width, fillColor);
 
 					for (auto c = 0ull; c < C; c++)
 					{
@@ -375,7 +375,7 @@ namespace dnn
 					const auto height = pitchW + 3 * border;
 					const auto size = width * height;
 					const auto totalSize = 3 * size;
-					auto image = ByteVector(totalSize, fillColor);
+					auto image = ByteArray(totalSize, fillColor);
 
 					auto mapping = 0ull;
 					for (auto c = 0ull; c < C; c++)
@@ -397,7 +397,7 @@ namespace dnn
 						}
 					}
 
-					auto temp = ByteVector(totalSize);
+					auto temp = ByteArray(totalSize);
 					mapping = 0ull;
 					for (auto i = 0ull; i < size; i++)
 					{

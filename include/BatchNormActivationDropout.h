@@ -14,7 +14,7 @@ namespace dnn
 		const Float Keep;
 		const Float Scale;
 
-		FloatVector NeuronsActive;
+		FloatArray NeuronsActive;
 		std::bernoulli_distribution DropoutDistribution;
 
 		FloatVector Mean;
@@ -115,7 +115,7 @@ namespace dnn
 		{
 			Layer::SetBatchSize(batchSize);
 
-			ZeroFloatVectorAllocate(NeuronsActive, batchSize * PaddedCDHW);
+			ResizeArray(NeuronsActive, batchSize * PaddedCDHW);
 			for (auto n = 0ull; n < batchSize; n++)
 				for (auto i = 0ull; i < CDHW; i++)
 					NeuronsActive[n * PaddedCDHW + i] = Float(1);
@@ -481,7 +481,7 @@ namespace dnn
 #endif // DNN_LEAN	
 		}
 
-		ByteVector GetImage(const Byte fillColor)  final override
+		ByteArray GetImage(const Byte fillColor)  final override
 		{
 			if (Scaling)
 			{
@@ -492,7 +492,7 @@ namespace dnn
 				const auto height = WeightCount / BiasCount;
 				const auto totalSize = width * (height + 3);
 
-				auto image = ByteVector(totalSize, fillColor);
+				auto image = ByteArray(totalSize, fillColor);
 
 				for (auto y = 0ull; y < height; y++)
 				{
@@ -512,7 +512,7 @@ namespace dnn
 				return image;
 			}
 			else
-				return ByteVector();
+				return ByteArray();
 		}
 
 		void ResetWeights(const Fillers weightFiller, const Float weightFillerScale, const Fillers biasFiller, const Float biasFillerScale) override

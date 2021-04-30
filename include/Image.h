@@ -33,10 +33,10 @@ namespace dnn
 	template<typename T>
 	struct Image
 	{
-		typedef AlignedVector<T, 64ull> VectorT;
+		typedef AlignedArray<T, 64ull> ArrayT;
 
 	private:
-		VectorT Data;
+		ArrayT Data;
 
 	public:
 		UInt Channels;
@@ -49,11 +49,11 @@ namespace dnn
 			Depth(0),
 			Height(0),
 			Width(0),
-			Data(VectorT())
+			Data(ArrayT())
 		{
 		}
 
-		Image(const UInt c, const UInt d, const UInt h, const UInt w, const VectorT& image) :
+		Image(const UInt c, const UInt d, const UInt h, const UInt w, const ArrayT& image) :
 			Channels(c),
 			Depth(d),
 			Height(h),
@@ -67,7 +67,7 @@ namespace dnn
 			Depth(d),
 			Height(h),
 			Width(w),
-			Data(VectorT(c * d * h * w))
+			Data(ArrayT(c * d * h * w))
 		{
 			std::memcpy(Data.data(), image, c * d * h * w * sizeof(T));
 		}
@@ -77,7 +77,7 @@ namespace dnn
 			Depth(d),
 			Height(h),
 			Width(w),
-			Data(VectorT(c * d * h * w))
+			Data(ArrayT(c * d * h * w))
 		{
 		}
 
