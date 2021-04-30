@@ -142,7 +142,7 @@ set(libdnn_headers
   include/Image.h
   include/Input.h
   include/Layer.h
-  include/LocalResponseNormalization.h
+  include/LocalResponseNorm.h
   include/Max.h
   include/MaxPooling.h
   include/Min.h
