@@ -417,6 +417,7 @@ namespace dnn
 			NeuronsD1.resize(0);
 			NeuronsD1.clear();
 			NeuronsD1.shrink_to_fit();
+			FloatVector().swap(NeuronsD1);
 		}
 #endif // DNN_LEAN
 

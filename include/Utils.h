@@ -164,7 +164,7 @@ namespace dnn
 		bool empty() const noexcept { return Data.empty(); }
 		void clear() noexcept { Data.clear(); }
 		void shrink_to_fit() noexcept { Data.shrink_to_fit(); }
-		void swap(std::vector<T, Allocator>& vector) noexcept { vector.swap(vector); }
+		void swap(Vector& other) noexcept { std::vector<T, Allocator>().swap(other.Data); }
 	};
 
 	typedef float Float;
