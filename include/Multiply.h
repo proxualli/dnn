@@ -108,7 +108,6 @@ namespace dnn
 #endif // DNN_LEAN
 					}
 				for (auto i = 1ull; i < inputs; i++)
-					PRAGMA_OMP_SIMD()
 					for (auto cdhw = 0ull; cdhw < CDHW; cdhw++)
 						Neurons[cdhw] *= Inputs[i]->Neurons[cdhw];
 			}

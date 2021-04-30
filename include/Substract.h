@@ -286,7 +286,6 @@ namespace dnn
 					for (auto cdhw = 0ull; cdhw < size; cdhw++)
 						Inputs[0]->NeuronsD1[cdhw] += NeuronsD1[cdhw];
 					for (auto i = 1ull; i < inputs; i++)
-						PRAGMA_OMP_SIMD()
 						for (auto cdhw = 0ull; cdhw < size; cdhw++)
 							Inputs[i]->NeuronsD1[cdhw] -= NeuronsD1[cdhw];
 				}

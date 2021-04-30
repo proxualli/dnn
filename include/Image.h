@@ -33,7 +33,7 @@ namespace dnn
 	template<typename T>
 	struct Image
 	{
-		typedef std::vector<T, AlignedAllocator<T, 64ull>> VectorT;
+		typedef Vector<T, 64ull> VectorT;
 
 	private:
 		VectorT Data;

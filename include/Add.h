@@ -284,7 +284,6 @@ namespace dnn
 				default:
 				{
 					for (auto i = 0ull; i < inputs; i++)
-						PRAGMA_OMP_SIMD()
 						for (auto cdhw = 0ull; cdhw < size; cdhw++)
 							Inputs[i]->NeuronsD1[cdhw] += NeuronsD1[cdhw];
 				}

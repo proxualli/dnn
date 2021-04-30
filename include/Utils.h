@@ -142,11 +142,36 @@ namespace dnn
 #endif
 	#define DNN_SIMD_ALIGN DNN_ALIGN(64)
 
+	template <typename T, std::size_t alignment, typename Allocator = AlignedAllocator<T, alignment>> class Vector {
+	protected:
+		std::vector<T, Allocator> Data;
+		typedef typename std::vector<T, Allocator>::iterator iterator;
+		typedef typename std::vector<T, Allocator>::const_iterator const_iterator;
+		typedef typename Allocator::size_type size_type;
+	public:
+		Vector() { Data = std::vector<T, Allocator>(); }
+		Vector(size_type n, T value = T()) { Data = std::vector<T, Allocator>(n, value); }
+		T* data() noexcept { return Data.data(); }
+		const T* data() const noexcept { return Data.data(); }
+		size_type size() const noexcept { return Data.size(); }
+		void resize(size_type n, T value = T()) { Data.resize(n, value); }
+		T& operator[] (size_type i) noexcept { return Data[i]; }
+		const T& operator[] (size_type i) const noexcept { return Data[i]; }
+		inline iterator begin() noexcept { return Data.begin(); }
+		inline const_iterator cbegin() const noexcept { return Data.cbegin(); }
+		inline iterator end() noexcept { return Data.end(); }
+		inline const_iterator cend() const noexcept { return Data.cend(); }
+		bool empty() const noexcept { return Data.empty(); }
+		void clear() noexcept { Data.clear(); }
+		void shrink_to_fit() noexcept { Data.shrink_to_fit(); }
+		void swap(std::vector<T, Allocator>& vector) noexcept { vector.swap(vector); }
+	};
+
 	typedef float Float;
 	typedef size_t UInt;
 	typedef unsigned char Byte;
-	typedef std::vector<Float, AlignedAllocator<Float, 64ull>> FloatVector;
-	typedef std::vector<Byte, AlignedAllocator<Byte, 64ull>> ByteVector;
+	typedef Vector<Float, 64ull> FloatVector;
+	typedef Vector<Byte, 64ull> ByteVector;
 	//constexpr bool IS_LITTLE_ENDIAN = std::endian::native == std::endian::little;
 	constexpr auto NEURONS_LIMIT = Float(1000);   // limit for all the neurons and derivative [-NEURONS_LIMIT,NEURONS_LIMIT]
 	constexpr auto WEIGHTS_LIMIT = Float(100);    // limit for all the weights and biases [-WEIGHTS_LIMIT,WEIGHTS_LIMIT]
