@@ -194,7 +194,7 @@ namespace dnn
 	}
 
 	template<typename T>
-	inline static void InitArray(T* destination, const std::size_t elements, const int initValue = int(0)) noexcept
+	inline static void InitArray(T* destination, const std::size_t elements, const int initValue = 0) noexcept
 	{
 		if (elements < 1048576ull)
 			::memset(destination, 0, elements * sizeof(T));
