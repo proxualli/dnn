@@ -164,7 +164,6 @@ namespace dnn
 				{
 #endif
 					if (!plain)
-					{
 						for_i(batchSize, threads, [=](UInt n)
 						{
 							const auto outputSampleOffset = n * PaddedCDHW;
@@ -189,9 +188,7 @@ namespace dnn
 								channelOffset += Inputs[input]->PaddedC;
 							}
 						});
-					}
 					else
-					{
 						for_i(batchSize, threads, [=](UInt n)
 						{
 							const auto outputSampleOffset = n * CDHW;
@@ -213,7 +210,6 @@ namespace dnn
 								channelOffset += Inputs[input]->C;
 							}
 						});
-					}
 #ifdef DNN_STOCHASTIC
 				}
 #endif
@@ -315,7 +311,6 @@ namespace dnn
 					});
 				}
 				else
-				{
 					for_i(batchSize, threads, [=](UInt n)
 					{
 						const auto outputSampleOffset = n * CDHW;
@@ -334,7 +329,6 @@ namespace dnn
 							channelOffset += Inputs[input]->C;
 						}
 					});
-				}
 #ifdef DNN_STOCHASTIC
 			}
 #endif

@@ -149,7 +149,7 @@ namespace dnn
 			::memset(destination, 0, elements * sizeof(T));
 		else
 		{
-			const auto threads = elements < 2097152ull ? 2ull : elements < 8338608ull ? LIGHT_COMPUTE : MEDIUM_COMPUTE;
+			const auto threads = elements < 2097152ull ? 2ull : elements < 8338608ull ? 4ull : 8ull;
 			const auto part = elements / threads;
 			for_i(threads, [=](const std::size_t thread) { ::memset(destination + part * thread, initValue, part * sizeof(T)); });
 			if (elements % threads != 0)
@@ -191,7 +191,7 @@ namespace dnn
 	unique_ptr_aligned<T> aligned_unique_ptr(std::size_t size, std::size_t align) { return unique_ptr_aligned<T>(static_cast<T*>(aligned_malloc<T>(size, align))); }
 
 	template<class T, std::size_t alignment> 
-	std::shared_ptr<T> aligned_shared_ptr(size_t align, size_t size) { return std::shared_ptr<T>(static_cast<T*>(aligned_malloc<T>(align, size)), &aligned_free); }
+	std::shared_ptr<T> aligned_shared_ptr(std::size_t align, std::size_t size) { return std::shared_ptr<T>(static_cast<T*>(aligned_malloc<T>(align, size)), &aligned_free); }
 
 	template <typename T, std::size_t alignment> class AlignedArray
 	{

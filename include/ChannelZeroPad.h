@@ -162,7 +162,6 @@ namespace dnn
 						}
 					}
 					else
-					{
 						for (auto c = 0ull; c < C; c++)
 						{
 							const auto offsetC = c * HW;
@@ -177,13 +176,11 @@ namespace dnn
 							}
 							
 						}
-					}
 				}
 				else
 				{
 #endif
 					if (!plain)
-					{
 						for_i(batchSize, threads, [=](UInt n)
 						{
 							const auto vecZero = VecFloat(0);
@@ -216,9 +213,7 @@ namespace dnn
 								}
 							}
 						});
-					}
 					else
-					{
 						for_i(batchSize, threads, [=](UInt n)
 						{
 							UInt inputOffset, outputOffset;
@@ -247,7 +242,6 @@ namespace dnn
 								}
 							}
 						});
-					}
 				}
 #ifdef DNN_STOCHASTIC
 			}
@@ -268,12 +262,9 @@ namespace dnn
 			{
 #ifdef DNN_STOCHASTIC
 				if (batchSize == 1)
-				{
 					for (auto c = 0ull; c < InputLayer->C; c++)
 						InputLayer->NeuronsD1[c] += NeuronsD1[c];
-				}
 				else
-				{
 #endif
 					for_i(batchSize, LIGHT_COMPUTE, [=](UInt n)
 					{
@@ -283,9 +274,6 @@ namespace dnn
 						for (auto c = 0ull; c < InputLayer->C; c++)
 							InputLayer->NeuronsD1[c + offsetNinput] += NeuronsD1[c + offsetN];
 					});
-#ifdef DNN_STOCHASTIC
-				}
-#endif
 			}
 			else
 			{
@@ -305,7 +293,6 @@ namespace dnn
 				{
 #endif
 					if (!plain)
-					{
 						for_i(batchSize, threads, [=](UInt n)
 						{
 							UInt inputOffset, outputOffset;
@@ -318,9 +305,7 @@ namespace dnn
 									(VecFloat().load_a(&InputLayer->NeuronsD1[w + inputOffset]) + VecFloat().load_a(&NeuronsD1[w + outputOffset])).store_a(&InputLayer->NeuronsD1[w + inputOffset]);
 							}
 						});
-					}
 					else
-					{
 						for_i(batchSize, threads, [=](UInt n)
 						{
 							UInt inputOffset, outputOffset;
@@ -333,7 +318,6 @@ namespace dnn
 									InputLayer->NeuronsD1[w + inputOffset] += NeuronsD1[w + outputOffset];
 							}
 						});
-					}
 #ifdef DNN_STOCHASTIC
 				}
 #endif
