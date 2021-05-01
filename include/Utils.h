@@ -141,9 +141,60 @@ namespace dnn
 	#define DNN_ALIGN(alignment) __attribute__((__aligned__(alignment)))
 #endif
 	#define DNN_SIMD_ALIGN DNN_ALIGN(64)
+	
+	typedef float Float;
+	typedef size_t UInt;
+	typedef unsigned char Byte;
+
+#if defined(DNN_AVX512BW) || defined(DNN_AVX512)
+	typedef Vec16f VecFloat;
+	typedef Vec16fb VecFloatBool;
+	constexpr auto VectorSize = 16ull;
+	constexpr auto BlockedFmt = dnnl::memory::format_tag::nChw16c;
+#elif defined(DNN_AVX2) || defined(DNN_AVX)
+	typedef Vec8f VecFloat;
+	typedef Vec8fb VecFloatBool;
+	constexpr auto VectorSize = 8ull;
+	constexpr auto BlockedFmt = dnnl::memory::format_tag::nChw8c;
+#elif defined(DNN_SSE42) || defined(DNN_SSE41)
+	typedef Vec4f VecFloat;
+	typedef Vec4fb VecFloatBool;
+	constexpr auto VectorSize = 4ull;
+	constexpr auto BlockedFmt = dnnl::memory::format_tag::nChw4c;
+#endif
+
+	constexpr auto DivUp(const UInt& c) noexcept { return (((c - 1) / VectorSize) + 1) * VectorSize; }
+	constexpr auto IsPlainDataFmt(const dnnl::memory::desc& md) noexcept { return md.data.format_kind == dnnl_blocked && md.data.format_desc.blocking.inner_nblks == 0; }
+	constexpr auto IsBlockedDataFmt(const dnnl::memory::desc& md) noexcept { return md.data.format_kind == dnnl_blocked && md.data.format_desc.blocking.inner_nblks == 1 && md.data.format_desc.blocking.inner_idxs[0] == 1 && (md.data.format_desc.blocking.inner_blks[0] == 4 || md.data.format_desc.blocking.inner_blks[0] == 8 || md.data.format_desc.blocking.inner_blks[0] == 16); }
+	constexpr auto PlainFmt = dnnl::memory::format_tag::nchw;
+	constexpr auto GetDataFmt(const dnnl::memory::desc& md) noexcept
+	{
+		if (md.data.format_kind == dnnl_blocked)
+		{
+			if (md.data.format_desc.blocking.inner_nblks == 0)
+				return PlainFmt;
+			else
+				if (md.data.format_desc.blocking.inner_nblks == 1 && md.data.format_desc.blocking.inner_idxs[0] == 1)
+				{
+					switch (md.data.format_desc.blocking.inner_blks[0])
+					{
+					case 4:
+						return dnnl::memory::format_tag::nChw4c;
+					case 8:
+						return dnnl::memory::format_tag::nChw8c;
+					case 16:
+						return dnnl::memory::format_tag::nChw16c;
+					default:
+						return dnnl::memory::format_tag::undef;
+					}
+				}
+		}
+
+		return dnnl::memory::format_tag::undef;
+	}
 
 	template<typename T>
-	inline static void ZeroArray(T* destination, const std::size_t elements, const int initValue = int(0)) noexcept
+	inline static void InitArray(T* destination, const std::size_t elements, const int initValue = int(0)) noexcept
 	{
 		if (elements < 1048576ull)
 			::memset(destination, 0, elements * sizeof(T));
@@ -190,8 +241,8 @@ namespace dnn
 	template<class T, std::size_t alignment> 
 	unique_ptr_aligned<T> aligned_unique_ptr(std::size_t size, std::size_t align) { return unique_ptr_aligned<T>(static_cast<T*>(aligned_malloc<T>(size, align))); }
 
-	//template<class T, std::size_t alignment> 
-	//std::shared_ptr<T> aligned_shared_ptr(std::size_t align, std::size_t size) { return std::shared_ptr<T>(static_cast<T*>(aligned_malloc<T>(align, size)), &aligned_free); }
+	// template<class T, std::size_t alignment> 
+	// std::shared_ptr<T> aligned_shared_ptr(std::size_t align, std::size_t size) { return std::shared_ptr<T>(static_cast<T*>(aligned_malloc<T>(align, size)), &aligned_free); }
 
 	template <typename T, std::size_t alignment> class AlignedArray
 	{
@@ -201,26 +252,45 @@ namespace dnn
 		typedef typename std::size_t size_type;
 		size_type count = 0;
 	public:
-		AlignedArray() { }
-		AlignedArray(size_type n, T value = T()) 
+		AlignedArray()
+		{
+			if (arr != nullptr)
+				arr.release();
+
+			count = 0;
+			arr = nullptr;
+			Data = nullptr;
+		}
+		AlignedArray(size_type newSize, T value = T()) 
 		{ 
-			if (count > 0)
+			if (arr != nullptr)
 				arr.release();
 				
 			count = 0;
 			arr = nullptr;
 			Data = nullptr;
 
-			arr = aligned_unique_ptr<T, alignment>(n, alignment); 
-			Data = arr.get(); 
-			count = n;
-
-			for (size_type i = 0; i < count; ++i) 
-				Data[i] = value;
+			arr = aligned_unique_ptr<T, alignment>(newSize, alignment);
+			if (arr != nullptr)
+			{
+				Data = arr.get();
+				count = newSize;
+			}
+	
+			if (count >= VectorSize && count % VectorSize == 0 && typeid(T) == typeid(Float))
+			{
+				const VecFloat vecValue = VecFloat(value);
+				Float* tmpArr = reinterpret_cast<Float*>(Data);
+				for (size_type i = 0; i < count; i+=VectorSize)
+					vecValue.store_nt(&tmpArr[i]);
+			}
+			else
+				for (size_type i = 0; i < count; ++i) 
+					Data[i] = value;
 		}
 		inline void release() noexcept
 		{
-			if (count > 0)
+			if (arr != nullptr)
 				arr.reset(nullptr);
 
 			count = 0;
@@ -230,24 +300,27 @@ namespace dnn
 		inline T* data() noexcept { return Data; }
 		inline const T* data() const noexcept { return Data; }
 		inline size_type size() const noexcept { return count; }
-		inline void resize(size_type n) 
+		inline void resize(size_type newSize) 
 		{ 
-			if (n == count)
+			if (newSize == count)
 				return;
 
-			if (count > 0)
-				arr.reset(nullptr);
+			if (arr != nullptr)
+				arr.release();
 
 			count = 0;
 			arr = nullptr;
 			Data = nullptr;
 			
-			if (n > 0)
+			if (newSize > 0)
 			{
-				arr = aligned_unique_ptr<T, alignment>(n, alignment);
-				Data = arr.get();
-				count = n;
-				ZeroArray<T>(Data, n);
+				arr = aligned_unique_ptr<T, alignment>(newSize, alignment);
+				if (arr != nullptr)
+				{
+					Data = arr.get();
+					count = newSize;
+					InitArray<T>(Data, count, 0);
+				}
 			}		
 		}
 		inline T& operator[] (size_type i) noexcept { return Data[i]; }
@@ -283,9 +356,7 @@ namespace dnn
 		inline void swap(AlignedVector& other) noexcept { std::vector<T, Allocator>().swap(other.vec); }
 	};
 
-	typedef float Float;
-	typedef size_t UInt;
-	typedef unsigned char Byte;
+	
 	typedef AlignedArray<Float, 64ull> FloatArray;
 	typedef AlignedArray<Byte, 64ull> ByteArray;
 	typedef AlignedVector<Float, 64ull> FloatVector;
@@ -308,55 +379,7 @@ namespace dnn
 	static const auto nwl = std::string("\n");
 #endif
 	static const auto tab = std::string("\t");
-	static const auto dtab = std::string("\t\t");
-	
-#if defined(DNN_AVX512BW) || defined(DNN_AVX512)
-	typedef Vec16f VecFloat;
-	typedef Vec16fb VecFloatBool;
-	constexpr auto VectorSize = 16ull;
-	constexpr auto BlockedFmt = dnnl::memory::format_tag::nChw16c;
-#elif defined(DNN_AVX2) || defined(DNN_AVX)
-	typedef Vec8f VecFloat;
-	typedef Vec8fb VecFloatBool;
-	constexpr auto VectorSize = 8ull;
-	constexpr auto BlockedFmt = dnnl::memory::format_tag::nChw8c;
-#elif defined(DNN_SSE42) || defined(DNN_SSE41)
-	typedef Vec4f VecFloat;
-	typedef Vec4fb VecFloatBool;
-	constexpr auto VectorSize = 4ull;
-	constexpr auto BlockedFmt = dnnl::memory::format_tag::nChw4c;
-#endif
-
-	constexpr auto DivUp(const UInt& c) noexcept { return (((c - 1) / VectorSize) + 1) * VectorSize; }
-	constexpr auto IsPlainDataFmt(const dnnl::memory::desc& md) noexcept { return md.data.format_kind == dnnl_blocked && md.data.format_desc.blocking.inner_nblks == 0; }
-	constexpr auto IsBlockedDataFmt(const dnnl::memory::desc& md) noexcept { return md.data.format_kind == dnnl_blocked && md.data.format_desc.blocking.inner_nblks == 1 && md.data.format_desc.blocking.inner_idxs[0] == 1 && (md.data.format_desc.blocking.inner_blks[0] == 4 || md.data.format_desc.blocking.inner_blks[0] == 8 || md.data.format_desc.blocking.inner_blks[0] == 16); }
-	constexpr auto PlainFmt = dnnl::memory::format_tag::nchw;
-
-	constexpr auto GetDataFmt(const dnnl::memory::desc& md) noexcept
-	{
-		if (md.data.format_kind == dnnl_blocked)
-		{
-			if (md.data.format_desc.blocking.inner_nblks == 0)
-				return PlainFmt;
-			else 
-				if (md.data.format_desc.blocking.inner_nblks == 1 && md.data.format_desc.blocking.inner_idxs[0] == 1)
-				{
-					switch (md.data.format_desc.blocking.inner_blks[0])
-					{
-					case 4:
-						return dnnl::memory::format_tag::nChw4c;
-					case 8:
-						return dnnl::memory::format_tag::nChw8c;
-					case 16:
-						return dnnl::memory::format_tag::nChw16c;
-					default:
-						return dnnl::memory::format_tag::undef;
-					}
-				}
-		}
-
-		return dnnl::memory::format_tag::undef;
-	}
+	static const auto dtab = std::string("\t\t");	
 	
 #ifdef DNN_FAST_SEED
 	template<typename T>

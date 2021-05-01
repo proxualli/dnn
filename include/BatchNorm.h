@@ -253,7 +253,7 @@ namespace dnn
 				}
 
 #ifndef DNN_LEAN
-				ZeroArray<Float>(NeuronsD1.data(), batchSize * PaddedCDHW);
+				InitArray<Float>(NeuronsD1.data(), batchSize * PaddedCDHW);
 #else
 				DNN_UNREF_PAR(batchSize);
 #endif // DNN_LEAN

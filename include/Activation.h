@@ -522,7 +522,7 @@ namespace dnn
 
 #ifndef DNN_LEAN
 				if (training)
-					ZeroArray<Float>(NeuronsD1.data(), batchSize * PaddedCDHW);
+					InitArray<Float>(NeuronsD1.data(), batchSize * PaddedCDHW);
 #endif
 			}
 			break;
@@ -547,7 +547,7 @@ namespace dnn
 
 #ifndef DNN_LEAN
 				if (training)
-					ZeroArray<Float>(NeuronsD1.data(), batchSize * PaddedCDHW);
+					InitArray<Float>(NeuronsD1.data(), batchSize * PaddedCDHW);
 #endif
 			}
 			break;
@@ -574,7 +574,7 @@ namespace dnn
 
 #ifndef DNN_LEAN
 				if (training)
-					ZeroArray<Float>(NeuronsD1.data(), batchSize * PaddedCDHW);
+					InitArray<Float>(NeuronsD1.data(), batchSize * PaddedCDHW);
 #endif
 			}
 			break;
@@ -1231,7 +1231,7 @@ namespace dnn
 
 #ifndef DNN_LEAN
 				if (training)
-					ZeroArray<Float>(NeuronsD1.data(), batchSize * PaddedCDHW);
+					InitArray<Float>(NeuronsD1.data(), batchSize * PaddedCDHW);
 #endif
 			}
 			}
