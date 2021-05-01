@@ -190,8 +190,8 @@ namespace dnn
 	template<class T, std::size_t alignment> 
 	unique_ptr_aligned<T> aligned_unique_ptr(std::size_t size, std::size_t align) { return unique_ptr_aligned<T>(static_cast<T*>(aligned_malloc<T>(size, align))); }
 
-	template<class T, std::size_t alignment> 
-	std::shared_ptr<T> aligned_shared_ptr(std::size_t align, std::size_t size) { return std::shared_ptr<T>(static_cast<T*>(aligned_malloc<T>(align, size)), &aligned_free); }
+	//template<class T, std::size_t alignment> 
+	//std::shared_ptr<T> aligned_shared_ptr(std::size_t align, std::size_t size) { return std::shared_ptr<T>(static_cast<T*>(aligned_malloc<T>(align, size)), &aligned_free); }
 
 	template <typename T, std::size_t alignment> class AlignedArray
 	{
