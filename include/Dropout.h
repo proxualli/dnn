@@ -92,8 +92,6 @@ namespace dnn
 					}
 				}
 				else
-
-				{
 #endif
 					for_i(batchSize, [=](UInt b)
 					{
@@ -118,9 +116,6 @@ namespace dnn
 #endif
 						}
 					});
-#ifdef DNN_STOCHASTIC
-				}
-#endif
 			}
 			else
 			{
@@ -133,7 +128,6 @@ namespace dnn
 						Neurons[i] = InputLayer->Neurons[i];
 				}
 				else
-				{
 #endif
 					for_i(batchSize, LIGHT_COMPUTE, [=](UInt b)
 					{
@@ -144,9 +138,6 @@ namespace dnn
 						for (auto i = end; i < start + size; i++)
 							Neurons[i] = InputLayer->Neurons[i];
 					});
-#ifdef DNN_STOCHASTIC
-				}
-#endif
 			}
 		}
 
@@ -168,7 +159,6 @@ namespace dnn
 					InputLayer->NeuronsD1[i] += NeuronsActive[i] * NeuronsD1[i];
 			}
 			else
-			{
 #endif
 				for_i(batchSize, LIGHT_COMPUTE, [=](UInt b)
 				{
@@ -180,9 +170,7 @@ namespace dnn
 					for (auto i = end; i < start + size; i++)
 						InputLayer->NeuronsD1[i] += NeuronsActive[i] * NeuronsD1[i];
 				});
-#ifdef DNN_STOCHASTIC
-			}
-#endif
+
 
 #ifdef DNN_LEAN
 			ReleaseGradient();
