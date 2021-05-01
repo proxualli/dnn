@@ -590,7 +590,10 @@ namespace dnn
 			if (optimizer != Optimizer)
 			{
 				for (auto& layer : Layers)
+				{
+					layer->InitializeDescriptors(BatchSize);
 					layer->SetOptimizer(optimizer);
+				}
 
 				Optimizer = optimizer;
 			}

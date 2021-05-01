@@ -33,7 +33,7 @@ namespace dnn
 	template<typename T>
 	struct Image
 	{
-		typedef AlignedArray<T, 64ull> ArrayT;
+		typedef AlignedVector<T, 64ull> ArrayT;
 
 	private:
 		ArrayT Data;

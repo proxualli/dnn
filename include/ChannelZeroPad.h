@@ -73,7 +73,6 @@ namespace dnn
 				if (batchSize == 1)
 				{
 					if (!plain)
-					{
 						for (auto c = 0ull; c < PaddedC; c++)
 						{
 							Neurons[c] = c < InputLayer->PaddedC ? InputLayer->Neurons[c] : Float(0);
@@ -81,9 +80,7 @@ namespace dnn
 							NeuronsD1[c] = Float(0);
 #endif // DNN_LEAN
 						}
-					}
 					else
-					{
 						for (auto c = 0ull; c < C; c++)
 						{
 							Neurons[c] = c < InputLayer->C ? InputLayer->Neurons[c] : Float(0);
@@ -91,13 +88,11 @@ namespace dnn
 							NeuronsD1[c] = Float(0);
 #endif // DNN_LEAN
 						}
-					}
 				}
 				else
 				{
 #endif
 					if (!plain)
-					{
 						for_i(batchSize, threads, [=](UInt n)
 						{
 							const auto outputOffset = n * PaddedCDHW;
@@ -111,9 +106,7 @@ namespace dnn
 #endif // DNN_LEAN
 							}
 						});
-					}
 					else
-					{
 						for_i(batchSize, threads, [=](UInt n)
 						{
 							const auto outputOffset = n * CDHW;
@@ -127,8 +120,7 @@ namespace dnn
 #endif // DNN_LEAN
 							}
 						});
-					}
-					
+			
 #ifdef DNN_STOCHASTIC
 				}
 #endif

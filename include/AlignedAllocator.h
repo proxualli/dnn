@@ -79,7 +79,7 @@ namespace dnn
 			ptr->~U();
 		}
 
-	private:
+	protected:
 		inline void* AlignedAlloc(const size_type align, const size_type size) const
 		{
 #if defined(_WIN32) || defined(__CYGWIN__)

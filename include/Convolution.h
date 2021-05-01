@@ -158,7 +158,7 @@ namespace dnn
 
 				dnnl::reorder(memWeights, weightsMem).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_FROM, memWeights}, { DNNL_ARG_TO, weightsMem } });
 				Device.stream.wait();
-
+				
 				Weights = weights;
 				WeightsMemDesc = std::make_unique<dnnl::memory::desc>(fwdDesc->weights_desc());
 			}
@@ -205,7 +205,7 @@ namespace dnn
 
 #ifndef DNN_LEAN
 			if (training)
-				ZeroArray(NeuronsD1.data(), batchSize * PaddedCDHW);
+				ZeroArray<Float>(NeuronsD1.data(), batchSize * PaddedCDHW);
 #else
 			DNN_UNREF_PAR(batchSize);
 #endif // DNN_LEAN			

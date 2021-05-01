@@ -142,25 +142,118 @@ namespace dnn
 #endif
 	#define DNN_SIMD_ALIGN DNN_ALIGN(64)
 
-	template <typename T, std::size_t alignment, typename Allocator = AlignedAllocator<T, alignment>> class AlignedArray
+	template<typename T>
+	inline static void ZeroArray(T* destination, const std::size_t elements, const int initValue = int(0)) noexcept
 	{
-	static_assert(std::is_same_v<T, typename Allocator::value_type>, "array<T, Allocator>");
+		if (elements < 1048576ull)
+			::memset(destination, 0, elements * sizeof(T));
+		else
+		{
+			const auto threads = elements < 2097152ull ? 2ull : elements < 8338608ull ? LIGHT_COMPUTE : MEDIUM_COMPUTE;
+			const auto part = elements / threads;
+			for_i(threads, [=](const std::size_t thread) { ::memset(destination + part * thread, initValue, part * sizeof(T)); });
+			if (elements % threads != 0)
+				::memset(destination + part * threads, initValue, (elements - part * threads) * sizeof(T));
+		}
+	}
+
+	struct aligned_free 
+	{
+		void operator()(void* p) 
+		{
+#if defined(_WIN32) || defined(__CYGWIN__)
+			::_aligned_free(p);
+#elif defined(__MINGW32__)
+			::_mm_free(p);
+#else
+			::free(p);
+#endif
+		}
+	};
+	
+	template<typename T>
+	T* aligned_malloc(std::size_t size, std::size_t alignment) 
+	{ 
+#if defined(_WIN32) || defined(__CYGWIN__)
+		return static_cast<T*>(::_aligned_malloc(size * sizeof(T), alignment));
+#elif defined(__ANDROID__)
+		return static_cast<T*>(::memalign(size * sizeof(T), alignment));
+#elif defined(__MINGW32__)
+		return  static_cast<T*>(::_mm_malloc(size * sizeof(T), alignment));
+#else  // posix assumed
+		return static_cast<T*>(::aligned_alloc(alignment, size * sizeof(T)));
+#endif
+	}
+
+	template<class T> using unique_ptr_aligned = std::unique_ptr<T, aligned_free>;
+
+	template<class T, std::size_t alignment> 
+	unique_ptr_aligned<T> aligned_unique_ptr(std::size_t size, std::size_t align) { return unique_ptr_aligned<T>(static_cast<T*>(aligned_malloc<T>(size, align))); }
+
+	template<class T, std::size_t alignment> 
+	std::shared_ptr<T> aligned_shared_ptr(size_t align, size_t size) { return std::shared_ptr<T>(static_cast<T*>(aligned_malloc<T>(align, size)), &aligned_free); }
+
+	template <typename T, std::size_t alignment> class AlignedArray
+	{
 	protected:
-		std::vector<T, Allocator> arr;
-		typedef typename Allocator::size_type size_type;
+		unique_ptr_aligned<T> arr = nullptr;
+		T* Data = nullptr;
+		typedef typename std::size_t size_type;
+		size_type count = 0;
 	public:
-		AlignedArray() { arr = std::vector<T, Allocator>(); }
-		AlignedArray(size_type n, T value = T()) { arr = std::vector<T, Allocator>(n, value); }
-		inline T* data() noexcept { return arr.data(); }
-		inline const T* data() const noexcept { return arr.data(); }
-		inline size_type size() const noexcept { return arr.size(); }
-		inline void resize(size_type n, T value = T()) { arr.resize(n, value); }
-		inline T& operator[] (size_type i) noexcept { return arr[i]; }
-		inline const T& operator[] (size_type i) const noexcept { return arr[i]; }
-		inline bool empty() const noexcept { return arr.empty(); }
-		inline void clear() noexcept { arr.clear(); }
-		inline void shrink_to_fit() noexcept { arr.shrink_to_fit(); }
-		inline void swap(AlignedArray& other) noexcept { std::vector<T, Allocator>().swap(other.arr); }
+		AlignedArray() { }
+		AlignedArray(size_type n, T value = T()) 
+		{ 
+			if (count > 0)
+				arr.release();
+				
+			count = 0;
+			arr = nullptr;
+			Data = nullptr;
+
+			arr = aligned_unique_ptr<T, alignment>(n, alignment); 
+			Data = arr.get(); 
+			count = n;
+
+			for (size_type i = 0; i < count; ++i) 
+				Data[i] = value;
+		}
+		inline void release() noexcept
+		{
+			if (count > 0)
+				arr.reset(nullptr);
+
+			count = 0;
+			arr = nullptr;
+			Data = nullptr;
+		}
+		inline T* data() noexcept { return Data; }
+		inline const T* data() const noexcept { return Data; }
+		inline size_type size() const noexcept { return count; }
+		inline void resize(size_type n) 
+		{ 
+			if (n == count)
+				return;
+
+			if (count > 0)
+				arr.reset(nullptr);
+
+			count = 0;
+			arr = nullptr;
+			Data = nullptr;
+			
+			if (n > 0)
+			{
+				arr = aligned_unique_ptr<T, alignment>(n, alignment);
+				Data = arr.get();
+				count = n;
+				ZeroArray<T>(Data, n);
+			}		
+		}
+		inline T& operator[] (size_type i) noexcept { return Data[i]; }
+		inline const T& operator[] (size_type i) const noexcept { return Data[i]; }
+		inline bool empty() const noexcept { return count == 0; }
+		
 	};
 
 	template <typename T, std::size_t alignment, typename Allocator = AlignedAllocator<T, alignment>> class AlignedVector
@@ -194,8 +287,8 @@ namespace dnn
 	typedef size_t UInt;
 	typedef unsigned char Byte;
 	typedef AlignedArray<Float, 64ull> FloatArray;
-	typedef AlignedVector<Float, 64ull> FloatVector;
 	typedef AlignedArray<Byte, 64ull> ByteArray;
+	typedef AlignedVector<Float, 64ull> FloatVector;
 	//constexpr bool IS_LITTLE_ENDIAN = std::endian::native == std::endian::little;
 	constexpr auto NEURONS_LIMIT = Float(1000);   // limit for all the neurons and derivative [-NEURONS_LIMIT,NEURONS_LIMIT]
 	constexpr auto WEIGHTS_LIMIT = Float(100);    // limit for all the weights and biases [-WEIGHTS_LIMIT,WEIGHTS_LIMIT]
@@ -208,7 +301,7 @@ namespace dnn
 	constexpr auto Saturate(const T& value) noexcept { return (value > T(255)) ? Byte(255) : (value < T(0)) ? Byte(0) : Byte(value); }
 	constexpr auto GetColorFromRange(const Float& range, const Float& minimum, const Float& value) noexcept { return Saturate<Float>(Float(255) - ((value - minimum) * range)); }
 	constexpr auto GetColorRange(const Float& min, const Float& max) noexcept { return (min == max) ? Float(0) : Float(255) / ((std::signbit(min) && std::signbit(max)) ? -(min + max) : (max - min)); }
-	
+
 #if defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW32__)
 	static const auto nwl = std::string("\r\n");
 #else // assuming Linux
@@ -264,27 +357,7 @@ namespace dnn
 
 		return dnnl::memory::format_tag::undef;
 	}
-
-	inline static void ZeroArray(Float* destination, const UInt elements, const int initValue = int(0)) noexcept
-	{
-		if (elements < 1048576ull)
-			::memset(destination, 0, elements * sizeof(Float));
-		else
-		{
-			const auto threads = elements < 2097152ull ? 2ull : elements < 8338608ull ? LIGHT_COMPUTE : MEDIUM_COMPUTE;
-			const auto part = elements / threads;
-			for_i(threads, [=](const UInt thread) { ::memset(destination + part * thread, initValue, part * sizeof(Float)); });
-			if (elements % threads != 0)
-				::memset(destination + part * threads, initValue, (elements - part * threads) * sizeof(Float));
-		}
-	}
 	
-	inline static void ResizeArray(FloatArray& destination, const UInt elements, const int initValue = int(0)) noexcept
-	{
-		destination.resize(elements);
-		ZeroArray(destination.data(), elements, initValue);
-	}
-
 #ifdef DNN_FAST_SEED
 	template<typename T>
 	inline static T Seed() noexcept

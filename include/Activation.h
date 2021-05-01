@@ -522,7 +522,7 @@ namespace dnn
 
 #ifndef DNN_LEAN
 				if (training)
-					ZeroArray(NeuronsD1.data(), batchSize * PaddedCDHW);
+					ZeroArray<Float>(NeuronsD1.data(), batchSize * PaddedCDHW);
 #endif
 			}
 			break;
@@ -547,7 +547,7 @@ namespace dnn
 
 #ifndef DNN_LEAN
 				if (training)
-					ZeroArray(NeuronsD1.data(), batchSize * PaddedCDHW);
+					ZeroArray<Float>(NeuronsD1.data(), batchSize * PaddedCDHW);
 #endif
 			}
 			break;
@@ -574,7 +574,7 @@ namespace dnn
 
 #ifndef DNN_LEAN
 				if (training)
-					ZeroArray(NeuronsD1.data(), batchSize * PaddedCDHW);
+					ZeroArray<Float>(NeuronsD1.data(), batchSize * PaddedCDHW);
 #endif
 			}
 			break;
@@ -1019,7 +1019,6 @@ namespace dnn
 								}
 							}
 							else
-							{
 								for (auto c = 0ull; c < C; c++)
 								{
 									Neurons[c] = TanhExp::f(InputLayer->Neurons[c]);
@@ -1027,7 +1026,6 @@ namespace dnn
 									NeuronsD1[c] = Float(0);
 #endif // DNN_LEAN
 								}
-							}
 						}
 						else
 						{
@@ -1184,26 +1182,26 @@ namespace dnn
 							if (!plain)
 							{
 								for_i(batchSize, threads, [=](UInt n)
+								{
+									for (auto c = 0ull; c < PaddedC; c += VectorSize)
 									{
-										for (auto c = 0ull; c < PaddedC; c += VectorSize)
-										{
-											const auto offset = n * PaddedCDHW + c * HW;
-											for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
-												TanhExp::fVec(VecFloat().load_a(&InputLayer->Neurons[hw + offset])).store_a(&Neurons[hw + offset]);
-										}
-									});
+										const auto offset = n * PaddedCDHW + c * HW;
+										for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
+											TanhExp::fVec(VecFloat().load_a(&InputLayer->Neurons[hw + offset])).store_a(&Neurons[hw + offset]);
+									}
+								});
 							}
 							else
 							{
 								for_i(batchSize, threads, [=](UInt n)
+								{
+									for (auto c = 0ull; c < C; c++)
 									{
-										for (auto c = 0ull; c < C; c++)
-										{
-											const auto offset = n * CDHW + c * HW;
-											for (auto hw = 0ull; hw < HW; hw++)
-												Neurons[hw + offset] = TanhExp::f(InputLayer->Neurons[hw + offset]);
-										}
-									});
+										const auto offset = n * CDHW + c * HW;
+										for (auto hw = 0ull; hw < HW; hw++)
+											Neurons[hw + offset] = TanhExp::f(InputLayer->Neurons[hw + offset]);
+									}
+								});
 							}
 						}
 					}
@@ -1233,7 +1231,7 @@ namespace dnn
 
 #ifndef DNN_LEAN
 				if (training)
-					ZeroArray(NeuronsD1.data(), batchSize * PaddedCDHW);
+					ZeroArray<Float>(NeuronsD1.data(), batchSize * PaddedCDHW);
 #endif
 			}
 			}

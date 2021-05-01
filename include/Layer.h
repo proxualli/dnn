@@ -403,21 +403,18 @@ namespace dnn
 #ifdef DNN_LEAN
 		inline void ZeroGradient(const UInt batchSize)
 		{
-			ResizeArray(InputLayer->NeuronsD1, batchSize * InputLayer->PaddedCDHW);
+			InputLayer->NeuronsD1.resize(batchSize * InputLayer->PaddedCDHW);
 		}
 
 		inline void ZeroGradientMulti(const UInt batchSize)
 		{
 			for (auto& inputLayer : Inputs)
-				ResizeArray(inputLayer->NeuronsD1, batchSize * inputLayer->PaddedCDHW);
+				inputLayer->NeuronsD1.resize(batchSize * inputLayer->PaddedCDHW);
 		}
 
 		inline void ReleaseGradient()
 		{
-			NeuronsD1.resize(0);
-			NeuronsD1.clear();
-			NeuronsD1.shrink_to_fit();
-			FloatArray().swap(NeuronsD1);
+			NeuronsD1.release();
 		}
 #endif // DNN_LEAN
 
@@ -426,9 +423,9 @@ namespace dnn
 			while (RefreshingStats.load())
 				std::this_thread::sleep_for(std::chrono::milliseconds(250));
 
-			ResizeArray(Neurons, batchSize * PaddedCDHW);
+			Neurons.resize(batchSize * PaddedCDHW);
 #ifndef DNN_LEAN
-			ResizeArray(NeuronsD1, batchSize * PaddedCDHW);
+			NeuronsD1.resize(batchSize * PaddedCDHW);
 #else
 			ReleaseGradient();
 #endif // DNN_LEAN
@@ -627,7 +624,6 @@ namespace dnn
 			case Optimizers::AdaDelta:
 			{
 				if (HasWeights)
-				{
 					for (auto i = 0ull; i < Weights.size(); i++)
 					{
 						if (std::isnan(WeightsPar1[i]) || std::isinf(WeightsPar1[i]))
@@ -641,10 +637,8 @@ namespace dnn
 							break;
 						}
 					}
-				}
 
 				if (HasBias && !dirty)
-				{
 					for (auto i = 0ull; i < BiasCount; i++)
 					{
 						if (std::isnan(BiasesPar1[i]) || std::isinf(BiasesPar1[i]))
@@ -658,14 +652,12 @@ namespace dnn
 							break;
 						}
 					}
-				}
 			}
 			break;
 
 			case Optimizers::Adam:
 			{
 				if (HasWeights)
-				{
 					for (auto i = 0ull; i < Weights.size(); i++)
 					{
 						if (std::isnan(WeightsPar1[i]) || std::isinf(WeightsPar1[i]))
@@ -679,10 +671,8 @@ namespace dnn
 							break;
 						}
 					}
-				}
 
 				if (HasBias && !dirty)
-				{
 					for (auto i = 0ull; i < BiasCount; i++)
 					{
 						if (std::isnan(BiasesPar1[i]) || std::isinf(BiasesPar1[i]))
@@ -696,7 +686,6 @@ namespace dnn
 							break;
 						}
 					}
-				}
 
 				if (std::isnan(B1) || std::isinf(B1))
 					dirty = true;
@@ -708,7 +697,6 @@ namespace dnn
 			case Optimizers::Adamax:
 			{
 				if (HasWeights)
-				{
 					for (auto i = 0ull; i < Weights.size(); i++)
 					{
 						if (std::isnan(WeightsPar1[i]) || std::isinf(WeightsPar1[i]))
@@ -722,10 +710,8 @@ namespace dnn
 							break;
 						}
 					}
-				}
 
 				if (HasBias && !dirty)
-				{
 					for (auto i = 0ull; i < BiasCount; i++)
 					{
 						if (std::isnan(BiasesPar1[i]) || std::isinf(BiasesPar1[i]))
@@ -739,7 +725,6 @@ namespace dnn
 							break;
 						}
 					}
-				}
 
 				if (std::isnan(B1) || std::isinf(B1))
 					dirty = true;
@@ -752,7 +737,6 @@ namespace dnn
 			case Optimizers::SGDMomentum:
 			{
 				if (HasWeights)
-				{
 					for (auto i = 0ull; i < Weights.size(); i++)
 					{
 						if (std::isnan(WeightsPar1[i]) || std::isinf(WeightsPar1[i]))
@@ -761,10 +745,8 @@ namespace dnn
 							break;
 						}
 					}
-				}
 
 				if (HasBias && !dirty)
-				{
 					for (auto i = 0ull; i < BiasCount; i++)
 					{
 						if (std::isnan(BiasesPar1[i]) || std::isinf(BiasesPar1[i]))
@@ -773,7 +755,6 @@ namespace dnn
 							break;
 						}
 					}
-				}
 			}
 			break;
 
@@ -789,20 +770,20 @@ namespace dnn
 		{
 			if (HasWeights)
 			{
-				WeightsD1.resize(WeightsMemDesc->get_size() / sizeof(Float), Float(0));
+				const auto newWeightsSize = WeightsMemDesc->get_size() / sizeof(Float);
+				WeightsD1.resize(newWeightsSize, Float(0));
+
+				BiasesD1.resize(HasBias ? BiasCount : 0, Float(0));
 
 				switch (optimizer)
 				{
 				case Optimizers::AdaDelta:
 				case Optimizers::Adam:
 				case Optimizers::Adamax:
-					WeightsPar1 = FloatVector(WeightsMemDesc->get_size() / sizeof(Float), Float(0));
-					WeightsPar2 = FloatVector(WeightsMemDesc->get_size() / sizeof(Float), Float(0));
-					if (HasBias)
-					{
-						BiasesPar1 = FloatVector(BiasCount, Float(0));
-						BiasesPar2 = FloatVector(BiasCount, Float(0));
-					}
+					WeightsPar1 = FloatVector(newWeightsSize, Float(0));
+					WeightsPar2 = FloatVector(newWeightsSize, Float(0));
+					BiasesPar1.resize(HasBias ? BiasCount : 0, Float(0));
+					BiasesPar2.resize(HasBias ? BiasCount : 0, Float(0));
 					B1 = Float(0.9);
 					B2 = Float(0.999);
 					break;
@@ -811,23 +792,17 @@ namespace dnn
 				case Optimizers::NAG:
 				case Optimizers::RMSProp:
 				case Optimizers::SGDMomentum:
-					WeightsPar1 = FloatVector(WeightsMemDesc->get_size() / sizeof(Float), Float(0));
+					WeightsPar1 = FloatVector(newWeightsSize, Float(0));
 					WeightsPar2.resize(0);
-					if (HasBias)
-					{
-						BiasesPar1 = FloatVector(BiasCount, Float(0));
-						BiasesPar2.resize(0);
-					}
+					BiasesPar1.resize(HasBias ? BiasCount : 0, Float(0));
+					BiasesPar2.resize(0);
 					break;
 
 				case Optimizers::SGD:
 					WeightsPar1.resize(0);
 					WeightsPar2.resize(0);
-					if (HasBias)
-					{
-						BiasesPar1.resize(0);
-						BiasesPar2.resize(0);
-					}
+					BiasesPar1.resize(0);
+					BiasesPar2.resize(0);
 					break;
 				}
 			}
@@ -837,46 +812,37 @@ namespace dnn
 		{
 			if (HasWeights)
 			{
-				WeightsD1.resize(WeightsMemDesc->get_size() / sizeof(Float), Float(0));
+				const auto newWeightsSize = WeightsMemDesc->get_size() / sizeof(Float);
+				WeightsD1.resize(newWeightsSize, Float(0));
 
-				if (HasBias)
-					BiasesD1.resize(BiasCount, Float(0));
-
+				BiasesD1.resize(HasBias ? BiasCount : 0, Float(0));
+				
 				switch (optimizer)
 				{
 				case Optimizers::AdaDelta:
 				case Optimizers::Adam:
 				case Optimizers::Adamax:
-					WeightsPar1.resize(WeightsMemDesc->get_size() / sizeof(Float), Float(0));
-					WeightsPar2.resize(WeightsMemDesc->get_size() / sizeof(Float), Float(0));
-					if (HasBias)
-					{
-						BiasesPar1.resize(BiasCount, Float(0));
-						BiasesPar2.resize(BiasCount, Float(0));
-					}
+					WeightsPar1.resize(newWeightsSize, Float(0));
+					WeightsPar2.resize(newWeightsSize, Float(0));
+					BiasesPar1.resize(HasBias ? BiasCount : 0, Float(0));
+					BiasesPar2.resize(HasBias ? BiasCount : 0, Float(0));
 					break;
 
 				case Optimizers::AdaGrad:
 				case Optimizers::NAG:
 				case Optimizers::RMSProp:
 				case Optimizers::SGDMomentum:
-					WeightsPar1.resize(WeightsMemDesc->get_size() / sizeof(Float), Float(0));
+					WeightsPar1.resize(newWeightsSize, Float(0));
 					WeightsPar2.resize(0);
-					if (HasBias)
-					{
-						BiasesPar1.resize(BiasCount, Float(0));
-						BiasesPar2.resize(0);
-					}
+					BiasesPar1.resize(HasBias ? BiasCount : 0, Float(0));
+					BiasesPar2.resize(0);
 					break;
 
 				case Optimizers::SGD:
 					WeightsPar1.resize(0);
 					WeightsPar2.resize(0);
-					if (HasBias)
-					{
-						BiasesPar1.resize(0);
-						BiasesPar2.resize(0);
-					}
+					BiasesPar1.resize(0);
+					BiasesPar2.resize(0);
 					break;
 				}
 			}

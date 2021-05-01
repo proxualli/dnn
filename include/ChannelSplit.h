@@ -98,7 +98,6 @@ namespace dnn
 						}
 					}
 					else
-					{
 						for (auto c = 0ull; c < C; c++)
 						{
 							const auto inputOffset = (c + groupC) * HW;
@@ -111,7 +110,6 @@ namespace dnn
 #endif // DNN_LEAN
 							}
 						}
-					}
 				}
 				else
 				{
@@ -131,7 +129,6 @@ namespace dnn
 						}
 					}
 					else
-					{
 						for (auto c = 0ull; c < C; c++)
 						{
 							const auto inputOffset = (c + groupC) * HW;
@@ -139,7 +136,6 @@ namespace dnn
 							for (auto hw = 0ull; hw < HW; hw++)
 								Neurons[hw + outputOffset] = InputLayer->Neurons[hw + inputOffset];
 						}
-					}
 				}				
 			}
 			else
@@ -148,7 +144,6 @@ namespace dnn
 				if (training)
 				{
 					if (!plain)
-					{
 						for_i(batchSize, threads, [=](UInt n)
 						{
 							const auto vecZero = VecFloat(0); 
@@ -167,9 +162,7 @@ namespace dnn
 								}
 							}
 						});
-					}
 					else
-					{
 						for_i(batchSize, threads, [=](UInt n)
 						{
 							for (auto c = 0ull; c < C; c ++)
@@ -185,12 +178,10 @@ namespace dnn
 								}
 							}
 						});
-					}
 				}
 				else
 				{
 					if (!plain)
-					{
 						for_i(batchSize, threads, [=](UInt n)
 						{
 							VecFloat In;
@@ -205,9 +196,7 @@ namespace dnn
 								}
 							}
 						});
-					}
 					else
-					{
 						for_i(batchSize, threads, [=](UInt n)
 						{
 							for (auto c = 0ull; c < C; c ++)
@@ -218,7 +207,6 @@ namespace dnn
 									Neurons[hw + outputOffset] = InputLayer->Neurons[hw + inputOffset];
 							}
 						});
-					}
 				}
 #ifdef DNN_STOCHASTIC
 			}
@@ -257,7 +245,6 @@ namespace dnn
 					}
 				}
 				else
-				{
 					for (auto c = 0ull; c < C; c++)
 					{
 						const auto inputOffset = (c + groupC) * HW;
@@ -265,13 +252,11 @@ namespace dnn
 						for (auto hw = 0ull; hw < HW; hw++)
 							InputLayer->NeuronsD1[hw + inputOffset] += NeuronsD1[hw + outputOffset];
 					}
-				}
 			}
 			else
 			{
 #endif
 				if (!plain)
-				{
 					for_i(batchSize, threads, [=](UInt n)
 					{
 						VecFloat In, D1;
@@ -288,9 +273,7 @@ namespace dnn
 							}
 						}
 					});
-				}
 				else
-				{
 					for_i(batchSize, threads, [=](UInt n)
 					{
 						for (auto c = 0ull; c < C; c++)
@@ -301,7 +284,6 @@ namespace dnn
 								InputLayer->NeuronsD1[hw + inputOffset] += NeuronsD1[hw + outputOffset];
 						}
 					});
-				}
 #ifdef DNN_STOCHASTIC
 			}
 #endif

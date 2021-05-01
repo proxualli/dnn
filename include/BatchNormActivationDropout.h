@@ -115,7 +115,7 @@ namespace dnn
 		{
 			Layer::SetBatchSize(batchSize);
 
-			ResizeArray(NeuronsActive, batchSize * PaddedCDHW);
+			NeuronsActive.resize(batchSize * PaddedCDHW);
 			for (auto n = 0ull; n < batchSize; n++)
 				for (auto i = 0ull; i < CDHW; i++)
 					NeuronsActive[n * PaddedCDHW + i] = Float(1);
