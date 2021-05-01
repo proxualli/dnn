@@ -255,7 +255,7 @@ namespace dnn
 		AlignedArray()
 		{
 			if (arr)
-				arr.release();
+				arr.reset(nullptr);
 
 			count = 0;
 			arr = nullptr;
@@ -264,7 +264,7 @@ namespace dnn
 		AlignedArray(size_type newSize, T value = T()) 
 		{ 
 			if (arr)
-				arr.release();
+				arr.reset(nullptr);
 				
 			count = 0;
 			arr = nullptr;
@@ -309,7 +309,7 @@ namespace dnn
 				return;
 
 			if (arr)
-				arr.release();
+				arr.reset(nullptr);
 
 			count = 0;
 			arr = nullptr;
