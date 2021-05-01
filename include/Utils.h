@@ -277,12 +277,15 @@ namespace dnn
 				count = newSize;
 			}
 	
-			if (count >= VectorSize && count % VectorSize == 0 && typeid(T) == typeid(Float))
+			if (count >= VectorSize && typeid(T) == typeid(Float))
 			{
+				const auto vecCount = (count / VectorSize) * VectorSize;
 				const VecFloat vecValue = VecFloat(value);
 				Float* tmpArr = reinterpret_cast<Float*>(Data);
-				for (size_type i = 0; i < count; i+=VectorSize)
+				for (size_type i = 0; i < vecCount; i+=VectorSize)
 					vecValue.store_nt(&tmpArr[i]);
+				for (size_type i = vecCount; i < count; ++i)
+					Data[i] = value;
 			}
 			else
 				for (size_type i = 0; i < count; ++i) 
