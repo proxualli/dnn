@@ -254,7 +254,7 @@ namespace dnn
 	public:
 		AlignedArray()
 		{
-			if (arr != nullptr)
+			if (arr)
 				arr.release();
 
 			count = 0;
@@ -263,7 +263,7 @@ namespace dnn
 		}
 		AlignedArray(size_type newSize, T value = T()) 
 		{ 
-			if (arr != nullptr)
+			if (arr)
 				arr.release();
 				
 			count = 0;
@@ -271,7 +271,7 @@ namespace dnn
 			Data = nullptr;
 
 			arr = aligned_unique_ptr<T, alignment>(newSize, alignment);
-			if (arr != nullptr)
+			if (arr)
 			{
 				Data = arr.get();
 				count = newSize;
@@ -290,7 +290,7 @@ namespace dnn
 		}
 		inline void release() noexcept
 		{
-			if (arr != nullptr)
+			if (arr)
 				arr.reset(nullptr);
 
 			count = 0;
@@ -305,7 +305,7 @@ namespace dnn
 			if (newSize == count)
 				return;
 
-			if (arr != nullptr)
+			if (arr)
 				arr.release();
 
 			count = 0;
@@ -315,7 +315,7 @@ namespace dnn
 			if (newSize > 0)
 			{
 				arr = aligned_unique_ptr<T, alignment>(newSize, alignment);
-				if (arr != nullptr)
+				if (arr)
 				{
 					Data = arr.get();
 					count = newSize;
