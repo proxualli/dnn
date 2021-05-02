@@ -277,8 +277,9 @@ namespace dnn
 				count = newSize;
 			}
 	
-			if (count >= VectorSize && typeid(T) == typeid(Float))
+			if (std::is_floating_point_v<T> && count >= VectorSize)
 			{
+				// only floats for now, not double or long double !!!
 				const auto vecCount = (count / VectorSize) * VectorSize;
 				const VecFloat vecValue = VecFloat(value);
 				Float* tmpArr = reinterpret_cast<Float*>(Data);
