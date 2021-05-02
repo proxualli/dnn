@@ -776,9 +776,13 @@ namespace dnn
 						if (Bernoulli<bool>(dropout))
 							for (auto c = 0ull; c < dstImage.Channels; c++)
 								if constexpr (std::is_floating_point_v<T>)
+								{
 									dstImage(c, d, h, w) = T(0);
+								}
 								else
+								{
 									dstImage(c, d, h, w) = T(mean[c]);
+								}
 
 			return dstImage;
 		}
