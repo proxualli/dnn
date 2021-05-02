@@ -772,20 +772,21 @@ namespace dnn
 		{
 			if (HasWeights)
 			{
-				const auto newWeightsSize = WeightsMemDesc->get_size() / sizeof(Float);
-				WeightsD1.resize(newWeightsSize, Float(0));
+				const auto weightsSize = WeightsMemDesc->get_size() / sizeof(Float);
+				const auto biasesSize = HasBias ? BiasCount : 0;
 
-				BiasesD1.resize(HasBias ? BiasCount : 0, Float(0));
-
+				WeightsD1.resize(weightsSize, Float(0));
+				BiasesD1.resize(biasesSize, Float(0));
+				
 				switch (optimizer)
 				{
 				case Optimizers::AdaDelta:
 				case Optimizers::Adam:
 				case Optimizers::Adamax:
-					WeightsPar1 = FloatVector(newWeightsSize, Float(0));
-					WeightsPar2 = FloatVector(newWeightsSize, Float(0));
-					BiasesPar1.resize(HasBias ? BiasCount : 0, Float(0));
-					BiasesPar2.resize(HasBias ? BiasCount : 0, Float(0));
+					WeightsPar1 = FloatVector(weightsSize, Float(0));
+					WeightsPar2 = FloatVector(weightsSize, Float(0));
+					BiasesPar1 = FloatVector(biasesSize, Float(0));
+					BiasesPar2 = FloatVector(biasesSize, Float(0));
 					B1 = Float(0.9);
 					B2 = Float(0.999);
 					break;
@@ -794,9 +795,9 @@ namespace dnn
 				case Optimizers::NAG:
 				case Optimizers::RMSProp:
 				case Optimizers::SGDMomentum:
-					WeightsPar1 = FloatVector(newWeightsSize, Float(0));
+					WeightsPar1 = FloatVector(weightsSize, Float(0));
 					WeightsPar2.resize(0);
-					BiasesPar1.resize(HasBias ? BiasCount : 0, Float(0));
+					BiasesPar1 = FloatVector(biasesSize, Float(0));
 					BiasesPar2.resize(0);
 					break;
 
@@ -810,46 +811,6 @@ namespace dnn
 			}
 		}
 
-		void SetOptimizer(const Optimizers optimizer)
-		{
-			if (HasWeights)
-			{
-				const auto newWeightsSize = WeightsMemDesc->get_size() / sizeof(Float);
-				WeightsD1.resize(newWeightsSize, Float(0));
-
-				BiasesD1.resize(HasBias ? BiasCount : 0, Float(0));
-				
-				switch (optimizer)
-				{
-				case Optimizers::AdaDelta:
-				case Optimizers::Adam:
-				case Optimizers::Adamax:
-					WeightsPar1.resize(newWeightsSize, Float(0));
-					WeightsPar2.resize(newWeightsSize, Float(0));
-					BiasesPar1.resize(HasBias ? BiasCount : 0, Float(0));
-					BiasesPar2.resize(HasBias ? BiasCount : 0, Float(0));
-					break;
-
-				case Optimizers::AdaGrad:
-				case Optimizers::NAG:
-				case Optimizers::RMSProp:
-				case Optimizers::SGDMomentum:
-					WeightsPar1.resize(newWeightsSize, Float(0));
-					WeightsPar2.resize(0);
-					BiasesPar1.resize(HasBias ? BiasCount : 0, Float(0));
-					BiasesPar2.resize(0);
-					break;
-
-				case Optimizers::SGD:
-					WeightsPar1.resize(0);
-					WeightsPar2.resize(0);
-					BiasesPar1.resize(0);
-					BiasesPar2.resize(0);
-					break;
-				}
-			}
-		}
-		
 		virtual void ResetWeights(const Fillers weightsFiller, const Float weightsScale, const Fillers biasesFiller, const Float biasesScale)
 		{
 			if (HasWeights)
@@ -1067,13 +1028,13 @@ namespace dnn
 			}
 		}
 
-		void ResetGradients()
+		inline void ResetGradients()
 		{
 			std::fill(WeightsD1.begin(), WeightsD1.end(), Float(0));
 			std::fill_n(BiasesD1.begin(), BiasCount, Float(0));
 		}
 
-		void UpdateWeights(const TrainingRate& rate, const Optimizers optimizer, const bool disableLocking)
+		inline void UpdateWeights(const TrainingRate& rate, const Optimizers optimizer, const bool disableLocking)
 		{
 			if (HasWeights && (disableLocking || (!disableLocking && !LockUpdate.load())))
 			{
