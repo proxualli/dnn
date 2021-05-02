@@ -811,6 +811,47 @@ namespace dnn
 			}
 		}
 
+		void SetOptimizer(const Optimizers optimizer)
+		{
+			if (HasWeights)
+			{
+				const auto weightsSize = WeightsMemDesc->get_size() / sizeof(Float);
+				const auto biasesSize = HasBias ? BiasCount : 0;
+
+				WeightsD1.resize(weightsSize, Float(0));
+				BiasesD1.resize(biasesSize, Float(0));
+
+				switch (optimizer)
+				{
+				case Optimizers::AdaDelta:
+				case Optimizers::Adam:
+				case Optimizers::Adamax:
+					WeightsPar1.resize(weightsSize, Float(0));
+					WeightsPar2.resize(weightsSize, Float(0));
+					BiasesPar1.resize(biasesSize, Float(0));
+					BiasesPar2.resize(biasesSize, Float(0));
+					break;
+
+				case Optimizers::AdaGrad:
+				case Optimizers::NAG:
+				case Optimizers::RMSProp:
+				case Optimizers::SGDMomentum:
+					WeightsPar1.resize(weightsSize, Float(0));
+					WeightsPar2.resize(0);
+					BiasesPar1.resize(biasesSize, Float(0));
+					BiasesPar2.resize(0);
+					break;
+
+				case Optimizers::SGD:
+					WeightsPar1.resize(0);
+					WeightsPar2.resize(0);
+					BiasesPar1.resize(0);
+					BiasesPar2.resize(0);
+					break;
+				}
+			}
+		}
+
 		virtual void ResetWeights(const Fillers weightsFiller, const Float weightsScale, const Fillers biasesFiller, const Float biasesScale)
 		{
 			if (HasWeights)

@@ -595,7 +595,7 @@ namespace dnn
 				for (auto& layer : Layers)
 				{
 					layer->InitializeDescriptors(BatchSize);
-					layer->ResetOptimizer(optimizer);
+					layer->SetOptimizer(optimizer);
 				}
 
 				Optimizer = optimizer;
