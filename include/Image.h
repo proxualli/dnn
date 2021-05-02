@@ -1160,8 +1160,6 @@ namespace dnn
 			if (deltaH == 0 && deltaW == 0)
 				return image;
 
-			constexpr bool isFloat = std::is_floating_point_v<T>;
-
 			if (deltaW <= -int(image.Width) || deltaW >= int(image.Width) || deltaH <= -int(image.Height) || deltaH >= int(image.Height))
 			{
 				Image dstImage(image.Channels, image.Depth, image.Height, image.Width);
