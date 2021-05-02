@@ -534,7 +534,10 @@ namespace dnn
 				if (TaskState.load() == TaskStates::Paused)
 				{
 					while (TaskState.load() == TaskStates::Paused)
-						WaitFor(std::chrono::milliseconds(1000));
+					{
+						std::this_thread::sleep_for(std::chrono::milliseconds(500));
+						SleepYield(std::chrono::milliseconds(500));
+					}
 				}
 				else
 					return false;

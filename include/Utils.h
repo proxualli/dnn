@@ -385,7 +385,7 @@ namespace dnn
 	static const auto tab = std::string("\t");
 	static const auto dtab = std::string("\t\t");	
 	
-	inline static void WaitFor(std::chrono::microseconds us)
+	inline static void SleepYield(std::chrono::microseconds us)
 	{
 		const auto start = std::chrono::high_resolution_clock::now();
 		const auto end = start + us;

@@ -226,6 +226,7 @@ namespace dnn
 		const bool Scaling;
 		const bool HasBias;
 		const bool HasWeights;
+		const bool InplaceBwd;
 		bool UseDefaultParameters;
 		Fillers WeightsFiller;
 		Float WeightsScale;
@@ -293,6 +294,7 @@ namespace dnn
 			PaddedCDHW(layerType != LayerTypes::Input ? (DivUp(c) * d * h * w) : c * d * h * w),
 			HasPadding(padD > 0 || padH > 0 || padW > 0),
 			InputLayer(inputs.size() > 0 ? inputs[0] : nullptr),
+			InplaceBwd(layerType == LayerTypes::BatchNorm && inputs.size() == 1 && (inputs[0]->LayerType == LayerTypes::Convolution || inputs[0]->LayerType == LayerTypes::DepthwiseConvolution)),
 			RandomEngine(std::mt19937(Seed<unsigned>())),
 			Neurons(FloatArray()),
 			NeuronsD1(FloatArray()),
