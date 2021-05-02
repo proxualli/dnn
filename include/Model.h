@@ -741,6 +741,19 @@ namespace dnn
 			}
 		}
 
+		void SwitchInplaceBwd(const bool enable)
+		{
+			if (enable)
+				for (auto i = Layers.size() - 1; i >= FirstUnlockedLayer.load(); --i)
+				{
+					if (Layers[i]->InputLayer != nullptr && Layers[i]->Inputs.size() == 1 && Layers[i]->InputLayer->InplaceBwd)
+						Layers[i]->InputLayer = Layers[i]->InputLayer->InputLayer;
+				}
+			else
+				for (auto i = 1ull; i < Layers.size(); i++)
+					Layers[i]->InputLayer = Layers[i]->Inputs[0];
+		}
+
 		void Training()
 		{
 			if (TaskState.load() == TaskStates::Stopped && !BatchSizeChanging.load() && !ResettingWeights.load())
@@ -893,7 +906,7 @@ namespace dnn
 								// Backward
 								bpropTimeCount = std::chrono::duration<Float>(Float(0));
 								updateTimeCount = std::chrono::duration<Float>(Float(0));
-
+								SwitchInplaceBwd(true);
 								for (auto i = Layers.size() - 1; i >= FirstUnlockedLayer.load(); --i)
 								{
 									if (Layers[i]->HasWeights)
@@ -915,6 +928,7 @@ namespace dnn
 									}
 									bpropTimeCount += Layers[i]->bpropTime;
 								}
+								SwitchInplaceBwd(false);
 								bpropTime = bpropTimeCount;
 								updateTime = updateTimeCount;
 
@@ -951,7 +965,7 @@ namespace dnn
 								// Backward
 								bpropTimeCount = std::chrono::duration<Float>(Float(0));
 								updateTimeCount = std::chrono::duration<Float>(Float(0));
-
+								SwitchInplaceBwd(true);
 								for (auto i = Layers.size() - 1; i >= FirstUnlockedLayer.load(); --i)
 								{
 									if (Layers[i]->HasWeights)
@@ -973,6 +987,7 @@ namespace dnn
 									}
 									bpropTimeCount += Layers[i]->bpropTime;
 								}
+								SwitchInplaceBwd(false);
 								bpropTime = bpropTimeCount;
 								updateTime = updateTimeCount;
 

@@ -416,7 +416,8 @@ namespace dnn
 
 		inline void ReleaseGradient()
 		{
-			NeuronsD1.release();
+			if (!InplaceBwd)
+				NeuronsD1.release();
 		}
 #endif // DNN_LEAN
 
@@ -427,7 +428,8 @@ namespace dnn
 
 			Neurons.resize(batchSize * PaddedCDHW);
 #ifndef DNN_LEAN
-			NeuronsD1.resize(batchSize * PaddedCDHW);
+			if (!InplaceBwd)
+				NeuronsD1.resize(batchSize * PaddedCDHW);
 #else
 			ReleaseGradient();
 #endif // DNN_LEAN
@@ -1761,7 +1763,7 @@ namespace dnn
 			auto neuronsSize = 0ull;
 
 #ifndef DNN_LEAN
-			neuronsSize += PaddedCDHW * batchSize * sizeof(Float) * 2;
+			neuronsSize += PaddedCDHW * batchSize * sizeof(Float) * (InplaceBwd ? 1 : 2);
 #else
 			neuronsSize += PaddedCDHW * batchSize * sizeof(Float);
 #endif // DNN_LEAN
