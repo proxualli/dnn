@@ -770,14 +770,15 @@ namespace dnn
 		{
 			Image dstImage(image);
 			
-			const bool isFloat = std::is_floating_point_v<T>;
-
 			for (auto d = 0ull; d < dstImage.Depth; d++)
 				for (auto h = 0ull; h < dstImage.Height; h++)
 					for (auto w = 0ull; w < dstImage.Width; w++)
 						if (Bernoulli<bool>(dropout))
 							for (auto c = 0ull; c < dstImage.Channels; c++)
-								dstImage(c, d, h, w) = isFloat ? T(0) : T(mean[c]);
+								if constexpr (std::is_floating_point_v<T>)
+									dstImage(c, d, h, w) = T(0);
+								else
+									dstImage(c, d, h, w) = T(mean[c]);
 
 			return dstImage;
 		}
@@ -841,7 +842,7 @@ namespace dnn
 		{
 			Image dstImage(image.Channels, image.Depth, image.Height, image.Width);
 
-			const T maximum = std::is_floating_point_v<T> ? T(1) : T(255);
+			constexpr T maximum = std::is_floating_point_v<T> ? T(1) : T(255);
 
 			for (auto c = 0ull; c < dstImage.Channels; c++)
 				for (auto d = 0ull; d < dstImage.Depth; d++)
@@ -1021,9 +1022,12 @@ namespace dnn
 		{
 			Image dstImage(image.Channels, depth, height, width);
 
+			auto channelMean = T(0);
 			for (auto c = 0ull; c < dstImage.Channels; c++)
 			{
-				const T channelMean = std::is_floating_point_v<T> ? T(0) : T(mean[c]);
+				if constexpr (!std::is_floating_point_v<T>)
+					channelMean = T(mean[c]);
+				
 				for (auto d = 0ull; d < dstImage.Depth; d++)
 					for (auto h = 0ull; h < dstImage.Height; h++)
 						for (auto w = 0ull; w < dstImage.Width; w++)
@@ -1064,9 +1068,11 @@ namespace dnn
 			const auto endH = centerH + rangeH < dstImage.Height ? centerH + rangeH : dstImage.Height;
 			const auto endW = centerW + rangeW < dstImage.Width ? centerW + rangeW : dstImage.Width;
 
+			auto channelMean = T(0);
 			for (auto c = 0ull; c < dstImage.Channels; c++)
 			{
-				const T channelMean = std::is_floating_point_v<T> ? T(0) : T(mean[c]);
+				if constexpr (!std::is_floating_point_v<T>)
+					channelMean = T(mean[c]);
 				for (auto d = 0ull; d < dstImage.Depth; d++)
 					for (auto h = startH; h < endH; h++)
 						for (auto w = startW; w < endW; w++)
@@ -1138,7 +1144,7 @@ namespace dnn
 		{
 			Image dstImage(image.Channels, image.Depth, image.Height, image.Width);
 
-			const T maximum = std::is_floating_point_v<T> ? T(1) : T(255);
+			constexpr T maximum = std::is_floating_point_v<T> ? T(1) : T(255);
 
 			for (auto c = 0ull; c < dstImage.Channels; c++)
 				for (auto d = 0ull; d < dstImage.Depth; d++)
@@ -1154,15 +1160,18 @@ namespace dnn
 			if (deltaH == 0 && deltaW == 0)
 				return image;
 
-			const bool isFloat = std::is_floating_point_v<T>;
+			constexpr bool isFloat = std::is_floating_point_v<T>;
 
 			if (deltaW <= -int(image.Width) || deltaW >= int(image.Width) || deltaH <= -int(image.Height) || deltaH >= int(image.Height))
 			{
 				Image dstImage(image.Channels, image.Depth, image.Height, image.Width);
-
+				
+				T channelMean = T(0);
 				for (auto c = 0ull; c < image.Channels; c++)
 				{
-					const T channelMean = isFloat ? T(0) : T(mean[c]);
+					if constexpr (!std::is_floating_point_v<T>)
+						channelMean = T(mean[c]);
+
 					for (auto d = 0ull; d < image.Depth; d++)
 						for (auto h = 0ull; h < image.Height; h++)
 							for (auto w = 0ull; w < image.Width; w++)
@@ -1180,13 +1189,19 @@ namespace dnn
 					cimg_forYZC(srcImage, y, z, c)
 					{
 						std::memmove(srcImage.data(0, y, z, c), srcImage.data(-deltaW, y, z, c), UInt(srcImage._width + deltaW) * sizeof(T));
-						std::memset(srcImage.data(srcImage._width + deltaW, y, z, c), isFloat ? 0 : (int)mean[c], -deltaW * sizeof(T));
+						if constexpr (std::is_floating_point_v<T>)
+							std::memset(srcImage.data(srcImage._width + deltaW, y, z, c), 0, -deltaW * sizeof(T));
+						else
+							std::memset(srcImage.data(srcImage._width + deltaW, y, z, c), (int)mean[c], -deltaW * sizeof(T));
 					}
 				else
 					cimg_forYZC(srcImage, y, z, c)
 					{
 						std::memmove(srcImage.data(deltaW, y, z, c), srcImage.data(0, y, z, c), UInt(srcImage._width - deltaW) * sizeof(T));
-						std::memset(srcImage.data(0, y, z, c), isFloat ? 0 : (int)mean[c], deltaW * sizeof(T));
+						if constexpr (std::is_floating_point_v<T>)
+							std::memset(srcImage.data(0, y, z, c), 0, deltaW * sizeof(T));
+						else
+							std::memset(srcImage.data(0, y, z, c), (int)mean[c], deltaW * sizeof(T));
 					}
 			}
 
@@ -1196,13 +1211,19 @@ namespace dnn
 					cimg_forZC(srcImage, z, c)
 					{
 						std::memmove(srcImage.data(0, 0, z, c), srcImage.data(0, -deltaH, z, c), UInt(srcImage._width) * UInt(srcImage._height + deltaH) * sizeof(T));
-						std::memset(srcImage.data(0, srcImage._height + deltaH, z, c), isFloat ? 0 : (int)mean[c], -deltaH * UInt(srcImage._width) * sizeof(T));
+						if constexpr (std::is_floating_point_v<T>)
+							std::memset(srcImage.data(0, srcImage._height + deltaH, z, c), 0, -deltaH * UInt(srcImage._width) * sizeof(T));
+						else
+							std::memset(srcImage.data(0, srcImage._height + deltaH, z, c), (int)mean[c], -deltaH * UInt(srcImage._width) * sizeof(T));
 					}
 				else
 					cimg_forZC(srcImage, z, c)
 					{
 						std::memmove(srcImage.data(0, deltaH, z, c), srcImage.data(0, 0, z, c), UInt(srcImage._width) * UInt(srcImage._height - deltaH) * sizeof(T));
-						std::memset(srcImage.data(0, 0, z, c), isFloat ? 0 : (int)mean[c], deltaH * UInt(srcImage._width) * sizeof(T));
+						if constexpr (std::is_floating_point_v<T>)
+							std::memset(srcImage.data(0, 0, z, c), 0, deltaH * UInt(srcImage._width) * sizeof(T));
+						else
+							std::memset(srcImage.data(0, 0, z, c), (int)mean[c], deltaH * UInt(srcImage._width) * sizeof(T));
 					}
 			}
 
@@ -1228,9 +1249,12 @@ namespace dnn
 		{
 			Image dstImage(image.Channels, image.Depth + (depth * 2), image.Height + (height * 2), image.Width + (width * 2));
 
+			T channelMean = T(0);
 			for (auto c = 0ull; c < dstImage.Channels; c++)
 			{
-				const T channelMean = std::is_floating_point_v<T> ? T(0) : T(mean[c]);
+				if constexpr (!std::is_floating_point_v<T>)
+					channelMean = T(mean[c]);
+
 				for (auto d = 0ull; d < dstImage.Depth; d++)
 					for (auto h = 0ull; h < dstImage.Height; h++)
 						for (auto w = 0ull; w < dstImage.Width; w++)
