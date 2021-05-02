@@ -277,7 +277,7 @@ namespace dnn
 				count = newSize;
 			}
 	
-			if (std::is_floating_point_v<T> && count >= VectorSize)
+			if constexpr (std::is_floating_point_v<T>)
 			{
 				// only floats for now, not double or long double !!!
 				const auto vecCount = (count / VectorSize) * VectorSize;
