@@ -385,6 +385,17 @@ namespace dnn
 	static const auto tab = std::string("\t");
 	static const auto dtab = std::string("\t\t");	
 	
+	inline static void WaitFor(std::chrono::microseconds us)
+	{
+		const auto start = std::chrono::high_resolution_clock::now();
+		const auto end = start + us;
+		do
+		{
+			std::this_thread::yield();
+		}
+		while (std::chrono::high_resolution_clock::now() < end);
+	}
+
 #ifdef DNN_FAST_SEED
 	template<typename T>
 	inline static T Seed() noexcept
