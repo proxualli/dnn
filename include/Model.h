@@ -331,35 +331,31 @@ namespace dnn
 
 		std::vector<Layer*> GetLayerOutputs(const Layer* parentLayer) const
 		{
-			auto list = std::vector<Layer*>();
+			auto outputs = std::vector<Layer*>();
 
 			for (auto &layer : Layers)
-				if (layer->Name != parentLayer->Name)
-					for (auto inputs : layer->Inputs)
-						if (inputs->Name == parentLayer->Name)
-						{
-							list.push_back(inputs);
-							break;
-						}
-			
-			return list;
+				for (auto inputs : layer->Inputs)
+					if (inputs->Name == parentLayer->Name)
+						outputs.push_back(layer.get());
+				
+			return outputs;
 		}
 
 		std::vector<Layer*> SetRelations()
 		{
 			// This determines how the backprop step correctly flows
 			// When SharesInput is true we have to add our diff vector instead of just copying it because there's more than one layer involved
-			for (auto &layer : Layers)
+			for (auto& layer : Layers)
 			{
 				layer->SharesInput = false;
-				//layer->Outputs = GetLayerOutputs(*layer.get());
+				layer->Outputs = GetLayerOutputs(layer.get());
 			}
 
 			auto unreferencedLayers = std::vector<Layer*>();
 
 			for (auto &layer : Layers)
 			{
-				auto outputLayersCount = GetLayerOutputs(layer.get()).size();
+				auto outputLayersCount = layer->Outputs.size();
 
 				if (outputLayersCount > 1)
 				{
@@ -741,6 +737,33 @@ namespace dnn
 			}
 		}
 
+		void SwitchInplaceBwd(const bool enable)
+		{
+			if (enable)
+			{
+				for (auto& layer : Layers)
+					if (layer->InplaceBwd)
+						for (auto output : layer->Outputs)
+						{
+							auto inp = std::vector<Layer*>();
+							for (auto in : output->InputsOriginal)
+								inp.push_back(in->InplaceBwd || in->Name == layer->Name ? in->InputLayer : in);
+							
+							output->Inputs = inp;
+							output->InputLayer = layer->InputLayer;
+						}
+			}
+			else
+			{
+				for (auto& layer : Layers)
+					if (layer->InputsOriginal.size() > 0)
+					{
+						layer->InputLayer = layer->InputsOriginal[0];
+						layer->Inputs = std::vector<Layer*>(layer->InputsOriginal);
+					}
+			}
+		}
+
 		void Training()
 		{
 			if (TaskState.load() == TaskStates::Stopped && !BatchSizeChanging.load() && !ResettingWeights.load())
@@ -893,12 +916,10 @@ namespace dnn
 								// Backward
 								bpropTimeCount = std::chrono::duration<Float>(Float(0));
 								updateTimeCount = std::chrono::duration<Float>(Float(0));
+								if (UseInplace)
+									SwitchInplaceBwd(true);
 								for (auto i = Layers.size() - 1; i >= FirstUnlockedLayer.load(); --i)
 								{
-									// determine Inplace backwar pass
-									if (Layers[i]->InputLayer != nullptr && Layers[i]->InputLayer->InplaceBwd && Layers[i]->Inputs.size() == 1)
-										Layers[i]->InputLayer = Layers[i]->InputLayer->InputLayer;
-
 									if (Layers[i]->HasWeights)
 									{
 										timePoint = timer.now();
@@ -918,8 +939,8 @@ namespace dnn
 									}
 									bpropTimeCount += Layers[i]->bpropTime;
 								}
-								for (auto i = 1ull; i < Layers.size(); i++)
-									Layers[i]->InputLayer = Layers[i]->Inputs[0];
+								if (UseInplace)
+									SwitchInplaceBwd(false);
 								bpropTime = bpropTimeCount;
 								updateTime = updateTimeCount;
 
@@ -956,12 +977,10 @@ namespace dnn
 								// Backward
 								bpropTimeCount = std::chrono::duration<Float>(Float(0));
 								updateTimeCount = std::chrono::duration<Float>(Float(0));
+								if (UseInplace)
+									SwitchInplaceBwd(true);
 								for (auto i = Layers.size() - 1; i >= FirstUnlockedLayer.load(); --i)
 								{
-									// determine Inplace backwar pass
-									if (Layers[i]->InputLayer != nullptr && Layers[i]->InputLayer->InplaceBwd && Layers[i]->Inputs.size() == 1)
-										Layers[i]->InputLayer = Layers[i]->InputLayer->InputLayer;
-
 									if (Layers[i]->HasWeights)
 									{
 										timePoint = timer.now();
@@ -981,8 +1000,8 @@ namespace dnn
 									}
 									bpropTimeCount += Layers[i]->bpropTime;
 								}
-								for (auto i = 1ull; i < Layers.size(); i++)
-									Layers[i]->InputLayer = Layers[i]->Inputs[0];
+								if (UseInplace)
+									SwitchInplaceBwd(false);
 								bpropTime = bpropTimeCount;
 								updateTime = updateTimeCount;
 

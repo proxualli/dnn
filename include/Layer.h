@@ -217,9 +217,10 @@ namespace dnn
 		const UInt PadH;
 		const UInt PadW;
 		const bool HasPadding;
-		const std::vector<Layer*> Inputs;
+		std::vector<Layer*> Inputs;
+		const std::vector<Layer*> InputsOriginal;
 		Layer* InputLayer;
-		//std::vector<Layer*> Outputs;
+		std::vector<Layer*> Outputs;
 		bool LayerBeforeCost;
 		bool SharesInput;
 		dnnl::memory::format_tag Format;
@@ -276,7 +277,8 @@ namespace dnn
 			PadD(padD),
 			PadH(padH),
 			PadW(padW),
-			Inputs(inputs),
+			Inputs(std::vector<Layer*>(inputs)),
+			InputsOriginal(inputs),
 			Scaling(scaling),
 			HasBias(hasBias && biasCount > 0),
 			HasWeights(weightCount > 0),
@@ -294,7 +296,7 @@ namespace dnn
 			PaddedCDHW(layerType != LayerTypes::Input ? (DivUp(c) * d * h * w) : c * d * h * w),
 			HasPadding(padD > 0 || padH > 0 || padW > 0),
 			InputLayer(inputs.size() > 0 ? inputs[0] : nullptr),
-			InplaceBwd((layerType == LayerTypes::BatchNorm || layerType == LayerTypes::BatchNormRelu) && inputs.size() == 1 && (inputs[0]->LayerType == LayerTypes::Convolution || inputs[0]->LayerType == LayerTypes::DepthwiseConvolution || inputs[0]->LayerType == LayerTypes::ConvolutionTranspose)),
+			InplaceBwd((std::string(magic_enum::enum_name<LayerTypes>(layerType)).find("BatchNorm", 0) != std::string::npos) && inputs.size() == 1 && UseInplace && (inputs[0]->LayerType == LayerTypes::Convolution || inputs[0]->LayerType == LayerTypes::DepthwiseConvolution || inputs[0]->LayerType == LayerTypes::ConvolutionTranspose)),
 			RandomEngine(std::mt19937(Seed<unsigned>())),
 			Neurons(FloatArray()),
 			NeuronsD1(FloatArray()),
@@ -308,7 +310,7 @@ namespace dnn
 			BiasesPar2(FloatVector()),
 			B1(Float(0.9)),
 			B2(Float(0.999)),
-			//Outputs(std::vector<Layer*>()),
+			Outputs(std::vector<Layer*>()),
 			UseDefaultParameters(true),
 			LockUpdate(false),
 			RefreshingStats(false),
@@ -775,7 +777,7 @@ namespace dnn
 			if (HasWeights)
 			{
 				const auto weightsSize = WeightsMemDesc->get_size() / sizeof(Float);
-				const auto biasesSize = HasBias ? BiasCount : 0;
+				const auto biasesSize = BiasCount;
 
 				WeightsD1.resize(weightsSize, Float(0));
 				BiasesD1.resize(biasesSize, Float(0));
@@ -818,7 +820,7 @@ namespace dnn
 			if (HasWeights)
 			{
 				const auto weightsSize = WeightsMemDesc->get_size() / sizeof(Float);
-				const auto biasesSize = HasBias ? BiasCount : 0;
+				const auto biasesSize = BiasCount;
 
 				WeightsD1.resize(weightsSize, Float(0));
 				BiasesD1.resize(biasesSize, Float(0));
@@ -1074,7 +1076,8 @@ namespace dnn
 		inline void ResetGradients()
 		{
 			std::fill(WeightsD1.begin(), WeightsD1.end(), Float(0));
-			std::fill_n(BiasesD1.begin(), BiasCount, Float(0));
+			if (HasBias)
+				std::fill_n(BiasesD1.begin(), BiasCount, Float(0));
 		}
 
 		inline void UpdateWeights(const TrainingRate& rate, const Optimizers optimizer, const bool disableLocking)
