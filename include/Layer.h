@@ -219,10 +219,15 @@ namespace dnn
 		const bool HasPadding;
 		std::vector<Layer*> Inputs;
 		const std::vector<Layer*> InputsOriginal;
+		std::vector<Layer*> InputsInplace;
 		Layer* InputLayer;
+		Layer* InputLayerInplace;
+		Layer* InputLayerOriginal;
 		std::vector<Layer*> Outputs;
 		bool LayerBeforeCost;
 		bool SharesInput;
+		bool SharesInputOriginal;
+		bool SharesInputInplace;
 		dnnl::memory::format_tag Format;
 		const bool Scaling;
 		const bool HasBias;
@@ -277,8 +282,9 @@ namespace dnn
 			PadD(padD),
 			PadH(padH),
 			PadW(padW),
-			Inputs(inputs),
-			InputsOriginal(inputs),
+			Inputs(std::vector<Layer*>(inputs)),
+			InputsOriginal(std::vector<Layer*>(inputs)),
+			InputsInplace(std::vector<Layer*>(inputs)),
 			Scaling(scaling),
 			HasBias(hasBias && biasCount > 0),
 			HasWeights(weightCount > 0),
@@ -296,6 +302,8 @@ namespace dnn
 			PaddedCDHW(layerType != LayerTypes::Input ? (DivUp(c) * d * h * w) : c * d * h * w),
 			HasPadding(padD > 0 || padH > 0 || padW > 0),
 			InputLayer(inputs.size() > 0 ? inputs[0] : nullptr),
+			InputLayerOriginal(inputs.size() > 0 ? inputs[0] : nullptr),
+			InputLayerInplace(inputs.size() > 0 ? inputs[0] : nullptr),
 			InplaceBwd((std::string(magic_enum::enum_name<LayerTypes>(layerType)).find("BatchNorm", 0) != std::string::npos) && inputs.size() == 1 && UseInplace && (inputs[0]->LayerType == LayerTypes::Convolution || inputs[0]->LayerType == LayerTypes::DepthwiseConvolution || inputs[0]->LayerType == LayerTypes::ConvolutionTranspose)),
 			RandomEngine(std::mt19937(Seed<unsigned>())),
 			Neurons(FloatArray()),
@@ -316,6 +324,8 @@ namespace dnn
 			RefreshingStats(false),
 			LayerBeforeCost(false),
 			SharesInput(false),
+			SharesInputOriginal(false),
+			SharesInputInplace(false),
 			NeuronsStats(),
 			WeightsStats(),
 			BiasesStats(),

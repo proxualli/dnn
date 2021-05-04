@@ -305,90 +305,6 @@ namespace dnn
 			return true;
 		}
 
-		std::vector<Layer*> GetLayerInputs(const std::vector<std::string>& inputs) const
-		{
-			auto list = std::vector<Layer*>();
-
-			for (auto &name : inputs)
-			{
-				auto exists = false;
-
-				for (auto &layer : Layers)
-				{
-					if (layer->Name == name)
-					{
-						list.push_back(layer.get());
-						exists = true;
-					}
-				}
-
-				if (!exists)
-					throw std::invalid_argument(std::string("Invalid input layer: " + name).c_str());
-			}
-
-			return list;
-		}
-
-		std::vector<Layer*> GetLayerOutputs(const Layer* parentLayer) const
-		{
-			auto outputs = std::vector<Layer*>();
-
-			for (auto &layer : Layers)
-				if (layer->Name != parentLayer->Name)
-					for (auto inputs : layer->Inputs)
-						if (inputs->Name == parentLayer->Name)
-							outputs.push_back(layer.get());
-				
-			return outputs;
-		}
-
-		std::vector<Layer*> SetRelations()
-		{
-			// This determines how the backprop step correctly flows
-			// When SharesInput is true we have to add our diff vector instead of just copying it because there's more than one layer involved
-			for (auto& layer : Layers)
-			{
-				layer->SharesInput = false;
-				layer->Outputs = GetLayerOutputs(layer.get());
-			}
-
-			auto unreferencedLayers = std::vector<Layer*>();
-
-			for (auto &layer : Layers)
-			{
-				auto outputsCount = layer->Outputs.size();
-
-				if (outputsCount > 1)
-				{
-					for (auto &l : Layers)
-					{
-						if (l->Name == layer->Name)
-							continue;
-
-						for (auto inputs : l->Inputs)
-						{
-							if (inputs->Name == layer->Name)
-							{
-								l->SharesInput = l->InplaceBwd ? false : true;
-								outputsCount--;
-								break;
-							}
-						}
-
-						if (outputsCount == 1)
-							break;
-					}
-				}
-				else
-				{
-					if (outputsCount == 0 && layer->LayerType != LayerTypes::Cost)
-						unreferencedLayers.push_back(layer.get());
-				}
-			}
-
-			return unreferencedLayers;
-		}
-
 		void SetLocking(const bool locked)
 		{
 			for (auto &layer : Layers)
@@ -741,32 +657,163 @@ namespace dnn
 		void SwitchInplaceBwd(const bool enable)
 		{
 			if (enable)
-			{
 				for (auto& layer : Layers)
 				{
-					layer->SharesInput = false;
-					if (layer->InplaceBwd)
-						for (auto output : layer->Outputs)
-						{
-							auto inp = std::vector<Layer*>();
-							for (auto in : output->InputsOriginal)
-								inp.push_back(in->InplaceBwd || in->Name == layer->Name ? in->InputLayer : in);
+					layer->Inputs = std::vector<Layer*>(layer->InputsInplace);
+					layer->InputLayer = layer->InputLayerInplace;
+					layer->SharesInput = layer->SharesInputInplace;
+				}
+			else
+				for (auto& layer : Layers)
+				{
+					layer->Inputs = std::vector<Layer*>(layer->InputsOriginal);
+					layer->InputLayer = layer->InputLayerOriginal;
+					layer->SharesInput = layer->SharesInputOriginal;
+				}
+		}
 
-							output->Inputs = inp;
-							output->InputLayer = layer->InputLayer;
+		std::vector<Layer*> GetLayerInputs(const std::vector<std::string>& inputs) const
+		{
+			auto list = std::vector<Layer*>();
+
+			for (auto& name : inputs)
+			{
+				auto exists = false;
+
+				for (auto& layer : Layers)
+				{
+					if (layer->Name == name)
+					{
+						list.push_back(layer.get());
+						exists = true;
+					}
+				}
+
+				if (!exists)
+					throw std::invalid_argument(std::string("Invalid input layer: " + name).c_str());
+			}
+
+			return list;
+		}
+
+		std::vector<Layer*> GetLayerOutputs(const Layer* parentLayer) const
+		{
+			auto outputs = std::vector<Layer*>();
+
+			for (auto& layer : Layers)
+				if (layer->Name != parentLayer->Name)
+					for (auto inputs : layer->Inputs)
+						if (inputs->Name == parentLayer->Name)
+							outputs.push_back(layer.get());
+
+			return outputs;
+		}
+
+		std::vector<Layer*> SetRelations()
+		{
+			// This determines how the backprop step correctly flows
+			// When SharesInput is true we have to add our diff vector instead of just copying it because there's more than one layer involved
+			for (auto& layer : Layers)
+			{
+				layer->SharesInput = false;
+				layer->Outputs = GetLayerOutputs(layer.get());
+			}
+
+			auto unreferencedLayers = std::vector<Layer*>();
+
+			for (auto& layer : Layers)
+			{
+				auto outputsCount = layer->Outputs.size();
+
+				if (outputsCount > 1)
+				{
+					for (auto& l : Layers)
+					{
+						if (l->Name == layer->Name)
+							continue;
+
+						for (auto inputs : l->Inputs)
+						{
+							if (inputs->Name == layer->Name)
+							{
+								l->SharesInput = l->InplaceBwd ? false : true;
+								l->SharesInputOriginal = l->SharesInput;
+								outputsCount--;
+								break;
+							}
 						}
+
+						if (outputsCount == 1)
+							break;
+					}
+				}
+				else
+				{
+					if (outputsCount == 0 && layer->LayerType != LayerTypes::Cost)
+						unreferencedLayers.push_back(layer.get());
 				}
 			}
-			else
+
+			return unreferencedLayers;
+		}
+
+		void FindInplaceBwd()
+		{
+			// Find Inplace inputs
+			for (auto& layer : Layers)
 			{
-				for (auto& layer : Layers)
-				{
-					layer->SharesInput = false;
-					if (layer->InputsOriginal.size() > 0)
+				layer->SharesInput = false;
+
+				if (layer->InplaceBwd)
+					for (auto output : layer->Outputs)
 					{
-						layer->Inputs = layer->InputsOriginal;
-						layer->InputLayer = layer->InputsOriginal[0];
+						auto inp = std::vector<Layer*>();
+						for (auto in : output->InputsOriginal)
+							inp.push_back(in->InplaceBwd || in->Name == layer->Name ? in->InputLayer : in);
+
+						output->Inputs = std::vector<Layer*>(inp);
+						output->InputsInplace = std::vector<Layer*>(inp);
+						output->InputLayer = layer->InputLayer;
+						output->InputLayerInplace = layer->InputLayer;
 					}
+			}
+
+			for (auto& layer : Layers)
+			{
+				layer->Outputs = GetLayerOutputs(layer.get());
+				auto outputsCount = layer->Outputs.size();
+
+				if (outputsCount > 1)
+				{
+					for (auto& l : Layers)
+					{
+						if (l->Name == layer->Name)
+							continue;
+
+						for (auto inputs : l->Inputs)
+						{
+							if (inputs->Name == layer->Name)
+							{
+								l->SharesInput = true;
+								l->SharesInputInplace = true;
+								outputsCount--;
+								break;
+							}
+						}
+
+						if (outputsCount == 1)
+							break;
+					}
+				}
+			}
+			
+			for (auto& layer : Layers)
+			{
+				layer->SharesInput = false;
+				if (layer->InputsOriginal.size() > 0)
+				{
+					layer->Inputs = std::vector<Layer*>(layer->InputsOriginal);
+					layer->InputLayer = layer->InputLayerOriginal;
 				}
 			}
 
@@ -787,6 +834,7 @@ namespace dnn
 							if (inputs->Name == layer->Name)
 							{
 								l->SharesInput = true;
+								l->SharesInputOriginal = true;
 								outputsCount--;
 								break;
 							}
@@ -876,7 +924,10 @@ namespace dnn
 						FirstUnlockedLayer.store(i);
 						break;
 					}
-				
+
+				if (UseInplace)
+					FindInplaceBwd(); // Find and store the inplace and non-inplace flow
+
 				while (CurrentEpoch < TotalEpochs)
 				{
 					if (CurrentEpoch - (GoToEpoch - 1) == learningRateEpochs)
