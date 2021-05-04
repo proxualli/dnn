@@ -334,9 +334,10 @@ namespace dnn
 			auto outputs = std::vector<Layer*>();
 
 			for (auto &layer : Layers)
-				for (auto inputs : layer->Inputs)
-					if (inputs->Name == parentLayer->Name)
-						outputs.push_back(layer.get());
+				if (layer->Name != parentLayer->Name)
+					for (auto inputs : layer->Inputs)
+						if (inputs->Name == parentLayer->Name)
+							outputs.push_back(layer.get());
 				
 			return outputs;
 		}
@@ -355,9 +356,9 @@ namespace dnn
 
 			for (auto &layer : Layers)
 			{
-				auto outputLayersCount = layer->Outputs.size();
+				auto outputsCount = layer->Outputs.size();
 
-				if (outputLayersCount > 1)
+				if (outputsCount > 1)
 				{
 					for (auto &l : Layers)
 					{
@@ -368,19 +369,19 @@ namespace dnn
 						{
 							if (inputs->Name == layer->Name)
 							{
-								l->SharesInput = true;
-								outputLayersCount--;
+								l->SharesInput = l->InplaceBwd ? false : true;
+								outputsCount--;
 								break;
 							}
 						}
 
-						if (outputLayersCount == 1)
+						if (outputsCount == 1)
 							break;
 					}
 				}
 				else
 				{
-					if (outputLayersCount == 0 && layer->LayerType != LayerTypes::Cost)
+					if (outputsCount == 0 && layer->LayerType != LayerTypes::Cost)
 						unreferencedLayers.push_back(layer.get());
 				}
 			}
@@ -742,25 +743,59 @@ namespace dnn
 			if (enable)
 			{
 				for (auto& layer : Layers)
+				{
+					layer->SharesInput = false;
 					if (layer->InplaceBwd)
 						for (auto output : layer->Outputs)
 						{
 							auto inp = std::vector<Layer*>();
 							for (auto in : output->InputsOriginal)
 								inp.push_back(in->InplaceBwd || in->Name == layer->Name ? in->InputLayer : in);
-							
+
 							output->Inputs = inp;
 							output->InputLayer = layer->InputLayer;
 						}
+				}
 			}
 			else
 			{
 				for (auto& layer : Layers)
+				{
+					layer->SharesInput = false;
 					if (layer->InputsOriginal.size() > 0)
 					{
+						layer->Inputs = layer->InputsOriginal;
 						layer->InputLayer = layer->InputsOriginal[0];
-						layer->Inputs = std::vector<Layer*>(layer->InputsOriginal);
 					}
+				}
+			}
+
+			for (auto& layer : Layers)
+			{
+				layer->Outputs = GetLayerOutputs(layer.get());
+				auto outputsCount = layer->Outputs.size();
+
+				if (outputsCount > 1)
+				{
+					for (auto& l : Layers)
+					{
+						if (l->Name == layer->Name)
+							continue;
+
+						for (auto inputs : l->Inputs)
+						{
+							if (inputs->Name == layer->Name)
+							{
+								l->SharesInput = true;
+								outputsCount--;
+								break;
+							}
+						}
+
+						if (outputsCount == 1)
+							break;
+					}
+				}
 			}
 		}
 

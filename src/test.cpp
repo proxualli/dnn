@@ -62,7 +62,7 @@ DNN_API void DNNGetCostInfo(const UInt costIndex, UInt* trainErrors, Float* trai
 DNN_API void DNNGetImage(const UInt layer, const dnn::Byte fillColor, dnn::Byte* image);
 DNN_API bool DNNSetFormat(const bool plain);
 DNN_API dnn::Optimizers GetOptimizer();
-
+//DNN_API void DNNPrintModel(const std::string& fileName);
 
 
 void NewEpoch(UInt CurrentCycle, UInt CurrentEpoch, UInt TotalEpochs, UInt optimizer, Float beta2, Float eps, bool HorizontalFlip, bool VerticalFlip, Float Dropout, Float Cutout, Float AutoAugment, Float ColorCast, UInt ColorAngle, Float Distortion, UInt Interpolation, Float Scaling, Float Rotation, Float MaximumRate, UInt BatchSize, Float Momentum, Float L2Penalty, Float AvgTrainLoss, Float TrainErrorPercentage, Float TrainAccuracy, UInt TrainErrors, Float AvgTestLoss, Float TestErrorPercentage, Float TestAccuracy, UInt TestErrors)
@@ -245,6 +245,7 @@ int main(int argc, char* argv[])
     {
         if (DNNLoadDataset())
         {
+            //DNNPrintModel(path + "Normal.txt");
             auto name = new std::string();
             auto costIndex = new UInt(); 
             auto costLayerCount = new UInt(); 

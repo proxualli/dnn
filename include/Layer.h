@@ -277,7 +277,7 @@ namespace dnn
 			PadD(padD),
 			PadH(padH),
 			PadW(padW),
-			Inputs(std::vector<Layer*>(inputs)),
+			Inputs(inputs),
 			InputsOriginal(inputs),
 			Scaling(scaling),
 			HasBias(hasBias && biasCount > 0),
@@ -777,7 +777,7 @@ namespace dnn
 			if (HasWeights)
 			{
 				const auto weightsSize = WeightsMemDesc->get_size() / sizeof(Float);
-				const auto biasesSize = BiasCount;
+				const auto biasesSize = HasBias ? BiasCount : 0;
 
 				WeightsD1.resize(weightsSize, Float(0));
 				BiasesD1.resize(biasesSize, Float(0));
@@ -820,7 +820,7 @@ namespace dnn
 			if (HasWeights)
 			{
 				const auto weightsSize = WeightsMemDesc->get_size() / sizeof(Float);
-				const auto biasesSize = BiasCount;
+				const auto biasesSize = HasBias ? BiasCount : 0;
 
 				WeightsD1.resize(weightsSize, Float(0));
 				BiasesD1.resize(biasesSize, Float(0));
@@ -1776,5 +1776,4 @@ namespace dnn
 
 		virtual ByteArray GetImage(const Byte) { return ByteArray(); }
 	};
-
 }

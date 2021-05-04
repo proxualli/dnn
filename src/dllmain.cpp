@@ -73,6 +73,27 @@ extern "C" DNN_API void DNNModelDispose()
 		model.reset();
 }
 
+//extern "C" DNN_API void DNNPrintModel(const std::string& fileName)
+//{
+//	if (model)
+//	{
+//		auto os = std::ofstream(fileName);
+//
+//		if (os)
+//		{
+//			for (auto& layer : model->Layers)
+//			{
+//				os << layer->Name << "  (SharesInput " << std::to_string(layer->SharesInput) << ")  : ";
+//				for (auto input : layer->Inputs)
+//					os << input->Name << "  ";
+//				os << std::endl;
+//			}
+//			os.flush();
+//			os.close();
+//		}
+//	}
+//}
+
 extern "C" DNN_API Model* DNNModel(const std::string name)
 {
 	model = std::make_unique<Model>(name, dataprovider.get());
