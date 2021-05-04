@@ -83,7 +83,7 @@ extern "C" DNN_API void DNNModelDispose()
 //		{
 //			for (auto& layer : model->Layers)
 //			{
-//				os << layer->Name << "  (SharesInput " << std::to_string(layer->SharesInput) << ")  : ";
+//				os << layer->Name << "  (SharesInput " << std::to_string(layer->SharesInput) << ")  InputLayer " << layer->InputLayer->Name << "  :  ";
 //				for (auto input : layer->Inputs)
 //					os << input->Name << "  ";
 //				os << std::endl;
