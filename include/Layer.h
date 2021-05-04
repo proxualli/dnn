@@ -426,7 +426,10 @@ namespace dnn
 		virtual void SetBatchSize(const UInt batchSize)
 		{
 			while (RefreshingStats.load())
+			{
 				std::this_thread::sleep_for(std::chrono::milliseconds(250));
+				SleepYield(std::chrono::milliseconds(250));
+			}
 
 			Neurons.resize(batchSize * PaddedCDHW);
 #ifndef DNN_LEAN
