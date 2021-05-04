@@ -434,8 +434,8 @@ namespace dnn
 					case 2:
 						for (auto cdhw = 0ull; cdhw < PaddedCDHW; cdhw += VectorSize)
 						{
-							mul_add(VecFloat().load_a(&Inputs[1]->Neurons[cdhw]), VecFloat().load_a(&NeuronsD1[cdhw]), VecFloat().load_a(&Inputs[0]->NeuronsD1[cdhw])).store_a(&Inputs[0]->NeuronsD1[cdhw]);
-							mul_add(VecFloat().load_a(&Inputs[0]->Neurons[cdhw]), VecFloat().load_a(&NeuronsD1[cdhw]), VecFloat().load_a(&Inputs[1]->NeuronsD1[cdhw])).store_a(&Inputs[1]->NeuronsD1[cdhw]);
+							mul_add(VecFloat().load_a(&InputsOriginal[1]->Neurons[cdhw]), VecFloat().load_a(&NeuronsD1[cdhw]), VecFloat().load_a(&Inputs[0]->NeuronsD1[cdhw])).store_a(&Inputs[0]->NeuronsD1[cdhw]);
+							mul_add(VecFloat().load_a(&InputsOriginal[0]->Neurons[cdhw]), VecFloat().load_a(&NeuronsD1[cdhw]), VecFloat().load_a(&Inputs[1]->NeuronsD1[cdhw])).store_a(&Inputs[1]->NeuronsD1[cdhw]);
 						}
 					break;
 
@@ -445,9 +445,9 @@ namespace dnn
 						for (auto cdhw = 0ull; cdhw < PaddedCDHW; cdhw += VectorSize)
 						{
 							D1.load_a(&NeuronsD1[cdhw]);
-							In0.load_a(&Inputs[0]->Neurons[cdhw]);
-							In1.load_a(&Inputs[1]->Neurons[cdhw]);
-							In2.load_a(&Inputs[2]->Neurons[cdhw]);
+							In0.load_a(&InputsOriginal[0]->Neurons[cdhw]);
+							In1.load_a(&InputsOriginal[1]->Neurons[cdhw]);
+							In2.load_a(&InputsOriginal[2]->Neurons[cdhw]);
 							mul_add(D1 * In1, In2, VecFloat().load_a(&Inputs[0]->NeuronsD1[cdhw])).store_a(&Inputs[0]->NeuronsD1[cdhw]);
 							mul_add(D1 * In0, In2, VecFloat().load_a(&Inputs[1]->NeuronsD1[cdhw])).store_a(&Inputs[1]->NeuronsD1[cdhw]);
 							mul_add(D1 * In0, In1, VecFloat().load_a(&Inputs[2]->NeuronsD1[cdhw])).store_a(&Inputs[2]->NeuronsD1[cdhw]);
@@ -461,10 +461,10 @@ namespace dnn
 						for (auto cdhw = 0ull; cdhw < PaddedCDHW; cdhw += VectorSize)
 						{
 							D1.load_a(&NeuronsD1[cdhw]);
-							In0.load_a(&Inputs[0]->Neurons[cdhw]);
-							In1.load_a(&Inputs[1]->Neurons[cdhw]);
-							In2.load_a(&Inputs[2]->Neurons[cdhw]);
-							In3.load_a(&Inputs[3]->Neurons[cdhw]);
+							In0.load_a(&InputsOriginal[0]->Neurons[cdhw]);
+							In1.load_a(&InputsOriginal[1]->Neurons[cdhw]);
+							In2.load_a(&InputsOriginal[2]->Neurons[cdhw]);
+							In3.load_a(&InputsOriginal[3]->Neurons[cdhw]);
 							mul_add(D1 * In1, In2 * In3, VecFloat().load_a(&Inputs[0]->NeuronsD1[cdhw])).store_a(&Inputs[0]->NeuronsD1[cdhw]);
 							mul_add(D1 * In0, In2 * In3, VecFloat().load_a(&Inputs[1]->NeuronsD1[cdhw])).store_a(&Inputs[1]->NeuronsD1[cdhw]);
 							mul_add(D1 * In0, In1 * In3, VecFloat().load_a(&Inputs[2]->NeuronsD1[cdhw])).store_a(&Inputs[2]->NeuronsD1[cdhw]);
@@ -483,8 +483,8 @@ namespace dnn
 						PRAGMA_OMP_SIMD()
 						for (auto cdhw = 0ull; cdhw < CDHW; cdhw++)
 						{
-							Inputs[0]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * Inputs[1]->Neurons[cdhw];
-							Inputs[1]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * Inputs[0]->Neurons[cdhw];
+							Inputs[0]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[1]->Neurons[cdhw];
+							Inputs[1]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[0]->Neurons[cdhw];
 						}
 					break;
 
@@ -492,9 +492,9 @@ namespace dnn
 						PRAGMA_OMP_SIMD()
 						for (auto cdhw = 0ull; cdhw < CDHW; cdhw++)
 						{
-							Inputs[0]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * Inputs[1]->Neurons[cdhw] * Inputs[2]->Neurons[cdhw];
-							Inputs[1]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * Inputs[0]->Neurons[cdhw] * Inputs[2]->Neurons[cdhw];
-							Inputs[2]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * Inputs[0]->Neurons[cdhw] * Inputs[1]->Neurons[cdhw];
+							Inputs[0]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[1]->Neurons[cdhw] * InputsOriginal[2]->Neurons[cdhw];
+							Inputs[1]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[0]->Neurons[cdhw] * InputsOriginal[2]->Neurons[cdhw];
+							Inputs[2]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[0]->Neurons[cdhw] * InputsOriginal[1]->Neurons[cdhw];
 						}
 					break;
 
@@ -502,10 +502,10 @@ namespace dnn
 						PRAGMA_OMP_SIMD()
 						for (auto cdhw = 0ull; cdhw < CDHW; cdhw++)
 						{
-							Inputs[0]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * Inputs[1]->Neurons[cdhw] * Inputs[2]->Neurons[cdhw] * Inputs[3]->Neurons[cdhw];
-							Inputs[1]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * Inputs[0]->Neurons[cdhw] * Inputs[2]->Neurons[cdhw] * Inputs[3]->Neurons[cdhw];
-							Inputs[2]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * Inputs[0]->Neurons[cdhw] * Inputs[1]->Neurons[cdhw] * Inputs[3]->Neurons[cdhw];
-							Inputs[3]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * Inputs[0]->Neurons[cdhw] * Inputs[1]->Neurons[cdhw] * Inputs[2]->Neurons[cdhw];
+							Inputs[0]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[1]->Neurons[cdhw] * InputsOriginal[2]->Neurons[cdhw] * InputsOriginal[3]->Neurons[cdhw];
+							Inputs[1]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[0]->Neurons[cdhw] * InputsOriginal[2]->Neurons[cdhw] * InputsOriginal[3]->Neurons[cdhw];
+							Inputs[2]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[0]->Neurons[cdhw] * InputsOriginal[1]->Neurons[cdhw] * InputsOriginal[3]->Neurons[cdhw];
+							Inputs[3]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[0]->Neurons[cdhw] * InputsOriginal[1]->Neurons[cdhw] * InputsOriginal[2]->Neurons[cdhw];
 						}
 					break;
 
@@ -526,8 +526,8 @@ namespace dnn
 							const auto end = start + PaddedCDHW;
 							for (auto cdhw = start; cdhw < end; cdhw += VectorSize)
 							{
-								mul_add(VecFloat().load_a(&Inputs[1]->Neurons[cdhw]), VecFloat().load_a(&NeuronsD1[cdhw]), VecFloat().load_a(&Inputs[0]->NeuronsD1[cdhw])).store_a(&Inputs[0]->NeuronsD1[cdhw]);
-								mul_add(VecFloat().load_a(&Inputs[0]->Neurons[cdhw]), VecFloat().load_a(&NeuronsD1[cdhw]), VecFloat().load_a(&Inputs[1]->NeuronsD1[cdhw])).store_a(&Inputs[1]->NeuronsD1[cdhw]);
+								mul_add(VecFloat().load_a(&InputsOriginal[1]->Neurons[cdhw]), VecFloat().load_a(&NeuronsD1[cdhw]), VecFloat().load_a(&Inputs[0]->NeuronsD1[cdhw])).store_a(&Inputs[0]->NeuronsD1[cdhw]);
+								mul_add(VecFloat().load_a(&InputsOriginal[0]->Neurons[cdhw]), VecFloat().load_a(&NeuronsD1[cdhw]), VecFloat().load_a(&Inputs[1]->NeuronsD1[cdhw])).store_a(&Inputs[1]->NeuronsD1[cdhw]);
 							}
 						});
 					break;
@@ -541,9 +541,9 @@ namespace dnn
 							for (auto cdhw = start; cdhw < end; cdhw+= VectorSize)
 							{
 								D1.load_a(&NeuronsD1[cdhw]);
-								In0.load_a(&Inputs[0]->Neurons[cdhw]);
-								In1.load_a(&Inputs[1]->Neurons[cdhw]);
-								In2.load_a(&Inputs[2]->Neurons[cdhw]);
+								In0.load_a(&InputsOriginal[0]->Neurons[cdhw]);
+								In1.load_a(&InputsOriginal[1]->Neurons[cdhw]);
+								In2.load_a(&InputsOriginal[2]->Neurons[cdhw]);
 								mul_add(D1 * In1, In2, VecFloat().load_a(&Inputs[0]->NeuronsD1[cdhw])).store_a(&Inputs[0]->NeuronsD1[cdhw]);
 								mul_add(D1 * In0, In2, VecFloat().load_a(&Inputs[1]->NeuronsD1[cdhw])).store_a(&Inputs[1]->NeuronsD1[cdhw]);
 								mul_add(D1 * In0, In1, VecFloat().load_a(&Inputs[2]->NeuronsD1[cdhw])).store_a(&Inputs[2]->NeuronsD1[cdhw]);
@@ -560,10 +560,10 @@ namespace dnn
 							for (auto cdhw = start; cdhw < end; cdhw += VectorSize)
 							{
 								D1.load_a(&NeuronsD1[cdhw]);
-								In0.load_a(&Inputs[0]->Neurons[cdhw]);
-								In1.load_a(&Inputs[1]->Neurons[cdhw]);
-								In2.load_a(&Inputs[2]->Neurons[cdhw]);
-								In3.load_a(&Inputs[3]->Neurons[cdhw]);
+								In0.load_a(&InputsOriginal[0]->Neurons[cdhw]);
+								In1.load_a(&InputsOriginal[1]->Neurons[cdhw]);
+								In2.load_a(&InputsOriginal[2]->Neurons[cdhw]);
+								In3.load_a(&InputsOriginal[3]->Neurons[cdhw]);
 								mul_add(D1 * In1, In2 * In3, VecFloat().load_a(&Inputs[0]->NeuronsD1[cdhw])).store_a(&Inputs[0]->NeuronsD1[cdhw]);
 								mul_add(D1 * In0, In2 * In3, VecFloat().load_a(&Inputs[1]->NeuronsD1[cdhw])).store_a(&Inputs[1]->NeuronsD1[cdhw]);
 								mul_add(D1 * In0, In1 * In3, VecFloat().load_a(&Inputs[2]->NeuronsD1[cdhw])).store_a(&Inputs[2]->NeuronsD1[cdhw]);
@@ -586,8 +586,8 @@ namespace dnn
 							PRAGMA_OMP_SIMD()
 							for (auto cdhw = start; cdhw < end; cdhw++)
 							{
-								Inputs[0]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * Inputs[1]->Neurons[cdhw];
-								Inputs[1]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * Inputs[0]->Neurons[cdhw];
+								Inputs[0]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[1]->Neurons[cdhw];
+								Inputs[1]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[0]->Neurons[cdhw];
 							}
 						});
 						break;
@@ -600,9 +600,9 @@ namespace dnn
 							PRAGMA_OMP_SIMD()
 							for (auto cdhw = start; cdhw < end; cdhw++)
 							{
-								Inputs[0]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * Inputs[1]->Neurons[cdhw] * Inputs[2]->Neurons[cdhw];
-								Inputs[1]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * Inputs[0]->Neurons[cdhw] * Inputs[2]->Neurons[cdhw];
-								Inputs[2]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * Inputs[0]->Neurons[cdhw] * Inputs[1]->Neurons[cdhw];
+								Inputs[0]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[1]->Neurons[cdhw] * InputsOriginal[2]->Neurons[cdhw];
+								Inputs[1]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[0]->Neurons[cdhw] * InputsOriginal[2]->Neurons[cdhw];
+								Inputs[2]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[0]->Neurons[cdhw] * InputsOriginal[1]->Neurons[cdhw];
 							}
 						});
 						break;
@@ -615,10 +615,10 @@ namespace dnn
 							PRAGMA_OMP_SIMD()
 							for (auto cdhw = start; cdhw < end; cdhw++)
 							{
-								Inputs[0]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * Inputs[1]->Neurons[cdhw] * Inputs[2]->Neurons[cdhw] * Inputs[3]->Neurons[cdhw];
-								Inputs[1]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * Inputs[0]->Neurons[cdhw] * Inputs[2]->Neurons[cdhw] * Inputs[3]->Neurons[cdhw];
-								Inputs[2]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * Inputs[0]->Neurons[cdhw] * Inputs[1]->Neurons[cdhw] * Inputs[3]->Neurons[cdhw];
-								Inputs[3]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * Inputs[0]->Neurons[cdhw] * Inputs[1]->Neurons[cdhw] * Inputs[2]->Neurons[cdhw];
+								Inputs[0]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[1]->Neurons[cdhw] * InputsOriginal[2]->Neurons[cdhw] * InputsOriginal[3]->Neurons[cdhw];
+								Inputs[1]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[0]->Neurons[cdhw] * InputsOriginal[2]->Neurons[cdhw] * InputsOriginal[3]->Neurons[cdhw];
+								Inputs[2]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[0]->Neurons[cdhw] * InputsOriginal[1]->Neurons[cdhw] * InputsOriginal[3]->Neurons[cdhw];
+								Inputs[3]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[0]->Neurons[cdhw] * InputsOriginal[1]->Neurons[cdhw] * InputsOriginal[2]->Neurons[cdhw];
 							}
 						});
 						break;

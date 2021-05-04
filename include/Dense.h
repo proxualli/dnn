@@ -174,7 +174,7 @@ namespace dnn
 
 			auto diffDstMem = dnnl::memory(*DiffDstMemDesc, Device.engine, NeuronsD1.data());
 
-			auto memSrc = dnnl::memory(*InputLayer->DstMemDesc, Device.engine, InputLayer->Neurons.data());
+			auto memSrc = dnnl::memory(*InputsOriginal[0]->DstMemDesc, Device.engine, InputsOriginal[0]->Neurons.data());
 			auto srcMem = reorderBwdSrc ? dnnl::memory(bwdWeightsDesc->src_desc(), Device.engine) : memSrc;
 			if (reorderBwdSrc)
 			{

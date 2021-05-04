@@ -272,7 +272,7 @@ namespace dnn
 			DNN_UNREF_PAR(batchSize);
 #endif // DNN_LEAN
 
-			auto memSrc = dnnl::memory(*InputLayer->DstMemDesc, Device.engine, InputLayer->Neurons.data());
+			auto memSrc = dnnl::memory(*InputsOriginal[0]->DstMemDesc, Device.engine, InputsOriginal[0]->Neurons.data());
 			const auto &srcMem = reorderBwdSrc ? dnnl::memory(bwdDesc->src_desc(), Device.engine) : memSrc;
 			if (reorderBwdSrc)
 			{
