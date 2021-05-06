@@ -792,18 +792,22 @@ namespace dnn
 				const auto weightsSize = WeightsMemDesc->get_size() / sizeof(Float);
 				const auto biasesSize = HasBias ? BiasCount : 0;
 
-				WeightsD1 = FloatVector(weightsSize, Float(0)); 
-				BiasesD1 = FloatVector(biasesSize, Float(0));
+				WeightsD1.resize(weightsSize, Float(0));
+				BiasesD1.resize(biasesSize, Float(0));
 				
 				switch (optimizer)
 				{
 				case Optimizers::AdaDelta:
 				case Optimizers::Adam:
 				case Optimizers::Adamax:
-					WeightsPar1 = FloatVector(weightsSize, Float(0));
-					WeightsPar2 = FloatVector(weightsSize, Float(0));
-					BiasesPar1 = FloatVector(biasesSize, Float(0));
-					BiasesPar2 = FloatVector(biasesSize, Float(0));
+					WeightsPar1.resize(weightsSize);
+					WeightsPar2.resize(weightsSize);
+					BiasesPar1.resize(biasesSize);
+					BiasesPar2.resize(biasesSize);
+					std::fill(WeightsPar1.begin(), WeightsPar1.end(), Float(0));
+					std::fill(WeightsPar2.begin(), WeightsPar2.end(), Float(0));
+					std::fill(BiasesPar1.begin(), BiasesPar1.end(), Float(0));
+					std::fill(BiasesPar2.begin(), BiasesPar2.end(), Float(0));
 					B1 = Float(0.9);
 					B2 = Float(0.999);
 					break;
@@ -812,9 +816,11 @@ namespace dnn
 				case Optimizers::NAG:
 				case Optimizers::RMSProp:
 				case Optimizers::SGDMomentum:
-					WeightsPar1 = FloatVector(weightsSize, Float(0));
+					WeightsPar1.resize(weightsSize);
+					BiasesPar1.resize(biasesSize);
+					std::fill(WeightsPar1.begin(), WeightsPar1.end(), Float(0));
+					std::fill(BiasesPar1.begin(), BiasesPar1.end(), Float(0));
 					WeightsPar2.resize(0);
-					BiasesPar1 = FloatVector(biasesSize, Float(0));
 					BiasesPar2.resize(0);
 					break;
 
@@ -891,7 +897,7 @@ namespace dnn
 
 				case Fillers::HeNormal:
 				{
-					const auto stddev = std::sqrt(Float(2) / Float(FanIn()));
+					auto stddev = std::sqrt(Float(2) / Float(FanIn()));
 					auto distribution = std::normal_distribution<Float>(Float(0), stddev);
 					std::generate_n(weights.begin(), WeightCount, [&]() { return distribution(RandomEngine); });
 				}
@@ -899,7 +905,7 @@ namespace dnn
 
 				case Fillers::HeUniform:
 				{
-					const auto limit = std::sqrt(Float(6) / Float(FanIn()));
+					auto limit = std::sqrt(Float(6) / Float(FanIn()));
 					auto distribution = std::uniform_real_distribution<Float>(-limit, limit);
 					std::generate_n(weights.begin(), WeightCount, [&]() { return distribution(RandomEngine); });
 				}
