@@ -282,9 +282,13 @@ namespace dnn
 			PadD(padD),
 			PadH(padH),
 			PadW(padW),
-			Inputs(std::vector<Layer*>(inputs)),
-			InputsOriginal(std::vector<Layer*>(inputs)),
-			InputsInplace(std::vector<Layer*>(inputs)),
+			Inputs(std::vector<Layer*>(inputs)),         // Inputs is switched between non-inplace and inplace during training 
+			InputsOriginal(std::vector<Layer*>(inputs)), // InputsOriginal = the non-inplace inputs 
+			InputsInplace(std::vector<Layer*>(inputs)),  // InputsInplece = the inplace inputs
+			InputLayer(inputs.size() > 0 ? inputs[0] : nullptr),
+			InputLayerOriginal(inputs.size() > 0 ? inputs[0] : nullptr),
+			InputLayerInplace(inputs.size() > 0 ? inputs[0] : nullptr),
+			InplaceBwd((std::string(magic_enum::enum_name<LayerTypes>(layerType)).find("BatchNorm", 0) != std::string::npos) && inputs.size() == 1 && UseInplace && (inputs[0]->LayerType == LayerTypes::Convolution || inputs[0]->LayerType == LayerTypes::DepthwiseConvolution || inputs[0]->LayerType == LayerTypes::ConvolutionTranspose)),
 			Scaling(scaling),
 			HasBias(hasBias && biasCount > 0),
 			HasWeights(weightCount > 0),
@@ -301,10 +305,6 @@ namespace dnn
 			PaddedC(DivUp(c)),
 			PaddedCDHW(layerType != LayerTypes::Input ? (DivUp(c) * d * h * w) : c * d * h * w),
 			HasPadding(padD > 0 || padH > 0 || padW > 0),
-			InputLayer(inputs.size() > 0 ? inputs[0] : nullptr),
-			InputLayerOriginal(inputs.size() > 0 ? inputs[0] : nullptr),
-			InputLayerInplace(inputs.size() > 0 ? inputs[0] : nullptr),
-			InplaceBwd((std::string(magic_enum::enum_name<LayerTypes>(layerType)).find("BatchNorm", 0) != std::string::npos) && inputs.size() == 1 && UseInplace && (inputs[0]->LayerType == LayerTypes::Convolution || inputs[0]->LayerType == LayerTypes::DepthwiseConvolution || inputs[0]->LayerType == LayerTypes::ConvolutionTranspose)),
 			RandomEngine(std::mt19937(Seed<unsigned>())),
 			Neurons(FloatArray()),
 			NeuronsD1(FloatArray()),
@@ -792,8 +792,8 @@ namespace dnn
 				const auto weightsSize = WeightsMemDesc->get_size() / sizeof(Float);
 				const auto biasesSize = HasBias ? BiasCount : 0;
 
-				WeightsD1.resize(weightsSize, Float(0));
-				BiasesD1.resize(biasesSize, Float(0));
+				WeightsD1 = FloatVector(weightsSize, Float(0)); 
+				BiasesD1 = FloatVector(biasesSize, Float(0));
 				
 				switch (optimizer)
 				{
@@ -951,7 +951,7 @@ namespace dnn
 
 				case Fillers::XavierNormal:
 				{
-					const auto stddev = std::sqrt(Float(2) / (Float(FanIn()) + Float(FanOut())));
+					auto stddev = std::sqrt(Float(2) / (Float(FanIn()) + Float(FanOut())));
 					auto distribution = std::normal_distribution<Float>(Float(0), stddev);
 					std::generate_n(weights.begin(), WeightCount, [&]() { return distribution(RandomEngine); });
 				}
@@ -959,7 +959,7 @@ namespace dnn
 
 				case Fillers::XavierUniform:
 				{
-					const auto limit = std::sqrt(Float(6) / (Float(FanIn()) + Float(FanOut())));
+					auto limit = std::sqrt(Float(6) / (Float(FanIn()) + Float(FanOut())));
 					auto distribution = std::uniform_real_distribution<Float>(-limit, limit);
 					std::generate_n(weights.begin(), WeightCount, [&]() { return distribution(RandomEngine); });
 				}
