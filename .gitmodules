@@ -19,3 +19,6 @@
 [submodule "deps/vectorclass"]
 	path = deps/vectorclass
 	url = https://github.com/zamir1001/vectorclass.git
+[submodule "deps/googletest"]
+	path = deps/googletest
+	url = https://github.com/google/googletest.git

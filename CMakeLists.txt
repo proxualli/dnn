@@ -248,6 +248,15 @@ IF(NOT DEFINED VECTORCLASS_SOURCE_DIR)
   SET(CIMG_SOURCE_DIR "${DNN_DEPENDENCIES_SOURCE_DIR}/CImg" CACHE STRING "CImg source directory")
  ENDIF()
 
+IF(DNN_BUILD_TESTS AND NOT DEFINED GOOGLETEST_SOURCE_DIR)
+  MESSAGE(STATUS "Downloading Google Test to ${DNN_DEPENDENCIES_SOURCE_DIR}/googletest (define GOOGLETEST_SOURCE_DIR to avoid it)")
+  CONFIGURE_FILE(cmake/DownloadGoogleTest.cmake "${DNN_DEPENDENCIES_BINARY_DIR}/googletest-download/CMakeLists.txt")
+  EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
+    WORKING_DIRECTORY "${DNN_DEPENDENCIES_BINARY_DIR}/googletest-download")
+  EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" --build .
+    WORKING_DIRECTORY "${DNN_DEPENDENCIES_BINARY_DIR}/googletest-download")
+  SET(GOOGLETEST_SOURCE_DIR "${DNN_DEPENDENCIES_SOURCE_DIR}/googletest" CACHE STRING "Google Test source directory")
+ENDIF()
 
 add_library(${PROJECT_NAME} ${libdnn_sources})
 DNN_TARGET_ENABLE_CXX17(${PROJECT_NAME})
@@ -354,6 +363,21 @@ IF(NOT TARGET magic_enum)
   ADD_SUBDIRECTORY(
     "${MAGIC_ENUM_SOURCE_DIR}"
     "${DNN_DEPENDENCIES_BINARY_DIR}/magic_enum")
+ENDIF()
+
+IF(DNN_BUILD_TESTS)
+  # ---[ Build google test
+  IF(NOT TARGET gtest)
+    SET(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+    ADD_SUBDIRECTORY(
+      "${GOOGLETEST_SOURCE_DIR}"
+      "${DNN_DEPENDENCIES_BINARY_DIR}/googletest")
+  ENDIF()
+  ADD_EXECUTABLE(batchnormactivation-smoketest test/bachnormactivation/smoke.cc)
+  DNN_TARGET_ENABLE_CXX17(batchnormactivation-smoketest)
+  TARGET_INCLUDE_DIRECTORIES(batchnormactivation-smoketest PRIVATE test)
+  TARGET_LINK_LIBRARIES(batchnormactivation-smoketest PRIVATE dnn gtest)
+  ADD_TEST(batchnormactivation-smoketest batchnormactivation-smoketest)
 ENDIF()
 
 TARGET_LINK_LIBRARIES(test PUBLIC ${PROJECT_NAME} zlib)
