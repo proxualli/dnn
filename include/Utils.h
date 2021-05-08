@@ -281,7 +281,7 @@ namespace dnn
 			{
 				// only floats for now, not double or long double !!!
 				const auto vecCount = (count / VectorSize) * VectorSize;
-				const VecFloat vecValue = VecFloat(value);
+				const auto vecValue = VecFloat(value);
 				Float* tmpArr = reinterpret_cast<Float*>(Data);
 				for (size_type i = 0; i < vecCount; i+=VectorSize)
 					vecValue.store_nt(&tmpArr[i]);

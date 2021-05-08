@@ -696,13 +696,13 @@ namespace dnn
 			return list;
 		}
 
-		std::vector<Layer*> GetLayerOutputs(const Layer* parentLayer) const
+		std::vector<Layer*> GetLayerOutputs(const Layer* parentLayer, const bool inplace = false) const
 		{
 			auto outputs = std::vector<Layer*>();
 
 			for (auto& layer : Layers)
 				if (layer->Name != parentLayer->Name)
-					for (auto input : layer->Inputs)
+					for (auto input : inplace ? layer->InputsInplace : layer->InputsOriginal)
 						if (input->Name == parentLayer->Name)
 							outputs.push_back(layer.get());
 
@@ -732,7 +732,7 @@ namespace dnn
 						if (l->Name == layer->Name)
 							continue;
 
-						for (auto input : l->Inputs)
+						for (auto input : l->InputsOriginal)
 						{
 							if (input->Name == layer->Name)
 							{
@@ -754,33 +754,14 @@ namespace dnn
 				}
 			}
 
-			return unreferencedLayers;
-		}
-
-		void FindInplaceBwd()
-		{
-			// Find Inplace inputs
 			for (auto& layer : Layers)
 			{
 				layer->SharesInput = false;
-				
-				if (layer->InplaceBwd)
-					for (auto output : layer->Outputs)
-					{
-						auto inputs = std::vector<Layer*>();
-						for (auto input : output->InputsOriginal)
-							inputs.push_back(input->InplaceBwd || input->Name == layer->Name ? input->InputLayerOriginal : input);
-
-						output->Inputs = std::vector<Layer*>(inputs);
-						output->InputsInplace = std::vector<Layer*>(inputs);
-						output->InputLayer = layer->InputLayerOriginal;
-						output->InputLayerInplace = layer->InputLayerOriginal;
-					}
+				layer->Outputs = GetLayerOutputs(layer.get(), true);
 			}
 
 			for (auto& layer : Layers)
 			{
-				layer->Outputs = GetLayerOutputs(layer.get());
 				auto outputsCount = layer->Outputs.size();
 
 				if (outputsCount > 1)
@@ -790,12 +771,11 @@ namespace dnn
 						if (l->Name == layer->Name)
 							continue;
 
-						for (auto input : l->Inputs)
+						for (auto input : l->InputsInplace)
 						{
 							if (input->Name == layer->Name)
 							{
-								l->SharesInput = true;
-								l->SharesInputInplace = true;
+								l->SharesInputInplace = l->InplaceBwd ? false : true;
 								outputsCount--;
 								break;
 							}
@@ -806,48 +786,10 @@ namespace dnn
 					}
 				}
 			}
-			
-			// Find non-Inplace inputs
-			for (auto& layer : Layers)
-			{
-				layer->SharesInput = false;
-				if (layer->InputsOriginal.size() > 0)
-				{
-					layer->Inputs = std::vector<Layer*>(layer->InputsOriginal);
-					layer->InputLayer = layer->InputLayerOriginal;
-				}
-			}
 
-			for (auto& layer : Layers)
-			{
-				layer->Outputs = GetLayerOutputs(layer.get());
-				auto outputsCount = layer->Outputs.size();
-
-				if (outputsCount > 1)
-				{
-					for (auto& l : Layers)
-					{
-						if (l->Name == layer->Name)
-							continue;
-
-						for (auto inputs : l->Inputs)
-						{
-							if (inputs->Name == layer->Name)
-							{
-								l->SharesInput = true;
-								l->SharesInputOriginal = true;
-								outputsCount--;
-								break;
-							}
-						}
-
-						if (outputsCount == 1)
-							break;
-					}
-				}
-			}
+			return unreferencedLayers;
 		}
-
+	
 		void Training()
 		{
 			if (TaskState.load() == TaskStates::Stopped && !BatchSizeChanging.load() && !ResettingWeights.load())
@@ -925,9 +867,6 @@ namespace dnn
 						FirstUnlockedLayer.store(i);
 						break;
 					}
-
-				if (UseInplace)
-					FindInplaceBwd(); // Find and store the inplace and non-inplace flow
 
 				while (CurrentEpoch < TotalEpochs)
 				{
