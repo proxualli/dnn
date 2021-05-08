@@ -284,7 +284,7 @@ namespace dnn
 			PadW(padW),
 			Inputs(std::vector<Layer*>(inputs)),			// Inputs is switched between non-inplace (forward) and inplace (backprop) during training 
 			InputsOriginal(std::vector<Layer*>(inputs)),	// InputsOriginal = the non-inplace inputs 
-			InputsInplace(std::vector<Layer*>(inputs)),			// InputsInplece = the inplace inputs
+			InputsInplace(std::vector<Layer*>(inputs)),		// InputsInplece = the inplace inputs
 			InputLayer(inputs.size() > 0 ? inputs[0] : nullptr),
 			InputLayerOriginal(inputs.size() > 0 ? inputs[0] : nullptr),
 			InputLayerInplace(inputs.size() > 0 ? inputs[0] : nullptr),

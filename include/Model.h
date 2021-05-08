@@ -714,18 +714,15 @@ namespace dnn
 			// This determines how the backprop step correctly flows
 			// When SharesInput is true we have to add our diff vector instead of just copying it because there's more than one layer involved
 
-			// determine SharesInputOriginal (and SharesInput)
+			// determine SharesInputOriginal and SharesInput
 			for (auto& layer : Layers)
-			{
 				layer->SharesInput = false;
-				layer->Outputs = GetLayerOutputs(layer.get());
-			}
-
+			
 			auto unreferencedLayers = std::vector<Layer*>();
 
 			for (auto& layer : Layers)
 			{
-				auto outputsCount = layer->Outputs.size();
+				auto outputsCount = GetLayerOutputs(layer.get()).size();
 
 				if (outputsCount > 1)
 				{
@@ -757,15 +754,10 @@ namespace dnn
 			}
 
 			// determine SharesInputInplace
+		
 			for (auto& layer : Layers)
 			{
-				layer->SharesInput = false;
-				layer->Outputs = GetLayerOutputs(layer.get(), true);
-			}
-
-			for (auto& layer : Layers)
-			{
-				auto outputsCount = layer->Outputs.size();
+				auto outputsCount = GetLayerOutputs(layer.get(), true).size();
 
 				if (outputsCount > 1)
 				{
