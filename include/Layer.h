@@ -223,7 +223,7 @@ namespace dnn
 		Layer* InputLayer;
 		Layer* InputLayerInplace;
 		Layer* InputLayerOriginal;
-		std::vector<Layer*> Outputs;
+		//std::vector<Layer*> Outputs;
 		bool LayerBeforeCost;
 		bool SharesInput;
 		bool SharesInputOriginal;
@@ -318,7 +318,7 @@ namespace dnn
 			BiasesPar2(FloatVector()),
 			B1(Float(0.9)),
 			B2(Float(0.999)),
-			Outputs(std::vector<Layer*>()),
+			//Outputs(std::vector<Layer*>()),
 			UseDefaultParameters(true),
 			LockUpdate(false),
 			RefreshingStats(false),
