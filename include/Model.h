@@ -696,14 +696,14 @@ namespace dnn
 			return list;
 		}
 
-		std::vector<Layer*> GetLayerOutputs(const Layer* parentLayer, const bool inplace = false) const
+		std::vector<Layer*> GetLayerOutputs(const Layer* layer, const bool inplace = false) const
 		{
 			auto outputs = std::vector<Layer*>();
 
 			for (auto& layer : Layers)
-				if (layer->Name != parentLayer->Name)
+				if (layer->Name != layer->Name)
 					for (auto input : inplace ? layer->InputsInplace : layer->InputsOriginal)
-						if (input->Name == parentLayer->Name)
+						if (input->Name == layer->Name)
 							outputs.push_back(layer.get());
 
 			return outputs;
@@ -1587,6 +1587,9 @@ namespace dnn
 
 		void BackwardProp(const UInt batchSize)
 		{
+			if (UseInplace)
+				SwitchInplaceBwd(true);
+
 			for (auto i = Layers.size() - 1; i > 0ull; --i)
 			{
 				if (Layers[i]->HasWeights)
@@ -1599,6 +1602,9 @@ namespace dnn
 				else
 					Layers[i]->BackwardProp(batchSize);
 			}
+
+			if (UseInplace)
+				SwitchInplaceBwd(false);
 		}
 		
 		int SaveWeights(std::string fileName, const bool persistOptimizer = false) const

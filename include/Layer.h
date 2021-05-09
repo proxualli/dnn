@@ -184,7 +184,7 @@ namespace dnn
 		{
 		}
 
-		Stats(const Float mean, const Float stddev, const Float min, const Float  max) :
+		Stats(const Float mean, const Float stddev, const Float min, const Float max) :
 			Mean(mean),
 			StdDev(stddev),
 			Min(min),
@@ -200,7 +200,7 @@ namespace dnn
 		dnnl::memory::format_tag ChosenFormat;
 		std::mt19937 RandomEngine;
 
-		bool IsInplaceBwd(const LayerTypes layerType, const std::vector<Layer*>& inputs) const
+		auto IsInplaceBwd(const LayerTypes layerType, const std::vector<Layer*>& inputs) const
 		{
 			if (UseInplace && (std::string(magic_enum::enum_name<LayerTypes>(layerType)).find("BatchNorm", 0) != std::string::npos) && (inputs.size() == 1) && (inputs[0]->LayerType == LayerTypes::Convolution || inputs[0]->LayerType == LayerTypes::DepthwiseConvolution || inputs[0]->LayerType == LayerTypes::ConvolutionTranspose))
 				return true;
@@ -208,7 +208,7 @@ namespace dnn
 				return false;
 		}
 
-		std::vector<Layer*> GetInplaceInputs(const LayerTypes layerType, const std::vector<Layer*>& inputs) const
+		auto GetInplaceInputs(const LayerTypes layerType, const std::vector<Layer*>& inputs) const
 		{
 			if (IsInplaceBwd(layerType, inputs))
 				return std::vector<Layer*>(inputs);
@@ -343,7 +343,6 @@ namespace dnn
 			BiasesPar2(FloatVector()),
 			B1(Float(0.9)),
 			B2(Float(0.999)),
-			//Outputs(std::vector<Layer*>()),
 			UseDefaultParameters(true),
 			LockUpdate(false),
 			RefreshingStats(false),
@@ -1178,7 +1177,6 @@ namespace dnn
 			if (HasBias)
 			{
 				const auto lr = -rate.MaximumRate * BiasesLRM;
-
 				PRAGMA_OMP_SIMD()
 				for (auto i = 0ull; i < BiasCount; i++)
 				{
@@ -1206,7 +1204,6 @@ namespace dnn
 			if (HasBias)
 			{
 				const auto lr = rate.MaximumRate * BiasesLRM;
-
 				PRAGMA_OMP_SIMD()
 				for (auto i = 0ull; i < BiasCount; i++)
 				{
@@ -1239,7 +1236,6 @@ namespace dnn
 			if (HasBias)
 			{
 				const auto lr = rate.MaximumRate * BiasesLRM;
-
 				PRAGMA_OMP_SIMD()
 				for (auto i = 0ull; i < BiasCount; i++)
 				{
@@ -1279,7 +1275,6 @@ namespace dnn
 			if (HasBias)
 			{
 				const auto lr = rate.MaximumRate * BiasesLRM / (Float(1) - B1);
-
 				for (auto i = 0ull; i < BiasCount; i++)
 				{
 					BiasesPar1[i] = (beta1 * BiasesPar1[i]) + (oneMinusBeta1 * BiasesD1[i]);
@@ -1311,7 +1306,6 @@ namespace dnn
 			{
 				const auto lr = rate.MaximumRate * BiasesLRM;
 				const auto batchRecip = Float(1) / rate.BatchSize * lr;
-				
 				PRAGMA_OMP_SIMD()
 				for (auto i = 0ull; i < BiasCount; i++)
 				{
@@ -1340,7 +1334,6 @@ namespace dnn
 			if (HasBias)
 			{
 				const auto lr = rate.MaximumRate * BiasesLRM / rate.BatchSize;
-
 				PRAGMA_OMP_SIMD()
 				for (auto i = 0ull; i < BiasCount; i++)
 				{
@@ -1362,7 +1355,6 @@ namespace dnn
 			if (HasBias)
 			{
 				const auto lr = rate.MaximumRate * BiasesLRM / rate.BatchSize;;
-
 				PRAGMA_OMP_SIMD()
 				for (auto i = 0ull; i < BiasCount; i++)
 					Biases[i] -= lr * BiasesD1[i];
@@ -1385,7 +1377,6 @@ namespace dnn
 			if (HasBias)
 			{
 				const auto lr = rate.MaximumRate * BiasesLRM / rate.BatchSize;
-
 				PRAGMA_OMP_SIMD()
 				for (auto i = 0ull; i < BiasCount; i++)
 				{
