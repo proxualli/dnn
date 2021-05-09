@@ -696,14 +696,14 @@ namespace dnn
 			return list;
 		}
 
-		std::vector<Layer*> GetLayerOutputs(const Layer* layer, const bool inplace = false) const
+		std::vector<Layer*> GetLayerOutputs(const Layer* parentLayer, const bool inplace = false) const
 		{
 			auto outputs = std::vector<Layer*>();
 
 			for (auto& layer : Layers)
-				if (layer->Name != layer->Name)
+				if (layer->Name != parentLayer->Name)
 					for (auto input : inplace ? layer->InputsInplace : layer->InputsOriginal)
-						if (input->Name == layer->Name)
+						if (input->Name == parentLayer->Name)
 							outputs.push_back(layer.get());
 
 			return outputs;
