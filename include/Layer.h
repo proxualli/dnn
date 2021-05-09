@@ -199,7 +199,33 @@ namespace dnn
 		dnn::Device Device;
 		dnnl::memory::format_tag ChosenFormat;
 		std::mt19937 RandomEngine;
-		
+
+		bool IsInplaceBwd(const std::vector<Layer*>& inputs, const LayerTypes layerType) const
+		{
+			if (UseInplace && (std::string(magic_enum::enum_name<LayerTypes>(layerType)).find("BatchNorm", 0) != std::string::npos) && (inputs.size() == 1) && (inputs[0]->LayerType == LayerTypes::Convolution || inputs[0]->LayerType == LayerTypes::DepthwiseConvolution || inputs[0]->LayerType == LayerTypes::ConvolutionTranspose))
+				return true;
+			else
+				return false;
+		}
+
+		std::vector<Layer*> GetInplaceInputs(const std::vector<Layer*>& inputs, const LayerTypes layerType) const
+		{
+			if (IsInplaceBwd(inputs, layerType))
+				return std::vector<Layer*>(inputs);
+			else
+			{
+				auto inputsInplace = std::vector<Layer*>();
+
+				if (inputs.size() > 0)
+				{
+					for (auto input : inputs)
+						inputsInplace.push_back(input->InplaceBwd ? input->InputLayerOriginal : input);
+				}
+
+				return inputsInplace;
+			}
+		}
+
 	public:
 		const std::string Name;
 		const LayerTypes LayerType;
@@ -219,7 +245,7 @@ namespace dnn
 		const bool HasPadding;
 		std::vector<Layer*> Inputs;
 		const std::vector<Layer*> InputsOriginal;
-		std::vector<Layer*> InputsInplace;
+		const std::vector<Layer*> InputsInplace;
 		Layer* InputLayer;
 		Layer* InputLayerInplace;
 		Layer* InputLayerOriginal;
@@ -284,11 +310,11 @@ namespace dnn
 			PadW(padW),
 			Inputs(std::vector<Layer*>(inputs)),			// Inputs is switched between non-inplace (forward) and inplace (backprop) during training 
 			InputsOriginal(std::vector<Layer*>(inputs)),	// InputsOriginal = the non-inplace inputs 
-			InputsInplace(std::vector<Layer*>(inputs)),		// InputsInplece = the inplace inputs
+			InputsInplace(GetInplaceInputs(inputs, layerType)),		// InputsInplece = the inplace inputs
 			InputLayer(inputs.size() > 0 ? inputs[0] : nullptr),
 			InputLayerOriginal(inputs.size() > 0 ? inputs[0] : nullptr),
-			InputLayerInplace(inputs.size() > 0 ? inputs[0] : nullptr),
-			InplaceBwd((std::string(magic_enum::enum_name<LayerTypes>(layerType)).find("BatchNorm", 0) != std::string::npos) && inputs.size() == 1 && UseInplace && (inputs[0]->LayerType == LayerTypes::Convolution || inputs[0]->LayerType == LayerTypes::DepthwiseConvolution || inputs[0]->LayerType == LayerTypes::ConvolutionTranspose)),
+			InputLayerInplace(GetInplaceInputs(inputs, layerType).size() > 0 ? GetInplaceInputs(inputs, layerType)[0] : nullptr),
+			InplaceBwd(IsInplaceBwd(inputs, layerType)),
 			Scaling(scaling),
 			HasBias(hasBias && biasCount > 0),
 			HasWeights(weightCount > 0),
@@ -333,16 +359,6 @@ namespace dnn
 			bpropTime(std::chrono::duration<Float>(Float(0))),
 			updateTime(std::chrono::duration<Float>(Float(0)))
 		{
-			if (!InplaceBwd)
-			{
-				InputsInplace = std::vector<Layer*>();
-				if (InputsOriginal.size() > 0)
-				{
-					for (auto input : InputsOriginal)
-						InputsInplace.push_back(input->InplaceBwd ? input->InputLayerOriginal : input);
-					InputLayerInplace = InputsInplace[0];
-				}
-			}
 		}
 
 		virtual ~Layer() = default;

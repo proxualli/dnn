@@ -330,7 +330,6 @@ namespace dnn
 		inline T& operator[] (size_type i) noexcept { return Data[i]; }
 		inline const T& operator[] (size_type i) const noexcept { return Data[i]; }
 		inline bool empty() const noexcept { return count == 0; }
-		
 	};
 
 	template <typename T, std::size_t alignment, typename Allocator = AlignedAllocator<T, alignment>> class AlignedVector
