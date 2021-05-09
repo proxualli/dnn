@@ -200,7 +200,7 @@ namespace dnn
 		dnnl::memory::format_tag ChosenFormat;
 		std::mt19937 RandomEngine;
 
-		bool IsInplaceBwd(const std::vector<Layer*>& inputs, const LayerTypes layerType) const
+		bool IsInplaceBwd(const LayerTypes layerType, const std::vector<Layer*>& inputs) const
 		{
 			if (UseInplace && (std::string(magic_enum::enum_name<LayerTypes>(layerType)).find("BatchNorm", 0) != std::string::npos) && (inputs.size() == 1) && (inputs[0]->LayerType == LayerTypes::Convolution || inputs[0]->LayerType == LayerTypes::DepthwiseConvolution || inputs[0]->LayerType == LayerTypes::ConvolutionTranspose))
 				return true;
@@ -208,9 +208,9 @@ namespace dnn
 				return false;
 		}
 
-		std::vector<Layer*> GetInplaceInputs(const std::vector<Layer*>& inputs, const LayerTypes layerType) const
+		std::vector<Layer*> GetInplaceInputs(const LayerTypes layerType, const std::vector<Layer*>& inputs) const
 		{
-			if (IsInplaceBwd(inputs, layerType))
+			if (IsInplaceBwd(layerType, inputs))
 				return std::vector<Layer*>(inputs);
 			else
 			{
@@ -249,7 +249,6 @@ namespace dnn
 		Layer* InputLayer;
 		Layer* InputLayerInplace;
 		Layer* InputLayerOriginal;
-		//std::vector<Layer*> Outputs;
 		bool LayerBeforeCost;
 		bool SharesInput;
 		bool SharesInputOriginal;
@@ -308,13 +307,13 @@ namespace dnn
 			PadD(padD),
 			PadH(padH),
 			PadW(padW),
-			Inputs(std::vector<Layer*>(inputs)),			// Inputs is switched between non-inplace (forward) and inplace (backprop) during training 
-			InputsOriginal(std::vector<Layer*>(inputs)),	// InputsOriginal = the non-inplace inputs 
-			InputsInplace(GetInplaceInputs(inputs, layerType)),		// InputsInplece = the inplace inputs
+			Inputs(std::vector<Layer*>(inputs)),					// Inputs is switched between non-inplace (forward) and inplace (backprop) during training 
+			InputsOriginal(std::vector<Layer*>(inputs)),			// InputsOriginal = the non-inplace inputs 
+			InputsInplace(GetInplaceInputs(layerType, inputs)),		// InputsInplece = the inplace inputs
 			InputLayer(inputs.size() > 0 ? inputs[0] : nullptr),
 			InputLayerOriginal(inputs.size() > 0 ? inputs[0] : nullptr),
-			InputLayerInplace(GetInplaceInputs(inputs, layerType).size() > 0 ? GetInplaceInputs(inputs, layerType)[0] : nullptr),
-			InplaceBwd(IsInplaceBwd(inputs, layerType)),
+			InputLayerInplace(GetInplaceInputs(layerType, inputs).size() > 0 ? GetInplaceInputs(layerType, inputs)[0] : nullptr),
+			InplaceBwd(IsInplaceBwd(layerType, inputs)),
 			Scaling(scaling),
 			HasBias(hasBias && biasCount > 0),
 			HasWeights(weightCount > 0),
