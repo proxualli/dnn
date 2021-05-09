@@ -841,11 +841,11 @@ namespace dnn
 				case Optimizers::RMSProp:
 				case Optimizers::SGDMomentum:
 					WeightsPar1.resize(weightsSize);
-					BiasesPar1.resize(biasesSize);
-					std::fill(WeightsPar1.begin(), WeightsPar1.end(), Float(0));
-					std::fill(BiasesPar1.begin(), BiasesPar1.end(), Float(0));
 					WeightsPar2.resize(0);
+					BiasesPar1.resize(biasesSize);
 					BiasesPar2.resize(0);
+					std::fill(WeightsPar1.begin(), WeightsPar1.end(), Float(0));
+					std::fill(BiasesPar1.begin(), BiasesPar1.end(), Float(0));					
 					break;
 
 				case Optimizers::SGD:

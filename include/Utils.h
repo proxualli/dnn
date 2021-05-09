@@ -194,7 +194,7 @@ namespace dnn
 	}
 
 	template<typename T>
-	inline static void InitArray(T* destination, const std::size_t elements, const int initValue = 0) noexcept
+	static void InitArray(T* destination, const std::size_t elements, const int initValue = 0) noexcept
 	{
 		if (elements < 1048576ull)
 			::memset(destination, 0, elements * sizeof(T));
@@ -208,9 +208,9 @@ namespace dnn
 		}
 	}
 
-	struct aligned_free 
+	struct aligned_free
 	{
-		void operator()(void* p) 
+		void operator()(void* p)
 		{
 #if defined(_WIN32) || defined(__CYGWIN__)
 			::_aligned_free(p);
@@ -262,7 +262,7 @@ namespace dnn
 			Data = nullptr;
 		}
 		AlignedArray(size_type newSize, T value = T()) 
-		{ 
+		{
 			if (arr)
 				arr.reset(nullptr);
 				

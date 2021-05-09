@@ -19,7 +19,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
 		AllocConsole();
 		_wfreopen_s(&stream, L"CONOUT$", L"w", stdout);
 #endif
-	break;
+		break;
 
 	case DLL_THREAD_ATTACH:
 	case DLL_THREAD_DETACH:
