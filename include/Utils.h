@@ -241,9 +241,6 @@ namespace dnn
 	template<class T, std::size_t alignment> 
 	unique_ptr_aligned<T> aligned_unique_ptr(std::size_t size, std::size_t align) { return unique_ptr_aligned<T>(static_cast<T*>(aligned_malloc<T>(size, align))); }
 
-	// template<class T, std::size_t alignment> 
-	// std::shared_ptr<T> aligned_shared_ptr(std::size_t align, std::size_t size) { return std::shared_ptr<T>(static_cast<T*>(aligned_malloc<T>(align, size)), &aligned_free); }
-
 	template <typename T, std::size_t alignment> class AlignedArray
 	{
 	protected:
@@ -281,9 +278,8 @@ namespace dnn
 			{
 				const auto vecCount = (count / VectorSize) * VectorSize;
 				const auto vecValue = VecFloat(value);
-				Float* tmpArr = reinterpret_cast<Float*>(Data);
 				for (size_type i = 0; i < vecCount; i+=VectorSize)
-					vecValue.store_nt(&tmpArr[i]);
+					vecValue.store_nt(&Data[i]);
 				for (size_type i = vecCount; i < count; ++i)
 					Data[i] = value;
 			}
@@ -331,37 +327,9 @@ namespace dnn
 		inline bool empty() const noexcept { return count == 0; }
 	};
 
-	template <typename T, std::size_t alignment, typename Allocator = AlignedAllocator<T, alignment>> class AlignedVector
-	{
-	static_assert(std::is_same_v<T, typename Allocator::value_type>, "vector<T, Allocator>");
-	protected:
-		std::vector<T, Allocator> vec;
-		typedef typename std::vector<T, Allocator>::iterator iterator;
-		typedef typename std::vector<T, Allocator>::const_iterator const_iterator;
-		typedef typename Allocator::size_type size_type;
-	public:
-		AlignedVector() { vec = std::vector<T, Allocator>(); }
-		AlignedVector(size_type n, T value = T()) { vec = std::vector<T, Allocator>(n, value); }
-		inline T* data() noexcept { return vec.data(); }
-		inline const T* data() const noexcept { return vec.data(); }
-		inline size_type size() const noexcept { return vec.size(); }
-		inline void resize(size_type n, T value = T()) { vec.resize(n, value); }
-		inline T& operator[] (size_type i) noexcept { return vec[i]; }
-		inline const T& operator[] (size_type i) const noexcept { return vec[i]; }
-		inline iterator begin() noexcept { return vec.begin(); }
-		inline const_iterator cbegin() const noexcept { return vec.cbegin(); }
-		inline iterator end() noexcept { return vec.end(); }
-		inline const_iterator cend() const noexcept { return vec.cend(); }
-		inline bool empty() const noexcept { return vec.empty(); }
-		inline void clear() noexcept { vec.clear(); }
-		inline void shrink_to_fit() noexcept { vec.shrink_to_fit(); }
-		inline void swap(AlignedVector& other) noexcept { std::vector<T, Allocator>().swap(other.vec); }
-	};
-
-	
 	typedef AlignedArray<Float, 64ull> FloatArray;
 	typedef AlignedArray<Byte, 64ull> ByteArray;
-	typedef AlignedVector<Float, 64ull> FloatVector;
+	typedef std::vector<Float, AlignedAllocator<Float, 64ull>> FloatVector;
 	//constexpr bool IS_LITTLE_ENDIAN = std::endian::native == std::endian::little;
 	constexpr auto NEURONS_LIMIT = Float(1000);   // limit for all the neurons and derivative [-NEURONS_LIMIT,NEURONS_LIMIT]
 	constexpr auto WEIGHTS_LIMIT = Float(100);    // limit for all the weights and biases [-WEIGHTS_LIMIT,WEIGHTS_LIMIT]
