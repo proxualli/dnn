@@ -247,7 +247,7 @@ namespace dnn
 	template <typename T, std::size_t alignment> class AlignedArray
 	{
 	protected:
-		std::unique_ptr_aligned<T> arr = nullptr;
+		unique_ptr_aligned<T> arr = nullptr;
 		T* Data = nullptr;
 		typedef typename std::size_t size_type;
 		size_type count = 0;
@@ -270,7 +270,7 @@ namespace dnn
 			arr = nullptr;
 			Data = nullptr;
 
-			arr = std::aligned_unique_ptr<T, alignment>(newSize, alignment);
+			arr = aligned_unique_ptr<T, alignment>(newSize, alignment);
 			if (arr)
 			{
 				Data = arr.get();
@@ -317,7 +317,7 @@ namespace dnn
 			
 			if (newSize > 0)
 			{
-				arr = std::aligned_unique_ptr<T, alignment>(newSize, alignment);
+				arr = aligned_unique_ptr<T, alignment>(newSize, alignment);
 				if (arr)
 				{
 					Data = arr.get();
