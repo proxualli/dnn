@@ -39,6 +39,11 @@ namespace dnn
 			Eps(eps),
 			Momentum(momentum),
 			OneMinusMomentum(Float(1) - momentum),
+			Mean(FloatVector(PaddedC, Float(0))),
+			RunningMean(FloatVector(PaddedC, Float(0))),
+			Variance(FloatVector(PaddedC, Float(1))),
+			RunningVariance(FloatVector(PaddedC, Float(1))),
+			InvStdDev(FloatVector(PaddedC)),
 			Flags(static_cast<dnnl::normalization_flags>(0U)),
 			inference(false),
 			reorderFwdSrc(false),
@@ -46,12 +51,6 @@ namespace dnn
 			reorderBwdDiffSrc(false)
 		{
 			assert(Inputs.size() == 1);
-
-			Mean = FloatVector(PaddedC, Float(0));
-			RunningMean = FloatVector(PaddedC, Float(0));
-			Variance = FloatVector(PaddedC, Float(1));
-			RunningVariance = FloatVector(PaddedC, Float(1));
-			InvStdDev = FloatVector(PaddedC);
 
 			if (Scaling)
 			{
@@ -368,11 +367,11 @@ namespace dnn
 
 		void ResetWeights(const Fillers weightFiller, const Float weightFillerScale, const Fillers biasFiller, const Float biasFillerScale) override
 		{
-			Weights = FloatVector(PaddedC, Float(1));
-			Biases = FloatVector(PaddedC, Float(0));
+			Weights.resize(PaddedC); std::fill(Weights.begin(), Weights.end(), Float(1));
+			Biases.resize(PaddedC); std::fill(Biases.begin(), Biases.end(), Float(0));
 
-			RunningMean = FloatVector(PaddedC, Float(0));
-			RunningVariance = FloatVector(PaddedC, Float(1));
+			RunningMean.resize(PaddedC); std::fill(RunningMean.begin(), RunningMean.end(), Float(0));
+			RunningVariance.resize(PaddedC); std::fill(RunningVariance.begin(), RunningVariance.end(), Float(1));
 
 			DNN_UNREF_PAR(weightFiller);
 			DNN_UNREF_PAR(weightFillerScale);

@@ -29,20 +29,18 @@ namespace dnn
 			Momentum(momentum),
 			OneMinusMomentum(Float(1) - momentum),
 			Keep(Float(1) - dropout),
-			Scale(Float(1) / (Float(1) - dropout))
+			Scale(Float(1) / (Float(1) - dropout)),
+			DropoutDistribution(std::bernoulli_distribution(Float(1) - dropout)),
+			Mean(FloatVector(PaddedC, Float(0))),
+			RunningMean(FloatVector(PaddedC, Float(0))),
+			Variance(FloatVector(PaddedC, Float(1))),
+			RunningVariance(FloatVector(PaddedC, Float(1))),
+			InvStdDev(FloatVector(PaddedC))
 		{
-			assert(Inputs.size() == 1);
-
-			Mean = FloatVector(PaddedC, Float(0));
-			RunningMean = FloatVector(PaddedC, Float(0));
-			Variance = FloatVector(PaddedC, Float(1));
-			RunningVariance = FloatVector(PaddedC, Float(1));
-			InvStdDev = FloatVector(PaddedC);
+			assert(Inputs.size() == 1);			
 
 			WeightsMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ 2, dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::nc));
 			PersistWeightsMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ 2, dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::nc));
-
-			DropoutDistribution = std::bernoulli_distribution(Keep);
 		}
 				
 		bool Lockable() const final override
@@ -639,11 +637,11 @@ namespace dnn
 
 		void ResetWeights(const Fillers weightFiller, const Float weightFillerScale, const Fillers biasFiller, const Float biasFillerScale) override
 		{
-			Weights = FloatVector(PaddedC, Float(1));
-			Biases = FloatVector(PaddedC, Float(0));
+			Weights.resize(PaddedC); std::fill(Weights.begin(), Weights.end(), Float(1));
+			Biases.resize(PaddedC); std::fill(Biases.begin(), Biases.end(), Float(0));
 
-			RunningMean = FloatVector(PaddedC, Float(0));
-			RunningVariance = FloatVector(PaddedC, Float(1));
+			RunningMean.resize(PaddedC); std::fill(RunningMean.begin(), RunningMean.end(), Float(0));
+			RunningVariance.resize(PaddedC); std::fill(RunningVariance.begin(), RunningVariance.end(), Float(1));
 
 			DNN_UNREF_PAR(weightFiller);
 			DNN_UNREF_PAR(weightFillerScale);
@@ -674,15 +672,11 @@ namespace dnn
 
 		UInt GetNeuronsSize(const UInt batchSize) const override
 		{
-			UInt totalSize = 0;
-
 #ifndef DNN_LEAN
-			totalSize += PaddedCDHW * batchSize * sizeof(Float) * 3;
+			return PaddedCDHW * batchSize * sizeof(Float) * (InplaceBwd ? 2 : 3);
 #else
-			totalSize += PaddedCDHW * batchSize * sizeof(Float) * 2;
+			return PaddedCDHW * batchSize * sizeof(Float) * (InplaceBwd ? 1 : 2);
 #endif // DNN_LEAN
-
-			return totalSize;
 		}
 	};
 }

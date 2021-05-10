@@ -1798,15 +1798,11 @@ namespace dnn
 					
 		virtual UInt GetNeuronsSize(const UInt batchSize) const
 		{
-			auto neuronsSize = 0ull;
-
 #ifndef DNN_LEAN
-			neuronsSize += PaddedCDHW * batchSize * sizeof(Float) * (InplaceBwd ? 1 : 2);
+			return PaddedCDHW * batchSize * sizeof(Float) * (InplaceBwd ? 1 : 2);
 #else
-			neuronsSize += PaddedCDHW * batchSize * sizeof(Float);
+			return PaddedCDHW * batchSize * sizeof(Float);
 #endif // DNN_LEAN
-
-			return neuronsSize;
 		}
 
 		virtual ByteArray GetImage(const Byte) { return ByteArray(); }

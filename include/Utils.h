@@ -247,7 +247,7 @@ namespace dnn
 	template <typename T, std::size_t alignment> class AlignedArray
 	{
 	protected:
-		unique_ptr_aligned<T> arr = nullptr;
+		std::unique_ptr_aligned<T> arr = nullptr;
 		T* Data = nullptr;
 		typedef typename std::size_t size_type;
 		size_type count = 0;
@@ -270,7 +270,7 @@ namespace dnn
 			arr = nullptr;
 			Data = nullptr;
 
-			arr = aligned_unique_ptr<T, alignment>(newSize, alignment);
+			arr = std::aligned_unique_ptr<T, alignment>(newSize, alignment);
 			if (arr)
 			{
 				Data = arr.get();
@@ -279,7 +279,6 @@ namespace dnn
 	
 			if constexpr (std::is_floating_point_v<T>)
 			{
-				// only floats for now, not double or long double !!!
 				const auto vecCount = (count / VectorSize) * VectorSize;
 				const auto vecValue = VecFloat(value);
 				Float* tmpArr = reinterpret_cast<Float*>(Data);
@@ -318,7 +317,7 @@ namespace dnn
 			
 			if (newSize > 0)
 			{
-				arr = aligned_unique_ptr<T, alignment>(newSize, alignment);
+				arr = std::aligned_unique_ptr<T, alignment>(newSize, alignment);
 				if (arr)
 				{
 					Data = arr.get();
@@ -384,7 +383,7 @@ namespace dnn
 	static const auto tab = std::string("\t");
 	static const auto dtab = std::string("\t\t");	
 	
-	inline static void SleepYield(std::chrono::microseconds us)
+	static void SleepYield(std::chrono::microseconds us)
 	{
 		const auto start = std::chrono::high_resolution_clock::now();
 		const auto end = start + us;

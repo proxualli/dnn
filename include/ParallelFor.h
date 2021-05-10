@@ -14,7 +14,7 @@
 
 #ifndef DNN_UNREF_PAR
   #ifdef _MSC_VER
-	#define DNN_UNREF_PAR(P) UNREFERENCED_PARAMETER(P)
+	#define DNN_UNREF_PAR(P) (P)
   #else
 	#define DNN_UNREF_PAR(P) (void)P
   #endif
