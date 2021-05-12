@@ -258,7 +258,7 @@ namespace dnn
 			arr = nullptr;
 			Data = nullptr;
 		}
-		AlignedArray(const size_type newSize, T value = T()) 
+		AlignedArray(const size_type newSize, T value = T(0)) 
 		{
 			if (arr)
 				arr.reset(nullptr);
