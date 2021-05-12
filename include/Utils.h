@@ -258,7 +258,7 @@ namespace dnn
 			arr = nullptr;
 			Data = nullptr;
 		}
-		AlignedArray(size_type newSize, T value = T()) 
+		AlignedArray(const size_type newSize, T value = T()) 
 		{
 			if (arr)
 				arr.reset(nullptr);
@@ -276,15 +276,12 @@ namespace dnn
 	
 			if constexpr (std::is_floating_point_v<T>)
 			{
-				const auto vecCount = (count / VectorSize) * VectorSize;
-				const auto vecValue = VecFloat(value);
-				for (size_type i = 0; i < vecCount; i+=VectorSize)
-					vecValue.store_nt(&Data[i]);
-				for (size_type i = vecCount; i < count; ++i)
+				PRAGMA_OMP_SIMD()
+				for (auto i = 0; i < newSize; i++)
 					Data[i] = value;
 			}
 			else
-				for (size_type i = 0; i < count; ++i) 
+				for (auto i = 0; i < newSize; i++)
 					Data[i] = value;
 		}
 		inline void release() noexcept
