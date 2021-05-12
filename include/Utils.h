@@ -277,11 +277,11 @@ namespace dnn
 			if constexpr (std::is_floating_point_v<T>)
 			{
 				PRAGMA_OMP_SIMD()
-				for (auto i = 0; i < newSize; i++)
+				for (auto i = 0ull; i < newSize; i++)
 					Data[i] = value;
 			}
 			else
-				for (auto i = 0; i < newSize; i++)
+				for (auto i = 0ull; i < newSize; i++)
 					Data[i] = value;
 		}
 		inline void release() noexcept
