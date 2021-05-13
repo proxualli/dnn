@@ -10,6 +10,7 @@ namespace dnn
 		std::unique_ptr<dnnl::layer_normalization_forward::primitive_desc> fwdDesc;
 		std::unique_ptr<dnnl::layer_normalization_backward::primitive_desc> bwdDesc;
 		std::unique_ptr<dnnl::binary::primitive_desc> bwdAddDesc;
+		std::unique_ptr<dnnl::memory::desc> StatsDesc;
 #ifdef DNN_CACHE_PRIMITIVES
 		std::unique_ptr<dnnl::layer_normalization_forward> fwd;
 		std::unique_ptr<dnnl::layer_normalization_backward> bwd;

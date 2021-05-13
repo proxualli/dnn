@@ -288,7 +288,6 @@ namespace dnn
 		std::chrono::duration<Float> bpropTime;
 		std::chrono::duration<Float> updateTime;
 		std::unique_ptr<dnnl::memory::desc> DstMemDesc;
-		std::unique_ptr<dnnl::memory::desc> StatsDesc;
 		std::unique_ptr<dnnl::memory::desc> DiffDstMemDesc;
 		std::unique_ptr<dnnl::memory::desc> WeightsMemDesc;
 		std::unique_ptr<dnnl::memory::desc> PersistWeightsMemDesc;
