@@ -126,8 +126,8 @@ namespace dnn
 
 			fwdDesc = std::make_unique<dnnl::layer_normalization_forward::primitive_desc>(dnnl::layer_normalization_forward::primitive_desc(dnnl::layer_normalization_forward::desc(inference ? dnnl::prop_kind::forward_inference : dnnl::prop_kind::forward_training, *DstMemDesc, *StatsDesc, Eps, Flags), Device.engine));
 
-			Mean = FloatVector(fwdDesc->mean_desc().get_size() / sizeof(Float), Float(0));
-			Variance = FloatVector(fwdDesc->variance_desc().get_size() / sizeof(Float), Float(1));
+			Mean.resize(fwdDesc->mean_desc().get_size() / sizeof(Float), Float(0));
+			Variance.resize(fwdDesc->variance_desc().get_size() / sizeof(Float), Float(1));
 
 			reorderFwdSrc = fwdDesc->src_desc() != *InputLayer->DstMemDesc;
 
