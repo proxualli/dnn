@@ -202,7 +202,7 @@ namespace dnn
 
 		auto IsInplaceBwd(const LayerTypes layerType, const std::vector<Layer*>& inputs) const
 		{
-			if (UseInplace && (std::string(magic_enum::enum_name<LayerTypes>(layerType)).find("BatchNorm", 0) != std::string::npos) && (inputs.size() == 1) && (inputs[0]->LayerType == LayerTypes::Convolution || inputs[0]->LayerType == LayerTypes::DepthwiseConvolution || inputs[0]->LayerType == LayerTypes::ConvolutionTranspose))
+			if (UseInplace && (layerType == LayerTypes::LayerNorm || std::string(magic_enum::enum_name<LayerTypes>(layerType)).find("BatchNorm", 0) != std::string::npos) && (inputs.size() == 1) && (inputs[0]->LayerType == LayerTypes::Convolution || inputs[0]->LayerType == LayerTypes::DepthwiseConvolution || inputs[0]->LayerType == LayerTypes::ConvolutionTranspose))
 				return true;
 			else
 				return false;
@@ -288,6 +288,7 @@ namespace dnn
 		std::chrono::duration<Float> bpropTime;
 		std::chrono::duration<Float> updateTime;
 		std::unique_ptr<dnnl::memory::desc> DstMemDesc;
+		std::unique_ptr<dnnl::memory::desc> StatsDesc;
 		std::unique_ptr<dnnl::memory::desc> DiffDstMemDesc;
 		std::unique_ptr<dnnl::memory::desc> WeightsMemDesc;
 		std::unique_ptr<dnnl::memory::desc> PersistWeightsMemDesc;

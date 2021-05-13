@@ -64,6 +64,7 @@ namespace dnn
 
 			auto mean = Float(0);
 			auto variance = Float(0);
+			PRAGMA_OMP_SIMD()
 			for (auto e = 0ull; e < Mean.size(); e++)
 			{
 				mean += Mean[e];
@@ -94,6 +95,7 @@ namespace dnn
 			{
 				ChosenFormat = dnnl::memory::format_tag::nc;
 
+				StatsDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::a));
 				DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, ChosenFormat));
 				DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, ChosenFormat));
 			}
@@ -104,10 +106,14 @@ namespace dnn
 					ChosenFormat = GetDataFmt(*InputLayer->DstMemDesc);
 					if (ChosenFormat != GetDataFmt(*InputLayer->DiffDstMemDesc))
 						throw std::invalid_argument(std::string("Src and Diff format are different in ") + std::string(magic_enum::enum_name<LayerTypes>(LayerType)) + std::string(" layer ") + Name);
+					StatsDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::aBc8b));
 				}
 				else
+				{
 					ChosenFormat = PlainFmt;
-
+					StatsDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::abc));
+				}
+				
 				DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, ChosenFormat));
 				DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, ChosenFormat));
 			}
@@ -117,7 +123,7 @@ namespace dnn
 			else
 				Flags = Scaling ? dnnl::normalization_flags::use_scale_shift : static_cast<dnnl::normalization_flags>(0U);
 
-			fwdDesc = std::make_unique<dnnl::layer_normalization_forward::primitive_desc>(dnnl::layer_normalization_forward::primitive_desc(dnnl::layer_normalization_forward::desc(inference ? dnnl::prop_kind::forward_inference : dnnl::prop_kind::forward_training, *DstMemDesc, Eps, Flags), Device.engine));
+			fwdDesc = std::make_unique<dnnl::layer_normalization_forward::primitive_desc>(dnnl::layer_normalization_forward::primitive_desc(dnnl::layer_normalization_forward::desc(inference ? dnnl::prop_kind::forward_inference : dnnl::prop_kind::forward_training, *DstMemDesc, *StatsDesc, Eps, Flags), Device.engine));
 
 			Mean = FloatVector(fwdDesc->mean_desc().get_size() / sizeof(Float), Float(0));
 			Variance = FloatVector(fwdDesc->variance_desc().get_size() / sizeof(Float), Float(1));
@@ -129,7 +135,7 @@ namespace dnn
 #endif
 			if (!inference)
 			{
-				bwdDesc = std::make_unique<dnnl::layer_normalization_backward::primitive_desc>(dnnl::layer_normalization_backward::primitive_desc(dnnl::layer_normalization_backward::desc(Scaling ? dnnl::prop_kind::backward : dnnl::prop_kind::backward_data, *DiffDstMemDesc, *DstMemDesc, Eps, Flags), Device.engine, *fwdDesc));
+				bwdDesc = std::make_unique<dnnl::layer_normalization_backward::primitive_desc>(dnnl::layer_normalization_backward::primitive_desc(dnnl::layer_normalization_backward::desc(Scaling ? dnnl::prop_kind::backward : dnnl::prop_kind::backward_data, *DiffDstMemDesc, *DstMemDesc, *StatsDesc, Eps, Flags), Device.engine, *fwdDesc));
 
 				reorderBwdSrc = bwdDesc->src_desc() != *InputLayer->DstMemDesc;
 				reorderBwdDiffSrc = bwdDesc->diff_src_desc() != *InputLayer->DiffDstMemDesc;
@@ -210,7 +216,6 @@ namespace dnn
 
 				auto memMean = dnnl::memory(fwdDesc->mean_desc(), Device.engine, Mean.data());
 				auto memVariance = dnnl::memory(fwdDesc->variance_desc(), Device.engine, Variance.data());
-
 				auto dstMem = dnnl::memory(*DstMemDesc, Device.engine, Neurons.data());
 
 				if (Scaling)
@@ -236,7 +241,8 @@ namespace dnn
 				Device.stream.wait();
 
 #ifndef DNN_LEAN
-				InitArray<Float>(NeuronsD1.data(), batchSize * PaddedCDHW);
+				if (!InplaceBwd)
+					InitArray<Float>(NeuronsD1.data(), batchSize * PaddedCDHW);
 #else
 				DNN_UNREF_PAR(batchSize);
 #endif // DNN_LEAN
@@ -259,14 +265,11 @@ namespace dnn
 				Device.stream.wait();
 			}
 
-			auto diffDstMem = dnnl::memory(*DiffDstMemDesc, Device.engine, NeuronsD1.data());
-
 			auto memMean = dnnl::memory(bwdDesc->mean_desc(), Device.engine, Mean.data());
 			auto memVariance = dnnl::memory(bwdDesc->variance_desc(), Device.engine, Variance.data());
 
-			const auto &memDiffSrc = SharesInput ? dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine) : dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data());
-			const auto &diffSrcMem = reorderBwdDiffSrc ? dnnl::memory(bwdDesc->diff_src_desc(), Device.engine) : memDiffSrc;
-
+			const auto& memDiffSrc = SharesInput && !InplaceBwd ? dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine) : dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data());
+			const auto& diffSrcMem = reorderBwdDiffSrc ? dnnl::memory(bwdDesc->diff_src_desc(), Device.engine) : memDiffSrc;
 			if (Scaling)
 			{
 				for (auto c = 0ull; c < 2 * PaddedC; c++)
@@ -275,9 +278,9 @@ namespace dnn
 				auto scaleShiftMemory = dnnl::memory(*WeightsMemDesc, Device.engine, ScaleShift.data());
 				auto diffScaleShiftMemory = dnnl::memory(*WeightsMemDesc, Device.engine, DiffScaleShift.data());
 #ifdef DNN_CACHE_PRIMITIVES
-				bwd->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DIFF_DST, diffDstMem }, { DNNL_ARG_MEAN, memMean }, { DNNL_ARG_VARIANCE, memVariance }, { DNNL_ARG_SCALE_SHIFT, scaleShiftMemory }, { DNNL_ARG_DIFF_SRC, diffSrcMem }, { DNNL_ARG_DIFF_SCALE_SHIFT, diffScaleShiftMemory } });
+				bwd->execute(Device.stream, std::unordered_map<int, dnnl::memory> { {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DIFF_DST, InplaceBwd ? diffSrcMem : dnnl::memory(*DiffDstMemDesc, Device.engine, NeuronsD1.data()) }, { DNNL_ARG_MEAN, memMean }, { DNNL_ARG_VARIANCE, memVariance }, { DNNL_ARG_SCALE_SHIFT, scaleShiftMemory }, { DNNL_ARG_DIFF_SRC, diffSrcMem }, { DNNL_ARG_DIFF_SCALE_SHIFT, diffScaleShiftMemory } });
 #else
-				dnnl::layer_normalization_backward(*bwdDesc).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DIFF_DST, diffDstMem }, { DNNL_ARG_MEAN, memMean }, { DNNL_ARG_VARIANCE, memVariance }, { DNNL_ARG_SCALE_SHIFT, scaleShiftMemory }, { DNNL_ARG_DIFF_SRC, diffSrcMem }, { DNNL_ARG_DIFF_SCALE_SHIFT, diffScaleShiftMemory } });
+				dnnl::layer_normalization_backward(*bwdDesc).execute(Device.stream, std::unordered_map<int, dnnl::memory> { {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DIFF_DST, InplaceBwd ? diffSrcMem : dnnl::memory(*DiffDstMemDesc, Device.engine, NeuronsD1.data()) }, { DNNL_ARG_MEAN, memMean }, { DNNL_ARG_VARIANCE, memVariance }, { DNNL_ARG_SCALE_SHIFT, scaleShiftMemory }, { DNNL_ARG_DIFF_SRC, diffSrcMem }, { DNNL_ARG_DIFF_SCALE_SHIFT, diffScaleShiftMemory } });
 #endif
 
 				for (auto c = 0ull; c < C; c++)
@@ -288,11 +291,10 @@ namespace dnn
 			}
 			else
 #ifdef DNN_CACHE_PRIMITIVES
-				bwd->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DIFF_DST, diffDstMem }, { DNNL_ARG_MEAN, memMean }, { DNNL_ARG_VARIANCE, memVariance }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });		
+				bwd->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DIFF_DST, InplaceBwd ? diffSrcMem : dnnl::memory(*DiffDstMemDesc, Device.engine, NeuronsD1.data()) }, { DNNL_ARG_MEAN, memMean }, { DNNL_ARG_VARIANCE, memVariance }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
 #else
-				dnnl::layer_normalization_backward(*bwdDesc).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DIFF_DST, diffDstMem }, { DNNL_ARG_MEAN, memMean }, { DNNL_ARG_VARIANCE, memVariance }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
+				dnnl::layer_normalization_backward(*bwdDesc).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DIFF_DST, InplaceBwd ? diffSrcMem : dnnl::memory(*DiffDstMemDesc, Device.engine, NeuronsD1.data()) }, { DNNL_ARG_MEAN, memMean }, { DNNL_ARG_VARIANCE, memVariance }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
 #endif
-
 			Device.stream.wait();
 
 			if (reorderBwdDiffSrc)
@@ -301,7 +303,7 @@ namespace dnn
 				Device.stream.wait();
 			}
 
-			if (SharesInput)
+			if (SharesInput && !InplaceBwd)
 			{
 #ifdef DNN_CACHE_PRIMITIVES
 				bwdAdd->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ { DNNL_ARG_SRC_0, dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data()) }, { DNNL_ARG_SRC_1, memDiffSrc }, { DNNL_ARG_DST, dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data()) } });
