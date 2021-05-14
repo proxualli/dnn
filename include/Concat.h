@@ -26,9 +26,6 @@ namespace dnn
 			Layer(device, format, name, LayerTypes::Concat, 0, 0, InputChannels(inputs), inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs)
 		{
 			assert(Inputs.size() > 1);
-			assert(Inputs[0]->Name.size() > 1);
-			assert(Inputs[1]->Name.size() > 1);
-			assert(Name.size() > 1);
 		}
 
 		std::string GetDescription() const final override
