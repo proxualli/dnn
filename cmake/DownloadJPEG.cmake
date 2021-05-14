@@ -5,7 +5,7 @@ PROJECT(jpeg-download NONE)
 INCLUDE(ExternalProject)
 ExternalProject_Add(jpeg
 	GIT_REPOSITORY https://github.com/libjpeg-turbo/libjpeg-turbo.git
-	GIT_TAG master
+	GIT_TAG main
 	SOURCE_DIR "${DNN_DEPENDENCIES_SOURCE_DIR}/libjpeg-turbo"
 	BINARY_DIR "${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo"
 	CONFIGURE_COMMAND ""
