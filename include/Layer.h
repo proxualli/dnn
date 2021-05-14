@@ -135,15 +135,14 @@ namespace dnn
 		GlobalMaxPooling = 29,
 		Input = 30,
 		LayerNorm = 31,
-		LayerNormRelu = 32,
-		LocalResponseNorm = 33,
-		Max = 34,
-		MaxPooling = 35,
-		Min = 36,
-		Multiply = 37,
-		PartialDepthwiseConvolution = 38,
-		Resampling = 39,
-		Substract = 40
+		LocalResponseNorm = 32,
+		Max = 33,
+		MaxPooling = 34,
+		Min = 35,
+		Multiply = 36,
+		PartialDepthwiseConvolution = 37,
+		Resampling = 38,
+		Substract = 39
 	};
 	
 	enum class Fillers
@@ -203,7 +202,7 @@ namespace dnn
 
 		auto IsInplaceBwd(const LayerTypes layerType, const std::vector<Layer*>& inputs) const
 		{
-			if (UseInplace && (layerType == LayerTypes::LayerNorm || layerType == LayerTypes::LayerNormRelu || std::string(magic_enum::enum_name<LayerTypes>(layerType)).find("BatchNorm", 0) != std::string::npos) && (inputs.size() == 1) && (inputs[0]->LayerType == LayerTypes::Convolution || inputs[0]->LayerType == LayerTypes::DepthwiseConvolution || inputs[0]->LayerType == LayerTypes::ConvolutionTranspose))
+			if (UseInplace && (layerType == LayerTypes::LayerNorm || std::string(magic_enum::enum_name<LayerTypes>(layerType)).find("BatchNorm", 0) != std::string::npos) && (inputs.size() == 1) && (inputs[0]->LayerType == LayerTypes::Convolution || inputs[0]->LayerType == LayerTypes::DepthwiseConvolution || inputs[0]->LayerType == LayerTypes::ConvolutionTranspose))
 				return true;
 			else
 				return false;
