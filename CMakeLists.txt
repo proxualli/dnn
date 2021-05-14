@@ -142,6 +142,8 @@ set(libdnn_headers
   include/Image.h
   include/Input.h
   include/Layer.h
+  include/LayerNorm.h
+  include/LayerNormRelu.h
   include/LocalResponseNorm.h
   include/Max.h
   include/MaxPooling.h
