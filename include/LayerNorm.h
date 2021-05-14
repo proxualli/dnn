@@ -94,27 +94,15 @@ namespace dnn
 		{
 			if (InputLayer->DstMemDesc->data.ndims == 2)
 			{
-				ChosenFormat = dnnl::memory::format_tag::nc;
-
+				ChosenFormat = dnnl::memory::format_tag::ab;
 				StatsDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::a));
 				DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, ChosenFormat));
 				DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, ChosenFormat));
 			}
 			else
 			{
-				if (Format == dnnl::memory::format_tag::any)
-				{
-					ChosenFormat = GetDataFmt(*InputLayer->DstMemDesc);
-					if (ChosenFormat != GetDataFmt(*InputLayer->DiffDstMemDesc))
-						throw std::invalid_argument(std::string("Src and Diff format are different in ") + std::string(magic_enum::enum_name<LayerTypes>(LayerType)) + std::string(" layer ") + Name);
-					StatsDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::aBc8b));
-				}
-				else
-				{
-					ChosenFormat = PlainFmt;
-					StatsDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::abc));
-				}
-				
+				ChosenFormat = PlainFmt;
+				StatsDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::abc));
 				DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, ChosenFormat));
 				DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, ChosenFormat));
 			}
@@ -355,8 +343,8 @@ namespace dnn
 
 		void ResetWeights(const Fillers weightFiller, const Float weightFillerScale, const Fillers biasFiller, const Float biasFillerScale) override
 		{
-			Weights = FloatVector(PaddedC, Float(1));
-			Biases = FloatVector(PaddedC, Float(0));
+			Weights.resize(PaddedC); std::fill(Weights.begin(), Weights.end(), Float(1));
+			Biases.resize(PaddedC); std::fill(Biases.begin(), Biases.end(), Float(0));
 
 			DNN_UNREF_PAR(weightFiller);
 			DNN_UNREF_PAR(weightFillerScale);

@@ -71,67 +71,21 @@
 #include <vector>
 #include <utility>
 
-#define MAGIC_ENUM_RANGE_MIN 0
-#define MAGIC_ENUM_RANGE_MAX 255
-#include "magic_enum.hpp"
-
-#ifdef DNN_OMP
-#include <omp.h>
-#endif
-
 #include "dnnl.hpp"
 #include "dnnl_debug.h"
+
 #if DNNL_GPU_RUNTIME == DNNL_RUNTIME_OCL
 #include "dnnl_ocl.hpp"
 #elif DNNL_GPU_RUNTIME == DNNL_RUNTIME_SYCL
 #include "dnnl_sycl.hpp"
 #endif
 
-#define CONCAt2(a, b) a##b
-#define CONCAT2(a, b) CONCAt2(a, b)
-#define CHAIn2(a, b) a b
-#define CHAIN2(a, b) CHAIn2(a, b)
-
-#ifdef _MSC_VER
-#define PRAGMA_MACRo(x) __pragma(x)
-#define PRAGMA_MACRO(x) PRAGMA_MACRo(x)
-#else
-#define PRAGMA_MACRo(x) _Pragma(#x)
-#define PRAGMA_MACRO(x) PRAGMA_MACRo(x)
-#endif
-
-#if DNNL_CPU_THREADING_RUNTIME == DNNL_RUNTIME_OMP
-#define PRAGMA_OMP(...) PRAGMA_MACRO(CHAIN2(omp, __VA_ARGS__))
-#define PRAGMA_OMP_SIMD(...) PRAGMA_MACRO(CHAIN2(omp, simd __VA_ARGS__))
-#define PRAGMA_OMP_PARALLEL_FOR_COLLAPSE(n) PRAGMA_MACRO(omp parallel for collapse(n))
-#define PRAGMA_OMP_PARALLEL_THREADS(n) PRAGMA_MACRO(omp parallel num_threads(n))
-#define PRAGMA_OMP_FOR_SCHEDULE_STATIC(n) PRAGMA_MACRO(omp for schedule(static,n))
-#define OMP_GET_THREAD_NUM() omp_get_thread_num()
-#define OMP_GET_NUM_THREADS() omp_get_num_threads()
-#else
-#define collapse(x)
-#define PRAGMA_OMP(...)
-#define PRAGMA_OMP_SIMD(...)
-#define PRAGMA_OMP_PARALLEL_FOR_COLLAPSE(n)
-#define PRAGMA_OMP_PARALLEL_THREADS(n)
-#define PRAGMA_OMP_FOR_SCHEDULE_STATIC(n)
-#define OMP_GET_THREAD_NUM() 0
-#define OMP_GET_NUM_THREADS() 1
-#endif
-
-#if (defined(__clang_major__) \
-        && (__clang_major__ < 3 \
-                || (__clang_major__ == 3 && __clang_minor__ < 9))) \
-        || (defined(__INTEL_COMPILER) && __INTEL_COMPILER < 1700) \
-        || (!defined(__INTEL_COMPILER) && !defined(__clang__) \
-                && (defined(_MSC_VER) || __GNUC__ < 6 \
-                        || (__GNUC__ == 6 && __GNUC_MINOR__ < 1)))
-#define simdlen(x)
-#endif // long simdlen if
-
 #include "AlignedAllocator.h"
 #include "ParallelFor.h"
 
+#define MAGIC_ENUM_RANGE_MIN 0
+#define MAGIC_ENUM_RANGE_MAX 255
+#include "magic_enum.hpp"
 
 namespace dnn
 {
