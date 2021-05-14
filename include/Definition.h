@@ -613,6 +613,10 @@ namespace dnn
 								model->Layers.push_back(std::make_unique<LayerNorm>(model->Device, model->Format, name, inputs, scaling, eps, biases));
 								model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesScale, biasesLRM, biasesWDM);
 								break;
+							case LayerTypes::LayerNormRelu:
+								model->Layers.push_back(std::make_unique<LayerNormRelu>(model->Device, model->Format, name, inputs, scaling, eps, biases));
+								model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesScale, biasesLRM, biasesWDM);
+								break;
 							case LayerTypes::LocalResponseNorm:
 								model->Layers.push_back(std::make_unique<LocalResponseNorm>(model->Device, model->Format, name, inputs, acrossChannels, localSize, alpha, beta, k));
 								break;
@@ -981,6 +985,7 @@ namespace dnn
 						case LayerTypes::BatchNormSwish:
 						case LayerTypes::BatchNormSwishDropout:
 						case LayerTypes::LayerNorm:
+						case LayerTypes::LayerNormRelu:
 							isNormalizationLayer = true;
 							break;
 						default:

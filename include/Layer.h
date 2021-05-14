@@ -135,14 +135,15 @@ namespace dnn
 		GlobalMaxPooling = 29,
 		Input = 30,
 		LayerNorm = 31,
-		LocalResponseNorm = 32,
-		Max = 33,
-		MaxPooling = 34,
-		Min = 35,
-		Multiply = 36,
-		PartialDepthwiseConvolution = 37,
-		Resampling = 38,
-		Substract = 39
+		LayerNormRelu = 32,
+		LocalResponseNorm = 33,
+		Max = 34,
+		MaxPooling = 35,
+		Min = 36,
+		Multiply = 37,
+		PartialDepthwiseConvolution = 38,
+		Resampling = 39,
+		Substract = 40
 	};
 	
 	enum class Fillers
