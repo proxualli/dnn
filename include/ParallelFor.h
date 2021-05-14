@@ -13,7 +13,6 @@
 #include <thread>
 #endif
 
-
 #define CONCAt2(a, b) a##b
 #define CONCAT2(a, b) CONCAt2(a, b)
 #define CHAIn2(a, b) a b
@@ -140,7 +139,7 @@ namespace dnn
 		PRAGMA_OMP_PARALLEL_THREADS(omp_get_max_threads())
 		{
 			PRAGMA_OMP_FOR_SCHEDULE_STATIC(1)
-			for (auto i = 0ll; i < static_cast<long long>(range); i++)
+			for (auto i = 0ull; i < range; i++)
 				f(i);
 		}
 #else
@@ -159,7 +158,7 @@ namespace dnn
 		PRAGMA_OMP_PARALLEL_THREADS(static_cast<int>(threads))
 		{
 			PRAGMA_OMP_FOR_SCHEDULE_STATIC(1)
-			for (auto i = 0ll; i < static_cast<long long>(range); i++)
+			for (auto i = 0ull; i < range; i++)
 				f(i);
 		}
 #else

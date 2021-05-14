@@ -73,7 +73,6 @@
 
 #include "dnnl.hpp"
 #include "dnnl_debug.h"
-
 #if DNNL_GPU_RUNTIME == DNNL_RUNTIME_OCL
 #include "dnnl_ocl.hpp"
 #elif DNNL_GPU_RUNTIME == DNNL_RUNTIME_SYCL
@@ -197,84 +196,86 @@ namespace dnn
 
 	template <typename T, std::size_t alignment> class AlignedArray
 	{
-	protected:
-		unique_ptr_aligned<T> arr = nullptr;
-		T* Data = nullptr;
 		typedef typename std::size_t size_type;
+
+	protected:
+		unique_ptr_aligned<T> arrPtr = nullptr;
+		T* dataPtr = nullptr;
 		size_type count = 0;
+
 	public:
 		AlignedArray()
 		{
-			if (arr)
-				arr.reset(nullptr);
+			if (arrPtr)
+				arrPtr.reset(nullptr);
 
 			count = 0;
-			arr = nullptr;
-			Data = nullptr;
+			arrPtr = nullptr;
+			dataPtr = nullptr;
 		}
-		AlignedArray(const size_type newSize, T value = T(0)) 
+		AlignedArray(const size_type nelems, T value = T(0)) 
 		{
-			if (arr)
-				arr.reset(nullptr);
+			if (arrPtr)
+				arrPtr.reset(nullptr);
 				
 			count = 0;
-			arr = nullptr;
-			Data = nullptr;
+			arrPtr = nullptr;
+			dataPtr = nullptr;
 
-			arr = aligned_unique_ptr<T, alignment>(newSize, alignment);
-			if (arr)
+			arrPtr = aligned_unique_ptr<T, alignment>(nelems, alignment);
+			if (arrPtr)
 			{
-				Data = arr.get();
-				count = newSize;
+				dataPtr = arrPtr.get();
+				count = nelems;
 			}
 	
 			if constexpr (std::is_floating_point_v<T>)
 			{
 				PRAGMA_OMP_SIMD()
-				for (auto i = 0ull; i < newSize; i++)
-					Data[i] = value;
+				for (auto i = 0ull; i < nelems; i++)
+					dataPtr[i] = value;
 			}
 			else
-				for (auto i = 0ull; i < newSize; i++)
-					Data[i] = value;
+				for (auto i = 0ull; i < nelems; i++)
+					dataPtr[i] = value;
 		}
 		inline void release() noexcept
 		{
-			if (arr)
-				arr.reset(nullptr);
+			if (arrPtr)
+				arrPtr.reset(nullptr);
 
 			count = 0;
-			arr = nullptr;
-			Data = nullptr;
+			arrPtr = nullptr;
+			dataPtr = nullptr;
 		}
-		inline T* data() noexcept { return Data; }
-		inline const T* data() const noexcept { return Data; }
+		inline T* data() noexcept { return dataPtr; }
+		inline const T* data() const noexcept { return dataPtr; }
 		inline size_type size() const noexcept { return count; }
-		inline void resize(size_type newSize) 
+		inline void resize(size_type nelems) 
 		{ 
-			if (newSize == count)
+			if (nelems == count)
 				return;
 
-			if (arr)
-				arr.reset(nullptr);
+			if (arrPtr)
+				arrPtr.reset(nullptr);
 
 			count = 0;
-			arr = nullptr;
-			Data = nullptr;
+			arrPtr = nullptr;
+			dataPtr = nullptr;
 			
-			if (newSize > 0)
+			if (nelems > 0)
 			{
-				arr = aligned_unique_ptr<T, alignment>(newSize, alignment);
-				if (arr)
+				arrPtr = aligned_unique_ptr<T, alignment>(nelems, alignment);
+				if (arrPtr)
 				{
-					Data = arr.get();
-					count = newSize;
-					InitArray<T>(Data, count, 0);
+					dataPtr = arrPtr.get();
+					count = nelems;
+					InitArray<T>(dataPtr, count, 0);
 				}
 			}		
 		}
-		inline T& operator[] (size_type i) noexcept { return Data[i]; }
-		inline const T& operator[] (size_type i) const noexcept { return Data[i]; }
+		inline T& operator[] (size_type i) noexcept { return dataPtr[i]; }
+		inline const T& operator[] (size_type i) const noexcept { return dataPtr[i]; }
 		inline bool empty() const noexcept { return count == 0; }
 	};
 
