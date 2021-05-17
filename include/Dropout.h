@@ -57,7 +57,7 @@ namespace dnn
 		{
 			Layer::SetBatchSize(batchSize);
 
-			NeuronsActive.resize(batchSize * PaddedCDHW);
+			NeuronsActive.resize(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(PaddedC), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, BlockedFmt), Device.engine);
 			for (auto n = 0ull; n < batchSize; n++)
 				for (auto i = 0ull; i < CDHW; i++)
 					NeuronsActive[n * PaddedCDHW + i] = Float(1);

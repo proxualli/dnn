@@ -37,13 +37,12 @@ namespace dnn
 			inference(false),
 			reorderFwdSrc(false),
 			reorderBwdSrc(false),
-			reorderBwdDiffSrc(false)
+			reorderBwdDiffSrc(false),
+			Mean(FloatVector(1, Float(0))),
+			Variance(FloatVector(1, Float(1)))
 		{
 			assert(Inputs.size() == 1);
 
-			Mean = FloatVector(1, Float(0));
-			Variance = FloatVector(1, Float(1));
-			
 			if (Scaling)
 			{
 				ScaleShift = FloatVector(2 * PaddedC, Float(1));

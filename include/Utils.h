@@ -207,7 +207,7 @@ namespace dnn
 		AlignedArray()
 		{
 			if (arrPtr)
-				arrPtr.reset(nullptr);
+				arrPtr.reset();
 
 			count = 0;
 			arrPtr = nullptr;
@@ -216,7 +216,7 @@ namespace dnn
 		AlignedArray(const size_type nelems, T value = T(0)) 
 		{
 			if (arrPtr)
-				arrPtr.reset(nullptr);
+				arrPtr.reset();
 				
 			count = 0;
 			arrPtr = nullptr;
@@ -242,7 +242,7 @@ namespace dnn
 		inline void release() noexcept
 		{
 			if (arrPtr)
-				arrPtr.reset(nullptr);
+				arrPtr.reset();
 
 			count = 0;
 			arrPtr = nullptr;
@@ -257,7 +257,7 @@ namespace dnn
 				return;
 
 			if (arrPtr)
-				arrPtr.reset(nullptr);
+				arrPtr.reset();
 
 			count = 0;
 			arrPtr = nullptr;
@@ -279,7 +279,101 @@ namespace dnn
 		inline bool empty() const noexcept { return count == 0; }
 	};
 
-	typedef AlignedArray<Float, 64ull> FloatArray;
+	template <typename T> class AlignedMemory
+	{
+		typedef typename std::size_t size_type;
+
+	protected:
+		std::unique_ptr<dnnl::memory> arrPtr = nullptr;
+		T* dataPtr = nullptr;
+		size_type count = 0;
+		dnnl::memory::desc desc;
+
+	public:
+		AlignedMemory()
+		{
+			if (arrPtr)
+				arrPtr.reset();
+
+			count = 0;
+			arrPtr = nullptr;
+			dataPtr = nullptr;
+		}
+		AlignedMemory(const dnnl::memory::desc& md, const dnnl::engine& engine, T value = T(0))
+		{
+			if (md)
+			{
+				if (arrPtr)
+					arrPtr.reset();
+
+				count = 0;
+				arrPtr = nullptr;
+				dataPtr = nullptr;
+
+				arrPtr = std::make_unique<dnnl::memory>(md, engine);
+				if (arrPtr)
+				{
+					dataPtr = static_cast<T*>(arrPtr->get_data_handle());
+					count = md.get_size() / sizeof(T);
+
+					if constexpr (std::is_floating_point_v<T>)
+					{
+						PRAGMA_OMP_SIMD()
+						for (auto i = 0ull; i < count; i++)
+							dataPtr[i] = value;
+					}
+					else
+					{
+						for (auto i = 0ull; i < count; i++)
+							dataPtr[i] = value;
+					}
+				}
+			}
+		}
+		inline void release() noexcept
+		{
+			if (arrPtr)
+				arrPtr.reset();
+
+			count = 0;
+			arrPtr = nullptr;
+			dataPtr = nullptr;
+		}
+		inline T* data() noexcept { return dataPtr; }
+		inline const T* data() const noexcept { return dataPtr; }
+		inline size_type size() const noexcept { return count; }
+		inline void resize(const dnnl::memory::desc& md, const dnnl::engine& engine)
+		{
+			if (md)
+			{
+				if (md.get_size() / sizeof(T) == count)
+					return;
+
+				if (arrPtr)
+					arrPtr.reset();
+
+				count = 0;
+				arrPtr = nullptr;
+				dataPtr = nullptr;
+
+				if (md.get_size() / sizeof(T) > 0)
+				{
+					arrPtr = std::make_unique<dnnl::memory>(md, engine);
+					if (arrPtr)
+					{
+						dataPtr = static_cast<T*>(arrPtr->get_data_handle());
+						count = md.get_size() / sizeof(T);
+						InitArray<T>(dataPtr, count, 0);
+					}
+				}
+			}
+		}
+		inline T& operator[] (size_type i) noexcept { return dataPtr[i]; }
+		inline const T& operator[] (size_type i) const noexcept { return dataPtr[i]; }
+		inline bool empty() const noexcept { return count == 0; }
+	};
+
+	typedef AlignedMemory<Float> FloatArray;
 	typedef AlignedArray<Byte, 64ull> ByteArray;
 	typedef std::vector<Float, AlignedAllocator<Float, 64ull>> FloatVector;
 	//constexpr bool IS_LITTLE_ENDIAN = std::endian::native == std::endian::little;
