@@ -287,8 +287,7 @@ namespace dnn
 		std::unique_ptr<dnnl::memory> arrPtr = nullptr;
 		T* dataPtr = nullptr;
 		size_type count = 0;
-		dnnl::memory::desc desc;
-
+		
 	public:
 		AlignedMemory()
 		{
