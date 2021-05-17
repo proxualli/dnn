@@ -27,8 +27,8 @@ namespace dnn
 
 	public:
 		const Float Eps;
-		FloatVector Mean;
-		FloatVector Variance;
+		FloatArray Mean;
+		FloatArray Variance;
 		
 		LayerNorm(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const bool scaling = true, const Float eps = Float(1e-06), const bool hasBias = true) :
 			Layer(device, format, name, LayerTypes::LayerNorm, inputs[0]->C, inputs[0]->C, inputs[0]->C, inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs, hasBias, scaling),
@@ -38,8 +38,8 @@ namespace dnn
 			reorderFwdSrc(false),
 			reorderBwdSrc(false),
 			reorderBwdDiffSrc(false),
-			Mean(FloatVector(1, Float(0))),
-			Variance(FloatVector(1, Float(1)))
+			Mean(FloatArray()),
+			Variance(FloatArray())
 		{
 			assert(Inputs.size() == 1);
 
@@ -127,8 +127,8 @@ namespace dnn
 
 			fwdDesc = std::make_unique<dnnl::layer_normalization_forward::primitive_desc>(dnnl::layer_normalization_forward::primitive_desc(dnnl::layer_normalization_forward::desc(inference ? dnnl::prop_kind::forward_inference : dnnl::prop_kind::forward_training, *DataDesc, *StatsDesc, Eps, Flags), Device.engine));
 
-			Mean.resize(fwdDesc->mean_desc().get_size() / sizeof(Float), Float(0));
-			Variance.resize(fwdDesc->variance_desc().get_size() / sizeof(Float), Float(1));
+			Mean.resize(fwdDesc->mean_desc(), Device.engine, Float(0));
+			Variance.resize(fwdDesc->variance_desc(), Device.engine, Float(1));
 
 			reorderFwdSrc = fwdDesc->src_desc() != *InputLayer->DstMemDesc;
 

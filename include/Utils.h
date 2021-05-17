@@ -341,7 +341,7 @@ namespace dnn
 		inline T* data() noexcept { return dataPtr; }
 		inline const T* data() const noexcept { return dataPtr; }
 		inline size_type size() const noexcept { return count; }
-		inline void resize(const dnnl::memory::desc& md, const dnnl::engine& engine)
+		inline void resize(const dnnl::memory::desc& md, const dnnl::engine& engine, T value = T(0))
 		{
 			if (md)
 			{
@@ -362,7 +362,18 @@ namespace dnn
 					{
 						dataPtr = static_cast<T*>(arrPtr->get_data_handle());
 						count = md.get_size() / sizeof(T);
-						InitArray<T>(dataPtr, count, 0);
+
+						if constexpr (std::is_floating_point_v<T>)
+						{
+							PRAGMA_OMP_SIMD()
+							for (auto i = 0ull; i < count; i++)
+								dataPtr[i] = value;
+						}
+						else
+						{
+							for (auto i = 0ull; i < count; i++)
+								dataPtr[i] = value;
+						}
 					}
 				}
 			}
