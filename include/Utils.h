@@ -279,7 +279,7 @@ namespace dnn
 		inline bool empty() const noexcept { return count == 0; }
 	};
 
-	typedef AlignedArray <Float, 64ull> FloatArray;
+	typedef AlignedArray<Float, 64ull> FloatArray;
 	typedef AlignedArray<Byte, 64ull> ByteArray;
 	typedef std::vector<Float, AlignedAllocator<Float, 64ull>> FloatVector;
 	//constexpr bool IS_LITTLE_ENDIAN = std::endian::native == std::endian::little;
