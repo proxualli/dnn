@@ -468,7 +468,7 @@ namespace dnn
 			Neurons.resize(batchSize * PaddedCDHW);
 #ifndef DNN_LEAN
 			if (!InplaceBwd)
-				NeuronsD1.resize(batchSize * PaddedCDHW);
+			    NeuronsD1.resize(batchSize * PaddedCDHW);
 #else
 			ReleaseGradient();
 #endif // DNN_LEAN
