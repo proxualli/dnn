@@ -441,13 +441,13 @@ namespace dnn
 #ifdef DNN_LEAN
 		inline void ZeroGradient(const UInt batchSize)
 		{
-			InputLayer->NeuronsD1.resize(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(InputLayer->PaddedC), dnnl::memory::dim(InputLayer->H), dnnl::memory::dim(InputLayer->W) }), dnnl::memory::data_type::f32, BlockedFmt), Device.engine);
+			InputLayer->NeuronsD1.resize(batchSize, InputLayer->PaddedC, InputLayer->H, InputLayer->W, Device.engine);
 		}
 
 		inline void ZeroGradientMulti(const UInt batchSize)
 		{
 			for (auto& inputLayer : Inputs)
-				inputLayer->NeuronsD1.resize(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(inputLayer->PaddedC), dnnl::memory::dim(inputLayer->H), dnnl::memory::dim(inputLayer->W) }), dnnl::memory::data_type::f32, BlockedFmt), Device.engine);
+				inputLayer->NeuronsD1.resize(batchSize, inputLayer->PaddedC, inputLayer->H, inputLayer->W, Device.engine);
 		}
 
 		inline void ReleaseGradient()
@@ -465,10 +465,10 @@ namespace dnn
 				SleepYield(std::chrono::milliseconds(250));
 			}
 			
-			Neurons.resize(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(PaddedC), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, BlockedFmt), Device.engine);
+			Neurons.resize(batchSize, PaddedC, H, W, Device.engine);
 #ifndef DNN_LEAN
 			if (!InplaceBwd)
-				NeuronsD1.resize(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(PaddedC), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, BlockedFmt), Device.engine);
+				NeuronsD1.resize(batchSize, PaddedC, H, W, Device.engine);
 #else
 			ReleaseGradient();
 #endif // DNN_LEAN

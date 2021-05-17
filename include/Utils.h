@@ -298,7 +298,7 @@ namespace dnn
 			arrPtr = nullptr;
 			dataPtr = nullptr;
 		}
-		AlignedMemory(const dnnl::memory::desc& md, const dnnl::engine& engine, T value = T(0))
+		AlignedMemory(const dnnl::memory::desc& md, const dnnl::engine& engine, const T value = T(0))
 		{
 			if (md)
 			{
@@ -341,40 +341,28 @@ namespace dnn
 		inline T* data() noexcept { return dataPtr; }
 		inline const T* data() const noexcept { return dataPtr; }
 		inline size_type size() const noexcept { return count; }
-		inline void resize(const dnnl::memory::desc& md, const dnnl::engine& engine, T value = T(0))
+		inline void resize(const size_type N, const size_type C, const size_type H, const size_type W, const dnnl::engine& engine)
 		{
-			if (md)
+			const auto md = dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(N), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, BlockedFmt);
+
+			if (md.get_size() / sizeof(T) == count)
+				return;
+
+			if (arrPtr)
+				arrPtr.reset();
+
+			count = 0;
+			arrPtr = nullptr;
+			dataPtr = nullptr;
+
+			if (md.get_size() / sizeof(T) > 0)
 			{
-				if (md.get_size() / sizeof(T) == count)
-					return;
-
+				arrPtr = std::make_unique<dnnl::memory>(md, engine);
 				if (arrPtr)
-					arrPtr.reset();
-
-				count = 0;
-				arrPtr = nullptr;
-				dataPtr = nullptr;
-
-				if (md.get_size() / sizeof(T) > 0)
 				{
-					arrPtr = std::make_unique<dnnl::memory>(md, engine);
-					if (arrPtr)
-					{
-						dataPtr = static_cast<T*>(arrPtr->get_data_handle());
-						count = md.get_size() / sizeof(T);
-
-						if constexpr (std::is_floating_point_v<T>)
-						{
-							PRAGMA_OMP_SIMD()
-							for (auto i = 0ull; i < count; i++)
-								dataPtr[i] = value;
-						}
-						else
-						{
-							for (auto i = 0ull; i < count; i++)
-								dataPtr[i] = value;
-						}
-					}
+					dataPtr = static_cast<T*>(arrPtr->get_data_handle());
+					count = md.get_size() / sizeof(T);
+					InitArray<T>(dataPtr, count, 0);
 				}
 			}
 		}
