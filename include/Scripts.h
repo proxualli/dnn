@@ -269,19 +269,9 @@ namespace scripts
                     "Type=BatchNorm" + nwl +
                     "Inputs=" + group + "DC" + std::to_string(id) + "DC" + nwl + nwl +
 
-                    "[" + group + "C" + std::to_string(id) + "C]" + nwl +
-                    "Type=Convolution" + nwl +
-                    "Inputs=" + group + "B" + std::to_string(id) + "B2" + nwl +
-                    "Channels=" + std::to_string(channels) + nwl +
-                    "Kernel=1,1" + nwl + nwl +
-
-                    "[" + group + "B" + std::to_string(id) + "B3]" + nwl +
-                    "Type=BatchNorm" + nwl +
-                    "Inputs=" + group + "C" + std::to_string(id) + "C" + nwl + nwl +
-
                     "[" + group + prefix + std::to_string(id) + "]" + nwl +
                     "Type=Max" + nwl +
-                    "Inputs=" + group + "B" + std::to_string(id) + "B3," + group + "B" + std::to_string(id) + "B1" + nwl + nwl;
+                    "Inputs=" + group + "B" + std::to_string(id) + "B2," + group + "B" + std::to_string(id) + "B1" + nwl + nwl;
             }
         }
 
