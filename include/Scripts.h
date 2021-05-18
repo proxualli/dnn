@@ -459,7 +459,7 @@ namespace scripts
 
             switch (p.Script)
             {
-            case Scripts::densenet:  // modet not compatible with FRelu in this script
+            case Scripts::densenet:
             {
                 auto channels = DIV8(p.GrowthRate);
 
