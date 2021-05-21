@@ -441,13 +441,13 @@ namespace dnn
 #ifdef DNN_LEAN
 		inline void ZeroGradient(const UInt batchSize)
 		{
-			InputLayer->NeuronsD1.resize(batchSize, InputLayer->C, InputLayer->H, InputLayer->W, Device.engine);
+			InputLayer->NeuronsD1.resize(batchSize, InputLayer->C, InputLayer->H, InputLayer->W, dnnl::memory::data_type::f32, BlockedFmt, Device.engine);
 		}
 
 		inline void ZeroGradientMulti(const UInt batchSize)
 		{
 			for (auto& inputLayer : Inputs)
-				inputLayer->NeuronsD1.resize(batchSize, inputLayer->C, inputLayer->H, inputLayer->W, Device.engine);
+				inputLayer->NeuronsD1.resize(batchSize, inputLayer->C, inputLayer->H, inputLayer->W, dnnl::memory::data_type::f32, BlockedFmt, Device.engine);
 		}
 
 		inline void ReleaseGradient()
@@ -465,10 +465,10 @@ namespace dnn
 				SleepYield(std::chrono::milliseconds(250));
 			}
 			
-			Neurons.resize(batchSize, C, H, W, Device.engine);
+			Neurons.resize(batchSize, C, H, W, dnnl::memory::data_type::f32, BlockedFmt, Device.engine);
 #ifndef DNN_LEAN
 			if (!InplaceBwd)
-				NeuronsD1.resize(batchSize, C, H, W, Device.engine);
+				NeuronsD1.resize(batchSize, C, H, W, dnnl::memory::data_type::f32, BlockedFmt, Device.engine);
 #else
 			ReleaseGradient();
 #endif // DNN_LEAN

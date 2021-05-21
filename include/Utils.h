@@ -341,30 +341,47 @@ namespace dnn
 		inline T* data() noexcept { return dataPtr; }
 		inline const T* data() const noexcept { return dataPtr; }
 		inline size_type size() const noexcept { return count; }
-		inline void resize(const size_type N, const size_type C, const size_type H, const size_type W, const dnnl::engine& engine)
+		void resize(const dnnl::memory::desc& md, const dnnl::engine& engine)
 		{
-			const auto md = dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(N), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, BlockedFmt);
-
-			if (md.get_size() / sizeof(T) == count)
-				return;
-
-			if (arrPtr)
-				arrPtr.reset();
-
-			count = 0;
-			arrPtr = nullptr;
-			dataPtr = nullptr;
-
-			if (md.get_size() / sizeof(T) > 0)
+			if (md)
 			{
-				arrPtr = std::make_unique<dnnl::memory>(md, engine);
+				if (md.get_size() / sizeof(T) == count)
+					return;
+
 				if (arrPtr)
+					arrPtr.reset();
+
+				count = 0;
+				arrPtr = nullptr;
+				dataPtr = nullptr;
+
+				if (md.get_size() / sizeof(T) > 0)
 				{
-					dataPtr = static_cast<T*>(arrPtr->get_data_handle());
-					count = md.get_size() / sizeof(T);
-					InitArray<T>(dataPtr, count, 0);
+					arrPtr = std::make_unique<dnnl::memory>(md, engine);
+					if (arrPtr)
+					{
+						dataPtr = static_cast<T*>(arrPtr->get_data_handle());
+						count = md.get_size() / sizeof(T);
+						InitArray<T>(dataPtr, count, 0);
+					}
 				}
 			}
+		}
+		void resize(const size_type N, const size_type C, const dnnl::memory::data_type dtype, const dnnl::memory::format_tag format, const dnnl::engine& engine)
+		{
+			resize(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(N), dnnl::memory::dim(C) }), dtype, format), engine);
+		}
+		void resize(const size_type N, const size_type C, const size_type H, const dnnl::memory::data_type dtype, const dnnl::memory::format_tag format, const dnnl::engine& engine)
+		{
+			resize(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(N), dnnl::memory::dim(C), dnnl::memory::dim(H) }), dtype, format), engine);
+		}
+		void resize(const size_type N, const size_type C, const size_type H, const size_type W, const dnnl::memory::data_type dtype, const dnnl::memory::format_tag format, const dnnl::engine& engine)
+		{
+			resize(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(N), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dtype, format), engine);
+		}
+		void resize(const size_type N, const size_type C, const size_type D, const size_type H, const size_type W, const dnnl::memory::data_type dtype, const dnnl::memory::format_tag format, const dnnl::engine& engine)
+		{
+			resize(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(N), dnnl::memory::dim(C), dnnl::memory::dim(D), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dtype, format), engine);
 		}
 		inline T& operator[] (size_type i) noexcept { return dataPtr[i]; }
 		inline const T& operator[] (size_type i) const noexcept { return dataPtr[i]; }
