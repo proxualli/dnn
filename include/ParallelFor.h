@@ -34,7 +34,6 @@
 #define OMP_GET_THREAD_NUM() omp_get_thread_num()
 #define OMP_GET_NUM_THREADS() omp_get_num_threads()
 #else
-#define collapse(x)
 #define PRAGMA_OMP(...)
 #define PRAGMA_OMP_PARALLEL_FOR_COLLAPSE(n)
 #define PRAGMA_OMP_PARALLEL_THREADS(n)
