@@ -28,7 +28,6 @@
 
 #if DNNL_CPU_THREADING_RUNTIME == DNNL_RUNTIME_OMP
 #define PRAGMA_OMP(...) PRAGMA_MACRO(CHAIN2(omp, __VA_ARGS__))
-#define PRAGMA_OMP_SIMD(...) PRAGMA_MACRO(CHAIN2(omp, simd __VA_ARGS__))
 #define PRAGMA_OMP_PARALLEL_FOR_COLLAPSE(n) PRAGMA_MACRO(omp parallel for collapse(n))
 #define PRAGMA_OMP_PARALLEL_THREADS(n) PRAGMA_MACRO(omp parallel num_threads(n))
 #define PRAGMA_OMP_FOR_SCHEDULE_STATIC(n) PRAGMA_MACRO(omp for schedule(static,n))
@@ -37,13 +36,21 @@
 #else
 #define collapse(x)
 #define PRAGMA_OMP(...)
-#define PRAGMA_OMP_SIMD(...)
 #define PRAGMA_OMP_PARALLEL_FOR_COLLAPSE(n)
 #define PRAGMA_OMP_PARALLEL_THREADS(n)
 #define PRAGMA_OMP_FOR_SCHEDULE_STATIC(n)
 #define OMP_GET_THREAD_NUM() 0
 #define OMP_GET_NUM_THREADS() 1
 #endif
+
+// MSVC still supports omp 2.0 only
+#if defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER)
+#define collapse(x)
+#define PRAGMA_OMP_SIMD(...)
+#else
+#define PRAGMA_OMP_SIMD(...) PRAGMA_MACRO(CHAIN2(omp, simd __VA_ARGS__))
+#endif // defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER)
+
 
 #if (defined(__clang_major__) \
         && (__clang_major__ < 3 \
