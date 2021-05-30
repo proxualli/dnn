@@ -41,7 +41,7 @@ DNN_API void DNNStop();
 DNN_API void DNNPause();
 DNN_API void DNNResume();
 DNN_API void DNNTesting();
-DNN_API void DNNGetTrainingInfo(UInt* currentCycle, UInt* totalCycles, UInt* currentEpoch, UInt* totalEpochs, bool* verticalMirror, bool* horizontalMirror, Float* dropout, Float* cutout, Float* autoAugment, Float* colorCast, UInt* colorAngle, Float* distortion, dnn::Interpolations* interpolation, Float* scaling, Float* rotation, UInt* sampleIndex, UInt* batchSize, Float* rate, dnn::Optimizers* optimizer, Float* momentum, Float* l2Penalty, Float* avgTrainLoss, Float* trainErrorPercentage, UInt* trainErrors, Float* avgTestLoss, Float* testErrorPercentage, UInt* testErrors, Float* sampleSpeed, dnn::States* networkState, dnn::TaskStates* taskState);
+DNN_API void DNNGetTrainingInfo(UInt* currentCycle, UInt* totalCycles, UInt* currentEpoch, UInt* totalEpochs, bool* verticalMirror, bool* horizontalMirror, Float* dropout, Float* cutout, Float* autoAugment, Float* colorCast, UInt* colorAngle, Float* distortion, dnn::Interpolations* interpolation, Float* scaling, Float* rotation, UInt* sampleIndex, UInt* batchSize, Float* rate, dnn::Optimizers* optimizer, Float* momentum, Float* beta2, Float* l2Penalty, Float* avgTrainLoss, Float* trainErrorPercentage, UInt* trainErrors, Float* avgTestLoss, Float* testErrorPercentage, UInt* testErrors, Float* sampleSpeed, dnn::States* networkState, dnn::TaskStates* taskState);
 DNN_API void DNNGetTestingInfo(UInt* batchSize, UInt* sampleIndex, Float* avgTestLoss, Float* testErrorPercentage, UInt* testErrors, Float* sampleSpeed, dnn::States* networkState, dnn::TaskStates* taskState);
 DNN_API void DNNGetModelInfo(std::string* name, UInt* costIndex, UInt* costLayerCount, UInt* groupIndex, UInt* labelindex, UInt* hierarchies, bool* meanStdNormalization, dnn::Costs* lossFunction, dnn::Datasets* dataset, UInt* layerCount, UInt* trainingSamples, UInt* testingSamples, std::vector<Float>* meanTrainSet, std::vector<Float>* stdTrainSet);
 DNN_API void DNNSetOptimizer(const dnn::Optimizers strategy);
@@ -116,6 +116,7 @@ void GetTrainingProgress(int seconds = 5, UInt trainingSamples = 50000, UInt tes
     auto rate = new Float();
     auto optimizer = new dnn::Optimizers();
     auto momentum = new Float();
+    auto beta2 = new Float();
     auto l2Penalty = new Float();
     auto batchSize = new UInt();
     auto avgTrainLoss = new Float();
@@ -132,7 +133,7 @@ void GetTrainingProgress(int seconds = 5, UInt trainingSamples = 50000, UInt tes
     do
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(250));
-        DNNGetTrainingInfo(cycle, totalCycles, epoch, totalEpochs, horizontalMirror, verticalMirror, dropout, cutout, autoAugment, colorCast, colorAngle, distortion, interpolation, scaling, rotation, sampleIndex, batchSize, rate, optimizer, momentum, l2Penalty, avgTrainLoss, trainErrorPercentage, trainErrors, avgTestLoss, testErrorPercentage, testErrors, sampleSpeed, state, taskState);
+        DNNGetTrainingInfo(cycle, totalCycles, epoch, totalEpochs, horizontalMirror, verticalMirror, dropout, cutout, autoAugment, colorCast, colorAngle, distortion, interpolation, scaling, rotation, sampleIndex, batchSize, rate, optimizer, momentum, beta2, l2Penalty, avgTrainLoss, trainErrorPercentage, trainErrors, avgTestLoss, testErrorPercentage, testErrors, sampleSpeed, state, taskState);
     } 
     while (*state == States::Idle);
 
@@ -143,7 +144,7 @@ void GetTrainingProgress(int seconds = 5, UInt trainingSamples = 50000, UInt tes
     {
         std::this_thread::sleep_for(std::chrono::seconds(*state == States::Testing ? 1 : seconds));
         
-        DNNGetTrainingInfo(cycle, totalCycles, epoch, totalEpochs, horizontalMirror, verticalMirror, dropout, cutout, autoAugment, colorCast, colorAngle, distortion, interpolation, scaling, rotation, sampleIndex, batchSize, rate, optimizer, momentum, l2Penalty, avgTrainLoss, trainErrorPercentage, trainErrors, avgTestLoss, testErrorPercentage, testErrors, sampleSpeed, state, taskState);
+        DNNGetTrainingInfo(cycle, totalCycles, epoch, totalEpochs, horizontalMirror, verticalMirror, dropout, cutout, autoAugment, colorCast, colorAngle, distortion, interpolation, scaling, rotation, sampleIndex, batchSize, rate, optimizer, momentum, beta2, l2Penalty, avgTrainLoss, trainErrorPercentage, trainErrors, avgTestLoss, testErrorPercentage, testErrors, sampleSpeed, state, taskState);
        
         if (*state == States::Testing)
             progress = Float(*sampleIndex) / testingSamples; 
@@ -193,6 +194,7 @@ void GetTrainingProgress(int seconds = 5, UInt trainingSamples = 50000, UInt tes
     delete rate;
     delete optimizer;
     delete momentum;
+    delete beta2;
     delete l2Penalty;
     delete batchSize;
     delete avgTrainLoss;

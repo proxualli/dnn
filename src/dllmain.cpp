@@ -405,7 +405,7 @@ extern "C" DNN_API void DNNGetModelInfo(std::string* name, UInt* costIndex, UInt
 	}
 }
 
-extern "C" DNN_API void DNNGetTrainingInfo(UInt* currentCycle, UInt* totalCycles, UInt* currentEpoch, UInt* totalEpochs, bool* horizontalFlip, bool* verticalFlip, Float* dropout, Float* cutout, Float* autoAugment, Float* colorCast, UInt* colorAngle, Float* distortion, Interpolations* interpolation, Float* scaling, Float* rotation, UInt* sampleIndex, UInt* batchSize, Float* maximumRate, Optimizers* optimizer, Float* momentum, Float* l2Penalty, Float* avgTrainLoss, Float* trainErrorPercentage, UInt* trainErrors, Float* avgTestLoss, Float* testErrorPercentage, UInt* testErrors, Float* sampleSpeed, States* networkState, TaskStates* taskState)
+extern "C" DNN_API void DNNGetTrainingInfo(UInt* currentCycle, UInt* totalCycles, UInt* currentEpoch, UInt* totalEpochs, bool* horizontalFlip, bool* verticalFlip, Float* dropout, Float* cutout, Float* autoAugment, Float* colorCast, UInt* colorAngle, Float* distortion, Interpolations* interpolation, Float* scaling, Float* rotation, UInt* sampleIndex, UInt* batchSize, Float* maximumRate, Optimizers* optimizer, Float* momentum, Float* beta2, Float* l2Penalty, Float* avgTrainLoss, Float* trainErrorPercentage, UInt* trainErrors, Float* avgTestLoss, Float* testErrorPercentage, UInt* testErrors, Float* sampleSpeed, States* networkState, TaskStates* taskState)
 {
 	if (model)
 	{
@@ -470,6 +470,7 @@ extern "C" DNN_API void DNNGetTrainingInfo(UInt* currentCycle, UInt* totalCycles
 		*maximumRate = model->CurrentTrainingRate.MaximumRate;
 		*optimizer = model->Optimizer;
 		*momentum = model->CurrentTrainingRate.Momentum;
+		*beta2 = model->CurrentTrainingRate.Beta2;
 		*l2Penalty = model->CurrentTrainingRate.L2Penalty;
 		*batchSize = model->BatchSize;
 		*sampleSpeed = model->SampleSpeed;
