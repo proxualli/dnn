@@ -15,7 +15,8 @@ namespace dnn
 		NAG = 5,
 		RMSProp = 6,
 		SGD = 7,
-		SGDMomentum = 8
+		SGDMomentum = 8,
+		SGDW = 9
 	};
 
 	struct TrainingRate
@@ -780,6 +781,7 @@ namespace dnn
 			case Optimizers::NAG:
 			case Optimizers::RMSProp:
 			case Optimizers::SGDMomentum:
+			case Optimizers::SGDW:
 			{
 				if (HasWeights)
 					for (auto i = 0ull; i < Weights.size(); i++)
@@ -843,6 +845,7 @@ namespace dnn
 				case Optimizers::NAG:
 				case Optimizers::RMSProp:
 				case Optimizers::SGDMomentum:
+				case Optimizers::SGDW:
 					WeightsPar1.resize(weightsSize);
 					WeightsPar2.resize(0);
 					BiasesPar1.resize(biasesSize);
@@ -887,6 +890,7 @@ namespace dnn
 				case Optimizers::NAG:
 				case Optimizers::RMSProp:
 				case Optimizers::SGDMomentum:
+				case Optimizers::SGDW:
 					WeightsPar1.resize(weightsSize, Float(0));
 					WeightsPar2.resize(0);
 					BiasesPar1.resize(biasesSize, Float(0));
@@ -1160,6 +1164,9 @@ namespace dnn
 				case Optimizers::SGDMomentum:
 					SGDMomentum(rate);
 					break;
+				case Optimizers::SGDW:
+					SGDW(rate);
+					break;
 				}
 			}
 		}
@@ -1430,6 +1437,31 @@ namespace dnn
 			}
 		}
 
+		inline void SGDW(const TrainingRate& rate)
+		{
+			const auto momentum = rate.Momentum;
+			const auto lr = rate.MaximumRate * WeightsLRM / rate.BatchSize;
+			const auto l2Penalty = rate.MaximumRate * WeightsLRM * rate.L2Penalty * WeightsWDM;
+
+			PRAGMA_OMP_SIMD()
+			for (auto i = 0ull; i < Weights.size(); i++)
+			{
+				WeightsPar1[i] = (momentum * WeightsPar1[i]) + (lr * WeightsD1[i]);
+				Weights[i] -= WeightsPar1[i] - (l2Penalty * Weights[i]);
+			}
+
+			if (HasBias)
+			{
+				const auto lr = rate.MaximumRate * BiasesLRM / rate.BatchSize;
+				PRAGMA_OMP_SIMD()
+				for (auto i = 0ull; i < BiasCount; i++)
+				{
+					BiasesPar1[i] = momentum * BiasesPar1[i] - lr * BiasesD1[i];
+					Biases[i] += BiasesPar1[i];
+				}
+			}
+		}
+
 		/*UInt OffsetPaddedMem(const UInt n, const UInt c, const UInt h, const UInt w) const
 		{
 			return n * PaddedCDHW + (c / VectorSize) * HW * VectorSize + h * W * VectorSize + w * VectorSize + (c % VectorSize);
@@ -1526,6 +1558,7 @@ namespace dnn
 						case Optimizers::NAG:
 						case Optimizers::RMSProp:
 						case Optimizers::SGDMomentum:
+						case Optimizers::SGDW:
 						{
 							auto weightsPar1 = FloatVector(WeightCount);
 							auto memWeightsPar1 = dnnl::memory(*WeightsMemDesc, Device.engine, WeightsPar1.data());
@@ -1592,6 +1625,7 @@ namespace dnn
 						case Optimizers::NAG:
 						case Optimizers::RMSProp:
 						case Optimizers::SGDMomentum:
+						case Optimizers::SGDW:
 						{
 							os.write(reinterpret_cast<const char*>(WeightsPar1.data()), std::streamsize(WeightCount * sizeof(Float)));
 							if (HasBias)
@@ -1697,6 +1731,7 @@ namespace dnn
 						case Optimizers::NAG:
 						case Optimizers::RMSProp:
 						case Optimizers::SGDMomentum:
+						case Optimizers::SGDW:
 						{
 							auto weightsPar1 = FloatVector(WeightCount);
 							is.read(reinterpret_cast<char*>(weightsPar1.data()), std::streamsize(WeightCount * sizeof(Float)));
@@ -1763,6 +1798,7 @@ namespace dnn
 						case Optimizers::NAG:
 						case Optimizers::RMSProp:
 						case Optimizers::SGDMomentum:
+						case Optimizers::SGDW:
 						{
 							is.read(reinterpret_cast<char*>(WeightsPar1.data()), std::streamsize(WeightCount * sizeof(Float)));
 							if (HasBias)
@@ -1818,6 +1854,7 @@ namespace dnn
 					case Optimizers::NAG:
 					case Optimizers::RMSProp:
 					case Optimizers::SGDMomentum:
+					case Optimizers::SGDW:
 					{
 						weightsSize += 2 * WeightCount * sizeof(Float);
 						if (HasBias)
