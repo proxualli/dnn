@@ -49,8 +49,8 @@ if(WIN32 OR MSVC)
   add_compile_options(
     "$<$<COMPILE_LANGUAGE:CXX>:${flags}>"
     "$<$<COMPILE_LANGUAGE:C>:${flags}>")
-  set(debug_flags /openmp:llvm /W4 /Od)
-  set(release_flags /openmp:llvm /W3 /O2 /Ob2 /Oi /Ot /GL /GF /Gy /fp:fast)
+  set(debug_flags /openmp:experimental /W4 /Od)
+  set(release_flags /openmp:experimental /W3 /O2 /Ob2 /Oi /Ot /GL /GF /Gy /fp:fast)
 else()
   set(flags -mfma -mavx2 -march=native -fopenmp)
   if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")

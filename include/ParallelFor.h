@@ -20,11 +20,10 @@
 
 #ifdef _MSC_VER
 #define PRAGMA_MACRo(x) __pragma(x)
-#define PRAGMA_MACRO(x) PRAGMA_MACRo(x)
 #else
 #define PRAGMA_MACRo(x) _Pragma(#x)
-#define PRAGMA_MACRO(x) PRAGMA_MACRo(x)
 #endif
+#define PRAGMA_MACRO(x) PRAGMA_MACRo(x)
 
 #if DNNL_CPU_THREADING_RUNTIME == DNNL_RUNTIME_OMP
 #define PRAGMA_OMP(...) PRAGMA_MACRO(CHAIN2(omp, __VA_ARGS__))
@@ -145,8 +144,13 @@ namespace dnn
 		PRAGMA_OMP_PARALLEL_THREADS(omp_get_max_threads())
 		{
 			PRAGMA_OMP_FOR_SCHEDULE_STATIC(1)
+#if defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER)
+			for (auto i = 0ll; i < static_cast<long long>(range); i++)
+				f(i);
+#else
 			for (auto i = 0ull; i < range; i++)
 				f(i);
+#endif
 		}
 #else
 		for_(0ull, range, [&](const blocked_range& r)
@@ -164,8 +168,13 @@ namespace dnn
 		PRAGMA_OMP_PARALLEL_THREADS(static_cast<int>(threads))
 		{
 			PRAGMA_OMP_FOR_SCHEDULE_STATIC(1)
-			for (auto i = 0ull; i < range; i++)
-				f(i);
+#if defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER)
+				for (auto i = 0ll; i < static_cast<long long>(range); i++)
+					f(i);
+#else
+				for (auto i = 0ull; i < range; i++)
+					f(i);
+#endif
 		}
 #else
 		DNN_UNREF_PAR(threads);

@@ -201,7 +201,7 @@ namespace dnn
 	protected:
 		unique_ptr_aligned<T> arrPtr = nullptr;
 		T* dataPtr = nullptr;
-		size_type count = 0;
+		size_type nelems = 0;
 
 	public:
 		AlignedArray()
@@ -209,30 +209,33 @@ namespace dnn
 			if (arrPtr)
 				arrPtr.reset();
 
-			count = 0;
+			nelems = 0;
 			arrPtr = nullptr;
 			dataPtr = nullptr;
 		}
-		AlignedArray(const size_type nelems, T value = T(0)) 
+		AlignedArray(const size_type elements, const T value = T()) 
 		{
 			if (arrPtr)
 				arrPtr.reset();
 				
-			count = 0;
+			nelems = 0;
 			arrPtr = nullptr;
 			dataPtr = nullptr;
 
-			arrPtr = aligned_unique_ptr<T, alignment>(nelems, alignment);
+			arrPtr = aligned_unique_ptr<T, alignment>(elements, alignment);
 			if (arrPtr)
 			{
 				dataPtr = arrPtr.get();
-				count = nelems;
+				nelems = elements;
 
 				if constexpr (std::is_floating_point_v<T>)
 				{
-					PRAGMA_OMP_SIMD()
-					for (auto i = 0ull; i < nelems; i++)
-						dataPtr[i] = value;
+					if constexpr (value == T(0))
+						InitArray<T>(dataPtr, nelems, 0);
+					else
+						PRAGMA_OMP_SIMD()
+						for (auto i = 0ull; i < nelems; i++)
+							dataPtr[i] = value;
 				}
 				else
 					for (auto i = 0ull; i < nelems; i++)
@@ -244,39 +247,50 @@ namespace dnn
 			if (arrPtr)
 				arrPtr.reset();
 
-			count = 0;
+			nelems = 0;
 			arrPtr = nullptr;
 			dataPtr = nullptr;
 		}
 		inline T* data() noexcept { return dataPtr; }
 		inline const T* data() const noexcept { return dataPtr; }
-		inline size_type size() const noexcept { return count; }
-		inline void resize(size_type nelems) 
+		inline size_type size() const noexcept { return nelems; }
+		inline void resize(size_type elements, const T value = T())
 		{ 
-			if (nelems == count)
+			if (elements == nelems)
 				return;
 
 			if (arrPtr)
 				arrPtr.reset();
 
-			count = 0;
+			nelems = 0;
 			arrPtr = nullptr;
 			dataPtr = nullptr;
 			
-			if (nelems > 0)
+			if (elements > 0)
 			{
-				arrPtr = aligned_unique_ptr<T, alignment>(nelems, alignment);
+				arrPtr = aligned_unique_ptr<T, alignment>(elements, alignment);
 				if (arrPtr)
 				{
 					dataPtr = arrPtr.get();
-					count = nelems;
-					InitArray<T>(dataPtr, count, 0);
+					nelems = elements;
+					if constexpr (std::is_floating_point_v<T>)
+					{
+						if constexpr (value == T(0))
+							InitArray<T>(dataPtr, nelems, 0);
+						else
+							PRAGMA_OMP_SIMD()
+							for (auto i = 0ull; i < nelems; i++)
+								dataPtr[i] = value;
+					}
+					else
+						for (auto i = 0ull; i < nelems; i++)
+							dataPtr[i] = value;
 				}
 			}		
 		}
 		inline T& operator[] (size_type i) noexcept { return dataPtr[i]; }
 		inline const T& operator[] (size_type i) const noexcept { return dataPtr[i]; }
-		inline bool empty() const noexcept { return count == 0; }
+		inline bool empty() const noexcept { return nelems == 0; }
 	};
 
 	template <typename T> class AlignedMemory
@@ -286,7 +300,7 @@ namespace dnn
 	protected:
 		std::unique_ptr<dnnl::memory> arrPtr = nullptr;
 		T* dataPtr = nullptr;
-		size_type count = 0;
+		size_type nelems = 0;
 		
 	public:
 		AlignedMemory()
@@ -294,18 +308,18 @@ namespace dnn
 			if (arrPtr)
 				arrPtr.reset();
 
-			count = 0;
+			nelems = 0;
 			arrPtr = nullptr;
 			dataPtr = nullptr;
 		}
-		AlignedMemory(const dnnl::memory::desc& md, const dnnl::engine& engine, const T value = T(0))
+		AlignedMemory(const dnnl::memory::desc& md, const dnnl::engine& engine, const T value = T())
 		{
 			if (md)
 			{
 				if (arrPtr)
 					arrPtr.reset();
 
-				count = 0;
+				nelems = 0;
 				arrPtr = nullptr;
 				dataPtr = nullptr;
 
@@ -313,19 +327,20 @@ namespace dnn
 				if (arrPtr)
 				{
 					dataPtr = static_cast<T*>(arrPtr->get_data_handle());
-					count = md.get_size() / sizeof(T);
+					nelems = md.get_size() / sizeof(T);
 
 					if constexpr (std::is_floating_point_v<T>)
 					{
-						PRAGMA_OMP_SIMD()
-						for (auto i = 0ull; i < count; i++)
-							dataPtr[i] = value;
+						if constexpr (value == T(0))
+							InitArray<T>(dataPtr, nelems, 0);
+						else
+							PRAGMA_OMP_SIMD()
+							for (auto i = 0ull; i < nelems; i++)
+								dataPtr[i] = value;
 					}
 					else
-					{
-						for (auto i = 0ull; i < count; i++)
+						for (auto i = 0ull; i < nelems; i++)
 							dataPtr[i] = value;
-					}
 				}
 			}
 		}
@@ -334,24 +349,24 @@ namespace dnn
 			if (arrPtr)
 				arrPtr.reset();
 
-			count = 0;
+			nelems = 0;
 			arrPtr = nullptr;
 			dataPtr = nullptr;
 		}
 		inline T* data() noexcept { return dataPtr; }
 		inline const T* data() const noexcept { return dataPtr; }
-		inline size_type size() const noexcept { return count; }
-		void resize(const dnnl::memory::desc& md, const dnnl::engine& engine)
+		inline size_type size() const noexcept { return nelems; }
+		void resize(const dnnl::memory::desc& md, const dnnl::engine& engine, const T value = T())
 		{
 			if (md)
 			{
-				if (md.get_size() / sizeof(T) == count)
+				if (md.get_size() / sizeof(T) == nelems)
 					return;
 
 				if (arrPtr)
 					arrPtr.reset();
 
-				count = 0;
+				nelems = 0;
 				arrPtr = nullptr;
 				dataPtr = nullptr;
 
@@ -361,31 +376,42 @@ namespace dnn
 					if (arrPtr)
 					{
 						dataPtr = static_cast<T*>(arrPtr->get_data_handle());
-						count = md.get_size() / sizeof(T);
-						InitArray<T>(dataPtr, count, 0);
+						nelems = md.get_size() / sizeof(T);
+						if constexpr (std::is_floating_point_v<T>)
+						{
+							if (value == T(0))
+								InitArray<T>(dataPtr, nelems, 0);
+							else
+								PRAGMA_OMP_SIMD()
+								for (auto i = 0ull; i < nelems; i++)
+									dataPtr[i] = value;
+						}
+						else
+							for (auto i = 0ull; i < nelems; i++)
+								dataPtr[i] = value;
 					}
 				}
 			}
 		}
-		void resize(const size_type n, const size_type c, const dnnl::memory::data_type dtype, const dnnl::memory::format_tag format, const dnnl::engine& engine)
+		void resize(const size_type n, const size_type c, const dnnl::memory::data_type dtype, const dnnl::memory::format_tag format, const dnnl::engine& engine, const T value = T())
 		{
-			resize(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(n), dnnl::memory::dim(c) }), dtype, format), engine);
+			resize(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(n), dnnl::memory::dim(c) }), dtype, format), engine, value);
 		}
-		void resize(const size_type n, const size_type c, const size_type h, const dnnl::memory::data_type dtype, const dnnl::memory::format_tag format, const dnnl::engine& engine)
+		void resize(const size_type n, const size_type c, const size_type h, const dnnl::memory::data_type dtype, const dnnl::memory::format_tag format, const dnnl::engine& engine, const T value = T())
 		{
-			resize(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(n), dnnl::memory::dim(c), dnnl::memory::dim(h) }), dtype, format), engine);
+			resize(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(n), dnnl::memory::dim(c), dnnl::memory::dim(h) }), dtype, format), engine, value);
 		}
-		void resize(const size_type n, const size_type c, const size_type h, const size_type w, const dnnl::memory::data_type dtype, const dnnl::memory::format_tag format, const dnnl::engine& engine)
+		void resize(const size_type n, const size_type c, const size_type h, const size_type w, const dnnl::memory::data_type dtype, const dnnl::memory::format_tag format, const dnnl::engine& engine, const T value = T())
 		{
-			resize(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(n), dnnl::memory::dim(c), dnnl::memory::dim(h), dnnl::memory::dim(w) }), dtype, format), engine);
+			resize(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(n), dnnl::memory::dim(c), dnnl::memory::dim(h), dnnl::memory::dim(w) }), dtype, format), engine, value);
 		}
-		void resize(const size_type n, const size_type c, const size_type d, const size_type h, const size_type w, const dnnl::memory::data_type dtype, const dnnl::memory::format_tag format, const dnnl::engine& engine)
+		void resize(const size_type n, const size_type c, const size_type d, const size_type h, const size_type w, const dnnl::memory::data_type dtype, const dnnl::memory::format_tag format, const dnnl::engine& engine, const T value = T())
 		{
-			resize(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(n), dnnl::memory::dim(c), dnnl::memory::dim(d), dnnl::memory::dim(h), dnnl::memory::dim(w) }), dtype, format), engine);
+			resize(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(n), dnnl::memory::dim(c), dnnl::memory::dim(d), dnnl::memory::dim(h), dnnl::memory::dim(w) }), dtype, format), engine, value);
 		}
 		inline T& operator[] (size_type i) noexcept { return dataPtr[i]; }
 		inline const T& operator[] (size_type i) const noexcept { return dataPtr[i]; }
-		inline bool empty() const noexcept { return count == 0; }
+		inline bool empty() const noexcept { return nelems == 0; }
 	};
 
 	typedef AlignedMemory<Float> FloatArray;

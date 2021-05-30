@@ -1249,6 +1249,44 @@ namespace dnn
 			B2 *= beta2;
 		}
 
+		/*
+		inline void AdamW(const TrainingRate& rate)
+		{
+			const auto beta1 = rate.Momentum;
+			const auto beta2 = rate.Beta2;
+			const auto lr = rate.MaximumRate * WeightsLRM;
+			const auto eps = rate.Eps;
+			const auto oneMinusBeta1 = (Float(1) - beta1) / rate.BatchSize;
+			const auto oneMinusBeta2 = Float(1) - beta2;
+			const auto oneMinusB1 = Float(1) - B1;
+			const auto oneMinusB2 = Float(1) - B2;
+			const auto batchRecip = Float(1) / rate.BatchSize;
+
+			PRAGMA_OMP_SIMD()
+			for (auto i = 0ull; i < Weights.size(); i++)
+			{
+				WeightsPar1[i] = (beta1 * WeightsPar1[i]) + (oneMinusBeta1 * WeightsD1[i]);
+				WeightsPar2[i] = (beta2 * WeightsPar2[i]) + (oneMinusBeta2 * FloatSquare(WeightsD1[i] * batchRecip));
+				Weights[i] -= lr * (WeightsPar1[i] / oneMinusB1) / std::sqrt((WeightsPar2[i] / oneMinusB2) + eps);
+			}
+
+			if (HasBias)
+			{
+				const auto lr = rate.MaximumRate * BiasesLRM;
+				PRAGMA_OMP_SIMD()
+				for (auto i = 0ull; i < BiasCount; i++)
+				{
+					BiasesPar1[i] = (beta1 * BiasesPar1[i]) + (oneMinusBeta1 * BiasesD1[i]);
+					BiasesPar2[i] = (beta2 * BiasesPar2[i]) + (oneMinusBeta2 * FloatSquare(BiasesD1[i] * batchRecip));
+					Biases[i] -= lr * (BiasesPar1[i] / oneMinusB1) / std::sqrt((BiasesPar2[i] / oneMinusB2) + eps);
+				}
+			}
+
+			B1 *= beta1;
+			B2 *= beta2;
+		}
+		*/
+
 		inline void Adamax(const TrainingRate& rate)
 		{
 			const auto lr = rate.MaximumRate * WeightsLRM / (Float(1) - B1);

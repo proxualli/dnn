@@ -191,7 +191,6 @@ namespace dnn
 			}
 
 			auto weightsMem = dnnl::memory(fwdDesc->weights_desc(), Device.engine, Weights.data());
-
 			auto dstMem = dnnl::memory(*DstMemDesc, Device.engine, Neurons.data());
 
 #ifdef DNN_CACHE_PRIMITIVES
