@@ -1305,7 +1305,7 @@ namespace dnn
 			const auto beta1 = rate.Momentum;
 			const auto beta2 = rate.Beta2;
 			const auto lr = rate.MaximumRate * WeightsLRM;
-			const auto weightDecay = rate.L2Penalty;
+			const auto weightDecay = rate.L2Penalty * WeightsWDM;
 			const auto eps = rate.Eps;
 			const auto oneMinusBeta1 = Float(1) - beta1;
 			const auto oneMinusBeta2 = Float(1) - beta2;
@@ -1441,7 +1441,7 @@ namespace dnn
 		{
 			const auto momentum = rate.Momentum;
 			const auto lr = rate.MaximumRate * WeightsLRM / rate.BatchSize;
-			const auto l2Penalty = rate.L2Penalty * WeightsWDM;
+			const auto l2Penalty = lr * rate.L2Penalty * WeightsWDM;
 
 			PRAGMA_OMP_SIMD()
 			for (auto i = 0ull; i < Weights.size(); i++)
