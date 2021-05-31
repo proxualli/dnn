@@ -378,7 +378,7 @@ namespace dnn
 			return false;
 		}
 
-		void AddTrainingRate(const TrainingRate rate, const bool clear, const UInt gotoEpoch)
+		void AddTrainingRate(const TrainingRate rate, const bool clear, const UInt gotoEpoch, const UInt trainSamples)
 		{
 			if (clear)
 				TrainingRates.clear();
@@ -408,7 +408,7 @@ namespace dnn
 				TrainingRates.push_back(TrainingRate(rate.Optimizer, rate.Momentum, rate.Beta2, rate.L2Penalty, rate.Eps, rate.BatchSize, 1, rate.Epochs - (totIteration * decayAfterEpochs), 1, newRate, rate.MinimumRate, decayAfterEpochs, Float(1), rate.HorizontalFlip, rate.VerticalFlip, rate.Dropout, rate.Cutout, rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
 		}
 
-		void AddTrainingRateSGDR(const TrainingRate rate, const bool clear, const UInt gotoEpoch)
+		void AddTrainingRateSGDR(const TrainingRate rate, const bool clear, const UInt gotoEpoch, const UInt trainSamples)
 		{
 			if (clear)
 				TrainingRates.clear();
@@ -416,6 +416,7 @@ namespace dnn
 			TotalCycles = rate.Cycles;
 			GoToEpoch = gotoEpoch;
 
+			const auto LR = rate.MaximumRate;
 			auto maxRate = rate.MaximumRate;
 			auto minRate = rate.MinimumRate;
 			auto epoch = 0ull;
@@ -425,11 +426,23 @@ namespace dnn
 				for (auto i = 0ull; i < total; i++)
 				{
 					const auto newRate = (minRate + Float(0.5) * (maxRate - minRate) * (Float(1) + std::cos(Float(i) / Float(total) * Float(3.1415926535897932384626433832))));
-
+					
 					epoch++;
-					if (epoch >= gotoEpoch)
-						TrainingRates.push_back(TrainingRate(rate.Optimizer, rate.Momentum, rate.Beta2, rate.L2Penalty, rate.Eps, rate.BatchSize, c + 1, 1, rate.EpochMultiplier, newRate, minRate, 1, Float(1), rate.HorizontalFlip, rate.VerticalFlip, rate.Dropout, rate.Cutout, rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
-		
+					
+					if (rate.Optimizer == Optimizers::AdamW || rate.Optimizer == Optimizers::SGDW)
+					{
+						auto learningRateMultiplier = newRate / LR;
+						auto weightDecayMultiplier = learningRateMultiplier;
+						auto weightDecayNormalized = rate.L2Penalty / pow(Float(trainSamples) / Float(rate.BatchSize), Float(0.5));
+
+						if (epoch >= gotoEpoch)
+							TrainingRates.push_back(TrainingRate(rate.Optimizer, rate.Momentum, rate.Beta2, weightDecayNormalized * weightDecayMultiplier, rate.Eps, rate.BatchSize, c + 1, 1, rate.EpochMultiplier, newRate, minRate, 1, Float(1), rate.HorizontalFlip, rate.VerticalFlip, rate.Dropout, rate.Cutout, rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
+					}
+					else
+					{
+						if (epoch >= gotoEpoch)
+							TrainingRates.push_back(TrainingRate(rate.Optimizer, rate.Momentum, rate.Beta2, rate.L2Penalty, rate.Eps, rate.BatchSize, c + 1, 1, rate.EpochMultiplier, newRate, minRate, 1, Float(1), rate.HorizontalFlip, rate.VerticalFlip, rate.Dropout, rate.Cutout, rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
+					}
 				}
 				
 				if (rate.DecayFactor != Float(1))
