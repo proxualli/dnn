@@ -1733,6 +1733,9 @@ namespace dnn
 			if (fileName.find("-adamax") != std::string::npos)
 				return Optimizers::Adamax;
 
+			if (fileName.find("-adamw") != std::string::npos)
+				return Optimizers::AdamW;
+
 			if (fileName.find("-nag") != std::string::npos)
 				return Optimizers::NAG;
 
@@ -1744,6 +1747,9 @@ namespace dnn
 
 			if (fileName.find("-sgdmomentum") != std::string::npos)
 				return Optimizers::SGDMomentum;
+
+			if (fileName.find("-sgdw") != std::string::npos)
+				return Optimizers::SGDW;
 
 			return Optimizers::SGD;
 		}
