@@ -238,7 +238,7 @@ int main(int argc, char* argv[])
 
     auto model = scripts::ScriptsCatalog::Generate(p);
 
-    const auto optimizer = Optimizers::NAG;
+    const auto optimizer = Optimizers::AdamW;
     const auto persistOptimizer = true;
    
     DNNDataprovider(path);
@@ -269,7 +269,7 @@ int main(int argc, char* argv[])
 
             DNNSetNewEpochDelegate(&NewEpoch);
             DNNPersistOptimizer(persistOptimizer);
-            DNNAddLearningRateSGDR(true, 1, *trainingSamples, Optimizers::AdamW, 0.9f, 0.999f, 0.05f, 0.000001f, 128, 1, 200, 1, 0.001f, 0.0001f, 1.0f, 1, true, false, 0.0f, 0.7f, 0.7f, 0.7f, 20, 0.7f, Interpolations::Cubic, 10.0f, 12.0f);
+            DNNAddLearningRateSGDR(true, 1, *trainingSamples, Optimizers::AdamW, 0.9f, 0.999f, 0.05f, 0.00001f, 128, 1, 200, 1, 0.001f, 0.0001f, 1.0f, 1, true, false, 0.0f, 0.7f, 0.7f, 0.7f, 20, 0.7f, Interpolations::Cubic, 10.0f, 12.0f);
             DNNTraining();
 
             GetTrainingProgress(1, *trainingSamples, *testingSamples);
