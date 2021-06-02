@@ -1722,10 +1722,10 @@ namespace dnn
 
 		Optimizers GetOptimizerFromString(std::string fileName) const
 		{
-			constexpr auto& optimizers = magic_enum::enum_entries<Optimizers>();
-			for (auto optimizer : optimizers)
+			const auto optimizers = magic_enum::enum_entries<Optimizers>();
+			for (const auto optimizer : optimizers)
 			{
-				auto optimizerString = std::string("-") + StringToLower(std::string(optimizer.second));
+				const auto optimizerString = std::string("-") + StringToLower(std::string(optimizer.second));
 				if (fileName.find(optimizerString) != std::string::npos)
 					return optimizer.first;
 			}
