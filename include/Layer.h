@@ -1132,14 +1132,14 @@ namespace dnn
 			}
 		}
 
-		inline void ResetGradients()
+		void ResetGradients()
 		{
 			std::fill(WeightsD1.begin(), WeightsD1.end(), Float(0));
 			if (HasBias)
 				std::fill_n(BiasesD1.begin(), BiasCount, Float(0));
 		}
 
-		inline void UpdateWeights(const TrainingRate& rate, const Optimizers optimizer, const bool disableLocking)
+		void UpdateWeights(const TrainingRate& rate, const Optimizers optimizer, const bool disableLocking)
 		{
 			if (HasWeights && (disableLocking || (!disableLocking && !LockUpdate.load())))
 			{
