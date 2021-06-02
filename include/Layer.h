@@ -662,7 +662,7 @@ namespace dnn
 				return true;
 		}
 
-		void CheckOptimizer(const Optimizers optimizer)
+		void CheckOptimizer(const Optimizers optimizer, const Float b1 = Float(0.9), const Float b2 = Float(0.999))
 		{
 			auto dirty = false;
 
@@ -814,10 +814,10 @@ namespace dnn
 			}
 
 			if (dirty)
-				ResetOptimizer(optimizer);
+				ResetOptimizer(optimizer, b1, b2);
 		}
 
-		void ResetOptimizer(const Optimizers optimizer)
+		void ResetOptimizer(const Optimizers optimizer, const Float b1 = Float(0.9), const Float b2 = Float(0.999))
 		{
 			if (HasWeights)
 			{
@@ -843,8 +843,8 @@ namespace dnn
 					std::fill(WeightsPar2.begin(), WeightsPar2.end(), Float(0));
 					std::fill(BiasesPar1.begin(), BiasesPar1.end(), Float(0));
 					std::fill(BiasesPar2.begin(), BiasesPar2.end(), Float(0));
-					B1 = Float(0.9);
-					B2 = Float(0.999);
+					B1 = b1;
+					B2 = b2;
 					break;
 
 				case Optimizers::AdaGrad:

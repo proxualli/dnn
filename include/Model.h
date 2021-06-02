@@ -283,7 +283,7 @@ namespace dnn
 						std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
 					layer->ResetWeights(WeightsFiller, WeightsScale, BiasesFiller, BiasesScale);
-					layer->ResetOptimizer(Optimizer);
+					layer->ResetOptimizer(Optimizer, CurrentTrainingRate.Momentum, CurrentTrainingRate.Beta2);
 				}
 
 				ResettingWeights.store(false);
@@ -555,7 +555,7 @@ namespace dnn
 		void ResetOptimizer()
 		{
 			for (auto &layer : Layers)
-				layer->ResetOptimizer(Optimizer);
+				layer->ResetOptimizer(Optimizer, CurrentTrainingRate.Momentum, CurrentTrainingRate.Beta2);
 		}
 
 #ifdef DNN_STOCHASTIC
@@ -887,10 +887,10 @@ namespace dnn
 				SetOptimizer(CurrentTrainingRate.Optimizer);
 				if (!PersistOptimizer)
 					for (auto& layer : Layers)
-						layer->ResetOptimizer(Optimizer);
+						layer->ResetOptimizer(Optimizer, CurrentTrainingRate.Momentum, CurrentTrainingRate.Beta2);
 				else
 					for (auto& layer : Layers)
-						layer->CheckOptimizer(Optimizer);
+						layer->CheckOptimizer(Optimizer, CurrentTrainingRate.Momentum, CurrentTrainingRate.Beta2);
 
 				FirstUnlockedLayer.store(Layers.size() - 2);
 				for (auto i = 0ull; i < Layers.size(); i++)
@@ -918,10 +918,10 @@ namespace dnn
 							SetOptimizer(CurrentTrainingRate.Optimizer);
 							if (!PersistOptimizer)
 								for (auto& layer : Layers)
-									layer->ResetOptimizer(Optimizer);
+									layer->ResetOptimizer(Optimizer, CurrentTrainingRate.Momentum, CurrentTrainingRate.Beta2);
 							else
 								for (auto& layer : Layers)
-									layer->CheckOptimizer(Optimizer);
+									layer->CheckOptimizer(Optimizer, CurrentTrainingRate.Momentum, CurrentTrainingRate.Beta2);
 						}
 					}
 
@@ -1722,8 +1722,8 @@ namespace dnn
 
 		Optimizers GetOptimizerFromString(std::string fileName) const
 		{
-			const auto optimizers = magic_enum::enum_entries<Optimizers>();
-			for (const auto optimizer : optimizers)
+			const auto& optimizers = magic_enum::enum_entries<Optimizers>();
+			for (const auto& optimizer : optimizers)
 			{
 				const auto optimizerString = std::string("-") + StringToLower(std::string(optimizer.second));
 				if (fileName.find(optimizerString) != std::string::npos)
