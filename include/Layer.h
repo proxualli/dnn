@@ -7,16 +7,18 @@ namespace dnn
 	
 	enum class Optimizers
 	{
-		AdaDelta = 0,
-		AdaGrad = 1,
-		Adam = 2,
-		Adamax = 3,
-		AdamW = 4,
-		NAG = 5,
-		RMSProp = 6,
-		SGD = 7,
-		SGDMomentum = 8,
-		SGDW = 9
+		AdaBound = 0,
+		AdaBoundW = 1,
+		AdaDelta = 2,
+		AdaGrad = 3,
+		Adam = 4,
+		Adamax = 5,
+		AdamW = 6,
+		NAG = 7,
+		RMSProp = 8,
+		SGD = 9,
+		SGDMomentum = 10,
+		SGDW = 11
 	};
 
 	struct TrainingRate
@@ -700,6 +702,8 @@ namespace dnn
 			}
 			break;
 
+			case Optimizers::AdaBound:
+			case Optimizers::AdaBoundW:
 			case Optimizers::Adam:
 			case Optimizers::AdamW:
 			{
@@ -825,6 +829,8 @@ namespace dnn
 				
 				switch (optimizer)
 				{
+				case Optimizers::AdaBound:
+				case Optimizers::AdaBoundW:
 				case Optimizers::AdaDelta:
 				case Optimizers::Adam:
 				case Optimizers::Adamax:
@@ -876,6 +882,8 @@ namespace dnn
 
 				switch (optimizer)
 				{
+				case Optimizers::AdaBound:
+				case Optimizers::AdaBoundW:
 				case Optimizers::AdaDelta:
 				case Optimizers::Adam:
 				case Optimizers::Adamax:
@@ -1137,6 +1145,12 @@ namespace dnn
 			{
 				switch (optimizer)
 				{
+				case Optimizers::AdaBound:
+					AdaBound(rate);
+					break;
+				case Optimizers::AdaBoundW:
+					AdaBoundW(rate);
+					break;
 				case Optimizers::AdaDelta:
 					AdaDelta(rate);
 					break;
@@ -1169,6 +1183,79 @@ namespace dnn
 					break;
 				}
 			}
+		}
+
+		inline void AdaBound(const TrainingRate& rate)
+		{
+			const auto beta1 = rate.Momentum;
+			const auto beta2 = rate.Beta2;
+			const auto lr = rate.MaximumRate * WeightsLRM;
+			const auto eps = rate.Eps;
+			const auto oneMinusBeta1 = (Float(1) - beta1) / rate.BatchSize;
+			const auto oneMinusBeta2 = Float(1) - beta2;
+			const auto oneMinusB1 = Float(1) - B1;
+			const auto oneMinusB2 = Float(1) - B2;
+			const auto batchRecip = Float(1) / rate.BatchSize;
+
+			PRAGMA_OMP_SIMD()
+			for (auto i = 0ull; i < Weights.size(); i++)
+			{
+				WeightsPar1[i] = (beta1 * WeightsPar1[i]) + (oneMinusBeta1 * WeightsD1[i]);
+				WeightsPar2[i] = (beta2 * WeightsPar2[i]) + (oneMinusBeta2 * FloatSquare(WeightsD1[i] * batchRecip));
+				Weights[i] -= lr * (WeightsPar1[i] / oneMinusB1) / std::sqrt((WeightsPar2[i] / oneMinusB2) + eps);
+			}
+
+			if (HasBias)
+			{
+				const auto lr = rate.MaximumRate * BiasesLRM;
+				PRAGMA_OMP_SIMD()
+				for (auto i = 0ull; i < BiasCount; i++)
+				{
+					BiasesPar1[i] = (beta1 * BiasesPar1[i]) + (oneMinusBeta1 * BiasesD1[i]);
+					BiasesPar2[i] = (beta2 * BiasesPar2[i]) + (oneMinusBeta2 * FloatSquare(BiasesD1[i] * batchRecip));
+					Biases[i] -= lr * (BiasesPar1[i] / oneMinusB1) / std::sqrt((BiasesPar2[i] / oneMinusB2) + eps);
+				}
+			}
+
+			B1 *= beta1;
+			B2 *= beta2;
+		}
+
+		inline void AdaBoundW(const TrainingRate& rate)
+		{
+			const auto beta1 = rate.Momentum;
+			const auto beta2 = rate.Beta2;
+			const auto lr = rate.MaximumRate * WeightsLRM;
+			const auto weightDecay = rate.L2Penalty * WeightsWDM;
+			const auto eps = rate.Eps;
+			const auto oneMinusBeta1 = Float(1) - beta1;
+			const auto oneMinusBeta2 = Float(1) - beta2;
+			const auto oneMinusB1 = Float(1) - B1;
+			const auto oneMinusB2 = Float(1) - B2;
+			const auto batchRecip = Float(1) / rate.BatchSize;
+
+			PRAGMA_OMP_SIMD()
+			for (auto i = 0ull; i < Weights.size(); i++)
+			{
+				WeightsPar1[i] = (beta1 * WeightsPar1[i]) + (oneMinusBeta1 * WeightsD1[i] * batchRecip);
+				WeightsPar2[i] = (beta2 * WeightsPar2[i]) + (oneMinusBeta2 * FloatSquare(WeightsD1[i] * batchRecip));
+				Weights[i] -= lr * ((WeightsPar1[i] / oneMinusB1) / std::sqrt((WeightsPar2[i] / oneMinusB2) + eps) + (weightDecay * Weights[i]));
+			}
+
+			if (HasBias)
+			{
+				const auto lr = rate.MaximumRate * BiasesLRM;
+				PRAGMA_OMP_SIMD()
+				for (auto i = 0ull; i < BiasCount; i++)
+				{
+					BiasesPar1[i] = (beta1 * BiasesPar1[i]) + (oneMinusBeta1 * BiasesD1[i] * batchRecip);
+					BiasesPar2[i] = (beta2 * BiasesPar2[i]) + (oneMinusBeta2 * FloatSquare(BiasesD1[i] * batchRecip));
+					Biases[i] -= lr * ((BiasesPar1[i] / oneMinusB1) / std::sqrt((BiasesPar2[i] / oneMinusB2) + eps) + (weightDecay * Biases[i]));
+				}
+			}
+
+			B1 *= beta1;
+			B2 *= beta2;
 		}
 
 		inline void AdaDelta(const TrainingRate& rate)
@@ -1508,6 +1595,8 @@ namespace dnn
 						}
 						break;
 
+						case Optimizers::AdaBound:
+						case Optimizers::AdaBoundW:
 						case Optimizers::Adam:
 						case Optimizers::AdamW:
 						{
@@ -1595,6 +1684,8 @@ namespace dnn
 						}
 						break;
 
+						case Optimizers::AdaBound:
+						case Optimizers::AdaBoundW:
 						case Optimizers::Adam:
 						case Optimizers::AdamW:
 						{
@@ -1681,6 +1772,8 @@ namespace dnn
 						}
 						break;
 
+						case Optimizers::AdaBound:
+						case Optimizers::AdaBoundW:
 						case Optimizers::Adam:
 						case Optimizers::AdamW:
 						{
@@ -1768,6 +1861,8 @@ namespace dnn
 						}
 						break;
 
+						case Optimizers::AdaBound:
+						case Optimizers::AdaBoundW:
 						case Optimizers::Adam:
 						case Optimizers::AdamW:
 						{
@@ -1833,6 +1928,8 @@ namespace dnn
 					}
 					break;
 
+					case Optimizers::AdaBound:
+					case Optimizers::AdaBoundW:
 					case Optimizers::Adam:
 					case Optimizers::AdamW:
 					{

@@ -398,7 +398,7 @@ namespace dnn
 
 			for (auto i = 0ull; i < totIteration; i++)
 			{
-				if (rate.Optimizer == Optimizers::AdamW || rate.Optimizer == Optimizers::SGDW)
+				if (rate.Optimizer == Optimizers::AdaBoundW || rate.Optimizer == Optimizers::AdamW || rate.Optimizer == Optimizers::SGDW)
 				{
 					const auto weightDecayMultiplier = newRate / LR;
 					const auto weightDecayNormalized = rate.L2Penalty / std::pow(Float(rate.BatchSize) / (Float(trainSamples) / rate.BatchSize) * Epochs, Float(0.5));
@@ -418,7 +418,7 @@ namespace dnn
 					newRate = rate.MinimumRate;
 			}
 
-			if (rate.Optimizer == Optimizers::AdamW || rate.Optimizer == Optimizers::SGDW)
+			if (rate.Optimizer == Optimizers::AdaBoundW || rate.Optimizer == Optimizers::AdamW || rate.Optimizer == Optimizers::SGDW)
 			{
 				const auto weightDecayMultiplier = newRate / LR;
 				const auto weightDecayNormalized = rate.L2Penalty / std::pow(Float(rate.BatchSize) / (Float(trainSamples) / rate.BatchSize) * Epochs, Float(0.5));
@@ -454,7 +454,7 @@ namespace dnn
 					
 					epoch++;
 					
-					if (rate.Optimizer == Optimizers::AdamW || rate.Optimizer == Optimizers::SGDW)
+					if (rate.Optimizer == Optimizers::AdaBoundW || rate.Optimizer == Optimizers::AdamW || rate.Optimizer == Optimizers::SGDW)
 					{
 						const auto weightDecayMultiplier = newRate / LR;
 						const auto weightDecayNormalized = rate.L2Penalty / std::pow(Float(rate.BatchSize) / (Float(trainSamples) / rate.BatchSize) * total, Float(0.5));
@@ -1722,35 +1722,13 @@ namespace dnn
 
 		Optimizers GetOptimizerFromString(std::string fileName) const
 		{
-			if (fileName.find("-adadelta") != std::string::npos)
-				return Optimizers::AdaDelta;
-
-			if (fileName.find("-adagrad") != std::string::npos)
-				return Optimizers::AdaGrad;
-
-			if (fileName.find("-adam") != std::string::npos)
-				return Optimizers::Adam;
-
-			if (fileName.find("-adamax") != std::string::npos)
-				return Optimizers::Adamax;
-
-			if (fileName.find("-adamw") != std::string::npos)
-				return Optimizers::AdamW;
-
-			if (fileName.find("-nag") != std::string::npos)
-				return Optimizers::NAG;
-
-			if (fileName.find("-rmsprop") != std::string::npos)
-				return Optimizers::RMSProp;
-
-			if (fileName.find("-sgd") != std::string::npos)
-				return Optimizers::SGD;
-
-			if (fileName.find("-sgdmomentum") != std::string::npos)
-				return Optimizers::SGDMomentum;
-
-			if (fileName.find("-sgdw") != std::string::npos)
-				return Optimizers::SGDW;
+			constexpr auto& optimizers = magic_enum::enum_entries<Optimizers>();
+			for (auto optimizer : optimizers)
+			{
+				auto optimizerString = std::string("-") + StringToLower(std::string(optimizer.second));
+				if (fileName.find(optimizerString) != std::string::npos)
+					return optimizer.first;
+			}
 
 			return Optimizers::SGD;
 		}
