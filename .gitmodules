@@ -1,0 +1,24 @@
+[submodule "deps/CImg"]
+	path = deps/CImg
+	url = https://github.com/dtschump/CImg
+[submodule "deps/zlib-1.2.11"]
+	path = deps/zlib-1.2.11
+	url = https://github.com/madler/zlib
+[submodule "deps/magic_enum"]
+	path = deps/magic_enum
+	url = https://github.com/Neargye/magic_enum
+[submodule "deps/vectorclass"]
+	path = deps/vectorclass
+	url = https://github.com/zamir1001/vectorclass
+[submodule "deps/libjpeg-turbo"]
+	path = deps/libjpeg-turbo
+	url = https://github.com/libjpeg-turbo/libjpeg-turbo
+[submodule "deps/libpng"]
+	path = deps/libpng
+	url = https://github.com/glennrp/libpng
+[submodule "deps/oneDNN"]
+	path = deps/oneDNN
+	url = https://github.com/oneapi-src/oneDNN
+[submodule "deps/googletest"]
+	path = deps/googletest
+	url = https://github.com/google/googletest
