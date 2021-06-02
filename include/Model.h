@@ -401,7 +401,7 @@ namespace dnn
 				if (rate.Optimizer == Optimizers::AdamW || rate.Optimizer == Optimizers::SGDW)
 				{
 					const auto weightDecayMultiplier = newRate / LR;
-					const auto weightDecayNormalized = rate.L2Penalty / pow(Float(rate.BatchSize) / (Float(trainSamples) / rate.BatchSize) * Epochs, Float(0.5));
+					const auto weightDecayNormalized = rate.L2Penalty / std::pow(Float(rate.BatchSize) / (Float(trainSamples) / rate.BatchSize) * Epochs, Float(0.5));
 
 					if ((i + 1) >= gotoEpoch)
 						TrainingRates.push_back(TrainingRate(rate.Optimizer, rate.Momentum, rate.Beta2, weightDecayMultiplier * weightDecayNormalized, rate.Eps, rate.BatchSize, 1, rate.Epochs, 1, newRate, rate.MinimumRate, decayAfterEpochs, Float(1), rate.HorizontalFlip, rate.VerticalFlip, rate.Dropout, rate.Cutout, rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
@@ -421,7 +421,7 @@ namespace dnn
 			if (rate.Optimizer == Optimizers::AdamW || rate.Optimizer == Optimizers::SGDW)
 			{
 				const auto weightDecayMultiplier = newRate / LR;
-				const auto weightDecayNormalized = rate.L2Penalty / pow(Float(rate.BatchSize) / (Float(trainSamples) / rate.BatchSize) * Epochs, Float(0.5));
+				const auto weightDecayNormalized = rate.L2Penalty / std::pow(Float(rate.BatchSize) / (Float(trainSamples) / rate.BatchSize) * Epochs, Float(0.5));
 
 				if ((totIteration * decayAfterEpochs) < rate.Epochs)
 					TrainingRates.push_back(TrainingRate(rate.Optimizer, rate.Momentum, rate.Beta2, weightDecayMultiplier * weightDecayNormalized, rate.Eps, rate.BatchSize, 1, rate.Epochs - (totIteration * decayAfterEpochs), 1, newRate, rate.MinimumRate, decayAfterEpochs, Float(1), rate.HorizontalFlip, rate.VerticalFlip, rate.Dropout, rate.Cutout, rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
@@ -457,7 +457,7 @@ namespace dnn
 					if (rate.Optimizer == Optimizers::AdamW || rate.Optimizer == Optimizers::SGDW)
 					{
 						const auto weightDecayMultiplier = newRate / LR;
-						const auto weightDecayNormalized = rate.L2Penalty / pow(Float(rate.BatchSize) / (Float(trainSamples) / rate.BatchSize) * total, Float(0.5));
+						const auto weightDecayNormalized = rate.L2Penalty / std::pow(Float(rate.BatchSize) / (Float(trainSamples) / rate.BatchSize) * total, Float(0.5));
 
 						if (epoch >= gotoEpoch)
 							TrainingRates.push_back(TrainingRate(rate.Optimizer, rate.Momentum, rate.Beta2, weightDecayMultiplier * weightDecayNormalized, rate.Eps, rate.BatchSize, c + 1, 1, rate.EpochMultiplier, newRate, minRate, 1, Float(1), rate.HorizontalFlip, rate.VerticalFlip, rate.Dropout, rate.Cutout, rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
