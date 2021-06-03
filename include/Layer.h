@@ -286,6 +286,7 @@ namespace dnn
 		FloatVector BiasesPar2;
 		Float B1;
 		Float B2;
+		Float Gamma;
 		Stats NeuronsStats;
 		Stats WeightsStats;
 		Stats BiasesStats;
@@ -350,6 +351,7 @@ namespace dnn
 			BiasesPar2(FloatVector()),
 			B1(Float(0)),
 			B2(Float(0)),
+			Gamma(Float(0)),
 			UseDefaultParameters(true),
 			LockUpdate(false),
 			RefreshingStats(false),
@@ -744,6 +746,8 @@ namespace dnn
 					dirty = true;
 				if (std::isnan(B2) || std::isinf(B2))
 					dirty = true;
+				if (std::isnan(Gamma) || std::isinf(Gamma))
+					dirty = true;
 			}
 			break;
 
@@ -848,6 +852,7 @@ namespace dnn
 					std::fill(BiasesPar2.begin(), BiasesPar2.end(), Float(0));
 					B1 = Float(0);
 					B2 = Float(0);
+					Gamma = Float(0);
 					break;
 
 				case Optimizers::AdaGrad:
@@ -1201,6 +1206,7 @@ namespace dnn
 			B2 = B2 == Float(0) ? beta2 : B2;
 			const auto oneMinusB1 = Float(1) - B1;
 			const auto oneMinusB2 = Float(1) - B2;
+			Gamma = Gamma == Float(0) ? Float(0.003) : Gamma;
 
 			PRAGMA_OMP_SIMD()
 			for (auto i = 0ull; i < Weights.size(); i++)
@@ -1224,6 +1230,7 @@ namespace dnn
 
 			B1 *= beta1;
 			B2 *= beta2;
+			Gamma += Gamma;
 		}
 
 		inline void AdaBoundW(const TrainingRate& rate)
@@ -1240,6 +1247,7 @@ namespace dnn
 			B2 = B2 == Float(0) ? beta2 : B2;
 			const auto oneMinusB1 = Float(1) - B1;
 			const auto oneMinusB2 = Float(1) - B2;
+			Gamma = Gamma == Float(0) ? Float(0.003) : Gamma;
 
 			PRAGMA_OMP_SIMD()
 			for (auto i = 0ull; i < Weights.size(); i++)
@@ -1263,6 +1271,7 @@ namespace dnn
 
 			B1 *= beta1;
 			B2 *= beta2;
+			Gamma += Gamma;
 		}
 
 		inline void AdaDelta(const TrainingRate& rate)
