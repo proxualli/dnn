@@ -35,6 +35,7 @@ namespace dnn
 		Float MaximumRate;
 		Float MinimumRate;
 		Float FinalRate;
+		Float Gamma;
 		UInt DecayAfterEpochs;
 		Float DecayFactor;
 		bool HorizontalFlip;
@@ -62,6 +63,7 @@ namespace dnn
 			MaximumRate(Float(0.05)),
 			MinimumRate(Float(0.0001)),
 			FinalRate(Float(0.1)),
+			Gamma(Float(0.003)),
 			DecayAfterEpochs(1),
 			DecayFactor(Float(1)),
 			HorizontalFlip(false),
@@ -78,7 +80,7 @@ namespace dnn
 		{
 		}
 
-		TrainingRate(const Optimizers optimizer, const Float momentum, const Float beta2, const Float l2Penalty, const Float eps, const UInt batchSize, const UInt cycles, const UInt epochs, const UInt epochMultiplier, const Float maximumRate, const Float minimumRate, const Float finalRate, const UInt decayAfterEpochs, const Float decayFactor, const bool horizontalFlip, const bool verticalFlip, const Float dropout, const Float cutout, const Float autoAugment, const Float colorCast, const UInt colorAngle, const Float distortion, const Interpolations interpolation, const Float scaling, const Float rotation) :
+		TrainingRate(const Optimizers optimizer, const Float momentum, const Float beta2, const Float l2Penalty, const Float eps, const UInt batchSize, const UInt cycles, const UInt epochs, const UInt epochMultiplier, const Float maximumRate, const Float minimumRate, const Float finalRate, const Float gamma, const UInt decayAfterEpochs, const Float decayFactor, const bool horizontalFlip, const bool verticalFlip, const Float dropout, const Float cutout, const Float autoAugment, const Float colorCast, const UInt colorAngle, const Float distortion, const Interpolations interpolation, const Float scaling, const Float rotation) :
 			Optimizer(optimizer),
 			Momentum(momentum),
 			Beta2(beta2),
@@ -90,6 +92,7 @@ namespace dnn
 			EpochMultiplier(epochMultiplier),
 			MaximumRate(maximumRate),
 			MinimumRate(minimumRate),
+			Gamma(gamma),
 			FinalRate(finalRate),
 			DecayAfterEpochs(decayAfterEpochs),
 			DecayFactor(decayFactor),
@@ -1244,7 +1247,7 @@ namespace dnn
 			B2 = B2 == Float(0) ? beta2 : B2;
 			const auto oneMinusB1 = Float(1) - B1;
 			const auto oneMinusB2 = Float(1) - B2;
-			Gamma = Gamma == Float(0) ? Float(0.003) : Gamma;
+			Gamma = Gamma == Float(0) ? rate.Gamma : Gamma;
 
 			PRAGMA_OMP_SIMD()
 			for (auto i = 0ull; i < Weights.size(); i++)
@@ -1285,7 +1288,7 @@ namespace dnn
 			B2 = B2 == Float(0) ? beta2 : B2;
 			const auto oneMinusB1 = Float(1) - B1;
 			const auto oneMinusB2 = Float(1) - B2;
-			Gamma = Gamma == Float(0) ? Float(0.003) : Gamma;
+			Gamma = Gamma == Float(0) ? rate.Gamma : Gamma;
 
 			PRAGMA_OMP_SIMD()
 			for (auto i = 0ull; i < Weights.size(); i++)
