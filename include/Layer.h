@@ -339,7 +339,7 @@ namespace dnn
 			HW(h * w),
 			CDHW(c * d * h * w),
 			PaddedC(DivUp(c)),
-			PaddedCDHW(DivUp(c) * d * h * w),
+			PaddedCDHW((layerType == LayerTypes::Input ? c : DivUp(c)) * d * h * w),
 			HasPadding(padD > 0 || padH > 0 || padW > 0),
 			RandomEngine(std::mt19937(Seed<unsigned>())),
 			Neurons(FloatArray()),
@@ -453,13 +453,13 @@ namespace dnn
 #ifdef DNN_LEAN
 		inline void ZeroGradient(const UInt batchSize)
 		{
-			InputLayer->NeuronsD1.resize(batchSize, InputLayer->C, InputLayer->H, InputLayer->W, dnnl::memory::data_type::f32, BlockedFmt, Device.engine);
+			InputLayer->NeuronsD1.resize(batchSize, InputLayer->PaddedC, InputLayer->H, InputLayer->W, dnnl::memory::data_type::f32, BlockedFmt, Device.engine);
 		}
 
 		inline void ZeroGradientMulti(const UInt batchSize)
 		{
 			for (auto& inputLayer : Inputs)
-				inputLayer->NeuronsD1.resize(batchSize, inputLayer->C, inputLayer->H, inputLayer->W, dnnl::memory::data_type::f32, BlockedFmt, Device.engine);
+				inputLayer->NeuronsD1.resize(batchSize, inputLayer->PaddedC, inputLayer->H, inputLayer->W, dnnl::memory::data_type::f32, BlockedFmt, Device.engine);
 		}
 
 		inline void ReleaseGradient()
@@ -477,10 +477,10 @@ namespace dnn
 				SleepYield(std::chrono::milliseconds(250));
 			}
 			
-			Neurons.resize(batchSize, C, H, W, dnnl::memory::data_type::f32, BlockedFmt, Device.engine);
+			Neurons.resize(batchSize, PaddedC, H, W, dnnl::memory::data_type::f32, BlockedFmt, Device.engine);
 #ifndef DNN_LEAN
 			if (!InplaceBwd)
-				NeuronsD1.resize(batchSize, C, H, W, dnnl::memory::data_type::f32, BlockedFmt, Device.engine);
+				NeuronsD1.resize(batchSize, PaddedC, H, W, dnnl::memory::data_type::f32, BlockedFmt, Device.engine);
 #else
 			ReleaseGradient();
 #endif // DNN_LEAN
