@@ -34,6 +34,7 @@ namespace dnn
 		UInt EpochMultiplier;
 		Float MaximumRate;
 		Float MinimumRate;
+		Float FinalRate;
 		UInt DecayAfterEpochs;
 		Float DecayFactor;
 		bool HorizontalFlip;
@@ -60,6 +61,7 @@ namespace dnn
 			EpochMultiplier(1),
 			MaximumRate(Float(0.05)),
 			MinimumRate(Float(0.0001)),
+			FinalRate(Float(0.1)),
 			DecayAfterEpochs(1),
 			DecayFactor(Float(1)),
 			HorizontalFlip(false),
@@ -76,7 +78,7 @@ namespace dnn
 		{
 		}
 
-		TrainingRate(const Optimizers optimizer, const Float momentum, const Float beta2, const Float l2Penalty, const Float eps, const UInt batchSize, const UInt cycles, const UInt epochs, const UInt epochMultiplier, const Float maximumRate, const Float minimumRate, const UInt decayAfterEpochs, const Float decayFactor, const bool horizontalFlip, const bool verticalFlip, const Float dropout, const Float cutout, const Float autoAugment, const Float colorCast, const UInt colorAngle, const Float distortion, const Interpolations interpolation, const Float scaling, const Float rotation) :
+		TrainingRate(const Optimizers optimizer, const Float momentum, const Float beta2, const Float l2Penalty, const Float eps, const UInt batchSize, const UInt cycles, const UInt epochs, const UInt epochMultiplier, const Float maximumRate, const Float minimumRate, const Float finalRate, const UInt decayAfterEpochs, const Float decayFactor, const bool horizontalFlip, const bool verticalFlip, const Float dropout, const Float cutout, const Float autoAugment, const Float colorCast, const UInt colorAngle, const Float distortion, const Interpolations interpolation, const Float scaling, const Float rotation) :
 			Optimizer(optimizer),
 			Momentum(momentum),
 			Beta2(beta2),
@@ -88,6 +90,7 @@ namespace dnn
 			EpochMultiplier(epochMultiplier),
 			MaximumRate(maximumRate),
 			MinimumRate(minimumRate),
+			FinalRate(finalRate),
 			DecayAfterEpochs(decayAfterEpochs),
 			DecayFactor(decayFactor),
 			HorizontalFlip(horizontalFlip),
