@@ -51,16 +51,16 @@ namespace dnn
 		Float Rotation;
 	
 		TrainingRate() :
-			Optimizer(Optimizers::NAG),
+			Optimizer(Optimizers::AdaBoundW),
 			Momentum(Float(0.9)),
 			Beta2(Float(0.999)),
-			L2Penalty(Float(0.0005)),
+			L2Penalty(Float(0.05)),
 			Eps(Float(1E-08)),
 			BatchSize(1),
 			Cycles(1),
 			Epochs(200),
 			EpochMultiplier(1),
-			MaximumRate(Float(0.05)),
+			MaximumRate(Float(0.001)),
 			MinimumRate(Float(0.0001)),
 			FinalRate(Float(0.1)),
 			Gamma(Float(0.003)),
@@ -74,9 +74,9 @@ namespace dnn
 			ColorCast(Float(0)),
 			ColorAngle(0),
 			Distortion(Float(0)),
-			Interpolation(Interpolations::Cubic),
+			Interpolation(Interpolations::Linear),
 			Scaling(Float(10.0)),
-			Rotation(Float(10.0))			
+			Rotation(Float(12.0))			
 		{
 		}
 

@@ -33,8 +33,8 @@ DNN_API void DNNModelDispose();
 DNN_API bool DNNBatchNormalizationUsed();
 DNN_API void DNNResetWeights();
 DNN_API void DNNResetLayerWeights(const UInt layerIndex);
-DNN_API void DNNAddLearningRate(const bool clear, const UInt gotoEpoch, const UInt trainSamples, const dnn::Optimizers optimizer, const Float momentum, const Float beta2, const Float L2penalty, const Float eps, const UInt batchSize, const UInt cycles, const UInt epochs, const UInt epochMultiplier, const Float maximumRate, const Float minimumRate, const Float finalRate, const Float gamma, const Float decayFactor, const UInt decayAfterEpochs, const bool horizontalFlip, const bool verticalFlip, const Float dropout, const Float cutout, const Float autoAugment, const Float colorCast, const UInt colorAngle, const Float distortion, const dnn::Interpolations interpolation, const Float scaling, const Float rotation);
-DNN_API void DNNAddLearningRateSGDR(const bool clear, const UInt gotoEpoch, const UInt trainSamples, const dnn::Optimizers optimizer, const Float momentum, const Float beta2, const Float L2penalty, const Float eps, const UInt batchSize, const UInt cycles, const UInt epochs, const UInt epochMultiplier, const Float maximumRate, const Float minimumRate, const Float finalRate, const Float gamma, const Float decayFactor, const UInt decayAfterEpochs, const bool horizontalFlip, const bool verticalFlip, const Float dropout, const Float cutout, const Float autoAugment, const Float colorCast, const UInt colorAngle, const Float distortion, const dnn::Interpolations interpolation, const Float saling, const Float rotation);
+DNN_API void DNNAddLearningRate(const bool clear, const UInt gotoEpoch, const UInt trainSamples, const dnn::Optimizers optimizer, const Float momentum, const Float beta2, const Float L2penalty, const Float eps, const UInt batchSize, const UInt cycles, const UInt epochs, const UInt epochMultiplier, const Float maximumRate, const Float minimumRate, const Float finalRate, const Float gamma, const UInt decayAfterEpochs, const Float decayFactor, const bool horizontalFlip, const bool verticalFlip, const Float dropout, const Float cutout, const Float autoAugment, const Float colorCast, const UInt colorAngle, const Float distortion, const dnn::Interpolations interpolation, const Float scaling, const Float rotation);
+DNN_API void DNNAddLearningRateSGDR(const bool clear, const UInt gotoEpoch, const UInt trainSamples, const dnn::Optimizers optimizer, const Float momentum, const Float beta2, const Float L2penalty, const Float eps, const UInt batchSize, const UInt cycles, const UInt epochs, const UInt epochMultiplier, const Float maximumRate, const Float minimumRate, const Float finalRate, const Float gamma, const UInt decayAfterEpochs, const Float decayFactor, const bool horizontalFlip, const bool verticalFlip, const Float dropout, const Float cutout, const Float autoAugment, const Float colorCast, const UInt colorAngle, const Float distortion, const dnn::Interpolations interpolation, const Float saling, const Float rotation);
 DNN_API bool DNNLoadDataset();
 DNN_API void DNNTraining();
 DNN_API void DNNStop();
@@ -269,7 +269,7 @@ int main(int argc, char* argv[])
 
             DNNSetNewEpochDelegate(&NewEpoch);
             DNNPersistOptimizer(persistOptimizer);
-            DNNAddLearningRateSGDR(true, 1, *trainingSamples, Optimizers::AdamW, 0.9f, 0.999f, 0.05f, 0.00001f, 128, 1, 200, 1, 0.001f, 0.0001f, 0.1f, 0.003f, 1.0f, 1, true, false, 0.0f, 0.7f, 0.7f, 0.7f, 20, 0.7f, Interpolations::Cubic, 10.0f, 12.0f);
+            DNNAddLearningRateSGDR(true, 1, *trainingSamples, Optimizers::AdamW, 0.9f, 0.999f, 0.05f, 0.00001f, 128, 1, 200, 1, 0.001f, 0.0001f, 0.1f, 0.003f, 1, 1.0f, true, false, 0.0f, 0.7f, 0.7f, 0.7f, 20, 0.7f, Interpolations::Cubic, 10.0f, 12.0f);
             DNNTraining();
 
             GetTrainingProgress(1, *trainingSamples, *testingSamples);
