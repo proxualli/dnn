@@ -1242,7 +1242,6 @@ namespace dnn
 		{
 			const auto beta1 = rate.Momentum;
 			const auto beta2 = rate.Beta2;
-			const auto weightDecay = rate.L2Penalty * WeightsWDM;
 			const auto eps = rate.Eps;
 			const auto oneMinusBeta1 = Float(1) - beta1;
 			const auto oneMinusBeta2 = Float(1) - beta2;
