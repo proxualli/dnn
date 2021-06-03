@@ -1194,8 +1194,8 @@ namespace dnn
 			const auto oneMinusBeta1 = (Float(1) - beta1) / rate.BatchSize;
 			const auto oneMinusBeta2 = Float(1) - beta2;
 			const auto batchRecip = Float(1) / rate.BatchSize;
-			B1 = B1 == 0 ? beta1 : B1;
-			B2 = B2 == 0 ? beta2 : B2;
+			B1 = B1 == Float(0) ? beta1 : B1;
+			B2 = B2 == Float(0) ? beta2 : B2;
 			const auto oneMinusB1 = Float(1) - B1;
 			const auto oneMinusB2 = Float(1) - B2;
 
@@ -1233,8 +1233,8 @@ namespace dnn
 			const auto oneMinusBeta1 = Float(1) - beta1;
 			const auto oneMinusBeta2 = Float(1) - beta2;
 			const auto batchRecip = Float(1) / rate.BatchSize;
-			B1 = B1 == 0 ? beta1 : B1;
-			B2 = B2 == 0 ? beta2 : B2;
+			B1 = B1 == Float(0) ? beta1 : B1;
+			B2 = B2 == Float(0) ? beta2 : B2;
 			const auto oneMinusB1 = Float(1) - B1;
 			const auto oneMinusB2 = Float(1) - B2;
 
@@ -1404,8 +1404,8 @@ namespace dnn
 			const auto oneMinusBeta1 = Float(1) - beta1;
 			const auto oneMinusBeta2 = Float(1) - beta2;
 			const auto batchRecip = Float(1) / rate.BatchSize;
-			B1 = B1 == 0 ? beta1 : B1;
-			B2 = B2 == 0 ? beta2 : B2;
+			B1 = B1 == Float(0) ? beta1 : B1;
+			B2 = B2 == Float(0) ? beta2 : B2;
 			const auto oneMinusB1 = Float(1) - B1;
 			const auto oneMinusB2 = Float(1) - B2;
 
