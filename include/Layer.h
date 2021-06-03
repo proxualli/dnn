@@ -345,8 +345,8 @@ namespace dnn
 			WeightsPar2(FloatVector()),
 			BiasesPar1(FloatVector()),
 			BiasesPar2(FloatVector()),
-			B1(Float(0.9)),
-			B2(Float(0.999)),
+			B1(Float(0)),
+			B2(Float(0)),
 			UseDefaultParameters(true),
 			LockUpdate(false),
 			RefreshingStats(false),
@@ -662,7 +662,7 @@ namespace dnn
 				return true;
 		}
 
-		void CheckOptimizer(const Optimizers optimizer, const Float b1 = Float(0.9), const Float b2 = Float(0.999))
+		void CheckOptimizer(const Optimizers optimizer)
 		{
 			auto dirty = false;
 
@@ -814,10 +814,10 @@ namespace dnn
 			}
 
 			if (dirty)
-				ResetOptimizer(optimizer, b1, b2);
+				ResetOptimizer(optimizer);
 		}
 
-		void ResetOptimizer(const Optimizers optimizer, const Float b1 = Float(0.9), const Float b2 = Float(0.999))
+		void ResetOptimizer(const Optimizers optimizer)
 		{
 			if (HasWeights)
 			{
@@ -843,8 +843,8 @@ namespace dnn
 					std::fill(WeightsPar2.begin(), WeightsPar2.end(), Float(0));
 					std::fill(BiasesPar1.begin(), BiasesPar1.end(), Float(0));
 					std::fill(BiasesPar2.begin(), BiasesPar2.end(), Float(0));
-					B1 = b1;
-					B2 = b2;
+					B1 = Float(0);
+					B2 = Float(0);
 					break;
 
 				case Optimizers::AdaGrad:
@@ -1193,9 +1193,11 @@ namespace dnn
 			const auto eps = rate.Eps;
 			const auto oneMinusBeta1 = (Float(1) - beta1) / rate.BatchSize;
 			const auto oneMinusBeta2 = Float(1) - beta2;
+			const auto batchRecip = Float(1) / rate.BatchSize;
+			B1 = B1 == 0 ? beta1 : B1;
+			B2 = B2 == 0 ? beta2 : B2;
 			const auto oneMinusB1 = Float(1) - B1;
 			const auto oneMinusB2 = Float(1) - B2;
-			const auto batchRecip = Float(1) / rate.BatchSize;
 
 			PRAGMA_OMP_SIMD()
 			for (auto i = 0ull; i < Weights.size(); i++)
@@ -1230,9 +1232,11 @@ namespace dnn
 			const auto eps = rate.Eps;
 			const auto oneMinusBeta1 = Float(1) - beta1;
 			const auto oneMinusBeta2 = Float(1) - beta2;
+			const auto batchRecip = Float(1) / rate.BatchSize;
+			B1 = B1 == 0 ? beta1 : B1;
+			B2 = B2 == 0 ? beta2 : B2;
 			const auto oneMinusB1 = Float(1) - B1;
 			const auto oneMinusB2 = Float(1) - B2;
-			const auto batchRecip = Float(1) / rate.BatchSize;
 
 			PRAGMA_OMP_SIMD()
 			for (auto i = 0ull; i < Weights.size(); i++)
@@ -1322,9 +1326,11 @@ namespace dnn
 			const auto eps = rate.Eps;
 			const auto oneMinusBeta1 = (Float(1) - beta1) / rate.BatchSize;
 			const auto oneMinusBeta2 = Float(1) - beta2;
+			const auto batchRecip = Float(1) / rate.BatchSize;
+			B1 = B1 == Float(0) ? beta1 : B1;
+			B2 = B2 == Float(0) ? beta2 : B2;
 			const auto oneMinusB1 = Float(1) - B1;
 			const auto oneMinusB2 = Float(1) - B2;
-			const auto batchRecip = Float(1) / rate.BatchSize;
 
 			PRAGMA_OMP_SIMD()
 			for (auto i = 0ull; i < Weights.size(); i++)
@@ -1352,13 +1358,14 @@ namespace dnn
 
 		inline void Adamax(const TrainingRate& rate)
 		{
+			const auto beta1 = rate.Momentum;
+			B1 = B1 == Float(0) ? beta1 : B1;
 			const auto lr = rate.MaximumRate * WeightsLRM / (Float(1) - B1);
 			const auto batchRecip = Float(1) / rate.BatchSize;
-			const auto beta1 = rate.Momentum;
 			const auto oneMinusBeta1 = (Float(1) - beta1) / rate.BatchSize;
 			const auto beta2 = rate.Beta2;
 			const auto eps = rate.Eps;
-
+									
 			VecFloat weights, weightsD1, par1, par2;
 			for (auto i = 0ull; i < Weights.size(); i += VectorSize)
 			{
@@ -1396,9 +1403,11 @@ namespace dnn
 			const auto eps = rate.Eps;
 			const auto oneMinusBeta1 = Float(1) - beta1;
 			const auto oneMinusBeta2 = Float(1) - beta2;
+			const auto batchRecip = Float(1) / rate.BatchSize;
+			B1 = B1 == 0 ? beta1 : B1;
+			B2 = B2 == 0 ? beta2 : B2;
 			const auto oneMinusB1 = Float(1) - B1;
 			const auto oneMinusB2 = Float(1) - B2;
-			const auto batchRecip = Float(1) / rate.BatchSize;
 
 			PRAGMA_OMP_SIMD()
 			for (auto i = 0ull; i < Weights.size(); i++)
