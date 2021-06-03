@@ -1262,6 +1262,9 @@ namespace dnn
 
 			if (HasBias)
 			{
+				const auto finalRate = rate.FinalRate * rate.MaximumRate * BiasesLRM;
+				const auto lowerBound = finalRate * (Float(1) - (Float(1) / (Float(1) - (Gamma + rate.Gamma))));
+				const auto upperBound = finalRate * (Float(1) + (Float(1) / (Float(1) - Gamma)));
 				const auto lr = Clamp<Float>(rate.MaximumRate * BiasesLRM, lowerBound, upperBound);
 				PRAGMA_OMP_SIMD()
 				for (auto i = 0ull; i < BiasCount; i++)
@@ -1306,6 +1309,9 @@ namespace dnn
 
 			if (HasBias)
 			{
+				const auto finalRate = rate.FinalRate * rate.MaximumRate * BiasesLRM;
+				const auto lowerBound = finalRate * (Float(1) - (Float(1) / (Float(1) - (Gamma + rate.Gamma))));
+				const auto upperBound = finalRate * (Float(1) + (Float(1) / (Float(1) - Gamma)));
 				const auto lr = Clamp<Float>(rate.MaximumRate * BiasesLRM, lowerBound, upperBound);
 				PRAGMA_OMP_SIMD()
 				for (auto i = 0ull; i < BiasCount; i++)
