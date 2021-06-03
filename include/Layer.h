@@ -1251,19 +1251,18 @@ namespace dnn
 			B2 = B2 == Float(0) ? beta2 : B2;
 			const auto oneMinusB1 = Float(1) - B1;
 			const auto oneMinusB2 = Float(1) - B2;
-			auto stepSize = rate.MaximumRate * WeightsLRM * std::sqrt(oneMinusB2) / oneMinusB1;
-
 			Gamma = Gamma == Float(0) ? rate.Gamma : Gamma;
 			const auto finalRate = rate.FinalRate * rate.MaximumRate * WeightsLRM;
 			const auto lowerBound = finalRate * (Float(1) - (Float(1) / (Gamma + rate.Gamma)));
 			const auto upperBound = finalRate * (Float(1) + (Float(1) / Gamma));
-			
+			const auto weightDecay = rate.L2Penalty * WeightsWDM;
+
 			PRAGMA_OMP_SIMD()
 			for (auto i = 0ull; i < Weights.size(); i++)
 			{
 				WeightsPar1[i] = (beta1 * WeightsPar1[i]) + (oneMinusBeta1 * WeightsD1[i] * batchRecip);
 				WeightsPar2[i] = (beta2 * WeightsPar2[i]) + (oneMinusBeta2 * FloatSquare(WeightsD1[i] * batchRecip));
-				Weights[i] -= Clamp<Float>(rate.MaximumRate * WeightsLRM / std::sqrt((WeightsPar2[i] / oneMinusB2) + eps), lowerBound, upperBound) * (WeightsPar1[i] / oneMinusB1);
+				Weights[i] -= Clamp<Float>(rate.MaximumRate * WeightsLRM / std::sqrt((WeightsPar2[i] / oneMinusB2) + eps) + (weightDecay * Weights[i]), lowerBound, upperBound) * (WeightsPar1[i] / oneMinusB1);
 			}
 
 			if (HasBias)
@@ -1271,12 +1270,13 @@ namespace dnn
 				const auto finalRate = rate.FinalRate * rate.MaximumRate * BiasesLRM;
 				const auto lowerBound = finalRate * (Float(1) - (Float(1) / (Gamma + rate.Gamma)));
 				const auto upperBound = finalRate * (Float(1) + (Float(1) / Gamma));
+				const auto weightDecay = rate.L2Penalty * BiasesWDM;
 				PRAGMA_OMP_SIMD()
 				for (auto i = 0ull; i < BiasCount; i++)
 				{
 					BiasesPar1[i] = (beta1 * BiasesPar1[i]) + (oneMinusBeta1 * BiasesD1[i] * batchRecip);
 					BiasesPar2[i] = (beta2 * BiasesPar2[i]) + (oneMinusBeta2 * FloatSquare(BiasesD1[i] * batchRecip));
-					Biases[i] -= Clamp<Float>(rate.MaximumRate * BiasesLRM / std::sqrt((BiasesPar2[i] / oneMinusB2) + eps), lowerBound, upperBound) * (BiasesPar1[i] / oneMinusB1);
+					Biases[i] -= Clamp<Float>(rate.MaximumRate * BiasesLRM / std::sqrt((BiasesPar2[i] / oneMinusB2) + eps) + (weightDecay * Biases[i]), lowerBound, upperBound) * (BiasesPar1[i] / oneMinusB1);
 				}
 			}
 
@@ -1443,6 +1443,7 @@ namespace dnn
 			if (HasBias)
 			{
 				const auto lr = rate.MaximumRate * BiasesLRM;
+				const auto weightDecay = rate.L2Penalty * BiasesWDM;
 				PRAGMA_OMP_SIMD()
 				for (auto i = 0ull; i < BiasCount; i++)
 				{
