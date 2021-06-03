@@ -1238,7 +1238,6 @@ namespace dnn
 		{
 			const auto beta1 = rate.Momentum;
 			const auto beta2 = rate.Beta2;
-			const auto lr = rate.MaximumRate * WeightsLRM;
 			const auto eps = rate.Eps;
 			const auto oneMinusBeta1 = (Float(1) - beta1) / rate.BatchSize;
 			const auto oneMinusBeta2 = Float(1) - beta2;
@@ -1248,6 +1247,10 @@ namespace dnn
 			const auto oneMinusB1 = Float(1) - B1;
 			const auto oneMinusB2 = Float(1) - B2;
 			Gamma = Gamma == Float(0) ? rate.Gamma : Gamma;
+			const auto finalRate = rate.FinalRate * rate.MaximumRate * WeightsLRM;
+			const auto lowerBound = finalRate * (Float(1) - (Float(1) / (Float(1) - (Gamma + rate.Gamma))));
+			const auto upperBound = finalRate * (Float(1) + (Float(1) / (Float(1) - Gamma)));
+			const auto lr = Clamp<Float>(rate.MaximumRate * WeightsLRM, lowerBound, upperBound);
 
 			PRAGMA_OMP_SIMD()
 			for (auto i = 0ull; i < Weights.size(); i++)
@@ -1259,7 +1262,7 @@ namespace dnn
 
 			if (HasBias)
 			{
-				const auto lr = rate.MaximumRate * BiasesLRM;
+				const auto lr = Clamp<Float>(rate.MaximumRate * BiasesLRM, lowerBound, upperBound);
 				PRAGMA_OMP_SIMD()
 				for (auto i = 0ull; i < BiasCount; i++)
 				{
@@ -1271,14 +1274,13 @@ namespace dnn
 
 			B1 *= beta1;
 			B2 *= beta2;
-			Gamma += Gamma;
+			Gamma += rate.Gamma;
 		}
 
 		inline void AdaBoundW(const TrainingRate& rate)
 		{
 			const auto beta1 = rate.Momentum;
 			const auto beta2 = rate.Beta2;
-			const auto lr = rate.MaximumRate * WeightsLRM;
 			const auto weightDecay = rate.L2Penalty * WeightsWDM;
 			const auto eps = rate.Eps;
 			const auto oneMinusBeta1 = Float(1) - beta1;
@@ -1289,6 +1291,10 @@ namespace dnn
 			const auto oneMinusB1 = Float(1) - B1;
 			const auto oneMinusB2 = Float(1) - B2;
 			Gamma = Gamma == Float(0) ? rate.Gamma : Gamma;
+			const auto finalRate = rate.FinalRate * rate.MaximumRate * WeightsLRM;
+			const auto lowerBound = finalRate * (Float(1) - (Float(1) / (Float(1) - (Gamma + rate.Gamma))));
+			const auto upperBound = finalRate * (Float(1) + (Float(1) / (Float(1) - Gamma)));
+			const auto lr = Clamp<Float>(rate.MaximumRate * WeightsLRM, lowerBound, upperBound);
 
 			PRAGMA_OMP_SIMD()
 			for (auto i = 0ull; i < Weights.size(); i++)
@@ -1300,7 +1306,7 @@ namespace dnn
 
 			if (HasBias)
 			{
-				const auto lr = rate.MaximumRate * BiasesLRM;
+				const auto lr = Clamp<Float>(rate.MaximumRate * BiasesLRM, lowerBound, upperBound);
 				PRAGMA_OMP_SIMD()
 				for (auto i = 0ull; i < BiasCount; i++)
 				{
@@ -1312,7 +1318,7 @@ namespace dnn
 
 			B1 *= beta1;
 			B2 *= beta2;
-			Gamma += Gamma;
+			Gamma += rate.Gamma;
 		}
 
 		inline void AdaDelta(const TrainingRate& rate)
