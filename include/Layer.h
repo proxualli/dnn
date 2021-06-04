@@ -1196,7 +1196,7 @@ namespace dnn
 			{
 				WeightsPar1[i] = (beta1 * WeightsPar1[i]) + (oneMinusBeta1 * WeightsD1[i] * batchRecip);
 				WeightsPar2[i] = (beta2 * WeightsPar2[i]) + (oneMinusBeta2 * FloatSquare(WeightsD1[i] * batchRecip));
-				Weights[i] -= Clamp<Float>(rate.MaximumRate * WeightsLRM / std::sqrt((WeightsPar2[i] / oneMinusB2) + eps) + (weightDecay * Weights[i]), lowerBound, upperBound) * (WeightsPar1[i] / oneMinusB1);
+				Weights[i] -= Clamp<Float>(rate.MaximumRate * WeightsLRM / std::sqrt((WeightsPar2[i] / oneMinusB2) + eps), lowerBound, upperBound) * (WeightsPar1[i] / oneMinusB1) + (weightDecay * Weights[i]);
 			}
 
 			if (HasBias)
@@ -1210,7 +1210,7 @@ namespace dnn
 				{
 					BiasesPar1[i] = (beta1 * BiasesPar1[i]) + (oneMinusBeta1 * BiasesD1[i] * batchRecip);
 					BiasesPar2[i] = (beta2 * BiasesPar2[i]) + (oneMinusBeta2 * FloatSquare(BiasesD1[i] * batchRecip));
-					Biases[i] -= Clamp<Float>(rate.MaximumRate * BiasesLRM / std::sqrt((BiasesPar2[i] / oneMinusB2) + eps) + (weightDecay * Biases[i]), lowerBound, upperBound) * (BiasesPar1[i] / oneMinusB1);
+					Biases[i] -= Clamp<Float>(rate.MaximumRate * BiasesLRM / std::sqrt((BiasesPar2[i] / oneMinusB2) + eps), lowerBound, upperBound) * (BiasesPar1[i] / oneMinusB1) + (weightDecay * Biases[i]);
 				}
 			}
 
