@@ -683,77 +683,12 @@ namespace dnn
 
 			switch (optimizer)
 			{
-			case Optimizers::AdaDelta:
-			{
-				if (HasWeights)
-					for (auto i = 0ull; i < Weights.size(); i++)
-					{
-						if (std::isnan(WeightsPar1[i]) || std::isinf(WeightsPar1[i]))
-						{
-							dirty = true;
-							break;
-						}
-						if (std::isnan(WeightsPar2[i]) || std::isinf(WeightsPar2[i]))
-						{
-							dirty = true;
-							break;
-						}
-					}
-
-				if (HasBias && !dirty)
-					for (auto i = 0ull; i < BiasCount; i++)
-					{
-						if (std::isnan(BiasesPar1[i]) || std::isinf(BiasesPar1[i]))
-						{
-							dirty = true;
-							break;
-						}
-						if (std::isnan(BiasesPar2[i]) || std::isinf(BiasesPar2[i]))
-						{
-							dirty = true;
-							break;
-						}
-					}
-			}
-			break;
-
+			
 			case Optimizers::AdaBound:
 			case Optimizers::AdaBoundW:
+			case Optimizers::AdaDelta:
 			case Optimizers::Adam:
 			case Optimizers::AdamW:
-			{
-				if (HasWeights)
-					for (auto i = 0ull; i < Weights.size(); i++)
-					{
-						if (std::isnan(WeightsPar1[i]) || std::isinf(WeightsPar1[i]))
-						{
-							dirty = true;
-							break;
-						}
-						if (std::isnan(WeightsPar2[i]) || std::isinf(WeightsPar2[i]))
-						{
-							dirty = true;
-							break;
-						}
-					}
-
-				if (HasBias && !dirty)
-					for (auto i = 0ull; i < BiasCount; i++)
-					{
-						if (std::isnan(BiasesPar1[i]) || std::isinf(BiasesPar1[i]))
-						{
-							dirty = true;
-							break;
-						}
-						if (std::isnan(BiasesPar2[i]) || std::isinf(BiasesPar2[i]))
-						{
-							dirty = true;
-							break;
-						}
-					}
-			}
-			break;
-
 			case Optimizers::Adamax:
 			{
 				if (HasWeights)
@@ -1606,53 +1541,11 @@ namespace dnn
 					if (persistOptimizer)
 						switch (optimizer)
 						{
-						case Optimizers::AdaDelta:
-						{
-							auto weightsPar1 = FloatVector(WeightCount);
-							auto memWeightsPar1 = dnnl::memory(*WeightsMemDesc, Device.engine, WeightsPar1.data());
-							auto weightsPar1Mem = dnnl::memory(*PersistWeightsMemDesc, Device.engine, weightsPar1.data());
-							dnnl::reorder(memWeightsPar1, weightsPar1Mem).execute(Device.stream, { {DNNL_ARG_FROM, memWeightsPar1}, {DNNL_ARG_TO, weightsPar1Mem} });
-							Device.stream.wait();
-							os.write(reinterpret_cast<const char*>(weightsPar1.data()), std::streamsize(WeightCount * sizeof(Float)));
-							if (HasBias)
-								os.write(reinterpret_cast<const char*>(BiasesPar1.data()), std::streamsize(BiasCount * sizeof(Float)));
-							auto weightsPar2 = FloatVector(WeightCount);
-							auto memWeightsPar2 = dnnl::memory(*WeightsMemDesc, Device.engine, WeightsPar2.data());
-							auto weightsPar2Mem = dnnl::memory(*PersistWeightsMemDesc, Device.engine, weightsPar2.data());
-							dnnl::reorder(memWeightsPar2, weightsPar2Mem).execute(Device.stream, { {DNNL_ARG_FROM, memWeightsPar2}, {DNNL_ARG_TO, weightsPar2Mem} });
-							Device.stream.wait();
-							os.write(reinterpret_cast<const char*>(weightsPar2.data()), std::streamsize(WeightCount * sizeof(Float)));
-							if (HasBias)
-								os.write(reinterpret_cast<const char*>(BiasesPar2.data()), std::streamsize(BiasCount * sizeof(Float)));
-						}
-						break;
-
 						case Optimizers::AdaBound:
 						case Optimizers::AdaBoundW:
-						{
-							auto weightsPar1 = FloatVector(WeightCount);
-							auto memWeightsPar1 = dnnl::memory(*WeightsMemDesc, Device.engine, WeightsPar1.data());
-							auto weightsPar1Mem = dnnl::memory(*PersistWeightsMemDesc, Device.engine, weightsPar1.data());
-							dnnl::reorder(memWeightsPar1, weightsPar1Mem).execute(Device.stream, { {DNNL_ARG_FROM, memWeightsPar1}, {DNNL_ARG_TO, weightsPar1Mem} });
-							Device.stream.wait();
-							os.write(reinterpret_cast<const char*>(weightsPar1.data()), std::streamsize(WeightCount * sizeof(Float)));
-							if (HasBias)
-								os.write(reinterpret_cast<const char*>(BiasesPar1.data()), std::streamsize(BiasCount * sizeof(Float)));
-							auto weightsPar2 = FloatVector(WeightCount);
-							auto memWeightsPar2 = dnnl::memory(*WeightsMemDesc, Device.engine, WeightsPar2.data());
-							auto weightsPar2Mem = dnnl::memory(*PersistWeightsMemDesc, Device.engine, weightsPar2.data());
-							dnnl::reorder(memWeightsPar2, weightsPar2Mem).execute(Device.stream, { {DNNL_ARG_FROM, memWeightsPar2}, {DNNL_ARG_TO, weightsPar2Mem} });
-							Device.stream.wait();
-							os.write(reinterpret_cast<const char*>(weightsPar2.data()), std::streamsize(WeightCount * sizeof(Float)));
-							if (HasBias)
-								os.write(reinterpret_cast<const char*>(BiasesPar2.data()), std::streamsize(BiasCount * sizeof(Float)));
-							os.write(reinterpret_cast<const char*>(&B1), std::streamsize(sizeof(Float)));
-							os.write(reinterpret_cast<const char*>(&B2), std::streamsize(sizeof(Float)));
-							os.write(reinterpret_cast<const char*>(&Gamma), std::streamsize(sizeof(Float)));
-						}
-						break;
-
+						case Optimizers::AdaDelta:
 						case Optimizers::Adam:
+						case Optimizers::Adamax:
 						case Optimizers::AdamW:
 						{
 							auto weightsPar1 = FloatVector(WeightCount);
@@ -1671,30 +1564,41 @@ namespace dnn
 							os.write(reinterpret_cast<const char*>(weightsPar2.data()), std::streamsize(WeightCount * sizeof(Float)));
 							if (HasBias)
 								os.write(reinterpret_cast<const char*>(BiasesPar2.data()), std::streamsize(BiasCount * sizeof(Float)));
-							os.write(reinterpret_cast<const char*>(&B1), std::streamsize(sizeof(Float)));
-							os.write(reinterpret_cast<const char*>(&B2), std::streamsize(sizeof(Float)));
-						}
-						break;
 
-						case Optimizers::Adamax:
-						{
-							auto weightsPar1 = FloatVector(WeightCount);
-							auto memWeightsPar1 = dnnl::memory(*WeightsMemDesc, Device.engine, WeightsPar1.data());
-							auto weightsPar1Mem = dnnl::memory(*PersistWeightsMemDesc, Device.engine, weightsPar1.data());
-							dnnl::reorder(memWeightsPar1, weightsPar1Mem).execute(Device.stream, { {DNNL_ARG_FROM, memWeightsPar1}, {DNNL_ARG_TO, weightsPar1Mem} });
-							Device.stream.wait();
-							os.write(reinterpret_cast<const char*>(weightsPar1.data()), std::streamsize(WeightCount * sizeof(Float)));
-							if (HasBias)
-								os.write(reinterpret_cast<const char*>(BiasesPar1.data()), std::streamsize(BiasCount * sizeof(Float)));
-							auto weightsPar2 = FloatVector(WeightCount);
-							auto memWeightsPar2 = dnnl::memory(*WeightsMemDesc, Device.engine, WeightsPar2.data());
-							auto weightsPar2Mem = dnnl::memory(*PersistWeightsMemDesc, Device.engine, weightsPar2.data());
-							dnnl::reorder(memWeightsPar2, weightsPar2Mem).execute(Device.stream, { {DNNL_ARG_FROM, memWeightsPar2}, {DNNL_ARG_TO, weightsPar2Mem} });
-							Device.stream.wait();
-							os.write(reinterpret_cast<const char*>(weightsPar2.data()), std::streamsize(WeightCount * sizeof(Float)));
-							if (HasBias)
-								os.write(reinterpret_cast<const char*>(BiasesPar2.data()), std::streamsize(BiasCount * sizeof(Float)));
-							os.write(reinterpret_cast<const char*>(&B1), std::streamsize(sizeof(Float)));
+							switch (optimizer)
+							{
+							case Optimizers::AdaBound:
+							case Optimizers::AdaBoundW:
+							case Optimizers::Adam:
+							case Optimizers::Adamax:
+							case Optimizers::AdamW:
+								os.write(reinterpret_cast<const char*>(&B1), std::streamsize(sizeof(Float)));
+								break;
+							default:
+								break;
+							}
+
+							switch (optimizer)
+							{
+							case Optimizers::AdaBound:
+							case Optimizers::AdaBoundW:
+							case Optimizers::Adam:
+							case Optimizers::AdamW:
+								os.write(reinterpret_cast<const char*>(&B2), std::streamsize(sizeof(Float)));
+								break;
+							default:
+								break;
+							}
+
+							switch (optimizer)
+							{
+							case Optimizers::AdaBound:
+							case Optimizers::AdaBoundW:
+								os.write(reinterpret_cast<const char*>(&Gamma), std::streamsize(sizeof(Float)));
+								break;
+							default:
+								break;
+							}
 						}
 						break;
 
@@ -1728,33 +1632,11 @@ namespace dnn
 					if (persistOptimizer)
 						switch (optimizer)
 						{
-						case Optimizers::AdaDelta:
-						{
-							os.write(reinterpret_cast<const char*>(WeightsPar1.data()), std::streamsize(WeightCount * sizeof(Float)));
-							if (HasBias)
-								os.write(reinterpret_cast<const char*>(BiasesPar1.data()), std::streamsize(BiasCount * sizeof(Float)));
-							os.write(reinterpret_cast<const char*>(WeightsPar2.data()), std::streamsize(WeightCount * sizeof(Float)));
-							if (HasBias)
-								os.write(reinterpret_cast<const char*>(BiasesPar2.data()), std::streamsize(BiasCount * sizeof(Float)));
-						}
-						break;
-
 						case Optimizers::AdaBound:
 						case Optimizers::AdaBoundW:
-						{
-							os.write(reinterpret_cast<const char*>(WeightsPar1.data()), std::streamsize(WeightCount * sizeof(Float)));
-							if (HasBias)
-								os.write(reinterpret_cast<const char*>(BiasesPar1.data()), std::streamsize(BiasCount * sizeof(Float)));
-							os.write(reinterpret_cast<const char*>(WeightsPar2.data()), std::streamsize(WeightCount * sizeof(Float)));
-							if (HasBias)
-								os.write(reinterpret_cast<const char*>(BiasesPar2.data()), std::streamsize(BiasCount * sizeof(Float)));
-							os.write(reinterpret_cast<const char*>(&B1), std::streamsize(sizeof(Float)));
-							os.write(reinterpret_cast<const char*>(&B2), std::streamsize(sizeof(Float)));
-							os.write(reinterpret_cast<const char*>(&Gamma), std::streamsize(sizeof(Float)));
-						}
-						break;
-
+						case Optimizers::AdaDelta:
 						case Optimizers::Adam:
+						case Optimizers::Adamax:
 						case Optimizers::AdamW:
 						{
 							os.write(reinterpret_cast<const char*>(WeightsPar1.data()), std::streamsize(WeightCount * sizeof(Float)));
@@ -1763,20 +1645,41 @@ namespace dnn
 							os.write(reinterpret_cast<const char*>(WeightsPar2.data()), std::streamsize(WeightCount * sizeof(Float)));
 							if (HasBias)
 								os.write(reinterpret_cast<const char*>(BiasesPar2.data()), std::streamsize(BiasCount * sizeof(Float)));
-							os.write(reinterpret_cast<const char*>(&B1), std::streamsize(sizeof(Float)));
-							os.write(reinterpret_cast<const char*>(&B2), std::streamsize(sizeof(Float)));
-						}
-						break;
 
-						case Optimizers::Adamax:
-						{
-							os.write(reinterpret_cast<const char*>(WeightsPar1.data()), std::streamsize(WeightCount * sizeof(Float)));
-							if (HasBias)
-								os.write(reinterpret_cast<const char*>(BiasesPar1.data()), std::streamsize(BiasCount * sizeof(Float)));
-							os.write(reinterpret_cast<const char*>(WeightsPar2.data()), std::streamsize(WeightCount * sizeof(Float)));
-							if (HasBias)
-								os.write(reinterpret_cast<const char*>(BiasesPar2.data()), std::streamsize(BiasCount * sizeof(Float)));
-							os.write(reinterpret_cast<const char*>(&B1), std::streamsize(sizeof(Float)));
+							switch (optimizer)
+							{
+							case Optimizers::AdaBound:
+							case Optimizers::AdaBoundW:
+							case Optimizers::Adam:
+							case Optimizers::Adamax:
+							case Optimizers::AdamW:
+								os.write(reinterpret_cast<const char*>(&B1), std::streamsize(sizeof(Float)));
+								break;
+							default:
+								break;
+							}
+
+							switch (optimizer)
+							{
+							case Optimizers::AdaBound:
+							case Optimizers::AdaBoundW:
+							case Optimizers::Adam:
+							case Optimizers::AdamW:
+								os.write(reinterpret_cast<const char*>(&B2), std::streamsize(sizeof(Float)));
+								break;
+							default:
+								break;
+							}
+
+							switch (optimizer)
+							{
+							case Optimizers::AdaBound:
+							case Optimizers::AdaBoundW:
+								os.write(reinterpret_cast<const char*>(&Gamma), std::streamsize(sizeof(Float)));
+								break;
+							default:
+								break;
+							}
 						}
 						break;
 
@@ -1819,52 +1722,11 @@ namespace dnn
 					if (persistOptimizer)
 						switch (optimizer)
 						{
-						case Optimizers::AdaDelta:
-						{
-							auto weightsPar1 = FloatVector(WeightCount);
-							is.read(reinterpret_cast<char*>(weightsPar1.data()), std::streamsize(WeightCount * sizeof(Float)));
-							auto memWeightsPar1 = dnnl::memory(*PersistWeightsMemDesc, Device.engine, weightsPar1.data());
-							auto weightsPar1Mem = dnnl::memory(*WeightsMemDesc, Device.engine, WeightsPar1.data());
-							dnnl::reorder(memWeightsPar1, weightsPar1Mem).execute(Device.stream, { {DNNL_ARG_FROM, memWeightsPar1}, {DNNL_ARG_TO, weightsPar1Mem} });
-							Device.stream.wait();
-							if (HasBias)
-								is.read(reinterpret_cast<char*>(BiasesPar1.data()), std::streamsize(BiasCount * sizeof(Float)));
-							auto weightsPar2 = FloatVector(WeightCount);
-							is.read(reinterpret_cast<char*>(weightsPar2.data()), std::streamsize(WeightCount * sizeof(Float)));
-							auto memWeightsPar2 = dnnl::memory(*PersistWeightsMemDesc, Device.engine, weightsPar2.data());
-							auto weightsPar2Mem = dnnl::memory(*WeightsMemDesc, Device.engine, WeightsPar2.data());
-							dnnl::reorder(memWeightsPar2, weightsPar2Mem).execute(Device.stream, { {DNNL_ARG_FROM, memWeightsPar2}, {DNNL_ARG_TO, weightsPar2Mem} });
-							Device.stream.wait();
-							if (HasBias)
-								is.read(reinterpret_cast<char*>(BiasesPar2.data()), std::streamsize(BiasCount * sizeof(Float)));
-						}
-						break;
-
 						case Optimizers::AdaBound:
 						case Optimizers::AdaBoundW:
-						{
-							auto weightsPar1 = FloatVector(WeightCount);
-							is.read(reinterpret_cast<char*>(weightsPar1.data()), std::streamsize(WeightCount * sizeof(Float)));
-							auto memWeightsPar1 = dnnl::memory(*PersistWeightsMemDesc, Device.engine, weightsPar1.data());
-							auto weightsPar1Mem = dnnl::memory(*WeightsMemDesc, Device.engine, WeightsPar1.data());
-							dnnl::reorder(memWeightsPar1, weightsPar1Mem).execute(Device.stream, { {DNNL_ARG_FROM, memWeightsPar1}, {DNNL_ARG_TO, weightsPar1Mem} });
-							Device.stream.wait();
-							if (HasBias)
-								is.read(reinterpret_cast<char*>(BiasesPar1.data()), std::streamsize(BiasCount * sizeof(Float)));
-							auto weightsPar2 = FloatVector(WeightCount);
-							is.read(reinterpret_cast<char*>(weightsPar2.data()), std::streamsize(WeightCount * sizeof(Float)));
-							auto memWeightsPar2 = dnnl::memory(*PersistWeightsMemDesc, Device.engine, weightsPar2.data());
-							auto weightsPar2Mem = dnnl::memory(*WeightsMemDesc, Device.engine, WeightsPar2.data());
-							dnnl::reorder(memWeightsPar2, weightsPar2Mem).execute(Device.stream, { {DNNL_ARG_FROM, memWeightsPar2}, {DNNL_ARG_TO, weightsPar2Mem} });
-							Device.stream.wait();
-							if (HasBias)
-								is.read(reinterpret_cast<char*>(BiasesPar2.data()), std::streamsize(BiasCount * sizeof(Float)));
-							is.read(reinterpret_cast<char*>(&B1), std::streamsize(sizeof(Float)));
-							is.read(reinterpret_cast<char*>(&B2), std::streamsize(sizeof(Float)));
-							is.read(reinterpret_cast<char*>(&Gamma), std::streamsize(sizeof(Float)));
-						}
-						break;
+						case Optimizers::AdaDelta:
 						case Optimizers::Adam:
+						case Optimizers::Adamax:
 						case Optimizers::AdamW:
 						{
 							auto weightsPar1 = FloatVector(WeightCount);
@@ -1883,30 +1745,41 @@ namespace dnn
 							Device.stream.wait();
 							if (HasBias)
 								is.read(reinterpret_cast<char*>(BiasesPar2.data()), std::streamsize(BiasCount * sizeof(Float)));
-							is.read(reinterpret_cast<char*>(&B1), std::streamsize(sizeof(Float)));
-							is.read(reinterpret_cast<char*>(&B2), std::streamsize(sizeof(Float)));
-						}
-						break;
 
-						case Optimizers::Adamax:
-						{
-							auto weightsPar1 = FloatVector(WeightCount);
-							is.read(reinterpret_cast<char*>(weightsPar1.data()), std::streamsize(WeightCount * sizeof(Float)));
-							auto memWeightsPar1 = dnnl::memory(*PersistWeightsMemDesc, Device.engine, weightsPar1.data());
-							auto weightsPar1Mem = dnnl::memory(*WeightsMemDesc, Device.engine, WeightsPar1.data());
-							dnnl::reorder(memWeightsPar1, weightsPar1Mem).execute(Device.stream, { {DNNL_ARG_FROM, memWeightsPar1}, {DNNL_ARG_TO, weightsPar1Mem} });
-							Device.stream.wait();
-							if (HasBias)
-								is.read(reinterpret_cast<char*>(BiasesPar1.data()), std::streamsize(BiasCount * sizeof(Float)));
-							auto weightsPar2 = FloatVector(WeightCount);
-							is.read(reinterpret_cast<char*>(weightsPar2.data()), std::streamsize(WeightCount * sizeof(Float)));
-							auto memWeightsPar2 = dnnl::memory(*PersistWeightsMemDesc, Device.engine, weightsPar2.data());
-							auto weightsPar2Mem = dnnl::memory(*WeightsMemDesc, Device.engine, WeightsPar2.data());
-							dnnl::reorder(memWeightsPar2, weightsPar2Mem).execute(Device.stream, { {DNNL_ARG_FROM, memWeightsPar2}, {DNNL_ARG_TO, weightsPar2Mem} });
-							Device.stream.wait();
-							if (HasBias)
-								is.read(reinterpret_cast<char*>(BiasesPar2.data()), std::streamsize(BiasCount * sizeof(Float)));
-							is.read(reinterpret_cast<char*>(&B1), std::streamsize(sizeof(Float)));
+							switch (optimizer)
+							{
+							case Optimizers::AdaBound:
+							case Optimizers::AdaBoundW:
+							case Optimizers::Adam:
+							case Optimizers::Adamax:
+							case Optimizers::AdamW:
+								is.read(reinterpret_cast<char*>(&B1), std::streamsize(sizeof(Float)));
+								break;
+							default:
+								break;
+							}
+
+							switch (optimizer)
+							{
+							case Optimizers::AdaBound:
+							case Optimizers::AdaBoundW:
+							case Optimizers::Adam:
+							case Optimizers::AdamW:
+								is.read(reinterpret_cast<char*>(&B2), std::streamsize(sizeof(Float)));
+								break;
+							default:
+								break;
+							}
+
+							switch (optimizer)
+							{
+							case Optimizers::AdaBound:
+							case Optimizers::AdaBoundW:
+								is.read(reinterpret_cast<char*>(&Gamma), std::streamsize(sizeof(Float)));
+								break;
+							default:
+								break;
+							}
 						}
 						break;
 
@@ -1940,32 +1813,11 @@ namespace dnn
 					if (persistOptimizer)
 						switch (optimizer)
 						{
-						case Optimizers::AdaDelta:
-						{
-							is.read(reinterpret_cast<char*>(WeightsPar1.data()), std::streamsize(WeightCount * sizeof(Float)));
-							if (HasBias)
-								is.read(reinterpret_cast<char*>(BiasesPar1.data()), std::streamsize(BiasCount * sizeof(Float)));
-							is.read(reinterpret_cast<char*>(WeightsPar2.data()), std::streamsize(WeightCount * sizeof(Float)));
-							if (HasBias)
-								is.read(reinterpret_cast<char*>(BiasesPar2.data()), std::streamsize(BiasCount * sizeof(Float)));
-						}
-						break;
-
 						case Optimizers::AdaBound:
 						case Optimizers::AdaBoundW:
-						{
-							is.read(reinterpret_cast<char*>(WeightsPar1.data()), std::streamsize(WeightCount * sizeof(Float)));
-							if (HasBias)
-								is.read(reinterpret_cast<char*>(BiasesPar1.data()), std::streamsize(BiasCount * sizeof(Float)));
-							is.read(reinterpret_cast<char*>(WeightsPar2.data()), std::streamsize(WeightCount * sizeof(Float)));
-							if (HasBias)
-								is.read(reinterpret_cast<char*>(BiasesPar2.data()), std::streamsize(BiasCount * sizeof(Float)));
-							is.read(reinterpret_cast<char*>(&B1), std::streamsize(sizeof(Float)));
-							is.read(reinterpret_cast<char*>(&B2), std::streamsize(sizeof(Float)));
-							is.read(reinterpret_cast<char*>(&Gamma), std::streamsize(sizeof(Float)));
-						}
-						break;
+						case Optimizers::AdaDelta:
 						case Optimizers::Adam:
+						case Optimizers::Adamax:
 						case Optimizers::AdamW:
 						{
 							is.read(reinterpret_cast<char*>(WeightsPar1.data()), std::streamsize(WeightCount * sizeof(Float)));
@@ -1974,20 +1826,41 @@ namespace dnn
 							is.read(reinterpret_cast<char*>(WeightsPar2.data()), std::streamsize(WeightCount * sizeof(Float)));
 							if (HasBias)
 								is.read(reinterpret_cast<char*>(BiasesPar2.data()), std::streamsize(BiasCount * sizeof(Float)));
-							is.read(reinterpret_cast<char*>(&B1), std::streamsize(sizeof(Float)));
-							is.read(reinterpret_cast<char*>(&B2), std::streamsize(sizeof(Float)));
-						}
-						break;
 
-						case Optimizers::Adamax:
-						{
-							is.read(reinterpret_cast<char*>(WeightsPar1.data()), std::streamsize(WeightCount * sizeof(Float)));
-							if (HasBias)
-								is.read(reinterpret_cast<char*>(BiasesPar1.data()), std::streamsize(BiasCount * sizeof(Float)));
-							is.read(reinterpret_cast<char*>(WeightsPar2.data()), std::streamsize(WeightCount * sizeof(Float)));
-							if (HasBias)
-								is.read(reinterpret_cast<char*>(BiasesPar2.data()), std::streamsize(BiasCount * sizeof(Float)));
-							is.read(reinterpret_cast<char*>(&B1), std::streamsize(sizeof(Float)));
+							switch (optimizer)
+							{
+							case Optimizers::AdaBound:
+							case Optimizers::AdaBoundW:
+							case Optimizers::Adam:
+							case Optimizers::Adamax:
+							case Optimizers::AdamW:
+								is.read(reinterpret_cast<char*>(&B1), std::streamsize(sizeof(Float)));
+								break;
+							default:
+								break;
+							}
+
+							switch (optimizer)
+							{
+							case Optimizers::AdaBound:
+							case Optimizers::AdaBoundW:
+							case Optimizers::Adam:
+							case Optimizers::AdamW:
+								is.read(reinterpret_cast<char*>(&B2), std::streamsize(sizeof(Float)));
+								break;
+							default:
+								break;
+							}
+
+							switch (optimizer)
+							{
+							case Optimizers::AdaBound:
+							case Optimizers::AdaBoundW:
+								is.read(reinterpret_cast<char*>(&Gamma), std::streamsize(sizeof(Float)));
+								break;
+							default:
+								break;
+							}
 						}
 						break;
 
@@ -2022,37 +1895,51 @@ namespace dnn
 				{
 					switch (optimizer)
 					{
+					case Optimizers::AdaBound:
+					case Optimizers::AdaBoundW:
 					case Optimizers::AdaDelta:
+					case Optimizers::Adam:
+					case Optimizers::Adamax:
+					case Optimizers::AdamW:
 					{
 						weightsSize += 3 * WeightCount * sizeof(Float);
 						if (HasBias)
 							weightsSize += 3 * BiasCount * sizeof(Float);
-					}
-					break;
 
-					case Optimizers::AdaBound:
-					case Optimizers::AdaBoundW:
-					{
-						weightsSize += 3 * WeightCount * sizeof(Float) + 3 * sizeof(Float);
-						if (HasBias)
-							weightsSize += 3 * BiasCount * sizeof(Float);
-					}
-					break;
+						switch (optimizer)
+						{
+						case Optimizers::AdaBound:
+						case Optimizers::AdaBoundW:
+						case Optimizers::Adam:
+						case Optimizers::Adamax:
+						case Optimizers::AdamW:
+							weightsSize += sizeof(Float);
+							break;
+						default:
+							break;
+						}
 
-					case Optimizers::Adam:
-					case Optimizers::AdamW:
-					{
-						weightsSize += 3 * WeightCount * sizeof(Float) + 2 * sizeof(Float);
-						if (HasBias)
-							weightsSize += 3 * BiasCount * sizeof(Float);
-					}
-					break;
+						switch (optimizer)
+						{
+						case Optimizers::AdaBound:
+						case Optimizers::AdaBoundW:
+						case Optimizers::Adam:
+						case Optimizers::AdamW:
+							weightsSize += sizeof(Float);
+							break;
+						default:
+							break;
+						}
 
-					case Optimizers::Adamax:
-					{
-						weightsSize += 3 * WeightCount * sizeof(Float) + sizeof(Float);
-						if (HasBias)
-							weightsSize += 3 * BiasCount * sizeof(Float);
+						switch (optimizer)
+						{
+						case Optimizers::AdaBound:
+						case Optimizers::AdaBoundW:
+							weightsSize += sizeof(Float);
+							break;
+						default:
+							break;
+						}
 					}
 					break;
 
