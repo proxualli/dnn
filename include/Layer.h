@@ -1222,7 +1222,7 @@ namespace dnn
 					WeightsD1[i] += weightDecay * Weights[i];
 					WeightsPar1[i] = (beta1 * WeightsPar1[i]) + (oneMinusBeta1 * WeightsD1[i] * batchRecip);
 					WeightsPar2[i] = (beta2 * WeightsPar2[i]) + (oneMinusBeta2 * FloatSquare(WeightsD1[i] * batchRecip));
-					Weights[i] -= Clamp<Float>(step_size / (std::sqrt(std::max(WeightsPar1[i], WeightsPar2[i])) + eps), lowerBound, upperBound) * WeightsPar1[i];
+					Weights[i] -= Clamp<Float>(step_size / (std::sqrt(WeightsPar2[i]) + eps), lowerBound, upperBound) * WeightsPar1[i];
 				}
 			else
 				PRAGMA_OMP_SIMD()
@@ -1258,7 +1258,7 @@ namespace dnn
 						BiasesD1[i] += weightDecay * Biases[i];
 						BiasesPar1[i] = (beta1 * BiasesPar1[i]) + (oneMinusBeta1 * BiasesD1[i] * batchRecip);
 						BiasesPar2[i] = (beta2 * BiasesPar2[i]) + (oneMinusBeta2 * FloatSquare(BiasesD1[i] * batchRecip));
-						Biases[i] -= Clamp<Float>(step_size / (std::sqrt(BiasesPar2[i]) + eps), lowerBound, upperBound) * BiasesPar1[i];
+						Biases[i] -= Clamp<Float>(step_size / (std::sqrt(std::max(BiasesPar1[i], BiasesPar2[i])) + eps), lowerBound, upperBound) * BiasesPar1[i];
 					}
 			}
 			
