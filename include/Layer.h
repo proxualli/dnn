@@ -1564,7 +1564,7 @@ namespace dnn
 			{
 				WeightsD1[i] += l2Penalty * Weights[i];
 				WeightsPar1[i] = (momentum * WeightsPar1[i]) - (lr * WeightsD1[i]);
-				Weights[i] -= WeightsPar1[i];
+				Weights[i] += WeightsPar1[i];
 			}
 
 			if (HasBias)
@@ -1574,7 +1574,7 @@ namespace dnn
 				for (auto i = 0ull; i < BiasCount; i++)
 				{
 					BiasesPar1[i] = momentum * BiasesPar1[i] - (lr * BiasesD1[i]);
-					Biases[i] -= BiasesPar1[i];
+					Biases[i] += BiasesPar1[i];
 				}
 			}
 		}
