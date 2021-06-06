@@ -14,11 +14,13 @@ namespace dnn
 		Adam = 4,
 		Adamax = 5,
 		AdamW = 6,
-		NAG = 7,
-		RMSProp = 8,
-		SGD = 9,
-		SGDMomentum = 10,
-		SGDW = 11
+		AmsBound = 7,
+		AmsBoundW = 8,
+		NAG = 9,
+		RMSProp = 10,
+		SGD = 11,
+		SGDMomentum = 12,
+		SGDW = 13
 	};
 
 	struct TrainingRate
@@ -690,6 +692,8 @@ namespace dnn
 			case Optimizers::Adam:
 			case Optimizers::AdamW:
 			case Optimizers::Adamax:
+			case Optimizers::AmsBound:
+			case Optimizers::AmsBoundW:
 			{
 				if (HasWeights)
 					for (auto i = 0ull; i < Weights.size(); i++)
@@ -781,6 +785,8 @@ namespace dnn
 				case Optimizers::Adam:
 				case Optimizers::Adamax:
 				case Optimizers::AdamW:
+				case Optimizers::AmsBound:
+				case Optimizers::AmsBoundW:
 					WeightsPar1.resize(weightsSize);
 					WeightsPar2.resize(weightsSize);
 					BiasesPar1.resize(biasesSize);
@@ -832,6 +838,8 @@ namespace dnn
 				case Optimizers::Adam:
 				case Optimizers::Adamax:
 				case Optimizers::AdamW:
+				case Optimizers::AmsBound:
+				case Optimizers::AmsBoundW:
 					WeightsPar1.resize(weightsSize, Float(0));
 					WeightsPar2.resize(weightsSize, Float(0));
 					BiasesPar1.resize(biasesSize, Float(0));
@@ -1109,6 +1117,12 @@ namespace dnn
 					break;
 				case Optimizers::AdamW:
 					AdamW(rate);
+					break;
+				case Optimizers::AmsBound:
+					AdaBound(rate, true);
+					break;
+				case Optimizers::AmsBoundW:
+					AdaBoundW(rate, true);
 					break;
 				case Optimizers::NAG:
 					NAG(rate);
@@ -1596,6 +1610,8 @@ namespace dnn
 						case Optimizers::Adam:
 						case Optimizers::Adamax:
 						case Optimizers::AdamW:
+						case Optimizers::AmsBound:
+						case Optimizers::AmsBoundW:
 						{
 							auto weightsPar1 = FloatVector(WeightCount);
 							auto memWeightsPar1 = dnnl::memory(*WeightsMemDesc, Device.engine, WeightsPar1.data());
@@ -1621,6 +1637,8 @@ namespace dnn
 							case Optimizers::Adam:
 							case Optimizers::Adamax:
 							case Optimizers::AdamW:
+							case Optimizers::AmsBound:
+							case Optimizers::AmsBoundW:
 								os.write(reinterpret_cast<const char*>(&B1), std::streamsize(sizeof(Float)));
 								break;
 							default:
@@ -1633,6 +1651,8 @@ namespace dnn
 							case Optimizers::AdaBoundW:
 							case Optimizers::Adam:
 							case Optimizers::AdamW:
+							case Optimizers::AmsBound:
+							case Optimizers::AmsBoundW:
 								os.write(reinterpret_cast<const char*>(&B2), std::streamsize(sizeof(Float)));
 								break;
 							default:
@@ -1643,6 +1663,8 @@ namespace dnn
 							{
 							case Optimizers::AdaBound:
 							case Optimizers::AdaBoundW:
+							case Optimizers::AmsBound:
+							case Optimizers::AmsBoundW:
 								os.write(reinterpret_cast<const char*>(&Gamma), std::streamsize(sizeof(Float)));
 								break;
 							default:
@@ -1687,6 +1709,8 @@ namespace dnn
 						case Optimizers::Adam:
 						case Optimizers::Adamax:
 						case Optimizers::AdamW:
+						case Optimizers::AmsBound:
+						case Optimizers::AmsBoundW:
 						{
 							os.write(reinterpret_cast<const char*>(WeightsPar1.data()), std::streamsize(WeightCount * sizeof(Float)));
 							if (HasBias)
@@ -1702,6 +1726,8 @@ namespace dnn
 							case Optimizers::Adam:
 							case Optimizers::Adamax:
 							case Optimizers::AdamW:
+							case Optimizers::AmsBound:
+							case Optimizers::AmsBoundW:
 								os.write(reinterpret_cast<const char*>(&B1), std::streamsize(sizeof(Float)));
 								break;
 							default:
@@ -1714,6 +1740,8 @@ namespace dnn
 							case Optimizers::AdaBoundW:
 							case Optimizers::Adam:
 							case Optimizers::AdamW:
+							case Optimizers::AmsBound:
+							case Optimizers::AmsBoundW:
 								os.write(reinterpret_cast<const char*>(&B2), std::streamsize(sizeof(Float)));
 								break;
 							default:
@@ -1724,6 +1752,8 @@ namespace dnn
 							{
 							case Optimizers::AdaBound:
 							case Optimizers::AdaBoundW:
+							case Optimizers::AmsBound:
+							case Optimizers::AmsBoundW:
 								os.write(reinterpret_cast<const char*>(&Gamma), std::streamsize(sizeof(Float)));
 								break;
 							default:
@@ -1777,6 +1807,8 @@ namespace dnn
 						case Optimizers::Adam:
 						case Optimizers::Adamax:
 						case Optimizers::AdamW:
+						case Optimizers::AmsBound:
+						case Optimizers::AmsBoundW:
 						{
 							auto weightsPar1 = FloatVector(WeightCount);
 							is.read(reinterpret_cast<char*>(weightsPar1.data()), std::streamsize(WeightCount * sizeof(Float)));
@@ -1802,6 +1834,8 @@ namespace dnn
 							case Optimizers::Adam:
 							case Optimizers::Adamax:
 							case Optimizers::AdamW:
+							case Optimizers::AmsBound:
+							case Optimizers::AmsBoundW:
 								is.read(reinterpret_cast<char*>(&B1), std::streamsize(sizeof(Float)));
 								break;
 							default:
@@ -1814,6 +1848,8 @@ namespace dnn
 							case Optimizers::AdaBoundW:
 							case Optimizers::Adam:
 							case Optimizers::AdamW:
+							case Optimizers::AmsBound:
+							case Optimizers::AmsBoundW:
 								is.read(reinterpret_cast<char*>(&B2), std::streamsize(sizeof(Float)));
 								break;
 							default:
@@ -1824,6 +1860,8 @@ namespace dnn
 							{
 							case Optimizers::AdaBound:
 							case Optimizers::AdaBoundW:
+							case Optimizers::AmsBound:
+							case Optimizers::AmsBoundW:
 								is.read(reinterpret_cast<char*>(&Gamma), std::streamsize(sizeof(Float)));
 								break;
 							default:
@@ -1868,6 +1906,8 @@ namespace dnn
 						case Optimizers::Adam:
 						case Optimizers::Adamax:
 						case Optimizers::AdamW:
+						case Optimizers::AmsBound:
+						case Optimizers::AmsBoundW:
 						{
 							is.read(reinterpret_cast<char*>(WeightsPar1.data()), std::streamsize(WeightCount * sizeof(Float)));
 							if (HasBias)
@@ -1883,6 +1923,8 @@ namespace dnn
 							case Optimizers::Adam:
 							case Optimizers::Adamax:
 							case Optimizers::AdamW:
+							case Optimizers::AmsBound:
+							case Optimizers::AmsBoundW:
 								is.read(reinterpret_cast<char*>(&B1), std::streamsize(sizeof(Float)));
 								break;
 							default:
@@ -1895,6 +1937,8 @@ namespace dnn
 							case Optimizers::AdaBoundW:
 							case Optimizers::Adam:
 							case Optimizers::AdamW:
+							case Optimizers::AmsBound:
+							case Optimizers::AmsBoundW:
 								is.read(reinterpret_cast<char*>(&B2), std::streamsize(sizeof(Float)));
 								break;
 							default:
@@ -1905,6 +1949,8 @@ namespace dnn
 							{
 							case Optimizers::AdaBound:
 							case Optimizers::AdaBoundW:
+							case Optimizers::AmsBound:
+							case Optimizers::AmsBoundW:
 								is.read(reinterpret_cast<char*>(&Gamma), std::streamsize(sizeof(Float)));
 								break;
 							default:
@@ -1950,6 +1996,8 @@ namespace dnn
 					case Optimizers::Adam:
 					case Optimizers::Adamax:
 					case Optimizers::AdamW:
+					case Optimizers::AmsBound:
+					case Optimizers::AmsBoundW:
 					{
 						weightsSize += 3 * WeightCount * sizeof(Float);
 						if (HasBias)
@@ -1962,6 +2010,8 @@ namespace dnn
 						case Optimizers::Adam:
 						case Optimizers::Adamax:
 						case Optimizers::AdamW:
+						case Optimizers::AmsBound:
+						case Optimizers::AmsBoundW:
 							weightsSize += sizeof(Float);
 							break;
 						default:
@@ -1974,6 +2024,8 @@ namespace dnn
 						case Optimizers::AdaBoundW:
 						case Optimizers::Adam:
 						case Optimizers::AdamW:
+						case Optimizers::AmsBound:
+						case Optimizers::AmsBoundW:
 							weightsSize += sizeof(Float);
 							break;
 						default:
@@ -1984,6 +2036,8 @@ namespace dnn
 						{
 						case Optimizers::AdaBound:
 						case Optimizers::AdaBoundW:
+						case Optimizers::AmsBound:
+						case Optimizers::AmsBoundW:
 							weightsSize += sizeof(Float);
 							break;
 						default:
