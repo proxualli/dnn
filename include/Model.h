@@ -1725,7 +1725,7 @@ namespace dnn
 			const auto& optimizers = magic_enum::enum_entries<Optimizers>();
 			for (const auto& optimizer : optimizers)
 			{
-				const auto optimizerString = std::string("-") + StringToLower(std::string(optimizer.second));
+				const auto& optimizerString = std::string("-") + StringToLower(std::string(optimizer.second)) + std::string("-");
 				if (fileName.find(optimizerString) != std::string::npos)
 					return optimizer.first;
 			}
