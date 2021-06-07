@@ -1159,7 +1159,7 @@ namespace dnn
 							// save the weights
 							State.store(States::SaveWeights);
 							auto directory = DataProv->StorageDirectory / std::string("definitions") / (Name + std::string("-weights"));
-							auto fileName = (directory / (std::to_string(CurrentEpoch) + std::string("-") + std::to_string(CurrentCycle) + std::string("-") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(Optimizer))) + std::string("-") + std::to_string(TestErrors) + std::string(".bin"))).string();
+							auto fileName = (directory / (std::to_string(CurrentEpoch) + std::string("-") + std::to_string(CurrentCycle) + std::string("-(") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(Optimizer))) + std::string(")-") + std::to_string(TrainErrors) + std::string("-") + std::to_string(TestErrors) + std::string(".bin"))).string();
 
 							std::filesystem::create_directories(directory);
 							SaveWeights(fileName, PersistOptimizer);
@@ -1725,7 +1725,7 @@ namespace dnn
 			const auto& optimizers = magic_enum::enum_entries<Optimizers>();
 			for (const auto& optimizer : optimizers)
 			{
-				const auto& optimizerString = std::string("-") + StringToLower(std::string(optimizer.second)) + std::string("-");
+				const auto& optimizerString = std::string("(") + StringToLower(std::string(optimizer.second)) + std::string(")");
 				if (fileName.find(optimizerString) != std::string::npos)
 					return optimizer.first;
 			}
