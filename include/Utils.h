@@ -150,7 +150,7 @@ namespace dnn
 	static void InitArray(T* destination, const std::size_t elements, const int initValue = 0) noexcept
 	{
 		if (elements < 1048576ull)
-			::memset(destination, 0, elements * sizeof(T));
+			::memset(destination, initValue, elements * sizeof(T));
 		else
 		{
 			const auto threads = elements < 2097152ull ? 2ull : elements < 8338608ull ? 4ull : 8ull;
