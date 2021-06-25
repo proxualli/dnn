@@ -2418,7 +2418,7 @@ namespace dnn
 			{
 				std::stringstream stream;
 				stream << file.rdbuf();
-				auto buffer = stream.str();
+				const auto buffer = stream.str();
 				file.close();
 				model = ReadDefinition(buffer, dataprovider, checkMsg);
 			}

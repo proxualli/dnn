@@ -198,8 +198,6 @@ namespace dnn
 									vecZero.store_nt(&NeuronsD1[w + outputOffset]);
 #endif // DNN_LEAN
 								}
-								
-								
 							}
 							for (auto c = InputLayer->PaddedC; c < PaddedC; c += VectorSize)
 							{
