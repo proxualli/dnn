@@ -139,6 +139,12 @@ public:
 		return this->activation_;
 	}
 
+	/*inline BatchNormActivationTester& device(dnn::Device device)
+	{
+		this->device_ = device;
+		return *this;
+	}*/
+
 	inline dnn::Device device() const
 	{
 		return this->device_;
