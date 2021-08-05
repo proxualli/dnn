@@ -199,14 +199,14 @@ IF(NOT DEFINED ZLIB_SOURCE_DIR)
   EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E copy "${PNG_SOURCE_DIR}/scripts/pnglibconf.h.prebuilt" "${DNN_DEPENDENCIES_BINARY_DIR}/libpng/scripts/pnglibconf.h")
  ENDIF()
 
-IF(NOT DEFINED VECTORCLASS_SOURCE_DIR)
-  MESSAGE(STATUS "Downloading vectorclass to ${DNN_DEPENDENCIES_SOURCE_DIR}/vectorclass (define VECTORCLASS_SOURCE_DIR to avoid it)")
-  CONFIGURE_FILE(cmake/DownloadVectorClass.cmake "${DNN_DEPENDENCIES_BINARY_DIR}/vectorclass-download/CMakeLists.txt")
+IF(NOT DEFINED VERSION2_SOURCE_DIR)
+  MESSAGE(STATUS "Downloading version2 to ${DNN_DEPENDENCIES_SOURCE_DIR}/version2 (define VERSION2_SOURCE_DIR to avoid it)")
+  CONFIGURE_FILE(cmake/DownloadVersion2.cmake "${DNN_DEPENDENCIES_BINARY_DIR}/version2-download/CMakeLists.txt")
   EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
-    WORKING_DIRECTORY "${DNN_DEPENDENCIES_BINARY_DIR}/vectorclass-download")
+    WORKING_DIRECTORY "${DNN_DEPENDENCIES_BINARY_DIR}/version2-download")
   EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" --build .
-    WORKING_DIRECTORY "${DNN_DEPENDENCIES_BINARY_DIR}/vectorclass-download")
-  SET(VECTORCLASS_SOURCE_DIR "${DNN_DEPENDENCIES_SOURCE_DIR}/vectorclass" CACHE STRING "VectorClass source directory")
+    WORKING_DIRECTORY "${DNN_DEPENDENCIES_BINARY_DIR}/version2-download")
+  SET(VERSION2_SOURCE_DIR "${DNN_DEPENDENCIES_SOURCE_DIR}/version2" CACHE STRING "version2 source directory")
  ENDIF()
 
  IF(NOT DEFINED JPEG_SOURCE_DIR)
@@ -297,7 +297,7 @@ include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/oneDNN/include)
 include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/oneDNN/include)
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/oneDNN/src)
 include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/oneDNN/src)
-include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/vectorclass)
+include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/version2)
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/magic_enum/include)
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/CImg)
 
@@ -351,13 +351,13 @@ IF(NOT TARGET dnnl)
 ENDIF()
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC dnnl)
 
-# ---[ Configure vectorclass
-IF(NOT TARGET vectorclass)
+# ---[ Configure version2
+IF(NOT TARGET version2)
   ADD_SUBDIRECTORY(
-    "${VECTORCLASS_SOURCE_DIR}"
-    "${DNN_DEPENDENCIES_BINARY_DIR}/vectorclass")
+    "${VERSION2_SOURCE_DIR}"
+    "${DNN_DEPENDENCIES_BINARY_DIR}/version2")
 ENDIF()
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC vectorclass)
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC version2)
 
 # ---[ Configure MagicEnum
 IF(NOT TARGET magic_enum)
