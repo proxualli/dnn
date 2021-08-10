@@ -204,7 +204,7 @@ namespace dnn
 		size_type nelems = 0;
 
 	public:
-		inline void release() noexcept
+		void release() noexcept
 		{
 			if (arrPtr)
 				arrPtr.reset();
@@ -288,7 +288,7 @@ namespace dnn
 		size_type nelems = 0;
 		
 	public:
-		inline void release() noexcept
+		void release() noexcept
 		{
 			if (arrPtr)
 				arrPtr.reset();
