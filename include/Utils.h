@@ -204,7 +204,7 @@ namespace dnn
 		size_type nelems = 0;
 
 	public:
-		AlignedArray()
+		inline void release() noexcept
 		{
 			if (arrPtr)
 				arrPtr.reset();
@@ -213,14 +213,13 @@ namespace dnn
 			arrPtr = nullptr;
 			dataPtr = nullptr;
 		}
+		AlignedArray()
+		{
+			release();
+		}
 		AlignedArray(const size_type elements, const T value = T()) 
 		{
-			if (arrPtr)
-				arrPtr.reset();
-				
-			nelems = 0;
-			arrPtr = nullptr;
-			dataPtr = nullptr;
+			release();
 
 			arrPtr = aligned_unique_ptr<T, alignment>(elements, alignment);
 			if (arrPtr)
@@ -242,15 +241,6 @@ namespace dnn
 						dataPtr[i] = value;
 			}
 		}
-		inline void release() noexcept
-		{
-			if (arrPtr)
-				arrPtr.reset();
-
-			nelems = 0;
-			arrPtr = nullptr;
-			dataPtr = nullptr;
-		}
 		inline T* data() noexcept { return dataPtr; }
 		inline const T* data() const noexcept { return dataPtr; }
 		inline size_type size() const noexcept { return nelems; }
@@ -259,12 +249,7 @@ namespace dnn
 			if (elements == nelems)
 				return;
 
-			if (arrPtr)
-				arrPtr.reset();
-
-			nelems = 0;
-			arrPtr = nullptr;
-			dataPtr = nullptr;
+			release();
 			
 			if (elements > 0)
 			{
@@ -303,7 +288,7 @@ namespace dnn
 		size_type nelems = 0;
 		
 	public:
-		AlignedMemory()
+		inline void release() noexcept
 		{
 			if (arrPtr)
 				arrPtr.reset();
@@ -312,16 +297,15 @@ namespace dnn
 			arrPtr = nullptr;
 			dataPtr = nullptr;
 		}
+		AlignedMemory()
+		{
+			release();
+		}
 		AlignedMemory(const dnnl::memory::desc& md, const dnnl::engine& engine, const T value = T())
 		{
 			if (md)
 			{
-				if (arrPtr)
-					arrPtr.reset();
-
-				nelems = 0;
-				arrPtr = nullptr;
-				dataPtr = nullptr;
+				release();
 
 				arrPtr = std::make_unique<dnnl::memory>(md, engine);
 				if (arrPtr)
@@ -344,15 +328,6 @@ namespace dnn
 				}
 			}
 		}
-		inline void release() noexcept
-		{
-			if (arrPtr)
-				arrPtr.reset();
-
-			nelems = 0;
-			arrPtr = nullptr;
-			dataPtr = nullptr;
-		}
 		inline T* data() noexcept { return dataPtr; }
 		inline const T* data() const noexcept { return dataPtr; }
 		inline size_type size() const noexcept { return nelems; }
@@ -363,12 +338,7 @@ namespace dnn
 				if (md.get_size() / sizeof(T) == nelems)
 					return;
 
-				if (arrPtr)
-					arrPtr.reset();
-
-				nelems = 0;
-				arrPtr = nullptr;
-				dataPtr = nullptr;
+				release();
 
 				if (md.get_size() / sizeof(T) > 0)
 				{
