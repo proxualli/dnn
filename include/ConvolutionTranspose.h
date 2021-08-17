@@ -292,15 +292,15 @@ namespace dnn
 				const auto biasOffset = height * width;
 				auto image = ByteArray(biasOffset + width, fillColor);
 
-				for (UInt c = 0; c < C; c++)
+				for (auto c = 0ull; c < C; c++)
 				{
 					const auto left = c * pitchH + border;
-					for (UInt r = 0; r < InputLayer->C; r++)
+					for (auto r = 0ull; r < InputLayer->C; r++)
 					{
 						const auto top = r * pitchW + border;
 						const auto idx = (c * InputLayer->C + r) * KernelH * KernelW;
-						for (UInt y = 0; y < KernelH; y++)
-							for (UInt x = 0; x < KernelW; x++)
+						for (auto y = 0ull; y < KernelH; y++)
+							for (auto x = 0ull; x < KernelW; x++)
 								image[((top + y) * width) + left + x] = GetColorFromRange(rangeWeights, WeightsStats.Min, weights[idx + (y * KernelW) + x]);
 					}
 					if (HasBias)
