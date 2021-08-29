@@ -1545,8 +1545,8 @@ namespace dnn
 
 				for (auto c = 0ull; c < dstImageByte.Channels; c++)
 				{
-					const Float mean = MeanStdNormalization ? DataProv->Mean[c] : Image<Byte>::GetChannelMean(dstImageByte, c);
-					const Float stddev = MeanStdNormalization ? DataProv->StdDev[c] : Image<Byte>::GetChannelStdDev(dstImageByte, c);
+					const auto mean = MeanStdNormalization ? DataProv->Mean[c] : Image<Byte>::GetChannelMean(dstImageByte, c);
+					const auto stddev = MeanStdNormalization ? DataProv->StdDev[c] : Image<Byte>::GetChannelStdDev(dstImageByte, c);
 
 					for (auto d = 0ull; d < dstImageByte.Depth; d++)
 						for (auto h = 0ull; h < dstImageByte.Height; h++)
