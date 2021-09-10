@@ -1091,7 +1091,7 @@ namespace dnn
 			Image dstImage(image);
 			Image mixImage(imageMix);
 			
-		    const auto cutH = int(mixImage.Height * std::sqrt(Float(1) - lambda));
+			const auto cutH = int(mixImage.Height * std::sqrt(Float(1) - lambda));
 			const auto cutW = int(mixImage.Width * std::sqrt(Float(1) - lambda));
 			const auto cy = UniformInt<UInt>(0, dstImage.Height);
 			const auto cx = UniformInt<UInt>(0, dstImage.Width);
