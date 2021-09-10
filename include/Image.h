@@ -1086,6 +1086,29 @@ namespace dnn
 			return dstImage;
 		}
 
+		static Image RandomCutMix(const Image& image, const Image& imageMix, const Float lambda)
+		{
+			Image dstImage(image);
+			Image mixImage(imageMix);
+			
+		    const auto cutH = int(mixImage.Height * std::sqrt(Float(1) - lambda));
+			const auto cutW = int(mixImage.Width * std::sqrt(Float(1) - lambda));
+			const auto cy = UniformInt<UInt>(0, dstImage.Height);
+			const auto cx = UniformInt<UInt>(0, dstImage.Width);
+			const auto bby1 = Clamp<UInt>(cy - cutH / 2, 0, dstImage.Height);
+			const auto bbx1 = Clamp<UInt>(cx - cutW / 2, 0, dstImage.Width);
+			const auto bby2 = Clamp<UInt>(cy + cutH / 2, 0, dstImage.Height);
+			const auto bbx2 = Clamp<UInt>(cx + cutW / 2, 0, dstImage.Width);
+			
+			for (auto c = 0ull; c < dstImage.Channels; c++)
+				for (auto d = 0ull; d < dstImage.Depth; d++)
+					for (auto h = bby1; h < bby2; h++)
+						for (auto w = bbx1; w < bbx2; w++)
+							dstImage(c, d, h, w) = mixImage(c, d, h, w);
+
+			return dstImage;
+		}
+
 		static Image Resize(const Image& image, const UInt depth, const UInt height, const UInt width, const Interpolations interpolation)
 		{
 			auto srcImage = ImageToCImg(image);

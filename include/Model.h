@@ -1467,17 +1467,19 @@ namespace dnn
 		std::vector<std::vector<UInt>> TrainBatch(const UInt index, const UInt batchSize)
 		{
 			auto SampleLabels = std::vector<std::vector<UInt>>(batchSize, std::vector<UInt>(DataProv->Hierarchies));
-
 			const auto resize = DataProv->TrainingSamples[0].Depth != SampleD || DataProv->TrainingSamples[0].Height != SampleH || DataProv->TrainingSamples[0].Width != SampleW;
 
-			for_i(batchSize, [=, &SampleLabels](const UInt batchIndex)
+			static thread_local auto generator = std::mt19937(Seed<unsigned>());
+			beta_distribution<Float> beta(1, 1);
+
+			for_i(batchSize, [=, &SampleLabels, &beta](const UInt batchIndex)
 			{
 				const auto randomIndex = (index + batchIndex >= DataProv->TrainingSamplesCount) ? RandomTrainingSamples[batchIndex] : RandomTrainingSamples[index + batchIndex];
-
+				
 				SampleLabels[batchIndex] = DataProv->TrainingLabels[randomIndex];
 
 				auto dstImageByte = Image<Byte>(DataProv->TrainingSamples[randomIndex]);
-
+				
 				if (CurrentTrainingRate.HorizontalFlip && TrainingSamplesHFlip[randomIndex])
 					dstImageByte = Image<Byte>::HorizontalMirror(dstImageByte);
 
@@ -1499,7 +1501,16 @@ namespace dnn
 					dstImageByte = Image<Byte>::Distorted(dstImageByte, CurrentTrainingRate.Scaling, CurrentTrainingRate.Rotation, Interpolations(CurrentTrainingRate.Interpolation), DataProv->Mean);
 
 				if (Bernoulli<bool>(CurrentTrainingRate.Cutout))
-					dstImageByte = Image<Byte>::RandomCutout(dstImageByte, DataProv->Mean);
+				{
+					if (!CurrentTrainingRate.CutMix)
+						dstImageByte = Image<Byte>::RandomCutout(dstImageByte, DataProv->Mean);
+					else
+					{
+						const auto randomIndexMix = (index + batchIndex + 1 >= DataProv->TrainingSamplesCount) ? RandomTrainingSamples[batchIndex + 1] : RandomTrainingSamples[index + batchIndex + 1];
+						auto dstImageByteMix = Image<Byte>(DataProv->TrainingSamples[randomIndexMix]);
+						dstImageByte = Image<Byte>::RandomCutMix(dstImageByte, dstImageByteMix, beta(generator));
+					}
+				}
 
 				if (RandomCrop)
 					dstImageByte = Image<Byte>::RandomCrop(dstImageByte, SampleD, SampleH, SampleW, DataProv->Mean);
@@ -1564,7 +1575,10 @@ namespace dnn
 
 			const auto resize = DataProv->TestingSamples[0].Depth != SampleD || DataProv->TestingSamples[0].Height != SampleH || DataProv->TestingSamples[0].Width != SampleW;
 
-			for_i(batchSize, [=, &SampleLabels](const UInt batchIndex)
+			static thread_local auto generator = std::mt19937(Seed<unsigned>());
+			beta_distribution<Float> beta(1, 1);
+
+			for_i(batchSize, [=, &SampleLabels, &beta](const UInt batchIndex)
 			{
 				const auto sampleIndex = ((index + batchIndex) >= DataProv->TestingSamplesCount) ? batchIndex : index + batchIndex;
 
@@ -1593,7 +1607,16 @@ namespace dnn
 					dstImageByte = Image<Byte>::Distorted(dstImageByte, CurrentTrainingRate.Scaling, CurrentTrainingRate.Rotation, Interpolations(CurrentTrainingRate.Interpolation), DataProv->Mean);
 
 				if (Bernoulli<bool>(CurrentTrainingRate.Cutout))
-					dstImageByte = Image<Byte>::RandomCutout(dstImageByte, DataProv->Mean);
+				{
+					if (!CurrentTrainingRate.CutMix)
+						dstImageByte = Image<Byte>::RandomCutout(dstImageByte, DataProv->Mean);
+					else
+					{
+						const auto randomIndexMix = (index + batchIndex + 1 >= DataProv->TrainingSamplesCount) ? RandomTrainingSamples[batchIndex + 1] : RandomTrainingSamples[index + batchIndex + 1];
+						auto dstImageByteMix = Image<Byte>(DataProv->TrainingSamples[randomIndexMix]);
+						dstImageByte = Image<Byte>::RandomCutMix(dstImageByte, dstImageByteMix, beta(generator));
+					}
+				}
 
 				if (RandomCrop)
 					dstImageByte = Image<Byte>::Crop(dstImageByte, Positions::Center, SampleD, SampleH, SampleW, DataProv->Mean);
