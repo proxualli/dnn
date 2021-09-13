@@ -791,7 +791,6 @@ namespace dnn
 			}
 
 			// determine SharesInputInplace
-		
 			for (auto& layer : Layers)
 			{
 				auto outputsCount = GetLayerOutputs(layer.get(), true).size();

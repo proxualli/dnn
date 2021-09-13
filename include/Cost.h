@@ -347,7 +347,6 @@ namespace dnn
 					}
 					const auto label = SampleLabel[LabelIndex];
 					const auto ty = LabelTrue * InputLayer->Neurons[label];
-
 					Neurons[label] = ty <= 0 ? Float(0.5) - ty : ty < Float(1) ? FloatSquare(1 - ty) * Float(0.5) : Float(0);
 				}
 				else
@@ -366,7 +365,6 @@ namespace dnn
 					{
 						const auto label = SampleLabels[n][LabelIndex] + (n * C);
 						const auto ty = LabelTrue * InputLayer->Neurons[label];
-
 						Neurons[label] = ty <= 0 ? Float(0.5) - ty : ty < Float(1) ? FloatSquare(1 - ty) * Float(0.5) : Float(0);
 					}
 #ifdef DNN_STOCHASTIC
@@ -586,7 +584,6 @@ namespace dnn
 					}
 					const auto label = SampleLabel[LabelIndex];
 					const auto ty = LabelTrue * InputLayerOriginal->Neurons[label];
-
 					InputLayer->NeuronsD1[label] = ty <= 0 ? -Float(1) : ty < Float(1) ? ty - Float(1) : Float(0);
 				}
 				else
@@ -602,7 +599,6 @@ namespace dnn
 					{
 						const auto label = SampleLabels[n][LabelIndex] + (n * C);
 						const auto ty = LabelTrue * InputLayerOriginal->Neurons[label];
-
 						InputLayer->NeuronsD1[label] = ty <= 0 ? -Float(1) : ty < Float(1) ? ty - Float(1) : Float(0);
 					}
 #ifdef DNN_STOCHASTIC
