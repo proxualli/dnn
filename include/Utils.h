@@ -631,7 +631,7 @@ namespace dnn
 	{
 		std::transform(text.begin(), text.end(), text.begin(), ::tolower);
 		return text;
-	};
+	}
 
 	static auto IsStringBool(std::string text)
 	{
