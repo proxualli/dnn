@@ -183,7 +183,6 @@ namespace dnn
 					"UnZip-File -File \"" << DatasetsDirectory.string() << "\\tiny-imagenet-200.zip\" -Destination \"" << DatasetsDirectory.string() << "\"" << std::endl;
 
 				unzipScript.close();
-				
 			}
 			break;
 
@@ -375,7 +374,6 @@ namespace dnn
 
 				return false;
 			}
-				
 #else
 			int status = std::system((DatasetsDirectory / fileName).c_str());
 

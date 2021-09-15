@@ -98,7 +98,6 @@ namespace dnn
 			ChosenFormat = dnnl::memory::format_tag::nc;
 			DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ int(batchSize), int(C) }), dnnl::memory::data_type::f32, ChosenFormat));
 			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ int(batchSize), int(C) }), dnnl::memory::data_type::f32, ChosenFormat));
-			
 			isLogSoftmax = static_cast<Activation*>(InputLayer)->ActivationFunction == Activations::LogSoftmax;
 		}
 
@@ -355,7 +354,6 @@ namespace dnn
 					for (auto nc = 0ull; nc < C * batchSize; nc++)
 					{
 						const auto ty = LabelFalse * InputLayer->Neurons[nc];
-
 						Neurons[nc] = ty <= 0 ? Float(0.5) - ty : ty < Float(1) ? FloatSquare(1 - ty) * Float(0.5) : Float(0);
 #ifndef DNN_LEAN
 						NeuronsD1[nc] = Float(0);
@@ -580,7 +578,6 @@ namespace dnn
 					{
 						const auto ty = LabelFalse * InputLayerOriginal->Neurons[c];
 						InputLayer->NeuronsD1[c] = ty <= 0 ? -Float(1) : ty < Float(1) ? ty - Float(1) : Float(0);
-
 					}
 					const auto label = SampleLabel[LabelIndex];
 					const auto ty = LabelTrue * InputLayerOriginal->Neurons[label];
@@ -592,7 +589,6 @@ namespace dnn
 					for (auto nc = 0ull; nc < C * batchSize; nc++)
 					{
 						const auto ty = LabelFalse * InputLayerOriginal->Neurons[nc];
-
 						InputLayer->NeuronsD1[nc] = ty <= 0 ? -Float(1) : ty < Float(1) ? ty - Float(1) : Float(0);
 					}
 					for (auto n = 0ull; n < batchSize; n++)
