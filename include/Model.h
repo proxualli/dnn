@@ -1527,7 +1527,7 @@ namespace dnn
 				const auto randomIndex = (index + batchIndex >= DataProv->TrainingSamplesCount) ? RandomTrainingSamples[batchIndex] : RandomTrainingSamples[index + batchIndex];
 				auto dstImageByte = Image<Byte>(DataProv->TrainingSamples[randomIndex]);
 
-				const auto randomIndexMix = (index + batchIndex + 1 >= DataProv->TrainingSamplesCount) ? RandomTrainingSamples[batchIndex + 1] : RandomTrainingSamples[index + batchIndex + 1];
+				const auto randomIndexMix = (index + batchSize - (batchIndex + 1) >= DataProv->TrainingSamplesCount) ? RandomTrainingSamples[batchSize - (batchIndex + 1)] : RandomTrainingSamples[index + batchSize - (batchIndex + 1)];
 				auto dstImageByteMix = Image<Byte>(DataProv->TrainingSamples[randomIndexMix]);
 
 				auto labels = DataProv->TrainingLabels[randomIndex];

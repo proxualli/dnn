@@ -422,7 +422,7 @@ namespace dnn
 						const auto labelA = SampleLabel[LabelIndex].LabelA;
 						const auto labelB = SampleLabel[LabelIndex].LabelB;
 						const auto weightA = SampleLabel[LabelIndex].Lambda;
-						const auto weightB = Float(1) - weightA;
+						const auto weightB = weightA != Float(1) ? Float(1) - weightA : Float(1);
 						InputLayer->NeuronsD1[labelA] = std::exp(InputLayerOriginal->Neurons[labelA] * weightA) - ((Float(1) - Eps) + (Eps / C));
 						InputLayer->NeuronsD1[labelB] = std::exp(InputLayerOriginal->Neurons[labelB] * weightB) - ((Float(1) - Eps) + (Eps / C));
 					}
@@ -437,7 +437,7 @@ namespace dnn
 							const auto labelA = SampleLabels[n][LabelIndex].LabelA + (n * C);
 							const auto labelB = SampleLabels[n][LabelIndex].LabelB + (n * C);
 							const auto weightA = SampleLabels[n][LabelIndex].Lambda;
-							const auto weightB = Float(1) - weightA;
+							const auto weightB = weightA != Float(1) ? Float(1) - weightA : Float(1);
 							InputLayer->NeuronsD1[labelA] = std::exp(InputLayerOriginal->Neurons[labelA] * weightA) - ((Float(1) - Eps) + (Eps / C));
 							InputLayer->NeuronsD1[labelB] = std::exp(InputLayerOriginal->Neurons[labelB] * weightB) - ((Float(1) - Eps) + (Eps / C));
 						}
@@ -456,7 +456,7 @@ namespace dnn
 						const auto labelA = SampleLabel[LabelIndex].LabelA;
 						const auto labelB = SampleLabel[LabelIndex].LabelB;
 						const auto weightA = SampleLabel[LabelIndex].Lambda;
-						const auto weightB = Float(1) - weightA;
+						const auto weightB = weightA != Float(1) ? Float(1) - weightA : Float(1);
 						InputLayer->NeuronsD1[labelA] = (InputLayerOriginal->Neurons[labelA] * weightA) - ((Float(1) - Eps) + (Eps / C));
 						InputLayer->NeuronsD1[labelB] = (InputLayerOriginal->Neurons[labelB] * weightB) - ((Float(1) - Eps) + (Eps / C));
 					}
@@ -471,7 +471,7 @@ namespace dnn
 							const auto labelA = SampleLabels[n][LabelIndex].LabelA + (n * C);
 							const auto labelB = SampleLabels[n][LabelIndex].LabelB + (n * C);
 							const auto weightA = SampleLabels[n][LabelIndex].Lambda;
-							const auto weightB = Float(1) - weightA;
+							const auto weightB = weightA != Float(1) ? Float(1) - weightA : Float(1);
 							InputLayer->NeuronsD1[labelA] = (InputLayerOriginal->Neurons[labelA] * weightA) - ((Float(1) - Eps) + (Eps / C));
 							InputLayer->NeuronsD1[labelB] = (InputLayerOriginal->Neurons[labelB] * weightB) - ((Float(1) - Eps) + (Eps / C));
 						}
