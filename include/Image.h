@@ -1086,20 +1086,20 @@ namespace dnn
 			return dstImage;
 		}
 
-		static Image RandomCutMix(const Image& image, const Image& imageMix, const Float lambda)
+		static Image RandomCutMix(const Image& image, const Image& imageMix, double* lambda)
 		{
 			Image dstImage(image);
 			Image mixImage(imageMix);
-			
-			const auto cutH = int(mixImage.Height * std::sqrt(Float(1) - lambda));
-			const auto cutW = int(mixImage.Width * std::sqrt(Float(1) - lambda));
-			const auto cy = UniformInt<UInt>(0, dstImage.Height);
-			const auto cx = UniformInt<UInt>(0, dstImage.Width);
-			const auto bby1 = Clamp<UInt>(cy - cutH / 2, 0, dstImage.Height);
-			const auto bbx1 = Clamp<UInt>(cx - cutW / 2, 0, dstImage.Width);
-			const auto bby2 = Clamp<UInt>(cy + cutH / 2, 0, dstImage.Height);
-			const auto bbx2 = Clamp<UInt>(cx + cutW / 2, 0, dstImage.Width);
-			
+
+			const auto cutH = static_cast<int>(double(dstImage.Height) * std::sqrt(double(1) - *lambda));
+			const auto cutW = static_cast<int>(double(dstImage.Width) * std::sqrt(double(1) - *lambda));
+			const auto cy = UniformInt<int>(0, int(dstImage.Height));
+			const auto cx = UniformInt<int>(0, int(dstImage.Width));
+			const auto bby1 = Clamp<int>(cy - cutH / 2, 0, int(dstImage.Height));
+			const auto bby2 = Clamp<int>(cy + cutH / 2, 0, int(dstImage.Height));
+			const auto bbx1 = Clamp<int>(cx - cutW / 2, 0, int(dstImage.Width));
+			const auto bbx2 = Clamp<int>(cx + cutW / 2, 0, int(dstImage.Width));
+			*lambda = double(1) - (((bbx2 - bbx1) * (bby2 - bby1)) / double(dstImage.Height * dstImage.Width));
 			for (auto c = 0ull; c < dstImage.Channels; c++)
 				for (auto d = 0ull; d < dstImage.Depth; d++)
 					for (auto h = bby1; h < bby2; h++)

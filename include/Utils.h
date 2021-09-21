@@ -99,6 +99,13 @@ namespace dnn
 	typedef size_t UInt;
 	typedef unsigned char Byte;
 
+	struct LabelInfo
+	{
+		UInt LabelA;
+		UInt LabelB;
+		Float Lambda;	
+	};
+
 #if defined(DNN_AVX512BW) || defined(DNN_AVX512)
 	typedef Vec16f VecFloat;
 	typedef Vec16fb VecFloatBool;
@@ -500,7 +507,7 @@ namespace dnn
 		static thread_local auto generator = std::mt19937(Seed<unsigned>());
 		return std::uniform_real_distribution<T>(min, max)(generator);
 	}
- 
+
 	// from Stack Overflow https://stackoverflow.com/questions/15165202/random-number-generator-with-beta-distribution
 	template <typename RealType = double>
 	class beta_distribution
@@ -589,6 +596,13 @@ namespace dnn
 			return x / (x + y_gamma(engine));
 		}
 	};
+
+	template<typename T>
+	static auto BetaDistribution(const T min, const T max) noexcept
+	{
+		static thread_local auto generator = std::mt19937(Seed<unsigned>());
+		return beta_distribution<T>(min, max)(generator);
+	}
 
 	static auto FloatToString(const Float value, const std::streamsize precision = 8)
 	{

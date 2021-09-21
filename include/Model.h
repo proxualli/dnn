@@ -575,7 +575,7 @@ namespace dnn
 			}
 		}
 
-		void Recognized(const States state, const std::vector<UInt>& sampleLabel)
+		void Recognized(const States state, const std::vector<LabelInfo>& sampleLabel)
 		{
 			for (auto cost : CostLayers)
 			{
@@ -593,7 +593,7 @@ namespace dnn
 					}
 				}
 
-				if (hotIndex != sampleLabel[labelIndex])
+				if (hotIndex != sampleLabel[labelIndex].LabelA)
 				{
 					if (state == States::Training)
 						cost->TrainErrors++;
@@ -602,7 +602,7 @@ namespace dnn
 				}
 
 				if (state == States::Testing)
-					cost->ConfusionMatrix[hotIndex][sampleLabel[labelIndex]]++;
+					cost->ConfusionMatrix[hotIndex][sampleLabel[labelIndex].LabelA]++;
 			}
 		}
 #endif
@@ -630,7 +630,7 @@ namespace dnn
 			}
 		}
 
-		void RecognizedBatch(const States state, const UInt batchSize, const bool overflow, const UInt skipCount, const std::vector<std::vector<UInt>>& sampleLabels)
+		void RecognizedBatch(const States state, const UInt batchSize, const bool overflow, const UInt skipCount, const std::vector<std::vector<LabelInfo>>& sampleLabels)
 		{
 			for (auto cost : CostLayers)
 			{
@@ -655,7 +655,7 @@ namespace dnn
 						}
 					}
 
-					if (hotIndex != sampleLabels[b][labelIndex])
+					if (hotIndex != sampleLabels[b][labelIndex].LabelA)
 					{
 						if (state == States::Training)
 							cost->TrainErrors++;
@@ -664,7 +664,7 @@ namespace dnn
 					}
 
 					if (state == States::Testing)
-						cost->ConfusionMatrix[hotIndex][sampleLabels[b][labelIndex]]++;
+						cost->ConfusionMatrix[hotIndex][sampleLabels[b][labelIndex].LabelA]++;
 				}
 			}
 		}
@@ -1333,12 +1333,41 @@ namespace dnn
 			return false;
 		}
 
+		std::vector<LabelInfo> GetLabelInfo(std::vector<UInt> labels)
+		{
+			const auto hierarchies = DataProv->Hierarchies;
+			auto SampleLabels = std::vector<LabelInfo>(hierarchies);
+			for (auto hierarchie = 0ull; hierarchie < hierarchies; hierarchie++)
+			{
+				SampleLabels[hierarchie].LabelA = labels[hierarchie];
+				SampleLabels[hierarchie].LabelB = labels[hierarchie];
+				SampleLabels[hierarchie].Lambda = Float(1);				
+			}
+
+			return SampleLabels;
+		}
+
+		std::vector<LabelInfo> GetCutMixLabelInfo(std::vector<UInt> labels, std::vector<UInt> mixLabels, double lambda)
+		{
+			const auto hierarchies = DataProv->Hierarchies;
+			auto SampleLabels = std::vector<LabelInfo>(hierarchies);
+			for (auto hierarchie = 0ull; hierarchie < hierarchies; hierarchie++)
+			{
+				SampleLabels[hierarchie].LabelA = labels[hierarchie];
+				SampleLabels[hierarchie].LabelB = mixLabels[hierarchie];
+				SampleLabels[hierarchie].Lambda = Float(lambda);
+			}
+
+			return SampleLabels;
+		}
+
 #ifdef DNN_STOCHASTIC
-		std::vector<UInt> TrainSample(const UInt index)
+		std::vector<LabelInfo> TrainSample(const UInt index)
 		{
 			const auto randomIndex = RandomTrainingSamples[index];
 
-			auto SampleLabel = DataProv->TrainingLabels[randomIndex];
+			auto label = DataProv->TrainingLabels[randomIndex];
+			auto SampleLabel = GetLabelInfo(label);
 
 			auto dstImageByte = DataProv->TrainingSamples[randomIndex];
 
@@ -1364,6 +1393,15 @@ namespace dnn
 
 			if (Bernoulli<bool>(CurrentTrainingRate.Cutout))
 				dstImageByte = Image<Byte>::RandomCutout(dstImageByte, DataProv->Mean);
+			else
+			{
+				const auto randomIndexMix = (index + 1 >= DataProv->TrainingSamplesCount) ? RandomTrainingSamples[1] : RandomTrainingSamples[index + 1];
+				auto mixLabel = DataProv->TrainingLabels[randomIndexMix];
+				auto dstImageByteMix = Image<Byte>::Padding(DataProv->TrainingSamples[randomIndexMix], PadD, PadH, PadW, DataProv->Mean, MirrorPad);
+				auto lambda = UniformReal<Float>(0, 1);
+				dstImageByte = Image<Byte>::RandomCutMix(dstImageByte, dstImageByteMix, lambda);
+				SampleLabel = GetCutMixLabelInfo(label, mixLabel, lambda);
+			}
 
 			if (CurrentTrainingRate.Dropout > Float(0))
 				dstImageByte = Image<Byte>::Dropout(dstImageByte, CurrentTrainingRate.Dropout, DataProv->Mean);
@@ -1385,9 +1423,10 @@ namespace dnn
 			return SampleLabel;
 		}
 
-		std::vector<UInt> TestSample(const UInt index)
+		std::vector<LabelInfo> TestSample(const UInt index)
 		{
-			auto SampleLabel = DataProv->TestingLabels[index];
+			auto label = DataProv->TestingLabels[index];
+			auto SampleLabel = GetLabelInfo(label);
 
 			auto dstImageByte = DataProv->TestingSamples[index];
 
@@ -1413,9 +1452,10 @@ namespace dnn
 			return SampleLabel;
 		}
 
-		std::vector<UInt> TestAugmentedSample(const UInt index)
+		std::vector<LabelInfo> TestAugmentedSample(const UInt index)
 		{
-			auto SampleLabel = DataProv->TestingLabels[index];
+			auto label = DataProv->TestingLabels[index];
+			auto SampleLabel = GetLabelInfo(label);
 
 			auto dstImageByte = DataProv->TestingSamples[index];
 
@@ -1439,7 +1479,7 @@ namespace dnn
 			if (Bernoulli<bool>(CurrentTrainingRate.Distortion))
 				dstImageByte = Image<Byte>::Distorted(dstImageByte, CurrentTrainingRate.Scaling, CurrentTrainingRate.Rotation, Interpolations(CurrentTrainingRate.Interpolation), DataProv->Mean);
 
-			if (Bernoulli<bool>(CurrentTrainingRate.Cutout))
+			if (Bernoulli<bool>(CurrentTrainingRate.Cutout) && !CurrentTrainingRate.CutMix)
 				dstImageByte = Image<Byte>::RandomCutout(dstImageByte, DataProv->Mean);
 
 			if (RandomCrop)
@@ -1463,21 +1503,40 @@ namespace dnn
 		}
 #endif
 
-		std::vector<std::vector<UInt>> TrainBatch(const UInt index, const UInt batchSize)
+		std::vector<std::vector<LabelInfo>> TrainBatch(const UInt index, const UInt batchSize)
 		{
-			auto SampleLabels = std::vector<std::vector<UInt>>(batchSize, std::vector<UInt>(DataProv->Hierarchies));
+			const auto hierarchies = DataProv->Hierarchies;
+			auto SampleLabels = std::vector<std::vector<LabelInfo>>(batchSize, std::vector<LabelInfo>(hierarchies));
 			const auto resize = DataProv->TrainingSamples[0].Depth != SampleD || DataProv->TrainingSamples[0].Height != SampleH || DataProv->TrainingSamples[0].Width != SampleW;
-
-			static thread_local auto generator = std::mt19937(Seed<unsigned>());
-			beta_distribution<Float> beta(1, 1);
-
-			for_i(batchSize, [=, &SampleLabels, &beta](const UInt batchIndex)
+			
+			for_i(batchSize, [=, &SampleLabels](const UInt batchIndex)
 			{
 				const auto randomIndex = (index + batchIndex >= DataProv->TrainingSamplesCount) ? RandomTrainingSamples[batchIndex] : RandomTrainingSamples[index + batchIndex];
-				
-				SampleLabels[batchIndex] = DataProv->TrainingLabels[randomIndex];
-
 				auto dstImageByte = Image<Byte>(DataProv->TrainingSamples[randomIndex]);
+
+				const auto randomIndexMix = (index + batchIndex + 1 >= DataProv->TrainingSamplesCount) ? RandomTrainingSamples[batchIndex + 1] : RandomTrainingSamples[index + batchIndex + 1];
+				auto dstImageByteMix = Image<Byte>(DataProv->TrainingSamples[randomIndexMix]);
+
+				auto labels = DataProv->TrainingLabels[randomIndex];
+				auto mixLabels = DataProv->TrainingLabels[randomIndexMix];
+				
+				auto cutout = false;
+				if (Bernoulli<bool>(CurrentTrainingRate.Cutout))
+				{
+					if (CurrentTrainingRate.CutMix)
+					{
+						double lambda = UniformReal<double>(0, 1);
+						dstImageByte = Image<Byte>::RandomCutMix(dstImageByte, dstImageByteMix, &lambda);
+						SampleLabels[batchIndex] = GetCutMixLabelInfo(labels, mixLabels, lambda);
+					}
+					else
+					{
+						SampleLabels[batchIndex] = GetLabelInfo(labels);
+						cutout = true;
+					}
+				}
+				else
+					SampleLabels[batchIndex] = GetLabelInfo(labels);
 				
 				if (CurrentTrainingRate.HorizontalFlip && TrainingSamplesHFlip[randomIndex])
 					dstImageByte = Image<Byte>::HorizontalMirror(dstImageByte);
@@ -1499,17 +1558,8 @@ namespace dnn
 				if (Bernoulli<bool>(CurrentTrainingRate.Distortion))
 					dstImageByte = Image<Byte>::Distorted(dstImageByte, CurrentTrainingRate.Scaling, CurrentTrainingRate.Rotation, Interpolations(CurrentTrainingRate.Interpolation), DataProv->Mean);
 
-				if (Bernoulli<bool>(CurrentTrainingRate.Cutout))
-				{
-					if (!CurrentTrainingRate.CutMix)
-						dstImageByte = Image<Byte>::RandomCutout(dstImageByte, DataProv->Mean);
-					else
-					{
-						const auto randomIndexMix = (index + batchIndex + 1 >= DataProv->TrainingSamplesCount) ? RandomTrainingSamples[batchIndex + 1] : RandomTrainingSamples[index + batchIndex + 1];
-						auto dstImageByteMix = Image<Byte>(DataProv->TrainingSamples[randomIndexMix]);
-						dstImageByte = Image<Byte>::RandomCutMix(dstImageByte, dstImageByteMix, beta(generator));
-					}
-				}
+				if (cutout)
+					dstImageByte = Image<Byte>::RandomCutout(dstImageByte, DataProv->Mean);
 
 				if (RandomCrop)
 					dstImageByte = Image<Byte>::RandomCrop(dstImageByte, SampleD, SampleH, SampleW, DataProv->Mean);
@@ -1532,17 +1582,17 @@ namespace dnn
 			return SampleLabels;
 		}
 
-		std::vector<std::vector<UInt>> TestBatch(const UInt index, const UInt batchSize)
+		std::vector<std::vector<LabelInfo>> TestBatch(const UInt index, const UInt batchSize)
 		{
-			auto SampleLabels = std::vector<std::vector<UInt>>(batchSize, std::vector<UInt>(DataProv->Hierarchies));
-
+			auto SampleLabels = std::vector<std::vector<LabelInfo>>(batchSize, std::vector<LabelInfo>(DataProv->Hierarchies));
 			const auto resize = DataProv->TestingSamples[0].Depth != SampleD || DataProv->TestingSamples[0].Height != SampleH || DataProv->TestingSamples[0].Width != SampleW;
 
 			for_i(batchSize, MEDIUM_COMPUTE, [=, &SampleLabels](const UInt batchIndex)
 			{
 				const auto sampleIndex = ((index + batchIndex) >= DataProv->TestingSamplesCount) ? batchIndex : index + batchIndex;
 
-				SampleLabels[batchIndex] = DataProv->TestingLabels[sampleIndex];
+				auto labels = DataProv->TestingLabels[sampleIndex];
+				SampleLabels[batchIndex] = GetLabelInfo(labels);
 
 				auto dstImageByte = DataProv->TestingSamples[sampleIndex];
 
@@ -1568,20 +1618,17 @@ namespace dnn
 			return SampleLabels;
 		}
 
-		std::vector<std::vector<UInt>> TestAugmentedBatch(const UInt index, const UInt batchSize)
+		std::vector<std::vector<LabelInfo>> TestAugmentedBatch(const UInt index, const UInt batchSize)
 		{
-			auto SampleLabels = std::vector<std::vector<UInt>>(batchSize, std::vector<UInt>(DataProv->Hierarchies));
-
+			auto SampleLabels = std::vector<std::vector<LabelInfo>>(batchSize, std::vector<LabelInfo>(DataProv->Hierarchies));
 			const auto resize = DataProv->TestingSamples[0].Depth != SampleD || DataProv->TestingSamples[0].Height != SampleH || DataProv->TestingSamples[0].Width != SampleW;
 
-			static thread_local auto generator = std::mt19937(Seed<unsigned>());
-			beta_distribution<Float> beta(1, 1);
-
-			for_i(batchSize, [=, &SampleLabels, &beta](const UInt batchIndex)
+			for_i(batchSize, [=, &SampleLabels](const UInt batchIndex)
 			{
 				const auto sampleIndex = ((index + batchIndex) >= DataProv->TestingSamplesCount) ? batchIndex : index + batchIndex;
 
-				SampleLabels[batchIndex] = DataProv->TestingLabels[sampleIndex];
+				auto labels = DataProv->TestingLabels[sampleIndex];
+				SampleLabels[batchIndex] = GetLabelInfo(labels);
 
 				auto dstImageByte = DataProv->TestingSamples[sampleIndex];
 
@@ -1605,18 +1652,9 @@ namespace dnn
 				if (Bernoulli<bool>(CurrentTrainingRate.Distortion))
 					dstImageByte = Image<Byte>::Distorted(dstImageByte, CurrentTrainingRate.Scaling, CurrentTrainingRate.Rotation, Interpolations(CurrentTrainingRate.Interpolation), DataProv->Mean);
 
-				if (Bernoulli<bool>(CurrentTrainingRate.Cutout))
-				{
-					if (!CurrentTrainingRate.CutMix)
-						dstImageByte = Image<Byte>::RandomCutout(dstImageByte, DataProv->Mean);
-					else
-					{
-						const auto randomIndexMix = (index + batchIndex + 1 >= DataProv->TrainingSamplesCount) ? RandomTrainingSamples[batchIndex + 1] : RandomTrainingSamples[index + batchIndex + 1];
-						auto dstImageByteMix = Image<Byte>(DataProv->TrainingSamples[randomIndexMix]);
-						dstImageByte = Image<Byte>::RandomCutMix(dstImageByte, dstImageByteMix, beta(generator));
-					}
-				}
-
+				if (Bernoulli<bool>(CurrentTrainingRate.Cutout) && !CurrentTrainingRate.CutMix)
+					dstImageByte = Image<Byte>::RandomCutout(dstImageByte, DataProv->Mean);
+				
 				if (RandomCrop)
 					dstImageByte = Image<Byte>::Crop(dstImageByte, Positions::Center, SampleD, SampleH, SampleW, DataProv->Mean);
 

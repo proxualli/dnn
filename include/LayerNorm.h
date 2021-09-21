@@ -130,7 +130,6 @@ namespace dnn
 			Mean.resize(fwdDesc->mean_desc().get_size() / sizeof(Float), Float(0));
 			Variance.resize(fwdDesc->variance_desc().get_size() / sizeof(Float), Float(1));
 			
-
 			reorderFwdSrc = fwdDesc->src_desc() != *InputLayer->DstMemDesc;
 
 #ifdef DNN_CACHE_PRIMITIVES
