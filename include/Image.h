@@ -1107,7 +1107,7 @@ namespace dnn
 						for (auto w = bbx1; w < bbx2; w++)
 							dstImage(c, d, h, w) = mixImage(c, d, h, w);
 
-			*lambda = 1.0 - (double((bbx2 - bbx1) * double(bby2 - bby1)) / double(dstImage.Height * dstImage.Width));
+			*lambda = 1.0 - ((double(bbx2 - bbx1) * double(bby2 - bby1)) / double(dstImage.Height * dstImage.Width));
 
 			return dstImage;
 		}
