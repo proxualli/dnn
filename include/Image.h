@@ -1091,15 +1091,16 @@ namespace dnn
 			Image dstImage(image);
 			Image mixImage(imageMix);
 
-			const auto cutH = static_cast<int>(double(dstImage.Height) * std::sqrt(double(1) - *lambda));
-			const auto cutW = static_cast<int>(double(dstImage.Width) * std::sqrt(double(1) - *lambda));
+			const double cutRate = std::sqrt(1.0 - *lambda);
+			const auto cutH = static_cast<int>(double(dstImage.Height) * cutRate);
+			const auto cutW = static_cast<int>(double(dstImage.Width) * cutRate);
 			const auto cy = UniformInt<int>(0, int(dstImage.Height));
 			const auto cx = UniformInt<int>(0, int(dstImage.Width));
 			const auto bby1 = Clamp<int>(cy - cutH / 2, 0, int(dstImage.Height));
 			const auto bby2 = Clamp<int>(cy + cutH / 2, 0, int(dstImage.Height));
 			const auto bbx1 = Clamp<int>(cx - cutW / 2, 0, int(dstImage.Width));
 			const auto bbx2 = Clamp<int>(cx + cutW / 2, 0, int(dstImage.Width));
-			*lambda = double(1) - (((bbx2 - bbx1) * (bby2 - bby1)) / double(dstImage.Height * dstImage.Width));
+			*lambda = double(1) - (double((bbx2 - bbx1) * double(bby2 - bby1)) / double(dstImage.Height * dstImage.Width));
 			for (auto c = 0ull; c < dstImage.Channels; c++)
 				for (auto d = 0ull; d < dstImage.Depth; d++)
 					for (auto h = bby1; h < bby2; h++)
