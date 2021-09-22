@@ -1100,12 +1100,14 @@ namespace dnn
 			const auto bby2 = Clamp<int>(cy + cutH / 2, 0, int(dstImage.Height));
 			const auto bbx1 = Clamp<int>(cx - cutW / 2, 0, int(dstImage.Width));
 			const auto bbx2 = Clamp<int>(cx + cutW / 2, 0, int(dstImage.Width));
-			*lambda = 1.0 - (double((bbx2 - bbx1) * double(bby2 - bby1)) / double(dstImage.Height * dstImage.Width));
+
 			for (auto c = 0ull; c < dstImage.Channels; c++)
 				for (auto d = 0ull; d < dstImage.Depth; d++)
 					for (auto h = bby1; h < bby2; h++)
 						for (auto w = bbx1; w < bbx2; w++)
 							dstImage(c, d, h, w) = mixImage(c, d, h, w);
+
+			*lambda = 1.0 - (double((bbx2 - bbx1) * double(bby2 - bby1)) / double(dstImage.Height * dstImage.Width));
 
 			return dstImage;
 		}
