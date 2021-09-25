@@ -590,7 +590,7 @@ namespace dnn
 		gamma_dist_type a_gamma, b_gamma;
 
 		template <typename URNG>
-		result_type generate(URNG& engine,	gamma_dist_type& x_gamma, gamma_dist_type& y_gamma)
+		result_type generate(URNG& engine, gamma_dist_type& x_gamma, gamma_dist_type& y_gamma)
 		{
 			result_type x = x_gamma(engine);
 			return x / (x + y_gamma(engine));
@@ -598,10 +598,10 @@ namespace dnn
 	};
 
 	template<typename T>
-	static auto BetaDistribution(const T min, const T max) noexcept
+	static auto BetaDistribution(const T a, const T b) noexcept
 	{
 		static thread_local auto generator = std::mt19937(Seed<unsigned>());
-		return beta_distribution<T>(min, max)(generator);
+		return beta_distribution<T>(a, b)(generator);
 	}
 
 	static auto FloatToString(const Float value, const std::streamsize precision = 8)

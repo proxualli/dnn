@@ -272,7 +272,7 @@ int main(int argc, char* argv[])
 
             DNNSetNewEpochDelegate(&NewEpoch);
             DNNPersistOptimizer(persistOptimizer);
-            DNNAddLearningRateSGDR(true, 1, *trainingSamples, Optimizers::NAG, 0.9f, 0.999f, 0.0005f, 0.00001f, 128, 1, 200, 1, 0.05f, 0.0001f, 0.1f, 0.003f, 1, 1.0f, true, false, 0.0f, 0.7f, false, 0.7f, 0.7f, 20, 0.7f, Interpolations::Cubic, 10.0f, 12.0f);
+            DNNAddLearningRateSGDR(true, 1, *trainingSamples, Optimizers::NAG, 0.9f, 0.999f, 0.0005f, 0.00001f, 128, 1, 200, 1, 0.05f, 0.0001f, 0.1f, 0.003f, 1, 1.0f, true, false, 0.0f, 0.7f, true, 0.7f, 0.7f, 20, 0.7f, Interpolations::Cubic, 10.0f, 12.0f);
             DNNTraining();
 
             GetTrainingProgress(1, *trainingSamples, *testingSamples);
