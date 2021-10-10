@@ -853,7 +853,7 @@ namespace dnn
 				if (CurrentTrainingRate.BatchSize > BatchSize)
 					if (GetTotalFreeMemory() < GetNeuronsSize(CurrentTrainingRate.BatchSize - BatchSize))
 					{                           
-						std::cout << std::string("Memory required: ") << std::to_string(GetNeuronsSize(CurrentTrainingRate.BatchSize - BatchSize)/1024/1024) << " MB with BatchSize " << std::to_string(CurrentTrainingRate.BatchSize) << std::endl << std::endl;
+						std::cout << std::string("Memory required: ") << std::to_string(GetNeuronsSize(CurrentTrainingRate.BatchSize - BatchSize) / 1024 / 1024) << " MB with BatchSize " << std::to_string(CurrentTrainingRate.BatchSize) << std::endl << std::endl;
 						State.store(States::Completed);
 						return;
 					}
@@ -1158,8 +1158,8 @@ namespace dnn
 							// save the weights
 							State.store(States::SaveWeights);
 							auto directory = DataProv->StorageDirectory / std::string("definitions") / (Name + std::string("-weights"));
-							auto fileName = (directory / (std::to_string(CurrentEpoch) + std::string("-") + std::to_string(CurrentCycle) + std::string("-(") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(Optimizer))) + std::string(")-") + std::to_string(TrainErrors) + std::string("-") + std::to_string(TestErrors) + std::string(".bin"))).string();
-
+							auto fileName = (directory / (std::to_string(CurrentEpoch) + std::string("-") + std::to_string(CurrentCycle) + std::string("-(") + StringToLower(std::string(magic_enum::enum_name<Datasets>(Dataset))) + std::string(")(") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(Optimizer))) + std::string(")-") + std::to_string(TrainErrors) + std::string("-") + std::to_string(TestErrors) + std::string(".bin"))).string();
+							
 							std::filesystem::create_directories(directory);
 							SaveWeights(fileName, PersistOptimizer);
 							
