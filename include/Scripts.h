@@ -25,9 +25,10 @@ namespace scripts
     enum class Scripts
     {
         densenet = 0,
-        mobilenetv3 = 1,
-        resnet = 2,
-        shufflenetv2 = 3
+        efficientnetv2 = 1,
+        mobilenetv3 = 2,
+        resnet = 3,
+        shufflenetv2 = 4
     };
 
     enum class Datasets
@@ -83,6 +84,15 @@ namespace scripts
         }
     }
 
+    struct EffNetRecord
+    {
+        UInt ExpandRatio;
+        UInt Channels;
+        UInt Iterations;
+        UInt Stride;
+        bool SE;
+    }
+
     struct ScriptParameters
     {
         // Model defaullt parameters
@@ -123,7 +133,14 @@ namespace scripts
         bool SqueezeExcitation;
         bool ChannelZeroPad;
         scripts::Activations Activation = Activations::Relu;
-
+        auto EffNet = std::vector<EffNetRecord>();
+        EffNet.push_back({ 1, 24, 2, 1, false });
+        EffNet.push_back({ 4, 48, 4, 2, false });
+        EffNet.push_back({ 4, 64, 4, 2, false });
+        EffNet.push_back({ 4, 128, 6, 2, true });
+        EffNet.push_back({ 6, 160, 9, 1, true });
+        EffNet.push_back({ 6, 256, 15, 2, true });
+       
         UInt Classes() const
         {
             switch (Dataset)
@@ -170,7 +187,8 @@ namespace scripts
         bool BottleneckVisible() const { return Script == Scripts::densenet || Script == Scripts::resnet; }
         bool SqueezeExcitationVisible() const { return Script == Scripts::mobilenetv3 || Script == Scripts::shufflenetv2; }
         bool ChannelZeroPadVisible() const { return Script == Scripts::resnet; }
-
+        bool EffNetVisible() const { return Script == Scripts::efficientnetv2; }
+        
         auto GetName() const
         {
             auto common = std::string(magic_enum::enum_name<Scripts>(Script)) + std::string("-") + std::to_string(H) + std::string("x") + std::to_string(W) + std::string("-") + std::to_string(Groups) + std::string("-") + std::to_string(Iterations) + std::string("-");
@@ -179,6 +197,8 @@ namespace scripts
             {
             case Scripts::densenet:
                 return common + std::to_string(GrowthRate) + (Dropout > 0 ? std::string("-dropout") : std::string("")) + (Compression > 0 ? std::string("-compression") : std::string("")) + (Bottleneck ? std::string("-bottleneck") : std::string("")) + std::string("-") + StringToLower(std::string(magic_enum::enum_name<Activations>(Activation)));
+            case Scripts::efficientnetv2:
+                return std::string(magic_enum::enum_name<Scripts>(Script)) + std::string("-") + std::to_string(H) + std::string("x") + std::to_string(W) + std::string("-");
             case Scripts::mobilenetv3:
                 return common + std::to_string(Width) + std::string("-") + StringToLower(std::string(magic_enum::enum_name<Activations>(Activation))) + (SqueezeExcitation ? std::string("-se") : std::string(""));
             case Scripts::resnet:
@@ -435,6 +455,46 @@ namespace scripts
                 "Eps=" + std::to_string(eps) + nwl + nwl;
         }
 
+        static std::vector<std::string> MBConv(UInt id, std::string inputs, UInt inputChannels, UInt outputChannels, UInt stride = 1, UInt expandRatio = 4ull, bool se = false, scripts::Activations activation = scripts::Activations::HardSwish)
+        {
+            auto blocks = std::vector<std::string>();
+            auto hiddenDim = DIV8(inputChannels * expandRatio);
+            auto identity = stride == 1ull && inputChannels == outputChannels;
+
+            if (se)
+            {
+                auto group = In("SE", id + 1);
+                blocks.push_back(
+                    Convolution(id, inputs, hiddenDim, 1, 1, 1, 1, 0, 0) +
+                    BatchNormActivation(id, In("C", id), activation) +
+                    DepthwiseConvolution(id + 1, In("B", id), 1, 3, 3, stride, stride, 1, 1) +
+                    BatchNormActivation(id + 1, In("DC", id + 1), activation) +
+                    GlobalAvgPooling(In("B", id + 1), group) +
+                    Convolution(1, group + "GAP", DIV8(hiddenDim / expandRatio), 1, 1, 1, 1, 0, 0, group) +
+                    BatchNormActivation(1, group + "C1", activation == scripts::Activations::FRelu ? scripts::Activations::HardSwish : activation, group) +
+                    Convolution(2, group + "B1", hiddenDim, 1, 1, 1, 1, 0, 0, group) +
+                    BatchNormActivation(2, group + "C2", "HardLogistic", group) +
+                    ChannelMultiply(In("B", id + 1) + "," + group + "B2", group) +
+                    Convolution(id + 2, group + "CM", DIV8(outputChannels), 1, 1, 1, 1, 0, 0) +
+                    BatchNorm(id + 2, In("C", id + 2)));
+            }
+            else
+            {
+                blocks.push_back(
+                    Convolution(id, inputs, hiddenDim, 1, 1, 1, 1, 0, 0) +
+                    BatchNormActivation(id, In("C", id), activation) +
+                    DepthwiseConvolution(id + 1, In("B", id), 1, 3, 3, stride, stride, 1, 1) +
+                    BatchNormActivation(id + 1, In("DC", id + 1), activation) +
+                    Convolution(id + 2, In("B", id + 1), DIV8(outputChannels), 1, 1, 1, 1, 0, 0) +
+                    BatchNorm(id + 2, In("C", id + 2)));
+            }
+
+            if (identity)
+                blocks.push_back(Add(id + 2, In("B", id + 2) + "," + inputs));
+
+            return blocks;
+        }
+
         static std::string Generate(const ScriptParameters p)
         {
             const auto userLocale = std::setlocale(LC_ALL, "C");
@@ -567,6 +627,49 @@ namespace scripts
                     GlobalAvgPooling(In("B", C + 1)) +
                     Activation("GAP", "LogSoftmax") +
                     Cost("ACT", p.Dataset, p.Classes(), "CategoricalCrossEntropy", 0.125f);
+            }
+            break;
+
+            case Scripts::efficientnetv2:
+            {
+                auto W = p.EffNet[0].Channels;
+                auto inputChannels = DIV8(W);
+                auto outputChannels = DIV8(W);
+
+                net +=
+                    Convolution(1, "Input", inputChannels, 3, 3, 1, 1, 1, 1) +
+                    BatchNormActivation(1, "C1", p.Activation);
+
+                auto C = 2ull;
+
+                std::string inp = "B1";
+                for (auto rec : p.EffNet)
+                {
+                    outputChannels = DIV8(rec.Channels);
+                    for (auto n = 0ull; n < rec.Iterations; n++)
+                    {
+                        auto stride = n == 0ull ? rec.Stride : 1ull;
+                        auto identity = stride == 1ull && inputChannels == outputChannels;
+
+                        auto subblocks = MBConv(C, inp, inputChannels, outputChannels, stride, rec.ExpandRatio, rec.SE, p.Activation);
+                        for(auto blk : subblocks)
+                            net += blk;
+
+                        inputChannels = outputChannels;
+                        C += 2;
+                        inp = In((identity ? "A" : "B"), C);
+                        if (rec.SE && n > 0ull)
+                            C++;
+                        C++;
+                    }
+                }
+
+                net +=
+                    Convolution(C, In("A", C - 2), p.Classes, 1, 1, 1, 1, 0, 0) +
+                    BatchNormActivation(C + 1, In("C", C), p.Activation) +
+                    GlobalAvgPooling(In("B", C + 1)) +
+                    Activation("GAP", "LogSoftmax") +
+                    Cost("ACT", p.Dataset, p.Classes, "CategoricalCrossEntropy", 0.1f);
             }
             break;
 
