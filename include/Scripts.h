@@ -91,7 +91,7 @@ namespace scripts
         UInt Iterations;
         UInt Stride;
         bool SE;
-    }
+    };
 
     struct ScriptParameters
     {
@@ -133,14 +133,8 @@ namespace scripts
         bool SqueezeExcitation;
         bool ChannelZeroPad;
         scripts::Activations Activation = Activations::Relu;
-        auto EffNet = std::vector<EffNetRecord>();
-        EffNet.push_back({ 1, 24, 2, 1, false });
-        EffNet.push_back({ 4, 48, 4, 2, false });
-        EffNet.push_back({ 4, 64, 4, 2, false });
-        EffNet.push_back({ 4, 128, 6, 2, true });
-        EffNet.push_back({ 6, 160, 9, 1, true });
-        EffNet.push_back({ 6, 256, 15, 2, true });
-       
+        std::vector<EffNetRecord> EffNet = { { 1, 24, 2, 1, false }, { 4, 48, 4, 2, false }, { 4, 64, 4, 2, false }, { 4, 128, 6, 2, true }, { 6, 160, 9, 1, true }, { 6, 256, 15, 2, true } };
+
         UInt Classes() const
         {
             switch (Dataset)
@@ -632,20 +626,18 @@ namespace scripts
 
             case Scripts::efficientnetv2:
             {
-                auto W = p.EffNet[0].Channels;
-                auto inputChannels = DIV8(W);
-                auto outputChannels = DIV8(W);
-
+                auto inputChannels = DIV8(p.EffNet[0].Channels);
+                auto C = 1ull;
+                
                 net +=
-                    Convolution(1, "Input", inputChannels, 3, 3, 1, 1, 1, 1) +
-                    BatchNormActivation(1, "C1", p.Activation);
+                    Convolution(C, "Input", inputChannels, 3, 3, 1, 1, 1, 1) +
+                    BatchNormActivation(C, In("C", C), p.Activation);
 
-                auto C = 2ull;
-
-                std::string inp = "B1";
+                C++;
+                auto inp = std::string("B1");
                 for (auto rec : p.EffNet)
                 {
-                    outputChannels = DIV8(rec.Channels);
+                    auto outputChannels = DIV8(rec.Channels);
                     for (auto n = 0ull; n < rec.Iterations; n++)
                     {
                         auto stride = n == 0ull ? rec.Stride : 1ull;
@@ -658,18 +650,16 @@ namespace scripts
                         inputChannels = outputChannels;
                         C += 2;
                         inp = In((identity ? "A" : "B"), C);
-                        if (rec.SE && n > 0ull)
-                            C++;
                         C++;
                     }
                 }
 
                 net +=
-                    Convolution(C, In("A", C - 2), p.Classes, 1, 1, 1, 1, 0, 0) +
+                    Convolution(C, In("A", C - 2), p.Classes(), 1, 1, 1, 1, 0, 0) +
                     BatchNormActivation(C + 1, In("C", C), p.Activation) +
                     GlobalAvgPooling(In("B", C + 1)) +
                     Activation("GAP", "LogSoftmax") +
-                    Cost("ACT", p.Dataset, p.Classes, "CategoricalCrossEntropy", 0.1f);
+                    Cost("ACT", p.Dataset, p.Classes(), "CategoricalCrossEntropy", 0.1f);
             }
             break;
 
