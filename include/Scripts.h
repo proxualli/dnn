@@ -392,6 +392,14 @@ namespace scripts
                 "Inputs=" + inputs + nwl + nwl;
         }
 
+        static std::string Dense(std::string inputs, UInt channels, std::string group = "", std::string prefix = "DS")
+        {
+            return "[" + group + prefix + "]" + nwl +
+                "Type=Dense" + nwl +
+                "Inputs=" + inputs + nwl +
+                "Channels=" + std::to_string(channels) + nwl + nwl;
+        }
+
         static std::string AvgPooling(UInt id, std::string input, std::string kernel = "3,3", std::string stride = "2,2", std::string pad = "1,1", std::string group = "", std::string prefix = "P")
         {
             return "[" + group + prefix + std::to_string(id) + "]" + nwl +
@@ -633,8 +641,8 @@ namespace scripts
                     Convolution(C, "Input", inputChannels, 3, 3, 1, 1, 1, 1) +
                     BatchNormActivation(C, In("C", C), p.Activation);
 
+                auto inp = In("B", C);
                 C++;
-                auto inp = std::string("B1");
                 for (auto rec : p.EffNet)
                 {
                     auto outputChannels = DIV8(rec.Channels);
@@ -655,10 +663,11 @@ namespace scripts
                 }
 
                 net +=
-                    Convolution(C, In("A", C - 2), p.Classes(), 1, 1, 1, 1, 0, 0) +
+                    Convolution(C, In("A", C - 2), inputChannels, 1, 1, 1, 1, 0, 0) +
                     BatchNormActivation(C + 1, In("C", C), p.Activation) +
                     GlobalAvgPooling(In("B", C + 1)) +
-                    Activation("GAP", "LogSoftmax") +
+                    Dense("GAP", p.Classes())  +
+                    Activation("DS", "LogSoftmax") +
                     Cost("ACT", p.Dataset, p.Classes(), "CategoricalCrossEntropy", 0.1f);
             }
             break;
