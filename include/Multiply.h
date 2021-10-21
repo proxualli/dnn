@@ -161,23 +161,23 @@ namespace dnn
 
 					case 4:
 						for_i(batchSize, threads, [=](UInt n)
+						{
+							const auto start = n * PaddedCDHW;
+							const auto end = start + PaddedCDHW;
+							VecFloat In0, In1, In2, In3;
+							const auto vecZero = VecFloat(0);
+							for (auto cdhw = start; cdhw < end; cdhw += VectorSize)
 							{
-								const auto start = n * PaddedCDHW;
-								const auto end = start + PaddedCDHW;
-								VecFloat In0, In1, In2, In3;
-								const auto vecZero = VecFloat(0);
-								for (auto cdhw = start; cdhw < end; cdhw += VectorSize)
-								{
-									In0.load_a(&Inputs[0]->Neurons[cdhw]);
-									In1.load_a(&Inputs[1]->Neurons[cdhw]);
-									In2.load_a(&Inputs[2]->Neurons[cdhw]);
-									In3.load_a(&Inputs[3]->Neurons[cdhw]);
-									(In0 * In1 * In2 * In3).store_a(&Neurons[cdhw]);
+								In0.load_a(&Inputs[0]->Neurons[cdhw]);
+								In1.load_a(&Inputs[1]->Neurons[cdhw]);
+								In2.load_a(&Inputs[2]->Neurons[cdhw]);
+								In3.load_a(&Inputs[3]->Neurons[cdhw]);
+								(In0 * In1 * In2 * In3).store_a(&Neurons[cdhw]);
 #ifndef DNN_LEAN
-									vecZero.store_nt(&NeuronsD1[cdhw]);
+								vecZero.store_nt(&NeuronsD1[cdhw]);
 #endif // DNN_LEAN
-								}
-							});
+							}
+						});
 						break;
 
 					default:
@@ -286,53 +286,53 @@ namespace dnn
 					{
 					case 2:
 						for_i(batchSize, threads, [=](UInt n)
+						{
+							const auto start = n * PaddedCDHW;
+							const auto end = start + PaddedCDHW;
+							VecFloat In0, In1;
+							const auto vecZero = VecFloat(0);
+							for (auto cdhw = start; cdhw < end; cdhw += VectorSize)
 							{
-								const auto start = n * PaddedCDHW;
-								const auto end = start + PaddedCDHW;
-								VecFloat In0, In1;
-								const auto vecZero = VecFloat(0);
-								for (auto cdhw = start; cdhw < end; cdhw += VectorSize)
-								{
-									In0.load_a(&Inputs[0]->Neurons[cdhw]);
-									In1.load_a(&Inputs[1]->Neurons[cdhw]);
-									(In0 * In1).store_a(&Neurons[cdhw]);
-								}
-							});
+								In0.load_a(&Inputs[0]->Neurons[cdhw]);
+								In1.load_a(&Inputs[1]->Neurons[cdhw]);
+								(In0 * In1).store_a(&Neurons[cdhw]);
+							}
+						});
 						break;
 
 					case 3:
 						for_i(batchSize, threads, [=](UInt n)
+						{
+							const auto start = n * PaddedCDHW;
+							const auto end = start + PaddedCDHW;
+							VecFloat In0, In1, In2;
+							const auto vecZero = VecFloat(0);
+							for (auto cdhw = start; cdhw < end; cdhw += VectorSize)
 							{
-								const auto start = n * PaddedCDHW;
-								const auto end = start + PaddedCDHW;
-								VecFloat In0, In1, In2;
-								const auto vecZero = VecFloat(0);
-								for (auto cdhw = start; cdhw < end; cdhw += VectorSize)
-								{
-									In0.load_a(&Inputs[0]->Neurons[cdhw]);
-									In1.load_a(&Inputs[1]->Neurons[cdhw]);
-									In2.load_a(&Inputs[2]->Neurons[cdhw]);
-									(In0 * In1 * In2).store_a(&Neurons[cdhw]);
-								}
-							});
+								In0.load_a(&Inputs[0]->Neurons[cdhw]);
+								In1.load_a(&Inputs[1]->Neurons[cdhw]);
+								In2.load_a(&Inputs[2]->Neurons[cdhw]);
+								(In0 * In1 * In2).store_a(&Neurons[cdhw]);
+							}
+						});
 						break;
 
 					case 4:
 						for_i(batchSize, threads, [=](UInt n)
+						{
+							const auto start = n * PaddedCDHW;
+							const auto end = start + PaddedCDHW;
+							VecFloat In0, In1, In2, In3;
+							const auto vecZero = VecFloat(0);
+							for (auto cdhw = start; cdhw < end; cdhw += VectorSize)
 							{
-								const auto start = n * PaddedCDHW;
-								const auto end = start + PaddedCDHW;
-								VecFloat In0, In1, In2, In3;
-								const auto vecZero = VecFloat(0);
-								for (auto cdhw = start; cdhw < end; cdhw += VectorSize)
-								{
-									In0.load_a(&Inputs[0]->Neurons[cdhw]);
-									In1.load_a(&Inputs[1]->Neurons[cdhw]);
-									In2.load_a(&Inputs[2]->Neurons[cdhw]);
-									In3.load_a(&Inputs[3]->Neurons[cdhw]);
-									(In0 * In1 * In2 * In3).store_a(&Neurons[cdhw]);
-								}
-							});
+								In0.load_a(&Inputs[0]->Neurons[cdhw]);
+								In1.load_a(&Inputs[1]->Neurons[cdhw]);
+								In2.load_a(&Inputs[2]->Neurons[cdhw]);
+								In3.load_a(&Inputs[3]->Neurons[cdhw]);
+								(In0 * In1 * In2 * In3).store_a(&Neurons[cdhw]);
+							}
+						});
 						break;
 
 					default:

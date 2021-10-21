@@ -33,16 +33,16 @@ namespace dnn
 		{
 			assert(Inputs.size() == 1);
 
-			if (InputLayer->DstMemDesc->data.ndims == 2)
-			{
-				PersistWeightsMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(C), dnnl::memory::dim(InputLayer->C) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::oi));
-				WeightsMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(C), dnnl::memory::dim(InputLayer->C) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::oi));
-			}
-			else
-			{
-				PersistWeightsMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(C), dnnl::memory::dim(InputLayer->C), dnnl::memory::dim(InputLayer->H), dnnl::memory::dim(InputLayer->W) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::oihw));
-				WeightsMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(C), dnnl::memory::dim(InputLayer->C), dnnl::memory::dim(InputLayer->H), dnnl::memory::dim(InputLayer->W) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::oihw));
-			}
+			//if (InputLayer->DstMemDesc->data.ndims == 2)
+			//{
+				PersistWeightsMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(C), dnnl::memory::dim(InputLayer->C * InputLayer->H * InputLayer->W) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::oi));
+				WeightsMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(C), dnnl::memory::dim(InputLayer->C * InputLayer->H * InputLayer->W) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::oi));
+			//}
+			//else
+			//{
+				//PersistWeightsMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(C), dnnl::memory::dim(InputLayer->C), dnnl::memory::dim(InputLayer->H), dnnl::memory::dim(InputLayer->W) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::oihw));
+				//WeightsMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(C), dnnl::memory::dim(InputLayer->C), dnnl::memory::dim(InputLayer->H), dnnl::memory::dim(InputLayer->W) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::oihw));
+			//}
 		}
 
 		std::string GetDescription() const final override

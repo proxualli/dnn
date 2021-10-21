@@ -2087,7 +2087,7 @@ namespace dnn
 						goto FAIL;
 					}
 
-					if (layerType != LayerTypes::ChannelZeroPad && layerType != LayerTypes::Convolution && layerType != LayerTypes::ConvolutionTranspose && layerType != LayerTypes::Cost)
+					if (layerType != LayerTypes::ChannelZeroPad && layerType != LayerTypes::Dense && layerType != LayerTypes::Convolution && layerType != LayerTypes::ConvolutionTranspose && layerType != LayerTypes::Cost)
 					{
 						msg = CheckMsg(line, col, "Channels cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
 						goto FAIL;

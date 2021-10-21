@@ -171,7 +171,6 @@ namespace dnn
 						InputLayer->NeuronsD1[i] += NeuronsActive[i] * NeuronsD1[i];
 				});
 
-
 #ifdef DNN_LEAN
 			ReleaseGradient();
 #endif // DNN_LEAN
