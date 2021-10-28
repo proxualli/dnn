@@ -666,8 +666,8 @@ namespace scripts
                     Convolution(C, In("A", C - 2), inputChannels, 1, 1, 1, 1, 0, 0) +
                     BatchNormActivation(C + 1, In("C", C), p.Activation) +
                     GlobalAvgPooling(In("B", C + 1)) +
-                    Dense("GAP", p.Classes())  +
-                    Activation("DS", "LogSoftmax") +
+                    Convolution(C + 1, "GAP", p.Classes(), 1, 1, 1, 1, 0, 0) +
+                    Activation(In("C", C + 1), "LogSoftmax") +
                     Cost("ACT", p.Dataset, p.Classes(), "CategoricalCrossEntropy", 0.1f);
             }
             break;
