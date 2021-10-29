@@ -68,7 +68,8 @@ jobs:
     #    uses a compiled language
 
     - run: |
-       sudo ./build.sh
+       export CC=clang and export CXX=clang++
+       mkdir -p build && cd build && cmake -G Ninja .. -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON && ninja
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v1
