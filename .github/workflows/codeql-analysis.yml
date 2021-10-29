@@ -40,6 +40,11 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
+    - name: Install Ninja
+      run: |
+            sudo apt-get update -y
+            sudo apt-get install -y ninja-build
+            
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v1
@@ -63,8 +68,7 @@ jobs:
     #    uses a compiled language
 
     - run: |
-       make bootstrap
-       make release
+       sudo ./build.sh
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v1
