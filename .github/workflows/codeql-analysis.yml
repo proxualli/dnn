@@ -62,7 +62,7 @@ jobs:
     
     # Build
     - name: Build dnn
-    - run: |
+      run: |
         export CC=clang and export CXX=clang++
         mkdir -p build && cd build && cmake -G Ninja .. -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON && ninja
 
