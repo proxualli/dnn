@@ -1,6 +1,6 @@
 #!/bin/bash
 sudo apt update && sudo apt upgrade
-sudo apt install build-essential curl unzip libomp-dev clang nasm graphviz doxygen cmake ninja-build
+sudo apt install build-essential curl unzip libomp-dev clang nasm graphviz doxygen python3-sphinx cmake ninja-build
 
 export CC=clang and export CXX=clang++
 export KMP_AFFINITY=granularity=fine,compact,1,0
