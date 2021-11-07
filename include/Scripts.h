@@ -91,6 +91,10 @@ namespace scripts
         UInt Iterations;
         UInt Stride;
         bool SE;
+        std::string to_string()
+        {
+            return "(" + std::to_string(ExpandRatio) + "-" + std::to_string(Channels) + "-" + std::to_string(Iterations) + "-" + std::to_string(Stride) + (SE ? "-se" : "") + ")";
+        }
     };
 
     struct ScriptParameters
@@ -192,7 +196,12 @@ namespace scripts
             case Scripts::densenet:
                 return common + std::to_string(GrowthRate) + (Dropout > 0 ? std::string("-dropout") : std::string("")) + (Compression > 0 ? std::string("-compression") : std::string("")) + (Bottleneck ? std::string("-bottleneck") : std::string("")) + std::string("-") + StringToLower(std::string(magic_enum::enum_name<Activations>(Activation)));
             case Scripts::efficientnetv2:
-                return std::string(magic_enum::enum_name<Scripts>(Script)) + std::string("-") + std::to_string(H) + std::string("x") + std::to_string(W) + std::string("-");
+            {
+                auto name = std::string(magic_enum::enum_name<Scripts>(Script)) + std::string("-") + std::to_string(H) + std::string("x") + std::to_string(W);
+                for (auto rec : EffNet)
+                    name += rec.to_string();
+                return name;
+            }
             case Scripts::mobilenetv3:
                 return common + std::to_string(Width) + std::string("-") + StringToLower(std::string(magic_enum::enum_name<Activations>(Activation))) + (SqueezeExcitation ? std::string("-se") : std::string(""));
             case Scripts::resnet:
