@@ -84,7 +84,7 @@ namespace scripts
         }
     }
 
-    struct EffNetRecord
+    struct EfficientNetRecord
     {
         UInt ExpandRatio;
         UInt Channels;
@@ -94,6 +94,19 @@ namespace scripts
         std::string to_string()
         {
             return "(" + std::to_string(ExpandRatio) + "-" + std::to_string(Channels) + "-" + std::to_string(Iterations) + "-" + std::to_string(Stride) + (SE ? "-se" : "") + ")";
+        }
+    };
+
+    struct ShuffleNetRecord
+    {
+        UInt Iterations;
+        UInt Kernel;
+        UInt Pad;
+        UInt Shuffle;
+        bool SE;
+        std::string to_string()
+        {
+            return "(" + std::to_string(Iterations) + "-" + std::to_string(Kernel) + "-" + std::to_string(Pad) + "-" + std::to_string(Shuffle) + (SE ? "-se" : "") + ")";
         }
     };
 
@@ -137,7 +150,8 @@ namespace scripts
         bool SqueezeExcitation;
         bool ChannelZeroPad;
         scripts::Activations Activation = Activations::Relu;
-        std::vector<EffNetRecord> EffNet = { { 1, 24, 2, 1, false }, { 4, 48, 4, 2, false }, { 4, 64, 4, 2, false }, { 4, 128, 6, 2, true }, { 6, 160, 9, 1, true }, { 6, 256, 15, 2, true } };
+        std::vector<EfficientNetRecord> EfficientNet = { { 1, 24, 2, 1, false }, { 4, 48, 4, 2, false }, { 4, 64, 4, 2, false }, { 4, 128, 6, 2, true }, { 6, 160, 9, 1, true }, { 6, 256, 15, 2, true } };
+        std::vector<ShuffleNetRecord> ShuffleNet = { { 6, 3, 1, 4, false }, { 7, 3, 1, 4, true }, { 8, 3, 1, 4, true } };
 
         UInt Classes() const
         {
@@ -171,8 +185,6 @@ namespace scripts
                 return (Groups * Iterations * 3) + ((Groups - 1) * 2);
             case Scripts::resnet:
                 return (Groups * Iterations * (Bottleneck ? 3u : 2u)) + ((Groups - 1) * 2);
-            case Scripts::shufflenetv2:
-                return (Groups * (Iterations - 1) * 3) + (Groups * 5) + 1;
             default:
                 return 0;
             }
@@ -183,10 +195,11 @@ namespace scripts
         bool DropoutVisible() const { return Script == Scripts::densenet || Script == Scripts::resnet; }
         bool CompressionVisible() const { return Script == Scripts::densenet; }
         bool BottleneckVisible() const { return Script == Scripts::densenet || Script == Scripts::resnet; }
-        bool SqueezeExcitationVisible() const { return Script == Scripts::mobilenetv3 || Script == Scripts::shufflenetv2; }
+        bool SqueezeExcitationVisible() const { return Script == Scripts::mobilenetv3; }
         bool ChannelZeroPadVisible() const { return Script == Scripts::resnet; }
-        bool EffNetVisible() const { return Script == Scripts::efficientnetv2; }
-        
+        bool EfficientNetVisible() const { return Script == Scripts::efficientnetv2; }
+        bool ShuffleNetVisible() const { return Script == Scripts::shufflenetv2; }
+
         auto GetName() const
         {
             auto common = std::string(magic_enum::enum_name<Scripts>(Script)) + std::string("-") + std::to_string(H) + std::string("x") + std::to_string(W) + std::string("-") + std::to_string(Groups) + std::string("-") + std::to_string(Iterations) + std::string("-");
@@ -198,7 +211,7 @@ namespace scripts
             case Scripts::efficientnetv2:
             {
                 auto name = std::string(magic_enum::enum_name<Scripts>(Script)) + std::string("-") + std::to_string(H) + std::string("x") + std::to_string(W) + std::string("-");
-                for (auto rec : EffNet)
+                for (auto rec : EfficientNet)
                     name += rec.to_string();
                 return name;
             }
@@ -207,7 +220,12 @@ namespace scripts
             case Scripts::resnet:
                 return common + std::to_string(Width) + (Dropout > 0 ? std::string("-dropout") : std::string("")) + (Bottleneck ? std::string("-bottleneck") : std::string("")) + (ChannelZeroPad ? std::string("-channelzeropad") : std::string("")) + std::string("-") + StringToLower(std::string(magic_enum::enum_name<Activations>(Activation)));
             case Scripts::shufflenetv2:
-                return common + std::to_string(Width) + std::string("-") + StringToLower(std::string(magic_enum::enum_name<Activations>(Activation))) + (SqueezeExcitation ? std::string("-se") : std::string(""));
+            {
+                auto name = std::string(magic_enum::enum_name<Scripts>(Script)) + std::string("-") + std::to_string(H) + std::string("x") + std::to_string(W) + std::string("-") + std::to_string(Width) + std::string("-");
+                for (auto rec : ShuffleNet)
+                    name += rec.to_string();
+                return name;
+            }
             default:
                 return common;
             }
@@ -466,7 +484,7 @@ namespace scripts
                 "Eps=" + std::to_string(eps) + nwl + nwl;
         }
 
-        static std::vector<std::string> MBConv(UInt id, std::string inputs, UInt inputChannels, UInt outputChannels, UInt stride = 1, UInt expandRatio = 4ull, bool se = false, scripts::Activations activation = scripts::Activations::HardSwish)
+        static std::vector<std::string> MBConv(UInt id, std::string inputs, UInt inputChannels, UInt outputChannels, UInt stride = 1, UInt expandRatio = 4, bool se = false, scripts::Activations activation = scripts::Activations::HardSwish)
         {
             auto blocks = std::vector<std::string>();
             auto hiddenDim = DIV8(inputChannels * expandRatio);
@@ -481,12 +499,12 @@ namespace scripts
                     DepthwiseConvolution(id + 1, In("B", id), 1, 3, 3, stride, stride, 1, 1) +
                     BatchNormActivation(id + 1, In("DC", id + 1), activation) +
                     GlobalAvgPooling(In("B", id + 1), group) +
-                    Convolution(1, group + "GAP", DIV8(hiddenDim / expandRatio), 1, 1, 1, 1, 0, 0, group) +
-                    BatchNormActivation(1, group + "C1", activation == scripts::Activations::FRelu ? scripts::Activations::HardSwish : activation, group) +
-                    Convolution(2, group + "B1", hiddenDim, 1, 1, 1, 1, 0, 0, group) +
-                    BatchNormActivation(2, group + "C2", "HardLogistic", group) +
-                    ChannelMultiply(In("B", id + 1) + "," + group + "B2", group) +
-                    Convolution(id + 2, group + "CM", DIV8(outputChannels), 1, 1, 1, 1, 0, 0) +
+                    Convolution(1, group + std::string("GAP"), DIV8(hiddenDim / expandRatio), 1, 1, 1, 1, 0, 0, group) +
+                    BatchNormActivation(1, group + std::string("C1"), activation == scripts::Activations::FRelu ? scripts::Activations::HardSwish : activation, group) +
+                    Convolution(2, group + std::string("B1"), hiddenDim, 1, 1, 1, 1, 0, 0, group) +
+                    BatchNormActivation(2, group + std::string("C2"), std::string("HardLogistic"), group) +
+                    ChannelMultiply(In("B", id + 1) + std::string(",") + group + std::string("B2"), group) +
+                    Convolution(id + 2, group + std::string("CM"), DIV8(outputChannels), 1, 1, 1, 1, 0, 0) +
                     BatchNorm(id + 2, In("C", id + 2)));
             }
             else
@@ -504,6 +522,49 @@ namespace scripts
                 blocks.push_back(Add(id + 2, In("B", id + 2) + "," + inputs));
 
             return blocks;
+        }
+
+        static std::string InvertedResidual(UInt id, UInt n, UInt channels, UInt kernel = 3, UInt pad = 1, bool subsample = false, UInt shuffle = 2, bool se = false, scripts::Activations activation = scripts::Activations::HardSwish)
+        {
+            if (subsample)
+            {
+                return
+                    Convolution(id, In("CC", n), channels, 1, 1, 1, 1, 0, 0) +
+                    BatchNormActivation(id + 1, In("C", id), activation) +
+                    DepthwiseConvolution(id + 1, In("B", id + 1), 1, kernel, kernel, 2, 2, pad, pad) +
+                    BatchNorm(id + 2, In("DC", id + 1)) +
+                    Convolution(id + 2, In("B", id + 2), channels, 1, 1, 1, 1, 0, 0) +
+                    BatchNormActivation(id + 3, In("C", id + 2), activation) +
+                    DepthwiseConvolution(id + 3, In("CC", n), 1, kernel, kernel, 2, 2, pad, pad) +
+                    BatchNorm(id + 4, In("DC", id + 3)) +
+                    Convolution(id + 4, In("B", id + 4), channels, 1, 1, 1, 1, 0, 0) +
+                    BatchNormActivation(id + 5, In("C", id + 4), activation) +
+                    Concat(n + 1, In("B", id + 5) + "," + In("B", id + 3));
+            }
+            else
+            {
+                auto group = In("SE", id + 3);
+                auto strSE =
+                    se ? GlobalAvgPooling(In("B", id + 3), group) +
+                    Convolution(1, group + std::string("GAP"), DIV8(channels / 4), 1, 1, 1, 1, 0, 0, group) +
+                    BatchNormActivation(1, group + std::string("C1"), activation == Activations::FRelu ? Activations::HardSwish : activation, group) +
+                    Convolution(2, group + std::string("B1"), channels, 1, 1, 1, 1, 0, 0, group) +
+                    BatchNormActivation(2, group + std::string("C2"), std::string("HardLogistic"), group) +
+                    ChannelMultiply(In("B", id + 3) + std::string(",") + group + std::string("B2"), group) +
+                    Concat(n + 1, In("LCS", n) + std::string(",") + group + std::string("CM")) :
+                    Concat(n + 1, In("LCS", n) + std::string(",") + In("B", id + 3));
+
+                return
+                    ChannelShuffle(n, In("CC", n), shuffle) +
+                    ChannelSplit(n, In("CSH", n), 2, 1, "L") + ChannelSplit(n, In("CSH", n), 2, 2, "R") +
+                    Convolution(id, In("RCS", n), channels, 1, 1, 1, 1, 0, 0) +
+                    BatchNormActivation(id + 1, In("C", id), activation) +
+                    DepthwiseConvolution(id + 1, In("B", id + 1), 1, kernel, kernel, 1, 1, pad, pad) +
+                    BatchNorm(id + 2, In("DC", id + 1)) +
+                    Convolution(id + 2, In("B", id + 2), channels, 1, 1, 1, 1, 0, 0) +
+                    BatchNormActivation(id + 3, In("C", id + 2), activation) +
+                    strSE;
+            }
         }
 
         static std::string Generate(const ScriptParameters p)
@@ -643,16 +704,15 @@ namespace scripts
 
             case Scripts::efficientnetv2:
             {
-                auto inputChannels = DIV8(p.EffNet[0].Channels);
+                auto inputChannels = DIV8(p.EfficientNet[0].Channels);
                 auto C = 1ull;
                 
                 net +=
                     Convolution(C, "Input", inputChannels, 3, 3, 1, 1, 1, 1) +
                     BatchNormActivation(C, In("C", C), p.Activation);
 
-                auto inp = In("B", C);
-                C++;
-                for (auto rec : p.EffNet)
+                auto input = In("B", C++);
+                for (auto rec : p.EfficientNet)
                 {
                     auto outputChannels = DIV8(rec.Channels);
                     for (auto n = 0ull; n < rec.Iterations; n++)
@@ -660,14 +720,13 @@ namespace scripts
                         auto stride = n == 0ull ? rec.Stride : 1ull;
                         auto identity = stride == 1ull && inputChannels == outputChannels;
 
-                        auto subblocks = MBConv(C, inp, inputChannels, outputChannels, stride, rec.ExpandRatio, rec.SE, p.Activation);
+                        auto subblocks = MBConv(C, input, inputChannels, outputChannels, stride, rec.ExpandRatio, rec.SE, p.Activation);
                         for(auto blk : subblocks)
                             net += blk;
 
                         inputChannels = outputChannels;
                         C += 2;
-                        inp = In((identity ? "A" : "B"), C);
-                        C++;
+                        input = In((identity ? "A" : "B"), C++);
                     }
                 }
 
@@ -893,80 +952,38 @@ namespace scripts
 
             case Scripts::shufflenetv2:
             {
-                auto se = false;
-                auto W = p.Width * 16;
-                auto kernel = 3ull;
-                auto pad = 1ull;
+                auto channels = DIV8(p.Width * 16);
 
-                net += Convolution(1, "Input", DIV8(W), kernel, kernel, 1, 1, pad, pad);
-
-                blocks.push_back(
+                net +=
+                    Convolution(1, "Input", channels, 3, 3, 1, 1, 1, 1) +
                     BatchNormActivation(1, "C1", p.Activation) +
-                    Convolution(2, "B1", DIV8(W), 1, 1, 1, 1, 0, 0) +
+                    Convolution(2, "B1", channels, 1, 1, 1, 1, 0, 0) +
                     BatchNormActivation(2, "C2", p.Activation) +
-                    DepthwiseConvolution(3, "B2", 1, kernel, kernel, 1, 1, pad, pad) +
+                    DepthwiseConvolution(3, "B2", 1, 3, 3, 1, 1, 1, 1) +
                     BatchNorm(3, "DC3") +
-                    Convolution(4, "B3", DIV8(W), 1, 1, 1, 1, 0, 0) +
+                    Convolution(4, "B3", channels, 1, 1, 1, 1, 0, 0) +
                     BatchNormActivation(4, "C4", p.Activation) +
-                    Convolution(5, "B1", DIV8(W), 1, 1, 1, 1, 0, 0) +
-                    Concat(1, "C5,B4"));
+                    Convolution(5, "B1", channels, 1, 1, 1, 1, 0, 0) +
+                    Concat(1, "C5,B4");
 
                 auto C = 6ull;
                 auto A = 1ull;
-
-                for (auto g = 1ull; g <= p.Groups; g++)
+                auto subsample = false;
+                for(auto rec : p.ShuffleNet)
                 {
-                    if (g > 1)
+                    if (subsample)
                     {
-                        se = p.SqueezeExcitation;
-                        W *= 2;
-
-                        blocks.push_back(
-                            Convolution(C, In("CC", A), DIV8(W), 1, 1, 1, 1, 0, 0) +
-                            BatchNormActivation(C + 1, In("C", C), p.Activation) +
-                            DepthwiseConvolution(C + 1, In("B", C + 1), 1, kernel, kernel, 2, 2, pad, pad) +
-                            BatchNorm(C + 2, In("DC", C + 1)) +
-                            Convolution(C + 2, In("B", C + 2), DIV8(W), 1, 1, 1, 1, 0, 0) +
-                            BatchNormActivation(C + 3, In("C", C + 2), p.Activation) +
-                            DepthwiseConvolution(C + 3, In("CC", A), 1, kernel, kernel, 2, 2, pad, pad) +
-                            BatchNorm(C + 4, In("DC", C + 3)) +
-                            Convolution(C + 4, In("B", C + 4), DIV8(W), 1, 1, 1, 1, 0, 0) +
-                            BatchNormActivation(C + 5, In("C", C + 4), p.Activation) +
-                            Concat(A + 1, In("B", C + 5) + "," + In("B", C + 3)));
-
-                        A++; C += 5;
+                        channels *= 2;
+                        net += InvertedResidual(C, A++, channels, rec.Kernel, rec.Pad, true, rec.Shuffle, rec.SE, p.Activation);
+                        C += 5;
                     }
-
-                    for (auto i = 1ull; i < p.Iterations; i++)
+                    for (auto n = 0ull; n < rec.Iterations; n++)
                     {
-                        auto group = In("SE", C + 3);
-                        auto strSE =
-                            se ? GlobalAvgPooling(In("B", C + 3), group) +
-                            Convolution(1, group + "GAP", DIV8(W / 4), 1, 1, 1, 1, 0, 0, group) +
-                            BatchNormActivation(1, group + "C1", p.Activation == Activations::FRelu ? Activations::HardSwish : p.Activation, group) +
-                            Convolution(2, group + "B1", DIV8(W), 1, 1, 1, 1, 0, 0, group) +
-                            BatchNormActivation(2, group + "C2", "HardLogistic", group) +
-                            ChannelMultiply(In("B", C + 3) + "," + group + "B2", group) +
-                            Concat(A + 1, In("LCS", A) + "," + group + "CM") :
-                            Concat(A + 1, In("LCS", A) + "," + In("B", C + 3));
-
-                        blocks.push_back(
-                            ChannelShuffle(A, In("CC", A), 2) +
-                            ChannelSplit(A, In("CSH", A), 2, 1, "L") + ChannelSplit(A, In("CSH", A), 2, 2, "R") +
-                            Convolution(C, In("RCS", A), DIV8(W), 1, 1, 1, 1, 0, 0) +
-                            BatchNormActivation(C + 1, In("C", C), p.Activation) +
-                            DepthwiseConvolution(C + 1, In("B", C + 1), 1, kernel, kernel, 1, 1, pad, pad) +
-                            BatchNorm(C + 2, In("DC", C + 1)) +
-                            Convolution(C + 2, In("B", C + 2), DIV8(W), 1, 1, 1, 1, 0, 0) +
-                            BatchNormActivation(C + 3, In("C", C + 2), p.Activation) +
-                            strSE);
-
-                        A++; C += 3;
+                        net += InvertedResidual(C, A++, channels, rec.Kernel, rec.Pad, false, rec.Shuffle, rec.SE, p.Activation);
+                        C += 3;
                     }
+                    subsample = true;
                 }
-
-                for (auto block : blocks)
-                    net += block;
 
                 net +=
                     Convolution(C, In("CC", A), p.Classes(), 1, 1, 1, 1, 0, 0) +

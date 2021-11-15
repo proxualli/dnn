@@ -232,12 +232,13 @@ int main(int argc, char* argv[])
     p.MirrorPad = false;
     p.Groups = 3;
     p.Iterations = 6;
-    p.Width = 10;
+    p.Width = 12;
     p.Activation = scripts::Activations::HardSwish;
     p.Dropout = Float(0);
     p.Bottleneck = false;
     p.SqueezeExcitation = true;
     p.ChannelZeroPad = false;
+    p.ShuffleNet = { { 6, 3, 1, 4, false }, { 7, 3, 1, 4, true }, { 8, 3, 1, 4, true } };
 
     auto model = scripts::ScriptsCatalog::Generate(p);
 
