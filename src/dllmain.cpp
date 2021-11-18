@@ -238,7 +238,7 @@ extern "C" DNN_API void DNNResetLayerWeights(const UInt layerIndex)
 
 extern "C" DNN_API void DNNGetImage(const UInt layerIndex, const Byte fillColor, Byte* image)
 {
-	if (model && layerIndex < model->Layers.size() && !model->BatchSizeChanging.load() && !model->ResettingWeights.load() && model->TaskState == dnn::TaskStates::Stopped)
+	if (model && layerIndex < model->Layers.size() && !model->BatchSizeChanging.load() && !model->ResettingWeights.load() && model->TaskState.load() == dnn::TaskStates::Stopped)
 	{
 		switch (model->Layers[layerIndex]->LayerType)
 		{
@@ -276,7 +276,7 @@ extern "C" DNN_API void DNNGetImage(const UInt layerIndex, const Byte fillColor,
 extern "C" DNN_API bool DNNGetInputSnapShot(std::vector<Float>* snapshot, std::vector<UInt>* label)
 {
 	if (model)
-		if ((model->TaskState.load() == TaskStates::Running) && ((model->State.load() == States::Training) || (model->State.load() == States::Testing)))
+		if (model->TaskState.load() == TaskStates::Running && model->State.load() == States::Training || model->State.load() == States::Testing)
 			return model->GetInputSnapShot(snapshot, label);
 
 	return false;
@@ -507,7 +507,7 @@ extern "C" DNN_API void DNNGetTestingInfo(UInt* batchSize, UInt* sampleIndex, Fl
 
 extern "C" DNN_API void DNNRefreshStatistics(const UInt layerIndex, std::string* description, Stats* neuronsStats, Stats* weightsStats, Stats* biasesStats, Float* fpropLayerTime, Float* bpropLayerTime, Float* updateLayerTime, Float* fpropTime, Float* bpropTime, Float* updateTime, bool* locked)
 {
-	if (model && layerIndex < model->Layers.size())
+	if (model && (layerIndex < model->Layers.size()))
 	{
 		while (model->BatchSizeChanging.load() || model->ResettingWeights.load())
 			std::this_thread::sleep_for(std::chrono::milliseconds(250));
