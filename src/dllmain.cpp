@@ -238,7 +238,7 @@ extern "C" DNN_API void DNNResetLayerWeights(const UInt layerIndex)
 
 extern "C" DNN_API void DNNGetImage(const UInt layerIndex, const Byte fillColor, Byte* image)
 {
-	if (model && layerIndex < model->Layers.size() && !model->BatchSizeChanging.load() && !model->ResettingWeights.load())
+	if (model && layerIndex < model->Layers.size() && !model->BatchSizeChanging.load() && !model->ResettingWeights.load() && model->TaskState == dnn::TaskStates::Stopped)
 	{
 		switch (model->Layers[layerIndex]->LayerType)
 		{
