@@ -4,7 +4,11 @@
 namespace dnn
 {
 	class Model;
-	
+	class Convolution;
+	class DepthwiseConvolution;
+	class PartialDepthwiseConvoltion;
+	class ConvolutionTranspose;
+
 	enum class Optimizers
 	{
 		AdaBound = 0,
@@ -892,7 +896,7 @@ namespace dnn
 
 				case Fillers::HeNormal:
 				{
-					auto stddev = std::sqrt(Float(2) / Float(FanIn()));
+					auto stddev = std::sqrt(Float(2) / Float(FanOut()));
 					auto distribution = std::normal_distribution<Float>(Float(0), stddev);
 					std::generate_n(weights.begin(), WeightCount, [&]() { return distribution(RandomEngine); });
 				}
