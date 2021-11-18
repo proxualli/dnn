@@ -238,7 +238,8 @@ int main(int argc, char* argv[])
     p.Bottleneck = false;
     p.SqueezeExcitation = true;
     p.ChannelZeroPad = false;
-    p.ShuffleNet = { { 6, 3, 1, 4, false }, { 7, 3, 1, 4, true }, { 8, 3, 1, 4, true } };
+    p.EfficientNet = { { 1, 24, 2, 1, false }, { 4, 48, 4, 2, false }, { 4, 64, 4, 2, false }, { 4, 128, 6, 2, true }, { 6, 160, 9, 1, true }, { 6, 256, 15, 2, true } };
+    p.ShuffleNet = { { 6, 3, 1, 4, false }, { 7, 3, 1, 4, true }, { 8, 3, 1, 4,true } };
 
     auto model = scripts::ScriptsCatalog::Generate(p);
 
