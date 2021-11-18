@@ -704,11 +704,11 @@ namespace scripts
 
             case Scripts::efficientnetv2:
             {
-                auto inputChannels = DIV8(p.EfficientNet[0].Channels);
+                auto inputChannels = DIV8(24);
                 auto C = 1ull;
                 
                 net +=
-                    Convolution(C, "Input", inputChannels, 3, 3, 1, 1, 1, 1) +
+                    Convolution(C, "Input", inputChannels, 3, 3, 2, 2, 1, 1) +
                     BatchNormActivation(C, In("C", C), p.Activation);
 
                 auto input = In("B", C++);
@@ -733,10 +733,9 @@ namespace scripts
                 net +=
                     Convolution(C, In("A", C - 2), inputChannels, 1, 1, 1, 1, 0, 0) +
                     BatchNormActivation(C + 1, In("C", C), p.Activation) +
-                    Convolution(C + 1, In("B", C + 1), p.Classes(), 1, 1, 1, 1, 0, 0) +
-                    BatchNorm(C + 2, In("C", C + 1)) +
-                    GlobalAvgPooling(In("B", C + 2)) +
-                    Activation("GAP", "LogSoftmax") +
+                    GlobalAvgPooling(In("B", C + 1)) +
+                    Convolution(C + 1, "GAP", p.Classes(), 1, 1, 1, 1, 0, 0) +
+                    Activation(In("C", C + 1), "LogSoftmax") +
                     Cost("ACT", p.Dataset, p.Classes(), "CategoricalCrossEntropy", 0.125f);
             }
             break;
