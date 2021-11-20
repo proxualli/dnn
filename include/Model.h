@@ -117,10 +117,12 @@ namespace dnn
 		bool RandomCrop;
 		bool MeanStdNormalization;
 		Fillers WeightsFiller;
+		FillerMode WeightsFillerMode;
 		Float WeightsScale;
 		Float WeightsLRM;
 		Float WeightsWDM;
 		Fillers BiasesFiller;
+		FillerMode BiasesFillerMode;
 		Float BiasesScale;
 		Float BiasesLRM;
 		Float BiasesWDM;
@@ -184,10 +186,12 @@ namespace dnn
 			BatchNormEps(Float(1e-04)),			// Eps
 			Dropout(Float(0)),					// Dropout
 			WeightsFiller(Fillers::HeNormal),	// WeightsFiller
+			WeightsFillerMode(FillerMode::In), // WeightsFillerMode
 			WeightsScale(Float(0.05)),			// WeightsScale
 			WeightsLRM(Float(1)),				// WeightsLRM
 			WeightsWDM(Float(1)),				// WeightsWDM
 			BiasesFiller(Fillers::Constant),	// BiasesFiller
+			BiasesFillerMode(FillerMode::In),  // BiasesFillerMode
 			BiasesScale(Float(0)),				// BiasesScale
 			BiasesLRM(Float(1)),				// BiasesLRM
 			BiasesWDM(Float(1)),				// BiasesWDM
@@ -221,7 +225,7 @@ namespace dnn
 			fpropTime(std::chrono::duration<Float>(Float(0))),
 			bpropTime(std::chrono::duration<Float>(Float(0))),
 			updateTime(std::chrono::duration<Float>(Float(0))),
-		    SampleSpeed(Float(0)),
+			SampleSpeed(Float(0)),
 			NewEpoch(nullptr),
 			AdjustedTrainingSamplesCount(0),
 			AdjustedTestingSamplesCount(0),
@@ -282,7 +286,7 @@ namespace dnn
 					while (layer->RefreshingStats.load())
 						std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-					layer->ResetWeights(WeightsFiller, WeightsScale, BiasesFiller, BiasesScale);
+					layer->ResetWeights(WeightsFiller, WeightsFillerMode, WeightsScale, BiasesFiller, BiasesFillerMode, BiasesScale);
 					layer->ResetOptimizer(Optimizer);
 				}
 
@@ -935,7 +939,7 @@ namespace dnn
 						for (auto index = 0ull; index < DataProv->TrainingSamplesCount; index++)
 							TrainingSamplesVFlip[index].flip();
 
-                   	if (CheckTaskState())
+					if (CheckTaskState())
 					{
 						State.store(States::Training);
 
@@ -1062,7 +1066,7 @@ namespace dnn
 								bpropTime = bpropTimeCount;
 								updateTime = updateTimeCount;
 
-                                elapsedTime = timer.now() - timePointGlobal;
+								elapsedTime = timer.now() - timePointGlobal;
 								SampleSpeed = BatchSize / (Float(std::chrono::duration_cast<std::chrono::microseconds>(elapsedTime).count()) / 1000000);
 
 								if (TaskState.load() != TaskStates::Running && !CheckTaskState())
@@ -1188,8 +1192,8 @@ namespace dnn
 
 				auto timer = std::chrono::high_resolution_clock();
 				auto timePoint = timer.now();
-				auto timePointGlobal = timer.now();;
-                auto elapsedTime = std::chrono::duration<Float>(Float(0));
+				auto timePointGlobal = timer.now();
+				auto elapsedTime = std::chrono::duration<Float>(Float(0));
 
 				CurrentTrainingRate = TrainingRates[0];
 				// check first if we have enough memory available
@@ -1268,8 +1272,8 @@ namespace dnn
 					RecognizedBatch(State.load(), BatchSize, overflow, TestSkipCount, SampleLabels);
 
 					fpropTime = timer.now() - timePointGlobal;
-
-                   	SampleSpeed = BatchSize / (Float(std::chrono::duration_cast<std::chrono::microseconds>(fpropTime).count()) / 1000000);
+					
+					SampleSpeed = BatchSize / (Float(std::chrono::duration_cast<std::chrono::microseconds>(fpropTime).count()) / 1000000);
 					
 					if (TaskState.load() != TaskStates::Running && !CheckTaskState())
 						break;

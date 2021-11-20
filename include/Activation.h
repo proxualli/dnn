@@ -481,15 +481,17 @@ namespace dnn
 				return ByteArray();
 		}
 
-		void ResetWeights(const Fillers weightFiller, const Float weightFillerScale, const Fillers biasFiller, const Float biasFillerScale) override
+		void ResetWeights(const Fillers weightsFiller, const FillerMode weightsFillerMode, const Float weightsFillerScale, const Fillers biasesFiller, const FillerMode biasesFillerMode, const Float biasesFillerScale) override
 		{
 			if (HasWeights)
 				Biases = FloatVector(PaddedC, Float(Alpha));
 			
-			DNN_UNREF_PAR(weightFiller);
-			DNN_UNREF_PAR(weightFillerScale);
-			DNN_UNREF_PAR(biasFiller);
-			DNN_UNREF_PAR(biasFillerScale);
+			DNN_UNREF_PAR(weightsFiller);
+			DNN_UNREF_PAR(weightsFillerMode);
+			DNN_UNREF_PAR(weightsFillerScale);
+			DNN_UNREF_PAR(biasesFiller);
+			DNN_UNREF_PAR(biasesFillerMode);
+			DNN_UNREF_PAR(biasesFillerScale);
 		}
 
 		void ForwardProp(const UInt batchSize, const bool training) final override

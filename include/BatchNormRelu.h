@@ -367,18 +367,20 @@ namespace dnn
 				return ByteArray();
 		}
 
-		void ResetWeights(const Fillers weightFiller, const Float weightFillerScale, const Fillers biasFiller, const Float biasFillerScale) override
+		void ResetWeights(const Fillers weightsFiller, const FillerMode weightsFillerMode, const Float weightsFillerScale, const Fillers biasesFiller, const FillerMode biasesFillerMode, const Float biasesFillerScale) override
 		{
 			Weights.resize(PaddedC); std::fill(Weights.begin(), Weights.end(), Float(1));
 			Biases.resize(PaddedC); std::fill(Biases.begin(), Biases.end(), Float(0));
-			
+
 			RunningMean.resize(PaddedC); std::fill(RunningMean.begin(), RunningMean.end(), Float(0));
 			RunningVariance.resize(PaddedC); std::fill(RunningVariance.begin(), RunningVariance.end(), Float(1));
-			
-			DNN_UNREF_PAR(weightFiller);
-			DNN_UNREF_PAR(weightFillerScale);
-			DNN_UNREF_PAR(biasFiller);
-			DNN_UNREF_PAR(biasFillerScale);
+
+			DNN_UNREF_PAR(weightsFiller);
+			DNN_UNREF_PAR(weightsFillerMode);
+			DNN_UNREF_PAR(weightsFillerScale);
+			DNN_UNREF_PAR(biasesFiller);
+			DNN_UNREF_PAR(biasesFillerMode);
+			DNN_UNREF_PAR(biasesFillerScale);
 		}
 
 		void Save(std::ostream& os, const bool persistOptimizer = false, const Optimizers optimizer = Optimizers::SGD) override
