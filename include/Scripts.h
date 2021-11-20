@@ -704,7 +704,7 @@ namespace scripts
 
             case Scripts::efficientnetv2:
             {
-                auto inputChannels = DIV8(24);
+                auto inputChannels = DIV8(p.EfficientNet[0].Channels);
                 auto C = 1ull;
                 
                 net +=
