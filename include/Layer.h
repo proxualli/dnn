@@ -176,7 +176,7 @@ namespace dnn
 		Uniform = 7
 	};
 	
-	enum class FillerMode
+	enum class FillerModes
 	{
 		In = 0,
 		InOut = 1,
@@ -284,12 +284,12 @@ namespace dnn
 		const bool InplaceBwd;
 		bool UseDefaultParameters;
 		Fillers WeightsFiller;
-		FillerMode WeightsFillerMode;
+		FillerModes WeightsFillerMode;
 		Float WeightsScale;
 		Float WeightsLRM;
 		Float WeightsWDM;
 		Fillers BiasesFiller;
-		FillerMode BiasesFillerMode;
+		FillerModes BiasesFillerMode;
 		Float BiasesScale;
 		Float BiasesLRM;
 		Float BiasesWDM;
@@ -345,12 +345,12 @@ namespace dnn
 			HasBias(hasBias && biasCount > 0),
 			HasWeights(weightCount > 0),
 			WeightsFiller(Fillers::HeNormal),
-			WeightsFillerMode(FillerMode::Out),
+			WeightsFillerMode(FillerModes::Out),
 			WeightsScale(Float(0.05)),
 			WeightsLRM(Float(1)),
 			WeightsWDM(Float(1)),
 			BiasesFiller(Fillers::Constant),
-			BiasesFillerMode(FillerMode::Out),
+			BiasesFillerMode(FillerModes::Out),
 			BiasesScale(Float(0)),
 			BiasesLRM(Float(1)),
 			BiasesWDM(Float(1)),
@@ -391,7 +391,7 @@ namespace dnn
 
 		virtual ~Layer() = default;
 		
-		void SetParameters(const bool useDefaults, const Fillers weightsFiller, const FillerMode weightsFillerMode, const Float weightsScale, const Float weightsLRM, const Float weightsWDM, const Fillers biasesFiller, const FillerMode biasesFillerMode, const Float biasesScale, const Float biasesLRM, const Float biasesWDM)
+		void SetParameters(const bool useDefaults, const Fillers weightsFiller, const FillerModes weightsFillerMode, const Float weightsScale, const Float weightsLRM, const Float weightsWDM, const Fillers biasesFiller, const FillerModes biasesFillerMode, const Float biasesScale, const Float biasesLRM, const Float biasesWDM)
 		{
 			UseDefaultParameters = useDefaults;
 			WeightsFiller = weightsFiller;
@@ -885,7 +885,7 @@ namespace dnn
 			}
 		}
 
-		virtual void ResetWeights(const Fillers weightsFiller, const FillerMode weightsFillerMode, const Float weightsScale, const Fillers biasesFiller, const FillerMode biasesFillerMode, const Float biasesScale)
+		virtual void ResetWeights(const Fillers weightsFiller, const FillerModes weightsFillerMode, const Float weightsScale, const Fillers biasesFiller, const FillerModes biasesFillerMode, const Float biasesScale)
 		{
 			if (HasWeights)
 			{
@@ -901,13 +901,13 @@ namespace dnn
 				auto weightsScope = Float(FanIn());
 				switch (WeightsFillerMode)
 				{
-				case FillerMode::In:
+				case FillerModes::In:
 					weightsScope = Float(FanIn());
 					break;
-				case FillerMode::InOut:
+				case FillerModes::InOut:
 					weightsScope = Float(FanIn() + FanOut());
 					break;
-				case FillerMode::Out:
+				case FillerModes::Out:
 					weightsScope = Float(FanOut());
 					break;
 				}
@@ -1014,13 +1014,13 @@ namespace dnn
 				auto biasesScope = Float(0);
 				switch (BiasesFillerMode)
 				{
-				case FillerMode::In:
+				case FillerModes::In:
 					biasesScope = Float(FanIn());
 					break;
-				case FillerMode::InOut:
+				case FillerModes::InOut:
 					biasesScope = Float(FanIn() + FanOut());
 					break;
-				case FillerMode::Out:
+				case FillerModes::Out:
 					biasesScope = Float(FanOut());
 					break;
 				}

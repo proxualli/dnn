@@ -365,7 +365,7 @@ namespace dnn
 				return ByteArray();
 		}
 
-		void ResetWeights(const Fillers weightsFiller, const FillerMode weightsFillerMode, const Float weightsFillerScale, const Fillers biasesFiller, const FillerMode biasesFillerMode, const Float biasesFillerScale) override
+		void ResetWeights(const Fillers weightsFiller, const FillerModes weightsFillerMode, const Float weightsFillerScale, const Fillers biasesFiller, const FillerModes biasesFillerMode, const Float biasesFillerScale) override
 		{
 			Weights.resize(PaddedC); std::fill(Weights.begin(), Weights.end(), Float(1));
 			Biases.resize(PaddedC); std::fill(Biases.begin(), Biases.end(), Float(0));

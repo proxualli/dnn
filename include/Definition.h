@@ -97,7 +97,7 @@ namespace dnn
 				defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), textFillerBiases, textFillerBiases);
 			}
 
-			auto fillerModes = magic_enum::enum_names<FillerMode>();
+			auto fillerModes = magic_enum::enum_names<FillerModes>();
 			for (auto fillerMode : fillerModes)
 			{
 				auto textFillerMode = "(" + std::string(fillerMode) + ")";
@@ -144,13 +144,13 @@ namespace dnn
 			auto epsSpecified = false;
 			auto useDefaultParams = true;
 			auto weightsFiller = Fillers::HeNormal;
-			auto weightsFillerMode = FillerMode::In;
+			auto weightsFillerMode = FillerModes::In;
 			auto defaultWeightsScale = Float(0.05);
 			auto weightsScale = Float(0.05);
 			auto weightsLRM = Float(1);
 			auto weightsWDM = Float(1);
 			auto biasesFiller = Fillers::Constant;
-			auto biasesFillerMode = FillerMode::In;
+			auto biasesFillerMode = FillerModes::In;
 			auto defaultBiasesScale = Float(0);
 			auto biasesScale = Float(0);
 			auto biasesLRM = Float(1);
@@ -1213,11 +1213,11 @@ namespace dnn
 						}
 						break;
 						default:
-							auto fillerModes = magic_enum::enum_names<FillerMode>();
+							auto fillerModes = magic_enum::enum_names<FillerModes>();
 							for (auto fillerMode : fillerModes)
-								if (value.rfind(std::string(fillerMode)) == 0 && magic_enum::enum_cast<FillerMode>(fillerMode).has_value())
+								if (value.rfind(std::string(fillerMode)) == 0 && magic_enum::enum_cast<FillerModes>(fillerMode).has_value())
 								{
-									weightsFillerMode = magic_enum::enum_cast<FillerMode>(fillerMode).value();
+									weightsFillerMode = magic_enum::enum_cast<FillerModes>(fillerMode).value();
 									ok = true;
 								}
 							break;
@@ -1367,11 +1367,11 @@ namespace dnn
 						break;
 
 						default:
-							auto fillerModes = magic_enum::enum_names<FillerMode>();
+							auto fillerModes = magic_enum::enum_names<FillerModes>();
 							for (auto fillerMode : fillerModes)
-								if (value.rfind(std::string(fillerMode)) == 0 && magic_enum::enum_cast<FillerMode>(fillerMode).has_value())
+								if (value.rfind(std::string(fillerMode)) == 0 && magic_enum::enum_cast<FillerModes>(fillerMode).has_value())
 								{
-									biasesFillerMode = magic_enum::enum_cast<FillerMode>(fillerMode).value();
+									biasesFillerMode = magic_enum::enum_cast<FillerModes>(fillerMode).value();
 									ok = true;
 								}
 							break;
