@@ -592,7 +592,7 @@ namespace scripts
                 "Dim=" + std::to_string(p.C) + "," + std::to_string(p.H) + "," + std::to_string(p.W) + nwl +
                 ((p.PadH > 0 || p.PadW > 0) ? (!p.MirrorPad ? "ZeroPad=" + std::to_string(p.PadH) + "," + std::to_string(p.PadW) + nwl : "MirrorPad=" + std::to_string(p.PadH) + "," + std::to_string(p.PadW) + nwl) : "") +
                 ((p.PadH > 0 || p.PadW > 0) ? "RandomCrop=Yes" + nwl : "") +
-                "WeightsFiller=" + to_string(p.WeightsFiller) + (ScaleVisible(p.WeightsFiller) ? "(" + std::to_string(p.WeightsScale) + ")" : "") + nwl +
+                "WeightsFiller=" + to_string(p.WeightsFiller) + (!ScaleVisible(p.WeightsFiller) ? "(" + to_string(p.WeightsFillerMode) + ")" : "") + (ScaleVisible(p.WeightsFiller) ? "(" + to_string(p.WeightsScale) + ")" : "") + nwl +
                 (p.WeightsLRM != 1 ? "WeightsLRM=" + std::to_string(p.WeightsLRM) + nwl : "") +
                 (p.WeightsWDM != 1 ? "WeightsWDM=" + std::to_string(p.WeightsWDM) + nwl : "") +
                 (p.HasBias ? "BiasesFiller=" + to_string(p.BiasesFiller) + (ScaleVisible(p.BiasesFiller) ? "(" + std::to_string(p.BiasesScale) + ")" : "") + nwl +
