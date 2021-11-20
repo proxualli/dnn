@@ -902,7 +902,7 @@ namespace dnn
 				auto weights = FloatVector(WeightCount);
 
 				auto weightsScope = Float(FanIn());
-				switch (WeightsFillerMode)
+				switch (weightsFillerMode)
 				{
 				case FillerModes::Auto:
 				{
@@ -935,7 +935,7 @@ namespace dnn
 					break;
 				}
 
-				switch (WeightsFiller)
+				switch (weightsFiller)
 				{
 				case Fillers::Constant:
 				{
@@ -1050,11 +1050,11 @@ namespace dnn
 				}
 
 				auto biasesScope = Float(FanIn());
-				switch (BiasesFillerMode)
+				switch (biasesFillerMode)
 				{
 				case FillerModes::Auto:
 				{
-					switch (BiasesFiller)
+					switch (biasesFiller)
 					{
 					case Fillers::HeNormal:
 					case Fillers::HeUniform:
@@ -1083,7 +1083,7 @@ namespace dnn
 					break;
 				}
 
-				switch (BiasesFiller)
+				switch (biasesFiller)
 				{
 				case Fillers::Constant:
 				{
