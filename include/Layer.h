@@ -173,14 +173,17 @@ namespace dnn
 		LeCunUniform = 4,
 		Normal = 5,
 		TruncatedNormal = 6,
-		Uniform = 7
+		Uniform = 7,
+		XavierNormal = 8,
+		XavierUniform = 9
 	};
 	
 	enum class FillerModes
 	{
-		In = 0,
-		InOut = 1,
-		Out = 2
+		Auto = 0,
+		In = 1,
+		InOut = 2,
+		Out = 3
 	};
 
 	struct Device
@@ -345,12 +348,12 @@ namespace dnn
 			HasBias(hasBias && biasCount > 0),
 			HasWeights(weightCount > 0),
 			WeightsFiller(Fillers::HeNormal),
-			WeightsFillerMode(FillerModes::Out),
+			WeightsFillerMode(FillerModes::Auto),
 			WeightsScale(Float(0.05)),
 			WeightsLRM(Float(1)),
 			WeightsWDM(Float(1)),
 			BiasesFiller(Fillers::Constant),
-			BiasesFillerMode(FillerModes::Out),
+			BiasesFillerMode(FillerModes::Auto),
 			BiasesScale(Float(0)),
 			BiasesLRM(Float(1)),
 			BiasesWDM(Float(1)),
@@ -901,6 +904,26 @@ namespace dnn
 				auto weightsScope = Float(FanIn());
 				switch (WeightsFillerMode)
 				{
+				case FillerModes::Auto:
+				{
+					switch (weightsFiller)
+					{
+					case Fillers::HeNormal:
+					case Fillers::HeUniform:
+					case Fillers::LeCunNormal:
+					case Fillers::LeCunUniform:
+						weightsScope = Float(FanIn());
+						break;
+					case Fillers::XavierNormal:
+					case Fillers::XavierUniform:
+						weightsScope = Float(FanIn() + FanOut());
+						break;
+					default:
+						weightsScope = Float(FanIn());
+						break;
+					}
+				}
+				break;
 				case FillerModes::In:
 					weightsScope = Float(FanIn());
 					break;
@@ -944,7 +967,6 @@ namespace dnn
 				}
 				break;
 
-
 				case Fillers::LeCunUniform:
 				{
 					auto limit = std::sqrt(Float(3) / weightsScope);
@@ -976,6 +998,22 @@ namespace dnn
 				case Fillers::Uniform:
 				{
 					auto distribution = std::uniform_real_distribution<Float>(-WeightsScale, WeightsScale);
+					std::generate_n(weights.begin(), WeightCount, [&]() { return distribution(RandomEngine); });
+				}
+				break;
+
+				case Fillers::XavierNormal:
+				{
+					auto stddev = std::sqrt(Float(2) / weightsScope);
+					auto distribution = std::normal_distribution<Float>(Float(0), stddev);
+					std::generate_n(weights.begin(), WeightCount, [&]() { return distribution(RandomEngine); });
+				}
+				break;
+
+				case Fillers::XavierUniform:
+				{
+					auto limit = std::sqrt(Float(6) / weightsScope);
+					auto distribution = std::uniform_real_distribution<Float>(-limit, limit);
 					std::generate_n(weights.begin(), WeightCount, [&]() { return distribution(RandomEngine); });
 				}
 				break;
@@ -1011,9 +1049,29 @@ namespace dnn
 					BiasesScale = biasesScale;
 				}
 
-				auto biasesScope = Float(0);
-				switch (BiasesFillerMode)
+				auto biasesScope = Float(FanIn());
+				switch (WeightsFillerMode)
 				{
+				case FillerModes::Auto:
+				{
+					switch (weightsFiller)
+					{
+					case Fillers::HeNormal:
+					case Fillers::HeUniform:
+					case Fillers::LeCunNormal:
+					case Fillers::LeCunUniform:
+						biasesScope = Float(FanIn());
+						break;
+					case Fillers::XavierNormal:
+					case Fillers::XavierUniform:
+						biasesScope = Float(FanIn() + FanOut());
+						break;
+					default:
+						biasesScope = Float(FanIn());
+						break;
+					}
+				}
+				break;
 				case FillerModes::In:
 					biasesScope = Float(FanIn());
 					break;
@@ -1088,6 +1146,22 @@ namespace dnn
 				case Fillers::Uniform:
 				{
 					auto distribution = std::uniform_real_distribution<Float>(-BiasesScale, BiasesScale);
+					std::generate_n(Biases.begin(), BiasCount, [&]() { return distribution(RandomEngine); });
+				}
+				break;
+
+				case Fillers::XavierNormal:
+				{
+					auto stddev = std::sqrt(Float(2) / biasesScope);
+					auto distribution = std::normal_distribution<Float>(Float(0), stddev);
+					std::generate_n(Biases.begin(), BiasCount, [&]() { return distribution(RandomEngine); });
+				}
+				break;
+
+				case Fillers::XavierUniform:
+				{
+					auto limit = std::sqrt(Float(6) / biasesScope);
+					auto distribution = std::uniform_real_distribution<Float>(-limit, limit);
 					std::generate_n(Biases.begin(), BiasCount, [&]() { return distribution(RandomEngine); });
 				}
 				break;

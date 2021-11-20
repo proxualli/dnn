@@ -54,6 +54,14 @@ namespace scripts
         XavierUniform = 9
     };
 
+    enum class FillerModes
+    {
+        Auto = 0,
+        In = 1,
+        InOut = 2,
+        Out = 3
+    };
+
     enum class Activations
     {
         FRelu = 1,
@@ -125,11 +133,13 @@ namespace scripts
         bool MirrorPad = false;
         bool MeanStdNormalization = true;
         scripts::Fillers WeightsFiller = Fillers::HeNormal;
+        scripts::FillerModes WeightsFillerMode = FillerModes::Auto;
         Float WeightsScale = Float(0.05);
         Float WeightsLRM = Float(1);
         Float WeightsWDM = Float(1);
         bool HasBias = false;
         scripts::Fillers BiasesFiller = Fillers::Constant;
+        scripts::FillerModes BiasesFillerMode = FillerModes::Auto;
         Float BiasesScale = Float(0);
         Float BiasesLRM = Float(1);
         Float BiasesWDM = Float(1);
@@ -248,6 +258,11 @@ namespace scripts
         static auto to_string(const Fillers filler)
         {
             return std::string(magic_enum::enum_name<Fillers>(filler));
+        }
+
+        static auto to_string(const FillerModes fillerMode)
+        {
+            return std::string(magic_enum::enum_name<FillerModes>(fillerMode));
         }
 
         static UInt DIV8(UInt channels)

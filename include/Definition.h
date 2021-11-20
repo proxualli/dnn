@@ -144,13 +144,13 @@ namespace dnn
 			auto epsSpecified = false;
 			auto useDefaultParams = true;
 			auto weightsFiller = Fillers::HeNormal;
-			auto weightsFillerMode = FillerModes::In;
+			auto weightsFillerMode = FillerModes::Auto;
 			auto defaultWeightsScale = Float(0.05);
 			auto weightsScale = Float(0.05);
 			auto weightsLRM = Float(1);
 			auto weightsWDM = Float(1);
 			auto biasesFiller = Fillers::Constant;
-			auto biasesFillerMode = FillerModes::In;
+			auto biasesFillerMode = FillerModes::Auto;
 			auto defaultBiasesScale = Float(0);
 			auto biasesScale = Float(0);
 			auto biasesLRM = Float(1);
