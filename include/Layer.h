@@ -1050,11 +1050,11 @@ namespace dnn
 				}
 
 				auto biasesScope = Float(FanIn());
-				switch (WeightsFillerMode)
+				switch (BiasesFillerMode)
 				{
 				case FillerModes::Auto:
 				{
-					switch (weightsFiller)
+					switch (BiasesFiller)
 					{
 					case Fillers::HeNormal:
 					case Fillers::HeUniform:
