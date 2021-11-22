@@ -528,6 +528,42 @@ namespace scripts
                 "Eps=" + std::to_string(eps) + nwl + nwl;
         }
 
+        static std::vector<std::string> FusedMBConv(UInt id, std::string inputs, UInt inputChannels, UInt outputChannels, UInt stride = 1, UInt expandRatio = 4, bool se = false, scripts::Activations activation = scripts::Activations::HardSwish)
+        {
+            auto blocks = std::vector<std::string>();
+            auto hiddenDim = DIV8(inputChannels * expandRatio);
+            auto identity = stride == 1ull && inputChannels == outputChannels;
+
+            if (se)
+            {
+                auto group = In("SE", id);
+                blocks.push_back(
+                    Convolution(id, inputs, hiddenDim, 3, 3, stride, stride, 1, 1) +
+                    BatchNormActivation(id, In("C", id), activation) +
+                    GlobalAvgPooling(In("B", id), group) +
+                    Convolution(1, group + std::string("GAP"), DIV8(hiddenDim / expandRatio), 1, 1, 1, 1, 0, 0, group) +
+                    BatchNormActivation(1, group + std::string("C1"), activation == scripts::Activations::FRelu ? scripts::Activations::HardSwish : activation, group) +
+                    Convolution(2, group + std::string("B1"), hiddenDim, 1, 1, 1, 1, 0, 0, group) +
+                    BatchNormActivation(2, group + std::string("C2"), std::string("HardLogistic"), group) +
+                    ChannelMultiply(In("B", id) + std::string(",") + group + std::string("B2"), group) +
+                    Convolution(id + 1, group + std::string("CM"), DIV8(outputChannels), 1, 1, 1, 1, 0, 0) +
+                    BatchNorm(id + 1, In("C", id + 1)));
+            }
+            else
+            {
+                blocks.push_back(
+                    Convolution(id, inputs, hiddenDim, 3, 3, stride, stride, 1, 1) +
+                    BatchNormActivation(id, In("C", id), activation) +
+                    Convolution(id + 1, In("B", id + 1), DIV8(outputChannels), 1, 1, 1, 1, 0, 0) +
+                    BatchNorm(id + 1, In("C", id + 1)));
+            }
+
+            if (identity)
+                blocks.push_back(Add(id + 1, In("B", id + 1) + "," + inputs));
+
+            return blocks;
+        }
+
         static std::vector<std::string> MBConv(UInt id, std::string inputs, UInt inputChannels, UInt outputChannels, UInt stride = 1, UInt expandRatio = 4, bool se = false, scripts::Activations activation = scripts::Activations::HardSwish)
         {
             auto blocks = std::vector<std::string>();
@@ -755,6 +791,7 @@ namespace scripts
                     Convolution(C, "Input", inputChannels, 3, 3, 2, 2, 1, 1) +
                     BatchNormActivation(C, In("C", C), p.Activation);
 
+                auto stage = 0ull;
                 auto input = In("B", C++);
                 for (auto rec : p.EfficientNet)
                 {
@@ -764,14 +801,15 @@ namespace scripts
                         auto stride = n == 0ull ? rec.Stride : 1ull;
                         auto identity = stride == 1ull && inputChannels == outputChannels;
 
-                        auto subblocks = MBConv(C, input, inputChannels, outputChannels, stride, rec.ExpandRatio, rec.SE, p.Activation);
+                        auto subblocks = stage < 3ull ? FusedMBConv(C, input, inputChannels, outputChannels, stride, rec.ExpandRatio, rec.SE, p.Activation) : MBConv(C, input, inputChannels, outputChannels, stride, rec.ExpandRatio, rec.SE, p.Activation);
                         for(auto blk : subblocks)
                             net += blk;
 
                         inputChannels = outputChannels;
-                        C += 2;
+                        C += (stage < 3ull ? 1ull : 2ull);
                         input = In((identity ? "A" : "B"), C++);
                     }
+                    stage++;
                 }
 
                 net +=
