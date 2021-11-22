@@ -806,7 +806,7 @@ namespace scripts
                             net += blk;
 
                         inputChannels = outputChannels;
-                        C += (stage < 3ull ? 1ull : 2ull);
+                        C += stage < 3ull ? 1ull : 2ull;
                         input = In((identity ? "A" : "B"), C++);
                     }
                     stage++;
