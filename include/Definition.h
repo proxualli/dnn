@@ -144,7 +144,7 @@ namespace dnn
 			auto epsSpecified = false;
 			auto useDefaultParams = true;
 			auto weightsFiller = Fillers::HeNormal;
-			auto weightsFillerMode = FillerModes::Auto;
+			auto weightsFillerMode = FillerModes::In;
 			auto defaultWeightsGain = Float(1);
 			auto weightsGain = Float(1);
 			auto defaultWeightsScale = Float(0.05);
@@ -152,7 +152,7 @@ namespace dnn
 			auto weightsLRM = Float(1);
 			auto weightsWDM = Float(1);
 			auto biasesFiller = Fillers::Constant;
-			auto biasesFillerMode = FillerModes::Auto;
+			auto biasesFillerMode = FillerModes::In;
 			auto defaultBiasesGain = Float(1);
 			auto biasesGain = Float(1);
 			auto defaultBiasesScale = Float(0);
@@ -1220,9 +1220,13 @@ namespace dnn
 							}
 						}
 						break;
-						default:
+
+						case Fillers::HeNormal:
+						case Fillers::HeUniform:
+						{
 							auto fillerModes = magic_enum::enum_names<FillerModes>();
 							for (auto fillerMode : fillerModes)
+							{
 								if (value.rfind(std::string(fillerMode)) == 0 && magic_enum::enum_cast<FillerModes>(fillerMode).has_value())
 								{
 									weightsFillerMode = magic_enum::enum_cast<FillerModes>(fillerMode).value();
@@ -1264,7 +1268,47 @@ namespace dnn
 									else
 										ok = true;
 								}
-							break;
+							}
+						}
+						break;
+						case Fillers::LeCunNormal:
+						case Fillers::LeCunUniform:
+						case Fillers::XavierNormal:
+						case Fillers::XavierUniform:
+						{
+							if (value.find_first_not_of("().-eE0123456789") != std::string::npos)
+							{
+								msg = CheckMsg(line, col, "WeightsGain contains illegal characters.");
+								goto FAIL;
+							}
+
+							if (value.size() > 2 && value[0] == '(' && value[value.size() - 1] == ')')
+							{
+								ok = false;
+								try
+								{
+									weightsGain = std::stof(value.substr(1, value.size() - 2));
+									ok = true;
+								}
+								catch (std::exception exception)
+								{
+									msg = CheckMsg(line, col, "WeightsGain value not recognized." + nwl + exception.what());
+									goto FAIL;
+								}
+
+								if (!ok)
+								{
+									msg = CheckMsg(line, col, "WeightsGain value not recognized.");
+									goto FAIL;
+								}
+							}
+							else
+							{
+								msg = CheckMsg(line, col, "WeightsGain value not recognized.");
+								goto FAIL;
+							}
+						}
+						break;
 						}
 					}
 
@@ -1279,18 +1323,25 @@ namespace dnn
 						case dnn::Fillers::Normal:
 						case dnn::Fillers::TruncatedNormal:
 						case dnn::Fillers::Uniform:
+						{
 							model->WeightsScale = value.size() > 2 ? weightsScale : defaultWeightsScale;
-							break;
-						
+						}
+						break;
 						case dnn::Fillers::HeNormal:
 						case dnn::Fillers::HeUniform:
+						{
+							model->WeightsFillerMode = weightsFillerMode;
+							model->WeightsGain = value.size() > 2 ? weightsGain : defaultWeightsGain;
+						}
+						break;
 						case dnn::Fillers::LeCunNormal:
 						case dnn::Fillers::LeCunUniform:
 						case dnn::Fillers::XavierNormal:
 						case dnn::Fillers::XavierUniform:
-							model->WeightsFillerMode = weightsFillerMode;
+						{
 							model->WeightsGain = value.size() > 2 ? weightsGain : defaultWeightsGain;
-							break;
+						}
+						break;
 						}
 					}
 				}
@@ -1427,10 +1478,12 @@ namespace dnn
 							}
 						}
 						break;
-
-						default:
+						case Fillers::HeNormal:
+						case Fillers::HeUniform:
+						{
 							auto fillerModes = magic_enum::enum_names<FillerModes>();
 							for (auto fillerMode : fillerModes)
+							{
 								if (value.rfind(std::string(fillerMode)) == 0 && magic_enum::enum_cast<FillerModes>(fillerMode).has_value())
 								{
 									biasesFillerMode = magic_enum::enum_cast<FillerModes>(fillerMode).value();
@@ -1472,7 +1525,48 @@ namespace dnn
 									else
 										ok = true;
 								}
-							break;
+							}
+						}
+						break;
+						case Fillers::LeCunNormal:
+						case Fillers::LeCunUniform:
+						case Fillers::XavierNormal:
+						case Fillers::XavierUniform:
+						{
+							if (value.find_first_not_of(".()-eE0123456789") != std::string::npos)
+							{
+								msg = CheckMsg(line, col, "BiasesGain contains illegal characters.");
+								goto FAIL;
+							}
+
+							if (value.size() > 2 && value[0] == '(' && value[value.size() - 1] == ')')
+							{
+								ok = false;
+
+								try
+								{
+									biasesGain = std::stof(value.substr(1, value.size() - 2));
+									ok = true;
+								}
+								catch (std::exception exception)
+								{
+									msg = CheckMsg(line, col, "BiasesGain value not recognized." + nwl + exception.what());
+									goto FAIL;
+								}
+
+								if (!ok)
+								{
+									msg = CheckMsg(line, col, "BiasesGain value not recognized.");
+									goto FAIL;
+								}
+							}
+							else
+							{
+								msg = CheckMsg(line, col, "BiasesGain value not recognized.");
+								goto FAIL;
+							}
+						}
+						break;
 						}
 					}
 
@@ -1487,18 +1581,25 @@ namespace dnn
 						case dnn::Fillers::Normal:
 						case dnn::Fillers::TruncatedNormal:
 						case dnn::Fillers::Uniform:
+						{
 							model->BiasesScale = value.size() > 2 ? biasesScale : defaultBiasesScale;
-							break;
-
+						}
+						break;
 						case dnn::Fillers::HeNormal:
 						case dnn::Fillers::HeUniform:
+						{
+							model->BiasesFillerMode = biasesFillerMode;
+							model->BiasesGain = value.size() > 2 ? biasesGain : defaultBiasesGain;
+						}
+						break;
 						case dnn::Fillers::LeCunNormal:
 						case dnn::Fillers::LeCunUniform:
 						case dnn::Fillers::XavierNormal:
 						case dnn::Fillers::XavierUniform:
-							model->BiasesFillerMode = biasesFillerMode;
+						{
 							model->BiasesGain = value.size() > 2 ? biasesGain : defaultBiasesGain;
-							break;
+						}
+						break;
 						}
 					}
 				}

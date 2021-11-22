@@ -188,13 +188,13 @@ namespace dnn
 			BatchNormEps(Float(1e-04)),				// Eps
 			Dropout(Float(0)),						// Dropout
 			WeightsFiller(Fillers::HeNormal),		// WeightsFiller
-			WeightsFillerMode(FillerModes::Auto),	// WeightsFillerMode
+			WeightsFillerMode(FillerModes::In),	// WeightsFillerMode
 			WeightsGain(Float(1)),					// WeightsGain
 			WeightsScale(Float(0.05)),				// WeightsScale
 			WeightsLRM(Float(1)),					// WeightsLRM
 			WeightsWDM(Float(1)),					// WeightsWDM
 			BiasesFiller(Fillers::Constant),		// BiasesFiller
-			BiasesFillerMode(FillerModes::Auto),	// BiasesFillerMode
+			BiasesFillerMode(FillerModes::In),	// BiasesFillerMode
 			BiasesGain(Float(1)),					// BiasesGain
 			BiasesScale(Float(0)),					// BiasesScale
 			BiasesLRM(Float(1)),					// BiasesLRM
