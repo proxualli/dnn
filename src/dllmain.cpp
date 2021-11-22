@@ -233,7 +233,7 @@ extern "C" DNN_API void DNNResetWeights()
 extern "C" DNN_API void DNNResetLayerWeights(const UInt layerIndex)
 {
 	if (model && layerIndex < model->Layers.size())
-		model->Layers[layerIndex]->ResetWeights(model->WeightsFiller, model->WeightsFillerMode, model->WeightsScale, model->BiasesFiller, model->BiasesFillerMode, model->BiasesScale);
+		model->Layers[layerIndex]->ResetWeights(model->WeightsFiller, model->WeightsFillerMode, model->WeightsGain, model->WeightsScale, model->BiasesFiller, model->BiasesFillerMode, model->BiasesGain, model->BiasesScale);
 }
 
 extern "C" DNN_API void DNNGetImage(const UInt layerIndex, const Byte fillColor, Byte* image)

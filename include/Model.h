@@ -118,11 +118,13 @@ namespace dnn
 		bool MeanStdNormalization;
 		Fillers WeightsFiller;
 		FillerModes WeightsFillerMode;
+		Float WeightsGain;
 		Float WeightsScale;
 		Float WeightsLRM;
 		Float WeightsWDM;
 		Fillers BiasesFiller;
 		FillerModes BiasesFillerMode;
+		Float BiasesGain;
 		Float BiasesScale;
 		Float BiasesLRM;
 		Float BiasesWDM;
@@ -170,34 +172,36 @@ namespace dnn
 			Optimizer(Optimizers::SGD),
 			TaskState(TaskStates::Stopped),
 			State(States::Idle),
-			Dataset(Datasets::cifar10),			// Dataset
-			SampleC(0),							// Dim
+			Dataset(Datasets::cifar10),				// Dataset
+			SampleC(0),								// Dim
 			SampleD(0),
 			SampleH(0),
 			SampleW(0),
-			MeanStdNormalization(true),			// MeanStd
-			MirrorPad(false),					// MirrorPad or ZeroPad
+			MeanStdNormalization(true),				// MeanStd
+			MirrorPad(false),						// MirrorPad or ZeroPad
 			PadD(0),
 			PadH(0),
 			PadW(0),
-			RandomCrop(false),					// RandomCrop
-			BatchNormScaling(true),				// Scaling
-			BatchNormMomentum(Float(0.995)),	// Momentum
-			BatchNormEps(Float(1e-04)),			// Eps
-			Dropout(Float(0)),					// Dropout
-			WeightsFiller(Fillers::HeNormal),	// WeightsFiller
-			WeightsFillerMode(FillerModes::In), // WeightsFillerMode
-			WeightsScale(Float(0.05)),			// WeightsScale
-			WeightsLRM(Float(1)),				// WeightsLRM
-			WeightsWDM(Float(1)),				// WeightsWDM
-			BiasesFiller(Fillers::Constant),	// BiasesFiller
-			BiasesFillerMode(FillerModes::In),  // BiasesFillerMode
-			BiasesScale(Float(0)),				// BiasesScale
-			BiasesLRM(Float(1)),				// BiasesLRM
-			BiasesWDM(Float(1)),				// BiasesWDM
-			HasBias(true),						// Biases
-			AlphaFiller(Float(0)),				// Alpha
-			BetaFiller(Float(0)),				// Beta
+			RandomCrop(false),						// RandomCrop
+			BatchNormScaling(true),					// Scaling
+			BatchNormMomentum(Float(0.995)),		// Momentum
+			BatchNormEps(Float(1e-04)),				// Eps
+			Dropout(Float(0)),						// Dropout
+			WeightsFiller(Fillers::HeNormal),		// WeightsFiller
+			WeightsFillerMode(FillerModes::Auto),	// WeightsFillerMode
+			WeightsGain(Float(1)),					// WeightsGain
+			WeightsScale(Float(0.05)),				// WeightsScale
+			WeightsLRM(Float(1)),					// WeightsLRM
+			WeightsWDM(Float(1)),					// WeightsWDM
+			BiasesFiller(Fillers::Constant),		// BiasesFiller
+			BiasesFillerMode(FillerModes::Auto),	// BiasesFillerMode
+			BiasesGain(Float(1)),					// BiasesGain
+			BiasesScale(Float(0)),					// BiasesScale
+			BiasesLRM(Float(1)),					// BiasesLRM
+			BiasesWDM(Float(1)),					// BiasesWDM
+			HasBias(true),							// Biases
+			AlphaFiller(Float(0)),					// Alpha
+			BetaFiller(Float(0)),					// Beta
 			TotalCycles(0),
 			CurrentCycle(1),
 			TotalEpochs(0),
@@ -286,7 +290,7 @@ namespace dnn
 					while (layer->RefreshingStats.load())
 						std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-					layer->ResetWeights(WeightsFiller, WeightsFillerMode, WeightsScale, BiasesFiller, BiasesFillerMode, BiasesScale);
+					layer->ResetWeights(WeightsFiller, WeightsFillerMode, WeightsGain, WeightsScale, BiasesFiller, BiasesFillerMode, BiasesGain, BiasesScale);
 					layer->ResetOptimizer(Optimizer);
 				}
 

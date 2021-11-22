@@ -288,11 +288,13 @@ namespace dnn
 		bool UseDefaultParameters;
 		Fillers WeightsFiller;
 		FillerModes WeightsFillerMode;
+		Float WeightsGain;
 		Float WeightsScale;
 		Float WeightsLRM;
 		Float WeightsWDM;
 		Fillers BiasesFiller;
 		FillerModes BiasesFillerMode;
+		Float BiasesGain;
 		Float BiasesScale;
 		Float BiasesLRM;
 		Float BiasesWDM;
@@ -349,11 +351,13 @@ namespace dnn
 			HasWeights(weightCount > 0),
 			WeightsFiller(Fillers::HeNormal),
 			WeightsFillerMode(FillerModes::Auto),
+			WeightsGain(Float(1)),
 			WeightsScale(Float(0.05)),
 			WeightsLRM(Float(1)),
 			WeightsWDM(Float(1)),
 			BiasesFiller(Fillers::Constant),
 			BiasesFillerMode(FillerModes::Auto),
+			BiasesGain(Float(1)),
 			BiasesScale(Float(0)),
 			BiasesLRM(Float(1)),
 			BiasesWDM(Float(1)),
@@ -394,16 +398,18 @@ namespace dnn
 
 		virtual ~Layer() = default;
 		
-		void SetParameters(const bool useDefaults, const Fillers weightsFiller, const FillerModes weightsFillerMode, const Float weightsScale, const Float weightsLRM, const Float weightsWDM, const Fillers biasesFiller, const FillerModes biasesFillerMode, const Float biasesScale, const Float biasesLRM, const Float biasesWDM)
+		void SetParameters(const bool useDefaults, const Fillers weightsFiller, const FillerModes weightsFillerMode, const Float weightsGain, const Float weightsScale, const Float weightsLRM, const Float weightsWDM, const Fillers biasesFiller, const FillerModes biasesFillerMode, const Float biasesGain, const Float biasesScale, const Float biasesLRM, const Float biasesWDM)
 		{
 			UseDefaultParameters = useDefaults;
 			WeightsFiller = weightsFiller;
 			WeightsFillerMode = weightsFillerMode;
+			WeightsGain = weightsGain;
 			WeightsScale = weightsScale;
 			WeightsLRM = weightsLRM;
 			WeightsWDM = weightsWDM;
 			BiasesFiller = biasesFiller;
 			BiasesFillerMode = biasesFillerMode;
+			BiasesGain = biasesGain;
 			BiasesScale = biasesScale;
 			BiasesLRM = biasesLRM;
 			BiasesWDM = biasesWDM;
@@ -888,7 +894,7 @@ namespace dnn
 			}
 		}
 
-		virtual void ResetWeights(const Fillers weightsFiller, const FillerModes weightsFillerMode, const Float weightsScale, const Fillers biasesFiller, const FillerModes biasesFillerMode, const Float biasesScale)
+		virtual void ResetWeights(const Fillers weightsFiller, const FillerModes weightsFillerMode, const Float weightsGain, const Float weightsScale, const Fillers biasesFiller, const FillerModes biasesFillerMode, const Float biasesGain, const Float biasesScale)
 		{
 			if (HasWeights)
 			{
@@ -896,6 +902,7 @@ namespace dnn
 				{
 					WeightsFiller = weightsFiller;
 					WeightsFillerMode = weightsFillerMode;
+					WeightsGain = weightsGain;
 					WeightsScale = weightsScale;
 				}
 
@@ -945,7 +952,7 @@ namespace dnn
 
 				case Fillers::HeNormal:
 				{
-					auto stddev = std::sqrt(Float(2) / weightsScope);
+					auto stddev = weightsGain * std::sqrt(Float(2) / weightsScope);
 					auto distribution = std::normal_distribution<Float>(Float(0), stddev);
 					std::generate_n(weights.begin(), WeightCount, [&]() { return distribution(RandomEngine); });
 				}
@@ -953,7 +960,7 @@ namespace dnn
 
 				case Fillers::HeUniform:
 				{
-					auto limit = std::sqrt(Float(6) / weightsScope);
+					auto limit = weightsGain * std::sqrt(Float(6) / weightsScope);
 					auto distribution = std::uniform_real_distribution<Float>(-limit, limit);
 					std::generate_n(weights.begin(), WeightCount, [&]() { return distribution(RandomEngine); });
 				}
@@ -961,7 +968,7 @@ namespace dnn
 
 				case Fillers::LeCunNormal:
 				{
-					auto stddev = std::sqrt(Float(1) / weightsScope);
+					auto stddev = weightsGain * std::sqrt(Float(1) / weightsScope);
 					auto distribution = std::normal_distribution<Float>(Float(0), stddev);
 					std::generate_n(weights.begin(), WeightCount, [&]() { return distribution(RandomEngine); });
 				}
@@ -969,7 +976,7 @@ namespace dnn
 
 				case Fillers::LeCunUniform:
 				{
-					auto limit = std::sqrt(Float(3) / weightsScope);
+					auto limit = weightsGain * std::sqrt(Float(3) / weightsScope);
 					auto distribution = std::uniform_real_distribution<Float>(-limit, limit);
 					std::generate_n(weights.begin(), WeightCount, [&]() { return distribution(RandomEngine); });
 				}
@@ -1004,7 +1011,7 @@ namespace dnn
 
 				case Fillers::XavierNormal:
 				{
-					auto stddev = std::sqrt(Float(2) / weightsScope);
+					auto stddev = weightsGain * std::sqrt(Float(2) / weightsScope);
 					auto distribution = std::normal_distribution<Float>(Float(0), stddev);
 					std::generate_n(weights.begin(), WeightCount, [&]() { return distribution(RandomEngine); });
 				}
@@ -1012,7 +1019,7 @@ namespace dnn
 
 				case Fillers::XavierUniform:
 				{
-					auto limit = std::sqrt(Float(6) / weightsScope);
+					auto limit = weightsGain * std::sqrt(Float(6) / weightsScope);
 					auto distribution = std::uniform_real_distribution<Float>(-limit, limit);
 					std::generate_n(weights.begin(), WeightCount, [&]() { return distribution(RandomEngine); });
 				}
@@ -1046,6 +1053,7 @@ namespace dnn
 				{
 					BiasesFiller = biasesFiller;
 					BiasesFillerMode = biasesFillerMode;
+					BiasesGain = biasesGain;
 					BiasesScale = biasesScale;
 				}
 
@@ -1093,7 +1101,7 @@ namespace dnn
 
 				case Fillers::HeNormal:
 				{
-					auto stddev = std::sqrt(Float(2) / biasesScope);
+					auto stddev = biasesGain * std::sqrt(Float(2) / biasesScope);
 					auto distribution = std::normal_distribution<Float>(Float(0), stddev);
 					std::generate_n(Biases.begin(), BiasCount, [&]() { return distribution(RandomEngine); });
 				}
@@ -1101,7 +1109,7 @@ namespace dnn
 
 				case Fillers::HeUniform:
 				{
-					auto limit = std::sqrt(Float(6) / biasesScope);
+					auto limit = biasesGain * std::sqrt(Float(6) / biasesScope);
 					auto distribution = std::uniform_real_distribution<Float>(-limit, limit);
 					std::generate_n(Biases.begin(), BiasCount, [&]() { return distribution(RandomEngine); });
 				}
@@ -1109,7 +1117,7 @@ namespace dnn
 
 				case Fillers::LeCunNormal:
 				{
-					auto stddev = std::sqrt(Float(1) / biasesScope);
+					auto stddev = biasesGain * std::sqrt(Float(1) / biasesScope);
 					auto distribution = std::normal_distribution<Float>(Float(0), stddev);
 					std::generate_n(Biases.begin(), BiasCount, [&]() { return distribution(RandomEngine); });
 				}
@@ -1117,7 +1125,7 @@ namespace dnn
 
 				case Fillers::LeCunUniform:
 				{
-					auto limit = std::sqrt(Float(3) / biasesScope);
+					auto limit = biasesGain * std::sqrt(Float(3) / biasesScope);
 					auto distribution = std::uniform_real_distribution<Float>(-limit, limit);
 					std::generate_n(Biases.begin(), BiasCount, [&]() { return distribution(RandomEngine); });
 				}
@@ -1152,7 +1160,7 @@ namespace dnn
 
 				case Fillers::XavierNormal:
 				{
-					auto stddev = std::sqrt(Float(2) / biasesScope);
+					auto stddev = biasesGain * std::sqrt(Float(2) / biasesScope);
 					auto distribution = std::normal_distribution<Float>(Float(0), stddev);
 					std::generate_n(Biases.begin(), BiasCount, [&]() { return distribution(RandomEngine); });
 				}
@@ -1160,7 +1168,7 @@ namespace dnn
 
 				case Fillers::XavierUniform:
 				{
-					auto limit = std::sqrt(Float(6) / biasesScope);
+					auto limit = biasesGain * std::sqrt(Float(6) / biasesScope);
 					auto distribution = std::uniform_real_distribution<Float>(-limit, limit);
 					std::generate_n(Biases.begin(), BiasCount, [&]() { return distribution(RandomEngine); });
 				}

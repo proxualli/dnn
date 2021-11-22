@@ -134,12 +134,14 @@ namespace scripts
         bool MeanStdNormalization = true;
         scripts::Fillers WeightsFiller = Fillers::HeNormal;
         scripts::FillerModes WeightsFillerMode = FillerModes::Auto;
+        Float WeightsGain = Float(1);
         Float WeightsScale = Float(0.05);
         Float WeightsLRM = Float(1);
         Float WeightsWDM = Float(1);
         bool HasBias = false;
         scripts::Fillers BiasesFiller = Fillers::Constant;
         scripts::FillerModes BiasesFillerMode = FillerModes::Auto;
+        Float BiasesGain = Float(1);
         Float BiasesScale = Float(0);
         Float BiasesLRM = Float(1);
         Float BiasesWDM = Float(1);
@@ -592,10 +594,10 @@ namespace scripts
                 "Dim=" + std::to_string(p.C) + "," + std::to_string(p.H) + "," + std::to_string(p.W) + nwl +
                 ((p.PadH > 0 || p.PadW > 0) ? (!p.MirrorPad ? "ZeroPad=" + std::to_string(p.PadH) + "," + std::to_string(p.PadW) + nwl : "MirrorPad=" + std::to_string(p.PadH) + "," + std::to_string(p.PadW) + nwl) : "") +
                 ((p.PadH > 0 || p.PadW > 0) ? "RandomCrop=Yes" + nwl : "") +
-                "WeightsFiller=" + to_string(p.WeightsFiller) + (!ScaleVisible(p.WeightsFiller) ? "(" + to_string(p.WeightsFillerMode) + ")" : "") + (ScaleVisible(p.WeightsFiller) ? "(" + to_string(p.WeightsScale) + ")" : "") + nwl +
+                "WeightsFiller=" + to_string(p.WeightsFiller) + (!ScaleVisible(p.WeightsFiller) ? "(" + to_string(p.WeightsFillerMode) + "," + std::to_string(p.WeightsGain) + ")" : "") + (ScaleVisible(p.WeightsFiller) ? "(" + to_string(p.WeightsScale) + ")" : "") + nwl +
                 (p.WeightsLRM != 1 ? "WeightsLRM=" + std::to_string(p.WeightsLRM) + nwl : "") +
                 (p.WeightsWDM != 1 ? "WeightsWDM=" + std::to_string(p.WeightsWDM) + nwl : "") +
-                (p.HasBias ? "BiasesFiller=" + to_string(p.BiasesFiller) + (ScaleVisible(p.BiasesFiller) ? "(" + std::to_string(p.BiasesScale) + ")" : "") + nwl +
+                (p.HasBias ? "BiasesFiller=" + to_string(p.BiasesFiller) + (!ScaleVisible(p.BiasesFiller) ? "(" + to_string(p.BiasesFillerMode) + "," + std::to_string(p.BiasesGain) + ")" : "") + (ScaleVisible(p.BiasesFiller) ? "(" + std::to_string(p.BiasesScale) + "," + std::to_string(p.BiasesGain) + ")" : "") + nwl +
                 (p.BiasesLRM != 1 ? "BiasesLRM=" + std::to_string(p.BiasesLRM) + nwl : "") +
                 (p.BiasesWDM != 1 ? "BiasesWDM=" + std::to_string(p.BiasesWDM) + nwl : "") : "Biases=No" + nwl) +
                 (p.DropoutVisible() ? "Dropout=" + std::to_string(p.Dropout) + nwl : "") +
