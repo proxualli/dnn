@@ -188,13 +188,13 @@ namespace dnn
 			BatchNormEps(Float(1e-04)),				// Eps
 			Dropout(Float(0)),						// Dropout
 			WeightsFiller(Fillers::HeNormal),		// WeightsFiller
-			WeightsFillerMode(FillerModes::In),	// WeightsFillerMode
+			WeightsFillerMode(FillerModes::In),		// WeightsFillerMode
 			WeightsGain(Float(1)),					// WeightsGain
 			WeightsScale(Float(0.05)),				// WeightsScale
 			WeightsLRM(Float(1)),					// WeightsLRM
 			WeightsWDM(Float(1)),					// WeightsWDM
 			BiasesFiller(Fillers::Constant),		// BiasesFiller
-			BiasesFillerMode(FillerModes::In),	// BiasesFillerMode
+			BiasesFillerMode(FillerModes::In),		// BiasesFillerMode
 			BiasesGain(Float(1)),					// BiasesGain
 			BiasesScale(Float(0)),					// BiasesScale
 			BiasesLRM(Float(1)),					// BiasesLRM
@@ -487,21 +487,10 @@ namespace dnn
 
 		bool CheckTaskState() const
 		{
-			if (TaskState.load() != TaskStates::Running)
-			{
-				if (TaskState.load() == TaskStates::Paused)
-				{
-					while (TaskState.load() == TaskStates::Paused)
-					{
-						std::this_thread::sleep_for(std::chrono::milliseconds(500));
-						SleepYield(std::chrono::milliseconds(500));
-					}
-				}
-				else
-					return false;
-			}
+			while (TaskState.load() == TaskStates::Paused)
+				std::this_thread::yield();
 
-			return true;
+			return TaskState.load() == TaskStates::Running;
 		}
 
 		void TrainingAsync()
