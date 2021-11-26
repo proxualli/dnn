@@ -1223,6 +1223,8 @@ namespace dnn
 
 						case Fillers::HeNormal:
 						case Fillers::HeUniform:
+						case Fillers::LeCunNormal:
+						case Fillers::LeCunUniform:
 						{
 							auto fillerModes = magic_enum::enum_names<FillerModes>();
 							for (auto fillerMode : fillerModes)
@@ -1271,8 +1273,7 @@ namespace dnn
 							}
 						}
 						break;
-						case Fillers::LeCunNormal:
-						case Fillers::LeCunUniform:
+						
 						case Fillers::XavierNormal:
 						case Fillers::XavierUniform:
 						{
@@ -1327,15 +1328,17 @@ namespace dnn
 							model->WeightsScale = value.size() > 2 ? weightsScale : defaultWeightsScale;
 						}
 						break;
+
 						case dnn::Fillers::HeNormal:
 						case dnn::Fillers::HeUniform:
+						case dnn::Fillers::LeCunNormal:
+						case dnn::Fillers::LeCunUniform:
 						{
 							model->WeightsFillerMode = weightsFillerMode;
 							model->WeightsGain = value.size() > 2 ? weightsGain : defaultWeightsGain;
 						}
 						break;
-						case dnn::Fillers::LeCunNormal:
-						case dnn::Fillers::LeCunUniform:
+						
 						case dnn::Fillers::XavierNormal:
 						case dnn::Fillers::XavierUniform:
 						{
