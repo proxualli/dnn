@@ -99,6 +99,8 @@ namespace scripts
         {
         case Fillers::HeNormal:
         case Fillers::HeUniform:
+        case Fillers::LeCunNormal:
+        case Fillers::LeCunUniform:
             return true;
         default:
             return false;
