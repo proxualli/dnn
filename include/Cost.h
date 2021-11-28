@@ -98,7 +98,7 @@ namespace dnn
 			ChosenFormat = dnnl::memory::format_tag::nc;
 			DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ int(batchSize), int(C) }), dnnl::memory::data_type::f32, ChosenFormat));
 			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ int(batchSize), int(C) }), dnnl::memory::data_type::f32, ChosenFormat));
-			isLogSoftmax = static_cast<Activation*>(InputLayer)->ActivationFunction == Activations::LogSoftmax;
+			isLogSoftmax = InputLayer->LayerType == LayerTypes::LogSoftmax;
 		}
 
 		void SetSampleLabel(const std::vector<LabelInfo>& sampleLabel)

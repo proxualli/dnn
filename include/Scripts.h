@@ -251,7 +251,7 @@ namespace scripts
                 return common + std::to_string(GrowthRate) + (Dropout > 0 ? std::string("-dropout") : std::string("")) + (Compression > 0 ? std::string("-compression") : std::string("")) + (Bottleneck ? std::string("-bottleneck") : std::string("")) + std::string("-") + StringToLower(std::string(magic_enum::enum_name<Activations>(Activation)));
             case Scripts::efficientnetv2:
             {
-                auto name = std::string(magic_enum::enum_name<Scripts>(Script)) + std::string("-") + std::to_string(H) + std::string("x") + std::to_string(W) + std::string("-");
+                auto name = std::string(magic_enum::enum_name<Scripts>(Script));
                 for (auto rec : EfficientNet)
                     name += rec.to_string();
                 return name;
@@ -294,6 +294,11 @@ namespace scripts
         static auto to_string(const FillerModes fillerMode)
         {
             return std::string(magic_enum::enum_name<FillerModes>(fillerMode));
+        }
+
+        static auto to_string(const Activations activation)
+        {
+            return std::string(magic_enum::enum_name<Activations>(activation));
         }
 
         static UInt DIV8(UInt channels)
@@ -371,7 +376,7 @@ namespace scripts
             }
         }
 
-        static std::string Convolution(UInt id, std::string inputs, UInt channels, UInt kernelX = 3, UInt kernelY = 3, UInt strideX = 1, UInt strideY = 1, UInt padX = 1, UInt padY = 1, std::string group = "", std::string prefix = "C", std::string weightsFiller = "")
+        static std::string Convolution(UInt id, std::string inputs, UInt channels, UInt kernelX = 3, UInt kernelY = 3, UInt strideX = 1, UInt strideY = 1, UInt padX = 1, UInt padY = 1, bool biases = false, std::string group = "", std::string prefix = "C", std::string weightsFiller = "")
         {
             return "[" + group + prefix + std::to_string(id) + "]" + nwl +
                 "Type=Convolution" + nwl +
@@ -380,10 +385,11 @@ namespace scripts
                 "Kernel=" + std::to_string(kernelX) + "," + std::to_string(kernelY) + nwl +
                 (strideX != 1 || strideY != 1 ? "Stride=" + std::to_string(strideX) + "," + std::to_string(strideY) + nwl : "") +
                 (padX != 0 || padY != 0 ? "Pad=" + std::to_string(padX) + "," + std::to_string(padY) + nwl : "") +
+                (biases ? "Biases=Yes" + nwl : "") +
                 (weightsFiller != "" ? "WeightsFiller=" + weightsFiller + nwl + nwl : nwl);
         }
 
-        static std::string DepthwiseConvolution(UInt id, std::string inputs, UInt multiplier = 1, UInt kernelX = 3, UInt kernelY = 3, UInt strideX = 1, UInt strideY = 1, UInt padX = 1, UInt padY = 1, std::string group = "", std::string prefix = "DC", std::string weightsFiller = "")
+        static std::string DepthwiseConvolution(UInt id, std::string inputs, UInt multiplier = 1, UInt kernelX = 3, UInt kernelY = 3, UInt strideX = 1, UInt strideY = 1, UInt padX = 1, UInt padY = 1, bool biases = false, std::string group = "", std::string prefix = "DC", std::string weightsFiller = "")
         {
             return "[" + group + prefix + std::to_string(id) + "]" + nwl +
                 "Type=DepthwiseConvolution" + nwl +
@@ -392,10 +398,11 @@ namespace scripts
                 "Kernel=" + std::to_string(kernelX) + "," + std::to_string(kernelY) + nwl +
                 (strideX != 1 || strideY != 1 ? "Stride=" + std::to_string(strideX) + "," + std::to_string(strideY) + nwl : "") +
                 (padX != 0 || padY != 0 ? "Pad=" + std::to_string(padX) + "," + std::to_string(padY) + nwl : "") +
+                (biases ? "Biases=Yes" + nwl : "") +
                 (weightsFiller != "" ? "WeightsFiller=" + weightsFiller + nwl + nwl : nwl);
         }
 
-        static std::string PartialDepthwiseConvolution(UInt id, std::string inputs, UInt part = 1, UInt groups = 1, UInt kernelX = 3, UInt kernelY = 3, UInt strideX = 1, UInt strideY = 1, UInt padX = 1, UInt padY = 1, std::string group = "", std::string prefix = "DC", std::string weightsFiller = "")
+        static std::string PartialDepthwiseConvolution(UInt id, std::string inputs, UInt part = 1, UInt groups = 1, UInt kernelX = 3, UInt kernelY = 3, UInt strideX = 1, UInt strideY = 1, UInt padX = 1, UInt padY = 1, bool biases = false, std::string group = "", std::string prefix = "DC", std::string weightsFiller = "")
         {
             return "[" + group + prefix + std::to_string(id) + "]" + nwl +
                 "Type=PartialDepthwiseConvolution" + nwl +
@@ -405,38 +412,39 @@ namespace scripts
                 "Kernel=" + std::to_string(kernelX) + "," + std::to_string(kernelY) + nwl +
                 (strideX != 1 || strideY != 1 ? "Stride=" + std::to_string(strideX) + "," + std::to_string(strideY) + nwl : "") +
                 (padX != 0 || padY != 0 ? "Pad=" + std::to_string(padX) + "," + std::to_string(padY) + nwl : "") +
+                (biases ? "Biases=Yes" + nwl : "") +
                 (weightsFiller != "" ? "WeightsFiller=" + weightsFiller + nwl + nwl : nwl);
         }
 
-        static std::string DepthwiseMixedConvolution(UInt g, UInt id, std::string inputs, UInt strideX = 1, UInt strideY = 1, bool useChannelSplit = true, std::string group = "", std::string prefix = "DC")
+        static std::string DepthwiseMixedConvolution(UInt g, UInt id, std::string inputs, UInt strideX = 1, UInt strideY = 1, bool biases = false, bool useChannelSplit = true, std::string group = "", std::string prefix = "DC")
         {
             switch (g)
             {
             case 0:
-                return DepthwiseConvolution(id, inputs, 1, 3, 3, strideX, strideY, 1, 1, group, prefix);
+                return DepthwiseConvolution(id, inputs, 1, 3, 3, strideX, strideY, 1, 1, biases, group, prefix);
 
             case 1:
                 return useChannelSplit ? ChannelSplit(id, inputs, 2, 1, "Q1") + ChannelSplit(id, inputs, 2, 2, "Q2") +
-                    DepthwiseConvolution(id, In("Q1CS", id), 1, 3, 3, strideX, strideY, 1, 1, "A") + DepthwiseConvolution(id, In("Q2CS", id), 1, 5, 5, strideX, strideY, 2, 2, "B") +
+                    DepthwiseConvolution(id, In("Q1CS", id), 1, 3, 3, strideX, strideY, 1, 1, biases, "A") + DepthwiseConvolution(id, In("Q2CS", id), 1, 5, 5, strideX, strideY, 2, 2, biases, "B") +
                     Concat(id, In("ADC", id) + "," + In("BDC", id), group, prefix) :
-                    PartialDepthwiseConvolution(id, inputs, 1, 2, 3, 3, strideX, strideY, 1, 1, "A") + PartialDepthwiseConvolution(id, inputs, 2, 2, 5, 5, strideX, strideY, 2, 2, "B") +
+                    PartialDepthwiseConvolution(id, inputs, 1, 2, 3, 3, strideX, strideY, 1, 1, biases, "A") + PartialDepthwiseConvolution(id, inputs, 2, 2, 5, 5, strideX, strideY, 2, 2, biases, "B") +
                     Concat(id, In("ADC", id) + "," + In("BDC", id), group, prefix);
                 /*
                 case 2:
                     return useChannelSplit ? ChannelSplit(id, inputs, 3, 1, "Q1") + ChannelSplit(id, inputs, 3, 2, "Q2") + ChannelSplit(id, inputs, 3, 3, "Q3") +
-                        DepthwiseConvolution(id, In("Q1CS", id), 1, 3, 3, strideX, strideY, 1, 1, "A") + DepthwiseConvolution(id, In("Q2CS", id), 1, 5, 5, strideX, strideY, 2, 2, "B") + DepthwiseConvolution(id, In("Q3CS", id), 1, 7, 7, strideX, strideY, 3, 3, "C") +
+                        DepthwiseConvolution(id, In("Q1CS", id), 1, 3, 3, strideX, strideY, 1, 1, biases, "A") + DepthwiseConvolution(id, In("Q2CS", id), 1, 5, 5, strideX, strideY, 2, 2, biases, "B") + DepthwiseConvolution(id, In("Q3CS", id), 1, 7, 7, strideX, strideY, 3, 3, biases, "C") +
                         Concat(id, In("ADC", id) + "," + In("BDC", id) + "," + In("CDC", id), group, prefix) :
-                        PartialDepthwiseConvolution(id, inputs, 1, 3, 3, 3, strideX, strideY, 1, 1, "A") + PartialDepthwiseConvolution(id, inputs, 2, 3, 5, 5, strideX, strideY, 2, 2, "B") +
-                        PartialDepthwiseConvolution(id, inputs, 3, 3, 7, 7, strideX, strideY, 3, 3, "C") +
+                        PartialDepthwiseConvolution(id, inputs, 1, 3, 3, 3, strideX, strideY, 1, 1, biases, "A") + PartialDepthwiseConvolution(id, inputs, 2, 3, 5, 5, strideX, strideY, 2, 2, biases, "B") +
+                        PartialDepthwiseConvolution(id, inputs, 3, 3, 7, 7, strideX, strideY, 3, 3, biases, "C") +
                         Concat(id, In("ADC", id) + "," + In("BDC", id) + "," + In("CDC", id), group, prefix);
                 */
             default:
                 return useChannelSplit ? ChannelSplit(id, inputs, 4, 1, "Q1") + ChannelSplit(id, inputs, 4, 2, "Q2") + ChannelSplit(id, inputs, 4, 3, "Q3") + ChannelSplit(id, inputs, 4, 4, "Q4") +
-                    DepthwiseConvolution(id, In("Q1CS", id), 1, 3, 3, strideX, strideY, 1, 1, "A") + DepthwiseConvolution(id, In("Q2CS", id), 1, 5, 5, strideX, strideY, 2, 2, "B") +
-                    DepthwiseConvolution(id, In("Q3CS", id), 1, 7, 7, strideX, strideY, 3, 3, "C") + DepthwiseConvolution(id, In("Q4CS", id), 1, 9, 9, strideX, strideY, 4, 4, "D") +
+                    DepthwiseConvolution(id, In("Q1CS", id), 1, 3, 3, strideX, strideY, 1, 1, biases, "A") + DepthwiseConvolution(id, In("Q2CS", id), 1, 5, 5, strideX, strideY, 2, 2, biases, "B") +
+                    DepthwiseConvolution(id, In("Q3CS", id), 1, 7, 7, strideX, strideY, 3, 3, biases, "C") + DepthwiseConvolution(id, In("Q4CS", id), 1, 9, 9, strideX, strideY, 4, 4, biases, "D") +
                     Concat(id, In("ADC", id) + "," + In("BDC", id) + "," + In("CDC", id) + "," + In("DDC", id), group, prefix) :
-                    PartialDepthwiseConvolution(id, inputs, 1, 4, 3, 3, strideX, strideY, 1, 1, "A") + PartialDepthwiseConvolution(id, inputs, 2, 4, 5, 5, strideX, strideY, 2, 2, "B") +
-                    PartialDepthwiseConvolution(id, inputs, 3, 4, 7, 7, strideX, strideY, 3, 3, "C") + PartialDepthwiseConvolution(id, inputs, 4, 4, 9, 9, strideX, strideY, 4, 4, "D") +
+                    PartialDepthwiseConvolution(id, inputs, 1, 4, 3, 3, strideX, strideY, 1, 1, biases, "A") + PartialDepthwiseConvolution(id, inputs, 2, 4, 5, 5, strideX, strideY, 2, 2, biases, "B") +
+                    PartialDepthwiseConvolution(id, inputs, 3, 4, 7, 7, strideX, strideY, 3, 3, biases, "C") + PartialDepthwiseConvolution(id, inputs, 4, 4, 9, 9, strideX, strideY, 4, 4, biases, "D") +
                     Concat(id, In("ADC", id) + "," + In("BDC", id) + "," + In("CDC", id) + "," + In("DDC", id), group, prefix);
             }
         }
@@ -465,12 +473,14 @@ namespace scripts
                 "Inputs=" + inputs + nwl + nwl;
         }
 
-        static std::string Dense(std::string inputs, UInt channels, std::string group = "", std::string prefix = "DS")
+        static std::string Dense(UInt id, std::string inputs, UInt channels, bool biases = false, std::string group = "", std::string prefix = "DS", std::string weightsFiller = "")
         {
-            return "[" + group + prefix + "]" + nwl +
+            return "[" + group + prefix + std::to_string(id) + "]" + nwl +
                 "Type=Dense" + nwl +
                 "Inputs=" + inputs + nwl +
-                "Channels=" + std::to_string(channels) + nwl + nwl;
+                "Channels=" + std::to_string(channels) + nwl +
+                (biases ? "Biases=Yes" + nwl : "") +
+                (weightsFiller != "" ? "WeightsFiller=" + weightsFiller + nwl + nwl : nwl);
         }
 
         static std::string AvgPooling(UInt id, std::string input, std::string kernel = "3,3", std::string stride = "2,2", std::string pad = "1,1", std::string group = "", std::string prefix = "P")
@@ -511,9 +521,31 @@ namespace scripts
                 "Inputs=" + inputs + nwl + nwl;
         }
 
+        static std::string Softmax(UInt id, std::string inputs, std::string group = "", std::string prefix = "SM")
+        {
+            return "[" + group + prefix + std::to_string(id) + "]" + nwl +
+                "Type=Softmax" + nwl +
+                "Inputs=" + inputs + nwl + nwl;
+        }
+
+        static std::string LogSoftmax(UInt id, std::string inputs, std::string group = "", std::string prefix = "LSM")
+        {
+            return "[" + group + prefix + std::to_string(id) + "]" + nwl +
+                "Type=LogSoftmax" + nwl +
+                "Inputs=" + inputs + nwl + nwl;
+        }
+
         static std::string Activation(std::string inputs, std::string activation = "Relu", std::string group = "", std::string prefix = "ACT")
         {
             return "[" + group + prefix + "]" + nwl +
+                "Type=Activation" + nwl +
+                "Inputs=" + inputs + nwl +
+                "Activation=" + activation + nwl + nwl;
+        }
+
+        static std::string Activation(UInt id, std::string inputs, std::string activation = "Relu", std::string group = "", std::string prefix = "ACT")
+        {
+            return "[" + group + prefix + std::to_string(id) + "]" + nwl +
                 "Type=Activation" + nwl +
                 "Inputs=" + inputs + nwl +
                 "Activation=" + activation + nwl + nwl;
@@ -542,12 +574,14 @@ namespace scripts
                 blocks.push_back(
                     Convolution(id, inputs, hiddenDim, 3, 3, stride, stride, 1, 1) +
                     BatchNormActivation(id, In("C", id), activation) +
+
                     GlobalAvgPooling(In("B", id), group) +
-                    Convolution(1, group + std::string("GAP"), DIV8(hiddenDim / expandRatio), 1, 1, 1, 1, 0, 0, group) +
-                    BatchNormActivation(1, group + std::string("C1"), activation == scripts::Activations::FRelu ? scripts::Activations::HardSwish : activation, group) +
-                    Convolution(2, group + std::string("B1"), hiddenDim, 1, 1, 1, 1, 0, 0, group) +
-                    BatchNormActivation(2, group + std::string("C2"), std::string("HardLogistic"), group) +
-                    ChannelMultiply(In("B", id) + std::string(",") + group + std::string("B2"), group) +
+                    Convolution(1, group + std::string("GAP"), DIV8(hiddenDim / expandRatio), 1, 1, 1, 1, 0, 0, true, group) +
+                    Activation(1, group + std::string("C1"), to_string(activation == scripts::Activations::FRelu ? scripts::Activations::HardSwish : activation), group) +
+                    Convolution(2, group + std::string("ACT1"), hiddenDim, 1, 1, 1, 1, 0, 0, true, group) +
+                    Activation(2, group + std::string("C2"), std::string("Logistic"), group) +
+                    ChannelMultiply(In("B", id) + std::string(",") + group + std::string("ACT2"), group) +
+
                     Convolution(id + 1, group + std::string("CM"), DIV8(outputChannels), 1, 1, 1, 1, 0, 0) +
                     BatchNorm(id + 1, In("C", id + 1)));
             }
@@ -580,12 +614,14 @@ namespace scripts
                     BatchNormActivation(id, In("C", id), activation) +
                     DepthwiseConvolution(id + 1, In("B", id), 1, 3, 3, stride, stride, 1, 1) +
                     BatchNormActivation(id + 1, In("DC", id + 1), activation) +
+                    
                     GlobalAvgPooling(In("B", id + 1), group) +
-                    Convolution(1, group + std::string("GAP"), DIV8(hiddenDim / expandRatio), 1, 1, 1, 1, 0, 0, group) +
-                    BatchNormActivation(1, group + std::string("C1"), activation == scripts::Activations::FRelu ? scripts::Activations::HardSwish : activation, group) +
-                    Convolution(2, group + std::string("B1"), hiddenDim, 1, 1, 1, 1, 0, 0, group) +
-                    BatchNormActivation(2, group + std::string("C2"), std::string("HardLogistic"), group) +
-                    ChannelMultiply(In("B", id + 1) + std::string(",") + group + std::string("B2"), group) +
+                    Convolution(1, group + std::string("GAP"), DIV8(hiddenDim / expandRatio), 1, 1, 1, 1, 0, 0, true, group) +
+                    Activation(1, group + std::string("C1"), to_string(activation == scripts::Activations::FRelu ? scripts::Activations::HardSwish : activation), group) +
+                    Convolution(2, group + std::string("ACT1"), hiddenDim, 1, 1, 1, 1, 0, 0, true, group) +
+                    Activation(2, group + std::string("C2"), std::string("Logistic"), group) +
+                    ChannelMultiply(In("B", id + 1) + std::string(",") + group + std::string("ACT2"), group) +
+
                     Convolution(id + 2, group + std::string("CM"), DIV8(outputChannels), 1, 1, 1, 1, 0, 0) +
                     BatchNorm(id + 2, In("C", id + 2)));
             }
@@ -628,11 +664,11 @@ namespace scripts
                 auto group = In("SE", id + 3);
                 auto strSE =
                     se ? GlobalAvgPooling(In("B", id + 3), group) +
-                    Convolution(1, group + std::string("GAP"), DIV8(channels / 4), 1, 1, 1, 1, 0, 0, group) +
-                    BatchNormActivation(1, group + std::string("C1"), activation == Activations::FRelu ? Activations::HardSwish : activation, group) +
-                    Convolution(2, group + std::string("B1"), channels, 1, 1, 1, 1, 0, 0, group) +
-                    BatchNormActivation(2, group + std::string("C2"), std::string("HardLogistic"), group) +
-                    ChannelMultiply(In("B", id + 3) + std::string(",") + group + std::string("B2"), group) +
+                    Convolution(1, group + std::string("GAP"), DIV8(channels / 4), 1, 1, 1, 1, 0, 0, true, group) +
+                    Activation(1, group + std::string("C1"), to_string(activation == scripts::Activations::FRelu ? scripts::Activations::HardSwish : activation), group) +
+                    Convolution(2, group + std::string("ACT1"), channels, 1, 1, 1, 1, 0, 0, true, group) +
+                    Activation(2, group + std::string("C2"), std::string("Logistic"), group) +
+                    ChannelMultiply(In("B", id + 3) + std::string(",") + group + std::string("ACT2"), group) +
                     Concat(n + 1, In("LCS", n) + std::string(",") + group + std::string("CM")) :
                     Concat(n + 1, In("LCS", n) + std::string(",") + In("B", id + 3));
 
@@ -779,8 +815,8 @@ namespace scripts
                     Convolution(C, In("CC", CC), p.Classes(), 1, 1, 1, 1, 0, 0) +
                     BatchNorm(C + 1, In("C", C)) +
                     GlobalAvgPooling(In("B", C + 1)) +
-                    Activation("GAP", "LogSoftmax") +
-                    Cost("ACT", p.Dataset, p.Classes(), "CategoricalCrossEntropy", 0.125f);
+                    LogSoftmax(1, "GAP") +
+                    Cost(In("LSM", 1), p.Dataset, p.Classes(), "CategoricalCrossEntropy", 0.125f);
             }
             break;
 
@@ -815,11 +851,12 @@ namespace scripts
                 }
 
                 net +=
-                    BatchNormActivation(C, In("A", C - 1), p.Activation) +
-                    Convolution(C, In("B", C), p.Classes(), 1, 1, 1, 1, 0, 0, "", "C", "Normal(0.001)") +
-                    GlobalAvgPooling(In("C", C)) +
-                    Activation("GAP", "LogSoftmax") +
-                    Cost("ACT", p.Dataset, p.Classes(), "CategoricalCrossEntropy", 0.125f);
+                    Convolution(C, In("A", C - 1), 1792, 1, 1, 1, 1, 0, 0) +
+                    BatchNormActivation(C, In("C", C), p.Activation) +
+                    GlobalAvgPooling(In("B", C)) +
+                    Dense(1, "GAP", p.Classes(), true, "", "DS", "Normal(0.001)") +
+                    LogSoftmax(1, In("DS", 1)) +
+                    Cost(In("LSM", 1), p.Dataset, p.Classes(), "CategoricalCrossEntropy", 0.1f);
             }
             break;
 
@@ -836,7 +873,7 @@ namespace scripts
                 blocks.push_back(
                     Convolution(2, "B1", DIV8(6 * W), 1, 1, 1, 1, 0, 0) +
                     BatchNormActivation(2, "C2", p.Activation) +
-                    DepthwiseMixedConvolution(0, 3, "B2", 1, 1, channelsplit) +
+                    DepthwiseMixedConvolution(0, 3, "B2", 1, 1, p.HasBias, channelsplit) +
                     BatchNormActivation(3, "DC3", p.Activation) +
                     Convolution(4, "B3", DIV8(W), 1, 1, 1, 1, 0, 0) +
                     BatchNorm(4, "C4"));
@@ -855,18 +892,18 @@ namespace scripts
                         auto group = In("SE", C + 1);
                         auto strSE =
                             se ? GlobalAvgPooling(In("B", C + 1), group) +
-                            Convolution(1, group + "GAP", DIV8((6 * W) / 4), 1, 1, 1, 1, 0, 0, group) +
-                            BatchNormActivation(1, group + "C1", p.Activation == Activations::FRelu ? Activations::HardSwish : p.Activation, group) +
-                            Convolution(2, group + "B1", DIV8(6 * W), 1, 1, 1, 1, 0, 0, group) +
-                            BatchNormActivation(2, group + "C2", "HardLogistic", group) +
-                            ChannelMultiply(In("B", C + 1) + "," + group + "B2", group) +
+                            Convolution(1, group + "GAP", DIV8((6 * W) / 4), 1, 1, 1, 1, 0, 0, true, group) +
+                            Activation(1, group + "C1", to_string(p.Activation == Activations::FRelu ? Activations::HardSwish : p.Activation), group) +
+                            Convolution(2, group + "ACT1", DIV8(6 * W), 1, 1, 1, 1, 0, 0, p.HasBias, group) +
+                            Activation(2, group + "C2", "Logistic", group) +
+                            ChannelMultiply(In("B", C + 1) + "," + group + "ACT2", group) +
                             Convolution(C + 2, group + "CM", DIV8(W), 1, 1, 1, 1, 0, 0) :
                             Convolution(C + 2, In("B", C + 1), DIV8(W), 1, 1, 1, 1, 0, 0);
 
                         blocks.push_back(
                             Convolution(C, In("A", A), DIV8(6 * W), 1, 1, 1, 1, 0, 0) +
                             BatchNormActivation(C, In("C", C), p.Activation) +
-                            DepthwiseMixedConvolution(mix, C + 1, In("B", C), 2, 2, channelsplit) +
+                            DepthwiseMixedConvolution(mix, C + 1, In("B", C), 2, 2, p.HasBias, channelsplit) +
                             BatchNormActivation(C + 1, In("DC", C + 1), p.Activation) +
                             strSE +
                             BatchNorm(C + 2, In("C", C + 2)));
@@ -882,18 +919,18 @@ namespace scripts
 
                         auto strSE =
                             se ? GlobalAvgPooling(In("B", C + 1), group) +
-                            Convolution(1, group + "GAP", DIV8((6 * W) / 4), 1, 1, 1, 1, 0, 0, group) +
-                            BatchNormActivation(1, group + "C1", p.Activation == Activations::FRelu ? Activations::HardSwish : p.Activation, group) +
-                            Convolution(2, group + "B1", DIV8(6 * W), 1, 1, 1, 1, 0, 0, group) +
-                            BatchNormActivation(2, group + "C2", "HardLogistic", group) +
-                            ChannelMultiply(In("B", C + 1) + "," + group + "B2", group) +
+                            Convolution(1, group + "GAP", DIV8((6 * W) / 4), 1, 1, 1, 1, 0, 0, p.HasBias, group) +
+                            Activation(1, group + "C1", to_string(p.Activation == Activations::FRelu ? Activations::HardSwish : p.Activation), group) +
+                            Convolution(2, group + "ACT1", DIV8(6 * W), 1, 1, 1, 1, 0, 0, p.HasBias, group) +
+                            Activation(2, group + "C2", "Logistic", group) +
+                            ChannelMultiply(In("B", C + 1) + "," + group + "ACT2", group) +
                             Convolution(C + 2, group + "CM", DIV8(W), 1, 1, 1, 1, 0, 0) :
                             Convolution(C + 2, In("B", C + 1), DIV8(W), 1, 1, 1, 1, 0, 0);
 
                         blocks.push_back(
                             Convolution(C, strOutputLayer, DIV8(6 * W), 1, 1, 1, 1, 0, 0) +
                             BatchNormActivation(C, In("C", C), p.Activation) +
-                            DepthwiseMixedConvolution(mix, C + 1, In("B", C), 1, 1, channelsplit) +
+                            DepthwiseMixedConvolution(mix, C + 1, In("B", C), 1, 1, p.HasBias, channelsplit) +
                             BatchNormActivation(C + 1, In("DC", C + 1), p.Activation) +
                             strSE +
                             BatchNorm(C + 2, In("C", C + 2)) +
@@ -912,8 +949,8 @@ namespace scripts
                     Convolution(C, In("B", C), p.Classes(), 1, 1, 1, 1, 0, 0) +
                     BatchNorm(C + 1, In("C", C)) +
                     GlobalAvgPooling(In("B", C + 1)) +
-                    Activation("GAP", "LogSoftmax") +
-                    Cost("ACT", p.Dataset, p.Classes(), "CategoricalCrossEntropy", 0.125f);
+                    LogSoftmax(1, "GAP") +
+                    Cost(In("LSM", 1), p.Dataset, p.Classes(), "CategoricalCrossEntropy", 0.125f);
             }
             break;
 
@@ -1027,8 +1064,8 @@ namespace scripts
                     Convolution(C, In("B", C), p.Classes(), 1, 1, 1, 1, 0, 0) +
                     BatchNorm(C + 1, In("C", C)) +
                     GlobalAvgPooling(In("B", C + 1)) +
-                    Activation("GAP", "LogSoftmax") +
-                    Cost("ACT", p.Dataset, p.Classes(), "CategoricalCrossEntropy", 0.125f);
+                    LogSoftmax(1, "GAP") +
+                    Cost(In("LSM", 1), p.Dataset, p.Classes(), "CategoricalCrossEntropy", 0.125f);
             }
             break;
 
@@ -1071,8 +1108,8 @@ namespace scripts
                     Convolution(C, In("CC", A), p.Classes(), 1, 1, 1, 1, 0, 0) +
                     BatchNorm(C + 1, In("C", C)) +
                     GlobalAvgPooling(In("B", C + 1)) +
-                    Activation("GAP", "LogSoftmax") +
-                    Cost("ACT", p.Dataset, p.Classes(), "CategoricalCrossEntropy", 0.125f);
+                    LogSoftmax(1, "GAP") +
+                    Cost(In("LSM", 1), p.Dataset, p.Classes(), "CategoricalCrossEntropy", 0.125f);
             }
             break;
 

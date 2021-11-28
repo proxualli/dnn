@@ -29,10 +29,10 @@ namespace dnn
 
 	struct HardLogistic
 	{
-		inline static Float f(const Float& x) noexcept { return std::min(Float(1), std::max(Float(0), x * Float(0.2) + Float(0.5))); }
-		inline static Float df(const Float& x) noexcept { return x < Float(-2.5) || x > Float(2.5) ? Float(0) : Float(0.2); }
-		inline static VecFloat fVec(const VecFloat& x) noexcept { return min(VecFloat(1), max(VecFloat(0), x * VecFloat(Float(0.2)) + VecFloat(Float(0.5)))); }
-		inline static VecFloat dfVec(const VecFloat& x) noexcept { return select(x < VecFloat(Float(-2.5)) | x > VecFloat(Float(2.5)), VecFloat(0), VecFloat(Float(0.2))); }
+		inline static Float f(const Float& x, const Float& alpha = Float(0.2), const Float& beta = Float(0.5)) noexcept { return std::min(Float(1), std::max(Float(0), x * alpha + beta)); }
+		inline static Float df(const Float& x, const Float& alpha = Float(0.2), const Float& beta = Float(0.5)) noexcept { return std::abs(x) > (beta / alpha) ? Float(0) : alpha; }
+		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0.2), const VecFloat& beta = VecFloat(0.5)) noexcept { return min(VecFloat(1), max(VecFloat(0), x * alpha + beta)); }
+		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0.2), const VecFloat& beta = VecFloat(0.5)) noexcept { return select(abs(x) > (beta / alpha), VecFloat(0), alpha); }
 	};
 
 	struct Relu6
@@ -154,7 +154,7 @@ namespace dnn
 		inline static VecFloat fVec(const VecFloat& x) noexcept { return x * tanh(log1p(exp(x))); }
 		inline static VecFloat dfVec(const VecFloat& x) noexcept { const auto tmpExp = exp(x); const auto tmpSoftplus = log1p(tmpExp); const auto tmpSech = VecFloat(1) / cosh(tmpSoftplus); return tanh(tmpSoftplus) + x * tmpExp * square(tmpSech) / (tmpExp + VecFloat(1)); }
 	};
-
+	
 	struct FTS
 	{
 		inline static Float f(const Float& x, const Float& alpha = Float(-0.2)) noexcept { return x >= Float(0) ? x * Logistic::f(x) + alpha : alpha; }
@@ -162,6 +162,7 @@ namespace dnn
 		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(Float(-0.2))) noexcept { return select(x >= VecFloat(0), x * Logistic::fVec(x) + alpha, alpha); }
 		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(Float(-0.2))) noexcept { return select(x >= VecFloat(0), Logistic::fVec(x) * (VecFloat(1) - x) + x, VecFloat(0)); }
 	};
+	
 
 	enum class Activations
 	{
@@ -171,49 +172,33 @@ namespace dnn
 		ClipV2 = 3,			//
 		Elu = 4,			//
 		Exp = 5,			//
-		FTS = 6,
-		Gelu = 7,
-		GeluErf = 8,
-		HardLogistic = 9,
-		HardSwish = 10,
-		Linear = 11,
-		Log = 12,
-		Logistic = 13,		//
-		LogLogistic = 14,
-		LogSoftmax = 15,
-		Mish = 16,
-		Pow = 17,
-		PRelu = 18,
-		Relu = 19,			//
-		Round = 20,
-		Softmax = 21,
-		SoftRelu = 22,
-		Sqrt = 23,			//
-		Square = 24,
-		Swish = 25,
-		Tanh = 26,			//
-		TanhExp = 27
+		Gelu = 6,
+		GeluErf = 7,
+		HardLogistic = 8,
+		HardSwish = 9,
+		Linear = 10,
+		Log = 11,
+		Logistic = 12,		//
+		LogLogistic = 13,
+		Mish = 14,
+		Pow = 15,
+		Relu = 16,			//
+		Round = 17,
+		SoftRelu = 18,
+		Sqrt = 19,			//
+		Square = 20,
+		Swish = 21,
+		Tanh = 22,			//
+		TanhExp = 23
 	};
 
 	class Activation final : public Layer
 	{
 	private:
-		std::unique_ptr<dnnl::prelu_forward::primitive_desc> fwdDescPRelu;
-		std::unique_ptr<dnnl::prelu_backward::primitive_desc> bwdDescPRelu;
-		std::unique_ptr<dnnl::logsoftmax_forward::primitive_desc> fwdDescLogSoftmax;
-		std::unique_ptr<dnnl::logsoftmax_backward::primitive_desc> bwdDescLogSoftmax;
-		std::unique_ptr<dnnl::softmax_forward::primitive_desc> fwdDescSoftmax;
-		std::unique_ptr<dnnl::softmax_backward::primitive_desc> bwdDescSoftmax;
 		std::unique_ptr<dnnl::eltwise_forward::primitive_desc> fwdDesc;
 		std::unique_ptr<dnnl::eltwise_backward::primitive_desc> bwdDesc;
 		std::unique_ptr<dnnl::binary::primitive_desc> bwdAddDesc;
 #ifdef DNN_CACHE_PRIMITIVES
-		std::unique_ptr<dnnl::prelu_forward> fwdPRelu;
-		std::unique_ptr<dnnl::prelu_backward> bwdPRelu;
-		std::unique_ptr<dnnl::logsoftmax_forward> fwdLogSoftmax;
-		std::unique_ptr<dnnl::logsoftmax_backward> bwdLogSoftmax;
-		std::unique_ptr<dnnl::softmax_forward> fwdSoftmax;
-		std::unique_ptr<dnnl::softmax_backward> bwdSoftmax;
 		std::unique_ptr<dnnl::eltwise_forward> fwd;
 		std::unique_ptr<dnnl::eltwise_backward> bwd;
 		std::unique_ptr<dnnl::binary> bwdAdd;
@@ -223,7 +208,6 @@ namespace dnn
 		bool reorderFwdSrc;
 		bool reorderBwdSrc;
 		bool reorderBwdDiffSrc;
-		bool reorderBwdDiffWeights;
 
 	public:
 		const Activations ActivationFunction;
@@ -231,20 +215,16 @@ namespace dnn
 		const Float Beta;
 
 		Activation(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const Activations activation, const std::vector<Layer*>& inputs, const Float alpha = Float(0), const Float beta = Float(0)) :
-			Layer(device, format, name, LayerTypes::Activation, activation == dnn::Activations::PRelu ? inputs[0]->C : 0, activation == dnn::Activations::PRelu ? inputs[0]->C : 0, inputs[0]->C, inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs, activation == dnn::Activations::PRelu),
+			Layer(device, format, name, LayerTypes::Activation, 0, 0, inputs[0]->C, inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs, false),
 			ActivationFunction(activation),
 			Alpha(alpha),
 			Beta(beta),
 			algorithm(dnnl::algorithm::eltwise_linear),
 			reorderFwdSrc(false),
 			reorderBwdSrc(false),
-			reorderBwdDiffSrc(false),
-			reorderBwdDiffWeights(false)
+			reorderBwdDiffSrc(false)
 		{
 			assert(Inputs.size() == 1);
-
-			PersistWeightsMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ 1, dnnl::memory::dim(C), 1, 1}), dnnl::memory::data_type::f32, dnnl::memory::format_tag::nchw));
-			WeightsMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ 1, dnnl::memory::dim(C), 1, 1 }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::nchw));
 		}
 				
 		std::string GetDescription() const final override
@@ -294,81 +274,7 @@ namespace dnn
 #endif
 			switch (ActivationFunction)
 			{
-			case Activations::PRelu:
-			{
-				auto memDesc = dnnl::memory::desc(dnnl::memory::dims({ 1, dnnl::memory::dim(C), 1, 1 }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::any);
-							
-				fwdDescPRelu = std::make_unique<dnnl::prelu_forward::primitive_desc>(dnnl::prelu_forward::primitive_desc(dnnl::prelu_forward::desc(dnnl::prop_kind::forward, *DstMemDesc, memDesc), Device.engine));
-				bwdDescPRelu = std::make_unique<dnnl::prelu_backward::primitive_desc>(dnnl::prelu_backward::primitive_desc(dnnl::prelu_backward::desc(*DstMemDesc, memDesc, *DiffDstMemDesc, memDesc), Device.engine, *fwdDescPRelu));
-
-				if (*WeightsMemDesc != fwdDescPRelu->weights_desc())
-				{
-					auto memWeights = dnnl::memory(*WeightsMemDesc, Device.engine, Biases.data());
-
-					auto weights = FloatVector(fwdDescPRelu->weights_desc().get_size() / sizeof(Float));
-					auto weightsMem = dnnl::memory(fwdDescPRelu->weights_desc(), Device.engine, weights.data());
-
-					dnnl::reorder(memWeights, weightsMem).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_FROM, memWeights}, { DNNL_ARG_TO, weightsMem } });
-					Device.stream.wait();
-
-					Biases = weights;
-					WeightsMemDesc = std::make_unique<dnnl::memory::desc>(fwdDescPRelu->weights_desc());
-				}
-
-				DstMemDesc = std::make_unique<dnnl::memory::desc>(fwdDescPRelu->dst_desc());
-				DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(fwdDescPRelu->dst_desc());
-
-				if (Format == dnnl::memory::format_tag::any)
-					ChosenFormat = GetDataFmt(*DstMemDesc);
-
-				reorderFwdSrc = fwdDescPRelu->src_desc() != *InputLayer->DstMemDesc;
-				reorderBwdSrc = bwdDescPRelu->src_desc() != *InputLayer->DstMemDesc;
-				reorderBwdDiffSrc = bwdDescPRelu->diff_src_desc() != *InputLayer->DiffDstMemDesc;
-				reorderBwdDiffWeights = bwdDescPRelu->diff_weights_desc() != fwdDescPRelu->weights_desc();
-#ifdef DNN_CACHE_PRIMITIVES
-				fwdPRelu = std::make_unique<dnnl::prelu_forward>(dnnl::prelu_forward(*fwdDescPRelu));
-				bwdPRelu = std::make_unique<dnnl::prelu_backward>(dnnl::prelu_backward(*bwdDescPRelu));
-#endif
-			}
-			break;
-
-			case Activations::LogSoftmax:
-			{
-				const auto axis = (H == 1 && W == 1) ? 1 : 3;
-				fwdDescLogSoftmax = std::make_unique<dnnl::logsoftmax_forward::primitive_desc>(dnnl::logsoftmax_forward::primitive_desc(dnnl::logsoftmax_forward::desc(dnnl::prop_kind::forward, *DstMemDesc, axis), Device.engine));
-				bwdDescLogSoftmax = std::make_unique<dnnl::logsoftmax_backward::primitive_desc>(dnnl::logsoftmax_backward::primitive_desc(dnnl::logsoftmax_backward::desc(*DiffDstMemDesc, *DstMemDesc, axis), Device.engine, *fwdDescLogSoftmax));
-				reorderFwdSrc = fwdDescLogSoftmax->src_desc() != *InputLayer->DstMemDesc;
-				reorderBwdDiffSrc = bwdDescLogSoftmax->diff_src_desc() != *InputLayer->DiffDstMemDesc;
-#ifdef DNN_CACHE_PRIMITIVES
-				fwdLogSoftmax = std::make_unique<dnnl::logsoftmax_forward>(dnnl::logsoftmax_forward(*fwdDescLogSoftmax));
-				bwdLogSoftmax = std::make_unique<dnnl::logsoftmax_backward>(dnnl::logsoftmax_backward(*bwdDescLogSoftmax));
-#endif
-			}
-			break;
-
-			case Activations::Softmax:
-			{
-				const auto axis = (H == 1 && W == 1) ? 1 : 3;
-				fwdDescSoftmax = std::make_unique<dnnl::softmax_forward::primitive_desc>(dnnl::softmax_forward::primitive_desc(dnnl::softmax_forward::desc(dnnl::prop_kind::forward, *DstMemDesc, axis), Device.engine));
-				bwdDescSoftmax = std::make_unique<dnnl::softmax_backward::primitive_desc>(dnnl::softmax_backward::primitive_desc(dnnl::softmax_backward::desc(*DiffDstMemDesc, *DstMemDesc, axis), Device.engine, *fwdDescSoftmax));
-				reorderFwdSrc = fwdDescSoftmax->src_desc() != *InputLayer->DstMemDesc;
-				reorderBwdDiffSrc = bwdDescSoftmax->diff_src_desc() != *InputLayer->DiffDstMemDesc;
-#ifdef DNN_CACHE_PRIMITIVES
-				fwdSoftmax = std::make_unique<dnnl::softmax_forward>(dnnl::softmax_forward(*fwdDescSoftmax));
-				bwdSoftmax = std::make_unique<dnnl::softmax_backward>(dnnl::softmax_backward(*bwdDescSoftmax));
-#endif
-			}
-			break;
-
-            default:
-			{
-				switch (ActivationFunction)
-				{
-				case Activations::FTS:
 				case Activations::HardLogistic:
-				case Activations::LogSoftmax:
-				case Activations::PRelu:
-				case Activations::Softmax:
 				case Activations::TanhExp:
 				    break;
 
@@ -438,62 +344,19 @@ namespace dnn
 				case Activations::Tanh:
 					algorithm = dnnl::algorithm::eltwise_tanh;
 					break;
-				}
+			}
 
-				fwdDesc = std::make_unique<dnnl::eltwise_forward::primitive_desc>(dnnl::eltwise_forward::primitive_desc(dnnl::eltwise_forward::desc(dnnl::prop_kind::forward, algorithm, *InputLayer->DstMemDesc, Alpha, Beta), Device.engine));
-				bwdDesc = std::make_unique<dnnl::eltwise_backward::primitive_desc>(dnnl::eltwise_backward::primitive_desc(dnnl::eltwise_backward::desc(algorithm, *DiffDstMemDesc, *DstMemDesc, Alpha, Beta), Device.engine, *fwdDesc));
+			fwdDesc = std::make_unique<dnnl::eltwise_forward::primitive_desc>(dnnl::eltwise_forward::primitive_desc(dnnl::eltwise_forward::desc(dnnl::prop_kind::forward, algorithm, *InputLayer->DstMemDesc, Alpha, Beta), Device.engine));
+			bwdDesc = std::make_unique<dnnl::eltwise_backward::primitive_desc>(dnnl::eltwise_backward::primitive_desc(dnnl::eltwise_backward::desc(algorithm, *DiffDstMemDesc, *DstMemDesc, Alpha, Beta), Device.engine, *fwdDesc));
 
-				reorderFwdSrc = fwdDesc->src_desc() != *InputLayer->DstMemDesc;
-				reorderBwdSrc = bwdDesc->src_desc() != *InputLayer->DstMemDesc;
-				reorderBwdDiffSrc = bwdDesc->diff_src_desc() != *InputLayer->DiffDstMemDesc;
+			reorderFwdSrc = fwdDesc->src_desc() != *InputLayer->DstMemDesc;
+			reorderBwdSrc = bwdDesc->src_desc() != *InputLayer->DstMemDesc;
+			reorderBwdDiffSrc = bwdDesc->diff_src_desc() != *InputLayer->DiffDstMemDesc;
 
 #ifdef DNN_CACHE_PRIMITIVES
-				fwd = std::make_unique<dnnl::eltwise_forward>(dnnl::eltwise_forward(*fwdDesc));
-				bwd = std::make_unique<dnnl::eltwise_backward>(dnnl::eltwise_backward(*bwdDesc));
+			fwd = std::make_unique<dnnl::eltwise_forward>(dnnl::eltwise_forward(*fwdDesc));
+			bwd = std::make_unique<dnnl::eltwise_backward>(dnnl::eltwise_backward(*bwdDesc));
 #endif
-			}
-			}
-		}
-
-		ByteArray GetImage(const Byte fillColor) final override
-		{
-			if (HasWeights)
-			{
-				const auto rangeWeights = GetColorRange(BiasesStats.Min, BiasesStats.Max);
-
-				const auto width = BiasCount;
-				const auto height = 1;
-				const auto totalSize = width * (height + 3);
-
-				auto image = ByteArray(totalSize, fillColor);
-
-				for (auto y = 0ull; y < height; y++)
-				{
-					const auto start = y * width;
-					const auto end = start + width;
-					for (auto x = start; x < end; x++)
-						image[x] = GetColorFromRange(rangeWeights, BiasesStats.Min, Biases[x]);
-				}
-				
-				return image;
-			}
-			else
-				return ByteArray();
-		}
-
-		void ResetWeights(const Fillers weightsFiller, const FillerModes weightsFillerMode, const Float weightsGain, const Float weightsFillerScale, const Fillers biasesFiller, const FillerModes biasesFillerMode, const Float biasesGain, const Float biasesFillerScale) override
-		{
-			if (HasWeights)
-				Biases = FloatVector(PaddedC, Float(Alpha));
-			
-			DNN_UNREF_PAR(weightsFiller);
-			DNN_UNREF_PAR(weightsFillerMode);
-			DNN_UNREF_PAR(weightsGain);
-			DNN_UNREF_PAR(weightsFillerScale);
-			DNN_UNREF_PAR(biasesFiller);
-			DNN_UNREF_PAR(biasesFillerMode);
-			DNN_UNREF_PAR(biasesGain);
-			DNN_UNREF_PAR(biasesFillerScale);
 		}
 
 		void ForwardProp(const UInt batchSize, const bool training) final override
@@ -506,292 +369,6 @@ namespace dnn
 
 			switch (ActivationFunction)
 			{
-			case Activations::LogSoftmax:
-			{
-				auto memSrc = dnnl::memory(*InputLayer->DstMemDesc, Device.engine, InputLayer->Neurons.data());
-				auto srcMem = reorderFwdSrc ? dnnl::memory(fwdDescLogSoftmax->src_desc(), Device.engine) : memSrc;
-				if (reorderFwdSrc)
-				{
-					dnnl::reorder(memSrc, srcMem).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_FROM, memSrc}, { DNNL_ARG_TO, srcMem } });
-					Device.stream.wait();
-				}
-
-				auto dstMem = dnnl::memory(fwdDescLogSoftmax->dst_desc(), Device.engine, Neurons.data());
-#ifdef DNN_CACHE_PRIMITIVES
-				fwdLogSoftmax->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DST,  dstMem } });
-#else
-				dnnl::logsoftmax_forward(*fwdDescLogSoftmax).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DST, dstMem } });
-#endif
-				Device.stream.wait();
-
-#ifndef DNN_LEAN
-				if (training)
-					InitArray<Float>(NeuronsD1.data(), batchSize * PaddedCDHW);
-#endif
-			}
-			break;
-
-			case Activations::Softmax:
-			{
-				auto memSrc = dnnl::memory(*InputLayer->DstMemDesc, Device.engine, InputLayer->Neurons.data());
-				auto srcMem = reorderFwdSrc ? dnnl::memory(fwdDescSoftmax->src_desc(), Device.engine) : memSrc;
-				if (reorderFwdSrc)
-				{
-					dnnl::reorder(memSrc, srcMem).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_FROM, memSrc}, { DNNL_ARG_TO, srcMem } });
-					Device.stream.wait();
-				}
-
-				auto dstMem = dnnl::memory(fwdDescSoftmax->dst_desc(), Device.engine, Neurons.data());
-#ifdef DNN_CACHE_PRIMITIVES
-				fwdSoftmax->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DST,  dstMem } });
-#else
-				dnnl::softmax_forward(*fwdDescSoftmax).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DST,  dstMem } });
-#endif
-				Device.stream.wait();
-
-#ifndef DNN_LEAN
-				if (training)
-					InitArray<Float>(NeuronsD1.data(), batchSize * PaddedCDHW);
-#endif
-			}
-			break;
-
-			case Activations::PRelu:
-			{
-				auto memSrc = dnnl::memory(*InputLayer->DstMemDesc, Device.engine, InputLayer->Neurons.data());
-				auto srcMem = reorderFwdSrc ? dnnl::memory(fwdDescPRelu->src_desc(), Device.engine) : memSrc;
-				if (reorderFwdSrc)
-				{
-					dnnl::reorder(memSrc, srcMem).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_FROM, memSrc}, { DNNL_ARG_TO, srcMem } });
-					Device.stream.wait();
-				}
-
-				auto weightsMem = dnnl::memory(fwdDescPRelu->weights_desc(), Device.engine, Biases.data());
-
-				auto dstMem = dnnl::memory(*DstMemDesc, Device.engine, Neurons.data());
-#ifdef DNN_CACHE_PRIMITIVES
-				fwdPRelu->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_WEIGHTS, weightsMem }, { DNNL_ARG_DST, dstMem } });
-#else
-				dnnl::prelu_forward(*fwdDescPRelu).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_WEIGHTS, weightsMem }, { DNNL_ARG_DST, dstMem } });
-#endif
-				Device.stream.wait();
-
-#ifndef DNN_LEAN
-				if (training)
-					InitArray<Float>(NeuronsD1.data(), batchSize * PaddedCDHW);
-#endif
-			}
-			break;
-
-			case Activations::FTS:
-			{
-				if (InputLayer->DstMemDesc->data.ndims == 2)
-				{
-#ifdef DNN_STOCHASTIC
-					if (batchSize == 1)
-					{
-						if (training)
-						{
-							if (!plain)
-							{
-								const auto vecZero = VecFloat(0);
-								for (auto c = 0ull; c < PaddedC; c+=VectorSize)
-								{
-									FTS::fVec(VecFloat().load_a(&InputLayer->Neurons[c])).store_a(&Neurons[c]);			
-#ifndef DNN_LEAN
-									vecZero.store_nt(&NeuronsD1[c]);
-#endif // DNN_LEAN
-								}
-							}
-							else
-								for (auto c = 0ull; c < C; c++)
-								{
-									Neurons[c] = FTS::f(InputLayer->Neurons[c]);
-#ifndef DNN_LEAN
-									NeuronsD1[c] = Float(0);
-#endif // DNN_LEAN
-								}
-						}
-						else
-						{
-							if (!plain)
-								for (auto c = 0ull; c < PaddedC; c+=VectorSize)
-									FTS::fVec(VecFloat().load_a(&InputLayer->Neurons[c])).store_a(&Neurons[c]);			
-							else
-								for (auto c = 0ull; c < C; c++)
-									Neurons[c] = FTS::f(InputLayer->Neurons[c]);
-						}
-					}
-					else
-					{
-#endif
-						if (training)
-						{
-							if (!plain)
-								for_i(batchSize, threads, [=](UInt n)
-								{
-									const auto vecZero = VecFloat(0);
-									const auto offset = n * PaddedC;
-									for (auto c = offset; c < offset + PaddedC; c+=VectorSize)
-									{
-										FTS::fVec(VecFloat().load_a(&InputLayer->Neurons[c])).store_a(&Neurons[c]);
-#ifndef DNN_LEAN
-										vecZero.store_nt(&NeuronsD1[c]);
-#endif // DNN_LEAN
-									}
-								});
-							else
-								for_i(batchSize, threads, [=](UInt n)
-								{
-									const auto offset = n * C;
-									for (auto c = offset; c < offset + C; c++)
-									{
-										Neurons[c] = FTS::f(InputLayer->Neurons[c]);
-#ifndef DNN_LEAN
-										NeuronsD1[c] = Float(0);
-#endif // DNN_LEAN
-									}
-								});
-						}
-						else
-						{
-							if (!plain)
-								for_i(batchSize, threads, [=](UInt n)
-								{
-									const auto vecZero = VecFloat(0);
-									const auto offset = n * PaddedC;
-									for (auto c = offset; c < offset + PaddedC; c+=VectorSize)
-										FTS::fVec(VecFloat().load_a(&InputLayer->Neurons[c])).store_a(&Neurons[c]);
-								});
-							else
-								for_i(batchSize, threads, [=](UInt n)
-								{
-									const auto offset = n * C;
-									for (auto c = offset; c < offset + C; c++)
-										Neurons[c] = FTS::f(InputLayer->Neurons[c]);
-								});
-						}
-#ifdef DNN_STOCHASTIC
-					}
-#endif
-				}
-				else
-				{
-#ifdef DNN_STOCHASTIC
-					if (batchSize == 1)
-					{
-						if (training)
-						{
-							if (!plain)
-								for (auto c = 0ull; c < PaddedC; c += VectorSize)
-								{
-									const auto offset = c * HW;
-									for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
-									{
-										FTS::fVec(VecFloat().load_a(&InputLayer->Neurons[hw + offset])).store_a(&Neurons[hw + offset]);
-#ifndef DNN_LEAN
-										vecZero.store_nt(&NeuronsD1[hw + offset]);
-#endif // DNN_LEAN
-									}
-								}
-							else
-								for (auto c = 0ull; c < C; c++)
-								{
-									const auto offset = c * HW;
-									for (auto hw = 0ull; hw < HW; hw++)
-									{
-										Neurons[hw + offset] = FTS::f(InputLayer->Neurons[hw + offset]);
-#ifndef DNN_LEAN
-										NeuronsD1[hw + offset] = Float(0);
-#endif // DNN_LEAN
-									}
-								}							
-						}
-						else
-						{
-							if (!plain)
-								for (auto c = 0ull; c < PaddedC; c += VectorSize)
-								{
-									const auto offset = c * HW;
-									for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
-										FTS::fVec(VecFloat().load_a(&InputLayer->Neurons[hw + offset])).store_a(&Neurons[hw + offset]);
-								}
-							else
-								for (auto c = 0ull; c < C; c++)
-								{
-									const auto offset = c * HW;
-									for (auto hw = 0ull; hw < HW; hw++)
-										Neurons[hw + offset] = FTS::f(InputLayer->Neurons[hw + offset]);
-								}			
-						}
-					}
-					else
-					{
-#endif
-						if (training)
-						{
-							if (!plain)
-								for_i(batchSize, threads, [=](UInt n)
-								{
-									const auto vecZero = VecFloat(0);
-									for (auto c = 0ull; c < PaddedC; c += VectorSize)
-									{
-										const auto offset = n * PaddedCDHW + c * HW;
-										for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
-										{
-											FTS::fVec(VecFloat().load_a(&InputLayer->Neurons[hw + offset])).store_a(&Neurons[hw + offset]);
-#ifndef DNN_LEAN
-											vecZero.store_nt(&NeuronsD1[hw + offset]);
-#endif // DNN_LEAN
-										}
-									}
-								});
-							else
-								for_i(batchSize, threads, [=](UInt n)
-								{
-									for (auto c = 0ull; c < C; c++)
-									{
-										const auto offset = n * CDHW + c * HW;
-										for (auto hw = 0ull; hw < HW; hw++)
-										{
-											Neurons[hw + offset] = FTS::f(InputLayer->Neurons[hw + offset]);
-#ifndef DNN_LEAN
-											NeuronsD1[hw + offset] = Float(0);
-#endif // DNN_LEAN
-										}
-									}
-								});
-						}
-						else
-						{
-							if (!plain)
-								for_i(batchSize, threads, [=](UInt n)
-								{
-									for (auto c = 0ull; c < PaddedC; c += VectorSize)
-									{
-										const auto offset = n * PaddedCDHW + c * HW;
-										for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
-											FTS::fVec(VecFloat().load_a(&InputLayer->Neurons[hw + offset])).store_a(&Neurons[hw + offset]);
-									}
-								});
-							else
-								for_i(batchSize, threads, [=](UInt n)
-								{
-									for (auto c = 0ull; c < C; c++)
-									{
-										const auto offset = n * CDHW + c * HW;
-										for (auto hw = 0ull; hw < HW; hw++)
-											Neurons[hw + offset] = FTS::f(InputLayer->Neurons[hw + offset]);
-									}
-								});
-						}
-					}
-#ifdef DNN_STOCHASTIC
-				}
-#endif
-			}
-			break;
-
 			case Activations::HardLogistic:
 			{
 				if (InputLayer->DstMemDesc->data.ndims == 2)
@@ -808,7 +385,8 @@ namespace dnn
 								{
 									HardLogistic::fVec(VecFloat().load_a(&InputLayer->Neurons[c])).store_a(&Neurons[c]);			
 #ifndef DNN_LEAN
-									vecZero.store_nt(&NeuronsD1[c]);
+									if (!InplaceBwd)
+										vecZero.store_nt(&NeuronsD1[c]);
 #endif // DNN_LEAN
 								}
 							}
@@ -817,7 +395,8 @@ namespace dnn
 								{
 									Neurons[c] = HardLogistic::f(InputLayer->Neurons[c]);
 #ifndef DNN_LEAN
-									NeuronsD1[c] = Float(0);
+									if (!InplaceBwd)
+										NeuronsD1[c] = Float(0);
 #endif // DNN_LEAN
 								}
 						}
@@ -845,7 +424,8 @@ namespace dnn
 									{
 										HardLogistic::fVec(VecFloat().load_a(&InputLayer->Neurons[c])).store_a(&Neurons[c]);
 #ifndef DNN_LEAN
-										vecZero.store_nt(&NeuronsD1[c]);
+										if (!InplaceBwd)
+											vecZero.store_nt(&NeuronsD1[c]);
 #endif // DNN_LEAN
 									}
 								});
@@ -857,7 +437,8 @@ namespace dnn
 									{
 										Neurons[c] = HardLogistic::f(InputLayer->Neurons[c]);
 #ifndef DNN_LEAN
-										NeuronsD1[c] = Float(0);
+										if (!InplaceBwd)
+											NeuronsD1[c] = Float(0);
 #endif // DNN_LEAN
 									}
 								});
@@ -899,7 +480,8 @@ namespace dnn
 									{
 										HardLogistic::fVec(VecFloat().load_a(&InputLayer->Neurons[hw + offset])).store_a(&Neurons[hw + offset]);
 #ifndef DNN_LEAN
-										vecZero.store_nt(&NeuronsD1[hw + offset]);
+										if (!InplaceBwd)
+											vecZero.store_nt(&NeuronsD1[hw + offset]);
 #endif // DNN_LEAN
 									}
 								}
@@ -911,7 +493,8 @@ namespace dnn
 									{
 										Neurons[hw + offset] = HardLogistic::f(InputLayer->Neurons[hw + offset]);
 #ifndef DNN_LEAN
-										NeuronsD1[hw + offset] = Float(0);
+										if (!InplaceBwd)
+											NeuronsD1[hw + offset] = Float(0);
 #endif // DNN_LEAN
 									}
 								}								
@@ -951,7 +534,8 @@ namespace dnn
 										{
 											HardLogistic::fVec(VecFloat().load_a(&InputLayer->Neurons[hw + offset])).store_a(&Neurons[hw + offset]);
 #ifndef DNN_LEAN
-											vecZero.store_nt(&NeuronsD1[hw + offset]);
+											if (!InplaceBwd)
+												vecZero.store_nt(&NeuronsD1[hw + offset]);
 #endif // DNN_LEAN
 										}
 									}
@@ -966,7 +550,8 @@ namespace dnn
 										{
 											Neurons[hw + offset] = HardLogistic::f(InputLayer->Neurons[hw + offset]);
 #ifndef DNN_LEAN
-											NeuronsD1[hw + offset] = Float(0);
+											if (!InplaceBwd)
+												NeuronsD1[hw + offset] = Float(0);
 #endif // DNN_LEAN
 										}
 									}
@@ -1018,7 +603,8 @@ namespace dnn
 								{
 									TanhExp::fVec(VecFloat().load_a(&InputLayer->Neurons[c])).store_a(&Neurons[c]);
 #ifndef DNN_LEAN
-									vecZero.store_nt(&NeuronsD1[c]);
+									if (!InplaceBwd)
+										vecZero.store_nt(&NeuronsD1[c]);
 #endif // DNN_LEAN
 								}
 							}
@@ -1027,7 +613,8 @@ namespace dnn
 								{
 									Neurons[c] = TanhExp::f(InputLayer->Neurons[c]);
 #ifndef DNN_LEAN
-									NeuronsD1[c] = Float(0);
+									if (!InplaceBwd)
+										NeuronsD1[c] = Float(0);
 #endif // DNN_LEAN
 								}
 						}
@@ -1055,7 +642,8 @@ namespace dnn
 									{
 										TanhExp::fVec(VecFloat().load_a(&InputLayer->Neurons[c])).store_a(&Neurons[c]);
 #ifndef DNN_LEAN
-										vecZero.store_nt(&NeuronsD1[c]);
+										if (!InplaceBwd)
+											vecZero.store_nt(&NeuronsD1[c]);
 #endif // DNN_LEAN
 									}
 								});
@@ -1067,7 +655,8 @@ namespace dnn
 									{
 										Neurons[c] = TanhExp::f(InputLayer->Neurons[c]);
 #ifndef DNN_LEAN
-										NeuronsD1[c] = Float(0);
+										if (!InplaceBwd)
+											NeuronsD1[c] = Float(0);
 #endif // DNN_LEAN
 									}
 								});
@@ -1109,7 +698,8 @@ namespace dnn
 									{
 										TanhExp::fVec(VecFloat().load_a(&InputLayer->Neurons[hw + offset])).store_a(&Neurons[hw + offset]);
 #ifndef DNN_LEAN
-										vecZero.store_nt(&NeuronsD1[hw + offset]);
+										if (!InplaceBwd)
+											vecZero.store_nt(&NeuronsD1[hw + offset]);
 #endif // DNN_LEAN
 									}
 								}
@@ -1121,7 +711,8 @@ namespace dnn
 									{
 										Neurons[hw + offset] = TanhExp::f(InputLayer->Neurons[hw + offset]);
 #ifndef DNN_LEAN
-										NeuronsD1[hw + offset] = Float(0);
+										if (!InplaceBwd)
+											NeuronsD1[hw + offset] = Float(0);
 #endif // DNN_LEAN
 									}
 								}
@@ -1160,7 +751,8 @@ namespace dnn
 										{
 											TanhExp::fVec(VecFloat().load_a(&InputLayer->Neurons[hw + offset])).store_a(&Neurons[hw + offset]);
 #ifndef DNN_LEAN
-											vecZero.store_nt(&NeuronsD1[hw + offset]);
+											if (!InplaceBwd)
+												vecZero.store_nt(&NeuronsD1[hw + offset]);
 #endif // DNN_LEAN
 										}
 									}
@@ -1175,7 +767,8 @@ namespace dnn
 										{
 											Neurons[hw + offset] = TanhExp::f(InputLayer->Neurons[hw + offset]);
 #ifndef DNN_LEAN
-											NeuronsD1[hw + offset] = Float(0);
+											if (!InplaceBwd)
+												NeuronsD1[hw + offset] = Float(0);
 #endif // DNN_LEAN
 										}
 									}
@@ -1234,7 +827,7 @@ namespace dnn
 				Device.stream.wait();
 
 #ifndef DNN_LEAN
-				if (training)
+				if (training && !InplaceBwd)
 					InitArray<Float>(NeuronsD1.data(), batchSize * PaddedCDHW);
 #endif
 			}
@@ -1254,206 +847,6 @@ namespace dnn
 
 			switch (ActivationFunction)
 			{
-			case Activations::LogSoftmax:
-			{
-				auto dstMem = dnnl::memory(bwdDescLogSoftmax->dst_desc(), Device.engine, Neurons.data());
-				auto diffDstMem = dnnl::memory(bwdDescLogSoftmax->diff_dst_desc(), Device.engine, NeuronsD1.data());
-
-				auto memDiffSrc = SharesInput ? dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine) : dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data());
-				auto diffSrcMem = reorderBwdDiffSrc ? dnnl::memory(bwdDescLogSoftmax->diff_src_desc(), Device.engine) : memDiffSrc;
-#ifdef DNN_CACHE_PRIMITIVES
-				bwdLogSoftmax->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_DST, dstMem}, { DNNL_ARG_DIFF_DST, diffDstMem }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
-#else
-				dnnl::logsoftmax_backward(*bwdDescLogSoftmax).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_DST, dstMem}, { DNNL_ARG_DIFF_DST, diffDstMem }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
-#endif
-				Device.stream.wait();
-
-				if (reorderBwdDiffSrc)
-				{
-					dnnl::reorder(diffSrcMem, memDiffSrc).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_FROM, diffSrcMem}, { DNNL_ARG_TO, memDiffSrc } });
-					Device.stream.wait();
-				}
-
-				if (SharesInput)
-				{
-#ifdef DNN_CACHE_PRIMITIVES
-					bwdAdd->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ { DNNL_ARG_SRC_0, dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data()) }, { DNNL_ARG_SRC_1, memDiffSrc }, { DNNL_ARG_DST, dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data()) } });		
-#else
-					dnnl::binary(*bwdAddDesc).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ { DNNL_ARG_SRC_0, dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data()) }, { DNNL_ARG_SRC_1, memDiffSrc }, { DNNL_ARG_DST, dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data()) } });
-#endif
-					Device.stream.wait();
-				}
-			}
-			break;
-
-			case Activations::Softmax:
-			{
-				auto dstMem = dnnl::memory(bwdDescSoftmax->dst_desc(), Device.engine, Neurons.data());
-				auto diffDstMem = dnnl::memory(bwdDescSoftmax->diff_dst_desc(), Device.engine, NeuronsD1.data());
-
-				auto memDiffSrc = SharesInput ? dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine) : dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data());
-				auto diffSrcMem = reorderBwdDiffSrc ? dnnl::memory(bwdDescSoftmax->diff_src_desc(), Device.engine) : memDiffSrc;
-#ifdef DNN_CACHE_PRIMITIVES
-				bwdSoftmax->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_DST, dstMem}, { DNNL_ARG_DIFF_DST, diffDstMem }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
-#else
-				dnnl::softmax_backward(*bwdDescSoftmax).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_DST, dstMem}, { DNNL_ARG_DIFF_DST, diffDstMem }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
-#endif
-				Device.stream.wait();
-
-				if (reorderBwdDiffSrc)
-				{
-					dnnl::reorder(diffSrcMem, memDiffSrc).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_FROM, diffSrcMem}, { DNNL_ARG_TO, memDiffSrc } });
-					Device.stream.wait();
-				}
-
-				if (SharesInput)
-				{
-#ifdef DNN_CACHE_PRIMITIVES
-					bwdAdd->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ { DNNL_ARG_SRC_0, dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data()) }, { DNNL_ARG_SRC_1, memDiffSrc }, { DNNL_ARG_DST, dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data()) } });
-#else
-					dnnl::binary(*bwdAddDesc).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ { DNNL_ARG_SRC_0, dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data()) }, { DNNL_ARG_SRC_1, memDiffSrc }, { DNNL_ARG_DST, dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data()) } });
-#endif
-					Device.stream.wait();
-				}
-			}
-			break;
-
-			case Activations::PRelu:
-			{
-				auto dstMem = dnnl::memory(bwdDescPRelu->dst_desc(), Device.engine, Neurons.data());
-				auto diffDstMem = dnnl::memory(bwdDescPRelu ->diff_dst_desc(), Device.engine, NeuronsD1.data());
-
-				auto memDiffSrc = SharesInput ? dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine) : dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data());
-				auto diffSrcMem = reorderBwdDiffSrc ? dnnl::memory(bwdDescPRelu->diff_src_desc(), Device.engine) : memDiffSrc;
-				
-				auto memSrc = dnnl::memory(*InputLayerOriginal->DstMemDesc, Device.engine, InputLayerOriginal->Neurons.data());
-				auto srcMem = reorderBwdSrc ? dnnl::memory(bwdDescPRelu->src_desc(), Device.engine) : memSrc;
-				if (reorderBwdSrc)
-				{
-					dnnl::reorder(memSrc, srcMem).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_FROM, memSrc}, { DNNL_ARG_TO, srcMem } });
-					Device.stream.wait();
-				}
-				
-				auto memDiffWeights = dnnl::memory(*WeightsMemDesc, Device.engine, BiasesD1.data());
-				auto diffWeightsMem = reorderBwdDiffWeights ? dnnl::memory(bwdDescPRelu->diff_weights_desc(), Device.engine) : memDiffWeights;
-	
-				auto weightsMem = dnnl::memory(bwdDescPRelu->weights_desc(), Device.engine, Biases.data());
-#ifdef DNN_CACHE_PRIMITIVES
-				bwdPRelu->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_WEIGHTS, weightsMem }, { DNNL_ARG_DIFF_DST, diffDstMem }, { DNNL_ARG_DIFF_WEIGHTS, diffWeightsMem }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
-#else
-				dnnl::prelu_backward(*bwdDescPRelu).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_WEIGHTS, weightsMem }, { DNNL_ARG_DIFF_DST, diffDstMem }, { DNNL_ARG_DIFF_WEIGHTS, diffWeightsMem }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
-#endif
-				Device.stream.wait();
-
-				if (reorderBwdDiffWeights)
-				{
-					dnnl::reorder(diffWeightsMem, memDiffWeights).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_FROM, diffWeightsMem}, { DNNL_ARG_TO, memDiffWeights } });
-					Device.stream.wait();
-				}
-				
-				if (reorderBwdDiffSrc)
-				{
-					dnnl::reorder(diffSrcMem, memDiffSrc).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_FROM, diffSrcMem}, { DNNL_ARG_TO, memDiffSrc } });
-					Device.stream.wait();
-				}
-
-				if (SharesInput)
-				{
-#ifdef DNN_CACHE_PRIMITIVES
-					bwdAdd->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ { DNNL_ARG_SRC_0, dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data()) }, { DNNL_ARG_SRC_1, memDiffSrc }, { DNNL_ARG_DST, dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data()) } });
-#else
-					dnnl::binary(*bwdAddDesc).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ { DNNL_ARG_SRC_0, dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data()) }, { DNNL_ARG_SRC_1, memDiffSrc }, { DNNL_ARG_DST, dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data()) } });
-#endif
-					Device.stream.wait();
-				}
-			}
-			break;
-
-			case Activations::FTS:
-			{
-				if (InputLayer->DstMemDesc->data.ndims == 2)
-				{
-#ifdef DNN_STOCHASTIC
-					if (batchSize == 1)
-					{
-						if (!plain)
-							for (auto c = 0ull; c < PaddedC; c+=VectorSize)
-								mul_add(FTS::dfVec(VecFloat().load_a(&InputLayerOriginal->Neurons[c])), VecFloat().load_a(&NeuronsD1[c]), VecFloat().load_a(&InputLayer->NeuronsD1[c])).store_a(&InputLayer->NeuronsD1[c]);
-						else
-							for (auto c = 0ull; c < C; c++)
-								InputLayer->NeuronsD1[c] += FTS::df(InputLayerOriginal->Neurons[c]) * NeuronsD1[c];
-					}
-					else
-					{
-#endif
-						if (!plain)
-							for_i(batchSize, threads, [=](UInt n)
-							{
-								const auto offset = n * PaddedC;
-								for (auto c = offset; c < offset + PaddedC; c+=VectorSize)
-									mul_add(FTS::dfVec(VecFloat().load_a(&InputLayerOriginal->Neurons[c])), VecFloat().load_a(&NeuronsD1[c]), VecFloat().load_a(&InputLayer->NeuronsD1[c])).store_a(&InputLayer->NeuronsD1[c]);
-							});
-						else
-							for_i(batchSize, threads, [=](UInt n)
-							{
-								const auto offset = n * C;
-								for (auto c = offset; c < offset + C; c++)
-									InputLayer->NeuronsD1[c] += FTS::df(InputLayerOriginal->Neurons[c]) * NeuronsD1[c];
-							});
-#ifdef DNN_STOCHASTIC
-					}
-#endif
-				}
-				else
-				{
-#ifdef DNN_STOCHASTIC
-					if (batchSize == 1)
-					{
-						if (!plain)
-							for (auto c = 0ull; c < PaddedC; c += VectorSize)
-							{
-								const auto offset = c * HW;
-								for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
-									mul_add(FTS::dfVec(VecFloat().load_a(&InputLayerOriginal->Neurons[hw])), VecFloat().load_a(&NeuronsD1[hw]), VecFloat().load_a(&InputLayer->NeuronsD1[hw])).store_a(&InputLayer->NeuronsD1[hw]);
-							}
-						else
-							for (auto c = 0ull; c < C; c++)
-							{
-								const auto offset = c * HW;
-								for (auto hw = offset; hw < offset + HW; hw++)
-									InputLayer->NeuronsD1[hw] += FTS::df(InputLayerOriginal->Neurons[hw]) * NeuronsD1[hw];
-							}
-					}
-					else
-					{
-#endif
-						if (!plain)
-							for_i(batchSize, threads, [=](UInt n)
-							{
-								for (auto c = 0ull; c < PaddedC; c += VectorSize)
-								{
-									const auto offset = n * PaddedCDHW + c * HW;
-									for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
-										mul_add(FTS::dfVec(VecFloat().load_a(&InputLayerOriginal->Neurons[hw])), VecFloat().load_a(&NeuronsD1[hw]), VecFloat().load_a(&InputLayer->NeuronsD1[hw])).store_a(&InputLayer->NeuronsD1[hw]);
-								}
-							});
-						else
-							for_i(batchSize, threads, [=](UInt n)
-							{
-								for (auto c = 0ull; c < C; c++)
-								{
-									const auto offset = n * CDHW + c * HW;
-									for (auto hw = offset; hw < offset + HW; hw++)
-										InputLayer->NeuronsD1[hw] += FTS::df(InputLayerOriginal->Neurons[hw]) * NeuronsD1[hw];
-								}
-							});
-#ifdef DNN_STOCHASTIC
-					}
-#endif
-				}
-			}
-			break;
-
 			case Activations::HardLogistic:
 			{
 				if (InputLayer->DstMemDesc->data.ndims == 2)
@@ -1461,30 +854,62 @@ namespace dnn
 #ifdef DNN_STOCHASTIC
 					if (batchSize == 1)
 					{
-						if (!plain)
-							for (auto c = 0ull; c < PaddedC; c+=VectorSize)
-								mul_add(HardLogistic::dfVec(VecFloat().load_a(&InputLayerOriginal->Neurons[c])), VecFloat().load_a(&NeuronsD1[c]), VecFloat().load_a(&InputLayer->NeuronsD1[c])).store_a(&InputLayer->NeuronsD1[c]);
+						if (InplaceBwd)
+						{
+							if (!plain)
+								for (auto c = 0ull; c < PaddedC; c += VectorSize)
+									(HardLogistic::dfVec(VecFloat().load_a(&InputLayerOriginal->Neurons[c])), VecFloat().load_a(&InputLayer->NeuronsD1[c])).store_a(&InputLayer->NeuronsD1[c]);
+							else
+								for (auto c = 0ull; c < C; c++)
+									InputLayer->NeuronsD1[c] = HardLogistic::df(InputLayerOriginal->Neurons[c]) * InputLayer->NeuronsD1[c];
+						}
 						else
-							for (auto c = 0ull; c < C; c++)
-								InputLayer->NeuronsD1[c] += HardLogistic::df(InputLayerOriginal->Neurons[c]) * NeuronsD1[c];
+						{
+							if (!plain)
+								for (auto c = 0ull; c < PaddedC; c += VectorSize)
+									mul_add(HardLogistic::dfVec(VecFloat().load_a(&InputLayerOriginal->Neurons[c])), VecFloat().load_a(&NeuronsD1[c]), VecFloat().load_a(&InputLayer->NeuronsD1[c])).store_a(&InputLayer->NeuronsD1[c]);
+							else
+								for (auto c = 0ull; c < C; c++)
+									InputLayer->NeuronsD1[c] += HardLogistic::df(InputLayerOriginal->Neurons[c]) * NeuronsD1[c];
+						}
 					}
 					else
 					{
 #endif
-						if (!plain)
-							for_i(batchSize, threads, [=](UInt n)
-							{
-								const auto offset = n * PaddedC;
-								for (auto c = offset; c < offset + PaddedC; c+=VectorSize)
-									mul_add(HardLogistic::dfVec(VecFloat().load_a(&InputLayerOriginal->Neurons[c])), VecFloat().load_a(&NeuronsD1[c]), VecFloat().load_a(&InputLayer->NeuronsD1[c])).store_a(&InputLayer->NeuronsD1[c]);
-							});
+						if (InplaceBwd)
+						{
+							if (!plain)
+								for_i(batchSize, threads, [=](UInt n)
+								{
+									const auto offset = n * PaddedC;
+									for (auto c = offset; c < offset + PaddedC; c += VectorSize)
+										(HardLogistic::dfVec(VecFloat().load_a(&InputLayerOriginal->Neurons[c])), VecFloat().load_a(&InputLayer->NeuronsD1[c])).store_a(&InputLayer->NeuronsD1[c]);
+								});
+							else
+								for_i(batchSize, threads, [=](UInt n)
+								{
+									const auto offset = n * C;
+									for (auto c = offset; c < offset + C; c++)
+										InputLayer->NeuronsD1[c] = HardLogistic::df(InputLayerOriginal->Neurons[c]) * InputLayer->NeuronsD1[c];
+								});
+						}
 						else
-							for_i(batchSize, threads, [=](UInt n)
-							{
-								const auto offset = n * C;
-								for (auto c = offset; c < offset + C; c++)
-									InputLayer->NeuronsD1[c] += HardLogistic::df(InputLayerOriginal->Neurons[c]) * NeuronsD1[c];
-							});
+						{
+							if (!plain)
+								for_i(batchSize, threads, [=](UInt n)
+								{
+									const auto offset = n * PaddedC;
+									for (auto c = offset; c < offset + PaddedC; c += VectorSize)
+										mul_add(HardLogistic::dfVec(VecFloat().load_a(&InputLayerOriginal->Neurons[c])), VecFloat().load_a(&NeuronsD1[c]), VecFloat().load_a(&InputLayer->NeuronsD1[c])).store_a(&InputLayer->NeuronsD1[c]);
+								});
+							else
+								for_i(batchSize, threads, [=](UInt n)
+								{
+									const auto offset = n * C;
+									for (auto c = offset; c < offset + C; c++)
+										InputLayer->NeuronsD1[c] += HardLogistic::df(InputLayerOriginal->Neurons[c]) * NeuronsD1[c];
+								});
+						}
 #ifdef DNN_STOCHASTIC
 					}
 #endif
@@ -1494,44 +919,90 @@ namespace dnn
 #ifdef DNN_STOCHASTIC
 					if (batchSize == 1)
 					{
-						if (!plain)
-							for (auto c = 0ull; c < PaddedC; c += VectorSize)
-							{
-								const auto offset = c * HW;
-								for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
-									mul_add(HardLogistic::dfVec(VecFloat().load_a(&InputLayerOriginal->Neurons[hw])), VecFloat().load_a(&NeuronsD1[hw]), VecFloat().load_a(&InputLayer->NeuronsD1[hw])).store_a(&InputLayer->NeuronsD1[hw]);
-							}
+						if (InplaceBwd)
+						{
+							if (!plain)
+								for (auto c = 0ull; c < PaddedC; c += VectorSize)
+								{
+									const auto offset = c * HW;
+									for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
+										(HardLogistic::dfVec(VecFloat().load_a(&InputLayerOriginal->Neurons[hw])), VecFloat().load_a(&InputLayer->NeuronsD1[hw])).store_a(&InputLayer->NeuronsD1[hw]);
+								}
+							else
+								for (auto c = 0ull; c < C; c++)
+								{
+									const auto offset = c * HW;
+									for (auto hw = offset; hw < offset + HW; hw++)
+										InputLayer->NeuronsD1[hw] = HardLogistic::df(InputLayerOriginal->Neurons[hw]) * InputLayer->NeuronsD1[hw];
+								}
+						}
 						else
-							for (auto c = 0ull; c < C; c++)
-							{
-								const auto offset = c * HW;
-								for (auto hw = offset; hw < offset + HW; hw++)
-									InputLayer->NeuronsD1[hw] += HardLogistic::df(InputLayerOriginal->Neurons[hw]) * NeuronsD1[hw];
-							}
+						{
+							if (!plain)
+								for (auto c = 0ull; c < PaddedC; c += VectorSize)
+								{
+									const auto offset = c * HW;
+									for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
+										mul_add(HardLogistic::dfVec(VecFloat().load_a(&InputLayerOriginal->Neurons[hw])), VecFloat().load_a(&NeuronsD1[hw]), VecFloat().load_a(&InputLayer->NeuronsD1[hw])).store_a(&InputLayer->NeuronsD1[hw]);
+								}
+							else
+								for (auto c = 0ull; c < C; c++)
+								{
+									const auto offset = c * HW;
+									for (auto hw = offset; hw < offset + HW; hw++)
+										InputLayer->NeuronsD1[hw] += HardLogistic::df(InputLayerOriginal->Neurons[hw]) * NeuronsD1[hw];
+								}
+						}
 					}
 					else
 					{
 #endif
-						if (!plain)
-							for_i(batchSize, threads, [=](UInt n)
-							{
-								for (auto c = 0ull; c < PaddedC; c += VectorSize)
+						if (InplaceBwd)
+						{
+							if (!plain)
+								for_i(batchSize, threads, [=](UInt n)
 								{
-									const auto offset = n * PaddedCDHW + c * HW;
-									for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
-										mul_add(HardLogistic::dfVec(VecFloat().load_a(&InputLayerOriginal->Neurons[hw])), VecFloat().load_a(&NeuronsD1[hw]), VecFloat().load_a(&InputLayer->NeuronsD1[hw])).store_a(&InputLayer->NeuronsD1[hw]);
-								}
-							});
+									for (auto c = 0ull; c < PaddedC; c += VectorSize)
+									{
+										const auto offset = n * PaddedCDHW + c * HW;
+										for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
+											(HardLogistic::dfVec(VecFloat().load_a(&InputLayerOriginal->Neurons[hw])), VecFloat().load_a(&InputLayer->NeuronsD1[hw])).store_a(&InputLayer->NeuronsD1[hw]);
+									}
+								});
+							else
+								for_i(batchSize, threads, [=](UInt n)
+								{
+									for (auto c = 0ull; c < C; c++)
+									{
+										const auto offset = n * CDHW + c * HW;
+										for (auto hw = offset; hw < offset + HW; hw++)
+											InputLayer->NeuronsD1[hw] = HardLogistic::df(InputLayerOriginal->Neurons[hw]) * InputLayer->NeuronsD1[hw];
+									}
+								});
+						}
 						else
-							for_i(batchSize, threads, [=](UInt n)
-							{
-								for (auto c = 0ull; c < C; c++)
+						{
+							if (!plain)
+								for_i(batchSize, threads, [=](UInt n)
 								{
-									const auto offset = n * CDHW + c * HW;
-									for (auto hw = offset; hw < offset + HW; hw++)
-										InputLayer->NeuronsD1[hw] += HardLogistic::df(InputLayerOriginal->Neurons[hw]) * NeuronsD1[hw];
-								}
-							});
+									for (auto c = 0ull; c < PaddedC; c += VectorSize)
+									{
+										const auto offset = n * PaddedCDHW + c * HW;
+										for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
+											mul_add(HardLogistic::dfVec(VecFloat().load_a(&InputLayerOriginal->Neurons[hw])), VecFloat().load_a(&NeuronsD1[hw]), VecFloat().load_a(&InputLayer->NeuronsD1[hw])).store_a(&InputLayer->NeuronsD1[hw]);
+									}
+								});
+							else
+								for_i(batchSize, threads, [=](UInt n)
+								{
+									for (auto c = 0ull; c < C; c++)
+									{
+										const auto offset = n * CDHW + c * HW;
+										for (auto hw = offset; hw < offset + HW; hw++)
+											InputLayer->NeuronsD1[hw] += HardLogistic::df(InputLayerOriginal->Neurons[hw]) * NeuronsD1[hw];
+									}
+								});
+						}
 #ifdef DNN_STOCHASTIC
 					}
 #endif
@@ -1546,30 +1017,62 @@ namespace dnn
 #ifdef DNN_STOCHASTIC
 					if (batchSize == 1)
 					{
-						if (!plain)
-							for (auto c = 0ull; c < PaddedC; c += VectorSize)
-								mul_add(TanhExp::dfVec(VecFloat().load_a(&InputLayerOriginal->Neurons[c])), VecFloat().load_a(&NeuronsD1[c]), VecFloat().load_a(&InputLayer->NeuronsD1[c])).store_a(&InputLayer->NeuronsD1[c]);
+						if (InplaceBwd)
+						{
+							if (!plain)
+								for (auto c = 0ull; c < PaddedC; c += VectorSize)
+									(TanhExp::dfVec(VecFloat().load_a(&InputLayerOriginal->Neurons[c])), VecFloat().load_a(&InputLayer->NeuronsD1[c])).store_a(&InputLayer->NeuronsD1[c]);
+							else
+								for (auto c = 0ull; c < C; c++)
+									InputLayer->NeuronsD1[c] = TanhExp::df(InputLayerOriginal->Neurons[c]) * InputLayer->NeuronsD1[c];
+						}
 						else
-							for (auto c = 0ull; c < C; c++)
-								InputLayer->NeuronsD1[c] += TanhExp::df(InputLayerOriginal->Neurons[c]) * NeuronsD1[c];
+						{
+							if (!plain)
+								for (auto c = 0ull; c < PaddedC; c += VectorSize)
+									mul_add(TanhExp::dfVec(VecFloat().load_a(&InputLayerOriginal->Neurons[c])), VecFloat().load_a(&NeuronsD1[c]), VecFloat().load_a(&InputLayer->NeuronsD1[c])).store_a(&InputLayer->NeuronsD1[c]);
+							else
+								for (auto c = 0ull; c < C; c++)
+									InputLayer->NeuronsD1[c] += TanhExp::df(InputLayerOriginal->Neurons[c]) * NeuronsD1[c];
+						}
 					}
 					else
 					{
 #endif
-						if (!plain)
-							for_i(batchSize, threads, [=](UInt n)
-							{
-								const auto offset = n * PaddedC;
-								for (auto c = offset; c < offset + PaddedC; c += VectorSize)
-									mul_add(TanhExp::dfVec(VecFloat().load_a(&InputLayerOriginal->Neurons[c])), VecFloat().load_a(&NeuronsD1[c]), VecFloat().load_a(&InputLayer->NeuronsD1[c])).store_a(&InputLayer->NeuronsD1[c]);
-							});
+						if (InplaceBwd)
+						{
+							if (!plain)
+								for_i(batchSize, threads, [=](UInt n)
+								{
+									const auto offset = n * PaddedC;
+									for (auto c = offset; c < offset + PaddedC; c += VectorSize)
+										(TanhExp::dfVec(VecFloat().load_a(&InputLayerOriginal->Neurons[c])), VecFloat().load_a(&InputLayer->NeuronsD1[c])).store_a(&InputLayer->NeuronsD1[c]);
+								});
+							else
+								for_i(batchSize, threads, [=](UInt n)
+								{
+									const auto offset = n * C;
+									for (auto c = offset; c < offset + C; c++)
+										InputLayer->NeuronsD1[c] = TanhExp::df(InputLayerOriginal->Neurons[c]) * InputLayer->NeuronsD1[c];
+								});
+						}
 						else
-							for_i(batchSize, threads, [=](UInt n)
-							{
-								const auto offset = n * C;
-								for (auto c = offset; c < offset + C; c++)
-									InputLayer->NeuronsD1[c] += TanhExp::df(InputLayerOriginal->Neurons[c]) * NeuronsD1[c];
-							});
+						{
+							if (!plain)
+								for_i(batchSize, threads, [=](UInt n)
+								{
+									const auto offset = n * PaddedC;
+									for (auto c = offset; c < offset + PaddedC; c += VectorSize)
+										mul_add(TanhExp::dfVec(VecFloat().load_a(&InputLayerOriginal->Neurons[c])), VecFloat().load_a(&NeuronsD1[c]), VecFloat().load_a(&InputLayer->NeuronsD1[c])).store_a(&InputLayer->NeuronsD1[c]);
+								});
+							else
+								for_i(batchSize, threads, [=](UInt n)
+								{
+									const auto offset = n * C;
+									for (auto c = offset; c < offset + C; c++)
+										InputLayer->NeuronsD1[c] += TanhExp::df(InputLayerOriginal->Neurons[c]) * NeuronsD1[c];
+								});
+						}
 #ifdef DNN_STOCHASTIC
 					}
 #endif
@@ -1579,44 +1082,90 @@ namespace dnn
 #ifdef DNN_STOCHASTIC
 					if (batchSize == 1)
 					{
-						if (!plain)
-							for (auto c = 0ull; c < PaddedC; c += VectorSize)
-							{
-								const auto offset = c * HW;
-								for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
-									mul_add(TanhExp::dfVec(VecFloat().load_a(&InputLayerOriginal->Neurons[hw])), VecFloat().load_a(&NeuronsD1[hw]), VecFloat().load_a(&InputLayer->NeuronsD1[hw])).store_a(&InputLayer->NeuronsD1[hw]);
-							}
+						if (InplaceBwd)
+						{
+							if (!plain)
+								for (auto c = 0ull; c < PaddedC; c += VectorSize)
+								{
+									const auto offset = c * HW;
+									for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
+										(TanhExp::dfVec(VecFloat().load_a(&InputLayerOriginal->Neurons[hw])), VecFloat().load_a(&InputLayer->NeuronsD1[hw])).store_a(&InputLayer->NeuronsD1[hw]);
+								}
+							else
+								for (auto c = 0ull; c < C; c++)
+								{
+									const auto offset = c * HW;
+									for (auto hw = offset; hw < offset + HW; hw++)
+										InputLayer->NeuronsD1[hw] = TanhExp::df(InputLayerOriginal->Neurons[hw]) * InputLayer->NeuronsD1[hw];
+								}
+						}
 						else
-							for (auto c = 0ull; c < C; c++)
-							{
-								const auto offset = c * HW;
-								for (auto hw = offset; hw < offset + HW; hw++)
-									InputLayer->NeuronsD1[hw] += TanhExp::df(InputLayerOriginal->Neurons[hw]) * NeuronsD1[hw];
-							}
+						{
+							if (!plain)
+								for (auto c = 0ull; c < PaddedC; c += VectorSize)
+								{
+									const auto offset = c * HW;
+									for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
+										mul_add(TanhExp::dfVec(VecFloat().load_a(&InputLayerOriginal->Neurons[hw])), VecFloat().load_a(&NeuronsD1[hw]), VecFloat().load_a(&InputLayer->NeuronsD1[hw])).store_a(&InputLayer->NeuronsD1[hw]);
+								}
+							else
+								for (auto c = 0ull; c < C; c++)
+								{
+									const auto offset = c * HW;
+									for (auto hw = offset; hw < offset + HW; hw++)
+										InputLayer->NeuronsD1[hw] += TanhExp::df(InputLayerOriginal->Neurons[hw]) * NeuronsD1[hw];
+								}
+						}
 					}
 					else
 					{
 #endif
-						if (!plain)
-							for_i(batchSize, threads, [=](UInt n)
-							{
-								for (auto c = 0ull; c < PaddedC; c += VectorSize)
+						if (InplaceBwd)
+						{
+							if (!plain)
+								for_i(batchSize, threads, [=](UInt n)
 								{
-									const auto offset = n * PaddedCDHW + c * HW;
-									for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
-										mul_add(TanhExp::dfVec(VecFloat().load_a(&InputLayerOriginal->Neurons[hw])), VecFloat().load_a(&NeuronsD1[hw]), VecFloat().load_a(&InputLayer->NeuronsD1[hw])).store_a(&InputLayer->NeuronsD1[hw]);
-								}
-							});
+									for (auto c = 0ull; c < PaddedC; c += VectorSize)
+									{
+										const auto offset = n * PaddedCDHW + c * HW;
+										for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
+											(TanhExp::dfVec(VecFloat().load_a(&InputLayerOriginal->Neurons[hw])), VecFloat().load_a(&InputLayer->NeuronsD1[hw])).store_a(&InputLayer->NeuronsD1[hw]);
+									}
+								});
+							else
+								for_i(batchSize, threads, [=](UInt n)
+								{
+									for (auto c = 0ull; c < C; c++)
+									{
+										const auto offset = n * CDHW + c * HW;
+										for (auto hw = offset; hw < offset + HW; hw++)
+											InputLayer->NeuronsD1[hw] = TanhExp::df(InputLayerOriginal->Neurons[hw]) * InputLayer->NeuronsD1[hw];
+									}
+								});
+						}
 						else
-							for_i(batchSize, threads, [=](UInt n)
-							{
-								for (auto c = 0ull; c < C; c++)
+						{
+							if (!plain)
+								for_i(batchSize, threads, [=](UInt n)
 								{
-									const auto offset = n * CDHW + c * HW;
-									for (auto hw = offset; hw < offset + HW; hw++)
-										InputLayer->NeuronsD1[hw] += TanhExp::df(InputLayerOriginal->Neurons[hw]) * NeuronsD1[hw];
-								}
-							});
+									for (auto c = 0ull; c < PaddedC; c += VectorSize)
+									{
+										const auto offset = n * PaddedCDHW + c * HW;
+										for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
+											mul_add(TanhExp::dfVec(VecFloat().load_a(&InputLayerOriginal->Neurons[hw])), VecFloat().load_a(&NeuronsD1[hw]), VecFloat().load_a(&InputLayer->NeuronsD1[hw])).store_a(&InputLayer->NeuronsD1[hw]);
+									}
+								});
+							else
+								for_i(batchSize, threads, [=](UInt n)
+								{
+									for (auto c = 0ull; c < C; c++)
+									{
+										const auto offset = n * CDHW + c * HW;
+										for (auto hw = offset; hw < offset + HW; hw++)
+											InputLayer->NeuronsD1[hw] += TanhExp::df(InputLayerOriginal->Neurons[hw]) * NeuronsD1[hw];
+									}
+								});
+						}
 #ifdef DNN_STOCHASTIC
 					}
 #endif
@@ -1636,12 +1185,13 @@ namespace dnn
 
 				auto diffDstMem = dnnl::memory(bwdDesc->diff_dst_desc(), Device.engine, NeuronsD1.data());
 
-				auto memDiffSrc = SharesInput ? dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine) : dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data());
-				auto diffSrcMem = reorderBwdDiffSrc ? dnnl::memory(bwdDesc->diff_src_desc(), Device.engine) : memDiffSrc;
+				const auto& memDiffSrc = SharesInput && !InplaceBwd ? dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine) : dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data());
+				const auto& diffSrcMem = reorderBwdDiffSrc ? dnnl::memory(bwdDesc->diff_src_desc(), Device.engine) : memDiffSrc;
+
 #ifdef DNN_CACHE_PRIMITIVES
-				bwd->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DIFF_DST, diffDstMem }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
+				bwd->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DIFF_DST, InplaceBwd ? diffSrcMem : dnnl::memory(*DiffDstMemDesc, Device.engine, NeuronsD1.data()) }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
 #else
-				dnnl::eltwise_backward(*bwdDesc).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DIFF_DST, diffDstMem }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
+				dnnl::eltwise_backward(*bwdDesc).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DIFF_DST, InplaceBwd ? diffSrcMem : dnnl::memory(*DiffDstMemDesc, Device.engine, NeuronsD1.data()) }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
 #endif
 				Device.stream.wait();
 
@@ -1651,7 +1201,7 @@ namespace dnn
 					Device.stream.wait();
 				}
 
-				if (SharesInput)
+				if (SharesInput && !InplaceBwd)
 				{
 #ifdef DNN_CACHE_PRIMITIVES
 					bwdAdd->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ { DNNL_ARG_SRC_0, dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data()) }, { DNNL_ARG_SRC_1, memDiffSrc }, { DNNL_ARG_DST, dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data()) } });

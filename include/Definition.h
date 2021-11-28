@@ -306,17 +306,8 @@ namespace dnn
 							{
 							case Activations::BoundedRelu:
 							case Activations::Elu:
-							case Activations::FTS:
 							case Activations::Linear:
 							case Activations::Swish:
-								break;
-
-							case Activations::PRelu:
-								if (alpha == 0)
-								{
-									msg = CheckMsg(line - 1, col, "Activation used without Alpha parameter.");
-									goto FAIL;
-								}
 								break;
 
 							case Activations::Mish:
@@ -329,10 +320,8 @@ namespace dnn
 							case Activations::Log:
 							case Activations::Logistic:
 							case Activations::LogLogistic:
-							case Activations::LogSoftmax:
 							case Activations::Pow:
 							case Activations::Round:
-							case Activations::Softmax:
 							case Activations::SoftRelu:
 							case Activations::Sqrt:
 							case Activations::Square:
@@ -633,6 +622,9 @@ namespace dnn
 							case LayerTypes::LocalResponseNorm:
 								model->Layers.push_back(std::make_unique<LocalResponseNorm>(model->Device, model->Format, name, inputs, acrossChannels, localSize, alpha, beta, k));
 								break;
+							case LayerTypes::LogSoftmax:
+								model->Layers.push_back(std::make_unique<LogSoftmax>(model->Device, model->Format, name, inputs));
+								break;
 							case LayerTypes::Max:
 								model->Layers.push_back(std::make_unique<Max>(model->Device, model->Format, name, inputs));
 								break;
@@ -649,8 +641,15 @@ namespace dnn
 								model->Layers.push_back(std::make_unique<PartialDepthwiseConvolution>(model->Device, model->Format, name, inputs, group, groups, kernelH, kernelW, strideH, strideW, dilationH, dilationW, padH, padW, multiplier, biases));
 								model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsFillerMode, weightsGain, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesFillerMode, biasesGain, biasesScale, biasesLRM, biasesWDM);
 								break;
+							case LayerTypes::PRelu:
+								model->Layers.push_back(std::make_unique<PRelu>(model->Device, model->Format, name, inputs, alpha));
+								model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsFillerMode, weightsGain, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesFillerMode, biasesGain, biasesScale, biasesLRM, biasesWDM);
+								break;
 							case LayerTypes::Resampling:
 								model->Layers.push_back(std::make_unique<Resampling>(model->Device, model->Format, name, inputs, algorithm, factorH, factorW));
+								break;
+							case LayerTypes::Softmax:
+								model->Layers.push_back(std::make_unique<Softmax>(model->Device, model->Format, name, inputs));
 								break;
 							case LayerTypes::Substract:
 								model->Layers.push_back(std::make_unique<Substract>(model->Device, model->Format, name, inputs));
@@ -1152,7 +1151,7 @@ namespace dnn
 				}
 				else if (strLine.rfind("WeightsFiller=") == 0)
 				{
-					if (!isNormalizationLayer && layerType != LayerTypes::Input && layerType != LayerTypes::DepthwiseConvolution && layerType != LayerTypes::Convolution && layerType != LayerTypes::ConvolutionTranspose && layerType != LayerTypes::Dense && layerType != LayerTypes::PartialDepthwiseConvolution)
+					if (!isNormalizationLayer && layerType != LayerTypes::Input && layerType != LayerTypes::PRelu && layerType != LayerTypes::DepthwiseConvolution && layerType != LayerTypes::Convolution && layerType != LayerTypes::ConvolutionTranspose && layerType != LayerTypes::Dense && layerType != LayerTypes::PartialDepthwiseConvolution)
 					{
 						msg = CheckMsg(line, col, "WeightsFiller cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
 						goto FAIL;
@@ -1350,7 +1349,7 @@ namespace dnn
 				}
 				else if (strLine.rfind("WeightsLRM=") == 0)
 				{
-					if (!isNormalizationLayer && layerType != LayerTypes::Input && layerType != LayerTypes::DepthwiseConvolution && layerType != LayerTypes::Convolution && layerType != LayerTypes::ConvolutionTranspose && layerType != LayerTypes::Dense && layerType != LayerTypes::PartialDepthwiseConvolution)
+					if (!isNormalizationLayer && layerType != LayerTypes::Input && layerType != LayerTypes::PRelu && layerType != LayerTypes::DepthwiseConvolution && layerType != LayerTypes::Convolution && layerType != LayerTypes::ConvolutionTranspose && layerType != LayerTypes::Dense && layerType != LayerTypes::PartialDepthwiseConvolution)
 					{
 						msg = CheckMsg(line, col, "WeightsLRM cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
 						goto FAIL;
@@ -1381,7 +1380,7 @@ namespace dnn
 				}
 				else if (strLine.rfind("WeightsWDM=") == 0)
 				{
-					if (!isNormalizationLayer && layerType != LayerTypes::Input && layerType != LayerTypes::DepthwiseConvolution && layerType != LayerTypes::Convolution && layerType != LayerTypes::ConvolutionTranspose && layerType != LayerTypes::Dense && layerType != LayerTypes::PartialDepthwiseConvolution)
+					if (!isNormalizationLayer && layerType != LayerTypes::Input && layerType != LayerTypes::PRelu && layerType != LayerTypes::DepthwiseConvolution && layerType != LayerTypes::Convolution && layerType != LayerTypes::ConvolutionTranspose && layerType != LayerTypes::Dense && layerType != LayerTypes::PartialDepthwiseConvolution)
 					{
 						msg = CheckMsg(line, col, "WeightsWDM cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
 						goto FAIL;
@@ -1412,7 +1411,7 @@ namespace dnn
 				}
 				else if (strLine.rfind("BiasesFiller=") == 0)
 				{
-					if (!isNormalizationLayer && layerType != LayerTypes::Input && layerType != LayerTypes::DepthwiseConvolution && layerType != LayerTypes::Convolution && layerType != LayerTypes::ConvolutionTranspose && layerType != LayerTypes::Dense && layerType != LayerTypes::PartialDepthwiseConvolution)
+					if (!isNormalizationLayer && layerType != LayerTypes::Input && layerType != LayerTypes::PRelu && layerType != LayerTypes::DepthwiseConvolution && layerType != LayerTypes::Convolution && layerType != LayerTypes::ConvolutionTranspose && layerType != LayerTypes::Dense && layerType != LayerTypes::PartialDepthwiseConvolution)
 					{
 						msg = CheckMsg(line, col, "BiasesFiller cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
 						goto FAIL;
@@ -1481,8 +1480,11 @@ namespace dnn
 							}
 						}
 						break;
+
 						case Fillers::HeNormal:
 						case Fillers::HeUniform:
+						case Fillers::LeCunNormal:
+						case Fillers::LeCunUniform:
 						{
 							auto fillerModes = magic_enum::enum_names<FillerModes>();
 							for (auto fillerMode : fillerModes)
@@ -1531,8 +1533,7 @@ namespace dnn
 							}
 						}
 						break;
-						case Fillers::LeCunNormal:
-						case Fillers::LeCunUniform:
+						
 						case Fillers::XavierNormal:
 						case Fillers::XavierUniform:
 						{
@@ -1588,15 +1589,17 @@ namespace dnn
 							model->BiasesScale = value.size() > 2 ? biasesScale : defaultBiasesScale;
 						}
 						break;
+
 						case dnn::Fillers::HeNormal:
 						case dnn::Fillers::HeUniform:
+						case dnn::Fillers::LeCunNormal:
+						case dnn::Fillers::LeCunUniform:
 						{
 							model->BiasesFillerMode = biasesFillerMode;
 							model->BiasesGain = value.size() > 2 ? biasesGain : defaultBiasesGain;
 						}
 						break;
-						case dnn::Fillers::LeCunNormal:
-						case dnn::Fillers::LeCunUniform:
+						
 						case dnn::Fillers::XavierNormal:
 						case dnn::Fillers::XavierUniform:
 						{
@@ -1608,7 +1611,7 @@ namespace dnn
 				}
 				else if (strLine.rfind("BiasesLRM=") == 0)
 				{
-					if (!isNormalizationLayer && layerType != LayerTypes::Input && layerType != LayerTypes::DepthwiseConvolution && layerType != LayerTypes::Convolution && layerType != LayerTypes::ConvolutionTranspose && layerType != LayerTypes::Dense && layerType != LayerTypes::PartialDepthwiseConvolution)
+					if (!isNormalizationLayer && layerType != LayerTypes::Input && layerType != LayerTypes::PRelu && layerType != LayerTypes::DepthwiseConvolution && layerType != LayerTypes::Convolution && layerType != LayerTypes::ConvolutionTranspose && layerType != LayerTypes::Dense && layerType != LayerTypes::PartialDepthwiseConvolution)
 					{
 						msg = CheckMsg(line, col, "BiasesLRM cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
 						goto FAIL;
@@ -1639,7 +1642,7 @@ namespace dnn
 				}
 				else if (strLine.rfind("BiasesWDM=") == 0)
 				{
-					if (!isNormalizationLayer && layerType != LayerTypes::Input && layerType != LayerTypes::DepthwiseConvolution && layerType != LayerTypes::Convolution && layerType != LayerTypes::ConvolutionTranspose && layerType != LayerTypes::Dense && layerType != LayerTypes::PartialDepthwiseConvolution)
+					if (!isNormalizationLayer && layerType != LayerTypes::Input && layerType != LayerTypes::PRelu && layerType != LayerTypes::DepthwiseConvolution && layerType != LayerTypes::Convolution && layerType != LayerTypes::ConvolutionTranspose && layerType != LayerTypes::Dense && layerType != LayerTypes::PartialDepthwiseConvolution)
 					{
 						msg = CheckMsg(line, col, "BiasesWDM cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
 						goto FAIL;
@@ -1670,7 +1673,7 @@ namespace dnn
 				}
 				else if (strLine.rfind("Biases=") == 0)
 				{
-					if (!isNormalizationLayer && layerType != LayerTypes::Input && layerType != LayerTypes::DepthwiseConvolution && layerType != LayerTypes::Convolution && layerType != LayerTypes::ConvolutionTranspose && layerType != LayerTypes::Dense && layerType != LayerTypes::PartialDepthwiseConvolution)
+					if (!isNormalizationLayer && layerType != LayerTypes::Input && layerType != LayerTypes::PRelu && layerType != LayerTypes::DepthwiseConvolution && layerType != LayerTypes::Convolution && layerType != LayerTypes::ConvolutionTranspose && layerType != LayerTypes::Dense && layerType != LayerTypes::PartialDepthwiseConvolution)
 					{
 						msg = CheckMsg(line, col, "Biases cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
 						goto FAIL;
@@ -1726,7 +1729,7 @@ namespace dnn
 				}
 				else if (strLine.rfind("Alpha=") == 0)
 				{
-					if (layerType != LayerTypes::Input && layerType != LayerTypes::Activation && layerType != LayerTypes::LocalResponseNorm)
+					if (layerType != LayerTypes::Input && layerType != LayerTypes::PRelu && layerType != LayerTypes::Activation && layerType != LayerTypes::LocalResponseNorm)
 					{
 						msg = CheckMsg(line, col, "Alpha cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
 						goto FAIL;
@@ -2287,9 +2290,6 @@ namespace dnn
 
 					switch (activationFunction)
 					{
-					case Activations::FTS:
-					    alpha = Float(-0.2);
-						break;
 					case Activations::BoundedRelu:
 						alpha = Float(6);
 						break;
@@ -2304,17 +2304,12 @@ namespace dnn
 						break;
 					case Activations::HardLogistic:
 					case Activations::Log:
-					case Activations::LogSoftmax:
-					case Activations::Softmax:
 						labelTrue = Float(1);
 						labelFalse = Float(0);
 						break;
 					case Activations::Pow:
 						alpha = Float(1);
 						beta = Float(1);
-						break;
-					case Activations::PRelu:
-						alpha = Float(0.25);
 						break;
 					case Activations::Relu:
 						alpha = Float(0);

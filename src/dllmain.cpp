@@ -242,7 +242,6 @@ extern "C" DNN_API void DNNGetImage(const UInt layerIndex, const Byte fillColor,
 	{
 		switch (model->Layers[layerIndex]->LayerType)
 		{
-			case LayerTypes::Activation:
 			case LayerTypes::BatchNorm:
 			case LayerTypes::BatchNormMish:
 			case LayerTypes::BatchNormMishDropout:
@@ -260,6 +259,7 @@ extern "C" DNN_API void DNNGetImage(const UInt layerIndex, const Byte fillColor,
 			case LayerTypes::Dense:
 			case LayerTypes::DepthwiseConvolution:
 			case LayerTypes::PartialDepthwiseConvolution:
+			case LayerTypes::PRelu:
 			case LayerTypes::LayerNorm:
 			{
 				auto img = model->Layers[layerIndex]->GetImage(fillColor);
@@ -891,6 +891,14 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, UInt* inputsCount
 			auto ln = dynamic_cast<LayerNorm*>(model->Layers[layerIndex].get());
 			if (ln)
 				*scaling = ln->Scaling;
+		}
+		break;
+
+		case LayerTypes::PRelu:
+		{
+			auto prelu = dynamic_cast<PRelu*>(model->Layers[layerIndex].get());
+			if (prelu)
+				*alpha = prelu->Alpha;
 		}
 		break;
 
