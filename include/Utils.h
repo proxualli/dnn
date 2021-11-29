@@ -498,6 +498,23 @@ namespace dnn
 		return std::uniform_real_distribution<T>(min, max)(generator);
 	}
 
+	template<typename T>
+	static auto TruncatedNormal(const T m, const T s, const T limit)
+	{
+		static thread_local auto generator = std::mt19937(Seed<unsigned>());
+		
+		if (limit < s)
+			throw std::invalid_argument("limit out of range in TruncatedNormalal function");
+
+		T x;
+		do 
+		{
+			x = std::normal_distribution<T>(T(0), s)(generator);
+		} while (std::abs(x) > limit); // reject if beyond limit
+		
+		return x + m;
+	}
+
 	// from Stack Overflow https://stackoverflow.com/questions/15165202/random-number-generator-with-beta-distribution
 	template <typename RealType = double>
 	class beta_distribution
