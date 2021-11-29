@@ -503,8 +503,11 @@ namespace dnn
 	template<typename T>
 	static auto UniformReal(const T min, const T max)
 	{
+		if constexpr (!std::is_floating_point_v<T>)
+			throw std::invalid_argument("Floating point number expected in UniformReal function");
+
 		if(min > max)
-			throw std::invalid_argument("Parameter out of range in UniformInt function");
+			throw std::invalid_argument("Parameter out of range in UniformReal function");
 
 		static thread_local auto generator = std::mt19937(Seed<unsigned>());
 		return std::uniform_real_distribution<T>(min, max)(generator);
@@ -513,6 +516,9 @@ namespace dnn
 	template<typename T>
 	static auto TruncatedNormal(const T m, const T s, const T limit)
 	{
+		if constexpr (!std::is_floating_point_v<T>)
+			throw std::invalid_argument("Floating point number expected in TruncatedNormal function");
+
 		if (limit < s)
 			throw std::invalid_argument("limit out of range in TruncatedNormal function");
 
