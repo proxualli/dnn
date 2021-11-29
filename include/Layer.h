@@ -970,7 +970,13 @@ namespace dnn
 				case Fillers::TruncatedNormal:
 				{
 					const auto limit = 2 * std::abs(WeightsScale);
-					std::generate_n(weights.begin(), WeightCount, [&]()	{ return TruncatedNormal<Float>(Float(0), WeightsScale, limit);	});
+					auto distribution = std::normal_distribution<Float>(Float(0), WeightsScale);
+					auto x = limit + Float(1);
+					std::generate_n(weights.begin(), WeightCount, [&]()
+					{
+						do { distribution(RandomEngine); } while (std::abs(x) > limit);
+						return x;
+					});
 				}
 				break;
 
@@ -997,7 +1003,6 @@ namespace dnn
 				}
 				break;
 				}
-
 
 				if (*PersistWeightsMemDesc != *WeightsMemDesc)
 				{
@@ -1092,8 +1097,14 @@ namespace dnn
 
 				case Fillers::TruncatedNormal:
 				{
+					auto distribution = std::normal_distribution<Float>(Float(0), BiasesScale);
 					const auto limit = 2 * std::abs(BiasesScale);
-					std::generate_n(Biases.begin(), BiasCount, [&]() { return TruncatedNormal<Float>(Float(0), BiasesScale, limit);	});
+					auto x = limit + Float(1);
+					std::generate_n(Biases.begin(), BiasCount, [&]()
+					{
+						do { distribution(RandomEngine); } while (std::abs(x) > limit);
+						return x;
+					});
 				}
 				break;
 
@@ -1124,7 +1135,6 @@ namespace dnn
 					std::fill_n(Biases.begin(), BiasCount, Float(0));
 					break;
 				}
-
 			}
 		}
 
