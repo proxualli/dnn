@@ -974,7 +974,7 @@ namespace dnn
 					auto x = limit + Float(1);
 					std::generate_n(weights.begin(), WeightCount, [&]()
 					{
-						do { distribution(RandomEngine); } while (std::abs(x) > limit);
+						do { x = distribution(RandomEngine); } while (std::abs(x) > limit);
 						return x;
 					});
 				}
@@ -1102,7 +1102,7 @@ namespace dnn
 					auto x = limit + Float(1);
 					std::generate_n(Biases.begin(), BiasCount, [&]()
 					{
-						do { distribution(RandomEngine); } while (std::abs(x) > limit);
+						do { x = distribution(RandomEngine); } while (std::abs(x) > limit);
 						return x;
 					});
 				}
