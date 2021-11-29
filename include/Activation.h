@@ -380,25 +380,25 @@ namespace dnn
 						{
 							if (!plain)
 							{
-								const auto vecZero = VecFloat(0);
 								for (auto c = 0ull; c < PaddedC; c+=VectorSize)
-								{
 									HardLogistic::fVec(VecFloat().load_a(&InputLayer->Neurons[c])).store_a(&Neurons[c]);			
 #ifndef DNN_LEAN
-									if (!InplaceBwd)
+								if (!InplaceBwd)
+									for (auto c = 0ull; c < PaddedC; c += VectorSize)
 										vecZero.store_nt(&NeuronsD1[c]);
 #endif // DNN_LEAN
-								}
+
 							}
 							else
+							{
 								for (auto c = 0ull; c < C; c++)
-								{
 									Neurons[c] = HardLogistic::f(InputLayer->Neurons[c]);
 #ifndef DNN_LEAN
-									if (!InplaceBwd)
-										NeuronsD1[c] = Float(0);
+								if (!InplaceBwd)
+									for (auto c = 0ull; c < C; c++)
+										NeuronsD1[c] = 0;
 #endif // DNN_LEAN
-								}
+							}
 						}
 						else
 						{
@@ -418,29 +418,27 @@ namespace dnn
 							if (!plain)
 								for_i(batchSize, threads, [=](UInt n)
 								{
-									const auto vecZero = VecFloat(0);
+									
 									const auto offset = n * PaddedC;
 									for (auto c = offset; c < offset + PaddedC; c+=VectorSize)
-									{
 										HardLogistic::fVec(VecFloat().load_a(&InputLayer->Neurons[c])).store_a(&Neurons[c]);
 #ifndef DNN_LEAN
-										if (!InplaceBwd)
+									if (!InplaceBwd)
+										for (auto c = offset; c < offset + PaddedC; c += VectorSize)
 											vecZero.store_nt(&NeuronsD1[c]);
 #endif // DNN_LEAN
-									}
 								});
 							else
 								for_i(batchSize, threads, [=](UInt n)
 								{
 									const auto offset = n * C;
 									for (auto c = offset; c < offset + C; c++)
-									{
 										Neurons[c] = HardLogistic::f(InputLayer->Neurons[c]);
 #ifndef DNN_LEAN
-										if (!InplaceBwd)
-											NeuronsD1[c] = Float(0);
+									if (!InplaceBwd)
+										for (auto c = offset; c < offset + C; c++)
+											NeuronsD1[c] = 0;
 #endif // DNN_LEAN
-									}
 								});
 						}
 						else
@@ -448,7 +446,6 @@ namespace dnn
 							if (!plain)
 								for_i(batchSize, threads, [=](UInt n)
 								{
-									const auto vecZero = VecFloat(0);
 									const auto offset = n * PaddedC;
 									for (auto c = offset; c < offset + PaddedC; c+=VectorSize)
 										HardLogistic::fVec(VecFloat().load_a(&InputLayer->Neurons[c])).store_a(&Neurons[c]);
@@ -473,32 +470,41 @@ namespace dnn
 						if (training)
 						{
 							if (!plain)
+							{
 								for (auto c = 0ull; c < PaddedC; c += VectorSize)
 								{
 									const auto offset = c * HW;
 									for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
-									{
 										HardLogistic::fVec(VecFloat().load_a(&InputLayer->Neurons[hw + offset])).store_a(&Neurons[hw + offset]);
-#ifndef DNN_LEAN
-										if (!InplaceBwd)
-											vecZero.store_nt(&NeuronsD1[hw + offset]);
-#endif // DNN_LEAN
-									}
 								}
+#ifndef DNN_LEAN
+								if (!InplaceBwd)
+									for (auto c = 0ull; c < PaddedC; c += VectorSize)
+									{
+										const auto offset = c * HW;
+										for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
+											vecZero.store_nt(&NeuronsD1[hw + offset]);
+									}
+#endif // DNN_LEAN
+							}
 							else
+							{
 								for (auto c = 0ull; c < C; c++)
 								{
 									const auto offset = c * HW;
 									for (auto hw = 0ull; hw < HW; hw++)
-									{
 										Neurons[hw + offset] = HardLogistic::f(InputLayer->Neurons[hw + offset]);
+								}
 #ifndef DNN_LEAN
-										if (!InplaceBwd)
-											NeuronsD1[hw + offset] = Float(0);
-#endif // DNN_LEAN
+								if (!InplaceBwd)
+									for (auto c = 0ull; c < C; c++)
+									{
+										const auto offset = c * HW;
+										for (auto hw = 0ull; hw < HW; hw++)
+											NeuronsD1[hw + offset] = 0;
 									}
-								}								
-						
+#endif // DNN_LEAN
+							}
 						}
 						else
 						{
@@ -526,19 +532,23 @@ namespace dnn
 							if (!plain)
 								for_i(batchSize, threads, [=](UInt n)
 								{
-									const auto vecZero = VecFloat(0);
+									
 									for (auto c = 0ull; c < PaddedC; c += VectorSize)
 									{
 										const auto offset = n * PaddedCDHW + c * HW;
 										for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
-										{
 											HardLogistic::fVec(VecFloat().load_a(&InputLayer->Neurons[hw + offset])).store_a(&Neurons[hw + offset]);
-#ifndef DNN_LEAN
-											if (!InplaceBwd)
-												vecZero.store_nt(&NeuronsD1[hw + offset]);
-#endif // DNN_LEAN
-										}
+
 									}
+#ifndef DNN_LEAN
+									if (!InplaceBwd)
+										for (auto c = 0ull; c < PaddedC; c += VectorSize)
+										{
+											const auto offset = n * PaddedCDHW + c * HW;
+											for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
+												vecZero.store_nt(&NeuronsD1[hw + offset]);
+										}
+#endif // DNN_LEAN
 								});
 							else
 								for_i(batchSize, threads, [=](UInt n)
@@ -547,14 +557,17 @@ namespace dnn
 									{
 										const auto offset = n * CDHW + c * HW;
 										for (auto hw = 0ull; hw < HW; hw++)
-										{
 											Neurons[hw + offset] = HardLogistic::f(InputLayer->Neurons[hw + offset]);
-#ifndef DNN_LEAN
-											if (!InplaceBwd)
-												NeuronsD1[hw + offset] = Float(0);
-#endif // DNN_LEAN
-										}
 									}
+#ifndef DNN_LEAN
+									if (!InplaceBwd)
+										for (auto c = 0ull; c < C; c++)
+										{
+											const auto offset = n * CDHW + c * HW;
+											for (auto hw = 0ull; hw < HW; hw++)
+												NeuronsD1[hw + offset] = Float(0);
+										}
+#endif // DNN_LEAN
 								});
 						}
 						else
