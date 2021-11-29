@@ -464,36 +464,48 @@ namespace dnn
 	}
 #endif
 
-	inline static auto BernoulliVecFloat(const Float prob = Float(0.5)) noexcept
+	inline static auto BernoulliVecFloat(const Float p = Float(0.5))
 	{
+		if (p < 0 || p > 1) 
+			throw std::invalid_argument("Parameter out of range in BernoulliVecFloat function");
+
 		static thread_local auto generator = Ranvec1(3);
 		generator.init(Seed<int>(), static_cast<int>(std::hash<std::thread::id>()(std::this_thread::get_id())));
 #if defined(DNN_AVX512BW) || defined(DNN_AVX512)
-		return select(generator.random16f() < prob, VecFloat(1), VecFloat(0));
+		return select(generator.random16f() < p, VecFloat(1), VecFloat(0));
 #elif defined(DNN_AVX2) || defined(DNN_AVX)
-		return select(generator.random8f() < prob, VecFloat(1), VecFloat(0));
+		return select(generator.random8f() < p, VecFloat(1), VecFloat(0));
 #elif defined(DNN_SSE42) || defined(DNN_SSE41)
-		return select(generator.random4f() < prob, VecFloat(1), VecFloat(0));
+		return select(generator.random4f() < p, VecFloat(1), VecFloat(0));
 #endif
 	}
 
 	template<typename T>
-	static auto Bernoulli(const Float prob = Float(0.5)) noexcept
+	static auto Bernoulli(const Float p = Float(0.5))
 	{
+		if (p < 0 || p > 1)
+			throw std::invalid_argument("Parameter out of range in Bernoulli function");
+
 		static thread_local auto generator = std::mt19937(Seed<unsigned>());
-		return static_cast<T>(std::bernoulli_distribution(double(prob))(generator));
+		return static_cast<T>(std::bernoulli_distribution(double(p))(generator));
 	}
 
 	template<typename T>
-	static auto UniformInt(const T min, const T max) noexcept
+	static auto UniformInt(const T min, const T max)
 	{
+		if (min > max)
+			throw std::invalid_argument("Parameter out of range in UniformInt function");
+
 		static thread_local auto generator = std::mt19937(Seed<unsigned>());
 		return std::uniform_int_distribution<T>(min, max)(generator);
 	}
 
 	template<typename T>
-	static auto UniformReal(const T min, const T max) noexcept
+	static auto UniformReal(const T min, const T max)
 	{
+		if(min > max)
+			throw std::invalid_argument("Parameter out of range in UniformInt function");
+
 		static thread_local auto generator = std::mt19937(Seed<unsigned>());
 		return std::uniform_real_distribution<T>(min, max)(generator);
 	}
@@ -501,11 +513,11 @@ namespace dnn
 	template<typename T>
 	static auto TruncatedNormal(const T m, const T s, const T limit)
 	{
+		if (limit < s)
+			throw std::invalid_argument("limit out of range in TruncatedNormal function");
+
 		static thread_local auto generator = std::mt19937(Seed<unsigned>());
 		
-		if (limit < s)
-			throw std::invalid_argument("limit out of range in TruncatedNormalal function");
-
 		T x;
 		do 
 		{
