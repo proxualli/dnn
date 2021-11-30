@@ -243,7 +243,7 @@ namespace scripts
 
         auto GetName() const
         {
-            auto common = std::string(magic_enum::enum_name<Scripts>(Script)) + std::string("-") + std::to_string(H) + std::string("x") + std::to_string(W) + std::string("-") + std::to_string(Groups) + std::string("-") + std::to_string(Iterations) + std::string("-");
+            auto common = std::string(magic_enum::enum_name<Scripts>(Script)) + std::string("-") + std::to_string(Groups) + std::string("-") + std::to_string(Iterations) + std::string("-");
 
             switch (Script)
             {
@@ -262,7 +262,7 @@ namespace scripts
                 return common + std::to_string(Width) + (Dropout > 0 ? std::string("-dropout") : std::string("")) + (Bottleneck ? std::string("-bottleneck") : std::string("")) + (ChannelZeroPad ? std::string("-channelzeropad") : std::string("")) + std::string("-") + StringToLower(std::string(magic_enum::enum_name<Activations>(Activation)));
             case Scripts::shufflenetv2:
             {
-                auto name = std::string(magic_enum::enum_name<Scripts>(Script)) + std::string("-") + std::to_string(H) + std::string("x") + std::to_string(W) + std::string("-") + std::to_string(Width) + std::string("-");
+                auto name = std::string(magic_enum::enum_name<Scripts>(Script)) + std::string("-") + std::to_string(Width);
                 for (auto rec : ShuffleNet)
                     name += rec.to_string();
                 return name;
