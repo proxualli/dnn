@@ -623,7 +623,7 @@ namespace dnn
 	};
 
 	template<typename T>
-	static auto BetaDistribution(const T a, const T b) noexcept
+	inline static auto BetaDistribution(const T a, const T b) noexcept
 	{
 		static thread_local auto generator = std::mt19937(Seed<unsigned>());
 		return beta_distribution<T>(a, b)(generator);
