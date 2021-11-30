@@ -1160,7 +1160,7 @@ namespace dnn
 
 							// save the weights
 							State.store(States::SaveWeights);
-							auto directory = DataProv->StorageDirectory / std::string("definitions") / (Name + std::string("-weights"));
+							auto directory = DataProv->StorageDirectory / std::string("definitions") / Name;
 							auto fileName = (directory / (std::to_string(CurrentEpoch) + std::string("-") + std::to_string(CurrentCycle) + std::string("-(") + StringToLower(std::string(magic_enum::enum_name<Datasets>(Dataset))) + std::string(")(") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(Optimizer))) + std::string(")-") + std::to_string(TrainErrors) + std::string("-") + std::to_string(TestErrors) + std::string(".bin"))).string();
 							
 							std::filesystem::create_directories(directory);
@@ -1582,7 +1582,7 @@ namespace dnn
 
 				if (CurrentTrainingRate.Dropout > Float(0))
 					dstImageByte = Image<Byte>::Dropout(dstImageByte, CurrentTrainingRate.Dropout, DataProv->Mean);
-
+				
 				for (auto c = 0ull; c < dstImageByte.Channels; c++)
 				{
 					const auto mean = MeanStdNormalization ? DataProv->Mean[c] : Image<Byte>::GetChannelMean(dstImageByte, c);
