@@ -760,8 +760,8 @@ namespace dnn
 		static Image Distorted(const Image& image, const Float scale, const Float angle, const Interpolations interpolation, const std::vector<Float>& mean)
 		{
 			const auto zoom = scale / Float(100) * UniformReal<Float>( Float(-1), Float(1));
-			const auto height = image.Height + int(std::round(Float(image.Height) * zoom));
-			const auto width = image.Width + int(std::round(Float(image.Width) * zoom));
+			const auto height = static_cast<UInt>(static_cast<int>(image.Height) + static_cast<int>(std::round(static_cast<int>(image.Height) * zoom)));
+			const auto width = static_cast<UInt>(static_cast<int>(image.Width) + static_cast<int>(std::round(static_cast<int>(image.Width) * zoom)));
 
 			return Image::Crop(Image::Rotate(Image::Resize(image, image.Depth, height, width, interpolation), angle * UniformReal<Float>( Float(-1), Float(1)), interpolation, mean), Positions::Center, image.Depth, image.Height, image.Width, mean);
 		}
@@ -1107,7 +1107,7 @@ namespace dnn
 						for (auto w = bbx1; w < bbx2; w++)
 							dstImage(c, d, h, w) = mixImage(c, d, h, w);
 
-			*lambda = 1.0 - ((double(bbx2) - double(bbx1)) * (double(bby2) - double(bby1)) / double(dstImage.Height * dstImage.Width));
+			*lambda = 1.0 - (double((bbx2 - bbx1) * (bby2 - bby1)) / double(dstImage.Height * dstImage.Width));
 
 			return dstImage;
 		}
