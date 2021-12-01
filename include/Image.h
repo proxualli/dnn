@@ -37,13 +37,16 @@ namespace dnn
 
 	private:
 		VectorT Data;
+		UInt area;
+		UInt channelSize;
+		UInt size;
 
 	public:
 		UInt Channels;
 		UInt Depth;
 		UInt Height;
 		UInt Width;
-		
+
 		Image() :
 			Channels(0),
 			Depth(0),
@@ -51,6 +54,7 @@ namespace dnn
 			Width(0),
 			Data(VectorT())
 		{
+			CalcualeSize();
 		}
 
 		Image(const UInt c, const UInt d, const UInt h, const UInt w, const VectorT& image) :
@@ -60,6 +64,7 @@ namespace dnn
 			Width(w),
 			Data(image)
 		{
+			CalcualeSize();
 		}
 
 		Image(const UInt c, const UInt d, const UInt h, const UInt w, const T* image) :
@@ -69,6 +74,7 @@ namespace dnn
 			Width(w),
 			Data(VectorT(c * d * h * w))
 		{
+			CalcualeSize();
 			std::memcpy(Data.data(), image, c * d * h * w * sizeof(T));
 		}
 
@@ -79,18 +85,19 @@ namespace dnn
 			Width(w),
 			Data(VectorT(c * d * h * w))
 		{
+			CalcualeSize();
 		}
 
 		~Image() = default;
 
 		T& operator()(const UInt c, const UInt d, const UInt h, const UInt w)
 		{
-			return Data[w + (h * Width) + (d * Height * Width) + (c * Depth * Height * Width)];
+			return Data[w + (h * Width) + (d * area) + (c * channelSize)];
 		}
 
 		const T& operator()(const UInt c, const UInt d, const UInt h, const UInt w) const
 		{
-			return Data[w + (h * Width) + (d * Height * Width) + (c * Depth * Height * Width)];
+			return Data[w + (h * Width) + (d * area) + (c * channelSize)];
 		}
 
 		T* data()
@@ -103,19 +110,26 @@ namespace dnn
 			return Data.data();
 		}
 
+		void CalcualeSize()
+		{
+			area = Height * Width;
+			channelSize = Depth * area;
+			size = Channels * channelSize;
+		}
+
 		auto Area() const
 		{
-			return Height * Width;
+			return area;
 		}
 
 		auto ChannelSize() const
 		{
-			return Depth * Height * Width;
+			return channelSize;
 		}
 
 		auto Size() const
 		{
-			return Channels * Depth * Height * Width;
+			return size;
 		}
 		
 		static cimg_library::CImg<Float> ImageToCImgFloat(const Image& image)

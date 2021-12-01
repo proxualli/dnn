@@ -233,7 +233,7 @@ namespace scripts
 
         bool WidthVisible() const { return Script == Scripts::mobilenetv3 || Script == Scripts::resnet || Script == Scripts::shufflenetv2; }
         bool GrowthRateVisible() const { return Script == Scripts::densenet; }
-        bool DropoutVisible() const { return Script == Scripts::densenet || Script == Scripts::resnet; }
+        bool DropoutVisible() const { return Script == Scripts::densenet || Script == Scripts::resnet || Script == Scripts::efficientnetv2; }
         bool CompressionVisible() const { return Script == Scripts::densenet; }
         bool BottleneckVisible() const { return Script == Scripts::densenet || Script == Scripts::resnet; }
         bool SqueezeExcitationVisible() const { return Script == Scripts::mobilenetv3; }
@@ -585,9 +585,13 @@ namespace scripts
                     Convolution(id + 1, In("B", id + 1), DIV8(outputChannels), 1, 1, 1, 1, 0, 0) +
                     BatchNorm(id + 1, In("C", id + 1)));
             }
-
+                
             if (identity)
-                blocks.push_back(Add(id + 1, In("B", id + 1) + "," + inputs));
+            {
+                blocks.push_back(
+                    Dropout(id + 1, In("B", id + 1)) +
+                    Add(id + 1, In("D", id + 1) + "," + inputs));
+            }
 
             return blocks;
         }
@@ -629,7 +633,11 @@ namespace scripts
             }
 
             if (identity)
-                blocks.push_back(Add(id + 2, In("B", id + 2) + "," + inputs));
+            {
+                blocks.push_back(
+                    Dropout(id + 2, In("B", id + 2)) +
+                    Add(id + 2, In("D", id + 2) + "," + inputs));
+            }
 
             return blocks;
         }
@@ -843,7 +851,7 @@ namespace scripts
                 }
 
                 net +=
-                    Convolution(C, In("A", C - 1), 1792, 1, 1, 1, 1, 0, 0) +
+                    Convolution(C, In("A", C - 1), 1280, 1, 1, 1, 1, 0, 0) +
                     BatchNormActivation(C, In("C", C), p.Activation) +
                     GlobalAvgPooling(In("B", C)) +
                     Dense(1, "GAP", p.Classes(), true, "", "DS", "Normal(0.001)") +

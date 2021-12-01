@@ -503,8 +503,7 @@ namespace dnn
 	template<typename T>
 	static auto UniformReal(const T min, const T max)
 	{
-		if constexpr (!std::is_floating_point_v<T>)
-			throw std::invalid_argument("Only Floating point type supported in UniformReal function");
+		static_assert(std::is_floating_point<T>::value, "Only Floating point type supported in UniformReal function");
 
 		if(min > max)
 			throw std::invalid_argument("Parameter out of range in UniformReal function");
@@ -516,8 +515,7 @@ namespace dnn
 	template<typename T>
 	static auto TruncatedNormal(const T m, const T s, const T limit)
 	{
-		if constexpr (!std::is_floating_point_v<T>)
-			throw std::invalid_argument("Only Floating point type supported in TruncatedNormal function");
+		static_assert(std::is_floating_point<T>::value, "Only Floating point type supported in TruncatedNormal function");
 
 		if (limit < s)
 			throw std::invalid_argument("limit out of range in TruncatedNormal function");
@@ -625,6 +623,8 @@ namespace dnn
 	template<typename T>
 	inline static auto BetaDistribution(const T a, const T b) noexcept
 	{
+		static_assert(std::is_floating_point<T>::value, "Only Floating point type supported in BetaDistribution function");
+
 		static thread_local auto generator = std::mt19937(Seed<unsigned>());
 		return beta_distribution<T>(a, b)(generator);
 	}
