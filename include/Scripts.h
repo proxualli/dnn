@@ -822,7 +822,8 @@ namespace scripts
 
             case Scripts::efficientnetv2:
             {
-                auto inputChannels = DIV8(p.EfficientNet[0].Channels);
+                const auto width = Float(1);
+                auto inputChannels = DIV8(UInt(width * (Float)p.EfficientNet[0].Channels));
                 auto C = 1ull;
                 
                 net +=
@@ -833,7 +834,7 @@ namespace scripts
                 auto input = In("B", C++);
                 for (auto rec : p.EfficientNet)
                 {
-                    auto outputChannels = DIV8(rec.Channels);
+                    auto outputChannels = DIV8(UInt(width * (Float)rec.Channels));
                     for (auto n = 0ull; n < rec.Iterations; n++)
                     {
                         auto stride = n == 0ull ? rec.Stride : 1ull;
@@ -854,9 +855,9 @@ namespace scripts
                     Convolution(C, In("A", C - 1), 1280, 1, 1, 1, 1, 0, 0) +
                     BatchNormActivation(C, In("C", C), p.Activation) +
                     GlobalAvgPooling(In("B", C)) +
-                    Dense(1, "GAP", p.Classes(), true, "", "DS", "Normal(0.001)") +
+                    Dense(1, "GAP", p.Classes(), true, "", "DS", std::string("Uniform(") + std::to_string(Float(1.0) / (Float)std::sqrt((double)p.Classes())) + std::string(")")) +
                     LogSoftmax(1, In("DS", 1)) +
-                    Cost(In("LSM", 1), p.Dataset, p.Classes(), "CategoricalCrossEntropy", 0.1f);
+                    Cost(In("LSM", 1), p.Dataset, p.Classes(), "CategoricalCrossEntropy", 0.125f);
             }
             break;
 
