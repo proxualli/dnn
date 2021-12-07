@@ -786,66 +786,100 @@ namespace dnn
 	}
 
 	// from oneDNN sample code
+#define COMPLAIN_DNNL_ERROR_AND_EXIT(what, status) \
+    do { \
+        printf("[%s:%d] `%s` returns oneDNN error: %s.\n", __FILE__, __LINE__, \
+                what, dnnl_status2str(status)); \
+        printf("Example failed.\n"); \
+        exit(1); \
+    } while (0)
+
+#define COMPLAIN_EXAMPLE_ERROR_AND_EXIT(complain_fmt, ...) \
+    do { \
+        printf("[%s:%d] Error in the example: " complain_fmt ".\n", __FILE__, \
+                __LINE__, __VA_ARGS__); \
+        printf("Example failed.\n"); \
+        exit(2); \
+    } while (0)
+
+	static dnnl_engine_kind_t validate_engine_kind(dnnl_engine_kind_t akind) {
+		// Checking if a GPU exists on the machine
+		if (akind == dnnl_gpu) {
+			if (!dnnl_engine_get_count(dnnl_gpu)) {
+				printf("Application couldn't find GPU, please run with CPU "
+					"instead.\n");
+				exit(0);
+			}
+		}
+		return akind;
+	}
+
+#define CHECK(f) \
+    do { \
+        dnnl_status_t s_ = f; \
+        if (s_ != dnnl_success) COMPLAIN_DNNL_ERROR_AND_EXIT(#f, s_); \
+    } while (0)
+
+	static inline dnnl_engine_kind_t parse_engine_kind(int argc, char** argv) {
+		// Returns default engine kind, i.e. CPU, if none given
+		if (argc == 1) {
+			return validate_engine_kind(dnnl_cpu);
+		}
+		else if (argc == 2) {
+			// Checking the engine type, i.e. CPU or GPU
+			char* engine_kind_str = argv[1];
+			if (!strcmp(engine_kind_str, "cpu")) {
+				return validate_engine_kind(dnnl_cpu);
+			}
+			else if (!strcmp(engine_kind_str, "gpu")) {
+				return validate_engine_kind(dnnl_gpu);
+			}
+		}
+
+		// If all above fails, the example should be run properly
+		COMPLAIN_EXAMPLE_ERROR_AND_EXIT(
+			"inappropriate engine kind.\n"
+			"Please run the example like this: %s [cpu|gpu].",
+			argv[0]);
+		}
+
+	static inline const char* engine_kind2str_upper(dnnl_engine_kind_t kind) {
+		if (kind == dnnl_cpu) return "CPU";
+		if (kind == dnnl_gpu) return "GPU";
+		return "<Unknown engine>";
+	}
+
 	// Read from memory, write to handle
-	inline void read_from_dnnl_memory(void* handle, dnnl::memory& mem) {
-		dnnl::engine eng = mem.get_engine();
-		auto size = mem.get_desc().get_size();
+	static inline void read_from_dnnl_memory(void* handle, dnnl_memory_t mem) {
+		dnnl_engine_t eng;
+		dnnl_engine_kind_t eng_kind;
+		const dnnl_memory_desc_t* md;
 
-		if (!handle) throw std::runtime_error("handle is nullptr.");
+		if (!handle) COMPLAIN_EXAMPLE_ERROR_AND_EXIT("%s", "handle is NULL.");
 
-#ifdef DNNL_WITH_SYCL
-		bool is_cpu_sycl = (DNNL_CPU_RUNTIME == DNNL_RUNTIME_SYCL
-			&& eng.get_kind() == dnnl::engine::kind::cpu);
-		bool is_gpu_sycl = (DNNL_GPU_RUNTIME == DNNL_RUNTIME_SYCL
-			&& eng.get_kind() == dnnl::engine::kind::gpu);
-		if (is_cpu_sycl || is_gpu_sycl) {
-			auto mkind = dnnl::sycl_interop::get_memory_kind(mem);
-			if (mkind == dnnl::sycl_interop::memory_kind::buffer) {
-				auto buffer = dnnl::sycl_interop::get_buffer<uint8_t>(mem);
-				auto src = buffer.get_access<cl::sycl::access::mode::read>();
-				uint8_t* src_ptr = src.get_pointer();
-				if (!src_ptr)
-					throw std::runtime_error("get_pointer returned nullptr.");
-				for (auto i = 0ull; i < size; ++i)
-					((uint8_t*)handle)[i] = src_ptr[i];
-			}
-			else {
-				assert(mkind == dnnl::sycl_interop::memory_kind::usm);
-				uint8_t* src_ptr = (uint8_t*)mem.get_data_handle();
-				if (!src_ptr)
-					throw std::runtime_error("get_data_handle returned nullptr.");
-				if (is_cpu_sycl) {
-					for (auto i = 0ull; i < size; ++i)
-						((uint8_t*)handle)[i] = src_ptr[i];
-				}
-				else {
-					auto sycl_queue
-						= dnnl::sycl_interop::get_queue(dnnl::stream(eng));
-					sycl_queue.memcpy(handle, src_ptr, size).wait();
+		CHECK(dnnl_memory_get_engine(mem, &eng));
+		CHECK(dnnl_engine_get_kind(eng, &eng_kind));
+		CHECK(dnnl_memory_get_memory_desc(mem, &md));
+		size_t bytes = dnnl_memory_desc_get_size(md);
+
+		bool is_cpu_sycl
+			= (DNNL_CPU_RUNTIME == DNNL_RUNTIME_SYCL && eng_kind == dnnl_cpu);
+
+		if (eng_kind == dnnl_gpu || is_cpu_sycl) {
+			void* mapped_ptr = NULL;
+			CHECK(dnnl_memory_map_data(mem, &mapped_ptr));
+			if (mapped_ptr) memcpy(handle, mapped_ptr, bytes);
+			CHECK(dnnl_memory_unmap_data(mem, mapped_ptr));
+		}
+
+		if (eng_kind == dnnl_cpu) {
+			void* ptr = NULL;
+			CHECK(dnnl_memory_get_data_handle(mem, &ptr));
+			if (ptr) {
+				for (size_t i = 0; i < bytes; ++i) {
+					((char*)handle)[i] = ((char*)ptr)[i];
 				}
 			}
-			return;
-		}
-#endif
-#if DNNL_GPU_RUNTIME == DNNL_RUNTIME_OCL
-		if (eng.get_kind() == dnnl::engine::kind::gpu) {
-			dnnl::stream s(eng);
-			cl_command_queue q = dnnl::ocl_interop::get_command_queue(s);
-			cl_mem m = dnnl::ocl_interop::get_mem_object(mem);
-
-			cl_int ret = clEnqueueReadBuffer(
-				q, m, CL_TRUE, 0, size, handle, 0, NULL, NULL);
-			if (ret != CL_SUCCESS)
-				throw std::runtime_error("clEnqueueReadBuffer failed.");
-			return;
-		}
-#endif
-
-		if (eng.get_kind() == dnnl::engine::kind::cpu) {
-			uint8_t* src = static_cast<uint8_t*>(mem.get_data_handle());
-			if (!src) throw std::runtime_error("get_data_handle returned nullptr.");
-			for (auto i = 0ull; i < size; ++i)
-				((uint8_t*)handle)[i] = src[i];
 			return;
 		}
 
@@ -853,65 +887,54 @@ namespace dnn
 	}
 
 	// Read from handle, write to memory
-	inline void write_to_dnnl_memory(void* handle, dnnl::memory& mem) {
-		dnnl::engine eng = mem.get_engine();
-		auto size = mem.get_desc().get_size();
+	static inline void write_to_dnnl_memory(void* handle, dnnl_memory_t mem) {
+		dnnl_engine_t eng;
+		dnnl_engine_kind_t eng_kind;
+		const dnnl_memory_desc_t* md;
 
-		if (!handle) throw std::runtime_error("handle is nullptr.");
+		if (!handle) COMPLAIN_EXAMPLE_ERROR_AND_EXIT("%s", "handle is NULL.");
+
+		CHECK(dnnl_memory_get_engine(mem, &eng));
+		CHECK(dnnl_engine_get_kind(eng, &eng_kind));
+		CHECK(dnnl_memory_get_memory_desc(mem, &md));
+		size_t bytes = dnnl_memory_desc_get_size(md);
 
 #ifdef DNNL_WITH_SYCL
-		bool is_cpu_sycl = (DNNL_CPU_RUNTIME == DNNL_RUNTIME_SYCL
-			&& eng.get_kind() == dnnl::engine::kind::cpu);
-		bool is_gpu_sycl = (DNNL_GPU_RUNTIME == DNNL_RUNTIME_SYCL
-			&& eng.get_kind() == dnnl::engine::kind::gpu);
+		bool is_cpu_sycl
+			= (DNNL_CPU_RUNTIME == DNNL_RUNTIME_SYCL && eng_kind == dnnl_cpu);
+		bool is_gpu_sycl
+			= (DNNL_GPU_RUNTIME == DNNL_RUNTIME_SYCL && eng_kind == dnnl_gpu);
 		if (is_cpu_sycl || is_gpu_sycl) {
-			auto mkind = dnnl::sycl_interop::get_memory_kind(mem);
-			if (mkind == dnnl::sycl_interop::memory_kind::buffer) {
-				auto buffer = dnnl::sycl_interop::get_buffer<uint8_t>(mem);
-				auto dst = buffer.get_access<cl::sycl::access::mode::write>();
-				uint8_t* dst_ptr = dst.get_pointer();
-				if (!dst_ptr)
-					throw std::runtime_error("get_pointer returned nullptr.");
-				for (auto i = 0ull; i < size; ++i)
-					dst_ptr[i] = ((uint8_t*)handle)[i];
-			}
-			else {
-				assert(mkind == dnnl::sycl_interop::memory_kind::usm);
-				uint8_t* dst_ptr = (uint8_t*)mem.get_data_handle();
-				if (!dst_ptr)
-					throw std::runtime_error("get_data_handle returned nullptr.");
-				if (is_cpu_sycl) {
-					for (auto i = 0ull; i < size; ++i)
-						dst_ptr[i] = ((uint8_t*)handle)[i];
-				}
-				else {
-					auto sycl_queue
-						= dnnl::sycl_interop::get_queue(dnnl::stream(eng));
-					sycl_queue.memcpy(dst_ptr, handle, size).wait();
+			void* mapped_ptr = NULL;
+			CHECK(dnnl_memory_map_data(mem, &mapped_ptr));
+			if (mapped_ptr) {
+				for (size_t i = 0; i < bytes; ++i) {
+					((char*)mapped_ptr)[i] = ((char*)handle)[i];
 				}
 			}
+			CHECK(dnnl_memory_unmap_data(mem, mapped_ptr));
 			return;
 		}
 #endif
+
 #if DNNL_GPU_RUNTIME == DNNL_RUNTIME_OCL
-		if (eng.get_kind() == dnnl::engine::kind::gpu) {
-			dnnl::stream s(eng);
-			cl_command_queue q = dnnl::ocl_interop::get_command_queue(s);
-			cl_mem m = dnnl::ocl_interop::get_mem_object(mem);
-
-			cl_int ret = clEnqueueWriteBuffer(
-				q, m, CL_TRUE, 0, size, handle, 0, NULL, NULL);
-			if (ret != CL_SUCCESS)
-				throw std::runtime_error("clEnqueueWriteBuffer failed.");
+		if (eng_kind == dnnl_gpu) {
+			void* mapped_ptr = NULL;
+			CHECK(dnnl_memory_map_data(mem, &mapped_ptr));
+			if (mapped_ptr) memcpy(mapped_ptr, handle, bytes);
+			CHECK(dnnl_memory_unmap_data(mem, mapped_ptr));
 			return;
 		}
 #endif
 
-		if (eng.get_kind() == dnnl::engine::kind::cpu) {
-			uint8_t* dst = static_cast<uint8_t*>(mem.get_data_handle());
-			if (!dst) throw std::runtime_error("get_data_handle returned nullptr.");
-			for (auto i = 0ull; i < size; ++i)
-				dst[i] = ((uint8_t*)handle)[i];
+		if (eng_kind == dnnl_cpu) {
+			void* ptr = NULL;
+			CHECK(dnnl_memory_get_data_handle(mem, &ptr));
+			if (ptr) {
+				for (size_t i = 0; i < bytes; ++i) {
+					((char*)ptr)[i] = ((char*)handle)[i];
+				}
+			}
 			return;
 		}
 
