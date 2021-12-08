@@ -100,6 +100,10 @@ namespace dnn
 	typedef size_t UInt;
 	typedef unsigned char Byte;
 
+	constexpr auto ULTRA_LIGHT_COMPUTE = 3ull;		// number of threads
+	constexpr auto LIGHT_COMPUTE = 6ull;
+	constexpr auto MEDIUM_COMPUTE = 12ull;
+
 	struct LabelInfo
 	{
 		UInt LabelA;
@@ -398,9 +402,7 @@ namespace dnn
 	//constexpr bool IS_LITTLE_ENDIAN = std::endian::native == std::endian::little;
 	constexpr auto NEURONS_LIMIT = Float(1000);		// limit for all the neurons and derivative [-NEURONS_LIMIT,NEURONS_LIMIT]
 	constexpr auto WEIGHTS_LIMIT = Float(100);		// limit for all the weights and biases [-WEIGHTS_LIMIT,WEIGHTS_LIMIT]
-	constexpr auto ULTRA_LIGHT_COMPUTE = 3ull;		// number of threads
-	constexpr auto LIGHT_COMPUTE = 6ull;
-	constexpr auto MEDIUM_COMPUTE = 12ull;
+	
 	constexpr auto FloatSquare(const Float& value) noexcept { return (value * value); }
 	template<typename T>
 	constexpr auto Clamp(const T& v, const T& lo, const T& hi) noexcept { return (v < lo) ? lo : (hi < v) ? hi : v; }
