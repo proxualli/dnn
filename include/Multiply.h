@@ -72,7 +72,7 @@ namespace dnn
 		{
 			const auto plain = IsPlainFormat();
 			const auto elements = plain ? batchSize * CDHW : batchSize * PaddedCDHW;
-			const auto threads = elements < 2097152ull ? 2ull : elements < 8338608ull ? LIGHT_COMPUTE : MEDIUM_COMPUTE;
+			const auto threads = elements < 2097152ull ? ULTRA_LIGHT_COMPUTE : elements < 8338608ull ? LIGHT_COMPUTE : MEDIUM_COMPUTE;
 			const auto inputs = Inputs.size();
 
 #ifdef DNN_STOCHASTIC
@@ -422,7 +422,7 @@ namespace dnn
 
 			const auto plain = IsPlainFormat();
 			const auto elements = plain ? batchSize * CDHW : batchSize * PaddedCDHW;
-			const auto threads = elements < 2097152ull ? 2ull : elements < 8338608ull ? LIGHT_COMPUTE : MEDIUM_COMPUTE;
+			const auto threads = elements < 2097152ull ? ULTRA_LIGHT_COMPUTE : elements < 8338608ull ? LIGHT_COMPUTE : MEDIUM_COMPUTE;
 			const auto inputs = Inputs.size();
 
 #ifdef DNN_STOCHASTIC

@@ -96,7 +96,7 @@ namespace dnn
 				const auto size = plain ? CDHW : PaddedCDHW;
 				const auto part = (size / VectorSize) * VectorSize;
 				const auto elements = size * batchSize;
-				const auto threads = elements < 2097152ull ? 2ull : elements < 8338608ull ? LIGHT_COMPUTE : MEDIUM_COMPUTE;
+				const auto threads = elements < 2097152ull ? ULTRA_LIGHT_COMPUTE : elements < 8338608ull ? LIGHT_COMPUTE : MEDIUM_COMPUTE;
 
 				for_i(batchSize, threads, [=](UInt n)
 				{
@@ -140,7 +140,7 @@ namespace dnn
 			const auto size = plain ? CDHW : PaddedCDHW;
 			const auto part = (size / VectorSize) * VectorSize;
 			const auto elements = size * batchSize;
-			const auto threads = elements < 2097152ull ? 2ull : elements < 8338608ull ? LIGHT_COMPUTE : MEDIUM_COMPUTE;
+			const auto threads = elements < 2097152ull ? ULTRA_LIGHT_COMPUTE : elements < 8338608ull ? LIGHT_COMPUTE : MEDIUM_COMPUTE;
 
 #ifdef DNN_STOCHASTIC
 			if (batchSize == 1)

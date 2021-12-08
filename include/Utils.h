@@ -161,7 +161,7 @@ namespace dnn
 			::memset(destination, initValue, elements * sizeof(T));
 		else
 		{
-			const auto threads = elements < 2097152ull ? 2ull : elements < 8338608ull ? 4ull : 8ull;
+			const auto threads = elements < 2097152ull ? ULTRA_LIGHT_COMPUTE : elements < 8338608ull ? LIGHT_COMPUTE : MEDIUM_COMPUTE;
 			const auto part = elements / threads;
 			for_i(threads, [=](const std::size_t thread) { ::memset(destination + part * thread, initValue, part * sizeof(T)); });
 			if (elements % threads != 0)
@@ -396,10 +396,11 @@ namespace dnn
 	typedef AlignedArray<Byte, 64ull> ByteArray;
 	typedef std::vector<Float, AlignedAllocator<Float, 64ull>> FloatVector;
 	//constexpr bool IS_LITTLE_ENDIAN = std::endian::native == std::endian::little;
-	constexpr auto NEURONS_LIMIT = Float(1000);   // limit for all the neurons and derivative [-NEURONS_LIMIT,NEURONS_LIMIT]
-	constexpr auto WEIGHTS_LIMIT = Float(100);    // limit for all the weights and biases [-WEIGHTS_LIMIT,WEIGHTS_LIMIT]
-	constexpr auto LIGHT_COMPUTE = 4ull;          // number of threads
-	constexpr auto MEDIUM_COMPUTE = 8ull;
+	constexpr auto NEURONS_LIMIT = Float(1000);		// limit for all the neurons and derivative [-NEURONS_LIMIT,NEURONS_LIMIT]
+	constexpr auto WEIGHTS_LIMIT = Float(100);		// limit for all the weights and biases [-WEIGHTS_LIMIT,WEIGHTS_LIMIT]
+	constexpr auto ULTRA_LIGHT_COMPUTE = 3ull;		// number of threads
+	constexpr auto LIGHT_COMPUTE = 6ull;
+	constexpr auto MEDIUM_COMPUTE = 12ull;
 	constexpr auto FloatSquare(const Float& value) noexcept { return (value * value); }
 	template<typename T>
 	constexpr auto Clamp(const T& v, const T& lo, const T& hi) noexcept { return (v < lo) ? lo : (hi < v) ? hi : v; }

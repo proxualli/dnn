@@ -694,13 +694,29 @@ namespace dnn
 			}
 		}
 
+		void SwitchInplaceFwd(const bool enable)
+		{
+			if (enable)
+				for (auto& layer : Layers)
+				{
+					layer->Inputs = std::vector<Layer*>(layer->InputsInplaceFwd);
+					layer->InputLayer = layer->InputLayerInplaceFwd;
+				}
+			else
+				for (auto& layer : Layers)
+				{
+					layer->Inputs = std::vector<Layer*>(layer->InputsOriginal);
+					layer->InputLayer = layer->InputLayerOriginal;
+				}
+		}
+
 		void SwitchInplaceBwd(const bool enable)
 		{
 			if (enable)
 				for (auto& layer : Layers)
 				{
-					layer->Inputs = std::vector<Layer*>(layer->InputsInplace);
-					layer->InputLayer = layer->InputLayerInplace;
+					layer->Inputs = std::vector<Layer*>(layer->InputsInplaceBwd);
+					layer->InputLayer = layer->InputLayerInplaceBwd;
 					layer->SharesInput = layer->SharesInputInplace;
 				}
 			else
@@ -742,7 +758,7 @@ namespace dnn
 
 			for (auto& layer : Layers)
 				if (layer->Name != parentLayer->Name)
-					for (auto input : inplace ? layer->InputsInplace : layer->InputsOriginal)
+					for (auto input : inplace ? layer->InputsInplaceBwd : layer->InputsOriginal)
 						if (input->Name == parentLayer->Name)
 							outputs.push_back(layer.get());
 
@@ -756,13 +772,16 @@ namespace dnn
 
 			// determine SharesInputOriginal and SharesInput
 			for (auto& layer : Layers)
+			{
 				layer->SharesInput = false;
-			
+				layer->Outputs = GetLayerOutputs(layer.get());
+			}
+
 			auto unreferencedLayers = std::vector<Layer*>();
 
 			for (auto& layer : Layers)
 			{
-				auto outputsCount = GetLayerOutputs(layer.get()).size();
+				auto outputsCount = layer->Outputs.size();
 
 				if (outputsCount > 1)
 				{
@@ -805,7 +824,7 @@ namespace dnn
 						if (l->Name == layer->Name)
 							continue;
 
-						for (auto input : l->InputsInplace)
+						for (auto input : l->InputsInplaceBwd)
 						{
 							if (input->Name == layer->Name)
 							{
@@ -1028,7 +1047,7 @@ namespace dnn
 									Layers[i]->ForwardProp(BatchSize, true);
 									Layers[i]->fpropTime = timer.now() - timePoint;
 								}
-
+								
 								overflow = SampleIndex >= TrainOverflowCount;
 								CostFunctionBatch(State.load(), BatchSize, overflow, TrainSkipCount);
 								RecognizedBatch(State.load(), BatchSize, overflow, TrainSkipCount, SampleLabels);
@@ -1081,7 +1100,9 @@ namespace dnn
 					if (CheckTaskState())
 					{
 						State.store(States::Testing);
-#ifdef DNN_STOCHASTIC			
+#ifdef DNN_STOCHASTIC	
+
+						
 						if (BatchSize == 1)
 						{
 							for (SampleIndex = 0; SampleIndex < DataProv->TestingSamplesCount; SampleIndex++)
