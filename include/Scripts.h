@@ -1083,7 +1083,7 @@ namespace scripts
                 auto channels = DIV8(p.Width * 16);
 
                 net +=
-                    Convolution(1, "Input", channels, 3, 3, 1, 1, 1, 1) +
+                    Convolution(1, "Input", channels, 3, 3, 2, 2, 1, 1) +
                     BatchNormActivation(1, "C1", p.Activation) +
                     Convolution(2, "B1", channels, 1, 1, 1, 1, 0, 0) +
                     BatchNormActivation(2, "C2", p.Activation) +
