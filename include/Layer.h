@@ -225,38 +225,12 @@ namespace dnn
 		dnnl::memory::format_tag ChosenFormat;
 		std::mt19937 RandomEngine;
 
-		auto IsInplaceFwd(const LayerTypes layerType, const std::vector<Layer*>& inputs) const
-		{
-			if (UseInplace && (layerType == LayerTypes::Activation && inputs.size() == 1) && (inputs[0]->LayerType == LayerTypes::Convolution || inputs[0]->LayerType == LayerTypes::DepthwiseConvolution || inputs[0]->LayerType == LayerTypes::ConvolutionTranspose))
-				return true;
-			else
-				return false;
-		}
-
 		auto IsInplaceBwd(const LayerTypes layerType, const std::vector<Layer*>& inputs) const
 		{
 			if (UseInplace && (layerType == LayerTypes::Activation || layerType == LayerTypes::LayerNorm || std::string(magic_enum::enum_name<LayerTypes>(layerType)).find("BatchNorm", 0) != std::string::npos) && (inputs.size() == 1) && (inputs[0]->LayerType == LayerTypes::Convolution || inputs[0]->LayerType == LayerTypes::DepthwiseConvolution || inputs[0]->LayerType == LayerTypes::ConvolutionTranspose))
 				return true;
 			else
 				return false;
-		}
-
-		auto GetInplaceInputsFwd(const LayerTypes layerType, const std::vector<Layer*>& inputs) const
-		{
-			if (IsInplaceFwd(layerType, inputs))
-				return std::vector<Layer*>(inputs);
-			else
-			{
-				auto inputsInplace = std::vector<Layer*>();
-
-				if (inputs.size() > 0)
-				{
-					for (auto input : inputs)
-						inputsInplace.push_back(input->InplaceFwd ? input->InputLayerOriginal : input);
-				}
-
-				return inputsInplace;
-			}
 		}
 
 		auto GetInplaceInputsBwd(const LayerTypes layerType, const std::vector<Layer*>& inputs) const
@@ -295,12 +269,10 @@ namespace dnn
 		const UInt PadW;
 		const bool HasPadding;
 		std::vector<Layer*> Inputs;
-		std::vector<Layer*> Outputs;
+		//std::vector<Layer*> Outputs;
 		const std::vector<Layer*> InputsOriginal;
-		const std::vector<Layer*> InputsInplaceFwd;
 		const std::vector<Layer*> InputsInplaceBwd;
 		Layer* InputLayer;
-		Layer* InputLayerInplaceFwd;
 		Layer* InputLayerInplaceBwd;
 		Layer* InputLayerOriginal;
 		bool LayerBeforeCost;
@@ -312,7 +284,6 @@ namespace dnn
 		const bool HasBias;
 		const bool HasWeights;
 		const bool InplaceBwd;
-		const bool InplaceFwd;
 		bool UseDefaultParameters;
 		Fillers WeightsFiller;
 		FillerModes WeightsFillerMode;
@@ -369,13 +340,10 @@ namespace dnn
 			PadW(padW),
 			Inputs(std::vector<Layer*>(inputs)),						// Inputs is switched between non-inplace (forward) and inplace (backprop) during training 
 			InputsOriginal(std::vector<Layer*>(inputs)),				// InputsOriginal = the non-inplace inputs 
-			InputsInplaceFwd(GetInplaceInputsFwd(layerType, inputs)),	// InputsInplaceFwd = the inplace inputs forward prop
 			InputsInplaceBwd(GetInplaceInputsBwd(layerType, inputs)),	// InputsInplaceBwd = the inplace inputs backward prop
 			InputLayer(inputs.size() > 0 ? inputs[0] : nullptr),
 			InputLayerOriginal(inputs.size() > 0 ? inputs[0] : nullptr),
-			InputLayerInplaceFwd(GetInplaceInputsFwd(layerType, inputs).size() > 0 ? GetInplaceInputsFwd(layerType, inputs)[0] : nullptr),
 			InputLayerInplaceBwd(GetInplaceInputsBwd(layerType, inputs).size() > 0 ? GetInplaceInputsBwd(layerType, inputs)[0] : nullptr),
-			InplaceFwd(IsInplaceFwd(layerType, inputs)),
 			InplaceBwd(IsInplaceBwd(layerType, inputs)),
 			Scaling(scaling),
 			HasBias(hasBias && biasCount > 0),

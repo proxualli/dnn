@@ -496,6 +496,8 @@ namespace dnn
 	template<typename T>
 	static auto UniformInt(const T min, const T max)
 	{
+		static_assert(std::is_integral<T>::value, "Only integral type supported in UniformInt function");
+
 		if (min > max)
 			throw std::invalid_argument("Parameter out of range in UniformInt function");
 
@@ -754,7 +756,7 @@ namespace dnn
 		// The sentry object performs various tasks,
 		// such as thread synchronization and updating the stream state.
 
-		auto se = std::istream::sentry(is, true);
+		std::istream::sentry se(is, true);
 		auto sb = is.rdbuf();
 
 		for (;;) 

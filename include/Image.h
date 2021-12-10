@@ -145,7 +145,7 @@ namespace dnn
 		{
 			Image dstImage(image);
 
-			auto operation = UniformInt<int>(0, 24);
+			const auto operation = UniformInt<UInt>(0, 24);
 
 			switch (operation)
 			{
@@ -620,7 +620,7 @@ namespace dnn
 
 			srcImage.RGBtoHSL();
 
-			const auto shift = Float(Bernoulli<bool>() ? UniformInt<int>( -int(angle), int(angle)) : 0);
+			const auto shift = Float(Bernoulli<bool>() ? static_cast<int>(UniformInt<UInt>(0, 2 * angle)) - static_cast<int>(angle) : 0);
 
 			for (auto d = 0ull; d < image.Depth; d++)
 				for (auto h = 0ull; h < image.Height; h++)

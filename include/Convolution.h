@@ -127,99 +127,11 @@ namespace dnn
 					dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(C), dnnl::memory::dim(InputLayer->C), dnnl::memory::dim(KernelH), dnnl::memory::dim(KernelW) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::any),
 					dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::any) });
 			}
-
-			// add post-ops
-			dnnl::post_ops po;
-			dnnl::primitive_attr attr;
-			/*
-			if (UseInplace && Outputs.size() == 1 && Outputs[0]->InplaceFwd && Outputs[0]->LayerType == LayerTypes::Activation)
-			{
-				Activation* layer = dynamic_cast<Activation*>(Outputs[0]);
-				dnnl::algorithm algorithm;
-
-				switch (layer->ActivationFunction)
-				{
-				case Activations::TanhExp:
-					break;
-
-				case Activations::Abs:
-					algorithm = dnnl::algorithm::eltwise_abs;
-					break;
-				case Activations::Clip:
-					algorithm = dnnl::algorithm::eltwise_clip;
-					break;
-				case Activations::ClipV2:
-					algorithm = dnnl::algorithm::eltwise_clip_v2;
-					break;
-				case Activations::BoundedRelu:
-					algorithm = dnnl::algorithm::eltwise_bounded_relu;
-					break;
-				case Activations::Elu:
-					algorithm = dnnl::algorithm::eltwise_elu;
-					break;
-				case Activations::Exp:
-					algorithm = dnnl::algorithm::eltwise_exp;
-					break;
-				case Activations::Gelu:
-					algorithm = dnnl::algorithm::eltwise_gelu;
-					break;
-				case Activations::GeluErf:
-					algorithm = dnnl::algorithm::eltwise_gelu_erf;
-					break;
-				case Activations::HardSwish:
-					algorithm = dnnl::algorithm::eltwise_hardswish;
-					break;
-				case Activations::Linear:
-					algorithm = dnnl::algorithm::eltwise_linear;
-					break;
-				case Activations::Log:
-					algorithm = dnnl::algorithm::eltwise_log;
-					break;
-				case Activations::HardLogistic:
-				case Activations::Logistic:
-					algorithm = dnnl::algorithm::eltwise_logistic;
-					break;
-				case Activations::LogLogistic:
-					algorithm = dnnl::algorithm::eltwise_logsigmoid;
-					break;
-				case Activations::Mish:
-					algorithm = dnnl::algorithm::eltwise_mish;
-					break;
-				case Activations::Pow:
-					algorithm = dnnl::algorithm::eltwise_pow;
-					break;
-				case Activations::Relu:
-					algorithm = dnnl::algorithm::eltwise_relu;
-					break;
-				case Activations::Round:
-					algorithm = dnnl::algorithm::eltwise_round;
-					break;
-				case Activations::SoftRelu:
-					algorithm = dnnl::algorithm::eltwise_soft_relu;
-					break;
-				case Activations::Sqrt:
-					algorithm = dnnl::algorithm::eltwise_sqrt;
-					break;
-				case Activations::Square:
-					algorithm = dnnl::algorithm::eltwise_square;
-					break;
-				case Activations::Swish:
-					algorithm = dnnl::algorithm::eltwise_swish;
-					break;
-				case Activations::Tanh:
-					algorithm = dnnl::algorithm::eltwise_tanh;
-					break;
-				}
-
-				po.append_eltwise(1.0f, algorithm, layer->Alpha, layer->Beta);
-				attr.set_post_ops(po);
-			}
-			*/
-
+						
 			fwdDesc = std::make_unique<dnnl::convolution_forward::primitive_desc>(
 				dnnl::convolution_forward::primitive_desc(HasBias ?
 					dnnl::convolution_forward::desc(dnnl::prop_kind::forward, dnnl::algorithm::convolution_auto, memDesc[0], memDesc[2], memDesc[3], memDesc[1], Strides, Dilates, Padding, Padding) :
-					dnnl::convolution_forward::desc(dnnl::prop_kind::forward, dnnl::algorithm::convolution_auto, memDesc[0], memDesc[2], memDesc[1], Strides, Dilates, Padding, Padding), attr, Device.engine));
+					dnnl::convolution_forward::desc(dnnl::prop_kind::forward, dnnl::algorithm::convolution_auto, memDesc[0], memDesc[2], memDesc[1], Strides, Dilates, Padding, Padding), Device.engine));
 			
 			bwdWeightsDesc = std::make_unique<dnnl::convolution_backward_weights::primitive_desc>(dnnl::convolution_backward_weights::primitive_desc(HasBias ?
 				dnnl::convolution_backward_weights::desc(dnnl::algorithm::convolution_auto, memDesc[0], memDesc[2], memDesc[3], memDesc[1], Strides, Dilates, Padding, Padding) :

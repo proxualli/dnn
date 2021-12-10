@@ -694,22 +694,6 @@ namespace dnn
 			}
 		}
 
-		void SwitchInplaceFwd(const bool enable)
-		{
-			if (enable)
-				for (auto& layer : Layers)
-				{
-					layer->Inputs = std::vector<Layer*>(layer->InputsInplaceFwd);
-					layer->InputLayer = layer->InputLayerInplaceFwd;
-				}
-			else
-				for (auto& layer : Layers)
-				{
-					layer->Inputs = std::vector<Layer*>(layer->InputsOriginal);
-					layer->InputLayer = layer->InputLayerOriginal;
-				}
-		}
-
 		void SwitchInplaceBwd(const bool enable)
 		{
 			if (enable)
@@ -772,16 +756,13 @@ namespace dnn
 
 			// determine SharesInputOriginal and SharesInput
 			for (auto& layer : Layers)
-			{
 				layer->SharesInput = false;
-				layer->Outputs = GetLayerOutputs(layer.get());
-			}
-
+			
 			auto unreferencedLayers = std::vector<Layer*>();
 
 			for (auto& layer : Layers)
 			{
-				auto outputsCount = layer->Outputs.size();
+				auto outputsCount = GetLayerOutputs(layer.get()).size();
 
 				if (outputsCount > 1)
 				{
