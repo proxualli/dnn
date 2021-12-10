@@ -65,6 +65,7 @@ namespace scripts
     {
         FRelu = 1,
         HardSwish = 10,
+        HardLogistic =  11,
         Mish = 16,
         Relu = 19,
         Swish = 25,
@@ -535,6 +536,13 @@ namespace scripts
                 "Inputs=" + inputs + nwl + nwl;
         }
 
+        static std::string LogSoftmax(std::string inputs, std::string group = "", std::string prefix = "LSM")
+        {
+            return "[" + group + prefix + "]" + nwl +
+                "Type=LogSoftmax" + nwl +
+                "Inputs=" + inputs + nwl + nwl;
+        }
+
         static std::string Activation(UInt id, std::string inputs, std::string activation = "Relu", std::string group = "", std::string prefix = "ACT")
         {
             return "[" + group + prefix + std::to_string(id) + "]" + nwl +
@@ -568,11 +576,11 @@ namespace scripts
                     BatchNormActivation(id, In("C", id), activation) +
 
                     GlobalAvgPooling(In("B", id), group) +
-                    Convolution(1, group + std::string("GAP"), DIV8(hiddenDim / expandRatio), 1, 1, 1, 1, 0, 0, true, group) +
-                    Activation(1, group + std::string("C1"), to_string(activation == scripts::Activations::FRelu ? scripts::Activations::HardSwish : activation), group) +
-                    Convolution(2, group + std::string("ACT1"), hiddenDim, 1, 1, 1, 1, 0, 0, true, group) +
-                    Activation(2, group + std::string("C2"), std::string("Logistic"), group) +
-                    ChannelMultiply(In("B", id) + std::string(",") + group + std::string("ACT2"), group) +
+                    Convolution(1, group + std::string("GAP"), DIV8(hiddenDim / expandRatio), 1, 1, 1, 1, 0, 0, false, group) +
+                    BatchNormActivation(1, group + std::string("C1"), (activation == scripts::Activations::FRelu ? scripts::Activations::HardSwish : activation), group) +
+                    Convolution(2, group + std::string("B1"), hiddenDim, 1, 1, 1, 1, 0, 0, false, group) +
+                    BatchNormActivation(2, group + std::string("C2"), scripts::Activations::HardLogistic, group) +
+                    ChannelMultiply(In("B", id) + std::string(",") + group + std::string("B2"), group) +
 
                     Convolution(id + 1, group + std::string("CM"), DIV8(outputChannels), 1, 1, 1, 1, 0, 0) +
                     BatchNorm(id + 1, In("C", id + 1)));
@@ -612,11 +620,11 @@ namespace scripts
                     BatchNormActivation(id + 1, In("DC", id + 1), activation) +
                     
                     GlobalAvgPooling(In("B", id + 1), group) +
-                    Convolution(1, group + std::string("GAP"), DIV8(hiddenDim / expandRatio), 1, 1, 1, 1, 0, 0, true, group) +
-                    Activation(1, group + std::string("C1"), to_string(activation == scripts::Activations::FRelu ? scripts::Activations::HardSwish : activation), group) +
-                    Convolution(2, group + std::string("ACT1"), hiddenDim, 1, 1, 1, 1, 0, 0, true, group) +
-                    Activation(2, group + std::string("C2"), std::string("Logistic"), group) +
-                    ChannelMultiply(In("B", id + 1) + std::string(",") + group + std::string("ACT2"), group) +
+                    Convolution(1, group + std::string("GAP"), DIV8(hiddenDim / expandRatio), 1, 1, 1, 1, 0, 0, false, group) +
+                    BatchNormActivation(1, group + std::string("C1"), (activation == scripts::Activations::FRelu ? scripts::Activations::HardSwish : activation), group) +
+                    Convolution(2, group + std::string("B1"), hiddenDim, 1, 1, 1, 1, 0, 0, false, group) +
+                    BatchNormActivation(2, group + std::string("C2"), scripts::Activations::HardLogistic, group) +
+                    ChannelMultiply(In("B", id + 1) + std::string(",") + group + std::string("B2"), group) +
 
                     Convolution(id + 2, group + std::string("CM"), DIV8(outputChannels), 1, 1, 1, 1, 0, 0) +
                     BatchNorm(id + 2, In("C", id + 2)));
@@ -664,11 +672,11 @@ namespace scripts
                 auto group = In("SE", id + 3);
                 auto strSE =
                     se ? GlobalAvgPooling(In("B", id + 3), group) +
-                    Convolution(1, group + std::string("GAP"), DIV8(channels / 4), 1, 1, 1, 1, 0, 0, true, group) +
-                    Activation(1, group + std::string("C1"), to_string(activation == scripts::Activations::FRelu ? scripts::Activations::HardSwish : activation), group) +
-                    Convolution(2, group + std::string("ACT1"), channels, 1, 1, 1, 1, 0, 0, true, group) +
-                    Activation(2, group + std::string("C2"), std::string("Logistic"), group) +
-                    ChannelMultiply(In("B", id + 3) + std::string(",") + group + std::string("ACT2"), group) +
+                    Convolution(1, group + std::string("GAP"), DIV8(channels / 4), 1, 1, 1, 1, 0, 0, false, group) +
+                    BatchNormActivation(1, group + std::string("C1"), (activation == scripts::Activations::FRelu ? scripts::Activations::HardSwish : activation), group) +
+                    Convolution(2, group + std::string("B1"), channels, 1, 1, 1, 1, 0, 0, false, group) +
+                    BatchNormActivation(2, group + std::string("C2"), scripts::Activations::HardLogistic, group) +
+                    ChannelMultiply(In("B", id + 3) + std::string(",") + group + std::string("B2"), group) +
                     Concat(n + 1, In("LCS", n) + std::string(",") + group + std::string("CM")) :
                     Concat(n + 1, In("LCS", n) + std::string(",") + In("B", id + 3));
 
@@ -815,8 +823,8 @@ namespace scripts
                     Convolution(C, In("CC", CC), p.Classes(), 1, 1, 1, 1, 0, 0) +
                     BatchNorm(C + 1, In("C", C)) +
                     GlobalAvgPooling(In("B", C + 1)) +
-                    LogSoftmax(1, "GAP") +
-                    Cost(In("LSM", 1), p.Dataset, p.Classes(), "CategoricalCrossEntropy", 0.125f);
+                    LogSoftmax("GAP") +
+                    Cost("LSM", p.Dataset, p.Classes(), "CategoricalCrossEntropy", 0.125f);
             }
             break;
 
@@ -856,8 +864,8 @@ namespace scripts
                     BatchNormActivation(C, In("C", C), p.Activation) +
                     GlobalAvgPooling(In("B", C)) +
                     Dense(1, "GAP", p.Classes(), true, "", "DS", std::string("Uniform(") + std::to_string(Float(1.0) / (Float)std::sqrt((double)p.Classes())) + std::string(")")) +
-                    LogSoftmax(1, In("DS", 1)) +
-                    Cost(In("LSM", 1), p.Dataset, p.Classes(), "CategoricalCrossEntropy", 0.125f);
+                    LogSoftmax(In("DS", 1)) +
+                    Cost("LSM", p.Dataset, p.Classes(), "CategoricalCrossEntropy", 0.125f);
             }
             break;
 
@@ -950,8 +958,8 @@ namespace scripts
                     Convolution(C, In("B", C), p.Classes(), 1, 1, 1, 1, 0, 0) +
                     BatchNorm(C + 1, In("C", C)) +
                     GlobalAvgPooling(In("B", C + 1)) +
-                    LogSoftmax(1, "GAP") +
-                    Cost(In("LSM", 1), p.Dataset, p.Classes(), "CategoricalCrossEntropy", 0.125f);
+                    LogSoftmax("GAP") +
+                    Cost("LSM", p.Dataset, p.Classes(), "CategoricalCrossEntropy", 0.125f);
             }
             break;
 
@@ -1065,8 +1073,8 @@ namespace scripts
                     Convolution(C, In("B", C), p.Classes(), 1, 1, 1, 1, 0, 0) +
                     BatchNorm(C + 1, In("C", C)) +
                     GlobalAvgPooling(In("B", C + 1)) +
-                    LogSoftmax(1, "GAP") +
-                    Cost(In("LSM", 1), p.Dataset, p.Classes(), "CategoricalCrossEntropy", 0.125f);
+                    LogSoftmax("GAP") +
+                    Cost("LSM", p.Dataset, p.Classes(), "CategoricalCrossEntropy", 0.125f);
             }
             break;
 
@@ -1109,8 +1117,8 @@ namespace scripts
                     Convolution(C, In("CC", A), p.Classes(), 1, 1, 1, 1, 0, 0) +
                     BatchNorm(C + 1, In("C", C)) +
                     GlobalAvgPooling(In("B", C + 1)) +
-                    LogSoftmax(1, "GAP") +
-                    Cost(In("LSM", 1), p.Dataset, p.Classes(), "CategoricalCrossEntropy", 0.125f);
+                    LogSoftmax("GAP") +
+                    Cost("LSM", p.Dataset, p.Classes(), "CategoricalCrossEntropy", 0.125f);
             }
             break;
 
