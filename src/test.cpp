@@ -246,6 +246,8 @@ int main(int argc, char* argv[])
     p.ChannelZeroPad = false;
     p.EfficientNet = { { 1, 24, 2, 1, false }, { 4, 48, 4, 2, false }, { 4, 64, 4, 2, false }, { 4, 128, 6, 2, true }, { 6, 160, 9, 1, true }, { 6, 256, 15, 2, true } };
     p.ShuffleNet = { { 5, 3, 1, 2, false }, { 6, 3, 1, 2, true }, { 7, 3, 1, 2, true }, { 8, 3, 1, 2, true } };
+    p.WeightsFiller = scripts::Fillers::HeNormal;
+    p.WeightsFillerMode = scripts::FillerModes::In;
 
     auto model = scripts::ScriptsCatalog::Generate(p);
 
