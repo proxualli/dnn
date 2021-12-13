@@ -43,6 +43,13 @@ namespace dnn
 			PersistWeightsMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ 2, dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::nc));
 		}
 				
+		void RecalculateHW() final override
+		{
+			H = InputLayer->H;
+			W = InputLayer->W;
+			Layer::RecalculateHW();
+		}
+
 		bool Lockable() const final override
 		{
 			return WeightCount > 0 && Scaling;

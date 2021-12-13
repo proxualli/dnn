@@ -27,6 +27,13 @@ namespace dnn
 			assert(Groups > 0 && Groups <= C);
 		}
 
+		void RecalculateHW() final override
+		{
+			H = InputLayer->H;
+			W = InputLayer->W;
+			Layer::RecalculateHW();
+		}
+
 		std::string GetDescription() const final override
 		{
 			auto description = GetDescriptionHeader();

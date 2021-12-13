@@ -822,6 +822,7 @@ namespace dnn
 					if (values[2] < 28 || values[2] > 4096)
 					{
 						msg = CheckMsg(line, col, "Third Dim (Width) value must be in the range [28-4096].");
+						goto FAIL;
 					}
 
 					model->SampleC = values[0];
@@ -2609,7 +2610,7 @@ namespace dnn
 			}
 			else
 				model->ResetWeights();
-
+			
 			std::setlocale(LC_ALL, userLocale);
             
 			msg = CheckMsg(0, 0, "No issues found", false);	// All checks have passed
@@ -2645,7 +2646,7 @@ namespace dnn
 			{
 
 			}
-
+			
 			return model;
 		}
 

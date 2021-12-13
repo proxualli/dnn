@@ -34,6 +34,13 @@ namespace dnn
 			Scales = std::vector<Float>(Inputs.size(), Scale);
 		}
 
+		void RecalculateHW() final override
+		{
+			H = InputLayer->H;
+			W = InputLayer->W;
+			Layer::RecalculateHW();
+		}
+
 		std::string GetDescription() const final override
 		{
 			auto description = GetDescriptionHeader();

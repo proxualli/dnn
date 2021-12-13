@@ -27,12 +27,19 @@ namespace dnn
 		const Float FactorW;
 
 		Resampling(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const Algorithms algorithm, const Float factorH, const Float factorW) :
-			Layer(device, format, name, LayerTypes::Resampling, 0, 0, inputs[0]->C, inputs[0]->D, static_cast<UInt>(inputs[0]->H* double(factorH)), static_cast<UInt>(inputs[0]->W* double(factorW)), 0, 0, 0, inputs),
+			Layer(device, format, name, LayerTypes::Resampling, 0, 0, inputs[0]->C, inputs[0]->D, static_cast<UInt>(inputs[0]->H * double(factorH)), static_cast<UInt>(inputs[0]->W * double(factorW)), 0, 0, 0, inputs),
 			Algorithm(algorithm),
 			FactorH(factorH),
 			FactorW(factorW)
 		{
 			assert(Inputs.size() == 1);
+		}
+
+		void RecalculateHW() final override
+		{
+			H = static_cast<UInt>(InputLayer->H * double(FactorH));
+			W = static_cast<UInt>(InputLayer->W * double(FactorW));
+			Layer::RecalculateHW();
 		}
 
 		std::string GetDescription() const final override

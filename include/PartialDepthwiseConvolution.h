@@ -39,7 +39,7 @@ namespace dnn
 		const UInt DilationKernelW;
 				
 		PartialDepthwiseConvolution(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const UInt group, const UInt groups, const UInt kernelH, const UInt kernelW, const UInt strideH = 1, const UInt strideW = 1, const UInt dilationH = 1, const UInt dilationW = 1, const UInt padH = 0, const UInt padW = 0, const UInt multiplier = 1, const bool hasBias = true) :
-			Layer(device, format, name, LayerTypes::PartialDepthwiseConvolution, multiplier* inputs[0]->C / groups * kernelH * kernelW, multiplier* inputs[0]->C / groups, multiplier* inputs[0]->C / groups, inputs[0]->D, ((((inputs[0]->H - (1 + (kernelH - 1) * dilationH)) + (padH * 2)) / strideH) + 1), ((((inputs[0]->W - (1 + (kernelW - 1) * dilationW)) + (padW * 2)) / strideW) + 1), 0, padH, padW, inputs, hasBias),
+			Layer(device, format, name, LayerTypes::PartialDepthwiseConvolution, multiplier* inputs[0]->C / groups * kernelH * kernelW, multiplier * inputs[0]->C / groups, multiplier * inputs[0]->C / groups, inputs[0]->D, ((((inputs[0]->H - (1 + (kernelH - 1) * dilationH)) + (padH * 2)) / strideH) + 1), ((((inputs[0]->W - (1 + (kernelW - 1) * dilationW)) + (padW * 2)) / strideW) + 1), 0, padH, padW, inputs, hasBias),
 			Group(group),
 			Groups(groups),
 			Multiplier(multiplier),
@@ -67,6 +67,13 @@ namespace dnn
 
 			PersistWeightsMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(InputLayer->C / Groups), dnnl::memory::dim(Multiplier), dnnl::memory::dim(1), dnnl::memory::dim(KernelH), dnnl::memory::dim(KernelW) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::goihw));
 			WeightsMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(InputLayer->C / Groups), dnnl::memory::dim(Multiplier), dnnl::memory::dim(1), dnnl::memory::dim(KernelH), dnnl::memory::dim(KernelW) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::goihw));
+		}
+
+		void RecalculateHW() final override
+		{
+			H = StrideH * ((((InputLayer->H - DilationKernelH) + (Padding[0] * 2)) / StrideH) + 1);
+			W = StrideW * ((((InputLayer->W - DilationKernelW) + (Padding[1] * 2)) / StrideW) + 1);
+			Layer::RecalculateHW();
 		}
 
 		std::string GetDescription() const final override

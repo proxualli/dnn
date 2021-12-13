@@ -31,6 +31,8 @@ namespace dnn
 		Float L2Penalty;
 		Float Eps;
 		UInt BatchSize;
+		UInt Height;
+		UInt Width;
 		UInt Cycles;
 		UInt Epochs;
 		UInt EpochMultiplier;
@@ -60,6 +62,8 @@ namespace dnn
 			L2Penalty(Float(0.0005)),
 			Eps(Float(1E-08)),
 			BatchSize(1),
+			Height(32),
+			Width(32),
 			Cycles(1),
 			Epochs(200),
 			EpochMultiplier(1),
@@ -84,7 +88,7 @@ namespace dnn
 		{
 		}
 
-		TrainingRate(const Optimizers optimizer, const Float momentum, const Float beta2, const Float l2Penalty, const Float eps, const UInt batchSize, const UInt cycles, const UInt epochs, const UInt epochMultiplier, const Float maximumRate, const Float minimumRate, const Float finalRate, const Float gamma, const UInt decayAfterEpochs, const Float decayFactor, const bool horizontalFlip, const bool verticalFlip, const Float dropout, const Float cutout, const bool cutMix, const Float autoAugment, const Float colorCast, const UInt colorAngle, const Float distortion, const Interpolations interpolation, const Float scaling, const Float rotation) :
+		TrainingRate(const Optimizers optimizer, const Float momentum, const Float beta2, const Float l2Penalty, const Float eps, const UInt batchSize, const UInt height, const UInt width, const UInt cycles, const UInt epochs, const UInt epochMultiplier, const Float maximumRate, const Float minimumRate, const Float finalRate, const Float gamma, const UInt decayAfterEpochs, const Float decayFactor, const bool horizontalFlip, const bool verticalFlip, const Float dropout, const Float cutout, const bool cutMix, const Float autoAugment, const Float colorCast, const UInt colorAngle, const Float distortion, const Interpolations interpolation, const Float scaling, const Float rotation) :
 			Optimizer(optimizer),
 			Momentum(momentum),
 			Beta2(beta2),
@@ -93,6 +97,8 @@ namespace dnn
 			BatchSize(batchSize),
 			Cycles(cycles),
 			Epochs(epochs),
+			Height(height),
+			Width(width),
 			EpochMultiplier(epochMultiplier),
 			MaximumRate(maximumRate),
 			MinimumRate(minimumRate),
@@ -258,12 +264,12 @@ namespace dnn
 		const UInt BiasCount;
 		const UInt C;
 		const UInt D;
-		const UInt H;
-		const UInt W;
-		const UInt HW;
-		const UInt CDHW;
+		UInt H;
+		UInt W;
+		UInt HW;
+		UInt CDHW;
 		const UInt PaddedC;
-		const UInt PaddedCDHW;
+		UInt PaddedCDHW;
 		const UInt PadD;
 		const UInt PadH;
 		const UInt PadW;
@@ -397,6 +403,13 @@ namespace dnn
 
 		virtual ~Layer() = default;
 		
+		virtual void RecalculateHW()
+		{
+			HW = H * W;
+			CDHW = C * D * H * W;
+			PaddedCDHW = LayerType == LayerTypes::Input ? C : PaddedC * D * H * W;
+		}
+
 		void SetParameters(const bool useDefaults, const Fillers weightsFiller, const FillerModes weightsFillerMode, const Float weightsGain, const Float weightsScale, const Float weightsLRM, const Float weightsWDM, const Fillers biasesFiller, const FillerModes biasesFillerMode, const Float biasesGain, const Float biasesScale, const Float biasesLRM, const Float biasesWDM)
 		{
 			UseDefaultParameters = useDefaults;

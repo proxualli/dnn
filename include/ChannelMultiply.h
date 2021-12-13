@@ -37,6 +37,13 @@ namespace dnn
 			assert(Inputs[0]->W != 1 || Inputs[1]->W != 1);
 		}
 
+		void RecalculateHW() final override
+		{
+			H = Inputs[GetFirst(Inputs)]->H;
+			W = Inputs[GetFirst(Inputs)]->W;
+			Layer::RecalculateHW();
+		}
+
 		std::string GetDescription() const final override
 		{
 			return GetDescriptionHeader();

@@ -39,7 +39,7 @@ namespace dnn
 		const UInt DilationKernelW;
 
 		ConvolutionTranspose(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const UInt c, const UInt kernelH, const UInt kernelW, const UInt strideH, const UInt strideW, const UInt dilationH, const UInt dilationW, const UInt padH, const UInt padW, const bool hasBias) :
-			Layer(device, format, name, LayerTypes::ConvolutionTranspose, inputs[0]->C * c * kernelH * kernelW, c, c, inputs[0]->D, strideH* ((inputs[0]->H - 1) + (1 + (kernelH - 1) * dilationH) - (padH * 2)), strideW* ((inputs[0]->W - 1) + (1 + (kernelW - 1) * dilationW) - (padW * 2)), 0, padH, padW, inputs, hasBias),
+			Layer(device, format, name, LayerTypes::ConvolutionTranspose, inputs[0]->C * c * kernelH * kernelW, c, c, inputs[0]->D, strideH * ((inputs[0]->H - 1) + (1 + (kernelH - 1) * dilationH) - (padH * 2)), strideW * ((inputs[0]->W - 1) + (1 + (kernelW - 1) * dilationW) - (padW * 2)), 0, padH, padW, inputs, hasBias),
 			KernelH(kernelH),
 			KernelW(kernelW),
 			StrideH(strideH),
@@ -60,6 +60,13 @@ namespace dnn
 
 			PersistWeightsMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(C), dnnl::memory::dim(InputLayer->C), dnnl::memory::dim(KernelH), dnnl::memory::dim(KernelW) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::oihw));
 			WeightsMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(C), dnnl::memory::dim(InputLayer->C), dnnl::memory::dim(KernelH), dnnl::memory::dim(KernelW) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::oihw));
+		}
+
+		void RecalculateHW() final override
+		{
+			H = StrideH * ((InputLayer->H - 1) + DilationKernelH - (Padding[0] * 2));
+			W = StrideW * ((InputLayer->W - 1) + DilationKernelW - (Padding[1] * 2));
+			Layer::RecalculateHW();
 		}
 
 		std::string GetDescription() const final override

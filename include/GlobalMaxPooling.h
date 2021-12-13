@@ -6,8 +6,8 @@ namespace dnn
 	class GlobalMaxPooling final : public Layer
 	{
 	private:
-		const dnnl::memory::dims Kernel;
-		const dnnl::memory::dims Stride;
+		dnnl::memory::dims Kernel;
+		dnnl::memory::dims Stride;
 		const dnnl::memory::dims Padding;
 		std::unique_ptr<dnnl::memory> WorkspaceMemory;
 		std::unique_ptr<dnnl::pooling_forward::primitive_desc> fwdDesc;
@@ -22,9 +22,9 @@ namespace dnn
 		bool reorderBwdDiffSrc;
 
 	public:
-		const UInt KernelH;
-		const UInt KernelW;
-		const Float Scale;
+		UInt KernelH;
+		UInt KernelW;
+		Float Scale;
 
 		GlobalMaxPooling(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs) :
 			Layer(device, format, name, LayerTypes::GlobalMaxPooling, 0, 0, inputs[0]->C, 1, 1, 1, 0, 0, 0, inputs),
@@ -38,6 +38,15 @@ namespace dnn
 			reorderBwdDiffSrc(false)
 		{
 			assert(Inputs.size() == 1);
+		}
+
+		void RecalculateHW() final override
+		{
+			KernelH = InputLayer->H;
+			KernelW = InputLayer->W;
+			Scale = Float(1) / InputLayer->H * InputLayer->W;
+			Kernel = dnnl::memory::dims({ dnnl::memory::dim(InputLayer->H), dnnl::memory::dim(InputLayer->W) });
+			Stride = dnnl::memory::dims({ dnnl::memory::dim(InputLayer->H) , dnnl::memory::dim(InputLayer->W) });
 		}
 
 		std::string GetDescription() const final override

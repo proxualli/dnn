@@ -72,6 +72,13 @@ namespace dnn
 			}
 		}
 
+		void RecalculateHW() final override
+		{
+			H = (((InputLayer->H - (1 + (KernelH - 1) * DilationH)) + (Padding[0] * 2)) / StrideH) + 1;
+			W = (((InputLayer->W - (1 + (KernelW - 1) * DilationW)) + (Padding[1] * 2)) / StrideW) + 1;
+			Layer::RecalculateHW();
+		}
+
 		std::string GetDescription() const final override
 		{
 			auto description = GetDescriptionHeader();

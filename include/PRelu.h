@@ -36,6 +36,13 @@ namespace dnn
 			WeightsMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ 1, dnnl::memory::dim(C), 1, 1 }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::nchw));
 		}
 
+		void RecalculateHW() final override
+		{
+			H = InputLayer->H;
+			W = InputLayer->W;
+			Layer::RecalculateHW();
+		}
+
 		std::string GetDescription() const final override
 		{
 			auto description = GetDescriptionHeader();
