@@ -910,7 +910,7 @@ namespace dnn
 						return;
 					}
 				std::cout << std::string("Memory required: ") << std::to_string(GetNeuronsSize(CurrentTrainingRate.BatchSize - BatchSize) / 1024 / 1024) << " MB with BatchSize " << std::to_string(CurrentTrainingRate.BatchSize) << std::endl << std::endl;
-				ChangeResolution(CurrentTrainingRate.Height, CurrentTrainingRate.Width, CurrentTrainingRate.BatchSize);
+				ChangeResolution(CurrentTrainingRate.BatchSize, CurrentTrainingRate.Height, CurrentTrainingRate.Width);
 
 				auto learningRateEpochs = CurrentTrainingRate.Epochs;
 				auto learningRateIndex = 0ull;
@@ -961,7 +961,7 @@ namespace dnn
 
 						if (height != CurrentTrainingRate.Height || width != CurrentTrainingRate.Width || BatchSize != CurrentTrainingRate.BatchSize)
 						{
-							ChangeResolution(CurrentTrainingRate.Height, CurrentTrainingRate.Width, CurrentTrainingRate.BatchSize);
+							ChangeResolution(CurrentTrainingRate.BatchSize, CurrentTrainingRate.Height, CurrentTrainingRate.Width);
 							height = CurrentTrainingRate.Height;
 							width = CurrentTrainingRate.Width;
 						}
