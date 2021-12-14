@@ -400,7 +400,7 @@ namespace dnn
 	typedef AlignedArray<Byte, 64ull> ByteArray;
 	typedef std::vector<Float, AlignedAllocator<Float, 64ull>> FloatVector;
 	//constexpr bool IS_LITTLE_ENDIAN = std::endian::native == std::endian::little;
-	constexpr auto NEURONS_LIMIT = Float(1000);		// limit for all the neurons and derivative [-NEURONS_LIMIT,NEURONS_LIMIT]
+	constexpr auto NEURONS_LIMIT = Float(10000);		// limit for all the neurons and derivative [-NEURONS_LIMIT,NEURONS_LIMIT]
 	constexpr auto WEIGHTS_LIMIT = Float(100);		// limit for all the weights and biases [-WEIGHTS_LIMIT,WEIGHTS_LIMIT]
 	
 	constexpr auto FloatSquare(const Float& value) noexcept { return (value * value); }
