@@ -337,6 +337,7 @@ namespace dnn
 #ifdef DNN_STOCHASTIC
 			}
 #endif
+
 #ifdef DNN_LEAN
 			ReleaseGradient();
 #endif // DNN_LEAN

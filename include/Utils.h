@@ -131,28 +131,63 @@ namespace dnn
 	constexpr auto DivUp(const UInt& c) noexcept { return (((c - 1) / VectorSize) + 1) * VectorSize; }
 	constexpr auto IsPlainDataFmt(const dnnl::memory::desc& md) noexcept { return md.data.format_kind == dnnl_blocked && md.data.format_desc.blocking.inner_nblks == 0; }
 	constexpr auto IsBlockedDataFmt(const dnnl::memory::desc& md) noexcept { return md.data.format_kind == dnnl_blocked && md.data.format_desc.blocking.inner_nblks == 1 && md.data.format_desc.blocking.inner_idxs[0] == 1 && (md.data.format_desc.blocking.inner_blks[0] == 4 || md.data.format_desc.blocking.inner_blks[0] == 8 || md.data.format_desc.blocking.inner_blks[0] == 16); }
-	constexpr auto PlainFmt = dnnl::memory::format_tag::nchw;
-	constexpr auto GetDataFmt(const dnnl::memory::desc& md) noexcept
+	constexpr auto PlainFmt = dnnl::memory::format_tag::nchw; // equals dnnl::memory::format_tag::abcd
+	constexpr auto GetDataFmt(const dnnl::memory::desc& md)
 	{
 		if (md.data.format_kind == dnnl_blocked)
 		{
-			if (md.data.format_desc.blocking.inner_nblks == 0)
-				return PlainFmt;
-			else
-				if (md.data.format_desc.blocking.inner_nblks == 1 && md.data.format_desc.blocking.inner_idxs[0] == 1)
+			switch (md.data.ndims)
+			{
+			case 1:
+				if (md.data.format_desc.blocking.inner_nblks == 0)
+					return dnnl::memory::format_tag::a;
+				else
+					throw std::invalid_argument("Unsupported format in GetDataFmt function");
+				break;
+			case 2:
+				if (md.data.format_desc.blocking.inner_nblks == 0)
+					return dnnl::memory::format_tag::ab;
+				else
+					throw std::invalid_argument("Unsupported format in GetDataFmt function");
+				break;
+			case 3:
+				if (md.data.format_desc.blocking.inner_nblks == 0)
+					return dnnl::memory::format_tag::abc;
+				else
+					throw std::invalid_argument("Unsupported format in GetDataFmt function");
+				break;
+			case 4:
+				if (md.data.format_desc.blocking.inner_nblks == 0)
+					return dnnl::memory::format_tag::abcd;
+				else
 				{
-					switch (md.data.format_desc.blocking.inner_blks[0])
+					if (md.data.format_desc.blocking.inner_nblks == 1 && md.data.format_desc.blocking.inner_idxs[0] == 1)
 					{
-					case 4:
-						return dnnl::memory::format_tag::nChw4c;
-					case 8:
-						return dnnl::memory::format_tag::nChw8c;
-					case 16:
-						return dnnl::memory::format_tag::nChw16c;
-					default:
-						return dnnl::memory::format_tag::undef;
+						switch (md.data.format_desc.blocking.inner_blks[0])
+						{
+						case 4:
+							return dnnl::memory::format_tag::nChw4c;
+						case 8:
+							return dnnl::memory::format_tag::nChw8c;
+						case 16:
+							return dnnl::memory::format_tag::nChw16c;
+						default:
+							throw std::invalid_argument("Unsupported format in GetDataFmt function");
+						}
 					}
+					else
+						throw std::invalid_argument("Unsupported format in GetDataFmt function");
 				}
+				break;
+			case 5:
+				if (md.data.format_desc.blocking.inner_nblks == 0)
+					return dnnl::memory::format_tag::abcde;
+				else
+					throw std::invalid_argument("Unsupported format in GetDataFmt function");
+				break;
+			default:
+				throw std::invalid_argument("Unsupported number of dimensions in GetDataFmt function");
+			}
 		}
 
 		return dnnl::memory::format_tag::undef;

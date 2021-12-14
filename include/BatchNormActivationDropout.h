@@ -684,9 +684,9 @@ namespace dnn
 		UInt GetNeuronsSize(const UInt batchSize) const override
 		{
 #ifndef DNN_LEAN
-			return PaddedCDHW * batchSize * sizeof(Float) * (InplaceBwd ? 2 : 3);
+			return batchSize * PaddedCDHW * sizeof(Float) * (InplaceBwd ? 2 : 3);
 #else
-			return PaddedCDHW * batchSize * sizeof(Float) * (InplaceBwd ? 1 : 2);
+			return batchSize * PaddedCDHW * sizeof(Float) * (InplaceBwd ? 1 : 2);
 #endif // DNN_LEAN
 		}
 	};

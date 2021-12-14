@@ -153,7 +153,6 @@ namespace dnn
 #endif
 				Device.stream.wait();
 			}
-
 #ifdef DNN_LEAN
 			ReleaseGradient();
 #endif // DNN_LEAN
