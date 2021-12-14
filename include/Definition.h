@@ -825,10 +825,10 @@ namespace dnn
 						goto FAIL;
 					}
 
-					model->SampleC = values[0];
-					model->SampleD = 1;
-					model->SampleH = values[1];
-					model->SampleW = values[2];
+					model->C = values[0];
+					model->D = 1;
+					model->H = values[1];
+					model->W = values[2];
 
 					modelMandatory += 128;
 				}	

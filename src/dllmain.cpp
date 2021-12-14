@@ -474,8 +474,8 @@ extern "C" DNN_API void DNNGetTrainingInfo(UInt* currentCycle, UInt* totalCycles
 		*beta2 = model->CurrentTrainingRate.Beta2;
 		*l2Penalty = model->CurrentTrainingRate.L2Penalty;
 		*batchSize = model->BatchSize;
-		*height = model->SampleH;
-		*width = model->SampleW;
+		*height = model->H;
+		*width = model->W;
 		*sampleSpeed = model->SampleSpeed;
 		
 		*networkState = model->State.load();
@@ -496,8 +496,8 @@ extern "C" DNN_API void DNNGetTestingInfo(UInt* batchSize, UInt* height, UInt* w
 		model->AvgTestLoss = model->TestLoss / adjustedsampleIndex;
 
 		*batchSize = model->BatchSize;
-		*height = model->SampleH;
-		*width = model->SampleW;
+		*height = model->H;
+		*width = model->W;
 		*sampleIndex = model->SampleIndex;
 		*avgTestLoss = model->AvgTestLoss;
 		*testErrorPercentage = model->TestErrorPercentage;
