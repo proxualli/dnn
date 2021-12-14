@@ -62,11 +62,11 @@ namespace dnn
 			WeightsMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(C), dnnl::memory::dim(InputLayer->C), dnnl::memory::dim(KernelH), dnnl::memory::dim(KernelW) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::oihw));
 		}
 
-		void RecalculateHW() final override
+		void UpdateResolution() final override
 		{
 			H = StrideH * ((InputLayer->H - 1) + DilationKernelH - (Padding[0] * 2));
 			W = StrideW * ((InputLayer->W - 1) + DilationKernelW - (Padding[1] * 2));
-			Layer::RecalculateHW();
+			Layer::UpdateResolution();
 		}
 
 		std::string GetDescription() const final override

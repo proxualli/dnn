@@ -270,7 +270,7 @@ namespace dnn
 		virtual ~Model() = default;
 		
 		// todo: check memory requirements !!!
-		void ChangeResolution(UInt h, UInt w, UInt batchSize)
+		void ChangeResolution(const UInt batchSize, const UInt h, const UInt w)
 		{
 			Layers[0]->H = h;
 			Layers[0]->W = w;
@@ -280,7 +280,7 @@ namespace dnn
 				BatchSizeChanging.store(true);
 
 				for (auto& layer : Layers)
-					layer->RecalculateHW();
+					layer->UpdateResolution();
 				
 				for (auto& layer : Layers)
 					layer->SetBatchSize(batchSize);
@@ -302,18 +302,17 @@ namespace dnn
 				H = h;
 				W = w;
 			}
-			//else
-			//{
-			//	// revert if unsuccessful
+			else
+			{
+				// revert if unsuccessful
+				Layers[0]->H = H;
+				Layers[0]->W = W;
 
-			//	Layers[0]->H = SampleH;
-			//	Layers[0]->W = SampleW;
+				for (auto& layer : Layers)
+					layer->UpdateResolution();
 
-			//	for (auto& layer : Layers)
-			//		layer->RecalculateHW();
-
-			//	SetBatchSize(BatchSize);
-			//}
+				SetBatchSize(BatchSize);
+			}
 		}
 
 		bool SetFormat(bool plain = false)
@@ -1685,7 +1684,7 @@ namespace dnn
 					for (auto d = 0ull; d < imgByte.D; d++)
 						for (auto h = 0ull; h < imgByte.H; h++)
 							for (auto w = 0ull; w < imgByte.W; w++)
-								Layers[0]->Neurons[batchIndex * imgByte.Size() + (c * imgByte.ChannelSize()) + (d * imgByte.Area()) + (h * imgByte.W) + w] = (dstImageByte(c, d, h, w) - mean) * stddevRecip;
+								Layers[0]->Neurons[batchIndex * imgByte.Size() + (c * imgByte.ChannelSize()) + (d * imgByte.Area()) + (h * imgByte.W) + w] = (imgByte(c, d, h, w) - mean) * stddevRecip;
 				}
 			});
 

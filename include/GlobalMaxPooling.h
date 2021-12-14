@@ -40,7 +40,7 @@ namespace dnn
 			assert(Inputs.size() == 1);
 		}
 
-		void RecalculateHW() final override
+		void UpdateResolution() final override
 		{
 			KernelH = InputLayer->H;
 			KernelW = InputLayer->W;

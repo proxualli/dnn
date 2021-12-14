@@ -27,11 +27,11 @@ namespace dnn
 			assert(Groups > 0 && Groups <= C);
 		}
 
-		void RecalculateHW() final override
+		void UpdateResolution() final override
 		{
 			H = InputLayer->H;
 			W = InputLayer->W;
-			Layer::RecalculateHW();
+			Layer::UpdateResolution();
 		}
 
 		std::string GetDescription() const final override

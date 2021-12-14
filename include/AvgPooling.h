@@ -44,11 +44,11 @@ namespace dnn
 			assert(Inputs.size() == 1);
 		}
 
-		void RecalculateHW() final override
+		void UpdateResolution() final override
 		{
 			H = (((InputLayer->H - KernelH) + (PadH * 2)) / StrideH) + 1;
 			W = (((InputLayer->W - KernelW) + (PadW * 2)) / StrideW) + 1;
-			Layer::RecalculateHW();
+			Layer::UpdateResolution();
 		}
 
 		std::string GetDescription() const final override

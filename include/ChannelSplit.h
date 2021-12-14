@@ -21,11 +21,11 @@ namespace dnn
 				throw std::invalid_argument("input not splittable in " + std::string(magic_enum::enum_name<LayerTypes>(LayerType)) + " layer " + Name);
 		}
 
-		void RecalculateHW() final override
+		void UpdateResolution() final override
 		{
 			H = InputLayer->H;
 			W = InputLayer->W;
-			Layer::RecalculateHW();
+			Layer::UpdateResolution();
 		}
 
 		std::string GetDescription() const final override

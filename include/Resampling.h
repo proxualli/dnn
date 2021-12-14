@@ -35,11 +35,11 @@ namespace dnn
 			assert(Inputs.size() == 1);
 		}
 
-		void RecalculateHW() final override
+		void UpdateResolution() final override
 		{
 			H = static_cast<UInt>(InputLayer->H * double(FactorH));
 			W = static_cast<UInt>(InputLayer->W * double(FactorW));
-			Layer::RecalculateHW();
+			Layer::UpdateResolution();
 		}
 
 		std::string GetDescription() const final override

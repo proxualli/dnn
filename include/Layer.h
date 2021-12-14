@@ -263,7 +263,7 @@ namespace dnn
 		const UInt WeightCount;
 		const UInt BiasCount;
 		const UInt C;
-		const UInt D;
+		UInt D;
 		UInt H;
 		UInt W;
 		UInt HW;
@@ -403,11 +403,11 @@ namespace dnn
 
 		virtual ~Layer() = default;
 		
-		virtual void RecalculateHW()
+		virtual void UpdateResolution()
 		{
 			HW = H * W;
-			CDHW = C * D * H * W;
-			PaddedCDHW = LayerType == LayerTypes::Input ? C : PaddedC * D * H * W;
+			CDHW = C * D * HW;
+			PaddedCDHW = LayerType == LayerTypes::Input ? C : PaddedC * D * HW;
 		}
 
 		void SetParameters(const bool useDefaults, const Fillers weightsFiller, const FillerModes weightsFillerMode, const Float weightsGain, const Float weightsScale, const Float weightsLRM, const Float weightsWDM, const Fillers biasesFiller, const FillerModes biasesFillerMode, const Float biasesGain, const Float biasesScale, const Float biasesLRM, const Float biasesWDM)
