@@ -1396,6 +1396,7 @@ namespace dnn
 		{
 			const auto hierarchies = DataProv->Hierarchies;
 			auto SampleLabels = std::vector<LabelInfo>(hierarchies);
+
 			for (auto hierarchie = 0ull; hierarchie < hierarchies; hierarchie++)
 			{
 				SampleLabels[hierarchie].LabelA = labels[hierarchie];
@@ -1410,6 +1411,7 @@ namespace dnn
 		{
 			const auto hierarchies = DataProv->Hierarchies;
 			auto SampleLabels = std::vector<LabelInfo>(hierarchies);
+
 			for (auto hierarchie = 0ull; hierarchie < hierarchies; hierarchie++)
 			{
 				SampleLabels[hierarchie].LabelA = labels[hierarchie];
@@ -1666,24 +1668,24 @@ namespace dnn
 				auto labels = DataProv->TestingLabels[sampleIndex];
 				SampleLabels[batchIndex] = GetLabelInfo(labels);
 
-				auto dstImageByte = DataProv->TestingSamples[sampleIndex];
+				auto imgByte = DataProv->TestingSamples[sampleIndex];
 
 				if (resize)
-					dstImageByte = Image<Byte>::Resize(dstImageByte, D, H, W, Interpolations(CurrentTrainingRate.Interpolation));
+					imgByte = Image<Byte>::Resize(imgByte, D, H, W, Interpolations(CurrentTrainingRate.Interpolation));
 
-				dstImageByte = Image<Byte>::Padding(dstImageByte, PadD, PadH, PadW, DataProv->Mean, MirrorPad);
+				imgByte = Image<Byte>::Padding(imgByte, PadD, PadH, PadW, DataProv->Mean, MirrorPad);
 
-				dstImageByte = Image<Byte>::Crop(dstImageByte, Positions::Center, D, H, W, DataProv->Mean);
+				imgByte = Image<Byte>::Crop(imgByte, Positions::Center, D, H, W, DataProv->Mean);
 
-				for (auto c = 0ull; c < dstImageByte.C; c++)
+				for (auto c = 0ull; c < imgByte.C; c++)
 				{
-					const auto mean = MeanStdNormalization ? DataProv->Mean[c] : Image<Byte>::GetChannelMean(dstImageByte, c);
-					const auto stddevRecip = Float(1) / (MeanStdNormalization ? DataProv->StdDev[c] : Image<Byte>::GetChannelStdDev(dstImageByte, c));
+					const auto mean = MeanStdNormalization ? DataProv->Mean[c] : Image<Byte>::GetChannelMean(imgByte, c);
+					const auto stddevRecip = Float(1) / (MeanStdNormalization ? DataProv->StdDev[c] : Image<Byte>::GetChannelStdDev(imgByte, c));
 
-					for (auto d = 0ull; d < dstImageByte.D; d++)
-						for (auto h = 0ull; h < dstImageByte.H; h++)
-							for (auto w = 0ull; w < dstImageByte.W; w++)
-								Layers[0]->Neurons[batchIndex * dstImageByte.Size() + (c * dstImageByte.ChannelSize()) + (d * dstImageByte.Area()) + (h * dstImageByte.W) + w] = (dstImageByte(c, d, h, w) - mean) * stddevRecip;
+					for (auto d = 0ull; d < imgByte.D; d++)
+						for (auto h = 0ull; h < imgByte.H; h++)
+							for (auto w = 0ull; w < imgByte.W; w++)
+								Layers[0]->Neurons[batchIndex * imgByte.Size() + (c * imgByte.ChannelSize()) + (d * imgByte.Area()) + (h * imgByte.W) + w] = (dstImageByte(c, d, h, w) - mean) * stddevRecip;
 				}
 			});
 
@@ -1795,7 +1797,7 @@ namespace dnn
 
 		int LoadWeights(std::string fileName, const bool persistOptimizer = false)
 		{
-			const Optimizers optimizer = GetOptimizerFromString(fileName);
+			const auto optimizer = GetOptimizerFromString(fileName);
 
 			if (GetFileSize(fileName) == GetWeightsSize(persistOptimizer, optimizer))
 			{
