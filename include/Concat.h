@@ -117,7 +117,7 @@ namespace dnn
 #else
 				const auto plain = IsPlainFormat();
 				const auto elements = plain ? batchSize * CDHW : batchSize * PaddedCDHW;
-				const auto threads = elements < 2097152ull ? ULTRA_LIGHT_COMPUTE : elements < 8338608ull ? LIGHT_COMPUTE : MEDIUM_COMPUTE;
+				const auto threads = GetThreads(elements);
 				const auto strideHW = HW * VectorSize;
 
 #ifdef DNN_STOCHASTIC
@@ -239,7 +239,7 @@ namespace dnn
 
 			const auto plain = IsPlainFormat();
 			const auto elements = plain ? batchSize * CDHW : batchSize * PaddedCDHW;
-			const auto threads = elements < 2097152ull ? ULTRA_LIGHT_COMPUTE : elements < 8338608ull ? LIGHT_COMPUTE : MEDIUM_COMPUTE;
+			const auto threads = GetThreads(elements);
 
 #ifdef DNN_STOCHASTIC
 			if (batchSize == 1)

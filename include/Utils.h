@@ -90,19 +90,30 @@
 namespace dnn
 {
 #ifdef _MSC_VER
-	#define DNN_ALIGN(alignment) __declspec(align(alignment))
+#define DNN_ALIGN(alignment) __declspec(align(alignment))
 #else
-	#define DNN_ALIGN(alignment) __attribute__((__aligned__(alignment)))
+#define DNN_ALIGN(alignment) __attribute__((__aligned__(alignment)))
 #endif
-	#define DNN_SIMD_ALIGN DNN_ALIGN(64)
-	
+#define DNN_SIMD_ALIGN DNN_ALIGN(64)
+
 	typedef float Float;
 	typedef size_t UInt;
 	typedef unsigned char Byte;
 
-	constexpr auto ULTRA_LIGHT_COMPUTE = 3ull;		// number of threads
+	constexpr auto ULTRALIGHT_COMPUTE = 3ull;	// number of threads
 	constexpr auto LIGHT_COMPUTE = 6ull;
 	constexpr auto MEDIUM_COMPUTE = 12ull;
+	constexpr auto HEAVY_COMPUTE = 16ull;
+	constexpr auto ULTRALIGHT_COMPUTE_ELEMENTSTHRESHOLD = 2097152ull;	// minimum element threshold for ULTRALIGHT_COMPUTE
+	constexpr auto LIGHT_COMPUTE_ELEMENTSTHRESHOLD = 8338608ull;
+	constexpr auto MEDIUM_COMPUTE_ELEMENTSTHRESHOLD = 68338608ull;
+	constexpr auto GetThreads(const UInt elements, const Float weight = 1) 
+	{
+		if (weight <= Float(0.01) || weight > Float(100))
+			throw std::invalid_argument("Weight is out of range in GetThreads function");
+		
+		return elements < static_cast<UInt>(weight * ULTRALIGHT_COMPUTE_ELEMENTSTHRESHOLD) ? ULTRALIGHT_COMPUTE : elements < static_cast<UInt>(weight * LIGHT_COMPUTE_ELEMENTSTHRESHOLD) ? LIGHT_COMPUTE : elements < static_cast<UInt>(weight * MEDIUM_COMPUTE_ELEMENTSTHRESHOLD) ? MEDIUM_COMPUTE : HEAVY_COMPUTE;
+	}
 
 	struct LabelInfo
 	{
@@ -200,7 +211,7 @@ namespace dnn
 			::memset(destination, initValue, elements * sizeof(T));
 		else
 		{
-			const auto threads = elements < 2097152ull ? ULTRA_LIGHT_COMPUTE : elements < 8338608ull ? LIGHT_COMPUTE : MEDIUM_COMPUTE;
+			const auto threads = GetThreads(elements);
 			const auto part = elements / threads;
 			for_i(threads, [=](const std::size_t thread) { ::memset(destination + part * thread, initValue, part * sizeof(T)); });
 			if (elements % threads != 0)
