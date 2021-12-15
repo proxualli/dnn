@@ -96,7 +96,7 @@ namespace dnn
 #endif
 #define DNN_SIMD_ALIGN DNN_ALIGN(64)
 
-	constexpr bool UseInplace = true;
+	constexpr auto UseInplace = true;
 
 	typedef float Float;
 	typedef size_t UInt;
