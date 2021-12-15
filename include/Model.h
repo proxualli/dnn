@@ -120,6 +120,8 @@ namespace dnn
 			Scaling(scaling),
 			Rotation(rotation)
 		{
+			if (Cycles == 0)
+				throw std::invalid_argument("Cycles cannot be zero in ResolutionStrategyRecord");
 			if (Epochs <= 0 || Epochs >= 1)
 				throw std::invalid_argument("Epochs out of range in ResolutionStrategyRecord");
 			if (BatchSize == 0)
