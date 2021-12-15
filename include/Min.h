@@ -101,7 +101,7 @@ namespace dnn
 #else
 				const auto plain = IsPlainFormat();
 				const auto size = plain ? CDHW : PaddedCDHW;
-				const auto part = (size / VectorSize) * VectorSize;
+				const auto part = GetVectorPart(size);
 				const auto elements = size * batchSize;
 				const auto threads = GetThreads(elements);
 
@@ -145,7 +145,7 @@ namespace dnn
 
 			const auto plain = IsPlainFormat();
 			const auto size = plain ? CDHW : PaddedCDHW;
-			const auto part = (size / VectorSize) * VectorSize;
+			const auto part = GetVectorPart(size);
 			const auto elements = size * batchSize;
 			const auto threads = GetThreads(elements);
 

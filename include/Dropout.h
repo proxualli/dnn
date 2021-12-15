@@ -73,7 +73,7 @@ namespace dnn
 		void ForwardProp(const UInt batchSize, const bool training) final override
 		{
 			const auto size = IsPlainFormat() ? CDHW : PaddedCDHW;
-	        const auto part = (size / VectorSize) * VectorSize;
+	        const auto part = GetVectorPart(size);
 
 			if (training)
 			{
@@ -155,7 +155,7 @@ namespace dnn
 #endif
 
 			const auto size = IsPlainFormat() ? CDHW : PaddedCDHW;
-	        const auto part = (size / VectorSize) * VectorSize;
+	        const auto part = GetVectorPart(size);
 
 #ifdef DNN_STOCHASTIC
 			if (batchSize == 1)
