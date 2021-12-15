@@ -71,6 +71,62 @@ namespace dnn
 		}
 	};
 	
+	class ResolutionStrategyRecord
+	{
+	public:
+		const UInt H;
+		const UInt W;
+		const Float Epochs;
+		const Float Augmentation;
+		const Float Dropout;
+		
+		ResolutionStrategyRecord(const UInt h, const UInt w, const Float augmentation, const Float dropout, const Float totalEpochs) : H(h), W(w), Augmentation(augmentation), Dropout(dropout), Epochs(totalEpochs)
+		{
+			if (H < 1 || H > 4096)
+				throw std::invalid_argument("Height out of range in ResolutionStrategyRecord");
+			if (W < 1 || W > 4096)
+				throw std::invalid_argument("Width out of range in ResolutionStrategyRecord");
+			if (augmentation < 0 || augmentation > 1)
+				throw std::invalid_argument("Augmentation out of range in ResolutionStrategyRecord");
+			if (dropout < 0 || dropout >= 1)
+				throw std::invalid_argument("Dropout out of range in ResolutionStrategyRecord");
+			if (totalEpochs < 0 || totalEpochs > 1)
+				throw std::invalid_argument("Epochs out of range in ResolutionStrategyRecord");
+		}
+	};
+
+	class ResolutionStrategy
+	{
+	public:
+		std::vector<ResolutionStrategyRecord> Records;
+
+		ResolutionStrategy() : Records(std::vector<ResolutionStrategyRecord>())
+		{
+		}
+
+		const auto GetTotalEpochs()
+		{
+			auto total = Float(0);
+			for (const auto& record : Records)
+				total += record.Epochs;
+
+			return total;
+		}
+
+		void Add(const ResolutionStrategyRecord& record)
+		{
+			if (GetTotalEpochs() + record.Epochs > Float(1))
+				throw std::invalid_argument("Epochs out of range in ResolutionStrategy");
+			else
+				Records.push_back(record);
+		}
+
+		void Clear()
+		{
+			Records = std::vector<ResolutionStrategyRecord>();
+		}
+	};
+
 	class Model
 	{
 	private:
@@ -163,7 +219,7 @@ namespace dnn
 		std::atomic<bool> BatchSizeChanging;
 		std::atomic<bool> ResettingWeights;
 
-		void(*NewEpoch)(UInt, UInt, UInt, UInt, Float, Float, bool, bool, Float, Float, bool, Float, Float, UInt, Float, UInt, Float, Float, Float, UInt, UInt, UInt, Float, Float, Float, Float, Float, UInt, Float, Float, Float, UInt);
+		void(*NewEpoch)(UInt, UInt, UInt, UInt, Float, Float, bool, bool, Float, Float, bool, Float, Float, UInt, Float, UInt, Float, Float, Float, UInt, UInt, UInt, Float, Float, Float, Float, Float, Float, UInt, Float, Float, Float, UInt);
 
 		Model(const std::string& name, Dataprovider* dataprovider) :
 			Name(name),
@@ -272,6 +328,13 @@ namespace dnn
 		// todo: check memory requirements !!!
 		void ChangeResolution(const UInt batchSize, const UInt h, const UInt w)
 		{
+			if (batchSize < 1)
+				throw std::invalid_argument("Invalid batchSize value in ChangeResolution function");
+			if (h < 1)
+				throw std::invalid_argument("Invalid height value in ChangeResolution function");
+			if (w < 1)
+				throw std::invalid_argument("Invalid width value in ChangeResolution function");
+
 			Layers[0]->H = h;
 			Layers[0]->W = w;
 
@@ -302,17 +365,76 @@ namespace dnn
 				H = h;
 				W = w;
 			}
-			else
+			//else
+			//{
+			//	// revert if unsuccessful
+			//	Layers[0]->H = H;
+			//	Layers[0]->W = W;
+
+			//	for (auto& layer : Layers)
+			//		layer->UpdateResolution();
+
+			//	SetBatchSize(BatchSize);
+			//}
+		}
+
+		void ChangeDropout(const Float dropout)
+		{
+			if (dropout < 0 || dropout >= 1)
+				throw std::invalid_argument("Invalid dropout value in ChangeDropout function");
+
+			for (auto& layer : Layers)
 			{
-				// revert if unsuccessful
-				Layers[0]->H = H;
-				Layers[0]->W = W;
-
-				for (auto& layer : Layers)
-					layer->UpdateResolution();
-
-				SetBatchSize(BatchSize);
+				switch (layer->LayerType)
+				{
+				case LayerTypes::BatchNormHardSwishDropout:
+				{
+					auto bn = dynamic_cast<BatchNormActivationDropout<HardSwish, LayerTypes::BatchNormHardSwishDropout>*>(layer.get());
+					if (bn)
+						bn->UpdateDropout(dropout);
+				}
+				break;
+				case LayerTypes::BatchNormMishDropout:
+				{
+					auto bn = dynamic_cast<BatchNormActivationDropout<HardSwish, LayerTypes::BatchNormHardSwishDropout>*>(layer.get());
+					if (bn)
+						bn->UpdateDropout(dropout);
+				}
+				break;
+				case LayerTypes::BatchNormReluDropout:
+				{
+					auto bn = dynamic_cast<BatchNormActivationDropout<HardSwish, LayerTypes::BatchNormHardSwishDropout>*>(layer.get());
+					if (bn)
+						bn->UpdateDropout(dropout);
+				}
+				break;
+				case LayerTypes::BatchNormSwishDropout:
+				{
+					auto bn = dynamic_cast<BatchNormActivationDropout<HardSwish, LayerTypes::BatchNormHardSwishDropout>*>(layer.get());
+					if (bn)
+						bn->UpdateDropout(dropout);
+				}
+				break;
+				case LayerTypes::BatchNormTanhExpDropout:
+				{
+					auto bn = dynamic_cast<BatchNormActivationDropout<HardSwish, LayerTypes::BatchNormHardSwishDropout>*>(layer.get());
+					if (bn)
+						bn->UpdateDropout(dropout);
+				}
+				break;
+				case LayerTypes::Dropout:
+				{
+					auto drop = dynamic_cast<dnn::Dropout*>(layer.get());
+					if (drop)
+						drop->UpdateDropout(dropout);
+				}
+				break;
+				default:
+					break;
+				}
 			}
+
+			Dropout = dropout;
 		}
 
 		bool SetFormat(bool plain = false)
@@ -429,7 +551,7 @@ namespace dnn
 
 		bool BatchNormalizationUsed() const
 		{
-			for (auto &layer : Layers)
+			for (const auto &layer : Layers)
 				if (layer->IsBatchNorm())
 					return true;
 
@@ -462,12 +584,12 @@ namespace dnn
 					const auto weightDecayNormalized = rate.L2Penalty / std::pow(Float(rate.BatchSize) / (Float(trainSamples) / rate.BatchSize) * Epochs, Float(0.5));
 
 					if ((i + 1) >= gotoEpoch)
-						TrainingRates.push_back(TrainingRate(rate.Optimizer, rate.Momentum, rate.Beta2, weightDecayMultiplier * weightDecayNormalized, rate.Eps, rate.BatchSize, rate.Height, rate.Width, 1, rate.Epochs, 1, newRate, rate.MinimumRate, rate.FinalRate / LR, rate.Gamma, decayAfterEpochs, Float(1), rate.HorizontalFlip, rate.VerticalFlip, rate.Dropout, rate.Cutout, rate.CutMix, rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
+						TrainingRates.push_back(TrainingRate(rate.Optimizer, rate.Momentum, rate.Beta2, weightDecayMultiplier * weightDecayNormalized, rate.Dropout, rate.Eps, rate.BatchSize, rate.Height, rate.Width, 1, rate.Epochs, 1, newRate, rate.MinimumRate, rate.FinalRate / LR, rate.Gamma, decayAfterEpochs, Float(1), rate.HorizontalFlip, rate.VerticalFlip, rate.InputDropout, rate.Cutout, rate.CutMix, rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
 				}
 				else
 				{
 					if ((i + 1) >= gotoEpoch)
-						TrainingRates.push_back(TrainingRate(rate.Optimizer, rate.Momentum, rate.Beta2, rate.L2Penalty, rate.Eps, rate.BatchSize, rate.Height, rate.Width, 1, rate.Epochs, 1, newRate, rate.MinimumRate, rate.FinalRate / LR, rate.Gamma, decayAfterEpochs, Float(1), rate.HorizontalFlip, rate.VerticalFlip, rate.Dropout, rate.Cutout, rate.CutMix,  rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
+						TrainingRates.push_back(TrainingRate(rate.Optimizer, rate.Momentum, rate.Beta2, rate.L2Penalty, rate.Dropout, rate.Eps, rate.BatchSize, rate.Height, rate.Width, 1, rate.Epochs, 1, newRate, rate.MinimumRate, rate.FinalRate / LR, rate.Gamma, decayAfterEpochs, Float(1), rate.HorizontalFlip, rate.VerticalFlip, rate.InputDropout, rate.Cutout, rate.CutMix,  rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
 				}
 
 				if (newRate * rate.DecayFactor > rate.MinimumRate)
@@ -482,12 +604,12 @@ namespace dnn
 				const auto weightDecayNormalized = rate.L2Penalty / std::pow(Float(rate.BatchSize) / (Float(trainSamples) / rate.BatchSize) * Epochs, Float(0.5));
 
 				if ((totIteration * decayAfterEpochs) < rate.Epochs)
-					TrainingRates.push_back(TrainingRate(rate.Optimizer, rate.Momentum, rate.Beta2, weightDecayMultiplier * weightDecayNormalized, rate.Eps, rate.BatchSize, rate.Height, rate.Width, 1, rate.Epochs - (totIteration * decayAfterEpochs), 1, newRate, rate.MinimumRate, rate.FinalRate / LR, rate.Gamma, decayAfterEpochs, Float(1), rate.HorizontalFlip, rate.VerticalFlip, rate.Dropout, rate.Cutout, rate.CutMix, rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
+					TrainingRates.push_back(TrainingRate(rate.Optimizer, rate.Momentum, rate.Beta2, weightDecayMultiplier * weightDecayNormalized, rate.Dropout, rate.Eps, rate.BatchSize, rate.Height, rate.Width, 1, rate.Epochs - (totIteration * decayAfterEpochs), 1, newRate, rate.MinimumRate, rate.FinalRate / LR, rate.Gamma, decayAfterEpochs, Float(1), rate.HorizontalFlip, rate.VerticalFlip, rate.InputDropout, rate.Cutout, rate.CutMix, rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
 			}
 			else
 			{
 				if ((totIteration * decayAfterEpochs) < rate.Epochs)
-					TrainingRates.push_back(TrainingRate(rate.Optimizer, rate.Momentum, rate.Beta2, rate.L2Penalty, rate.Eps, rate.BatchSize, rate.Height, rate.Width, 1, rate.Epochs - (totIteration * decayAfterEpochs), 1, newRate, rate.MinimumRate, rate.FinalRate / LR, rate.Gamma, decayAfterEpochs, Float(1), rate.HorizontalFlip, rate.VerticalFlip, rate.Dropout, rate.Cutout, rate.CutMix, rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
+					TrainingRates.push_back(TrainingRate(rate.Optimizer, rate.Momentum, rate.Beta2, rate.L2Penalty, rate.Dropout, rate.Eps, rate.BatchSize, rate.Height, rate.Width, 1, rate.Epochs - (totIteration * decayAfterEpochs), 1, newRate, rate.MinimumRate, rate.FinalRate / LR, rate.Gamma, decayAfterEpochs, Float(1), rate.HorizontalFlip, rate.VerticalFlip, rate.InputDropout, rate.Cutout, rate.CutMix, rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
 			}
 		}
 
@@ -518,12 +640,12 @@ namespace dnn
 						const auto weightDecayNormalized = rate.L2Penalty / std::pow(Float(rate.BatchSize) / (Float(trainSamples) / rate.BatchSize) * total, Float(0.5));
 
 						if (epoch >= gotoEpoch)
-							TrainingRates.push_back(TrainingRate(rate.Optimizer, rate.Momentum, rate.Beta2, weightDecayMultiplier * weightDecayNormalized, rate.Eps, rate.BatchSize, rate.Height, rate.Width, c + 1, 1, rate.EpochMultiplier, newRate, minRate, rate.FinalRate / LR, rate.Gamma, 1, Float(1), rate.HorizontalFlip, rate.VerticalFlip, rate.Dropout, rate.Cutout, rate.CutMix, rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
+							TrainingRates.push_back(TrainingRate(rate.Optimizer, rate.Momentum, rate.Beta2, weightDecayMultiplier * weightDecayNormalized, rate.Dropout, rate.Eps, rate.BatchSize, rate.Height, rate.Width, c + 1, 1, rate.EpochMultiplier, newRate, minRate, rate.FinalRate / LR, rate.Gamma, 1, Float(1), rate.HorizontalFlip, rate.VerticalFlip, rate.InputDropout, rate.Cutout, rate.CutMix, rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
 					}
 					else
 					{
 						if (epoch >= gotoEpoch)
-							TrainingRates.push_back(TrainingRate(rate.Optimizer, rate.Momentum, rate.Beta2, rate.L2Penalty, rate.Eps, rate.BatchSize, rate.Height, rate.Width, c + 1, 1, rate.EpochMultiplier, newRate, minRate, rate.FinalRate / LR, rate.Gamma, 1, Float(1), rate.HorizontalFlip, rate.VerticalFlip, rate.Dropout, rate.Cutout, rate.CutMix, rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
+							TrainingRates.push_back(TrainingRate(rate.Optimizer, rate.Momentum, rate.Beta2, rate.L2Penalty, rate.Dropout, rate.Eps, rate.BatchSize, rate.Height, rate.Width, c + 1, 1, rate.EpochMultiplier, newRate, minRate, rate.FinalRate / LR, rate.Gamma, 1, Float(1), rate.HorizontalFlip, rate.VerticalFlip, rate.InputDropout, rate.Cutout, rate.CutMix, rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
 					}
 				}
 				
@@ -899,9 +1021,7 @@ namespace dnn
 				CurrentTrainingRate = TrainingRates[0];
 				Rate = CurrentTrainingRate.MaximumRate;
 				CurrentCycle = CurrentTrainingRate.Cycles;
-				auto height = CurrentTrainingRate.Height;
-				auto width = CurrentTrainingRate.Width;
-
+			
 				if (CurrentTrainingRate.BatchSize > BatchSize)
 					if (GetTotalFreeMemory() < GetNeuronsSize(CurrentTrainingRate.BatchSize - BatchSize))
 					{                           
@@ -951,6 +1071,7 @@ namespace dnn
 						break;
 					}
 
+				
 				while (CurrentEpoch < TotalEpochs)
 				{
 					if (CurrentEpoch - (GoToEpoch - 1) == learningRateEpochs)
@@ -959,13 +1080,12 @@ namespace dnn
 						CurrentTrainingRate = TrainingRates[learningRateIndex];
 						Rate = CurrentTrainingRate.MaximumRate;
 
-						if (height != CurrentTrainingRate.Height || width != CurrentTrainingRate.Width || BatchSize != CurrentTrainingRate.BatchSize)
-						{
-							ChangeResolution(CurrentTrainingRate.BatchSize, CurrentTrainingRate.Height, CurrentTrainingRate.Width);
-							height = CurrentTrainingRate.Height;
-							width = CurrentTrainingRate.Width;
-						}
+						if (Dropout != CurrentTrainingRate.Dropout)
+							ChangeDropout(CurrentTrainingRate.Dropout);
 						
+						if (H != CurrentTrainingRate.Height || W != CurrentTrainingRate.Width || BatchSize != CurrentTrainingRate.BatchSize)
+							ChangeResolution(CurrentTrainingRate.BatchSize, CurrentTrainingRate.Height, CurrentTrainingRate.Width);
+												
 						learningRateEpochs += CurrentTrainingRate.Epochs;
 
 						if (CurrentTrainingRate.Optimizer != Optimizer)
@@ -1223,7 +1343,7 @@ namespace dnn
 							
 							State.store(States::NewEpoch);
 
-							NewEpoch(CurrentCycle, CurrentEpoch, TotalEpochs, static_cast<UInt>(CurrentTrainingRate.Optimizer), CurrentTrainingRate.Beta2, CurrentTrainingRate.Eps, CurrentTrainingRate.HorizontalFlip, CurrentTrainingRate.VerticalFlip, CurrentTrainingRate.Dropout, CurrentTrainingRate.Cutout, CurrentTrainingRate.CutMix, CurrentTrainingRate.AutoAugment, CurrentTrainingRate.ColorCast, CurrentTrainingRate.ColorAngle, CurrentTrainingRate.Distortion, static_cast<UInt>(CurrentTrainingRate.Interpolation), CurrentTrainingRate.Scaling, CurrentTrainingRate.Rotation, CurrentTrainingRate.MaximumRate, CurrentTrainingRate.BatchSize, CurrentTrainingRate.Height, CurrentTrainingRate.Width, CurrentTrainingRate.Momentum, CurrentTrainingRate.L2Penalty, AvgTrainLoss, TrainErrorPercentage, Float(100) - TrainErrorPercentage, TrainErrors, AvgTestLoss, TestErrorPercentage, Float(100) - TestErrorPercentage, TestErrors);
+							NewEpoch(CurrentCycle, CurrentEpoch, TotalEpochs, static_cast<UInt>(CurrentTrainingRate.Optimizer), CurrentTrainingRate.Beta2, CurrentTrainingRate.Eps, CurrentTrainingRate.HorizontalFlip, CurrentTrainingRate.VerticalFlip, CurrentTrainingRate.InputDropout, CurrentTrainingRate.Cutout, CurrentTrainingRate.CutMix, CurrentTrainingRate.AutoAugment, CurrentTrainingRate.ColorCast, CurrentTrainingRate.ColorAngle, CurrentTrainingRate.Distortion, static_cast<UInt>(CurrentTrainingRate.Interpolation), CurrentTrainingRate.Scaling, CurrentTrainingRate.Rotation, CurrentTrainingRate.MaximumRate, CurrentTrainingRate.BatchSize, CurrentTrainingRate.Height, CurrentTrainingRate.Width, CurrentTrainingRate.Momentum, CurrentTrainingRate.L2Penalty, CurrentTrainingRate.Dropout, AvgTrainLoss, TrainErrorPercentage, Float(100) - TrainErrorPercentage, TrainErrors, AvgTestLoss, TestErrorPercentage, Float(100) - TestErrorPercentage, TestErrors);
 						}
 						else
 							break;

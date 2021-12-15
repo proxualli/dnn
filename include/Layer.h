@@ -29,6 +29,7 @@ namespace dnn
 		Float Momentum;
 		Float Beta2;
 		Float L2Penalty;
+		Float Dropout;
 		Float Eps;
 		UInt BatchSize;
 		UInt Height;
@@ -44,7 +45,7 @@ namespace dnn
 		Float DecayFactor;
 		bool HorizontalFlip;
 		bool VerticalFlip;
-		Float Dropout;
+		Float InputDropout;
 		Float Cutout;
 		bool CutMix;
 		Float AutoAugment;
@@ -60,6 +61,7 @@ namespace dnn
 			Momentum(Float(0.9)),
 			Beta2(Float(0.999)),
 			L2Penalty(Float(0.0005)),
+			Dropout(Float(0)),
 			Eps(Float(1E-08)),
 			BatchSize(1),
 			Height(32),
@@ -75,7 +77,7 @@ namespace dnn
 			DecayFactor(Float(1)),
 			HorizontalFlip(false),
 			VerticalFlip(false),
-			Dropout(Float(0)),
+			InputDropout(Float(0)),
 			Cutout(Float(0)),
 			CutMix(false),
 			AutoAugment(Float(0)),
@@ -88,11 +90,12 @@ namespace dnn
 		{
 		}
 
-		TrainingRate(const Optimizers optimizer, const Float momentum, const Float beta2, const Float l2Penalty, const Float eps, const UInt batchSize, const UInt height, const UInt width, const UInt cycles, const UInt epochs, const UInt epochMultiplier, const Float maximumRate, const Float minimumRate, const Float finalRate, const Float gamma, const UInt decayAfterEpochs, const Float decayFactor, const bool horizontalFlip, const bool verticalFlip, const Float dropout, const Float cutout, const bool cutMix, const Float autoAugment, const Float colorCast, const UInt colorAngle, const Float distortion, const Interpolations interpolation, const Float scaling, const Float rotation) :
+		TrainingRate(const Optimizers optimizer, const Float momentum, const Float beta2, const Float l2Penalty, const Float dropout, const Float eps, const UInt batchSize, const UInt height, const UInt width, const UInt cycles, const UInt epochs, const UInt epochMultiplier, const Float maximumRate, const Float minimumRate, const Float finalRate, const Float gamma, const UInt decayAfterEpochs, const Float decayFactor, const bool horizontalFlip, const bool verticalFlip, const Float inputDropout, const Float cutout, const bool cutMix, const Float autoAugment, const Float colorCast, const UInt colorAngle, const Float distortion, const Interpolations interpolation, const Float scaling, const Float rotation) :
 			Optimizer(optimizer),
 			Momentum(momentum),
 			Beta2(beta2),
 			L2Penalty(l2Penalty),
+			Dropout(dropout),
 			Eps(eps),
 			BatchSize(batchSize),
 			Cycles(cycles),
@@ -108,7 +111,7 @@ namespace dnn
 			DecayFactor(decayFactor),
 			HorizontalFlip(horizontalFlip),
 			VerticalFlip(verticalFlip),
-			Dropout(dropout),
+			InputDropout(inputDropout),
 			Cutout(cutout),
 			CutMix(cutMix),
 			AutoAugment(autoAugment),
@@ -432,7 +435,7 @@ namespace dnn
 			return ChosenFormat == dnnl::memory::format_tag::ab || ChosenFormat == dnnl::memory::format_tag::abc || ChosenFormat == dnnl::memory::format_tag::abcd || ChosenFormat == dnnl::memory::format_tag::abcde; 
 		}
 
-		bool IsBatchNorm() const 
+		const bool IsBatchNorm() const 
 		{ 
 			return std::string(magic_enum::enum_name<LayerTypes>(LayerType)).find("BatchNorm", 0) != std::string::npos;
 		}

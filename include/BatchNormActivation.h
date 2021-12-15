@@ -113,7 +113,7 @@ namespace dnn
 			{
 				if (IsPlainFormat()) // nchw
 				{
-					const auto partialHW = (HW / VectorSize) * VectorSize;
+					const auto partialHW = GetVectorPart(HW);
 
 					for_i(C, [=](UInt c)
 					{
@@ -165,7 +165,7 @@ namespace dnn
 #endif
 				if (IsPlainFormat())
 				{
-					const auto partialHW = (HW / VectorSize) * VectorSize;
+					const auto partialHW = GetVectorPart(HW);
 
 					for_i(C, [=](UInt c)
 					{
@@ -330,7 +330,7 @@ namespace dnn
 
 			if (IsPlainFormat())
 			{
-				const auto partialHW = (HW / VectorSize) * VectorSize;
+				const auto partialHW = GetVectorPart(HW);
 
 				for_i(C, [=](UInt c)
 				{

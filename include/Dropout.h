@@ -5,19 +5,18 @@ namespace dnn
 {
 	class Dropout final : public Layer
 	{
-	private:
-		std::bernoulli_distribution DropoutDistribution;
-		FloatArray NeuronsActive;
-	
 	public:
-		const Float Keep;
-		const Float Scale;
+		const bool LocalValue;
+		Float Keep;
+		Float Scale;
 
-		Dropout(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const Float dropout = Float(0.3)) :
+		FloatArray NeuronsActive;
+
+		Dropout(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const Float dropout = Float(0.5), const bool localValue = false) :
 			Layer(device, format, name, LayerTypes::Dropout, 0, 0, inputs[0]->C, inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs),
+			LocalValue(localValue),
 			Keep(Float(1) - dropout),
 			Scale(Float(1) / (Float(1) - dropout)),
-			DropoutDistribution(std::bernoulli_distribution(double(1) - dropout)),
 			NeuronsActive(FloatArray())
 		{
 			assert(Inputs.size() == 1);
@@ -28,6 +27,15 @@ namespace dnn
 			H = InputLayer->H;
 			W = InputLayer->W;
 			Layer::UpdateResolution();
+		}
+
+		void UpdateDropout(const Float dropout)
+		{
+			if (!LocalValue)
+			{
+				Keep = Float(1) - dropout;
+				Scale = Float(1) / Keep;
+			}
 		}
 
 		std::string GetDescription() const final override
@@ -82,9 +90,9 @@ namespace dnn
 				{
 					for (auto i = 0ull; i < part; i += VectorSize)
 					{
-						const auto neuronsActive = BernoulliVecFloat(Keep);
-						neuronsActive.store_a(&NeuronsActive[i]);
-						(neuronsActive * Scale * VecFloat().load_a(&InputLayer->Neurons[i])).store_a(&Neurons[i]);
+						VecFloat mask = BernoulliVecFloat(Keep);
+						mask.store_a(&NeuronsActive[i]);
+						(mask * Scale * VecFloat().load_a(&InputLayer->Neurons[i])).store_a(&Neurons[i]);
 #ifndef DNN_LEAN
 						VecFloat(0).store_nt(&NeuronsD1[i]);
 #endif
@@ -104,12 +112,12 @@ namespace dnn
 					{
 						const auto start = b * size;
 						const auto end = start + part;
-
+						VecFloat mask;
 						for (auto i = start; i < end; i += VectorSize)
 						{
-							const auto neuronsActive = BernoulliVecFloat(Keep);
-							neuronsActive.store_a(&NeuronsActive[i]);
-							(neuronsActive * Scale * VecFloat().load_a(&InputLayer->Neurons[i])).store_a(&Neurons[i]);
+							mask = BernoulliVecFloat(Keep);
+							mask.store_a(&NeuronsActive[i]);
+							(mask * Scale * VecFloat().load_a(&InputLayer->Neurons[i])).store_a(&Neurons[i]);
 #ifndef DNN_LEAN
 							VecFloat(0).store_nt(&NeuronsD1[i]);
 #endif

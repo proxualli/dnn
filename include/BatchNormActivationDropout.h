@@ -8,29 +8,30 @@ namespace dnn
 	class BatchNormActivationDropout final : public Layer
 	{
 	public:
+		const bool LocalValue;
 		const Float Eps;
 		const Float Momentum;
 		const Float OneMinusMomentum;
-		const Float Keep;
-		const Float Scale;
-
-		FloatArray NeuronsActive;
-		std::bernoulli_distribution DropoutDistribution;
-
+		
+		Float Keep;
+		Float Scale;
+		
 		FloatVector Mean;
 		FloatVector RunningMean;
 		FloatVector Variance;
 		FloatVector RunningVariance;
 		FloatVector InvStdDev;
 	
-		BatchNormActivationDropout<Activation, T>(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const Float dropout = Float(0.5), const bool scaling = true, const Float momentum = Float(0.99), const Float eps = Float(1e-04), const bool hasBias = true) :
+		FloatArray NeuronsActive;
+
+		BatchNormActivationDropout<Activation, T>(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const Float dropout = Float(0.5), const bool localValue = false, const bool scaling = true, const Float momentum = Float(0.99), const Float eps = Float(1e-04), const bool hasBias = true) :
 			Layer(device, format, name, T, inputs[0]->C, inputs[0]->C, inputs[0]->C, inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs, hasBias, scaling),
+			LocalValue(localValue),
 			Eps(eps),
 			Momentum(momentum),
 			OneMinusMomentum(Float(1) - momentum),
 			Keep(Float(1) - dropout),
 			Scale(Float(1) / (Float(1) - dropout)),
-			DropoutDistribution(std::bernoulli_distribution(Float(1) - dropout)),
 			Mean(FloatVector(PaddedC, Float(0))),
 			RunningMean(FloatVector(PaddedC, Float(0))),
 			Variance(FloatVector(PaddedC, Float(1))),
@@ -48,6 +49,15 @@ namespace dnn
 			H = InputLayer->H;
 			W = InputLayer->W;
 			Layer::UpdateResolution();
+		}
+
+		void UpdateDropout(const Float dropout)
+		{
+			if (!LocalValue)
+			{
+				Keep = Float(1) - dropout;
+				Scale = Float(1) / Keep;
+			}
 		}
 
 		bool Lockable() const final override
@@ -134,7 +144,7 @@ namespace dnn
 			{
 				if (IsPlainFormat()) // nchw
 				{
-					const auto partialHW = (HW / VectorSize) * VectorSize;
+					const auto partialHW = GetVectorPart(HW);
 
 					for_i(C, [=](UInt c)
 					{
@@ -188,7 +198,7 @@ namespace dnn
 #endif
 				if (IsPlainFormat())
 				{
-					const auto partialHW = (HW / VectorSize) * VectorSize;
+					const auto partialHW = GetVectorPart(HW);
 
 					for_i(C, [=](UInt c)
 					{
@@ -232,7 +242,7 @@ namespace dnn
 						const auto weightedInvStdDev = Scaling ? invStdDev * Weights[c] : invStdDev;
 						const auto biases = Scaling && HasBias ? Biases[c] : Float(0);
 
-						auto neuronsActive = VecFloat(1);
+						VecFloat mask;
 						if (InplaceBwd)
 							for (auto n = 0ull; n < batchSize; n++)
 							{
@@ -240,9 +250,9 @@ namespace dnn
 								const auto part = start + partialHW;
 								for (auto hw = start; hw < part; hw += VectorSize)
 								{
-									neuronsActive = BernoulliVecFloat(Keep);
-									neuronsActive.store_a(&NeuronsActive[hw]);
-									(neuronsActive * Scale * Activation::fVec(((VecFloat().load_a(&InputLayer->Neurons[hw]) - mean) * weightedInvStdDev + biases))).store_a(&Neurons[hw]);
+									mask = BernoulliVecFloat(Keep);
+									mask.store_a(&NeuronsActive[hw]);
+									(mask * Scale * Activation::fVec(((VecFloat().load_a(&InputLayer->Neurons[hw]) - mean) * weightedInvStdDev + biases))).store_a(&Neurons[hw]);
 								}
 								const auto end = start + HW;
 								for (auto hw = part; hw < end; hw++)
@@ -258,9 +268,9 @@ namespace dnn
 								const auto part = start + partialHW;
 								for (auto hw = start; hw < part; hw += VectorSize)
 								{
-									neuronsActive = BernoulliVecFloat(Keep);
-									neuronsActive.store_a(&NeuronsActive[hw]);
-									(neuronsActive * Scale * Activation::fVec(((VecFloat().load_a(&InputLayer->Neurons[hw]) - mean) * weightedInvStdDev + biases))).store_a(&Neurons[hw]);
+									mask = BernoulliVecFloat(Keep);
+									mask.store_a(&NeuronsActive[hw]);
+									(mask* Scale * Activation::fVec(((VecFloat().load_a(&InputLayer->Neurons[hw]) - mean) * weightedInvStdDev + biases))).store_a(&Neurons[hw]);
 #ifndef DNN_LEAN
 									vecZero.store_nt(&NeuronsD1[hw]);
 #endif
@@ -322,7 +332,7 @@ namespace dnn
 						const auto weightedInvStdDev = Scaling ? invStdDev * VecFloat().load_a(&Weights[channelOffset]) : invStdDev;
 						const auto biases = Scaling && HasBias ? VecFloat().load_a(&Biases[channelOffset]) : VecFloat(0);
 
-						auto neuronsActive = VecFloat(1);
+						VecFloat mask;
 						if (InplaceBwd)
 							for (auto n = 0ull; n < batchSize; n++)
 							{
@@ -332,9 +342,9 @@ namespace dnn
 									const auto offsetH = offsetC + h * strideH;
 									for (auto w = offsetH; w < offsetH + strideH; w += VectorSize)
 									{
-										neuronsActive = BernoulliVecFloat(Keep);
-										neuronsActive.store_a(&NeuronsActive[w]);
-										(neuronsActive * Scale * Activation::fVec(mul_add(VecFloat().load_a(&InputLayer->Neurons[w]) - mean, weightedInvStdDev, biases))).store_a(&Neurons[w]);
+										mask = BernoulliVecFloat(Keep);
+										mask.store_a(&NeuronsActive[w]);
+										(mask* Scale * Activation::fVec(mul_add(VecFloat().load_a(&InputLayer->Neurons[w]) - mean, weightedInvStdDev, biases))).store_a(&Neurons[w]);
 									}
 								}
 							}
@@ -347,9 +357,9 @@ namespace dnn
 									const auto offsetH = offsetC + h * strideH;
 									for (auto w = offsetH; w < offsetH + strideH; w += VectorSize)
 									{
-										neuronsActive = BernoulliVecFloat(Keep);
-										neuronsActive.store_a(&NeuronsActive[w]);
-										(neuronsActive * Scale * Activation::fVec(mul_add(VecFloat().load_a(&InputLayer->Neurons[w]) - mean, weightedInvStdDev, biases))).store_a(&Neurons[w]);
+										mask = BernoulliVecFloat(Keep);
+										mask.store_a(&NeuronsActive[w]);
+										(mask* Scale * Activation::fVec(mul_add(VecFloat().load_a(&InputLayer->Neurons[w]) - mean, weightedInvStdDev, biases))).store_a(&Neurons[w]);
 #ifndef DNN_LEAN
 										vecZero.store_nt(&NeuronsD1[w]);
 #endif
@@ -371,7 +381,7 @@ namespace dnn
 
 			if (IsPlainFormat())
 			{
-				const auto partialHW = (HW / VectorSize) * VectorSize;
+				const auto partialHW = GetVectorPart(HW);
 				
 				for_i(C, [=](UInt c)
 				{

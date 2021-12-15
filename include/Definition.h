@@ -532,7 +532,7 @@ namespace dnn
 								model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsFillerMode, weightsGain, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesFillerMode, biasesGain, biasesScale, biasesLRM, biasesWDM);
 								break;
 							case LayerTypes::BatchNormHardSwishDropout:
-								model->Layers.push_back(std::make_unique<BatchNormActivationDropout<HardSwish, LayerTypes::BatchNormHardSwishDropout>>(model->Device, model->Format, name, inputs, dropout, scaling, momentum, eps, biases));
+								model->Layers.push_back(std::make_unique<BatchNormActivationDropout<HardSwish, LayerTypes::BatchNormHardSwishDropout>>(model->Device, model->Format, name, inputs, dropout, dropout != model->Dropout, scaling, momentum, eps, biases));
 								model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsFillerMode, weightsGain, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesFillerMode, biasesGain, biasesScale, biasesLRM, biasesWDM);
 								break;
 							case LayerTypes::BatchNormMish:
@@ -540,7 +540,7 @@ namespace dnn
 								model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsFillerMode, weightsGain, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesFillerMode, biasesGain, biasesScale, biasesLRM, biasesWDM);
 								break;
 							case LayerTypes::BatchNormMishDropout:
-								model->Layers.push_back(std::make_unique<BatchNormActivationDropout<Mish, LayerTypes::BatchNormMishDropout>>(model->Device, model->Format, name, inputs, dropout, scaling, momentum, eps, biases));
+								model->Layers.push_back(std::make_unique<BatchNormActivationDropout<Mish, LayerTypes::BatchNormMishDropout>>(model->Device, model->Format, name, inputs, dropout, dropout != model->Dropout, scaling, momentum, eps, biases));
 								model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsFillerMode, weightsGain, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesFillerMode, biasesGain, biasesScale, biasesLRM, biasesWDM);
 								break;
 							case LayerTypes::BatchNormRelu:
@@ -548,7 +548,7 @@ namespace dnn
 								model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsFillerMode, weightsGain, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesFillerMode, biasesGain, biasesScale, biasesLRM, biasesWDM);
 								break;
 							case LayerTypes::BatchNormReluDropout:
-								model->Layers.push_back(std::make_unique<BatchNormActivationDropout<Relu, LayerTypes::BatchNormReluDropout>>(model->Device, model->Format, name, inputs, dropout, scaling, momentum, eps, biases));
+								model->Layers.push_back(std::make_unique<BatchNormActivationDropout<Relu, LayerTypes::BatchNormReluDropout>>(model->Device, model->Format, name, inputs, dropout, dropout != model->Dropout, scaling, momentum, eps, biases));
 								model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsFillerMode, weightsGain, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesFillerMode, biasesGain, biasesScale, biasesLRM, biasesWDM);
 								break;
 							case LayerTypes::BatchNormSwish:
@@ -556,7 +556,7 @@ namespace dnn
 								model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsFillerMode, weightsGain, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesFillerMode, biasesGain, biasesScale, biasesLRM, biasesWDM);
 								break;
 							case LayerTypes::BatchNormSwishDropout:
-								model->Layers.push_back(std::make_unique<BatchNormActivationDropout<Swish, LayerTypes::BatchNormSwishDropout>>(model->Device, model->Format, name, inputs, dropout, scaling, momentum, eps, biases));
+								model->Layers.push_back(std::make_unique<BatchNormActivationDropout<Swish, LayerTypes::BatchNormSwishDropout>>(model->Device, model->Format, name, inputs, dropout, dropout != model->Dropout, scaling, momentum, eps, biases));
 								model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsFillerMode, weightsGain, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesFillerMode, biasesGain, biasesScale, biasesLRM, biasesWDM);
 								break;
 							case LayerTypes::BatchNormTanhExp:
@@ -564,7 +564,7 @@ namespace dnn
 								model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsFillerMode, weightsGain, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesFillerMode, biasesGain, biasesScale, biasesLRM, biasesWDM);
 								break;
 							case LayerTypes::BatchNormTanhExpDropout:
-								model->Layers.push_back(std::make_unique<BatchNormActivationDropout<TanhExp, LayerTypes::BatchNormTanhExpDropout>>(model->Device, model->Format, name, inputs, dropout, scaling, momentum, eps, biases));
+								model->Layers.push_back(std::make_unique<BatchNormActivationDropout<TanhExp, LayerTypes::BatchNormTanhExpDropout>>(model->Device, model->Format, name, inputs, dropout, dropout != model->Dropout, scaling, momentum, eps, biases));
 								model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsFillerMode, weightsGain, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesFillerMode, biasesGain, biasesScale, biasesLRM, biasesWDM);
 								break;
 							case LayerTypes::ChannelMultiply:
@@ -607,7 +607,7 @@ namespace dnn
 								model->Layers.push_back(std::make_unique<Divide>(model->Device, model->Format, name, inputs));
 								break;
 							case LayerTypes::Dropout:
-								model->Layers.push_back(std::make_unique<Dropout>(model->Device, model->Format, name, inputs, dropout));
+								model->Layers.push_back(std::make_unique<Dropout>(model->Device, model->Format, name, inputs, dropout, dropout != model->Dropout));
 								break;
 							case LayerTypes::GlobalAvgPooling:
 								model->Layers.push_back(std::make_unique<GlobalAvgPooling>(model->Device, model->Format, name, inputs));
@@ -679,13 +679,13 @@ namespace dnn
 						padW = 0;
 						factorH = 1;
 						factorW = 1;
-						dropout = Float(0);
 						weight = Float(1);
 						groupIndex = 0;
 						labelIndex = 0;
 						activationFunction = Activations::Linear;
 						multiplier = 1;
 						useDefaultParams = true;
+						dropout = model->Dropout;
 						biases = model->HasBias;
 						weightsFiller = model->WeightsFiller;
 						weightsFillerMode = model->WeightsFillerMode;
@@ -705,7 +705,6 @@ namespace dnn
 						scaling = model->BatchNormScaling;
 						eps = model->BatchNormEps;
 						epsSpecified = false;
-						dropout = model->Dropout;
 						acrossChannels = false;
 						localSize = 5;
 						k = Float(1);
@@ -992,15 +991,17 @@ namespace dnn
 					switch (layerType)
 					{
 						case LayerTypes::BatchNorm:
-						case LayerTypes::BatchNormMish:
-						case LayerTypes::BatchNormMishDropout:
 						case LayerTypes::BatchNormHardLogistic:
 						case LayerTypes::BatchNormHardSwish:
 						case LayerTypes::BatchNormHardSwishDropout:
+						case LayerTypes::BatchNormMish:
+						case LayerTypes::BatchNormMishDropout:
 						case LayerTypes::BatchNormRelu:
 						case LayerTypes::BatchNormReluDropout:
 						case LayerTypes::BatchNormSwish:
 						case LayerTypes::BatchNormSwishDropout:
+						case LayerTypes::BatchNormTanhExp:
+						case LayerTypes::BatchNormTanhExpDropout:
 						case LayerTypes::LayerNorm:
 							isNormalizationLayer = true;
 							break;
@@ -1695,7 +1696,13 @@ namespace dnn
 				}
 				else if (strLine.rfind("Dropout=") == 0)
 				{
-					if (!isNormalizationLayer && layerType != LayerTypes::Input && layerType != LayerTypes::Dropout && layerType != LayerTypes::BatchNormReluDropout && layerType != LayerTypes::BatchNormHardSwishDropout && layerType != LayerTypes::BatchNormMishDropout)
+					if (layerType != LayerTypes::Input
+						&& layerType != LayerTypes::BatchNormHardSwishDropout
+						&& layerType != LayerTypes::BatchNormMishDropout
+						&& layerType != LayerTypes::BatchNormReluDropout
+						&& layerType != LayerTypes::BatchNormSwishDropout
+						&& layerType != LayerTypes::BatchNormTanhExpDropout
+						&& layerType != LayerTypes::Dropout)
 					{
 						msg = CheckMsg(line, col, "Dropout cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
 						goto FAIL;
@@ -1721,7 +1728,7 @@ namespace dnn
 
 					if (dropout < 0 || dropout >= 1)
 					{
-						msg = CheckMsg(line, col, "Dropout value must be int the range [0-1[");
+						msg = CheckMsg(line, col, "Dropout out of range [0-1[");
 						goto FAIL;
 					}
 
