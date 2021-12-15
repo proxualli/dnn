@@ -73,7 +73,6 @@ namespace dnn
 	
 	struct ResolutionStrategy
 	{
-		UInt Cycles;
 		Float Epochs;
 		UInt BatchSize;
 		UInt Height;
@@ -96,8 +95,7 @@ namespace dnn
 		Float Scaling;
 		Float Rotation;
 
-		ResolutionStrategy(const UInt cycles, const Float epochs, const UInt batchSize, const UInt height, const UInt width, const Float momentum, const Float beta2, const Float gamma, const Float l2penalty, const Float dropout, const bool horizontalFlip, const bool verticalFlip, const Float inputDropout, const Float cutout, const bool cutMix, const Float autoAugment, const Float colorCast, const UInt colorAngle, const Float distortion, const Interpolations interpolation, const Float scaling, const Float rotation) :
-			Cycles(cycles),
+		ResolutionStrategy(const Float epochs, const UInt batchSize, const UInt height, const UInt width, const Float momentum, const Float beta2, const Float gamma, const Float l2penalty, const Float dropout, const bool horizontalFlip, const bool verticalFlip, const Float inputDropout, const Float cutout, const bool cutMix, const Float autoAugment, const Float colorCast, const UInt colorAngle, const Float distortion, const Interpolations interpolation, const Float scaling, const Float rotation) :
 			Epochs(epochs),
 			BatchSize(batchSize),
 			Height(height),
@@ -120,8 +118,6 @@ namespace dnn
 			Scaling(scaling),
 			Rotation(rotation)
 		{
-			if (Cycles == 0)
-				throw std::invalid_argument("Cycles cannot be zero in ResolutionStrategyRecord");
 			if (Epochs <= 0 || Epochs >= 1)
 				throw std::invalid_argument("Epochs out of range in ResolutionStrategyRecord");
 			if (BatchSize == 0)
