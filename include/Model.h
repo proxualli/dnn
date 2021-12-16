@@ -199,6 +199,7 @@ namespace dnn
 		
 	public:
 		const std::string Name;
+		const std::string Definition;
 		const dnnl::engine Engine;
 		dnn::Device Device;
 		dnnl::memory::format_tag Format;
@@ -281,8 +282,9 @@ namespace dnn
 
 		void(*NewEpoch)(UInt, UInt, UInt, UInt, Float, Float, Float, bool, bool, Float, Float, bool, Float, Float, UInt, Float, UInt, Float, Float, Float, UInt, UInt, UInt, Float, Float, Float, Float, Float, Float, UInt, Float, Float, Float, UInt);
 
-		Model(const std::string& name, Dataprovider* dataprovider) :
+		Model(const std::string& name, const std::string& definition, Dataprovider* dataprovider) :
 			Name(name),
+			Definition(definition),
 			DataProv(dataprovider),
 			Engine(dnnl::engine(dnnl::engine::kind::cpu, 0)),
 			Device(dnn::Device(Engine, dnnl::stream(Engine))),

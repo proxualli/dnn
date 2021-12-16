@@ -94,9 +94,9 @@ extern "C" DNN_API void DNNModelDispose()
 //	}
 //}
 
-extern "C" DNN_API Model* DNNModel(const std::string name)
+extern "C" DNN_API Model* DNNModel(const std::string name, const std::string definition)
 {
-	model = std::make_unique<Model>(name, dataprovider.get());
+	model = std::make_unique<Model>(name, definition, dataprovider.get());
 
 	return model.get();
 }
