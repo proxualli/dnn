@@ -451,35 +451,50 @@ namespace dnn
 				{
 					auto bn = dynamic_cast<BatchNormActivationDropout<HardSwish, LayerTypes::BatchNormHardSwishDropout>*>(layer.get());
 					if (bn)
+					{
 						bn->UpdateDropout(dropout);
+						bn->SetBatchSize(batchSize);
+					}
 				}
 				break;
 				case LayerTypes::BatchNormMishDropout:
 				{
 					auto bn = dynamic_cast<BatchNormActivationDropout<HardSwish, LayerTypes::BatchNormHardSwishDropout>*>(layer.get());
 					if (bn)
+					{
 						bn->UpdateDropout(dropout);
+						bn->SetBatchSize(batchSize);
+					}
 				}
 				break;
 				case LayerTypes::BatchNormReluDropout:
 				{
 					auto bn = dynamic_cast<BatchNormActivationDropout<HardSwish, LayerTypes::BatchNormHardSwishDropout>*>(layer.get());
 					if (bn)
+					{
 						bn->UpdateDropout(dropout);
+						bn->SetBatchSize(batchSize);
+					}
 				}
 				break;
 				case LayerTypes::BatchNormSwishDropout:
 				{
 					auto bn = dynamic_cast<BatchNormActivationDropout<HardSwish, LayerTypes::BatchNormHardSwishDropout>*>(layer.get());
 					if (bn)
+					{
 						bn->UpdateDropout(dropout);
+						bn->SetBatchSize(batchSize);
+					}
 				}
 				break;
 				case LayerTypes::BatchNormTanhExpDropout:
 				{
 					auto bn = dynamic_cast<BatchNormActivationDropout<HardSwish, LayerTypes::BatchNormHardSwishDropout>*>(layer.get());
 					if (bn)
+					{
 						bn->UpdateDropout(dropout);
+						bn->SetBatchSize(batchSize);
+					}
 				}
 				break;
 				case LayerTypes::Dropout:
