@@ -61,7 +61,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
 #endif
 
 
-extern "C" DNN_API void DNNSetNewEpochDelegate(void(*newEpoch)(UInt, UInt, UInt, UInt, Float, Float, bool, bool, Float, Float, bool, Float, Float, UInt, Float, UInt, Float, Float, Float, UInt, UInt, UInt, Float, Float, Float, Float, Float, Float, UInt, Float, Float, Float, UInt))
+extern "C" DNN_API void DNNSetNewEpochDelegate(void(*newEpoch)(UInt, UInt, UInt, UInt, Float, Float, Float, bool, bool, Float, Float, bool, Float, Float, UInt, Float, UInt, Float, Float, Float, UInt, UInt, UInt, Float, Float, Float, Float, Float, Float, UInt, Float, Float, Float, UInt))
 {																	     
 	if (model)
 		model->NewEpoch = newEpoch;
@@ -405,7 +405,7 @@ extern "C" DNN_API void DNNGetModelInfo(std::string* name, UInt* costIndex, UInt
 	}
 }
 
-extern "C" DNN_API void DNNGetTrainingInfo(UInt* currentCycle, UInt* totalCycles, UInt* currentEpoch, UInt* totalEpochs, bool* horizontalFlip, bool* verticalFlip, Float* inputDropout, Float* cutout, bool* cutMix, Float* autoAugment, Float* colorCast, UInt* colorAngle, Float* distortion, Interpolations* interpolation, Float* scaling, Float* rotation, UInt* sampleIndex, UInt* batchSize, UInt* height, UInt* width, Float* maximumRate, Optimizers* optimizer, Float* momentum, Float* beta2, Float* l2Penalty, Float* dropout, Float* avgTrainLoss, Float* trainErrorPercentage, UInt* trainErrors, Float* avgTestLoss, Float* testErrorPercentage, UInt* testErrors, Float* sampleSpeed, States* networkState, TaskStates* taskState)
+extern "C" DNN_API void DNNGetTrainingInfo(UInt* currentCycle, UInt* totalCycles, UInt* currentEpoch, UInt* totalEpochs, bool* horizontalFlip, bool* verticalFlip, Float* inputDropout, Float* cutout, bool* cutMix, Float* autoAugment, Float* colorCast, UInt* colorAngle, Float* distortion, Interpolations* interpolation, Float* scaling, Float* rotation, UInt* sampleIndex, UInt* batchSize, UInt* height, UInt* width, Float* maximumRate, Optimizers* optimizer, Float* momentum, Float* beta2, Float* gamma, Float* l2Penalty, Float* dropout, Float* avgTrainLoss, Float* trainErrorPercentage, UInt* trainErrors, Float* avgTestLoss, Float* testErrorPercentage, UInt* testErrors, Float* sampleSpeed, States* networkState, TaskStates* taskState)
 {
 	if (model)
 	{
@@ -472,13 +472,13 @@ extern "C" DNN_API void DNNGetTrainingInfo(UInt* currentCycle, UInt* totalCycles
 		*optimizer = model->Optimizer;
 		*momentum = model->CurrentTrainingRate.Momentum;
 		*beta2 = model->CurrentTrainingRate.Beta2;
+		*gamma = model->CurrentTrainingRate.Gamma;
 		*l2Penalty = model->CurrentTrainingRate.L2Penalty;
 		*dropout = model->CurrentTrainingRate.Dropout;
 		*batchSize = model->BatchSize;
 		*height = model->H;
 		*width = model->W;
 		*sampleSpeed = model->SampleSpeed;
-		
 		*networkState = model->State.load();
 		*taskState = model->TaskState.load();
 	}

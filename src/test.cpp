@@ -28,7 +28,7 @@ DNN_API void DNNDisableLocking(const bool disable);
 DNN_API void DNNGetConfusionMatrix(const UInt costLayerIndex, std::vector<std::vector<UInt>>* confusionMatrix);
 DNN_API void DNNGetLayerInputs(const UInt layerIndex, std::vector<UInt>* inputs);
 DNN_API void DNNGetLayerInfo(const UInt layerIndex, UInt* inputsCount, dnn::LayerTypes* layerType, dnn::Activations* activationFunction, dnn::Costs* cost, std::string* name, std::string* description, UInt* neuronCount, UInt* weightCount, UInt* biasesCount, UInt* multiplier, UInt* groups, UInt* group, UInt* localSize, UInt* c, UInt* d, UInt* h, UInt* w, UInt* kernelH, UInt* kernelW, UInt* strideH, UInt* strideW, UInt* dilationH, UInt* dilationW, UInt* padD, UInt* padH, UInt* padW, Float* dropout, Float* labelTrue, Float* labelFalse, Float* weight, UInt* groupIndex, UInt* labelIndex, UInt* inputC, Float* alpha, Float* beta, Float* k, dnn::Algorithms* algorithm, Float* fH, Float* fW, bool* hasBias, bool* scaling, bool* acrossChannels, bool* locked, bool* lockable);
-DNN_API void DNNSetNewEpochDelegate(void(*newEpoch)(UInt, UInt, UInt, UInt, Float, Float, bool, bool, Float, Float, bool, Float, Float, UInt, Float, UInt, Float, Float, Float, UInt, UInt, UInt, Float, Float, Float, Float, Float, Float, UInt, Float, Float, Float, UInt));
+DNN_API void DNNSetNewEpochDelegate(void(*newEpoch)(UInt, UInt, UInt, UInt, Float, Float, Float, bool, bool, Float, Float, bool, Float, Float, UInt, Float, UInt, Float, Float, Float, UInt, UInt, UInt, Float, Float, Float, Float, Float, Float, UInt, Float, Float, Float, UInt));
 DNN_API void DNNModelDispose();
 DNN_API bool DNNBatchNormalizationUsed();
 DNN_API void DNNResetWeights();
@@ -41,7 +41,7 @@ DNN_API void DNNStop();
 DNN_API void DNNPause();
 DNN_API void DNNResume();
 DNN_API void DNNTesting();
-DNN_API void DNNGetTrainingInfo(UInt* currentCycle, UInt* totalCycles, UInt* currentEpoch, UInt* totalEpochs, bool* verticalMirror, bool* horizontalMirror, Float* dropout, Float* cutout, bool* cutMix, Float* autoAugment, Float* colorCast, UInt* colorAngle, Float* distortion, dnn::Interpolations* interpolation, Float* scaling, Float* rotation, UInt* sampleIndex, UInt* batchSize, UInt* height, UInt* width, Float* rate, dnn::Optimizers* optimizer, Float* momentum, Float* beta2, Float* l2Penalty, Float* avgTrainLoss, Float* trainErrorPercentage, UInt* trainErrors, Float* avgTestLoss, Float* testErrorPercentage, UInt* testErrors, Float* sampleSpeed, dnn::States* networkState, dnn::TaskStates* taskState);
+DNN_API void DNNGetTrainingInfo(UInt* currentCycle, UInt* totalCycles, UInt* currentEpoch, UInt* totalEpochs, bool* horizontalFlip, bool* verticalFlip, Float* inputDropout, Float* cutout, bool* cutMix, Float* autoAugment, Float* colorCast, UInt* colorAngle, Float* distortion, dnn::Interpolations* interpolation, Float* scaling, Float* rotation, UInt* sampleIndex, UInt* batchSize, UInt* height, UInt* width, Float* maximumRate, dnn::Optimizers* optimizer, Float* momentum, Float* beta2, Float* gamma, Float* l2Penalty, Float* dropout, Float* avgTrainLoss, Float* trainErrorPercentage, UInt* trainErrors, Float* avgTestLoss, Float* testErrorPercentage, UInt* testErrors, Float* sampleSpeed, dnn::States* networkState, dnn::TaskStates* taskState);
 DNN_API void DNNGetTestingInfo(UInt* batchSize, UInt* height, UInt* width, UInt* sampleIndex, Float* avgTestLoss, Float* testErrorPercentage, UInt* testErrors, Float* sampleSpeed, dnn::States* networkState, dnn::TaskStates* taskState);
 DNN_API void DNNGetModelInfo(std::string* name, UInt* costIndex, UInt* costLayerCount, UInt* groupIndex, UInt* labelindex, UInt* hierarchies, bool* meanStdNormalization, dnn::Costs* lossFunction, dnn::Datasets* dataset, UInt* layerCount, UInt* trainingSamples, UInt* testingSamples, std::vector<Float>* meanTrainSet, std::vector<Float>* stdTrainSet);
 DNN_API void DNNSetOptimizer(const dnn::Optimizers strategy);
@@ -65,7 +65,7 @@ DNN_API dnn::Optimizers GetOptimizer();
 //DNN_API void DNNPrintModel(const std::string& fileName);
 
 
-void NewEpoch(UInt CurrentCycle, UInt CurrentEpoch, UInt TotalEpochs, UInt optimizer, Float beta2, Float eps, bool HorizontalFlip, bool VerticalFlip, Float InputDropout, Float Cutout, bool CutMix, Float AutoAugment, Float ColorCast, UInt ColorAngle, Float Distortion, UInt Interpolation, Float Scaling, Float Rotation, Float MaximumRate, UInt BatchSize, UInt Height, UInt Width, Float Momentum, Float L2Penalty, Float Dropout, Float AvgTrainLoss, Float TrainErrorPercentage, Float TrainAccuracy, UInt TrainErrors, Float AvgTestLoss, Float TestErrorPercentage, Float TestAccuracy, UInt TestErrors)
+void NewEpoch(UInt CurrentCycle, UInt CurrentEpoch, UInt TotalEpochs, UInt Optimizer, Float Beta2, Float Gamma, Float Eps, bool HorizontalFlip, bool VerticalFlip, Float InputDropout, Float Cutout, bool CutMix, Float AutoAugment, Float ColorCast, UInt ColorAngle, Float Distortion, UInt Interpolation, Float Scaling, Float Rotation, Float MaximumRate, UInt BatchSize, UInt Height, UInt Width, Float Momentum, Float L2Penalty, Float Dropout, Float AvgTrainLoss, Float TrainErrorPercentage, Float TrainAccuracy, UInt TrainErrors, Float AvgTestLoss, Float TestErrorPercentage, Float TestAccuracy, UInt TestErrors)
 {
     std::cout << "Cycle: " << std::to_string(CurrentCycle) << "  Epoch: " << std::to_string(CurrentEpoch) << "  Test Accuracy: " << FloatToStringFixed(TestAccuracy, 2) << std::string("%                                                                           ") << std::endl;
     std::cout.flush();
@@ -89,6 +89,7 @@ void NewEpoch(UInt CurrentCycle, UInt CurrentEpoch, UInt TotalEpochs, UInt optim
     DNN_UNREF_PAR(Height);
     DNN_UNREF_PAR(Width);
     DNN_UNREF_PAR(L2Penalty);
+    DNN_UNREF_PAR(Gamma);
     DNN_UNREF_PAR(Dropout);
     DNN_UNREF_PAR(AvgTrainLoss);
     DNN_UNREF_PAR(TrainErrorPercentage);
@@ -107,7 +108,7 @@ void GetTrainingProgress(int seconds = 5, UInt trainingSamples = 50000, UInt tes
     auto totalEpochs = new UInt();
     auto horizontalMirror = new bool();
     auto verticalMirror = new bool();
-    auto dropout = new Float();
+    auto inputDropout = new Float();
     auto cutout = new Float();
     auto cutMix = new bool();
     auto autoAugment = new Float();
@@ -122,7 +123,9 @@ void GetTrainingProgress(int seconds = 5, UInt trainingSamples = 50000, UInt tes
     auto optimizer = new dnn::Optimizers();
     auto momentum = new Float();
     auto beta2 = new Float();
+    auto gamma = new Float();
     auto l2Penalty = new Float();
+    auto dropout = new Float();
     auto batchSize = new UInt();
     auto height = new UInt();
     auto width = new UInt();
@@ -140,7 +143,7 @@ void GetTrainingProgress(int seconds = 5, UInt trainingSamples = 50000, UInt tes
     do
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(250));
-        DNNGetTrainingInfo(cycle, totalCycles, epoch, totalEpochs, horizontalMirror, verticalMirror, dropout, cutout, cutMix, autoAugment, colorCast, colorAngle, distortion, interpolation, scaling, rotation, sampleIndex, batchSize, height, width, rate, optimizer, momentum, beta2, l2Penalty, avgTrainLoss, trainErrorPercentage, trainErrors, avgTestLoss, testErrorPercentage, testErrors, sampleSpeed, state, taskState);
+        DNNGetTrainingInfo(cycle, totalCycles, epoch, totalEpochs, horizontalMirror, verticalMirror, inputDropout, cutout, cutMix, autoAugment, colorCast, colorAngle, distortion, interpolation, scaling, rotation, sampleIndex, batchSize, height, width, rate, optimizer, momentum, beta2, gamma, l2Penalty, dropout, avgTrainLoss, trainErrorPercentage, trainErrors, avgTestLoss, testErrorPercentage, testErrors, sampleSpeed, state, taskState);
     } 
     while (*state == States::Idle);
 
@@ -151,7 +154,7 @@ void GetTrainingProgress(int seconds = 5, UInt trainingSamples = 50000, UInt tes
     {
         std::this_thread::sleep_for(std::chrono::seconds(*state == States::Testing ? 1 : seconds));
         
-        DNNGetTrainingInfo(cycle, totalCycles, epoch, totalEpochs, horizontalMirror, verticalMirror, dropout, cutout, cutMix, autoAugment, colorCast, colorAngle, distortion, interpolation, scaling, rotation, sampleIndex, batchSize, height, width, rate, optimizer, momentum, beta2, l2Penalty, avgTrainLoss, trainErrorPercentage, trainErrors, avgTestLoss, testErrorPercentage, testErrors, sampleSpeed, state, taskState);
+        DNNGetTrainingInfo(cycle, totalCycles, epoch, totalEpochs, horizontalMirror, verticalMirror, inputDropout, cutout, cutMix, autoAugment, colorCast, colorAngle, distortion, interpolation, scaling, rotation, sampleIndex, batchSize, height, width, rate, optimizer, momentum, beta2, gamma, l2Penalty, dropout, avgTrainLoss, trainErrorPercentage, trainErrors, avgTestLoss, testErrorPercentage, testErrors, sampleSpeed, state, taskState);
        
         if (*state == States::Testing)
             progress = Float(*sampleIndex) / testingSamples; 
@@ -203,7 +206,9 @@ void GetTrainingProgress(int seconds = 5, UInt trainingSamples = 50000, UInt tes
     delete optimizer;
     delete momentum;
     delete beta2;
+    delete gamma;
     delete l2Penalty;
+    delete dropout;
     delete batchSize;
     delete height;
     delete width;
