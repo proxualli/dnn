@@ -636,7 +636,7 @@ namespace dnn
 			return false;
 		}
 
-		void AddTrainingRate(const TrainingRate rate, const bool clear, const UInt gotoEpoch, const UInt trainSamples)
+		void AddTrainingRate(const TrainingRate& rate, const bool clear, const UInt gotoEpoch, const UInt trainSamples)
 		{
 			if (clear)
 				TrainingRates.clear();
@@ -691,7 +691,7 @@ namespace dnn
 			}
 		}
 
-		void AddTrainingRateSGDR(const TrainingRate rate, const bool clear, const UInt gotoEpoch, const UInt trainSamples)
+		void AddTrainingRateSGDR(const TrainingRate& rate, const bool clear, const UInt gotoEpoch, const UInt trainSamples)
 		{
 			if (clear)
 				TrainingRates.clear();
