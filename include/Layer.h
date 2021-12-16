@@ -293,6 +293,7 @@ namespace dnn
 		const bool HasBias;
 		const bool HasWeights;
 		const bool InplaceBwd;
+		bool Enabled;
 		bool UseDefaultParameters;
 		Fillers WeightsFiller;
 		FillerModes WeightsFillerMode;
@@ -332,7 +333,7 @@ namespace dnn
 		std::unique_ptr<dnnl::memory::desc> WeightsMemDesc;
 		std::unique_ptr<dnnl::memory::desc> PersistWeightsMemDesc;
 
-		Layer(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const LayerTypes layerType, const UInt weightCount, const UInt biasCount, const UInt c, const UInt d, const UInt h, const UInt w, const UInt padD, const UInt padH, const UInt padW, const std::vector<Layer*>& inputs, const bool hasBias = false, const bool scaling = false) :
+		Layer(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const LayerTypes layerType, const UInt weightCount, const UInt biasCount, const UInt c, const UInt d, const UInt h, const UInt w, const UInt padD, const UInt padH, const UInt padW, const std::vector<Layer*>& inputs, const bool hasBias = false, const bool scaling = false, const bool enabled = true) :
 			Device(device),
 			Format(format),
 			ChosenFormat(format),
@@ -354,6 +355,7 @@ namespace dnn
 			InputLayerOriginal(inputs.size() > 0 ? inputs[0] : nullptr),
 			InputLayerInplaceBwd(GetInplaceInputsBwd(layerType, inputs).size() > 0 ? GetInplaceInputsBwd(layerType, inputs)[0] : nullptr),
 			InplaceBwd(IsInplaceBwd(layerType, inputs)),
+			Enabled(enabled),
 			Scaling(scaling),
 			HasBias(hasBias && biasCount > 0),
 			HasWeights(weightCount > 0),

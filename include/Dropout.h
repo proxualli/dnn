@@ -13,7 +13,7 @@ namespace dnn
 		FloatArray NeuronsActive;
 
 		Dropout(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const Float dropout = Float(0.5), const bool localValue = false) :
-			Layer(device, format, name, LayerTypes::Dropout, 0, 0, inputs[0]->C, inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs),
+			Layer(device, format, name, LayerTypes::Dropout, 0, 0, inputs[0]->C, inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs, false, false, dropout > 0),
 			LocalValue(localValue),
 			Keep(Float(1) - dropout),
 			Scale(Float(1) / (Float(1) - dropout)),
@@ -33,6 +33,7 @@ namespace dnn
 		{
 			if (!LocalValue)
 			{
+				Enabled = dropout > 0;
 				Keep = Float(1) - dropout;
 				Scale = Float(1) / Keep;
 			}
@@ -72,19 +73,25 @@ namespace dnn
 		{
 			Layer::SetBatchSize(batchSize);
 
-			NeuronsActive.resize(batchSize, C, H, W, dnnl::memory::data_type::f32, BlockedFmt, Device.engine);
-			for (auto n = 0ull; n < batchSize; n++)
-				for (auto i = 0ull; i < CDHW; i++)
-					NeuronsActive[n * PaddedCDHW + i] = Float(1);
+			if (Enabled)
+			{
+				NeuronsActive.resize(batchSize, C, H, W, dnnl::memory::data_type::f32, BlockedFmt, Device.engine);
+				for (auto n = 0ull; n < batchSize; n++)
+					for (auto i = 0ull; i < CDHW; i++)
+						NeuronsActive[n * PaddedCDHW + i] = Float(1);
+			}
+			else
+				NeuronsActive.resize(1, 1, 1, 1, dnnl::memory::data_type::f32, BlockedFmt, Device.engine);
 		}
 
 		void ForwardProp(const UInt batchSize, const bool training) final override
 		{
 			const auto size = IsPlainFormat() ? CDHW : PaddedCDHW;
-	        const auto part = GetVectorPart(size);
+			const auto part = GetVectorPart(size);
 
-			if (training)
+			if (Enabled && training)
 			{
+				
 #ifdef DNN_STOCHASTIC
 				if (batchSize == 1)
 				{
@@ -158,33 +165,58 @@ namespace dnn
 
 		void BackwardProp(const UInt batchSize) final override
 		{
+			
 #ifdef DNN_LEAN
 			ZeroGradient(batchSize);
 #endif
 
 			const auto size = IsPlainFormat() ? CDHW : PaddedCDHW;
-	        const auto part = GetVectorPart(size);
+			const auto part = GetVectorPart(size);
 
-#ifdef DNN_STOCHASTIC
-			if (batchSize == 1)
+			if (Enabled)
 			{
-				for (auto i = 0ull; i < part; i += VectorSize)
-					mul_add(VecFloat().load_a(&NeuronsActive[i]), VecFloat().load_a(&NeuronsD1[i]), VecFloat().load_a(&InputLayer->NeuronsD1[i])).store_a(&InputLayer->NeuronsD1[i]);
-				for (auto i = part; i < size; i++)
-					InputLayer->NeuronsD1[i] += NeuronsActive[i] * NeuronsD1[i];
+#ifdef DNN_STOCHASTIC
+				if (batchSize == 1)
+				{
+					for (auto i = 0ull; i < part; i += VectorSize)
+						mul_add(VecFloat().load_a(&NeuronsActive[i]), VecFloat().load_a(&NeuronsD1[i]), VecFloat().load_a(&InputLayer->NeuronsD1[i])).store_a(&InputLayer->NeuronsD1[i]);
+					for (auto i = part; i < size; i++)
+						InputLayer->NeuronsD1[i] += NeuronsActive[i] * NeuronsD1[i];
+				}
+				else
+#endif
+					for_i(batchSize, LIGHT_COMPUTE, [=](UInt b)
+					{
+						const auto start = b * size;
+						const auto end = start + part;
+						for (auto i = start; i < end; i += VectorSize)
+							mul_add(VecFloat().load_a(&NeuronsActive[i]), VecFloat().load_a(&NeuronsD1[i]), VecFloat().load_a(&InputLayer->NeuronsD1[i])).store_a(&InputLayer->NeuronsD1[i]);
+						for (auto i = end; i < start + size; i++)
+							InputLayer->NeuronsD1[i] += NeuronsActive[i] * NeuronsD1[i];
+					});
 			}
 			else
-#endif
-				for_i(batchSize, LIGHT_COMPUTE, [=](UInt b)
+			{
+#ifdef DNN_STOCHASTIC
+				if (batchSize == 1)
 				{
-					const auto start = b * size;
-					const auto end = start + part;
-
-					for (auto i = start; i < end; i += VectorSize)
-						mul_add(VecFloat().load_a(&NeuronsActive[i]), VecFloat().load_a(&NeuronsD1[i]), VecFloat().load_a(&InputLayer->NeuronsD1[i])).store_a(&InputLayer->NeuronsD1[i]);
-					for (auto i = end; i < start + size; i++)
-						InputLayer->NeuronsD1[i] += NeuronsActive[i] * NeuronsD1[i];
-				});
+					for (auto i = 0ull; i < part; i += VectorSize)
+						(VecFloat().load_a(&InputLayer->NeuronsD1[i]) + VecFloat().load_a(&NeuronsD1[i])).store_a(&InputLayer->NeuronsD1[i]);
+					for (auto i = part; i < size; i++)
+						InputLayer->NeuronsD1[i] += NeuronsD1[i];
+				}
+				else
+#endif
+					for_i(batchSize, LIGHT_COMPUTE, [=](UInt b)
+					{
+						const auto start = b * size;
+						const auto end = start + part;
+						for (auto i = start; i < end; i += VectorSize)
+							(VecFloat().load_a(&InputLayer->NeuronsD1[i]) + VecFloat().load_a(&NeuronsD1[i])).store_a(&InputLayer->NeuronsD1[i]);
+						for (auto i = end; i < start + size; i++)
+							InputLayer->NeuronsD1[i] += NeuronsD1[i];
+					});
+			}
 
 #ifdef DNN_LEAN
 			ReleaseGradient();

@@ -438,7 +438,7 @@ namespace dnn
 			//}
 		}
 
-		void ChangeDropout(const Float dropout)
+		void ChangeDropout(const Float dropout, const UInt batchSize)
 		{
 			if (dropout < 0 || dropout >= 1)
 				throw std::invalid_argument("Invalid dropout value in ChangeDropout function");
@@ -486,7 +486,10 @@ namespace dnn
 				{
 					auto drop = dynamic_cast<dnn::Dropout*>(layer.get());
 					if (drop)
+					{
 						drop->UpdateDropout(dropout);
+						drop->SetBatchSize(batchSize);
+					}
 				}
 				break;
 				default:
@@ -1139,13 +1142,13 @@ namespace dnn
 						learningRateIndex++;
 						CurrentTrainingRate = TrainingRates[learningRateIndex];
 						Rate = CurrentTrainingRate.MaximumRate;
-
-						if (Dropout != CurrentTrainingRate.Dropout)
-							ChangeDropout(CurrentTrainingRate.Dropout);
 						
 						if (H != CurrentTrainingRate.Height || W != CurrentTrainingRate.Width || BatchSize != CurrentTrainingRate.BatchSize)
 							ChangeResolution(CurrentTrainingRate.BatchSize, CurrentTrainingRate.Height, CurrentTrainingRate.Width);
-												
+								
+						if (Dropout != CurrentTrainingRate.Dropout)
+							ChangeDropout(CurrentTrainingRate.Dropout, BatchSize);
+
 						learningRateEpochs += CurrentTrainingRate.Epochs;
 
 						if (CurrentTrainingRate.Optimizer != Optimizer)
