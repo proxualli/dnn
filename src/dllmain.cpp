@@ -307,16 +307,16 @@ extern "C" DNN_API void DNNAddTrainingRateSGDR(const TrainingRate& rate, const b
 		model->AddTrainingRateSGDR(rate, clear, gotoEpoch, trainSamples);
 }
 
-extern "C" DNN_API void DNNClearTrainingStrategy()
+extern "C" DNN_API void DNNClearTrainingStrategies()
 {
 	if (model)
-		model->TrainingStrategy.Clear();
+		model->TrainingStrategies.clear();
 }
 
 extern "C" DNN_API void DNNAddTrainingStrategy(const TrainingStrategy& strategy)
 {
 	if (model)
-		model->TrainingStrategy.Add(strategy);
+		model->TrainingStrategies.push_back(strategy);
 }
 
 extern "C" DNN_API void DNNTraining()

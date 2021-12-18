@@ -155,42 +155,7 @@ namespace dnn
 		}
 	};
 
-	class TrainingStrategies
-	{
-	public:
-		std::vector<TrainingStrategy> Records;
-
-		TrainingStrategies() : Records(std::vector<TrainingStrategy>())
-		{
-		}
-
-		TrainingStrategies(const TrainingStrategy& record) : Records(std::vector<TrainingStrategy>({ record }))
-		{
-		}
-
-		const auto GetTotalEpochs()
-		{
-			auto total = Float(0);
-			for (const auto& record : Records)
-				total += record.Epochs;
-
-			return total;
-		}
-
-		void Add(const TrainingStrategy& record)
-		{
-			if (GetTotalEpochs() + record.Epochs > Float(1))
-				throw std::invalid_argument("Epochs out of range in TrainingStrategies");
-			else
-				Records.push_back(record);
-		}
-
-		void Clear()
-		{
-			Records = std::vector<TrainingStrategy>();
-		}
-	};
-
+	
 	class Model
 	{
 	private:
@@ -275,7 +240,7 @@ namespace dnn
 		bool DisableLocking;
 		TrainingRate CurrentTrainingRate;
 		std::vector<TrainingRate> TrainingRates;
-		TrainingStrategies TrainingStrategy;
+		std::vector<TrainingStrategy> TrainingStrategies;
 		bool UseTrainingStrategy;
 		std::vector<std::unique_ptr<Layer>> Layers;
 		std::vector<Cost*> CostLayers;
@@ -370,7 +335,7 @@ namespace dnn
 			ResettingWeights(false),
 			FirstUnlockedLayer(1),
 			UseTrainingStrategy(false),
-			TrainingStrategy(TrainingStrategies())
+			TrainingStrategies()
 			//LogInterval(10000)
 		{
 #ifdef DNN_LOG
