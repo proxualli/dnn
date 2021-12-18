@@ -71,7 +71,7 @@ namespace dnn
 		}
 	};
 	
-	struct ResolutionStrategy
+	struct TrainingStrategy
 	{
 		Float Epochs;
 		UInt BatchSize;
@@ -95,7 +95,7 @@ namespace dnn
 		Float Scaling;
 		Float Rotation;
 
-		ResolutionStrategy(const Float epochs, const UInt batchSize, const UInt height, const UInt width, const Float momentum, const Float beta2, const Float gamma, const Float l2penalty, const Float dropout, const bool horizontalFlip, const bool verticalFlip, const Float inputDropout, const Float cutout, const bool cutMix, const Float autoAugment, const Float colorCast, const UInt colorAngle, const Float distortion, const Interpolations interpolation, const Float scaling, const Float rotation) :
+		TrainingStrategy(const Float epochs, const UInt batchSize, const UInt height, const UInt width, const Float momentum, const Float beta2, const Float gamma, const Float l2penalty, const Float dropout, const bool horizontalFlip, const bool verticalFlip, const Float inputDropout, const Float cutout, const bool cutMix, const Float autoAugment, const Float colorCast, const UInt colorAngle, const Float distortion, const Interpolations interpolation, const Float scaling, const Float rotation) :
 			Epochs(epochs),
 			BatchSize(batchSize),
 			Height(height),
@@ -119,48 +119,52 @@ namespace dnn
 			Rotation(rotation)
 		{
 			if (Epochs <= 0 || Epochs >= 1)
-				throw std::invalid_argument("Epochs out of range in ResolutionStrategyRecord");
+				throw std::invalid_argument("Epochs out of range in TrainingStrategy");
 			if (BatchSize == 0)
-				throw std::invalid_argument("BatchSize cannot be zero in ResolutionStrategyRecord");
+				throw std::invalid_argument("BatchSize cannot be zero in TrainingStrategy");
 			if (Height == 0)
-				throw std::invalid_argument("Height cannot be zero in ResolutionStrategyRecord");
+				throw std::invalid_argument("Height cannot be zero in TrainingStrategy");
 			if (Width == 0)
-				throw std::invalid_argument("Width cannot be zero in ResolutionStrategyRecord");
+				throw std::invalid_argument("Width cannot be zero in TrainingStrategy");
 			if (Momentum < 0 || Momentum > 1)
-				throw std::invalid_argument("Momentum out of range in ResolutionStrategyRecord");
+				throw std::invalid_argument("Momentum out of range in TrainingStrategy");
 			if (Beta2 < 0 || Beta2 > 1)
-				throw std::invalid_argument("Beta2 out of range in ResolutionStrategyRecord");
+				throw std::invalid_argument("Beta2 out of range in TrainingStrategy");
 			if (Gamma < 0 || Gamma > 1)
-				throw std::invalid_argument("Gamma out of range in ResolutionStrategyRecord");
+				throw std::invalid_argument("Gamma out of range in TrainingStrategy");
 			if (L2Penalty < 0 || L2Penalty > 1)
-				throw std::invalid_argument("L2Penalty out of range in ResolutionStrategyRecord");
+				throw std::invalid_argument("L2Penalty out of range in TrainingStrategy");
 			if (Dropout < 0 || Dropout >= 1)
-				throw std::invalid_argument("Dropout out of range in ResolutionStrategyRecord");
+				throw std::invalid_argument("Dropout out of range in TrainingStrategy");
 			if (InputDropout < 0 || InputDropout >= 1)
-				throw std::invalid_argument("InputDropout out of range in ResolutionStrategyRecord");
+				throw std::invalid_argument("InputDropout out of range in TrainingStrategy");
 			if (Cutout < 0 || Cutout > 1)
-				throw std::invalid_argument("Cutout out of range in ResolutionStrategyRecord");
+				throw std::invalid_argument("Cutout out of range in TrainingStrategy");
 			if (AutoAugment < 0 || AutoAugment > 1)
-				throw std::invalid_argument("AutoAugment out of range in ResolutionStrategyRecord");
+				throw std::invalid_argument("AutoAugment out of range in TrainingStrategy");
 			if (ColorCast < 0 || ColorCast > 1)
-				throw std::invalid_argument("ColorCast out of range in ResolutionStrategyRecord");
+				throw std::invalid_argument("ColorCast out of range in TrainingStrategy");
 			if (ColorAngle > 180)
-				throw std::invalid_argument("ColorAngle cannot be zero in ResolutionStrategyRecord");
+				throw std::invalid_argument("ColorAngle cannot be zero in TrainingStrategy");
 			if (Distortion < 0 || Distortion > 1)
-				throw std::invalid_argument("Distortion out of range in ResolutionStrategyRecord");
+				throw std::invalid_argument("Distortion out of range in TrainingStrategy");
 			if (Scaling < 0 || Scaling > 100)
-				throw std::invalid_argument("Scaling out of range in ResolutionStrategyRecord");
+				throw std::invalid_argument("Scaling out of range in TrainingStrategy");
 			if (Rotation < 0 || Rotation > 180)
-				throw std::invalid_argument("Rotation out of range in ResolutionStrategyRecord");
+				throw std::invalid_argument("Rotation out of range in TrainingStrategy");
 		}
 	};
 
-	class ResolutionStrategies
+	class TrainingStrategies
 	{
 	public:
-		std::vector<ResolutionStrategy> Records;
+		std::vector<TrainingStrategy> Records;
 
-		ResolutionStrategies() : Records(std::vector<ResolutionStrategy>())
+		TrainingStrategies() : Records(std::vector<TrainingStrategy>())
+		{
+		}
+
+		TrainingStrategies(const TrainingStrategy& record) : Records(std::vector<TrainingStrategy>({ record }))
 		{
 		}
 
@@ -173,17 +177,17 @@ namespace dnn
 			return total;
 		}
 
-		void Add(const ResolutionStrategy& record)
+		void Add(const TrainingStrategy& record)
 		{
 			if (GetTotalEpochs() + record.Epochs > Float(1))
-				throw std::invalid_argument("Epochs out of range in ResolutionStrategies");
+				throw std::invalid_argument("Epochs out of range in TrainingStrategies");
 			else
 				Records.push_back(record);
 		}
 
 		void Clear()
 		{
-			Records = std::vector<ResolutionStrategy>();
+			Records = std::vector<TrainingStrategy>();
 		}
 	};
 
@@ -271,6 +275,8 @@ namespace dnn
 		bool DisableLocking;
 		TrainingRate CurrentTrainingRate;
 		std::vector<TrainingRate> TrainingRates;
+		TrainingStrategies TrainingStrategy;
+		bool UseTrainingStrategy;
 		std::vector<std::unique_ptr<Layer>> Layers;
 		std::vector<Cost*> CostLayers;
 		std::chrono::duration<Float> fpropTime;
@@ -295,13 +301,14 @@ namespace dnn
 			TaskState(TaskStates::Stopped),
 			State(States::Idle),
 			Dataset(Datasets::cifar10),				// Dataset
-			C(1),								// Dim
+			C(3),									// Dim
 			D(1),
 			H(8),
 			W(8),
 			MeanStdNormalization(true),				// MeanStd
 			MirrorPad(false),						// MirrorPad or ZeroPad
 			PadD(0),
+			PadC(0),
 			PadH(0),
 			PadW(0),
 			RandomCrop(false),						// RandomCrop
@@ -361,7 +368,9 @@ namespace dnn
 			TestSkipCount(0),
 			BatchSizeChanging(false),
 			ResettingWeights(false),
-			FirstUnlockedLayer(1)
+			FirstUnlockedLayer(1),
+			UseTrainingStrategy(false),
+			TrainingStrategy(TrainingStrategies())
 			//LogInterval(10000)
 		{
 #ifdef DNN_LOG

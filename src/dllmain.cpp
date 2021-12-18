@@ -295,16 +295,28 @@ extern "C" DNN_API void DNNGetLayerWeights(const UInt layerIndex, std::vector<Fl
 	}
 }
 
-extern "C" DNN_API void DNNAddLearningRate(const TrainingRate& rate, const bool clear, const UInt gotoEpoch, const UInt trainSamples)
+extern "C" DNN_API void DNNAddTrainingRate(const TrainingRate& rate, const bool clear, const UInt gotoEpoch, const UInt trainSamples)
 {
 	if (model)
 		model->AddTrainingRate(rate, clear, gotoEpoch, trainSamples);
 }
 
-extern "C" DNN_API void DNNAddLearningRateSGDR(const TrainingRate& rate, const bool clear, const UInt gotoEpoch, const UInt trainSamples)
+extern "C" DNN_API void DNNAddTrainingRateSGDR(const TrainingRate& rate, const bool clear, const UInt gotoEpoch, const UInt trainSamples)
 {
 	if (model)
 		model->AddTrainingRateSGDR(rate, clear, gotoEpoch, trainSamples);
+}
+
+extern "C" DNN_API void DNNClearTrainingStrategy()
+{
+	if (model)
+		model->TrainingStrategy.Clear();
+}
+
+extern "C" DNN_API void DNNAddTrainingStrategy(const TrainingStrategy& strategy)
+{
+	if (model)
+		model->TrainingStrategy.Add(strategy);
 }
 
 extern "C" DNN_API void DNNTraining()

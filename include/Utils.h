@@ -537,7 +537,7 @@ namespace dnn
 			throw std::invalid_argument("Parameter out of range in Bernoulli function");
 
 		static thread_local auto generator = std::mt19937(Seed<unsigned>());
-		return static_cast<T>(std::bernoulli_distribution(double(p))(generator));
+		return static_cast<T>(std::bernoulli_distribution(static_cast<double>(p))(generator));
 	}
 
 	template<typename T>
