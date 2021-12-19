@@ -679,27 +679,66 @@ namespace dnn
 			auto maxRate = rate.MaximumRate;
 			auto minRate = rate.MinimumRate;
 			auto epoch = 0ull;
+
 			for (auto c = 0ull; c < TotalCycles; c++)
 			{
-				const auto total = rate.Epochs * (c > 0 ? (rate.EpochMultiplier != 1 ? c * rate.EpochMultiplier : 1) : 1);
-				for (auto i = 0ull; i < total; i++)
+				const auto totalEpochs = rate.Epochs * (c > 0 ? (rate.EpochMultiplier != 1 ? c * rate.EpochMultiplier : 1) : 1);
+				for (auto i = 0ull; i < totalEpochs; i++)
 				{
-					const auto newRate = (minRate + Float(0.5) * (maxRate - minRate) * (Float(1) + std::cos(Float(i) / Float(total) * Float(3.1415926535897932384626433832))));
+					const auto newRate = (minRate + Float(0.5) * (maxRate - minRate) * (Float(1) + std::cos(Float(i) / Float(totalEpochs) * Float(3.1415926535897932384626433832))));
 					
 					epoch++;
 					
 					if (rate.Optimizer == Optimizers::AdaBoundW || rate.Optimizer == Optimizers::AdamW || rate.Optimizer == Optimizers::AmsBoundW || rate.Optimizer == Optimizers::SGDW)
 					{
 						const auto weightDecayMultiplier = newRate / LR;
-						const auto weightDecayNormalized = rate.L2Penalty / std::pow(Float(rate.BatchSize) / (Float(trainSamples) / rate.BatchSize) * total, Float(0.5));
+						const auto weightDecayNormalized = rate.L2Penalty / std::pow(Float(rate.BatchSize) / (Float(trainSamples) / rate.BatchSize) * totalEpochs, Float(0.5));
 
 						if (epoch >= gotoEpoch)
-							TrainingRates.push_back(TrainingRate(rate.Optimizer, rate.Momentum, rate.Beta2, weightDecayMultiplier * weightDecayNormalized, rate.Dropout, rate.Eps, rate.BatchSize, rate.Height, rate.Width, c + 1, 1, rate.EpochMultiplier, newRate, minRate, rate.FinalRate / LR, rate.Gamma, 1, Float(1), rate.HorizontalFlip, rate.VerticalFlip, rate.InputDropout, rate.Cutout, rate.CutMix, rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
+						{
+							if (UseTrainingStrategy)
+							{
+								TrainingRate tmpRate;
+
+								auto mult = Float(0);
+								for (const auto& strategy : TrainingStrategies)
+								{
+									mult += strategy.Epochs;
+									if (epoch <= static_cast<UInt>(mult * totalEpochs))
+										tmpRate = TrainingRate(rate.Optimizer, strategy.Momentum, strategy.Beta2, weightDecayMultiplier * weightDecayNormalized, strategy.Dropout, rate.Eps, strategy.BatchSize, strategy.Height, strategy.Width, c + 1, 1, rate.EpochMultiplier, newRate, minRate, rate.FinalRate / LR, strategy.Gamma, 1, Float(1), strategy.HorizontalFlip, strategy.VerticalFlip, strategy.InputDropout, strategy.Cutout, strategy.CutMix, strategy.AutoAugment, strategy.ColorCast, strategy.ColorAngle, strategy.Distortion, strategy.Interpolation, strategy.Scaling, strategy.Rotation);
+									else
+										break;
+								}
+
+								TrainingRates.push_back(tmpRate);
+							}
+							else
+								TrainingRates.push_back(TrainingRate(rate.Optimizer, rate.Momentum, rate.Beta2, weightDecayMultiplier * weightDecayNormalized, rate.Dropout, rate.Eps, rate.BatchSize, rate.Height, rate.Width, c + 1, 1, rate.EpochMultiplier, newRate, minRate, rate.FinalRate / LR, rate.Gamma, 1, Float(1), rate.HorizontalFlip, rate.VerticalFlip, rate.InputDropout, rate.Cutout, rate.CutMix, rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
+						}
 					}
 					else
 					{
 						if (epoch >= gotoEpoch)
-							TrainingRates.push_back(TrainingRate(rate.Optimizer, rate.Momentum, rate.Beta2, rate.L2Penalty, rate.Dropout, rate.Eps, rate.BatchSize, rate.Height, rate.Width, c + 1, 1, rate.EpochMultiplier, newRate, minRate, rate.FinalRate / LR, rate.Gamma, 1, Float(1), rate.HorizontalFlip, rate.VerticalFlip, rate.InputDropout, rate.Cutout, rate.CutMix, rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
+						{
+							if (UseTrainingStrategy)
+							{
+								TrainingRate tmpRate;
+
+								auto mult = Float(0);
+								for (const auto& strategy : TrainingStrategies)
+								{
+									mult += strategy.Epochs;
+									if (epoch <= static_cast<UInt>(mult * totalEpochs))
+										tmpRate = TrainingRate(rate.Optimizer, strategy.Momentum, strategy.Beta2, strategy.L2Penalty, strategy.Dropout, rate.Eps, strategy.BatchSize, strategy.Height, strategy.Width, c + 1, 1, rate.EpochMultiplier, newRate, minRate, rate.FinalRate / LR, strategy.Gamma, 1, Float(1), strategy.HorizontalFlip, strategy.VerticalFlip, strategy.InputDropout, strategy.Cutout, strategy.CutMix, strategy.AutoAugment, strategy.ColorCast, strategy.ColorAngle, strategy.Distortion, strategy.Interpolation, strategy.Scaling, strategy.Rotation);
+									else
+										break;
+								}
+
+								TrainingRates.push_back(tmpRate);
+							}
+							else
+								TrainingRates.push_back(TrainingRate(rate.Optimizer, rate.Momentum, rate.Beta2, rate.L2Penalty, rate.Dropout, rate.Eps, rate.BatchSize, rate.Height, rate.Width, c + 1, 1, rate.EpochMultiplier, newRate, minRate, rate.FinalRate / LR, rate.Gamma, 1, Float(1), rate.HorizontalFlip, rate.VerticalFlip, rate.InputDropout, rate.Cutout, rate.CutMix, rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
+						}
 					}
 				}
 				
