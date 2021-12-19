@@ -218,6 +218,12 @@ extern "C" DNN_API void DNNSetOptimizer(const Optimizers optimizer)
 		model->SetOptimizer(optimizer);
 }
 
+extern "C" DNN_API void DNNSetUseTrainingStrategy(const bool enable)
+{
+	if (model)
+		model->UseTrainingStrategy = enable;
+}
+
 extern "C" DNN_API void DNNDisableLocking(const bool disable)
 {
 	if (model)
