@@ -722,7 +722,7 @@ namespace scripts
             {
                 auto channels = DIV8(p.GrowthRate);
 
-                net += Convolution(1, "Input", channels, 3, 3, 1, 1, 1, 1);
+                net += Convolution(1, "Input", channels, 3, 3, 2, 2, 1, 1);
 
                 if (p.Bottleneck)
                 {
@@ -876,7 +876,7 @@ namespace scripts
                 auto W = p.Width * 16;
 
                 net +=
-                    Convolution(1, "Input", DIV8(W), 3, 3, 1, 1, 1, 1) +
+                    Convolution(1, "Input", DIV8(W), 3, 3, 2, 2, 1, 1) +
                     BatchNormActivation(1, "C1", p.Activation);
 
                 blocks.push_back(
@@ -971,7 +971,7 @@ namespace scripts
                 auto A = 1ull;
                 auto C = 5ull;
 
-                net += Convolution(1, "Input", DIV8(W), 3, 3, 1, 1, 1, 1);
+                net += Convolution(1, "Input", DIV8(W), 3, 3, 2, 2, 1, 1);
 
                 if (p.Bottleneck)
                 {
