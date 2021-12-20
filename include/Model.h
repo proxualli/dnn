@@ -1202,6 +1202,9 @@ namespace dnn
 			
 				if (!ChangeResolution(CurrentTrainingRate.BatchSize, CurrentTrainingRate.Height, CurrentTrainingRate.Width))
 					return;
+				
+				if (Dropout != CurrentTrainingRate.Dropout)
+					ChangeDropout(CurrentTrainingRate.Dropout, BatchSize);
 
 				auto learningRateEpochs = CurrentTrainingRate.Epochs;
 				auto learningRateIndex = 0ull;
@@ -1946,7 +1949,10 @@ namespace dnn
 			auto SampleLabels = std::vector<std::vector<LabelInfo>>(batchSize, std::vector<LabelInfo>(DataProv->Hierarchies));
 			const auto resize = DataProv->TestingSamples[0].D != D || DataProv->TestingSamples[0].H != H || DataProv->TestingSamples[0].W != W;
 
-			for_i(batchSize, MEDIUM_COMPUTE, [=, &SampleLabels](const UInt batchIndex)
+			const auto elements = batchSize * C * D * H * W;
+			const auto threads = GetThreads(elements);
+
+			for_i(batchSize, threads, [=, &SampleLabels](const UInt batchIndex)
 			{
 				const auto sampleIndex = ((index + batchIndex) >= DataProv->TestingSamplesCount) ? batchIndex : index + batchIndex;
 
