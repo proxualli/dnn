@@ -404,52 +404,53 @@ namespace dnn
 
 			const auto currentSize = GetNeuronsSize(BatchSize) + GetWeightsSize(PersistOptimizer, Optimizer);
 
-			if (!BatchSizeChanging.load() && !ResettingWeights.load())
+			while (BatchSizeChanging.load() || ResettingWeights.load())
 			{
-				BatchSizeChanging.store(true);
-
-				Layers[0]->H = h;
-				Layers[0]->W = w;
-				for (auto& layer : Layers)
-					layer->UpdateResolution();
-				
-				auto requestedSize = GetNeuronsSize(batchSize) + GetWeightsSize(PersistOptimizer, Optimizer);
-
-				if (GetTotalFreeMemory() + currentSize < requestedSize)
-				{
-					std::cout << std::string("Memory required: ") << std::to_string(requestedSize / 1024 / 1024) << " MB with resolution" << std::to_string(batchSize) + std::string("x") + std::to_string(h) + std::string("x") + std::to_string(w) << std::endl << std::endl;
-					
-					State.store(States::Completed);
-					BatchSizeChanging.store(false);
-
-					Layers[0]->H = H;
-					Layers[0]->W = W;
-					for (auto& layer : Layers)
-						layer->UpdateResolution();
-
-					return false;
-				}
-
-				for (auto& layer : Layers)
-					layer->SetBatchSize(batchSize);
-				
-				AdjustedTrainingSamplesCount = (DataProv->TrainingSamplesCount % batchSize == 0) ? DataProv->TrainingSamplesCount : ((DataProv->TrainingSamplesCount / batchSize) + 1) * batchSize;
-				AdjustedTestingSamplesCount = (DataProv->TestingSamplesCount % batchSize == 0) ? DataProv->TestingSamplesCount : ((DataProv->TestingSamplesCount / batchSize) + 1) * batchSize;
-				TrainSkipCount = batchSize - (AdjustedTrainingSamplesCount - DataProv->TrainingSamplesCount);
-				TestSkipCount = batchSize - (AdjustedTestingSamplesCount - DataProv->TestingSamplesCount);
-				TrainOverflowCount = AdjustedTrainingSamplesCount - batchSize;
-				TestOverflowCount = AdjustedTestingSamplesCount - batchSize;;
-
-				BatchSize = batchSize;
-				H = h;
-				W = w;
-
-				BatchSizeChanging.store(false);
-
-				return true;
+				std::this_thread::sleep_for(std::chrono::milliseconds(200));
+				std::this_thread::yield();
 			}
 
-			return false;;
+			BatchSizeChanging.store(true);
+
+			Layers[0]->H = h;
+			Layers[0]->W = w;
+			for (auto& layer : Layers)
+				layer->UpdateResolution();
+				
+			auto requestedSize = GetNeuronsSize(batchSize) + GetWeightsSize(PersistOptimizer, Optimizer);
+
+			if (GetTotalFreeMemory() + currentSize < requestedSize)
+			{
+				std::cout << std::string("Memory required: ") << std::to_string(requestedSize / 1024 / 1024) << " MB with resolution" << std::to_string(batchSize) + std::string("x") + std::to_string(h) + std::string("x") + std::to_string(w) << std::endl << std::endl;
+					
+				State.store(States::Completed);
+				BatchSizeChanging.store(false);
+
+				Layers[0]->H = H;
+				Layers[0]->W = W;
+				for (auto& layer : Layers)
+					layer->UpdateResolution();
+
+				return false;
+			}
+
+			for (auto& layer : Layers)
+				layer->SetBatchSize(batchSize);
+				
+			AdjustedTrainingSamplesCount = (DataProv->TrainingSamplesCount % batchSize == 0) ? DataProv->TrainingSamplesCount : ((DataProv->TrainingSamplesCount / batchSize) + 1) * batchSize;
+			AdjustedTestingSamplesCount = (DataProv->TestingSamplesCount % batchSize == 0) ? DataProv->TestingSamplesCount : ((DataProv->TestingSamplesCount / batchSize) + 1) * batchSize;
+			TrainSkipCount = batchSize - (AdjustedTrainingSamplesCount - DataProv->TrainingSamplesCount);
+			TestSkipCount = batchSize - (AdjustedTestingSamplesCount - DataProv->TestingSamplesCount);
+			TrainOverflowCount = AdjustedTrainingSamplesCount - batchSize;
+			TestOverflowCount = AdjustedTestingSamplesCount - batchSize;;
+
+			BatchSize = batchSize;
+			H = h;
+			W = w;
+
+			BatchSizeChanging.store(false);
+
+			return true;
 		}
 
 		void ChangeDropout(const Float dropout, const UInt batchSize)
