@@ -423,13 +423,12 @@ namespace dnn
 			{
 				std::cout << std::string("Memory required: ") << std::to_string(requestedSize / 1024 / 1024) << " MB with resolution" << std::to_string(batchSize) + std::string("x") + std::to_string(h) + std::string("x") + std::to_string(w) << std::endl << std::endl;
 					
-				State.store(States::Completed);
-				BatchSizeChanging.store(false);
-
 				Layers[0]->H = H;
 				Layers[0]->W = W;
 				for (auto& layer : Layers)
 					layer->UpdateResolution();
+
+				BatchSizeChanging.store(false);
 
 				return false;
 			}
