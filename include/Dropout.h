@@ -86,9 +86,11 @@ namespace dnn
 
 		void ForwardProp(const UInt batchSize, const bool training) final override
 		{
-			const auto size = IsPlainFormat() ? CDHW : PaddedCDHW;
+			const auto plain = IsPlainFormat();
+			const auto size = plain ? CDHW : PaddedCDHW;
 			const auto part = GetVectorPart(size);
-			
+			const auto elements = batchSize * size;
+			const auto threads = GetThreads(elements);
 
 			if (Enabled && training)
 			{
@@ -116,7 +118,7 @@ namespace dnn
 				}
 				else
 #endif
-					for_i(batchSize, [=](UInt b)
+					for_i(batchSize, threads, [=](UInt b)
 					{
 						const auto start = b * size;
 						const auto end = start + part;
@@ -152,7 +154,7 @@ namespace dnn
 				}
 				else
 #endif
-					for_i(batchSize, LIGHT_COMPUTE, [=](UInt b)
+					for_i(batchSize, threads, [=](UInt b)
 					{
 						const auto start = b * size;
 						const auto end = start + part;
@@ -170,10 +172,12 @@ namespace dnn
 #ifdef DNN_LEAN
 			ZeroGradient(batchSize);
 #endif
-
-			const auto size = IsPlainFormat() ? CDHW : PaddedCDHW;
+			const auto plain = IsPlainFormat();
+			const auto size = plain ? CDHW : PaddedCDHW;
 			const auto part = GetVectorPart(size);
-
+			const auto elements = batchSize * size;
+			const auto threads = GetThreads(elements);
+			
 			if (Enabled)
 			{
 #ifdef DNN_STOCHASTIC
@@ -186,7 +190,7 @@ namespace dnn
 				}
 				else
 #endif
-					for_i(batchSize, LIGHT_COMPUTE, [=](UInt b)
+					for_i(batchSize, threads, [=](UInt b)
 					{
 						const auto start = b * size;
 						const auto end = start + part;
@@ -208,7 +212,7 @@ namespace dnn
 				}
 				else
 #endif
-					for_i(batchSize, LIGHT_COMPUTE, [=](UInt b)
+					for_i(batchSize, threads, [=](UInt b)
 					{
 						const auto start = b * size;
 						const auto end = start + part;
