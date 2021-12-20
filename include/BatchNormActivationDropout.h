@@ -139,7 +139,7 @@ namespace dnn
 						NeuronsActive[n * PaddedCDHW + i] = Float(1);
 			}
 			else
-				NeuronsActive.resize(1, 1, 1, 1, dnnl::memory::data_type::f32, BlockedFmt, Device.engine);
+				NeuronsActive.release();
 		}
 
 		void ForwardProp(const UInt batchSize, const bool training) final override

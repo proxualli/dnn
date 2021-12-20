@@ -365,26 +365,71 @@ namespace dnn
 
 		virtual ~Model() = default;
 		
-		// todo: check memory requirements !!!
-		void ChangeResolution(const UInt batchSize, const UInt h, const UInt w)
+		auto GetWeightsSize(const bool persistOptimizer, const Optimizers optimizer) const
 		{
-			if (batchSize < 1)
-				throw std::invalid_argument("Invalid batchSize value in ChangeResolution function");
-			if (h < 1)
-				throw std::invalid_argument("Invalid height value in ChangeResolution function");
-			if (w < 1)
-				throw std::invalid_argument("Invalid width value in ChangeResolution function");
+			std::streamsize weightsSize = 0;
 
-			Layers[0]->H = h;
-			Layers[0]->W = w;
+			for (auto& layer : Layers)
+				weightsSize += layer->GetWeightsSize(persistOptimizer, optimizer);
+
+			return weightsSize;
+		}
+
+		auto GetNeuronsSize(const UInt batchSize) const
+		{
+			UInt neuronsSize = 0;
+
+			for (auto& layer : Layers)
+				neuronsSize += layer->GetNeuronsSize(batchSize);
+
+			return neuronsSize;
+		}
+
+		bool BatchNormalizationUsed() const
+		{
+			for (const auto& layer : Layers)
+				if (layer->IsBatchNorm())
+					return true;
+
+			return false;
+		}
+
+		bool ChangeResolution(const UInt batchSize, const UInt h, const UInt w)
+		{
+			if (batchSize < 1 || h < 1 || w < 1)
+				throw false;
+
+			if (batchSize == BatchSize && h == H && w == W)
+				return true;
+
+			const auto currentSize = GetNeuronsSize(BatchSize) + GetWeightsSize(PersistOptimizer, Optimizer);
 
 			if (!BatchSizeChanging.load() && !ResettingWeights.load())
 			{
 				BatchSizeChanging.store(true);
 
+				Layers[0]->H = h;
+				Layers[0]->W = w;
 				for (auto& layer : Layers)
 					layer->UpdateResolution();
 				
+				auto requestedSize = GetNeuronsSize(batchSize) + GetWeightsSize(PersistOptimizer, Optimizer);
+
+				if (GetTotalFreeMemory() + currentSize < requestedSize)
+				{
+					std::cout << std::string("Memory required: ") << std::to_string(requestedSize / 1024 / 1024) << " MB with resolution" << std::to_string(batchSize) + std::string("x") + std::to_string(h) + std::string("x") + std::to_string(w) << std::endl << std::endl;
+					
+					State.store(States::Completed);
+					BatchSizeChanging.store(false);
+
+					Layers[0]->H = H;
+					Layers[0]->W = W;
+					for (auto& layer : Layers)
+						layer->UpdateResolution();
+
+					return false;
+				}
+
 				for (auto& layer : Layers)
 					layer->SetBatchSize(batchSize);
 				
@@ -396,26 +441,15 @@ namespace dnn
 				TestOverflowCount = AdjustedTestingSamplesCount - batchSize;;
 
 				BatchSize = batchSize;
-
-				BatchSizeChanging.store(false);
-			}
-
-			if (BatchSize == batchSize)
-			{
 				H = h;
 				W = w;
+
+				BatchSizeChanging.store(false);
+
+				return true;
 			}
-			//else
-			//{
-			//	// revert if unsuccessful
-			//	Layers[0]->H = H;
-			//	Layers[0]->W = W;
 
-			//	for (auto& layer : Layers)
-			//		layer->UpdateResolution();
-
-			//	SetBatchSize(BatchSize);
-			//}
+			return false;;
 		}
 
 		void ChangeDropout(const Float dropout, const UInt batchSize)
@@ -587,35 +621,6 @@ namespace dnn
 			}
 		}		
 	
-		auto GetWeightsSize(const bool persistOptimizer, const Optimizers optimizer) const
-		{
-			std::streamsize weightsSize = 0;
-
-			for (auto &layer : Layers)
-				weightsSize += layer->GetWeightsSize(persistOptimizer, optimizer);
-
-			return weightsSize;
-		}
-
-		auto GetNeuronsSize(const UInt batchSize) const
-		{
-			UInt neuronsSize = 0;
-
-			for (auto &layer : Layers)
-				neuronsSize += layer->GetNeuronsSize(batchSize);
-
-			return neuronsSize;
-		}
-
-		bool BatchNormalizationUsed() const
-		{
-			for (const auto &layer : Layers)
-				if (layer->IsBatchNorm())
-					return true;
-
-			return false;
-		}
-
 		void AddTrainingRate(const TrainingRate& rate, const bool clear, const UInt gotoEpoch, const UInt trainSamples)
 		{
 			if (clear)
@@ -1014,7 +1019,7 @@ namespace dnn
 			}
 		}
 
-		void SetBatchSize(const UInt batchSize)
+		/*void SetBatchSize(const UInt batchSize)
 		{
 			if (!BatchSizeChanging.load() && !ResettingWeights.load())
 			{
@@ -1034,7 +1039,7 @@ namespace dnn
 
 				BatchSizeChanging.store(false);
 			}
-		}
+		}*/
 
 		void SwitchInplaceBwd(const bool enable)
 		{
@@ -1195,15 +1200,8 @@ namespace dnn
 				Rate = CurrentTrainingRate.MaximumRate;
 				CurrentCycle = CurrentTrainingRate.Cycles;
 			
-				if (CurrentTrainingRate.BatchSize > BatchSize)
-					if (GetTotalFreeMemory() < GetNeuronsSize(CurrentTrainingRate.BatchSize - BatchSize))
-					{                           
-						std::cout << std::string("Memory required: ") << std::to_string(GetNeuronsSize(CurrentTrainingRate.BatchSize - BatchSize) / 1024 / 1024) << " MB with BatchSize " << std::to_string(CurrentTrainingRate.BatchSize) << std::endl << std::endl;
-						State.store(States::Completed);
-						return;
-					}
-				std::cout << std::string("Memory required: ") << std::to_string(GetNeuronsSize(CurrentTrainingRate.BatchSize - BatchSize) / 1024 / 1024) << " MB with BatchSize " << std::to_string(CurrentTrainingRate.BatchSize) << std::endl << std::endl;
-				ChangeResolution(CurrentTrainingRate.BatchSize, CurrentTrainingRate.Height, CurrentTrainingRate.Width);
+				if (!ChangeResolution(CurrentTrainingRate.BatchSize, CurrentTrainingRate.Height, CurrentTrainingRate.Width))
+					return;
 
 				auto learningRateEpochs = CurrentTrainingRate.Epochs;
 				auto learningRateIndex = 0ull;
@@ -1244,7 +1242,6 @@ namespace dnn
 						break;
 					}
 
-				
 				while (CurrentEpoch < TotalEpochs)
 				{
 					if (CurrentEpoch - (GoToEpoch - 1) == learningRateEpochs)
@@ -1253,8 +1250,8 @@ namespace dnn
 						CurrentTrainingRate = TrainingRates[learningRateIndex];
 						Rate = CurrentTrainingRate.MaximumRate;
 						
-						if (H != CurrentTrainingRate.Height || W != CurrentTrainingRate.Width || BatchSize != CurrentTrainingRate.BatchSize)
-							ChangeResolution(CurrentTrainingRate.BatchSize, CurrentTrainingRate.Height, CurrentTrainingRate.Width);
+						if (!ChangeResolution(CurrentTrainingRate.BatchSize, CurrentTrainingRate.Height, CurrentTrainingRate.Width))
+								return;
 								
 						if (Dropout != CurrentTrainingRate.Dropout)
 							ChangeDropout(CurrentTrainingRate.Dropout, BatchSize);
@@ -1543,14 +1540,10 @@ namespace dnn
 				auto elapsedTime = std::chrono::duration<Float>(Float(0));
 
 				CurrentTrainingRate = TrainingRates[0];
-				// check first if we have enough memory available
-				if (CurrentTrainingRate.BatchSize > BatchSize)
-					if (GetTotalFreeMemory() < GetNeuronsSize(CurrentTrainingRate.BatchSize - BatchSize))
-					{
-						State.store(States::Completed);
+				
+				if (!ChangeResolution(CurrentTrainingRate.BatchSize, CurrentTrainingRate.Height, CurrentTrainingRate.Width))
 						return;
-					}
-				SetBatchSize(CurrentTrainingRate.BatchSize);
+
 				Rate = CurrentTrainingRate.MaximumRate;
 
 				TrainingSamplesHFlip = std::vector<bool>();
