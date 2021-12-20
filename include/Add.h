@@ -392,7 +392,6 @@ namespace dnn
 							In += D1;
 							In.store_a(&Inputs[3]->NeuronsD1[cdhw]);
 						}
-						PRAGMA_OMP_SIMD()
 						for (auto cdhw = end; cdhw < start + size; cdhw++)
 						{
 							Inputs[0]->NeuronsD1[cdhw] += NeuronsD1[cdhw];
@@ -436,7 +435,6 @@ namespace dnn
 							In += D1;
 							In.store_a(&Inputs[4]->NeuronsD1[cdhw]);
 						}
-						PRAGMA_OMP_SIMD()
 						for (auto cdhw = end; cdhw < start + size; cdhw++)
 						{
 							Inputs[0]->NeuronsD1[cdhw] += NeuronsD1[cdhw];
