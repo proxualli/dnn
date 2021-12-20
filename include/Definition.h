@@ -226,7 +226,7 @@ namespace dnn
 						if (modelName.empty())
 						{
 							modelName = layerName;
-							model = new Model(modelName, definition, dataprovider);
+							model = new Model(definition, dataprovider);
 							
 							layerNames.push_back(std::make_pair("Input", line));
 						}

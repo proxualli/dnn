@@ -257,8 +257,26 @@ namespace dnn
 
 		void(*NewEpoch)(UInt, UInt, UInt, UInt, Float, Float, Float, bool, bool, Float, Float, bool, Float, Float, UInt, Float, UInt, Float, Float, Float, UInt, UInt, UInt, Float, Float, Float, Float, Float, Float, UInt, Float, Float, Float, UInt);
 
-		Model(const std::string& name, const std::string& definition, Dataprovider* dataprovider) :
-			Name(name),
+		const auto GetName(const std::string& definition) const
+		{
+			if (definition.length() > 2)
+			{
+				std::string name = definition;
+				std::istringstream iss(name);
+
+				std::string line;
+				std::getline(iss, line);
+				if (line[0] == '[' && line[line.length() - 1] == ']')
+					name = line.erase(line.length() - 1, 1).erase(0, 1);
+
+				return name;
+			}
+
+			return std::string("");
+		}
+
+		Model(const std::string& definition, Dataprovider* dataprovider) :
+			Name(GetName(definition)),
 			Definition(definition),
 			DataProv(dataprovider),
 			Engine(dnnl::engine(dnnl::engine::kind::cpu, 0)),
