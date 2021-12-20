@@ -562,7 +562,7 @@ namespace scripts
                 "Eps=" + std::to_string(eps) + nwl + nwl;
         }
 
-        static std::vector<std::string> FusedMBConv(UInt id, std::string inputs, UInt inputChannels, UInt outputChannels, UInt stride = 1, UInt expandRatio = 4, bool se = false, scripts::Activations activation = scripts::Activations::HardSwish)
+        static std::vector<std::string> FusedMBConv(UInt idA, UInt id, std::string inputs, UInt inputChannels, UInt outputChannels, UInt stride = 1, UInt expandRatio = 4, bool se = false, scripts::Activations activation = scripts::Activations::HardSwish)
         {
             auto blocks = std::vector<std::string>();
             auto hiddenDim = DIV8(inputChannels * expandRatio);
@@ -597,14 +597,14 @@ namespace scripts
             if (identity)
             {
                 blocks.push_back(
-                    Dropout(id + 1, In("B", id + 1)) +
-                    Add(id + 1, In("D", id + 1) + "," + inputs));
+                    Dropout(idA, In("B", id + 1)) +
+                    Add(idA, In("D", idA) + "," + inputs));
             }
 
             return blocks;
         }
 
-        static std::vector<std::string> MBConv(UInt id, std::string inputs, UInt inputChannels, UInt outputChannels, UInt stride = 1, UInt expandRatio = 4, bool se = false, scripts::Activations activation = scripts::Activations::HardSwish)
+        static std::vector<std::string> MBConv(UInt idA, UInt id, std::string inputs, UInt inputChannels, UInt outputChannels, UInt stride = 1, UInt expandRatio = 4, bool se = false, scripts::Activations activation = scripts::Activations::HardSwish)
         {
             auto blocks = std::vector<std::string>();
             auto hiddenDim = DIV8(inputChannels * expandRatio);
@@ -643,8 +643,8 @@ namespace scripts
             if (identity)
             {
                 blocks.push_back(
-                    Dropout(id + 2, In("B", id + 2)) +
-                    Add(id + 2, In("D", id + 2) + "," + inputs));
+                    Dropout(idA, In("B", id + 2)) +
+                    Add(idA, In("D", idA) + "," + inputs));
             }
 
             return blocks;
@@ -832,6 +832,7 @@ namespace scripts
             {
                 const auto width = Float(1);
                 auto inputChannels = DIV8(UInt(width * (Float)p.EfficientNet[0].Channels));
+                auto A = 1ull;
                 auto C = 1ull;
                 
                 net +=
@@ -848,19 +849,26 @@ namespace scripts
                         auto stride = n == 0ull ? rec.Stride : 1ull;
                         auto identity = stride == 1ull && inputChannels == outputChannels;
 
-                        auto subblocks = stage < 3ull ? FusedMBConv(C, input, inputChannels, outputChannels, stride, rec.ExpandRatio, rec.SE, p.Activation) : MBConv(C, input, inputChannels, outputChannels, stride, rec.ExpandRatio, rec.SE, p.Activation);
+                        auto subblocks = stage < 3ull ? FusedMBConv(A, C, input, inputChannels, outputChannels, stride, rec.ExpandRatio, rec.SE, p.Activation) : MBConv(A, C, input, inputChannels, outputChannels, stride, rec.ExpandRatio, rec.SE, p.Activation);
                         for(auto blk : subblocks)
                             net += blk;
 
                         inputChannels = outputChannels;
                         C += stage < 3ull ? 1ull : 2ull;
-                        input = In((identity ? "A" : "B"), C++);
+
+                        if (identity)
+                        {
+                            input = In("A", A++);
+                            C++;
+                        }
+                        else
+                            input = In("B", C++);
                     }
                     stage++;
                 }
 
                 net +=
-                    BatchNormActivation(C, In("A", C - 1), p.Activation) +
+                    BatchNormActivation(C, In("A", A - 1), p.Activation) +
                     Convolution(C, In("B", C), p.Classes(), 1, 1, 1, 1, 0, 0) +
                     BatchNorm(C + 1, In("C", C)) +
                     GlobalAvgPooling(In("B", C + 1)) +
