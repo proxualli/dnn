@@ -95,6 +95,10 @@ namespace dnn
 		Float Scaling;
 		Float Rotation;
 
+		TrainingStrategy()
+		{
+		}
+
 		TrainingStrategy(const Float epochs, const UInt batchSize, const UInt height, const UInt width, const Float momentum, const Float beta2, const Float gamma, const Float l2penalty, const Float dropout, const bool horizontalFlip, const bool verticalFlip, const Float inputDropout, const Float cutout, const bool cutMix, const Float autoAugment, const Float colorCast, const UInt colorAngle, const Float distortion, const Interpolations interpolation, const Float scaling, const Float rotation) :
 			Epochs(epochs),
 			BatchSize(batchSize),
@@ -118,7 +122,7 @@ namespace dnn
 			Scaling(scaling),
 			Rotation(rotation)
 		{
-			if (Epochs <= 0 || Epochs >= 1)
+			if (Epochs <= 0 || Epochs > 1)
 				throw std::invalid_argument("Epochs out of range in TrainingStrategy");
 			if (BatchSize == 0)
 				throw std::invalid_argument("BatchSize cannot be zero in TrainingStrategy");
@@ -335,7 +339,7 @@ namespace dnn
 			ResettingWeights(false),
 			FirstUnlockedLayer(1),
 			UseTrainingStrategy(false),
-			TrainingStrategies()
+			TrainingStrategies(std::vector<TrainingStrategy>())
 			//LogInterval(10000)
 		{
 #ifdef DNN_LOG
@@ -696,17 +700,17 @@ namespace dnn
 
 						if (epoch >= gotoEpoch)
 						{
-							if (UseTrainingStrategy)
+							if (UseTrainingStrategy && TrainingStrategies.size() > 0)
 							{
 								TrainingRate tmpRate;
 
-								auto mult = Float(0);
+								auto sum = Float(0);
 								for (const auto& strategy : TrainingStrategies)
 								{
-									mult += strategy.Epochs;
-									if (epoch <= static_cast<UInt>(mult * totalEpochs))
-										tmpRate = TrainingRate(rate.Optimizer, strategy.Momentum, strategy.Beta2, weightDecayMultiplier * weightDecayNormalized, strategy.Dropout, rate.Eps, strategy.BatchSize, strategy.Height, strategy.Width, c + 1, 1, rate.EpochMultiplier, newRate, minRate, rate.FinalRate / LR, strategy.Gamma, 1, Float(1), strategy.HorizontalFlip, strategy.VerticalFlip, strategy.InputDropout, strategy.Cutout, strategy.CutMix, strategy.AutoAugment, strategy.ColorCast, strategy.ColorAngle, strategy.Distortion, strategy.Interpolation, strategy.Scaling, strategy.Rotation);
-									else
+									tmpRate = TrainingRate(rate.Optimizer, strategy.Momentum, strategy.Beta2, weightDecayMultiplier * weightDecayNormalized, strategy.Dropout, rate.Eps, strategy.BatchSize, strategy.Height, strategy.Width, c + 1, 1, rate.EpochMultiplier, newRate, minRate, rate.FinalRate / LR, strategy.Gamma, 1, Float(1), strategy.HorizontalFlip, strategy.VerticalFlip, strategy.InputDropout, strategy.Cutout, strategy.CutMix, strategy.AutoAugment, strategy.ColorCast, strategy.ColorAngle, strategy.Distortion, strategy.Interpolation, strategy.Scaling, strategy.Rotation);
+
+									sum += strategy.Epochs * totalEpochs;
+									if (epoch > totalEpochs - sum)
 										break;
 								}
 
@@ -720,17 +724,17 @@ namespace dnn
 					{
 						if (epoch >= gotoEpoch)
 						{
-							if (UseTrainingStrategy)
+							if (UseTrainingStrategy && TrainingStrategies.size() > 0)
 							{
 								TrainingRate tmpRate;
-
-								auto mult = Float(0);
+								
+								auto sum = Float(0);
 								for (const auto& strategy : TrainingStrategies)
 								{
-									mult += strategy.Epochs;
-									if (epoch <= static_cast<UInt>(mult * totalEpochs))
-										tmpRate = TrainingRate(rate.Optimizer, strategy.Momentum, strategy.Beta2, strategy.L2Penalty, strategy.Dropout, rate.Eps, strategy.BatchSize, strategy.Height, strategy.Width, c + 1, 1, rate.EpochMultiplier, newRate, minRate, rate.FinalRate / LR, strategy.Gamma, 1, Float(1), strategy.HorizontalFlip, strategy.VerticalFlip, strategy.InputDropout, strategy.Cutout, strategy.CutMix, strategy.AutoAugment, strategy.ColorCast, strategy.ColorAngle, strategy.Distortion, strategy.Interpolation, strategy.Scaling, strategy.Rotation);
-									else
+									tmpRate = TrainingRate(rate.Optimizer, strategy.Momentum, strategy.Beta2, strategy.L2Penalty, strategy.Dropout, rate.Eps, strategy.BatchSize, strategy.Height, strategy.Width, c + 1, 1, rate.EpochMultiplier, newRate, minRate, rate.FinalRate / LR, strategy.Gamma, 1, Float(1), strategy.HorizontalFlip, strategy.VerticalFlip, strategy.InputDropout, strategy.Cutout, strategy.CutMix, strategy.AutoAugment, strategy.ColorCast, strategy.ColorAngle, strategy.Distortion, strategy.Interpolation, strategy.Scaling, strategy.Rotation);
+									
+									sum += strategy.Epochs * totalEpochs;
+									if (epoch > totalEpochs - sum)
 										break;
 								}
 

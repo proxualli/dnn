@@ -316,10 +316,10 @@ extern "C" DNN_API void DNNAddTrainingRateSGDR(const TrainingRate& rate, const b
 extern "C" DNN_API void DNNClearTrainingStrategies()
 {
 	if (model)
-		model->TrainingStrategies.clear();
+		model->TrainingStrategies = std::vector<dnn::TrainingStrategy>();
 }
 
-extern "C" DNN_API void DNNAddTrainingStrategy(const TrainingStrategy& strategy)
+extern "C" DNN_API void DNNAddTrainingStrategy(const dnn::TrainingStrategy& strategy)
 {
 	if (model)
 		model->TrainingStrategies.push_back(strategy);
