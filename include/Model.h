@@ -653,7 +653,7 @@ namespace dnn
 								tmpRate = TrainingRate(rate.Optimizer, strategy.Momentum, strategy.Beta2, weightDecayMultiplier * weightDecayNormalized, strategy.Dropout, rate.Eps, strategy.BatchSize, strategy.Height, strategy.Width, 1, rate.Epochs, 1, newRate, rate.MinimumRate, rate.FinalRate / LR, strategy.Gamma, 1, Float(1), strategy.HorizontalFlip, strategy.VerticalFlip, strategy.InputDropout, strategy.Cutout, strategy.CutMix, strategy.AutoAugment, strategy.ColorCast, strategy.ColorAngle, strategy.Distortion, strategy.Interpolation, strategy.Scaling, strategy.Rotation);
 
 								sum += strategy.Epochs * rate.Epochs;
-								if ((i + 1) > rate.Epochs - sum)
+								if ((i + 1) <= sum)
 									break;
 							}
 
@@ -677,7 +677,7 @@ namespace dnn
 								tmpRate = TrainingRate(rate.Optimizer, strategy.Momentum, strategy.Beta2, strategy.L2Penalty, strategy.Dropout, rate.Eps, strategy.BatchSize, strategy.Height, strategy.Width, 1, rate.Epochs, 1, newRate, rate.MinimumRate, rate.FinalRate / LR, strategy.Gamma, 1, Float(1), strategy.HorizontalFlip, strategy.VerticalFlip, strategy.InputDropout, strategy.Cutout, strategy.CutMix, strategy.AutoAugment, strategy.ColorCast, strategy.ColorAngle, strategy.Distortion, strategy.Interpolation, strategy.Scaling, strategy.Rotation);
 
 								sum += strategy.Epochs * rate.Epochs;
-								if ((i + 1) > rate.Epochs - sum)
+								if ((i + 1) <= sum)
 									break;
 							}
 
@@ -711,7 +711,7 @@ namespace dnn
 							tmpRate = TrainingRate(rate.Optimizer, strategy.Momentum, strategy.Beta2, weightDecayMultiplier * weightDecayNormalized, strategy.Dropout, rate.Eps, strategy.BatchSize, strategy.Height, strategy.Width, 1, rate.Epochs - (totIteration * decayAfterEpochs), 1, newRate, rate.MinimumRate, rate.FinalRate / LR, strategy.Gamma, 1, Float(1), strategy.HorizontalFlip, strategy.VerticalFlip, strategy.InputDropout, strategy.Cutout, strategy.CutMix, strategy.AutoAugment, strategy.ColorCast, strategy.ColorAngle, strategy.Distortion, strategy.Interpolation, strategy.Scaling, strategy.Rotation);
 
 							sum += strategy.Epochs * rate.Epochs;
-							if (totIteration * decayAfterEpochs > rate.Epochs - sum)
+							if (totIteration * decayAfterEpochs <= sum)
 								break;
 						}
 
@@ -735,7 +735,7 @@ namespace dnn
 							tmpRate = TrainingRate(rate.Optimizer, strategy.Momentum, strategy.Beta2, strategy.L2Penalty, strategy.Dropout, rate.Eps, strategy.BatchSize, strategy.Height, strategy.Width, 1, rate.Epochs - (totIteration * decayAfterEpochs),1, newRate, rate.MinimumRate, rate.FinalRate / LR, strategy.Gamma, 1, Float(1), strategy.HorizontalFlip, strategy.VerticalFlip, strategy.InputDropout, strategy.Cutout, strategy.CutMix, strategy.AutoAugment, strategy.ColorCast, strategy.ColorAngle, strategy.Distortion, strategy.Interpolation, strategy.Scaling, strategy.Rotation);
 
 							sum += strategy.Epochs * rate.Epochs;
-							if (totIteration * decayAfterEpochs > rate.Epochs - sum)
+							if (totIteration * decayAfterEpochs <= sum)
 								break;
 						}
 
@@ -786,7 +786,7 @@ namespace dnn
 									tmpRate = TrainingRate(rate.Optimizer, strategy.Momentum, strategy.Beta2, weightDecayMultiplier * weightDecayNormalized, strategy.Dropout, rate.Eps, strategy.BatchSize, strategy.Height, strategy.Width, c + 1, 1, rate.EpochMultiplier, newRate, minRate, rate.FinalRate / LR, strategy.Gamma, 1, Float(1), strategy.HorizontalFlip, strategy.VerticalFlip, strategy.InputDropout, strategy.Cutout, strategy.CutMix, strategy.AutoAugment, strategy.ColorCast, strategy.ColorAngle, strategy.Distortion, strategy.Interpolation, strategy.Scaling, strategy.Rotation);
 
 									sum += strategy.Epochs * totalEpochs;
-									if (epoch > totalEpochs - sum)
+									if (epoch <= sum)
 										break;
 								}
 
@@ -810,7 +810,7 @@ namespace dnn
 									tmpRate = TrainingRate(rate.Optimizer, strategy.Momentum, strategy.Beta2, strategy.L2Penalty, strategy.Dropout, rate.Eps, strategy.BatchSize, strategy.Height, strategy.Width, c + 1, 1, rate.EpochMultiplier, newRate, minRate, rate.FinalRate / LR, strategy.Gamma, 1, Float(1), strategy.HorizontalFlip, strategy.VerticalFlip, strategy.InputDropout, strategy.Cutout, strategy.CutMix, strategy.AutoAugment, strategy.ColorCast, strategy.ColorAngle, strategy.Distortion, strategy.Interpolation, strategy.Scaling, strategy.Rotation);
 									
 									sum += strategy.Epochs * totalEpochs;
-									if (epoch > totalEpochs - sum)
+									if (epoch <= sum)
 										break;
 								}
 
