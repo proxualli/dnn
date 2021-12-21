@@ -159,7 +159,57 @@ namespace dnn
 		}
 	};
 
-	
+	struct TrainingInfo
+	{
+		UInt TotalCycles;
+		UInt TotalEpochs;
+		UInt Cycle;
+		UInt Epoch;
+		UInt SampleIndex;
+
+		Float Rate;
+		Optimizers Optimizer;
+
+		Float Momentum;
+		Float Beta2;
+		Float Gamma;
+		Float L2Penalty;
+		Float Dropout;
+
+		UInt BatchSize;
+		UInt Height;
+		UInt Width;
+
+		bool HorizontalFlip;
+		bool VerticalFlip;
+		Float InputDropout;
+		Float Cutout;
+		bool CutMix;
+		Float AutoAugment;
+		Float ColorCast;
+		UInt ColorAngle;
+		Float Distortion;
+		Interpolations Interpolation;
+		Float Scaling;
+		Float Rotation;
+
+		Float AvgTrainLoss;
+		Float TrainErrorPercentage;
+		UInt TrainErrors;
+		Float AvgTestLoss;
+		Float TestErrorPercentage;
+		UInt TestErrors;
+
+		Float SampleSpeed;
+
+		States State;
+		TaskStates TaskState;
+
+		TrainingInfo()
+		{
+		}
+	};
+
 	class Model
 	{
 	private:

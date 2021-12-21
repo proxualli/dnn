@@ -36,6 +36,7 @@ DNN_API void DNNResetLayerWeights(const UInt layerIndex);
 DNN_API void DNNAddTrainingRate(const dnn::TrainingRate& rate, const bool clear, const UInt gotoEpoch, const UInt trainSamples);
 DNN_API void DNNAddTrainingRateSGDR(const dnn::TrainingRate& rate, const bool clear, const UInt gotoEpoch, const UInt trainSamples);
 DNN_API void DNNClearTrainingStrategies();
+DNN_API void DNNSetUseTrainingStrategy(const bool enable);
 DNN_API void DNNAddTrainingStrategy(const dnn::TrainingStrategy& strategy);
 DNN_API bool DNNLoadDataset();
 DNN_API void DNNTraining();
@@ -43,8 +44,8 @@ DNN_API void DNNStop();
 DNN_API void DNNPause();
 DNN_API void DNNResume();
 DNN_API void DNNTesting();
-DNN_API void DNNGetTrainingInfo(UInt* currentCycle, UInt* totalCycles, UInt* currentEpoch, UInt* totalEpochs, bool* horizontalFlip, bool* verticalFlip, Float* inputDropout, Float* cutout, bool* cutMix, Float* autoAugment, Float* colorCast, UInt* colorAngle, Float* distortion, dnn::Interpolations* interpolation, Float* scaling, Float* rotation, UInt* sampleIndex, UInt* batchSize, UInt* height, UInt* width, Float* maximumRate, dnn::Optimizers* optimizer, Float* momentum, Float* beta2, Float* gamma, Float* l2Penalty, Float* dropout, Float* avgTrainLoss, Float* trainErrorPercentage, UInt* trainErrors, Float* avgTestLoss, Float* testErrorPercentage, UInt* testErrors, Float* sampleSpeed, dnn::States* networkState, dnn::TaskStates* taskState);
-DNN_API void DNNGetTestingInfo(UInt* batchSize, UInt* height, UInt* width, UInt* sampleIndex, Float* avgTestLoss, Float* testErrorPercentage, UInt* testErrors, Float* sampleSpeed, dnn::States* networkState, dnn::TaskStates* taskState);
+DNN_API void DNNGetTrainingInfo(dnn::TrainingInfo* info);
+DNN_API void DNNGetTestingInfo(dnn::TrainingInfo* info);
 DNN_API void DNNGetModelInfo(std::string* name, UInt* costIndex, UInt* costLayerCount, UInt* groupIndex, UInt* labelindex, UInt* hierarchies, bool* meanStdNormalization, dnn::Costs* lossFunction, dnn::Datasets* dataset, UInt* layerCount, UInt* trainingSamples, UInt* testingSamples, std::vector<Float>* meanTrainSet, std::vector<Float>* stdTrainSet);
 DNN_API void DNNSetOptimizer(const dnn::Optimizers strategy);
 DNN_API void DNNResetOptimizer();
@@ -104,66 +105,31 @@ void NewEpoch(UInt CurrentCycle, UInt CurrentEpoch, UInt TotalEpochs, UInt Optim
 
 void GetTrainingProgress(int seconds = 5, UInt trainingSamples = 50000, UInt testingSamples = 10000)
 {
-    auto cycle = new UInt();
-    auto totalCycles = new UInt();
-    auto epoch = new UInt();
-    auto totalEpochs = new UInt();
-    auto horizontalMirror = new bool();
-    auto verticalMirror = new bool();
-    auto inputDropout = new Float();
-    auto cutout = new Float();
-    auto cutMix = new bool();
-    auto autoAugment = new Float();
-    auto colorCast = new Float();
-    auto colorAngle = new UInt();
-    auto distortion = new Float();
-    auto interpolation = new Interpolations();
-    auto scaling = new Float();
-    auto rotation = new Float();
-    auto sampleIndex = new UInt();
-    auto rate = new Float();
-    auto optimizer = new dnn::Optimizers();
-    auto momentum = new Float();
-    auto beta2 = new Float();
-    auto gamma = new Float();
-    auto l2Penalty = new Float();
-    auto dropout = new Float();
-    auto batchSize = new UInt();
-    auto height = new UInt();
-    auto width = new UInt();
-    auto avgTrainLoss = new Float();
-    auto trainErrorPercentage = new Float();
-    auto trainErrors = new UInt();
-    auto avgTestLoss = new Float();
-    auto testErrorPercentage = new Float();
-    auto testErrors = new UInt();
-    auto sampleSpeed = new Float();
-    auto state = new States();
-    auto taskState = new TaskStates();
-
-    *state = States::Idle;
+    auto info = new dnn::TrainingInfo();
+   
+    info->State = States::Idle;
     do
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(250));
-        DNNGetTrainingInfo(cycle, totalCycles, epoch, totalEpochs, horizontalMirror, verticalMirror, inputDropout, cutout, cutMix, autoAugment, colorCast, colorAngle, distortion, interpolation, scaling, rotation, sampleIndex, batchSize, height, width, rate, optimizer, momentum, beta2, gamma, l2Penalty, dropout, avgTrainLoss, trainErrorPercentage, trainErrors, avgTestLoss, testErrorPercentage, testErrors, sampleSpeed, state, taskState);
+        DNNGetTrainingInfo(info);
     } 
-    while (*state == States::Idle);
+    while (info->State == States::Idle);
 
     int barWidth = 40;
     float progress = 0.0;
   
-    while (*state != States::Completed)
+    while (info->State != States::Completed)
     {
-        std::this_thread::sleep_for(std::chrono::seconds(*state == States::Testing ? 1 : seconds));
+        std::this_thread::sleep_for(std::chrono::seconds(info->State == States::Testing ? 1 : seconds));
         
-        DNNGetTrainingInfo(cycle, totalCycles, epoch, totalEpochs, horizontalMirror, verticalMirror, inputDropout, cutout, cutMix, autoAugment, colorCast, colorAngle, distortion, interpolation, scaling, rotation, sampleIndex, batchSize, height, width, rate, optimizer, momentum, beta2, gamma, l2Penalty, dropout, avgTrainLoss, trainErrorPercentage, trainErrors, avgTestLoss, testErrorPercentage, testErrors, sampleSpeed, state, taskState);
+        DNNGetTrainingInfo(info);
        
-        if (*state == States::Testing)
-            progress = Float(*sampleIndex) / testingSamples; 
+        if (info->State == States::Testing)
+            progress = Float(info->SampleIndex) / testingSamples; 
         else
-            progress = Float(*sampleIndex) / trainingSamples; 
+            progress = Float(info->SampleIndex) / trainingSamples; 
 
-        if (*state != States::Completed)
+        if (info->State != States::Completed)
         {
             std::cout << "[";
             int pos = int(barWidth * progress);
@@ -177,52 +143,17 @@ void GetTrainingProgress(int seconds = 5, UInt trainingSamples = 50000, UInt tes
                     else
                         std::cout << " ";
             }
-            std::cout << "] " << int(progress * 100.0) << "%  Cycle:" << std::to_string(*cycle) << "  Epoch:" << std::to_string(*epoch) << "  Error:";
-            if (*state == States::Testing)
-                std::cout << FloatToStringFixed(*testErrorPercentage, 2);
+            std::cout << "] " << int(progress * 100.0) << "%  Cycle:" << std::to_string(info->Cycle) << "  Epoch:" << std::to_string(info->Epoch) << "  Error:";
+            if (info->State == States::Testing)
+                std::cout << FloatToStringFixed(info->TestErrorPercentage, 2);
             else
-                std::cout << FloatToStringFixed(*trainErrorPercentage, 2);
-            std::cout << "%  " << FloatToStringFixed(*sampleSpeed, 2) << " samples/s   \r";
+                std::cout << FloatToStringFixed(info->TrainErrorPercentage, 2);
+            std::cout << "%  " << FloatToStringFixed(info->SampleSpeed, 2) << " samples/s   \r";
             std::cout.flush();
         }
     }
    
-    delete cycle;
-    delete totalCycles;
-    delete epoch;
-    delete totalEpochs;
-    delete horizontalMirror;
-    delete verticalMirror;
-    delete dropout;
-    delete cutout;
-    delete cutMix;
-    delete autoAugment;
-    delete colorCast;
-    delete colorAngle;
-    delete distortion;
-    delete interpolation;
-    delete scaling;
-    delete rotation;
-    delete sampleIndex;
-    delete rate;
-    delete optimizer;
-    delete momentum;
-    delete beta2;
-    delete gamma;
-    delete l2Penalty;
-    delete dropout;
-    delete batchSize;
-    delete height;
-    delete width;
-    delete avgTrainLoss;
-    delete trainErrorPercentage;
-    delete trainErrors;
-    delete avgTestLoss;
-    delete testErrorPercentage;
-    delete testErrors;
-    delete sampleSpeed;
-    delete state;
-    delete taskState;
+    delete info;
 }
 
 

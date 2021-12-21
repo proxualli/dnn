@@ -383,6 +383,7 @@ extern "C" DNN_API void DNNGetCostInfo(const UInt costLayerIndex, UInt* trainErr
 	}
 }
 
+
 extern "C" DNN_API void DNNGetModelInfo(std::string* name, UInt* costIndex, UInt* costLayerCount, UInt* groupIndex, UInt* labelIndex, UInt* hierarchies, bool* meanStdNormalization, Costs* lossFunction, Datasets* dataset, UInt* layerCount, UInt* trainingSamples, UInt* testingSamples, std::vector<Float>* meanTrainSet, std::vector<Float>* stdTrainSet)
 {
 	if (model)
@@ -423,146 +424,7 @@ extern "C" DNN_API void DNNGetModelInfo(std::string* name, UInt* costIndex, UInt
 	}
 }
 
-extern "C" DNN_API void DNNGetTrainingInfo(UInt* currentCycle, UInt* totalCycles, UInt* currentEpoch, UInt* totalEpochs, bool* horizontalFlip, bool* verticalFlip, Float* inputDropout, Float* cutout, bool* cutMix, Float* autoAugment, Float* colorCast, UInt* colorAngle, Float* distortion, Interpolations* interpolation, Float* scaling, Float* rotation, UInt* sampleIndex, UInt* batchSize, UInt* height, UInt* width, Float* maximumRate, Optimizers* optimizer, Float* momentum, Float* beta2, Float* gamma, Float* l2Penalty, Float* dropout, Float* avgTrainLoss, Float* trainErrorPercentage, UInt* trainErrors, Float* avgTestLoss, Float* testErrorPercentage, UInt* testErrors, Float* sampleSpeed, States* networkState, TaskStates* taskState)
-{
-	if (model)
-	{
-		const auto sampleIdx = model->SampleIndex + model->BatchSize;
-
-		switch (model->State)
-		{
-		case States::Training:
-		{
-			model->TrainLoss = model->CostLayers[model->CostIndex]->TrainLoss;
-			model->TrainErrors = model->CostLayers[model->CostIndex]->TrainErrors;
-			model->TrainErrorPercentage = Float(model->TrainErrors * 100) / sampleIdx;
-			model->AvgTrainLoss = model->TrainLoss / sampleIdx;
-   
-			*avgTrainLoss = model->AvgTrainLoss;
-			*trainErrorPercentage = model->TrainErrorPercentage;
-			*trainErrors = model->TrainErrors;
-		}
-		break;
-
-		case States::Testing:
-		{
-			const auto adjustedsampleIndex = sampleIdx > dataprovider->TestingSamplesCount ? dataprovider->TestingSamplesCount : sampleIdx;
-						
-			model->TestLoss = model->CostLayers[model->CostIndex]->TestLoss;
-			model->TestErrors = model->CostLayers[model->CostIndex]->TestErrors;
-			model->TestErrorPercentage = Float(model->TestErrors * 100) / adjustedsampleIndex;
-			model->AvgTestLoss = model->TestLoss / adjustedsampleIndex;
-
-			*avgTestLoss = model->AvgTestLoss;
-			*testErrorPercentage = model->TestErrorPercentage;
-			*testErrors = model->TestErrors;
-		}
-		break;
-
-		case States::Idle:
-		case States::NewEpoch:
-		case States::SaveWeights:
-		case States::Completed:
-		{
-			// Do nothing
-		}
-		break;
-		}
-		
-		*currentCycle = model->CurrentCycle;
-		*totalCycles = model->TotalCycles;
-		*currentEpoch = model->CurrentEpoch;
-		*totalEpochs = model->TotalEpochs;
-		*sampleIndex = model->SampleIndex;
-		*horizontalFlip = model->CurrentTrainingRate.HorizontalFlip;
-		*verticalFlip = model->CurrentTrainingRate.VerticalFlip;
-		*inputDropout = model->CurrentTrainingRate.InputDropout;
-		*cutout = model->CurrentTrainingRate.Cutout;
-		*cutMix = model->CurrentTrainingRate.CutMix;
-		*autoAugment = model->CurrentTrainingRate.AutoAugment;
-		*colorCast = model->CurrentTrainingRate.ColorCast;
-		*colorAngle = model->CurrentTrainingRate.ColorAngle;
-		*distortion = model->CurrentTrainingRate.Distortion;
-		*interpolation = model->CurrentTrainingRate.Interpolation;
-		*scaling = model->CurrentTrainingRate.Scaling;
-		*rotation = model->CurrentTrainingRate.Rotation;
-		*maximumRate = model->CurrentTrainingRate.MaximumRate;
-		*optimizer = model->Optimizer;
-		*momentum = model->CurrentTrainingRate.Momentum;
-		*beta2 = model->CurrentTrainingRate.Beta2;
-		*gamma = model->CurrentTrainingRate.Gamma;
-		*l2Penalty = model->CurrentTrainingRate.L2Penalty;
-		*dropout = model->CurrentTrainingRate.Dropout;
-		*batchSize = model->BatchSize;
-		*height = model->H;
-		*width = model->W;
-		*sampleSpeed = model->SampleSpeed;
-		*networkState = model->State.load();
-		*taskState = model->TaskState.load();
-	}
-}
-
-extern "C" DNN_API void DNNGetTestingInfo(UInt* batchSize, UInt* height, UInt* width, UInt* sampleIndex, Float* avgTestLoss, Float* testErrorPercentage, UInt* testErrors, Float* sampleSpeed, States* networkState, TaskStates* taskState)
-{
-	if (model)
-	{
-		const auto sampleIdx = model->SampleIndex + model->BatchSize;
-		const auto adjustedsampleIndex = sampleIdx > dataprovider->TestingSamplesCount ? dataprovider->TestingSamplesCount : sampleIdx;
-							
-		model->TestLoss = model->CostLayers[model->CostIndex]->TestLoss;
-		model->TestErrors = model->CostLayers[model->CostIndex]->TestErrors;
-		model->TestErrorPercentage = Float(model->TestErrors * 100) / adjustedsampleIndex;
-		model->AvgTestLoss = model->TestLoss / adjustedsampleIndex;
-
-		*batchSize = model->BatchSize;
-		*height = model->H;
-		*width = model->W;
-		*sampleIndex = model->SampleIndex;
-		*avgTestLoss = model->AvgTestLoss;
-		*testErrorPercentage = model->TestErrorPercentage;
-		*testErrors = model->TestErrors;
-		*sampleSpeed = model->SampleSpeed;
-				
-		*networkState = model->State.load();
-		*taskState = model->TaskState.load();
-	}
-}
-
-extern "C" DNN_API void DNNRefreshStatistics(const UInt layerIndex, std::string* description, Stats* neuronsStats, Stats* weightsStats, Stats* biasesStats, Float* fpropLayerTime, Float* bpropLayerTime, Float* updateLayerTime, Float* fpropTime, Float* bpropTime, Float* updateTime, bool* locked)
-{
-	if (model && (layerIndex < model->Layers.size()))
-	{
-		while (model->BatchSizeChanging.load() || model->ResettingWeights.load())
-			std::this_thread::sleep_for(std::chrono::milliseconds(250));
-
-		auto statsOK = false;
-		if (!model->BatchSizeChanging.load() && !model->ResettingWeights.load())
-			statsOK = model->Layers[layerIndex]->RefreshStatistics(model->BatchSize);
-
-		if (!statsOK)
-		{
-			model->StopTask();
-			return;
-		}
-
-		*description = model->Layers[layerIndex]->GetDescription();
-
-		*neuronsStats = model->Layers[layerIndex]->NeuronsStats;
-		*weightsStats = model->Layers[layerIndex]->WeightsStats;
-		*biasesStats = model->Layers[layerIndex]->BiasesStats;
-
-		*fpropLayerTime = Float(std::chrono::duration_cast<std::chrono::microseconds>(model->Layers[layerIndex]->fpropTime).count()) / 1000;
-		*bpropLayerTime = Float(std::chrono::duration_cast<std::chrono::microseconds>(model->Layers[layerIndex]->bpropTime).count()) / 1000;
-		*updateLayerTime = Float(std::chrono::duration_cast<std::chrono::microseconds>(model->Layers[layerIndex]->updateTime).count()) / 1000;
-		*fpropTime = Float(std::chrono::duration_cast<std::chrono::microseconds>(model->fpropTime).count()) / 1000;
-		*bpropTime = Float(std::chrono::duration_cast<std::chrono::microseconds>(model->bpropTime).count()) / 1000;
-		*updateTime = Float(std::chrono::duration_cast<std::chrono::microseconds>(model->updateTime).count()) / 1000;
-
-		*locked = model->Layers[layerIndex]->Lockable() ? model->Layers[layerIndex]->LockUpdate.load() : false;
-	}
-}
-
-extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, UInt* inputsCount, LayerTypes* layerType, Activations* activationFunction, Costs* cost, std::string* name, std::string* description, UInt* neuronCount, UInt* weightCount, UInt* biasesCount, UInt* multiplier, UInt* groups, UInt* group, UInt* localSize, UInt* c, UInt* d, UInt* h, UInt* w, UInt* kernelH, UInt* kernelW, UInt* strideH, UInt* strideW, UInt* dilationH, UInt* dilationW, UInt* padD, UInt* padH, UInt* padW, Float* dropout, Float* labelTrue, Float* labelFalse, Float* weight, UInt* groupIndex, UInt* labelIndex, UInt* inputC, Float* alpha, Float* beta, Float* k, Algorithms* algorithm, Float* fH, Float* fW, bool* hasBias, bool* scaling, bool* acrossChannels, bool* locked, bool* lockable)
+extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, UInt * inputsCount, LayerTypes * layerType, Activations * activationFunction, Costs * cost, std::string * name, std::string * description, UInt * neuronCount, UInt * weightCount, UInt * biasesCount, UInt * multiplier, UInt * groups, UInt * group, UInt * localSize, UInt * c, UInt * d, UInt * h, UInt * w, UInt * kernelH, UInt * kernelW, UInt * strideH, UInt * strideW, UInt * dilationH, UInt * dilationW, UInt * padD, UInt * padH, UInt * padW, Float * dropout, Float * labelTrue, Float * labelFalse, Float * weight, UInt * groupIndex, UInt * labelIndex, UInt * inputC, Float * alpha, Float * beta, Float * k, Algorithms * algorithm, Float * fH, Float * fW, bool* hasBias, bool* scaling, bool* acrossChannels, bool* locked, bool* lockable)
 {
 	if (model && layerIndex < model->Layers.size())
 	{
@@ -930,6 +792,156 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, UInt* inputsCount
 		}
 	}
 }
+
+extern "C" DNN_API void DNNRefreshStatistics(const UInt layerIndex, std::string* description, Stats* neuronsStats, Stats* weightsStats, Stats* biasesStats, Float* fpropLayerTime, Float* bpropLayerTime, Float* updateLayerTime, Float* fpropTime, Float* bpropTime, Float* updateTime, bool* locked)
+{
+	if (model && (layerIndex < model->Layers.size()))
+	{
+		while (model->BatchSizeChanging.load() || model->ResettingWeights.load())
+			std::this_thread::sleep_for(std::chrono::milliseconds(250));
+
+		auto statsOK = false;
+		if (!model->BatchSizeChanging.load() && !model->ResettingWeights.load())
+			statsOK = model->Layers[layerIndex]->RefreshStatistics(model->BatchSize);
+
+		if (!statsOK)
+		{
+			model->StopTask();
+			return;
+		}
+
+		*description = model->Layers[layerIndex]->GetDescription();
+
+		*neuronsStats = model->Layers[layerIndex]->NeuronsStats;
+		*weightsStats = model->Layers[layerIndex]->WeightsStats;
+		*biasesStats = model->Layers[layerIndex]->BiasesStats;
+
+		*fpropLayerTime = Float(std::chrono::duration_cast<std::chrono::microseconds>(model->Layers[layerIndex]->fpropTime).count()) / 1000;
+		*bpropLayerTime = Float(std::chrono::duration_cast<std::chrono::microseconds>(model->Layers[layerIndex]->bpropTime).count()) / 1000;
+		*updateLayerTime = Float(std::chrono::duration_cast<std::chrono::microseconds>(model->Layers[layerIndex]->updateTime).count()) / 1000;
+		*fpropTime = Float(std::chrono::duration_cast<std::chrono::microseconds>(model->fpropTime).count()) / 1000;
+		*bpropTime = Float(std::chrono::duration_cast<std::chrono::microseconds>(model->bpropTime).count()) / 1000;
+		*updateTime = Float(std::chrono::duration_cast<std::chrono::microseconds>(model->updateTime).count()) / 1000;
+
+		*locked = model->Layers[layerIndex]->Lockable() ? model->Layers[layerIndex]->LockUpdate.load() : false;
+	}
+}
+
+
+extern "C" DNN_API void DNNGetTrainingInfo(TrainingInfo* info)
+{
+	if (model)
+	{
+		const auto sampleIdx = model->SampleIndex + model->BatchSize;
+
+		switch (model->State)
+		{
+		case States::Training:
+		{
+			model->TrainLoss = model->CostLayers[model->CostIndex]->TrainLoss;
+			model->TrainErrors = model->CostLayers[model->CostIndex]->TrainErrors;
+			model->TrainErrorPercentage = Float(model->TrainErrors * 100) / sampleIdx;
+			model->AvgTrainLoss = model->TrainLoss / sampleIdx;
+
+			info->AvgTrainLoss = model->AvgTrainLoss;
+			info->TrainErrorPercentage = model->TrainErrorPercentage;
+			info->TrainErrors = model->TrainErrors;
+		}
+		break;
+
+		case States::Testing:
+		{
+			const auto adjustedsampleIndex = sampleIdx > dataprovider->TestingSamplesCount ? dataprovider->TestingSamplesCount : sampleIdx;
+
+			model->TestLoss = model->CostLayers[model->CostIndex]->TestLoss;
+			model->TestErrors = model->CostLayers[model->CostIndex]->TestErrors;
+			model->TestErrorPercentage = Float(model->TestErrors * 100) / adjustedsampleIndex;
+			model->AvgTestLoss = model->TestLoss / adjustedsampleIndex;
+
+			info->AvgTestLoss = model->AvgTestLoss;
+			info->TestErrorPercentage = model->TestErrorPercentage;
+			info->TestErrors = model->TestErrors;
+		}
+		break;
+
+		case States::Idle:
+		case States::NewEpoch:
+		case States::SaveWeights:
+		case States::Completed:
+		{
+			// Do nothing
+		}
+		break;
+		}
+
+		info->TotalCycles = model->TotalCycles;
+		info->TotalEpochs = model->TotalEpochs;
+		info->Cycle = model->CurrentCycle;
+		info->Epoch = model->CurrentEpoch;
+		info->SampleIndex = model->SampleIndex;
+
+		info->Rate = model->CurrentTrainingRate.MaximumRate;
+		info->Optimizer = model->Optimizer;
+
+		info->Momentum = model->CurrentTrainingRate.Momentum;
+		info->Beta2 = model->CurrentTrainingRate.Beta2;
+		info->Gamma = model->CurrentTrainingRate.Gamma;
+		info->L2Penalty = model->CurrentTrainingRate.L2Penalty;
+		info->Dropout = model->CurrentTrainingRate.Dropout;
+
+		info->BatchSize = model->BatchSize;
+		info->Height = model->H;
+		info->Width = model->W;
+
+		info->HorizontalFlip = model->CurrentTrainingRate.HorizontalFlip;
+		info->VerticalFlip = model->CurrentTrainingRate.VerticalFlip;
+		info->InputDropout = model->CurrentTrainingRate.InputDropout;
+		info->Cutout = model->CurrentTrainingRate.Cutout;
+		info->CutMix = model->CurrentTrainingRate.CutMix;
+		info->AutoAugment = model->CurrentTrainingRate.AutoAugment;
+		info->ColorCast = model->CurrentTrainingRate.ColorCast;
+		info->ColorAngle = model->CurrentTrainingRate.ColorAngle;
+		info->Distortion = model->CurrentTrainingRate.Distortion;
+		info->Interpolation = model->CurrentTrainingRate.Interpolation;
+		info->Scaling = model->CurrentTrainingRate.Scaling;
+		info->Rotation = model->CurrentTrainingRate.Rotation;
+
+		info->SampleSpeed = model->SampleSpeed;
+		info->State = model->State.load();
+		info->TaskState = model->TaskState.load();
+	}
+}
+
+extern "C" DNN_API void DNNGetTestingInfo(TrainingInfo* info)
+{
+	if (model)
+	{
+		const auto sampleIdx = model->SampleIndex + model->BatchSize;
+		const auto adjustedsampleIndex = sampleIdx > dataprovider->TestingSamplesCount ? dataprovider->TestingSamplesCount : sampleIdx;
+
+		model->TestLoss = model->CostLayers[model->CostIndex]->TestLoss;
+		model->TestErrors = model->CostLayers[model->CostIndex]->TestErrors;
+		model->TestErrorPercentage = Float(model->TestErrors * 100) / adjustedsampleIndex;
+		model->AvgTestLoss = model->TestLoss / adjustedsampleIndex;
+
+		info->SampleIndex = model->SampleIndex;
+
+		info->BatchSize = model->BatchSize;
+		info->Height = model->H;
+		info->Width = model->W;
+
+
+		info->AvgTestLoss = model->AvgTestLoss;
+		info->TestErrorPercentage = model->TestErrorPercentage;
+		info->TestErrors = model->TestErrors;
+
+		info->SampleSpeed = model->SampleSpeed;
+
+		info->State = model->State.load();
+		info->TaskState = model->TaskState.load();
+	}
+}
+
 
 extern "C" DNN_API Optimizers GetOptimizer()
 {
