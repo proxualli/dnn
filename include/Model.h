@@ -280,6 +280,17 @@ namespace dnn
 		std::vector<Float> StdTrainSet;
 	};
 
+	struct CostInfo
+	{
+		UInt TrainErrors;
+		Float TrainLoss;
+		Float AvgTrainLoss;
+		Float TrainErrorPercentage;
+		UInt TestErrors;
+		Float TestLoss;
+		Float AvgTestLoss;
+		Float TestErrorPercentage;
+	};
 	struct StatsInfo
 	{
 		std::string Description;

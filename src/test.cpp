@@ -61,7 +61,7 @@ DNN_API int DNNLoadLayerWeights(const std::string& fileName, const UInt layerInd
 DNN_API int DNNSaveLayerWeights(const std::string& fileName, const UInt layerIndex, const bool persistOptimizer);
 DNN_API void DNNGetLayerWeights(const UInt layerIndex, std::vector<Float>* weights, std::vector<Float>* biases);
 DNN_API void DNNSetCostIndex(const UInt index);
-DNN_API void DNNGetCostInfo(const UInt costIndex, UInt* trainErrors, Float* trainLoss, Float* avgTrainLoss, Float* trainErrorPercentage, UInt* testErrors, Float* testLoss, Float* avgTestLoss, Float* testErrorPercentage);
+DNN_API void DNNGetCostInfo(const UInt costIndex, dnn::CostInfo* info);
 DNN_API void DNNGetImage(const UInt layer, const dnn::Byte fillColor, dnn::Byte* image);
 DNN_API bool DNNSetFormat(const bool plain);
 DNN_API dnn::Optimizers GetOptimizer();

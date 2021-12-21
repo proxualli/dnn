@@ -367,19 +367,19 @@ extern "C" DNN_API void DNNSetCostIndex(const UInt costLayerIndex)
 		model->CostIndex = costLayerIndex;
 }
 
-extern "C" DNN_API void DNNGetCostInfo(const UInt index, UInt* trainErrors, Float* trainLoss, Float* avgTrainLoss, Float* trainErrorPercentage, UInt* testErrors, Float* testLoss, Float* avgTestLoss, Float* testErrorPercentage)
+extern "C" DNN_API void DNNGetCostInfo(const UInt index, CostInfo* info)
 {
 	if (model && index < model->CostLayers.size())
 	{
-		*trainErrors = model->CostLayers[index]->TrainErrors;
-		*trainLoss = model->CostLayers[index]->TrainLoss;
-		*avgTrainLoss = model->CostLayers[index]->AvgTrainLoss;
-		*trainErrorPercentage = model->CostLayers[index]->TrainErrorPercentage;
+		info->TrainErrors = model->CostLayers[index]->TrainErrors;
+		info->TrainLoss = model->CostLayers[index]->TrainLoss;
+		info->AvgTrainLoss = model->CostLayers[index]->AvgTrainLoss;
+		info->TrainErrorPercentage = model->CostLayers[index]->TrainErrorPercentage;
 
-		*testErrors = model->CostLayers[index]->TestErrors;
-		*testLoss = model->CostLayers[index]->TestLoss;
-		*avgTestLoss = model->CostLayers[index]->AvgTestLoss;
-		*testErrorPercentage = model->CostLayers[index]->TestErrorPercentage;
+		info->TestErrors = model->CostLayers[index]->TestErrors;
+		info->TestLoss = model->CostLayers[index]->TestLoss;
+		info->AvgTestLoss = model->CostLayers[index]->AvgTestLoss;
+		info->TestErrorPercentage = model->CostLayers[index]->TestErrorPercentage;
 	}
 }
 
