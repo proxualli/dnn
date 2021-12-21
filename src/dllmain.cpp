@@ -428,7 +428,7 @@ extern "C" DNN_API void DNNGetLayerInfo(LayerInfo* info)
 {
 	if (model && info && info->LayerIndex < model->Layers.size())
 	{
-		const auto layerIndex = info->LabelIndex;
+		const auto layerIndex = info->LayerIndex;
 
 		info->Name = model->Layers[layerIndex]->Name;
 		info->Description = model->Layers[layerIndex]->GetDescription();
