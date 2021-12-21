@@ -95,10 +95,6 @@ namespace dnn
 		Float Scaling;
 		Float Rotation;
 
-		TrainingStrategy()
-		{
-		}
-
 		TrainingStrategy(const Float epochs, const UInt batchSize, const UInt height, const UInt width, const Float momentum, const Float beta2, const Float gamma, const Float l2penalty, const Float dropout, const bool horizontalFlip, const bool verticalFlip, const Float inputDropout, const Float cutout, const bool cutMix, const Float autoAugment, const Float colorCast, const UInt colorAngle, const Float distortion, const Interpolations interpolation, const Float scaling, const Float rotation) :
 			Epochs(epochs),
 			BatchSize(batchSize),
@@ -166,20 +162,16 @@ namespace dnn
 		UInt Cycle;
 		UInt Epoch;
 		UInt SampleIndex;
-
 		Float Rate;
 		Optimizers Optimizer;
-
 		Float Momentum;
 		Float Beta2;
 		Float Gamma;
 		Float L2Penalty;
 		Float Dropout;
-
 		UInt BatchSize;
 		UInt Height;
 		UInt Width;
-
 		bool HorizontalFlip;
 		bool VerticalFlip;
 		Float InputDropout;
@@ -192,22 +184,15 @@ namespace dnn
 		Interpolations Interpolation;
 		Float Scaling;
 		Float Rotation;
-
 		Float AvgTrainLoss;
 		Float TrainErrorPercentage;
 		UInt TrainErrors;
 		Float AvgTestLoss;
 		Float TestErrorPercentage;
 		UInt TestErrors;
-
 		Float SampleSpeed;
-
 		States State;
 		TaskStates TaskState;
-
-		TrainingInfo()
-		{
-		}
 	};
 
 	struct TestingInfo
@@ -217,23 +202,64 @@ namespace dnn
 		UInt Cycle;
 		UInt Epoch;
 		UInt SampleIndex;
-
 		UInt BatchSize;
 		UInt Height;
 		UInt Width;
-
 		Float AvgTestLoss;
 		Float TestErrorPercentage;
 		UInt TestErrors;
-
 		Float SampleSpeed;
-
 		States State;
 		TaskStates TaskState;
+	};
 
-		TestingInfo()
-		{
-		}
+	struct LayerInfo
+	{
+		std::string Name;
+		std::string Description;
+		LayerTypes LayerType;
+		Activations ActivationFunction;
+		Algorithms Algorithm;
+		Costs Cost;
+		UInt NeuronCount;
+		UInt WeightCount;
+		UInt BiasesCount;
+		UInt LayerIndex;
+		UInt InputsCount;
+		UInt C;
+		UInt D;
+		UInt H;
+		UInt W;
+		UInt PadD;
+		UInt PadH;
+		UInt PadW;
+		UInt KernelH;
+		UInt KernelW;
+		UInt StrideH;
+		UInt StrideW;
+		UInt DilationH;
+		UInt DilationW;
+		UInt Multiplier;
+		UInt Groups;
+		UInt Group;
+		UInt LocalSize;
+		Float Dropout;
+		Float LabelTrue;
+		Float LabelFalse;
+		Float Weight;
+		UInt GroupIndex;
+		UInt LabelIndex;
+		UInt InputC;
+		Float Alpha;
+		Float Beta;
+		Float K;
+		Float fH;
+		Float fW;
+		bool HasBias;
+		bool Scaling;
+		bool AcrossChannels;
+		bool Locked;
+		bool Lockable;
 	};
 
 	class Model

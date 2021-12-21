@@ -424,46 +424,48 @@ extern "C" DNN_API void DNNGetModelInfo(std::string* name, UInt* costIndex, UInt
 	}
 }
 
-extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, UInt * inputsCount, LayerTypes * layerType, Activations * activationFunction, Costs * cost, std::string * name, std::string * description, UInt * neuronCount, UInt * weightCount, UInt * biasesCount, UInt * multiplier, UInt * groups, UInt * group, UInt * localSize, UInt * c, UInt * d, UInt * h, UInt * w, UInt * kernelH, UInt * kernelW, UInt * strideH, UInt * strideW, UInt * dilationH, UInt * dilationW, UInt * padD, UInt * padH, UInt * padW, Float * dropout, Float * labelTrue, Float * labelFalse, Float * weight, UInt * groupIndex, UInt * labelIndex, UInt * inputC, Float * alpha, Float * beta, Float * k, Algorithms * algorithm, Float * fH, Float * fW, bool* hasBias, bool* scaling, bool* acrossChannels, bool* locked, bool* lockable)
+extern "C" DNN_API void DNNGetLayerInfo(LayerInfo* info)
 {
-	if (model && layerIndex < model->Layers.size())
+	if (model && info && info->LayerIndex < model->Layers.size())
 	{
-		*inputsCount = model->Layers[layerIndex]->Inputs.size();
-		*layerType = model->Layers[layerIndex]->LayerType;
-		*name = model->Layers[layerIndex]->Name;
-		*description = model->Layers[layerIndex]->GetDescription();
-		*neuronCount = model->Layers[layerIndex]->CDHW;
-		*weightCount = model->Layers[layerIndex]->WeightCount;
-		*biasesCount = model->Layers[layerIndex]->BiasCount;
-		*multiplier = 1;
-		*groups = 1;
-		*group = 1;
-		*c = model->Layers[layerIndex]->C;
-		*d = model->Layers[layerIndex]->D;
-		*h = model->Layers[layerIndex]->H;
-		*w = model->Layers[layerIndex]->W;
-		*padD = model->Layers[layerIndex]->PadD;
-		*padH = model->Layers[layerIndex]->PadH;
-		*padW = model->Layers[layerIndex]->PadW;
-		*dilationH = 1;
-		*dilationW = 1;
-		*kernelH = 0;
-		*kernelW = 0;
-		*strideH = 1;
-		*strideW = 1;
-		*algorithm = Algorithms::Linear;
-		*fH = 1;
-		*fW = 1;
-		*dropout = Float(0);
-		*labelTrue = Float(1);
-		*labelFalse = Float(0);
-		*weight = Float(1);
-		*groupIndex = 0;
-		*labelIndex = 0;
-		*inputC = model->Layers[layerIndex]->InputLayer != nullptr ? model->Layers[layerIndex]->InputLayer->C : 0;
-		*hasBias = model->Layers[layerIndex]->HasBias;
-		*locked = model->Layers[layerIndex]->Lockable() ? model->Layers[layerIndex]->LockUpdate.load() : false;
-		*lockable = model->Layers[layerIndex]->Lockable();
+		const auto layerIndex = info->LabelIndex;
+
+		info->Name = model->Layers[layerIndex]->Name;
+		info->Description = model->Layers[layerIndex]->GetDescription();
+		info->LayerType = model->Layers[layerIndex]->LayerType;
+		info->Algorithm = Algorithms::Linear;
+		info->InputsCount = model->Layers[layerIndex]->Inputs.size();
+		info->NeuronCount = model->Layers[layerIndex]->CDHW;
+		info->WeightCount = model->Layers[layerIndex]->WeightCount;
+		info->BiasesCount = model->Layers[layerIndex]->BiasCount;
+		info->Multiplier = 1;
+		info->Groups = 1;
+		info->Group = 1;
+		info->C = model->Layers[layerIndex]->C;
+		info->D = model->Layers[layerIndex]->D;
+		info->H = model->Layers[layerIndex]->H;
+		info->W = model->Layers[layerIndex]->W;
+		info->PadD = model->Layers[layerIndex]->PadD;
+		info->PadH = model->Layers[layerIndex]->PadH;
+		info->PadW = model->Layers[layerIndex]->PadW;
+		info->DilationH = 1;
+		info->DilationW = 1;
+		info->KernelH = 0;
+		info->KernelW = 0;
+		info->StrideH = 1;
+		info->StrideW = 1;
+		info->fH = 1;
+		info->fW = 1;
+		info->Dropout = Float(0);
+		info->LabelTrue = Float(1);
+		info->LabelFalse = Float(0);
+		info->Weight = Float(1);
+		info->GroupIndex = 0;
+		info->LabelIndex = 0;
+		info->InputC = model->Layers[layerIndex]->InputLayer != nullptr ? model->Layers[layerIndex]->InputLayer->C : 0;
+		info->HasBias = model->Layers[layerIndex]->HasBias;
+		info->Locked = model->Layers[layerIndex]->Lockable() ? model->Layers[layerIndex]->LockUpdate.load() : false;
+		info->Lockable = model->Layers[layerIndex]->Lockable();
 
 		switch (model->Layers[layerIndex]->LayerType)
 		{
@@ -472,9 +474,9 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, UInt * inputsCoun
 			auto resampling = dynamic_cast<Resampling*>(model->Layers[layerIndex].get());
 			if (resampling)
 			{
-				*algorithm = resampling->Algorithm;
-				*fH = resampling->FactorH;
-				*fW = resampling->FactorW;
+				info->Algorithm = resampling->Algorithm;
+				info->fH = resampling->FactorH;
+				info->fW = resampling->FactorW;
 			}
 		}
 		break;
@@ -484,11 +486,11 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, UInt * inputsCoun
 			auto lrn = dynamic_cast<LocalResponseNorm*>(model->Layers[layerIndex].get());
 			if (lrn)
 			{
-				*acrossChannels = lrn->AcrossChannels;
-				*localSize = lrn->LocalSize;
-				*alpha = lrn->Alpha;
-				*beta = lrn->Beta;
-				*k = lrn->K;
+				info->AcrossChannels = lrn->AcrossChannels;
+				info->LocalSize = lrn->LocalSize;
+				info->Alpha = lrn->Alpha;
+				info->Beta = lrn->Beta;
+				info->K = lrn->K;
 			}
 		}
 		break;
@@ -498,9 +500,9 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, UInt * inputsCoun
 			auto activation = dynamic_cast<Activation*>(model->Layers[layerIndex].get());
 			if (activation)
 			{
-				*activationFunction = activation->ActivationFunction;
-				*alpha = activation->Alpha;
-				*beta = activation->Beta;
+				info->ActivationFunction = activation->ActivationFunction;
+				info->Alpha = activation->Alpha;
+				info->Beta = activation->Beta;
 			}
 		}
 		break;
@@ -509,7 +511,7 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, UInt * inputsCoun
 		{
 			auto bn = dynamic_cast<BatchNorm*>(model->Layers[layerIndex].get());
 			if (bn)
-				*scaling = bn->Scaling;
+				info->Scaling = bn->Scaling;
 		}
 		break;
 
@@ -517,7 +519,7 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, UInt * inputsCoun
 		{
 			auto bn = dynamic_cast<BatchNormActivation<Mish, LayerTypes::BatchNormMish>*>(model->Layers[layerIndex].get());
 			if (bn)
-				*scaling = bn->Scaling;
+				info->Scaling = bn->Scaling;
 		}
 		break;
 
@@ -526,8 +528,8 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, UInt * inputsCoun
 			auto bn = dynamic_cast<BatchNormActivationDropout<Mish, LayerTypes::BatchNormMishDropout>*>(model->Layers[layerIndex].get());
 			if (bn)
 			{
-				*scaling = bn->Scaling;
-				*dropout = Float(1) - bn->Keep;
+				info->Scaling = bn->Scaling;
+				info->Dropout = Float(1) - bn->Keep;
 			}
 		}
 		break;
@@ -536,7 +538,7 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, UInt * inputsCoun
 		{
 			auto bn = dynamic_cast<BatchNormActivation<HardLogistic, LayerTypes::BatchNormHardLogistic>*>(model->Layers[layerIndex].get());
 			if (bn)
-				*scaling = bn->Scaling;
+				info->Scaling = bn->Scaling;
 		}
 		break;
 
@@ -544,7 +546,7 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, UInt * inputsCoun
 		{
 			auto bn = dynamic_cast<BatchNormActivation<HardSwish, LayerTypes::BatchNormHardSwish>*>(model->Layers[layerIndex].get());
 			if (bn)
-				*scaling = bn->Scaling;
+				info->Scaling = bn->Scaling;
 		}
 		break;
 
@@ -553,8 +555,8 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, UInt * inputsCoun
 			auto bn = dynamic_cast<BatchNormActivationDropout<HardSwish, LayerTypes::BatchNormHardSwishDropout>*>(model->Layers[layerIndex].get());
 			if (bn)
 			{
-				*scaling = bn->Scaling;
-				*dropout = Float(1) - bn->Keep;
+				info->Scaling = bn->Scaling;
+				info->Dropout = Float(1) - bn->Keep;
 			}
 		}
 		break;
@@ -563,7 +565,7 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, UInt * inputsCoun
 		{
 			auto bn = dynamic_cast<BatchNormRelu*>(model->Layers[layerIndex].get());
 			if (bn)
-				*scaling = bn->Scaling;
+				info->Scaling = bn->Scaling;
 		}
 		break;
 
@@ -572,8 +574,8 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, UInt * inputsCoun
 			auto bn = dynamic_cast<BatchNormActivationDropout<Relu, LayerTypes::BatchNormReluDropout>*>(model->Layers[layerIndex].get());
 			if (bn)
 			{
-				*scaling = bn->Scaling;
-				*dropout = Float(1) - bn->Keep;
+				info->Scaling = bn->Scaling;
+				info->Dropout = Float(1) - bn->Keep;
 			}
 		}
 		break;
@@ -582,7 +584,7 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, UInt * inputsCoun
 		{
 			auto bn = dynamic_cast<BatchNormActivation<Swish, LayerTypes::BatchNormSwish>*>(model->Layers[layerIndex].get());
 			if (bn)
-				*scaling = bn->Scaling;
+				info->Scaling = bn->Scaling;
 		}
 		break;
 
@@ -591,8 +593,8 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, UInt * inputsCoun
 			auto bn = dynamic_cast<BatchNormActivationDropout<Swish, LayerTypes::BatchNormSwishDropout>*>(model->Layers[layerIndex].get());
 			if (bn)
 			{
-				*scaling = bn->Scaling;
-				*dropout = Float(1) - bn->Keep;
+				info->Scaling = bn->Scaling;
+				info->Dropout = Float(1) - bn->Keep;
 			}
 		}
 		break;
@@ -601,7 +603,7 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, UInt * inputsCoun
 		{
 			auto bn = dynamic_cast<BatchNormActivation<TanhExp, LayerTypes::BatchNormTanhExp>*>(model->Layers[layerIndex].get());
 			if (bn)
-				*scaling = bn->Scaling;
+				info->Scaling = bn->Scaling;
 		}
 		break;
 
@@ -610,8 +612,8 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, UInt * inputsCoun
 			auto bn = dynamic_cast<BatchNormActivationDropout<TanhExp, LayerTypes::BatchNormTanhExpDropout>*>(model->Layers[layerIndex].get());
 			if (bn)
 			{
-				*scaling = bn->Scaling;
-				*dropout = Float(1) - bn->Keep;
+				info->Scaling = bn->Scaling;
+				info->Dropout = Float(1) - bn->Keep;
 			}
 		}
 		break;
@@ -620,7 +622,7 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, UInt * inputsCoun
 		{
 			auto drop = dynamic_cast<dnn::Dropout*>(model->Layers[layerIndex].get());
 			if (drop)
-				*dropout = Float(1) - drop->Keep;
+				info->Dropout = Float(1) - drop->Keep;
 		}
 		break;
 
@@ -629,10 +631,10 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, UInt * inputsCoun
 			auto pool = dynamic_cast<AvgPooling*>(model->Layers[layerIndex].get());
 			if (pool)
 			{
-				*kernelH = pool->KernelH;
-				*kernelW = pool->KernelW;
-				*strideH = pool->StrideH;
-				*strideW = pool->StrideW;
+				info->KernelH = pool->KernelH;
+				info->KernelW = pool->KernelW;
+				info->StrideH = pool->StrideH;
+				info->StrideW = pool->StrideW;
 			}
 		}
 		break;
@@ -642,10 +644,10 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, UInt * inputsCoun
 			auto pool = dynamic_cast<MaxPooling*>(model->Layers[layerIndex].get());
 			if (pool)
 			{
-				*kernelH = pool->KernelH;
-				*kernelW = pool->KernelW;
-				*strideH = pool->StrideH;
-				*strideW = pool->StrideW;
+				info->KernelH = pool->KernelH;
+				info->KernelW = pool->KernelW;
+				info->StrideH = pool->StrideH;
+				info->StrideW = pool->StrideW;
 			}
 		}
 		break;
@@ -655,8 +657,8 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, UInt * inputsCoun
 			auto pool = dynamic_cast<GlobalAvgPooling*>(model->Layers[layerIndex].get());
 			if (pool)
 			{
-				*kernelH = pool->KernelH;
-				*kernelW = pool->KernelW;
+				info->KernelH = pool->KernelH;
+				info->KernelW = pool->KernelW;
 			}
 		}
 		break;
@@ -666,8 +668,8 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, UInt * inputsCoun
 			auto pool = dynamic_cast<GlobalMaxPooling*>(model->Layers[layerIndex].get());
 			if (pool)
 			{
-				*kernelH = pool->KernelH;
-				*kernelW = pool->KernelW;
+				info->KernelH = pool->KernelH;
+				info->KernelW = pool->KernelW;
 			}
 		}
 		break;
@@ -677,13 +679,13 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, UInt * inputsCoun
 			auto conv = dynamic_cast<Convolution*>(model->Layers[layerIndex].get());
 			if (conv)
 			{
-				*groups = conv->Groups;
-				*kernelH = conv->KernelH;
-				*kernelW = conv->KernelW;
-				*strideH = conv->StrideH;
-				*strideW = conv->StrideW;
-				*dilationH = conv->DilationH;
-				*dilationW = conv->DilationW;
+				info->Groups = conv->Groups;
+				info->KernelH = conv->KernelH;
+				info->KernelW = conv->KernelW;
+				info->StrideH = conv->StrideH;
+				info->StrideW = conv->StrideW;
+				info->DilationH = conv->DilationH;
+				info->DilationW = conv->DilationW;
 			}
 		}
 		break;
@@ -693,62 +695,13 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, UInt * inputsCoun
 			auto conv = dynamic_cast<DepthwiseConvolution*>(model->Layers[layerIndex].get());
 			if (conv)
 			{
-				*multiplier = conv->Multiplier;
-				*kernelH = conv->KernelH;
-				*kernelW = conv->KernelW;
-				*strideH = conv->StrideH;
-				*strideW = conv->StrideW;
-				*dilationH = conv->DilationH;
-				*dilationW = conv->DilationW;
-			}
-		}
-		break;
-
-		case LayerTypes::ConvolutionTranspose:
-		{
-			auto conv = dynamic_cast<ConvolutionTranspose*>(model->Layers[layerIndex].get());
-			if (conv)
-			{
-				*kernelH = conv->KernelH;
-				*kernelW = conv->KernelW;
-				*strideH = conv->StrideH;
-				*strideW = conv->StrideW;
-				*dilationH = conv->DilationH;
-				*dilationW = conv->DilationW;
-			}
-		}
-		break;
-
-		case LayerTypes::ChannelShuffle:
-		{
-			auto channel = dynamic_cast<ChannelShuffle*>(model->Layers[layerIndex].get());
-			if (channel)
-				*groups = channel->Groups;
-		}
-		break;
-
-		case LayerTypes::ChannelSplit:
-		{
-			auto channel = dynamic_cast<ChannelSplit*>(model->Layers[layerIndex].get());
-			if (channel)
-			{
-				*group = channel->Group;
-				*groups = channel->Groups;
-			}
-		}
-		break;
-
-		case LayerTypes::Cost:
-		{
-			auto loss = dynamic_cast<Cost*>(model->Layers[layerIndex].get());
-			if (loss)
-			{
-				*cost = loss->CostFunction;
-				*labelTrue = loss->LabelTrue;
-				*labelFalse = loss->LabelFalse;
-				*groupIndex = loss->GroupIndex;
-				*labelIndex = loss->LabelIndex;
-				*weight = loss->Weight;
+				info->Multiplier = conv->Multiplier;
+				info->KernelH = conv->KernelH;
+				info->KernelW = conv->KernelW;
+				info->StrideH = conv->StrideH;
+				info->StrideW = conv->StrideW;
+				info->DilationH = conv->DilationH;
+				info->DilationW = conv->DilationW;
 			}
 		}
 		break;
@@ -758,24 +711,75 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, UInt * inputsCoun
 			auto conv = dynamic_cast<PartialDepthwiseConvolution*>(model->Layers[layerIndex].get());
 			if (conv)
 			{
-				*group = conv->Group;
-				*groups = conv->Groups;
-				*multiplier = conv->Multiplier;
-				*kernelH = conv->KernelH;
-				*kernelW = conv->KernelW;
-				*strideH = conv->StrideH;
-				*strideW = conv->StrideW;
-				*dilationH = conv->DilationH;
-				*dilationW = conv->DilationW;
+				info->Group = conv->Group;
+				info->Groups = conv->Groups;
+				info->Multiplier = conv->Multiplier;
+				info->KernelH = conv->KernelH;
+				info->KernelW = conv->KernelW;
+				info->StrideH = conv->StrideH;
+				info->StrideW = conv->StrideW;
+				info->DilationH = conv->DilationH;
+				info->DilationW = conv->DilationW;
 			}
 		}
 		break;
+
+		case LayerTypes::ConvolutionTranspose:
+		{
+			auto conv = dynamic_cast<ConvolutionTranspose*>(model->Layers[layerIndex].get());
+			if (conv)
+			{
+				info->KernelH = conv->KernelH;
+				info->KernelW = conv->KernelW;
+				info->StrideH = conv->StrideH;
+				info->StrideW = conv->StrideW;
+				info->DilationH = conv->DilationH;
+				info->DilationW = conv->DilationW;
+			}
+		}
+		break;
+
+		case LayerTypes::ChannelShuffle:
+		{
+			auto channel = dynamic_cast<ChannelShuffle*>(model->Layers[layerIndex].get());
+			if (channel)
+				info->Groups = channel->Groups;
+		}
+		break;
+
+		case LayerTypes::ChannelSplit:
+		{
+			auto channel = dynamic_cast<ChannelSplit*>(model->Layers[layerIndex].get());
+			if (channel)
+			{
+				info->Group = channel->Group;
+				info->Groups = channel->Groups;
+			}
+		}
+		break;
+
+		case LayerTypes::Cost:
+		{
+			auto loss = dynamic_cast<Cost*>(model->Layers[layerIndex].get());
+			if (loss)
+			{
+				info->Cost = loss->CostFunction;
+				info->LabelTrue = loss->LabelTrue;
+				info->LabelFalse = loss->LabelFalse;
+				info->GroupIndex = loss->GroupIndex;
+				info->LabelIndex = loss->LabelIndex;
+				info->Weight = loss->Weight;
+			}
+		}
+		break;
+
+		
 
 		case LayerTypes::LayerNorm:
 		{
 			auto ln = dynamic_cast<LayerNorm*>(model->Layers[layerIndex].get());
 			if (ln)
-				*scaling = ln->Scaling;
+				info->Scaling = ln->Scaling;
 		}
 		break;
 
@@ -783,7 +787,7 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, UInt * inputsCoun
 		{
 			auto prelu = dynamic_cast<PRelu*>(model->Layers[layerIndex].get());
 			if (prelu)
-				*alpha = prelu->Alpha;
+				info->Alpha = prelu->Alpha;
 		}
 		break;
 
@@ -826,7 +830,6 @@ extern "C" DNN_API void DNNRefreshStatistics(const UInt layerIndex, std::string*
 		*locked = model->Layers[layerIndex]->Lockable() ? model->Layers[layerIndex]->LockUpdate.load() : false;
 	}
 }
-
 
 extern "C" DNN_API void DNNGetTrainingInfo(TrainingInfo* info)
 {
