@@ -384,25 +384,24 @@ extern "C" DNN_API void DNNGetCostInfo(const UInt index, UInt* trainErrors, Floa
 }
 
 
-extern "C" DNN_API void DNNGetModelInfo(std::string* name, UInt* costIndex, UInt* costLayerCount, UInt* groupIndex, UInt* labelIndex, UInt* hierarchies, bool* meanStdNormalization, Costs* lossFunction, Datasets* dataset, UInt* layerCount, UInt* trainingSamples, UInt* testingSamples, std::vector<Float>* meanTrainSet, std::vector<Float>* stdTrainSet)
+extern "C" DNN_API void DNNGetModelInfo(ModelInfo* info)
 {
 	if (model)
 	{
-		*name = model->Name;
-		*costIndex = model->CostIndex;
-		*costLayerCount = model->CostLayers.size();
-		*groupIndex = model->GroupIndex;
-		*labelIndex = model->LabelIndex;
-		*meanStdNormalization = model->MeanStdNormalization;
-		*hierarchies = dataprovider->Hierarchies;
-		*lossFunction = model->CostFuction;
-		*dataset = dataprovider->Dataset;
-		*layerCount = model->Layers.size();
-		*trainingSamples = dataprovider->TrainingSamplesCount;
-		*testingSamples = dataprovider->TestingSamplesCount;
-		
-		(*meanTrainSet).clear();
-		(*stdTrainSet).clear();
+		info->Name = model->Name;
+		info->Dataset = dataprovider->Dataset;
+		info->LossFunction = model->CostFuction;
+		info->LayerCount = model->Layers.size();
+		info->CostLayerCount = model->CostLayers.size();
+		info->CostIndex = model->CostIndex;
+		info->GroupIndex = model->GroupIndex;
+		info->LabelIndex = model->LabelIndex;
+		info->Hierarchies = dataprovider->Hierarchies;
+		info->TrainingSamplesCount = dataprovider->TrainingSamplesCount;
+		info->TestingSamplesCount = dataprovider->TestingSamplesCount;
+		info->MeanStdNormalization = model->MeanStdNormalization;
+		info->MeanTrainSet.clear();
+		info->StdTrainSet.clear();
 		
 		switch (dataprovider->Dataset)
 		{
@@ -411,14 +410,14 @@ extern "C" DNN_API void DNNGetModelInfo(std::string* name, UInt* costIndex, UInt
 		case Datasets::cifar100:
 			for (auto c = 0ull; c < 3ull; c++)
 			{
-				(*meanTrainSet).push_back(dataprovider->Mean[c]);
-				(*stdTrainSet).push_back(dataprovider->StdDev[c]);
+				info->MeanTrainSet.push_back(dataprovider->Mean[c]);
+				info->StdTrainSet.push_back(dataprovider->StdDev[c]);
 			}
 			break;
 		case Datasets::fashionmnist:
 		case Datasets::mnist:
-			(*meanTrainSet).push_back(dataprovider->Mean[0]);
-			(*stdTrainSet).push_back(dataprovider->StdDev[0]);
+			info->MeanTrainSet.push_back(dataprovider->Mean[0]);
+			info->StdTrainSet.push_back(dataprovider->StdDev[0]);
 			break;
 		}
 	}

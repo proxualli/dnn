@@ -27,7 +27,7 @@ DNN_API void DNNPersistOptimizer(const bool persist);
 DNN_API void DNNDisableLocking(const bool disable);
 DNN_API void DNNGetConfusionMatrix(const UInt costLayerIndex, std::vector<std::vector<UInt>>* confusionMatrix);
 DNN_API void DNNGetLayerInputs(const UInt layerIndex, std::vector<UInt>* inputs);
-DNN_API void DNNGetLayerInfo(LayerInfo* info);
+DNN_API void DNNGetLayerInfo(const UInt layerIndex, LayerInfo* info);
 DNN_API void DNNSetNewEpochDelegate(void(*newEpoch)(UInt, UInt, UInt, UInt, Float, Float, Float, bool, bool, Float, Float, bool, Float, Float, UInt, Float, UInt, Float, Float, Float, UInt, UInt, UInt, Float, Float, Float, Float, Float, Float, UInt, Float, Float, Float, UInt));
 DNN_API void DNNModelDispose();
 DNN_API bool DNNBatchNormalizationUsed();
@@ -46,7 +46,7 @@ DNN_API void DNNResume();
 DNN_API void DNNTesting();
 DNN_API void DNNGetTrainingInfo(dnn::TrainingInfo* info);
 DNN_API void DNNGetTestingInfo(dnn::TestingInfo* info);
-DNN_API void DNNGetModelInfo(std::string* name, UInt* costIndex, UInt* costLayerCount, UInt* groupIndex, UInt* labelindex, UInt* hierarchies, bool* meanStdNormalization, dnn::Costs* lossFunction, dnn::Datasets* dataset, UInt* layerCount, UInt* trainingSamples, UInt* testingSamples, std::vector<Float>* meanTrainSet, std::vector<Float>* stdTrainSet);
+DNN_API void DNNGetModelInfo(dnn::ModelInfo* info);
 DNN_API void DNNSetOptimizer(const dnn::Optimizers strategy);
 DNN_API void DNNResetOptimizer();
 DNN_API void DNNRefreshStatistics(const UInt layerIndex, std::string* description, dnn::Stats* neuronsStats, dnn::Stats* weightsStats, dnn::Stats* biasesStats, Float* fpropLayerTime, Float* bpropLayerTime, Float* updateLayerTime, Float* fpropTime, Float* bpropTime, Float* updateTime, bool* locked);
@@ -200,47 +200,21 @@ int main(int argc, char* argv[])
         if (DNNLoadDataset())
         {
             //DNNPrintModel(path + "Normal.txt");
-            auto name = new std::string();
-            auto costIndex = new UInt(); 
-            auto costLayerCount = new UInt(); 
-            auto groupIndex = new UInt(); 
-            auto labelIndex = new UInt(); 
-            auto hierarchies = new UInt(); 
-            auto meanStdNormalization = new bool(); 
-            auto lossFunction = new Costs(); 
-            auto dataset = new Datasets(); 
-            auto layerCount = new UInt(); 
-            auto trainingSamples = new UInt(); 
-            auto testingSamples = new UInt(); 
-            auto meanTrainSet = new std::vector<Float>();
-            auto stdTrainSet = new std::vector<Float>();
-            
-            DNNGetModelInfo(name, costIndex, costLayerCount, groupIndex, labelIndex, hierarchies, meanStdNormalization, lossFunction, dataset, layerCount, trainingSamples, testingSamples, meanTrainSet, stdTrainSet);
-            std::cout << std::string("Training ") << *name << std::string(" on ") << std::string(magic_enum::enum_name<Datasets>(*dataset)) << std::string(" with " +  std::string(magic_enum::enum_name<Optimizers>(optimizer)) + " optimizer") << std::endl << std::endl;
+            auto info = new ModelInfo();
+            DNNGetModelInfo(info);
+
+            std::cout << std::string("Training ") << info->Name << std::string(" on ") << std::string(magic_enum::enum_name<Datasets>(info->Dataset)) << std::string(" with " +  std::string(magic_enum::enum_name<Optimizers>(optimizer)) + " optimizer") << std::endl << std::endl;
             std::cout.flush();
 
             DNNSetNewEpochDelegate(&NewEpoch);
             DNNPersistOptimizer(persistOptimizer);
-            DNNAddTrainingRateSGDR(dnn::TrainingRate(dnn::Optimizers::NAG, 0.9f, 0.999f, 0.0005f, 0.0f, 0.00001f, 128, 128, 128, 1, 200, 1, 0.05f, 0.0001f, 0.1f, 0.003f, 1, 1.0f, true, false, 0.0f, 0.7f, true, 0.7f, 0.7f, 20, 0.7f, dnn::Interpolations::Cubic, 10.0f, 12.0f), true, 1, *trainingSamples);
+            DNNAddTrainingRateSGDR(dnn::TrainingRate(dnn::Optimizers::NAG, 0.9f, 0.999f, 0.0005f, 0.0f, 0.00001f, 128, 128, 128, 1, 200, 1, 0.05f, 0.0001f, 0.1f, 0.003f, 1, 1.0f, true, false, 0.0f, 0.7f, true, 0.7f, 0.7f, 20, 0.7f, dnn::Interpolations::Cubic, 10.0f, 12.0f), true, 1, info->TrainingSamplesCount);
             DNNTraining();
 
-            GetTrainingProgress(1, *trainingSamples, *testingSamples);
+            GetTrainingProgress(1, info->TrainingSamplesCount, info->TestingSamplesCount);
             
-            delete name;
-            delete costIndex; 
-            delete costLayerCount; 
-            delete groupIndex; 
-            delete labelIndex; 
-            delete hierarchies; 
-            delete meanStdNormalization; 
-            delete lossFunction; 
-            delete dataset; 
-            delete layerCount; 
-            delete trainingSamples; 
-            delete testingSamples; 
-            delete meanTrainSet;
-            delete stdTrainSet;
-        
+            delete info;
+                   
             DNNStop();
         }
         else

@@ -193,10 +193,6 @@ namespace dnn
 		Float SampleSpeed;
 		States State;
 		TaskStates TaskState;
-
-		TrainingInfo()
-		{
-		}
 	};
 
 	struct TestingInfo
@@ -215,10 +211,6 @@ namespace dnn
 		Float SampleSpeed;
 		States State;
 		TaskStates TaskState;
-
-		TestingInfo()
-		{
-		}
 	};
 
 	struct LayerInfo
@@ -268,10 +260,24 @@ namespace dnn
 		bool AcrossChannels;
 		bool Locked;
 		bool Lockable;
+	};
 
-		LayerInfo()
-		{
-		}
+	struct ModelInfo
+	{
+		std::string Name;
+		Datasets Dataset;
+		Costs LossFunction;
+		UInt LayerCount;
+		UInt CostLayerCount;
+		UInt CostIndex;
+		UInt GroupIndex;
+		UInt LabelIndex;
+		UInt Hierarchies;
+		UInt TrainingSamplesCount;
+		UInt TestingSamplesCount;
+		bool MeanStdNormalization;
+		std::vector<Float> MeanTrainSet;
+		std::vector<Float> StdTrainSet;
 	};
 
 	class Model
