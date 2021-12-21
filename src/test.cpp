@@ -192,7 +192,38 @@ int main(int argc, char* argv[])
 
     const auto optimizer = Optimizers::NAG;
     const auto persistOptimizer = true;
-   
+       
+    dnn::TrainingRate rate;
+
+    rate.Optimizer = dnn::Optimizers::NAG;
+    rate.Momentum = 0.9f;
+    rate.Beta2 = 0.999f;
+    rate.L2Penalty = 0.0005f;
+    rate.Dropout = 0.0f;
+    rate.Eps = 0.00001f,
+    rate.BatchSize = 128;
+    rate.Height = 128;
+    rate.Width = 128;
+    rate.Cycles = 1;
+    rate.Epochs = 200;
+    rate.EpochMultiplier = 1;
+    rate.MaximumRate = 0.05;
+    rate.MinimumRate = 0.0001f;
+    rate.FinalRate = 0.1f;
+    rate.Gamma = 0.003f;
+    rate.DecayAfterEpochs = 1;
+    rate.DecayFactor = 1.0f;
+    rate.HorizontalFlip = true;
+    rate.VerticalFlip = false;
+    rate.InputDropout = 0.0f;
+    rate.Cutout = 0.7f;
+    rate.CutMix = true;
+    rate.AutoAugment = 0.7f;
+    rate.Distortion = 0.7f;
+    rate.Interpolation = dnn::Interpolations::Cubic;
+    rate.Rotation = 12.0f;
+    rate.Scaling = 10.0f;
+
     DNNDataprovider(path);
     
     if (DNNReadDefinition(model, msg) == 1)
@@ -208,7 +239,7 @@ int main(int argc, char* argv[])
 
             DNNSetNewEpochDelegate(&NewEpoch);
             DNNPersistOptimizer(persistOptimizer);
-            DNNAddTrainingRateSGDR(dnn::TrainingRate(dnn::Optimizers::NAG, 0.9f, 0.999f, 0.0005f, 0.0f, 0.00001f, 128, 128, 128, 1, 200, 1, 0.05f, 0.0001f, 0.1f, 0.003f, 1, 1.0f, true, false, 0.0f, 0.7f, true, 0.7f, 0.7f, 20, 0.7f, dnn::Interpolations::Cubic, 10.0f, 12.0f), true, 1, info->TrainingSamplesCount);
+            DNNAddTrainingRateSGDR(rate, true, 1, info->TrainingSamplesCount);
             DNNTraining();
 
             GetTrainingProgress(1, info->TrainingSamplesCount, info->TestingSamplesCount);
