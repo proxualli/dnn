@@ -280,6 +280,21 @@ namespace dnn
 		std::vector<Float> StdTrainSet;
 	};
 
+	struct StatsInfo
+	{
+		std::string Description;
+		Stats NeuronsStats;
+		Stats WeightsStats;
+		Stats BiasesStats;
+		Float FPropLayerTime;
+		Float BPropLayerTime;
+		Float UpdateLayerTime;
+		Float FPropTime;
+		Float BPropTime;
+		Float UpdateTime;
+		bool Locked;
+	};
+
 	class Model
 	{
 	private:
