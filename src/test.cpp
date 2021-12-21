@@ -27,7 +27,7 @@ DNN_API void DNNPersistOptimizer(const bool persist);
 DNN_API void DNNDisableLocking(const bool disable);
 DNN_API void DNNGetConfusionMatrix(const UInt costLayerIndex, std::vector<std::vector<UInt>>* confusionMatrix);
 DNN_API void DNNGetLayerInputs(const UInt layerIndex, std::vector<UInt>* inputs);
-DNN_API void DNNGetLayerInfo(const UInt layerIndex, UInt* inputsCount, dnn::LayerTypes* layerType, dnn::Activations* activationFunction, dnn::Costs* cost, std::string* name, std::string* description, UInt* neuronCount, UInt* weightCount, UInt* biasesCount, UInt* multiplier, UInt* groups, UInt* group, UInt* localSize, UInt* c, UInt* d, UInt* h, UInt* w, UInt* kernelH, UInt* kernelW, UInt* strideH, UInt* strideW, UInt* dilationH, UInt* dilationW, UInt* padD, UInt* padH, UInt* padW, Float* dropout, Float* labelTrue, Float* labelFalse, Float* weight, UInt* groupIndex, UInt* labelIndex, UInt* inputC, Float* alpha, Float* beta, Float* k, dnn::Algorithms* algorithm, Float* fH, Float* fW, bool* hasBias, bool* scaling, bool* acrossChannels, bool* locked, bool* lockable);
+DNN_API void DNNGetLayerInfo(LayerInfo* info);
 DNN_API void DNNSetNewEpochDelegate(void(*newEpoch)(UInt, UInt, UInt, UInt, Float, Float, Float, bool, bool, Float, Float, bool, Float, Float, UInt, Float, UInt, Float, Float, Float, UInt, UInt, UInt, Float, Float, Float, Float, Float, Float, UInt, Float, Float, Float, UInt));
 DNN_API void DNNModelDispose();
 DNN_API bool DNNBatchNormalizationUsed();

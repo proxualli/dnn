@@ -367,19 +367,19 @@ extern "C" DNN_API void DNNSetCostIndex(const UInt costLayerIndex)
 		model->CostIndex = costLayerIndex;
 }
 
-extern "C" DNN_API void DNNGetCostInfo(const UInt costLayerIndex, UInt* trainErrors, Float* trainLoss, Float* avgTrainLoss, Float* trainErrorPercentage, UInt* testErrors, Float* testLoss, Float* avgTestLoss, Float* testErrorPercentage)
+extern "C" DNN_API void DNNGetCostInfo(const UInt index, UInt* trainErrors, Float* trainLoss, Float* avgTrainLoss, Float* trainErrorPercentage, UInt* testErrors, Float* testLoss, Float* avgTestLoss, Float* testErrorPercentage)
 {
-	if (model && costLayerIndex < model->CostLayers.size())
+	if (model && index < model->CostLayers.size())
 	{
-		*trainErrors = model->CostLayers[costLayerIndex]->TrainErrors;
-		*trainLoss = model->CostLayers[costLayerIndex]->TrainLoss;
-		*avgTrainLoss = model->CostLayers[costLayerIndex]->AvgTrainLoss;
-		*trainErrorPercentage = model->CostLayers[costLayerIndex]->TrainErrorPercentage;
+		*trainErrors = model->CostLayers[index]->TrainErrors;
+		*trainLoss = model->CostLayers[index]->TrainLoss;
+		*avgTrainLoss = model->CostLayers[index]->AvgTrainLoss;
+		*trainErrorPercentage = model->CostLayers[index]->TrainErrorPercentage;
 
-		*testErrors = model->CostLayers[costLayerIndex]->TestErrors;
-		*testLoss = model->CostLayers[costLayerIndex]->TestLoss;
-		*avgTestLoss = model->CostLayers[costLayerIndex]->AvgTestLoss;
-		*testErrorPercentage = model->CostLayers[costLayerIndex]->TestErrorPercentage;
+		*testErrors = model->CostLayers[index]->TestErrors;
+		*testLoss = model->CostLayers[index]->TestLoss;
+		*avgTestLoss = model->CostLayers[index]->AvgTestLoss;
+		*testErrorPercentage = model->CostLayers[index]->TestErrorPercentage;
 	}
 }
 
@@ -424,12 +424,11 @@ extern "C" DNN_API void DNNGetModelInfo(std::string* name, UInt* costIndex, UInt
 	}
 }
 
-extern "C" DNN_API void DNNGetLayerInfo(LayerInfo* info)
+extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, LayerInfo* info)
 {
-	if (model && info && info->LayerIndex < model->Layers.size())
+	if (model && layerIndex < model->Layers.size())
 	{
-		const auto layerIndex = info->LayerIndex;
-
+		info->LayerIndex = layerIndex;
 		info->Name = model->Layers[layerIndex]->Name;
 		info->Description = model->Layers[layerIndex]->GetDescription();
 		info->LayerType = model->Layers[layerIndex]->LayerType;
@@ -500,7 +499,7 @@ extern "C" DNN_API void DNNGetLayerInfo(LayerInfo* info)
 			auto activation = dynamic_cast<Activation*>(model->Layers[layerIndex].get());
 			if (activation)
 			{
-				info->ActivationFunction = activation->ActivationFunction;
+				info->Activation = activation->ActivationFunction;
 				info->Alpha = activation->Alpha;
 				info->Beta = activation->Beta;
 			}
@@ -772,9 +771,7 @@ extern "C" DNN_API void DNNGetLayerInfo(LayerInfo* info)
 			}
 		}
 		break;
-
 		
-
 		case LayerTypes::LayerNorm:
 		{
 			auto ln = dynamic_cast<LayerNorm*>(model->Layers[layerIndex].get());

@@ -193,6 +193,10 @@ namespace dnn
 		Float SampleSpeed;
 		States State;
 		TaskStates TaskState;
+
+		TrainingInfo()
+		{
+		}
 	};
 
 	struct TestingInfo
@@ -211,6 +215,10 @@ namespace dnn
 		Float SampleSpeed;
 		States State;
 		TaskStates TaskState;
+
+		TestingInfo()
+		{
+		}
 	};
 
 	struct LayerInfo
@@ -218,7 +226,7 @@ namespace dnn
 		std::string Name;
 		std::string Description;
 		LayerTypes LayerType;
-		Activations ActivationFunction;
+		Activations Activation;
 		Algorithms Algorithm;
 		Costs Cost;
 		UInt NeuronCount;
@@ -260,6 +268,10 @@ namespace dnn
 		bool AcrossChannels;
 		bool Locked;
 		bool Lockable;
+
+		LayerInfo()
+		{
+		}
 	};
 
 	class Model
@@ -363,15 +375,9 @@ namespace dnn
 		{
 			if (definition.length() > 2)
 			{
-				std::string name = definition;
-				std::istringstream iss(name);
-
-				std::string line;
-				std::getline(iss, line);
-				if (line[0] == '[' && line[line.length() - 1] == ']')
-					name = line.erase(line.length() - 1, 1).erase(0, 1);
-
-				return name;
+				auto first = definition.find_first_of("]");
+				if (first != std::string::npos)
+					return definition.substr(1, first - 1);
 			}
 
 			return std::string("");
