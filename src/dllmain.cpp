@@ -912,7 +912,7 @@ extern "C" DNN_API void DNNGetTrainingInfo(TrainingInfo* info)
 	}
 }
 
-extern "C" DNN_API void DNNGetTestingInfo(TrainingInfo* info)
+extern "C" DNN_API void DNNGetTestingInfo(TestingInfo* info)
 {
 	if (model)
 	{

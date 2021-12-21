@@ -45,7 +45,7 @@ DNN_API void DNNPause();
 DNN_API void DNNResume();
 DNN_API void DNNTesting();
 DNN_API void DNNGetTrainingInfo(dnn::TrainingInfo* info);
-DNN_API void DNNGetTestingInfo(dnn::TrainingInfo* info);
+DNN_API void DNNGetTestingInfo(dnn::TestingInfo* info);
 DNN_API void DNNGetModelInfo(std::string* name, UInt* costIndex, UInt* costLayerCount, UInt* groupIndex, UInt* labelindex, UInt* hierarchies, bool* meanStdNormalization, dnn::Costs* lossFunction, dnn::Datasets* dataset, UInt* layerCount, UInt* trainingSamples, UInt* testingSamples, std::vector<Float>* meanTrainSet, std::vector<Float>* stdTrainSet);
 DNN_API void DNNSetOptimizer(const dnn::Optimizers strategy);
 DNN_API void DNNResetOptimizer();

@@ -210,6 +210,32 @@ namespace dnn
 		}
 	};
 
+	struct TestingInfo
+	{
+		UInt TotalCycles;
+		UInt TotalEpochs;
+		UInt Cycle;
+		UInt Epoch;
+		UInt SampleIndex;
+
+		UInt BatchSize;
+		UInt Height;
+		UInt Width;
+
+		Float AvgTestLoss;
+		Float TestErrorPercentage;
+		UInt TestErrors;
+
+		Float SampleSpeed;
+
+		States State;
+		TaskStates TaskState;
+
+		TestingInfo()
+		{
+		}
+	};
+
 	class Model
 	{
 	private:
