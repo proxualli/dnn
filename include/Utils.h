@@ -567,7 +567,7 @@ namespace dnn
 	}
 
 	template<typename T>
-	static auto TruncatedNormal(const T m , const T s, const T limit)
+	static auto TruncatedNormal(const T m, const T s, const T limit)
 	{
 		static_assert(std::is_floating_point<T>::value, "Only Floating point type supported in TruncatedNormal function");
 
