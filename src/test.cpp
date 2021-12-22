@@ -221,9 +221,9 @@ int main(int argc, char* argv[])
     rate.AutoAugment = 0.7f;
     rate.Distortion = 0.7f;
     rate.Interpolation = dnn::Interpolations::Cubic;
-    rate.Rotation = 12.0f;
     rate.Scaling = 10.0f;
-
+    rate.Rotation = 12.0f;
+    
     DNNDataprovider(path);
     
     if (DNNReadDefinition(model, msg) == 1)
