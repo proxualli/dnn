@@ -291,6 +291,7 @@ namespace dnn
 		Float AvgTestLoss;
 		Float TestErrorPercentage;
 	};
+
 	struct StatsInfo
 	{
 		std::string Description;

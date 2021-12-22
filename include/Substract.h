@@ -6,7 +6,7 @@ namespace dnn
 	class Substract final : public Layer
 	{
 	private:
-		std::vector<Float> Scales;
+		std::vector<Float> scales;
 		std::vector<dnnl::memory::desc> srcsMemsDesc;
 		std::unordered_map<int, dnnl::memory> fwdArgs;
 		std::unique_ptr<dnnl::sum::primitive_desc> fwdDesc;
@@ -28,8 +28,8 @@ namespace dnn
 				assert(Inputs[i]->W == W);
 			}
 
-			Scales = std::vector<Float>(Inputs.size(), Float(-1));
-			Scales[0] = Float(1);
+			scales = std::vector<Float>(Inputs.size(), Float(-1));
+			scales[0] = Float(1);
 		}
 
 		void UpdateResolution() final override
@@ -89,7 +89,7 @@ namespace dnn
 			for (auto i = 0ull; i < Inputs.size(); i++)
 				srcsMemsDesc[i] = *Inputs[i]->DstMemDesc;
 
-			fwdDesc = std::make_unique<dnnl::sum::primitive_desc>(dnnl::sum::primitive_desc(*DstMemDesc, Scales, srcsMemsDesc, Device.engine));
+			fwdDesc = std::make_unique<dnnl::sum::primitive_desc>(dnnl::sum::primitive_desc(*DstMemDesc, scales, srcsMemsDesc, Device.engine));
 
 			fwdArgs = std::unordered_map<int, dnnl::memory>{ { DNNL_ARG_DST, dnnl::memory(*DstMemDesc, Device.engine, Neurons.data()) } };
 			for (auto i = 0ull; i < Inputs.size(); i++)

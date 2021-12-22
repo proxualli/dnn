@@ -12,16 +12,13 @@ namespace dnn
 		const Float Eps;
 		const Float Momentum;
 		const Float OneMinusMomentum;
-		
 		Float Keep;
 		Float Scale;
-		
 		FloatVector Mean;
 		FloatVector RunningMean;
 		FloatVector Variance;
 		FloatVector RunningVariance;
 		FloatVector InvStdDev;
-	
 		FloatArray NeuronsActive;
 
 		BatchNormActivationDropout<Activation, T>(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const Float dropout = Float(0.5), const bool localValue = false, const bool scaling = true, const Float momentum = Float(0.99), const Float eps = Float(1e-04), const bool hasBias = true) :

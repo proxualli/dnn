@@ -6,9 +6,9 @@ namespace dnn
 	class Convolution final : public Layer
 	{
 	private:
-		const dnnl::memory::dims Strides;
-		const dnnl::memory::dims Dilates;
-		const dnnl::memory::dims Padding;
+		const dnnl::memory::dims strides;
+		const dnnl::memory::dims dilates;
+		const dnnl::memory::dims padding;
 		std::unique_ptr<dnnl::convolution_forward::primitive_desc> fwdDesc;
 		std::unique_ptr<dnnl::convolution_backward_weights::primitive_desc> bwdWeightsDesc;
 		std::unique_ptr<dnnl::convolution_backward_data::primitive_desc> bwdDataDesc;
@@ -47,9 +47,9 @@ namespace dnn
 			DilationW(dilationW),
 			DilationKernelH(1 + (kernelH - 1) * dilationH),
 			DilationKernelW(1 + (kernelW - 1) * dilationW),
-			Strides(dnnl::memory::dims({ dnnl::memory::dim(strideH) , dnnl::memory::dim(strideW) })),
-			Dilates(dnnl::memory::dims({ dnnl::memory::dim(dilationH - 1), dnnl::memory::dim(dilationW - 1) })),
-			Padding(dnnl::memory::dims({ dnnl::memory::dim(padH), dnnl::memory::dim(padW) })),
+			strides(dnnl::memory::dims({ dnnl::memory::dim(strideH) , dnnl::memory::dim(strideW) })),
+			dilates(dnnl::memory::dims({ dnnl::memory::dim(dilationH - 1), dnnl::memory::dim(dilationW - 1) })),
+			padding(dnnl::memory::dims({ dnnl::memory::dim(padH), dnnl::memory::dim(padW) })),
 			reorderFwdSrc(false),
 			reorderBwdSrc(false),
 			reorderBwdDiffSrc(false),
@@ -74,8 +74,8 @@ namespace dnn
 
 		void UpdateResolution() final override
 		{
-			H = (((InputLayer->H - (1 + (KernelH - 1) * DilationH)) + (Padding[0] * 2)) / StrideH) + 1;
-			W = (((InputLayer->W - (1 + (KernelW - 1) * DilationW)) + (Padding[1] * 2)) / StrideW) + 1;
+			H = (((InputLayer->H - (1 + (KernelH - 1) * DilationH)) + (padding[0] * 2)) / StrideH) + 1;
+			W = (((InputLayer->W - (1 + (KernelW - 1) * DilationW)) + (padding[1] * 2)) / StrideW) + 1;
 			Layer::UpdateResolution();
 		}
 
@@ -137,15 +137,15 @@ namespace dnn
 						
 			fwdDesc = std::make_unique<dnnl::convolution_forward::primitive_desc>(
 				dnnl::convolution_forward::primitive_desc(HasBias ?
-					dnnl::convolution_forward::desc(dnnl::prop_kind::forward, dnnl::algorithm::convolution_auto, memDesc[0], memDesc[2], memDesc[3], memDesc[1], Strides, Dilates, Padding, Padding) :
-					dnnl::convolution_forward::desc(dnnl::prop_kind::forward, dnnl::algorithm::convolution_auto, memDesc[0], memDesc[2], memDesc[1], Strides, Dilates, Padding, Padding), Device.engine));
+					dnnl::convolution_forward::desc(dnnl::prop_kind::forward, dnnl::algorithm::convolution_auto, memDesc[0], memDesc[2], memDesc[3], memDesc[1], strides, dilates, padding, padding) :
+					dnnl::convolution_forward::desc(dnnl::prop_kind::forward, dnnl::algorithm::convolution_auto, memDesc[0], memDesc[2], memDesc[1], strides, dilates, padding, padding), Device.engine));
 			
 			bwdWeightsDesc = std::make_unique<dnnl::convolution_backward_weights::primitive_desc>(dnnl::convolution_backward_weights::primitive_desc(HasBias ?
-				dnnl::convolution_backward_weights::desc(dnnl::algorithm::convolution_auto, memDesc[0], memDesc[2], memDesc[3], memDesc[1], Strides, Dilates, Padding, Padding) :
-				dnnl::convolution_backward_weights::desc(dnnl::algorithm::convolution_auto, memDesc[0], memDesc[2], memDesc[1], Strides, Dilates, Padding, Padding),
+				dnnl::convolution_backward_weights::desc(dnnl::algorithm::convolution_auto, memDesc[0], memDesc[2], memDesc[3], memDesc[1], strides, dilates, padding, padding) :
+				dnnl::convolution_backward_weights::desc(dnnl::algorithm::convolution_auto, memDesc[0], memDesc[2], memDesc[1], strides, dilates, padding, padding),
 				Device.engine, *fwdDesc));
 
-			bwdDataDesc = std::make_unique<dnnl::convolution_backward_data::primitive_desc>(dnnl::convolution_backward_data::primitive_desc(dnnl::convolution_backward_data::desc(dnnl::algorithm::convolution_auto, memDesc[0], memDesc[2], memDesc[1], Strides, Dilates, Padding, Padding), Device.engine, *fwdDesc));
+			bwdDataDesc = std::make_unique<dnnl::convolution_backward_data::primitive_desc>(dnnl::convolution_backward_data::primitive_desc(dnnl::convolution_backward_data::desc(dnnl::algorithm::convolution_auto, memDesc[0], memDesc[2], memDesc[1], strides, dilates, padding, padding), Device.engine, *fwdDesc));
 			
 			DstMemDesc = std::make_unique<dnnl::memory::desc>(fwdDesc->dst_desc());
 			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(fwdDesc->dst_desc());

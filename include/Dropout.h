@@ -9,7 +9,6 @@ namespace dnn
 		const bool LocalValue;
 		Float Keep;
 		Float Scale;
-
 		FloatArray NeuronsActive;
 
 		Dropout(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const Float dropout = Float(0.5), const bool localValue = false) :

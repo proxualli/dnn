@@ -504,10 +504,12 @@ namespace dnn
 			ran = static_cast<uint32_t>(__rdtsc());
 			break;
 		case 2:								// use RDRAND instruction
-			while (_rdrand32_step(&ran) == 0) {}
+			while (_rdrand32_step(&ran) == 0)
+			{ }
 			break;
 		case 3:								// use RDSEED instruction */
-			while (_rdseed32_step(&ran) == 0) {}
+			while (_rdseed32_step(&ran) == 0)
+			{ }
 			break;
 		}
 		
@@ -557,7 +559,7 @@ namespace dnn
 	{
 		static_assert(std::is_floating_point<T>::value, "Only Floating point type supported in UniformReal function");
 
-		if(min > max)
+		if (min > max)
 			throw std::invalid_argument("Parameter out of range in UniformReal function");
 
 		static thread_local auto generator = std::mt19937(Seed<unsigned>());
@@ -565,7 +567,7 @@ namespace dnn
 	}
 
 	template<typename T>
-	static auto TruncatedNormal(const T m, const T s, const T limit)
+	static auto TruncatedNormal(const T m , const T s, const T limit)
 	{
 		static_assert(std::is_floating_point<T>::value, "Only Floating point type supported in TruncatedNormal function");
 
@@ -575,10 +577,8 @@ namespace dnn
 		static thread_local auto generator = std::mt19937(Seed<unsigned>());
 		
 		T x;
-		do 
-		{
-			x = std::normal_distribution<T>(T(0), s)(generator);
-		} while (std::abs(x) > limit); // reject if beyond limit
+		do { x = std::normal_distribution<T>(T(0), s)(generator); }
+		while (std::abs(x) > limit); // reject if beyond limit
 		
 		return x + m;
 	}

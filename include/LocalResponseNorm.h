@@ -9,7 +9,7 @@ namespace dnn
 		std::unique_ptr<dnnl::lrn_forward::primitive_desc> fwdDesc;
 		std::unique_ptr<dnnl::lrn_backward::primitive_desc> bwdDesc;
 		std::unique_ptr<dnnl::binary::primitive_desc> bwdAddDesc;
-		std::unique_ptr<dnnl::memory> WorkspaceMemory;
+		std::unique_ptr<dnnl::memory> workspaceMemory;
 #ifdef DNN_CACHE_PRIMITIVES
 		std::unique_ptr<dnnl::lrn_forward> fwd;
 		std::unique_ptr<dnnl::lrn_backward> bwd;
@@ -98,7 +98,7 @@ namespace dnn
 			
 			fwdDesc = std::make_unique<dnnl::lrn_forward::primitive_desc>(dnnl::lrn_forward::primitive_desc(dnnl::lrn_forward::desc(dnnl::prop_kind::forward, Algorithm, *InputLayer->DstMemDesc, LocalSize, Alpha, Beta, K), Device.engine));
 			bwdDesc = std::make_unique<dnnl::lrn_backward::primitive_desc>(dnnl::lrn_backward::primitive_desc(dnnl::lrn_backward::desc(Algorithm, *DiffDstMemDesc, *DstMemDesc, LocalSize, Alpha, Beta, K), Device.engine, *fwdDesc));
-			WorkspaceMemory = std::make_unique<dnnl::memory>(dnnl::memory(fwdDesc->workspace_desc(), Device.engine));
+			workspaceMemory = std::make_unique<dnnl::memory>(dnnl::memory(fwdDesc->workspace_desc(), Device.engine));
 			bwdAddDesc = std::make_unique<dnnl::binary::primitive_desc>(dnnl::binary::primitive_desc(dnnl::binary::desc(dnnl::algorithm::binary_add, *InputLayer->DiffDstMemDesc, *InputLayer->DiffDstMemDesc, *InputLayer->DiffDstMemDesc), Device.engine));
 						
 			reorderFwdSrc = fwdDesc->src_desc() != *InputLayer->DstMemDesc;
@@ -118,7 +118,7 @@ namespace dnn
 			auto srcMem = reorderFwdSrc ? dnnl::memory(fwdDesc->src_desc(), Device.engine) : memSrc;
 			if (reorderFwdSrc)
 			{
-				dnnl::reorder(memSrc, srcMem).execute(Device.stream, std::unordered_map<int, dnnl::memory> { {DNNL_ARG_FROM, memSrc}, { DNNL_ARG_TO, srcMem }, { DNNL_ARG_WORKSPACE, *WorkspaceMemory } });
+				dnnl::reorder(memSrc, srcMem).execute(Device.stream, std::unordered_map<int, dnnl::memory> { {DNNL_ARG_FROM, memSrc}, { DNNL_ARG_TO, srcMem }, { DNNL_ARG_WORKSPACE, *workspaceMemory } });
 				Device.stream.wait();
 			}
 
@@ -149,7 +149,7 @@ namespace dnn
 			auto memDiffSrc = SharesInput ? dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine) : dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data());
 			auto diffSrcMem = reorderBwdDiffSrc ? dnnl::memory(bwdDesc->diff_src_desc(), Device.engine) : memDiffSrc;
 #ifdef DNN_CACHE_PRIMITIVES
-			bwd->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_DIFF_DST, diffDstMem}, { DNNL_ARG_WORKSPACE, *WorkspaceMemory }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
+			bwd->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_DIFF_DST, diffDstMem}, { DNNL_ARG_WORKSPACE, *workspaceMemory }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
 #else
 			dnnl::lrn_backward(*bwdDesc).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_DIFF_DST, diffDstMem}, { DNNL_ARG_WORKSPACE, *WorkspaceMemory }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
 #endif

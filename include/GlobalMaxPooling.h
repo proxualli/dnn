@@ -6,10 +6,10 @@ namespace dnn
 	class GlobalMaxPooling final : public Layer
 	{
 	private:
-		dnnl::memory::dims Kernel;
-		dnnl::memory::dims Stride;
-		const dnnl::memory::dims Padding;
-		std::unique_ptr<dnnl::memory> WorkspaceMemory;
+		dnnl::memory::dims kernel;
+		dnnl::memory::dims stride;
+		const dnnl::memory::dims padding;
+		std::unique_ptr<dnnl::memory> workspaceMemory;
 		std::unique_ptr<dnnl::pooling_forward::primitive_desc> fwdDesc;
 		std::unique_ptr<dnnl::pooling_backward::primitive_desc> bwdDesc;
 		std::unique_ptr<dnnl::binary::primitive_desc> bwdAddDesc;
@@ -31,9 +31,9 @@ namespace dnn
 			KernelH(inputs[0]->H),
 			KernelW(inputs[0]->W),
 			Scale(Float(1) / inputs[0]->W * inputs[0]->H),
-			Kernel(dnnl::memory::dims({ dnnl::memory::dim(inputs[0]->H), dnnl::memory::dim(inputs[0]->W) })),
-			Stride(dnnl::memory::dims({ dnnl::memory::dim(inputs[0]->H) , dnnl::memory::dim(inputs[0]->W) })),
-			Padding(dnnl::memory::dims({ dnnl::memory::dim(0), dnnl::memory::dim(0) })),
+			kernel(dnnl::memory::dims({ dnnl::memory::dim(inputs[0]->H), dnnl::memory::dim(inputs[0]->W) })),
+			stride(dnnl::memory::dims({ dnnl::memory::dim(inputs[0]->H) , dnnl::memory::dim(inputs[0]->W) })),
+			padding(dnnl::memory::dims({ dnnl::memory::dim(0), dnnl::memory::dim(0) })),
 			reorderFwdSrc(false),
 			reorderBwdDiffSrc(false)
 		{
@@ -45,8 +45,8 @@ namespace dnn
 			KernelH = InputLayer->H;
 			KernelW = InputLayer->W;
 			Scale = Float(1) / InputLayer->H * InputLayer->W;
-			Kernel = dnnl::memory::dims({ dnnl::memory::dim(InputLayer->H), dnnl::memory::dim(InputLayer->W) });
-			Stride = dnnl::memory::dims({ dnnl::memory::dim(InputLayer->H) , dnnl::memory::dim(InputLayer->W) });
+			kernel = dnnl::memory::dims({ dnnl::memory::dim(InputLayer->H), dnnl::memory::dim(InputLayer->W) });
+			stride = dnnl::memory::dims({ dnnl::memory::dim(InputLayer->H) , dnnl::memory::dim(InputLayer->W) });
 		}
 
 		std::string GetDescription() const final override
@@ -88,10 +88,10 @@ namespace dnn
 				DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(1), dnnl::memory::dim(1) }), dnnl::memory::data_type::f32, ChosenFormat));
 			}
 
-			fwdDesc = std::make_unique<dnnl::pooling_forward::primitive_desc>(dnnl::pooling_forward::primitive_desc(dnnl::pooling_forward::desc(dnnl::prop_kind::forward, dnnl::algorithm::pooling_max, *InputLayer->DstMemDesc, *DstMemDesc, Stride, Kernel, Padding, Padding), Device.engine));
-			bwdDesc = std::make_unique<dnnl::pooling_backward::primitive_desc>(dnnl::pooling_backward::primitive_desc(dnnl::pooling_backward::desc(dnnl::algorithm::pooling_max, *InputLayer->DiffDstMemDesc, *DiffDstMemDesc, Stride, Kernel, Padding, Padding), Device.engine, *fwdDesc));
+			fwdDesc = std::make_unique<dnnl::pooling_forward::primitive_desc>(dnnl::pooling_forward::primitive_desc(dnnl::pooling_forward::desc(dnnl::prop_kind::forward, dnnl::algorithm::pooling_max, *InputLayer->DstMemDesc, *DstMemDesc, stride, kernel, padding, padding), Device.engine));
+			bwdDesc = std::make_unique<dnnl::pooling_backward::primitive_desc>(dnnl::pooling_backward::primitive_desc(dnnl::pooling_backward::desc(dnnl::algorithm::pooling_max, *InputLayer->DiffDstMemDesc, *DiffDstMemDesc, stride, kernel, padding, padding), Device.engine, *fwdDesc));
 
-			WorkspaceMemory = std::make_unique<dnnl::memory>(dnnl::memory(fwdDesc->workspace_desc(), Device.engine));
+			workspaceMemory = std::make_unique<dnnl::memory>(dnnl::memory(fwdDesc->workspace_desc(), Device.engine));
 
 			reorderFwdSrc = fwdDesc->src_desc() != *InputLayer->DstMemDesc;
 			reorderBwdDiffSrc = bwdDesc->diff_src_desc() != *InputLayer->DiffDstMemDesc;
@@ -120,7 +120,7 @@ namespace dnn
 
 			auto dstMem = dnnl::memory(*DstMemDesc, Device.engine, Neurons.data());
 #ifdef DNN_CACHE_PRIMITIVES
-			fwd->execute(Device.stream, std::unordered_map<int, dnnl::memory> { {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DST, dstMem }, { DNNL_ARG_WORKSPACE, *WorkspaceMemory } });
+			fwd->execute(Device.stream, std::unordered_map<int, dnnl::memory> { {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DST, dstMem }, { DNNL_ARG_WORKSPACE, *workspaceMemory } });
 #else
 			dnnl::pooling_forward(*fwdDesc).execute(Device.stream, std::unordered_map<int, dnnl::memory> { {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DST, dstMem }, { DNNL_ARG_WORKSPACE, *WorkspaceMemory } });
 #endif
@@ -147,7 +147,7 @@ namespace dnn
 			auto memDiffSrc = SharesInput ? dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine) : dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data());
 			auto diffSrcMem = reorderBwdDiffSrc ? dnnl::memory(bwdDesc->diff_src_desc(), Device.engine) : memDiffSrc;
 #ifdef DNN_CACHE_PRIMITIVES
-			bwd->execute(Device.stream, std::unordered_map<int, dnnl::memory> { {DNNL_ARG_DIFF_DST, diffDstMem}, { DNNL_ARG_WORKSPACE, *WorkspaceMemory }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
+			bwd->execute(Device.stream, std::unordered_map<int, dnnl::memory> { {DNNL_ARG_DIFF_DST, diffDstMem}, { DNNL_ARG_WORKSPACE, *workspaceMemory }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
 #else
 			dnnl::pooling_backward(*bwdDesc).execute(Device.stream, std::unordered_map<int, dnnl::memory> { {DNNL_ARG_DIFF_DST, diffDstMem}, { DNNL_ARG_WORKSPACE, *WorkspaceMemory }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
 #endif

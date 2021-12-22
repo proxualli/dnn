@@ -11,6 +11,7 @@ namespace dnn
 #ifdef DNN_CACHE_PRIMITIVES
 		std::unique_ptr<dnnl::binary> fwd;
 #endif
+
 		auto GetFirst(const std::vector<Layer*>& inputs)
 		{
 			return (inputs[0]->H == 1 && inputs[0]->W == 1) ? Byte(1) : Byte(0);

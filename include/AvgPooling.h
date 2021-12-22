@@ -6,10 +6,9 @@ namespace dnn
 	class AvgPooling final : public Layer
 	{
 	private:
-		const dnnl::memory::dims Kernel;
-		const dnnl::memory::dims Stride;
-		const dnnl::memory::dims Padding;
-
+		const dnnl::memory::dims kernel;
+		const dnnl::memory::dims stride;
+		const dnnl::memory::dims padding;
 		std::unique_ptr<dnnl::pooling_forward::primitive_desc> fwdDesc;
 		std::unique_ptr<dnnl::pooling_backward::primitive_desc> bwdDesc;
 		std::unique_ptr<dnnl::binary::primitive_desc> bwdAddDesc;
@@ -35,9 +34,9 @@ namespace dnn
 			StrideH(strideH),
 			StrideW(strideW),
 			Scale(Float(1) / (kernelH * kernelW)),
-			Kernel(dnnl::memory::dims({ dnnl::memory::dim(kernelH), dnnl::memory::dim(kernelW) })),
-			Stride(dnnl::memory::dims({ dnnl::memory::dim(strideH) , dnnl::memory::dim(strideW) })),
-			Padding(dnnl::memory::dims({ dnnl::memory::dim(padH), dnnl::memory::dim(padW) })),
+			kernel(dnnl::memory::dims({ dnnl::memory::dim(kernelH), dnnl::memory::dim(kernelW) })),
+			stride(dnnl::memory::dims({ dnnl::memory::dim(strideH) , dnnl::memory::dim(strideW) })),
+			padding(dnnl::memory::dims({ dnnl::memory::dim(padH), dnnl::memory::dim(padW) })),
 			reorderFwdSrc(false),
 			reorderBwdDiffSrc(false)
 		{
@@ -96,13 +95,13 @@ namespace dnn
 
 			if (HasPadding)
 			{
-				fwdDesc = std::make_unique<dnnl::pooling_forward::primitive_desc>(dnnl::pooling_forward::primitive_desc(dnnl::pooling_forward::desc(dnnl::prop_kind::forward, dnnl::algorithm::pooling_avg_include_padding, *InputLayer->DstMemDesc, *DstMemDesc, Stride, Kernel, Padding, Padding), Device.engine));
-				bwdDesc = std::make_unique<dnnl::pooling_backward::primitive_desc>(dnnl::pooling_backward::primitive_desc(dnnl::pooling_backward::desc(dnnl::algorithm::pooling_avg_include_padding, *InputLayer->DiffDstMemDesc, *DiffDstMemDesc, Stride, Kernel, Padding, Padding), Device.engine, *fwdDesc));
+				fwdDesc = std::make_unique<dnnl::pooling_forward::primitive_desc>(dnnl::pooling_forward::primitive_desc(dnnl::pooling_forward::desc(dnnl::prop_kind::forward, dnnl::algorithm::pooling_avg_include_padding, *InputLayer->DstMemDesc, *DstMemDesc, stride, kernel, padding, padding), Device.engine));
+				bwdDesc = std::make_unique<dnnl::pooling_backward::primitive_desc>(dnnl::pooling_backward::primitive_desc(dnnl::pooling_backward::desc(dnnl::algorithm::pooling_avg_include_padding, *InputLayer->DiffDstMemDesc, *DiffDstMemDesc, stride, kernel, padding, padding), Device.engine, *fwdDesc));
 			}
 			else
 			{
-				fwdDesc = std::make_unique<dnnl::pooling_forward::primitive_desc>(dnnl::pooling_forward::primitive_desc(dnnl::pooling_forward::desc(dnnl::prop_kind::forward, dnnl::algorithm::pooling_avg_exclude_padding, *InputLayer->DstMemDesc, *DstMemDesc, Stride, Kernel, Padding, Padding), Device.engine));
-				bwdDesc = std::make_unique<dnnl::pooling_backward::primitive_desc>(dnnl::pooling_backward::primitive_desc(dnnl::pooling_backward::desc(dnnl::algorithm::pooling_avg_exclude_padding, *InputLayer->DiffDstMemDesc, *DiffDstMemDesc, Stride, Kernel, Padding, Padding), Device.engine, *fwdDesc));
+				fwdDesc = std::make_unique<dnnl::pooling_forward::primitive_desc>(dnnl::pooling_forward::primitive_desc(dnnl::pooling_forward::desc(dnnl::prop_kind::forward, dnnl::algorithm::pooling_avg_exclude_padding, *InputLayer->DstMemDesc, *DstMemDesc, stride, kernel, padding, padding), Device.engine));
+				bwdDesc = std::make_unique<dnnl::pooling_backward::primitive_desc>(dnnl::pooling_backward::primitive_desc(dnnl::pooling_backward::desc(dnnl::algorithm::pooling_avg_exclude_padding, *InputLayer->DiffDstMemDesc, *DiffDstMemDesc, stride, kernel, padding, padding), Device.engine, *fwdDesc));
 			}
 
 			reorderFwdSrc = fwdDesc->src_desc() != *InputLayer->DstMemDesc;

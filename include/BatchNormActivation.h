@@ -10,7 +10,6 @@ namespace dnn
 		const Float Eps;
 		const Float Momentum;
 		const Float OneMinusMomentum;
-
 		FloatVector Mean;
 		FloatVector RunningMean;
 		FloatVector Variance;
