@@ -282,7 +282,7 @@ extern "C" DNN_API void DNNGetImage(const UInt layerIndex, const Byte fillColor,
 extern "C" DNN_API bool DNNGetInputSnapShot(std::vector<Float>* snapshot, std::vector<UInt>* label)
 {
 	if (model)
-		if (model->TaskState.load() == TaskStates::Running && model->State.load() == States::Training || model->State.load() == States::Testing)
+		if (model->TaskState.load() == TaskStates::Running && (model->State.load() == States::Training || model->State.load() == States::Testing))
 			return model->GetInputSnapShot(snapshot, label);
 
 	return false;

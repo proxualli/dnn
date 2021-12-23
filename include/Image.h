@@ -40,9 +40,9 @@ namespace dnn
 
 	public:
 		UInt C; // Channels
-		UInt D;	// Depth
-		UInt H;	// Height
-		UInt W;	// Width
+		UInt D; // Depth
+		UInt H; // Height
+		UInt W; // Width
 
 		Image() :
 			C(0),
@@ -50,6 +50,15 @@ namespace dnn
 			H(0),
 			W(0),
 			Data(VectorT())
+		{
+		}
+
+		Image(const Image& image) :
+			C(image.C),
+			D(image.D),
+			H(image.H),
+			W(image.W),
+			Data(image.Data)
 		{
 		}
 
@@ -83,16 +92,6 @@ namespace dnn
 
 		~Image() = default;
 
-		T& operator()(const UInt c, const UInt d, const UInt h, const UInt w)
-		{
-			return Data[w + (h * W) + (d * H * W) + (c * D * H * W)];
-		}
-
-		const T& operator()(const UInt c, const UInt d, const UInt h, const UInt w) const
-		{
-			return Data[w + (h * W) + (d * H * W) + (c * D * H * W)];
-		}
-
 		T* data()
 		{
 			return Data.data();
@@ -116,6 +115,16 @@ namespace dnn
 		auto Size() const
 		{
 			return C * D * H * W;
+		}
+
+		T& operator()(const UInt c, const UInt d, const UInt h, const UInt w)
+		{
+			return Data[w + (h * W) + (d * H * W) + (c * D * H * W)];
+		}
+
+		const T& operator()(const UInt c, const UInt d, const UInt h, const UInt w) const
+		{
+			return Data[w + (h * W) + (d * H * W) + (c * D * H * W)];
 		}
 		
 		static cimg_library::CImg<Float> ImageToCImgFloat(const Image& image)

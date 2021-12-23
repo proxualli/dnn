@@ -204,7 +204,6 @@ namespace dnn
 		std::unique_ptr<dnnl::binary> bwdAdd;
 #endif
 		dnnl::algorithm algorithm;
-
 		bool reorderFwdSrc;
 		bool reorderBwdSrc;
 		bool reorderBwdDiffSrc;

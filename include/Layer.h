@@ -412,7 +412,7 @@ namespace dnn
 		{
 			HW = H * W;
 			CDHW = C * D * HW;
-			PaddedCDHW = LayerType == LayerTypes::Input ? C : PaddedC * D * HW;
+			PaddedCDHW = LayerType == LayerTypes::Input ? CDHW : PaddedCDHW;
 		}
 
 		void SetParameters(const bool useDefaults, const Fillers weightsFiller, const FillerModes weightsFillerMode, const Float weightsGain, const Float weightsScale, const Float weightsLRM, const Float weightsWDM, const Fillers biasesFiller, const FillerModes biasesFillerMode, const Float biasesGain, const Float biasesScale, const Float biasesLRM, const Float biasesWDM)

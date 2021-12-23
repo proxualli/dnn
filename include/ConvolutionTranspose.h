@@ -19,7 +19,6 @@ namespace dnn
 		std::unique_ptr<dnnl::deconvolution_backward_data> bwdData;
 		std::unique_ptr<dnnl::binary> bwdAdd;
 #endif
-		
 		bool reorderFwdSrc;
 		bool reorderBwdSrc;
 		bool reorderBwdDiffSrc;
