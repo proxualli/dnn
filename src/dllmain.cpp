@@ -793,6 +793,16 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, LayerInfo* info)
 	}
 }
 
+extern "C" DNN_API void DNNGetResolution(UInt* N, UInt* H, UInt* W)
+{
+	if (model)
+	{
+		*N = model->BatchSize;
+		*H = model->H;
+		*W = model->W;
+	}
+}
+
 extern "C" DNN_API void DNNRefreshStatistics(const UInt layerIndex, StatsInfo* info)
 {
 	if (model && layerIndex < model->Layers.size())
@@ -811,7 +821,6 @@ extern "C" DNN_API void DNNRefreshStatistics(const UInt layerIndex, StatsInfo* i
 		}
 
 		info->Description = model->Layers[layerIndex]->GetDescription();
-
 		info->NeuronsStats = model->Layers[layerIndex]->NeuronsStats;
 		info->WeightsStats = model->Layers[layerIndex]->WeightsStats;
 		info->BiasesStats = model->Layers[layerIndex]->BiasesStats;

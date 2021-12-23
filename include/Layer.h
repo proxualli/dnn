@@ -210,11 +210,15 @@ namespace dnn
 		Float Min;
 		Float Max;
 
-		Stats() :
-		   Mean(0),
-		   StdDev(0),
-		   Min(0),
-		   Max(0)
+		Stats() : Mean(0), StdDev(0), Min(0), Max(0)
+		{
+		}
+
+		Stats(const Stats& stats) :
+		   Mean(stats.Mean),
+		   StdDev(stats.StdDev),
+		   Min(stats.Min),
+		   Max(stats.Max)
 		{
 		}
 
@@ -397,9 +401,9 @@ namespace dnn
 			SharesInput(false),
 			SharesInputOriginal(false),
 			SharesInputInplace(false),
-			NeuronsStats(),
-			WeightsStats(),
-			BiasesStats(),
+			NeuronsStats(Stats()),
+			WeightsStats(Stats()),
+			BiasesStats(Stats()),
 			fpropTime(std::chrono::duration<Float>(Float(0))),
 			bpropTime(std::chrono::duration<Float>(Float(0))),
 			updateTime(std::chrono::duration<Float>(Float(0)))
@@ -412,7 +416,7 @@ namespace dnn
 		{
 			HW = H * W;
 			CDHW = C * D * HW;
-			PaddedCDHW = LayerType == LayerTypes::Input ? CDHW : PaddedCDHW;
+			PaddedCDHW = LayerType == LayerTypes::Input ? CDHW : PaddedC * HW;
 		}
 
 		void SetParameters(const bool useDefaults, const Fillers weightsFiller, const FillerModes weightsFillerMode, const Float weightsGain, const Float weightsScale, const Float weightsLRM, const Float weightsWDM, const Fillers biasesFiller, const FillerModes biasesFillerMode, const Float biasesGain, const Float biasesScale, const Float biasesLRM, const Float biasesWDM)
