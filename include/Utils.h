@@ -394,7 +394,7 @@ namespace dnn
 		inline T* data() noexcept { return dataPtr; }
 		inline const T* data() const noexcept { return dataPtr; }
 		inline size_type size() const noexcept { return nelems; }
-		inline dnnl::memory::desc desc() { return descPtr; }
+		inline dnnl::memory::desc desc() { return description; }
 		inline void resize(const dnnl::memory::desc& md, const dnnl::engine& engine, const T value = T())
 		{
 			if (md)
