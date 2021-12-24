@@ -264,7 +264,7 @@ namespace dnn
 		size_type nelems = 0;
 
 	public:
-		void release() noexcept
+		inline void release() noexcept
 		{
 			if (arrPtr)
 				arrPtr.reset();
@@ -275,7 +275,7 @@ namespace dnn
 		}
 		AlignedArray()
 		{
-			release();
+			//release();
 		}
 		AlignedArray(const size_type elements, const T value = T()) 
 		{
@@ -346,20 +346,21 @@ namespace dnn
 		std::unique_ptr<dnnl::memory> arrPtr = nullptr;
 		T* dataPtr = nullptr;
 		size_type nelems = 0;
-		
+		dnnl::memory::desc description;
+
 	public:
-		void release() noexcept
+		inline void release() noexcept
 		{
 			if (arrPtr)
 				arrPtr.reset();
 
 			nelems = 0;
 			arrPtr = nullptr;
-			dataPtr = nullptr;
+			dataPtr = nullptr;			
 		}
 		AlignedMemory()
 		{
-			release();
+			//release();
 		}
 		AlignedMemory(const dnnl::memory::desc& md, const dnnl::engine& engine, const T value = T())
 		{
@@ -385,13 +386,16 @@ namespace dnn
 					else
 						for (auto i = 0ull; i < nelems; i++)
 							dataPtr[i] = value;
+
+					description = md;
 				}
 			}
 		}
 		inline T* data() noexcept { return dataPtr; }
 		inline const T* data() const noexcept { return dataPtr; }
 		inline size_type size() const noexcept { return nelems; }
-		void resize(const dnnl::memory::desc& md, const dnnl::engine& engine, const T value = T())
+		inline dnnl::memory::desc desc() { return descPtr; }
+		inline void resize(const dnnl::memory::desc& md, const dnnl::engine& engine, const T value = T())
 		{
 			if (md)
 			{
@@ -419,6 +423,8 @@ namespace dnn
 						else
 							for (auto i = 0ull; i < nelems; i++)
 								dataPtr[i] = value;
+
+						description = md;
 					}
 				}
 			}
@@ -451,13 +457,13 @@ namespace dnn
 	constexpr auto NEURONS_LIMIT = Float(10000);		// limit for all the neurons and derivative [-NEURONS_LIMIT,NEURONS_LIMIT]
 	constexpr auto WEIGHTS_LIMIT = Float(100);		// limit for all the weights and biases [-WEIGHTS_LIMIT,WEIGHTS_LIMIT]
 	
-	constexpr auto FloatSquare(const Float& value) noexcept { return (value * value); }
+	constexpr auto inline FloatSquare(const Float& value) noexcept { return (value * value); }
 	template<typename T>
-	constexpr auto Clamp(const T& v, const T& lo, const T& hi) noexcept { return (v < lo) ? lo : (hi < v) ? hi : v; }
+	constexpr auto inline Clamp(const T& v, const T& lo, const T& hi) noexcept { return (v < lo) ? lo : (hi < v) ? hi : v; }
 	template<typename T>
-	constexpr auto Saturate(const T& value) noexcept { return (value > T(255)) ? Byte(255) : (value < T(0)) ? Byte(0) : Byte(value); }
-	constexpr auto GetColorFromRange(const Float& range, const Float& minimum, const Float& value) noexcept { return Saturate<Float>(Float(255) - ((value - minimum) * range)); }
-	constexpr auto GetColorRange(const Float& min, const Float& max) noexcept { return (min == max) ? Float(0) : Float(255) / ((std::signbit(min) && std::signbit(max)) ? -(min + max) : (max - min)); }
+	constexpr auto inline Saturate(const T& value) noexcept { return (value > T(255)) ? Byte(255) : (value < T(0)) ? Byte(0) : Byte(value); }
+	constexpr auto inline GetColorFromRange(const Float& range, const Float& minimum, const Float& value) noexcept { return Saturate<Float>(Float(255) - ((value - minimum) * range)); }
+	constexpr auto inline GetColorRange(const Float& min, const Float& max) noexcept { return (min == max) ? Float(0) : Float(255) / ((std::signbit(min) && std::signbit(max)) ? -(min + max) : (max - min)); }
 
 #if defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW32__)
 	static const auto nwl = std::string("\r\n");
@@ -492,7 +498,7 @@ namespace dnn
 	
 	static int PhysicalSeedType = -1;
 	template<typename T>
-	T Seed() noexcept
+	inline T Seed() noexcept
 	{
 		if (PhysicalSeedType < 0)
 			PhysicalSeedType = GetPhysicalSeedType();
@@ -517,10 +523,10 @@ namespace dnn
 	}
 #endif
 
-	inline static auto BernoulliVecFloat(const Float p = Float(0.5))
+	inline static auto BernoulliVecFloat(const Float p = Float(0.5)) noexcept
 	{
-		if (p < 0 || p > 1) 
-			throw std::invalid_argument("Parameter out of range in BernoulliVecFloat function");
+		//if (p < 0 || p > 1) 
+		//	throw std::invalid_argument("Parameter out of range in BernoulliVecFloat function");
 
 		static thread_local auto generator = Ranvec1(Seed<int>(), static_cast<int>(std::hash<std::thread::id>()(std::this_thread::get_id())), 3);
 #if defined(DNN_AVX512BW) || defined(DNN_AVX512)
@@ -533,34 +539,34 @@ namespace dnn
 	}
 
 	template<typename T>
-	static auto Bernoulli(const Float p = Float(0.5))
+	inline static auto Bernoulli(const Float p = Float(0.5)) noexcept
 	{
-		if (p < 0 || p > 1)
-			throw std::invalid_argument("Parameter out of range in Bernoulli function");
+		//if (p < 0 || p > 1)
+		//	throw std::invalid_argument("Parameter out of range in Bernoulli function");
 
 		static thread_local auto generator = std::mt19937(Seed<unsigned>());
 		return static_cast<T>(std::bernoulli_distribution(static_cast<double>(p))(generator));
 	}
 
 	template<typename T>
-	static auto UniformInt(const T min, const T max)
+	inline static auto UniformInt(const T min, const T max) noexcept
 	{
 		static_assert(std::is_integral<T>::value, "Only integral type supported in UniformInt function");
 
-		if (min > max)
-			throw std::invalid_argument("Parameter out of range in UniformInt function");
+		//if (min > max)
+		//	throw std::invalid_argument("Parameter out of range in UniformInt function");
 
 		static thread_local auto generator = std::mt19937(Seed<unsigned>());
 		return std::uniform_int_distribution<T>(min, max)(generator);
 	}
 
 	template<typename T>
-	static auto UniformReal(const T min, const T max)
+	inline static auto UniformReal(const T min, const T max) noexcept
 	{
 		static_assert(std::is_floating_point<T>::value, "Only Floating point type supported in UniformReal function");
 
-		if (min > max)
-			throw std::invalid_argument("Parameter out of range in UniformReal function");
+		//if (min > max)
+		//		throw std::invalid_argument("Parameter out of range in UniformReal function");
 
 		static thread_local auto generator = std::mt19937(Seed<unsigned>());
 		return std::uniform_real_distribution<T>(min, max)(generator);
@@ -572,7 +578,7 @@ namespace dnn
 		static_assert(std::is_floating_point<T>::value, "Only Floating point type supported in TruncatedNormal function");
 
 		if (limit < s)
-			throw std::invalid_argument("limit out of range in TruncatedNormal function");
+	     throw std::invalid_argument("limit out of range in TruncatedNormal function");
 
 		static thread_local auto generator = std::mt19937(Seed<unsigned>());
 		
@@ -597,15 +603,15 @@ namespace dnn
 
 			explicit param_type(RealType a = 2.0, RealType b = 2.0) : a_param(a), b_param(b) { }
 
-			RealType a() const { return a_param; }
-			RealType b() const { return b_param; }
+			RealType a() const noexcept { return a_param; }
+			RealType b() const noexcept { return b_param; }
 
-			bool operator==(const param_type& other) const
+			bool operator==(const param_type& other) const noexcept
 			{
 				return (a_param == other.a_param && b_param == other.b_param);
 			}
 
-			bool operator!=(const param_type& other) const
+			bool operator!=(const param_type& other) const noexcept
 			{
 				return !(*this == other);
 			}
@@ -614,47 +620,47 @@ namespace dnn
 			RealType a_param, b_param;
 		};
 
-		explicit beta_distribution(RealType a = 2.0, RealType b = 2.0) : a_gamma(a), b_gamma(b) { }
-		explicit beta_distribution(const param_type& param) : a_gamma(param.a()), b_gamma(param.b()) { }
+		explicit beta_distribution(RealType a = 2.0, RealType b = 2.0) noexcept  : a_gamma(a), b_gamma(b) { }
+		explicit beta_distribution(const param_type& param) noexcept : a_gamma(param.a()), b_gamma(param.b()) { }
 
 		void reset() { }
 
-		param_type param() const
+		param_type param() const noexcept
 		{
 			return param_type(a(), b());
 		}
 
-		void param(const param_type& param)
+		void param(const param_type& param) noexcept
 		{
 			a_gamma = gamma_dist_type(param.a());
 			b_gamma = gamma_dist_type(param.b());
 		}
 
 		template <typename URNG>
-		result_type operator()(URNG& engine)
+		inline result_type operator()(URNG& engine) noexcept
 		{
 			return generate(engine, a_gamma, b_gamma);
 		}
 
 		template <typename URNG>
-		result_type operator()(URNG& engine, const param_type& param)
+		inline result_type operator()(URNG& engine, const param_type& param) noexcept
 		{
 			gamma_dist_type a_param_gamma(param.a()), b_param_gamma(param.b());
 			return generate(engine, a_param_gamma, b_param_gamma);
 		}
 
-		result_type min() const { return 0.0; }
-		result_type max() const { return 1.0; }
+		result_type min() const noexcept { return 0.0; }
+		result_type max() const noexcept { return 1.0; }
 
-		result_type a() const { return a_gamma.alpha(); }
-		result_type b() const { return b_gamma.alpha(); }
+		result_type a() const noexcept { return a_gamma.alpha(); }
+		result_type b() const noexcept { return b_gamma.alpha(); }
 
-		bool operator==(const beta_distribution<result_type>& other) const
+		bool operator==(const beta_distribution<result_type>& other) const noexcept
 		{
 			return (param() == other.param() &&	a_gamma == other.a_gamma &&	b_gamma == other.b_gamma);
 		}
 
-		bool operator!=(const beta_distribution<result_type>& other) const
+		bool operator!=(const beta_distribution<result_type>& other) const noexcept
 		{
 			return !(*this == other);
 		}
@@ -665,7 +671,7 @@ namespace dnn
 		gamma_dist_type a_gamma, b_gamma;
 
 		template <typename URNG>
-		result_type generate(URNG& engine, gamma_dist_type& x_gamma, gamma_dist_type& y_gamma)
+		inline result_type generate(URNG& engine, gamma_dist_type& x_gamma, gamma_dist_type& y_gamma) noexcept
 		{
 			result_type x = x_gamma(engine);
 			return x / (x + y_gamma(engine));

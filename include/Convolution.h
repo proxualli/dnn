@@ -223,7 +223,7 @@ namespace dnn
 #else
 			DNN_UNREF_PAR(batchSize);
 #endif // DNN_LEAN
-
+			
 			auto diffDstMem = dnnl::memory(*DiffDstMemDesc, Device.engine, NeuronsD1.data());
 
 			auto memSrc = dnnl::memory(*InputLayerOriginal->DstMemDesc, Device.engine, InputLayerOriginal->Neurons.data());
