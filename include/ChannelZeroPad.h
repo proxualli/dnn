@@ -19,7 +19,6 @@ namespace dnn
 		{
 			H = InputLayer->H;
 			W = InputLayer->W;
-			Layer::UpdateResolution();
 		}
 
 		std::string GetDescription() const final override
@@ -69,7 +68,7 @@ namespace dnn
 		void ForwardProp(const UInt batchSize, const bool training) final override
 		{
 			const auto plain = IsPlainFormat();
-			const auto elements = plain ? batchSize * CDHW : batchSize * PaddedCDHW;
+			const auto elements = plain ? batchSize * CDHW() : batchSize * PaddedCDHW();
 			const auto threads = GetThreads(elements);
 
 			DNN_UNREF_PAR(training);
@@ -102,8 +101,8 @@ namespace dnn
 					if (!plain)
 						for_i(batchSize, threads, [=](UInt n)
 						{
-							const auto outputOffset = n * PaddedCDHW;
-							const auto inputOffset = n * InputLayer->PaddedCDHW;
+							const auto outputOffset = n * PaddedCDHW();
+							const auto inputOffset = n * InputLayer->PaddedCDHW();
 
 							for (auto c = 0ull; c < PaddedC; c++)
 							{
@@ -116,8 +115,8 @@ namespace dnn
 					else
 						for_i(batchSize, threads, [=](UInt n)
 						{
-							const auto outputOffset = n * CDHW;
-							const auto inputOffset = n * InputLayer->CDHW;
+							const auto outputOffset = n * CDHW();
+							const auto inputOffset = n * InputLayer->CDHW();
 
 							for (auto c = 0ull; c < C; c++)
 							{
@@ -134,7 +133,7 @@ namespace dnn
 			}
 			else
 			{
-				const auto strideH = HW * VectorSize;
+				const auto strideH = HW() * VectorSize;
 #ifdef DNN_STOCHASTIC
 				if (batchSize == 1)
 				{
@@ -145,7 +144,7 @@ namespace dnn
 						UInt inputOffset;
 						for (auto c = 0ull; c < InputLayer->PaddedC; c += VectorSize)
 						{
-							inputOffset = c * HW;
+							inputOffset = c * HW();
 							for (auto w = 0ull; w < strideH; w += VectorSize)
 							{
 								In.load_a(&InputLayer->Neurons[w + inputOffset]);
@@ -158,7 +157,7 @@ namespace dnn
 						}
 						for (auto c = InputLayer->PaddedC; c < PaddedC; c += VectorSize)
 						{
-							inputOffset = c * HW;
+							inputOffset = c * HW();
 							for (auto w = 0ull; w < strideH; w += VectorSize)
 							{
 								vecZero.store_a(&Neurons[w + inputOffset]);
@@ -171,10 +170,10 @@ namespace dnn
 					else
 						for (auto c = 0ull; c < C; c++)
 						{
-							const auto offsetC = c * HW;
+							const auto offsetC = c * HW();
 							const auto skip = c >= InputLayer->PaddedC;
 
-							for (auto w = 0ull; w < HW; w++)
+							for (auto w = 0ull; w < HW(); w++)
 							{
 								Neurons[w + offsetC] = skip ? Float(0) : InputLayer->Neurons[w + offsetC];
 #ifndef DNN_LEAN
@@ -195,8 +194,8 @@ namespace dnn
 							UInt inputOffset, outputOffset;
 							for (auto c = 0ull; c < InputLayer->PaddedC; c += VectorSize)
 							{
-								inputOffset = n * InputLayer->PaddedCDHW + c * HW;
-								outputOffset = n * PaddedCDHW + c * HW;
+								inputOffset = n * InputLayer->PaddedCDHW() + c * HW();
+								outputOffset = n * PaddedCDHW() + c * HW();
 								for (auto w = 0ull; w < strideH; w += VectorSize)
 								{
 									In.load_a(&InputLayer->Neurons[w + inputOffset]);
@@ -208,7 +207,7 @@ namespace dnn
 							}
 							for (auto c = InputLayer->PaddedC; c < PaddedC; c += VectorSize)
 							{
-								outputOffset = n * PaddedCDHW + c * HW;
+								outputOffset = n * PaddedCDHW() + c * HW();
 								for (auto w = 0ull; w < strideH; w += VectorSize)
 								{
 									vecZero.store_a(&Neurons[w + outputOffset]);
@@ -224,10 +223,10 @@ namespace dnn
 							UInt inputOffset, outputOffset;
 							for (auto c = 0ull; c < InputLayer->C; c++)
 							{
-								inputOffset = n * InputLayer->CDHW + c * HW;
-								outputOffset = n * CDHW + c * HW;
+								inputOffset = n * InputLayer->CDHW() + c * HW();
+								outputOffset = n * CDHW() + c * HW();
 								
-								for (auto w = 0ull; w < HW; w++)
+								for (auto w = 0ull; w < HW(); w++)
 								{
 									Neurons[w + outputOffset] = InputLayer->Neurons[w + inputOffset];
 #ifndef DNN_LEAN
@@ -237,8 +236,8 @@ namespace dnn
 							}
 							for (auto c = InputLayer->C; c < C; c++)
 							{
-								outputOffset = n * CDHW + c * HW;
-								for (auto w = 0ull; w < HW; w++)
+								outputOffset = n * CDHW() + c * HW();
+								for (auto w = 0ull; w < HW(); w++)
 								{
 									Neurons[w + outputOffset] = Float(0);
 #ifndef DNN_LEAN
@@ -260,7 +259,7 @@ namespace dnn
 #endif // DNN_LEAN
 
 			const auto plain = IsPlainFormat();
-			const auto elements = plain ? batchSize * CDHW : batchSize * PaddedCDHW;
+			const auto elements = plain ? batchSize * CDHW() : batchSize * PaddedCDHW();
 			const auto threads = GetThreads(elements);
 
 			if (InputLayer->DstMemDesc->data.ndims == 2)
@@ -273,8 +272,8 @@ namespace dnn
 #endif
 					for_i(batchSize, LIGHT_COMPUTE, [=](UInt n)
 					{
-						const auto offsetN = n * CDHW;
-						const auto offsetNinput = n * InputLayer->CDHW;
+						const auto offsetN = n * CDHW();
+						const auto offsetNinput = n * InputLayer->CDHW();
 
 						for (auto c = 0ull; c < InputLayer->C; c++)
 							InputLayer->NeuronsD1[c + offsetNinput] += NeuronsD1[c + offsetN];
@@ -282,14 +281,14 @@ namespace dnn
 			}
 			else
 			{
-				const auto strideH = HW * VectorSize;
+				const auto strideH = HW() * VectorSize;
 #ifdef DNN_STOCHASTIC
 				if (batchSize == 1)
 				{
 					UInt inputOffset;
 					for (auto c = 0ull; c < InputLayer->PaddedC; c += VectorSize)
 					{
-						inputOffset = c * HW;
+						inputOffset = c * HW();
 						for (auto w = 0ull; w < strideH; w += VectorSize)
 							(VecFloat().load_a(&InputLayer->NeuronsD1[w + inputOffset]) + VecFloat().load_a(&NeuronsD1[w + inputOffset])).store_a(&InputLayer->NeuronsD1[w + inputOffset]);
 					}
@@ -303,8 +302,8 @@ namespace dnn
 							UInt inputOffset, outputOffset;
 							for (auto c = 0ull; c < InputLayer->PaddedC; c += VectorSize)
 							{
-								outputOffset = n * PaddedCDHW + c * HW;
-								inputOffset = n * InputLayer->PaddedCDHW + c * HW;
+								outputOffset = n * PaddedCDHW() + c * HW();
+								inputOffset = n * InputLayer->PaddedCDHW() + c * HW();
 
 								for (auto w = 0ull; w < strideH; w += VectorSize)
 									(VecFloat().load_a(&InputLayer->NeuronsD1[w + inputOffset]) + VecFloat().load_a(&NeuronsD1[w + outputOffset])).store_a(&InputLayer->NeuronsD1[w + inputOffset]);
@@ -316,10 +315,10 @@ namespace dnn
 							UInt inputOffset, outputOffset;
 							for (auto c = 0ull; c < InputLayer->C; c++)
 							{
-								inputOffset = n * InputLayer->CDHW + c * HW;
-								outputOffset = n * CDHW + c * HW;
+								inputOffset = n * InputLayer->CDHW() + c * HW();
+								outputOffset = n * CDHW() + c * HW();
 								
-								for (auto w = 0ull; w < HW; w++)
+								for (auto w = 0ull; w < HW(); w++)
 									InputLayer->NeuronsD1[w + inputOffset] += NeuronsD1[w + outputOffset];
 							}
 						});

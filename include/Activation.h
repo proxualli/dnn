@@ -230,7 +230,6 @@ namespace dnn
 		{
 			H = InputLayer->H;
 			W = InputLayer->W;
-			Layer::UpdateResolution();
 		}
 
 		std::string GetDescription() const final override
@@ -368,9 +367,9 @@ namespace dnn
 		void ForwardProp(const UInt batchSize, const bool training) final override
 		{
 			const auto plain = IsPlainFormat();
-			const auto elements = plain ? batchSize * CDHW : batchSize * PaddedCDHW;
+			const auto elements = plain ? batchSize * CDHW() : batchSize * PaddedCDHW();
 			const auto threads = GetThreads(elements);
-			const auto strideHW = HW * VectorSize;
+			const auto strideHW = HW() * VectorSize;
 			const auto vecZero = VecFloat(0);
 
 			switch (ActivationFunction)
@@ -479,7 +478,7 @@ namespace dnn
 							{
 								for (auto c = 0ull; c < PaddedC; c += VectorSize)
 								{
-									const auto offset = c * HW;
+									const auto offset = c * HW();
 									for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
 										HardLogistic::fVec(VecFloat().load_a(&InputLayer->Neurons[hw + offset])).store_a(&Neurons[hw + offset]);
 								}
@@ -487,7 +486,7 @@ namespace dnn
 								if (!InplaceBwd)
 									for (auto c = 0ull; c < PaddedC; c += VectorSize)
 									{
-										const auto offset = c * HW;
+										const auto offset = c * HW();
 										for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
 											vecZero.store_nt(&NeuronsD1[hw + offset]);
 									}
@@ -497,16 +496,16 @@ namespace dnn
 							{
 								for (auto c = 0ull; c < C; c++)
 								{
-									const auto offset = c * HW;
-									for (auto hw = 0ull; hw < HW; hw++)
+									const auto offset = c * HW();
+									for (auto hw = 0ull; hw < HW(); hw++)
 										Neurons[hw + offset] = HardLogistic::f(InputLayer->Neurons[hw + offset]);
 								}
 #ifndef DNN_LEAN
 								if (!InplaceBwd)
 									for (auto c = 0ull; c < C; c++)
 									{
-										const auto offset = c * HW;
-										for (auto hw = 0ull; hw < HW; hw++)
+										const auto offset = c * HW();
+										for (auto hw = 0ull; hw < HW(); hw++)
 											NeuronsD1[hw + offset] = 0;
 									}
 #endif // DNN_LEAN
@@ -517,15 +516,15 @@ namespace dnn
 							if (!plain)
 								for (auto c = 0ull; c < PaddedC; c += VectorSize)
 								{
-									const auto offset = c * HW;
+									const auto offset = c * HW();
 									for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
 										HardLogistic::fVec(VecFloat().load_a(&InputLayer->Neurons[hw + offset])).store_a(&Neurons[hw + offset]);
 								}
 							else
 								for (auto c = 0ull; c < C; c++)
 								{
-									const auto offset = c * HW;
-									for (auto hw = 0ull; hw < HW; hw++)
+									const auto offset = c * HW();
+									for (auto hw = 0ull; hw < HW(); hw++)
 										Neurons[hw + offset] = HardLogistic::f(InputLayer->Neurons[hw + offset]);
 								}			
 						}
@@ -541,7 +540,7 @@ namespace dnn
 									
 									for (auto c = 0ull; c < PaddedC; c += VectorSize)
 									{
-										const auto offset = n * PaddedCDHW + c * HW;
+										const auto offset = n * PaddedCDHW() + c * HW();
 										for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
 											HardLogistic::fVec(VecFloat().load_a(&InputLayer->Neurons[hw + offset])).store_a(&Neurons[hw + offset]);
 
@@ -550,7 +549,7 @@ namespace dnn
 									if (!InplaceBwd)
 										for (auto c = 0ull; c < PaddedC; c += VectorSize)
 										{
-											const auto offset = n * PaddedCDHW + c * HW;
+											const auto offset = n * PaddedCDHW() + c * HW();
 											for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
 												vecZero.store_nt(&NeuronsD1[hw + offset]);
 										}
@@ -561,16 +560,16 @@ namespace dnn
 								{
 									for (auto c = 0ull; c < C; c++)
 									{
-										const auto offset = n * CDHW + c * HW;
-										for (auto hw = 0ull; hw < HW; hw++)
+										const auto offset = n * CDHW() + c * HW();
+										for (auto hw = 0ull; hw < HW(); hw++)
 											Neurons[hw + offset] = HardLogistic::f(InputLayer->Neurons[hw + offset]);
 									}
 #ifndef DNN_LEAN
 									if (!InplaceBwd)
 										for (auto c = 0ull; c < C; c++)
 										{
-											const auto offset = n * CDHW + c * HW;
-											for (auto hw = 0ull; hw < HW; hw++)
+											const auto offset = n * CDHW() + c * HW();
+											for (auto hw = 0ull; hw < HW(); hw++)
 												NeuronsD1[hw + offset] = Float(0);
 										}
 #endif // DNN_LEAN
@@ -583,7 +582,7 @@ namespace dnn
 								{
 									for (auto c = 0ull; c < PaddedC; c += VectorSize)
 									{
-										const auto offset = n * PaddedCDHW + c * HW;
+										const auto offset = n * PaddedCDHW() + c * HW();
 										for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
 											HardLogistic::fVec(VecFloat().load_a(&InputLayer->Neurons[hw + offset])).store_a(&Neurons[hw + offset]);
 									}
@@ -593,8 +592,8 @@ namespace dnn
 								{
 									for (auto c = 0ull; c < C; c++)
 									{
-										const auto offset = n * CDHW + c * HW;
-										for (auto hw = 0ull; hw < HW; hw++)
+										const auto offset = n * CDHW() + c * HW();
+										for (auto hw = 0ull; hw < HW(); hw++)
 											Neurons[hw + offset] = HardLogistic::f(InputLayer->Neurons[hw + offset]);
 									}
 								});
@@ -712,7 +711,7 @@ namespace dnn
 							if (!plain)
 								for (auto c = 0ull; c < PaddedC; c += VectorSize)
 								{
-									const auto offset = c * HW;
+									const auto offset = c * HW();
 									for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
 									{
 										TanhExp::fVec(VecFloat().load_a(&InputLayer->Neurons[hw + offset])).store_a(&Neurons[hw + offset]);
@@ -725,8 +724,8 @@ namespace dnn
 							else
 								for (auto c = 0ull; c < C; c++)
 								{
-									const auto offset = c * HW;
-									for (auto hw = 0ull; hw < HW; hw++)
+									const auto offset = c * HW();
+									for (auto hw = 0ull; hw < HW(); hw++)
 									{
 										Neurons[hw + offset] = TanhExp::f(InputLayer->Neurons[hw + offset]);
 #ifndef DNN_LEAN
@@ -741,15 +740,15 @@ namespace dnn
 							if (!plain)
 								for (auto c = 0ull; c < PaddedC; c += VectorSize)
 								{
-									const auto offset = c * HW;
+									const auto offset = c * HW();
 									for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
 										TanhExp::fVec(VecFloat().load_a(&InputLayer->Neurons[hw + offset])).store_a(&Neurons[hw + offset]);
 								}
 							else
 								for (auto c = 0ull; c < C; c++)
 								{
-									const auto offset = c * HW;
-									for (auto hw = 0ull; hw < HW; hw++)
+									const auto offset = c * HW();
+									for (auto hw = 0ull; hw < HW(); hw++)
 										Neurons[hw + offset] = TanhExp::f(InputLayer->Neurons[hw + offset]);
 								}
 						}
@@ -765,7 +764,7 @@ namespace dnn
 									const auto vecZero = VecFloat(0);
 									for (auto c = 0ull; c < PaddedC; c += VectorSize)
 									{
-										const auto offset = n * PaddedCDHW + c * HW;
+										const auto offset = n * PaddedCDHW() + c * HW();
 										for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
 										{
 											TanhExp::fVec(VecFloat().load_a(&InputLayer->Neurons[hw + offset])).store_a(&Neurons[hw + offset]);
@@ -781,8 +780,8 @@ namespace dnn
 								{
 									for (auto c = 0ull; c < C; c++)
 									{
-										const auto offset = n * CDHW + c * HW;
-										for (auto hw = 0ull; hw < HW; hw++)
+										const auto offset = n * CDHW() + c * HW();
+										for (auto hw = 0ull; hw < HW(); hw++)
 										{
 											Neurons[hw + offset] = TanhExp::f(InputLayer->Neurons[hw + offset]);
 #ifndef DNN_LEAN
@@ -801,7 +800,7 @@ namespace dnn
 								{
 									for (auto c = 0ull; c < PaddedC; c += VectorSize)
 									{
-										const auto offset = n * PaddedCDHW + c * HW;
+										const auto offset = n * PaddedCDHW() + c * HW();
 										for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
 											TanhExp::fVec(VecFloat().load_a(&InputLayer->Neurons[hw + offset])).store_a(&Neurons[hw + offset]);
 									}
@@ -813,8 +812,8 @@ namespace dnn
 								{
 									for (auto c = 0ull; c < C; c++)
 									{
-										const auto offset = n * CDHW + c * HW;
-										for (auto hw = 0ull; hw < HW; hw++)
+										const auto offset = n * CDHW() + c * HW();
+										for (auto hw = 0ull; hw < HW(); hw++)
 											Neurons[hw + offset] = TanhExp::f(InputLayer->Neurons[hw + offset]);
 									}
 								});
@@ -847,7 +846,7 @@ namespace dnn
 
 #ifndef DNN_LEAN
 				if (training && !InplaceBwd)
-					InitArray<Float>(NeuronsD1.data(), batchSize * PaddedCDHW);
+					InitArray<Float>(NeuronsD1.data(), batchSize * PaddedCDHW());
 #endif
 			}
 			}
@@ -860,9 +859,9 @@ namespace dnn
 #endif // DNN_LEAN
 
 			const auto plain = IsPlainFormat();
-			const auto elements = plain ? batchSize * CDHW : batchSize * PaddedCDHW;
+			const auto elements = plain ? batchSize * CDHW() : batchSize * PaddedCDHW();
 			const auto threads = GetThreads(elements);
-			const auto strideHW = HW * VectorSize;
+			const auto strideHW = HW() * VectorSize;
 
 			switch (ActivationFunction)
 			{
@@ -943,15 +942,15 @@ namespace dnn
 							if (!plain)
 								for (auto c = 0ull; c < PaddedC; c += VectorSize)
 								{
-									const auto offset = c * HW;
+									const auto offset = c * HW();
 									for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
 										(HardLogistic::dfVec(VecFloat().load_a(&InputLayerOriginal->Neurons[hw])), VecFloat().load_a(&InputLayer->NeuronsD1[hw])).store_a(&InputLayer->NeuronsD1[hw]);
 								}
 							else
 								for (auto c = 0ull; c < C; c++)
 								{
-									const auto offset = c * HW;
-									for (auto hw = offset; hw < offset + HW; hw++)
+									const auto offset = c * HW();
+									for (auto hw = offset; hw < offset + HW(); hw++)
 										InputLayer->NeuronsD1[hw] = HardLogistic::df(InputLayerOriginal->Neurons[hw]) * InputLayer->NeuronsD1[hw];
 								}
 						}
@@ -960,15 +959,15 @@ namespace dnn
 							if (!plain)
 								for (auto c = 0ull; c < PaddedC; c += VectorSize)
 								{
-									const auto offset = c * HW;
+									const auto offset = c * HW();
 									for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
 										mul_add(HardLogistic::dfVec(VecFloat().load_a(&InputLayerOriginal->Neurons[hw])), VecFloat().load_a(&NeuronsD1[hw]), VecFloat().load_a(&InputLayer->NeuronsD1[hw])).store_a(&InputLayer->NeuronsD1[hw]);
 								}
 							else
 								for (auto c = 0ull; c < C; c++)
 								{
-									const auto offset = c * HW;
-									for (auto hw = offset; hw < offset + HW; hw++)
+									const auto offset = c * HW();
+									for (auto hw = offset; hw < offset + HW(); hw++)
 										InputLayer->NeuronsD1[hw] += HardLogistic::df(InputLayerOriginal->Neurons[hw]) * NeuronsD1[hw];
 								}
 						}
@@ -983,7 +982,7 @@ namespace dnn
 								{
 									for (auto c = 0ull; c < PaddedC; c += VectorSize)
 									{
-										const auto offset = n * PaddedCDHW + c * HW;
+										const auto offset = n * PaddedCDHW() + c * HW();
 										for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
 											(HardLogistic::dfVec(VecFloat().load_a(&InputLayerOriginal->Neurons[hw])), VecFloat().load_a(&InputLayer->NeuronsD1[hw])).store_a(&InputLayer->NeuronsD1[hw]);
 									}
@@ -993,8 +992,8 @@ namespace dnn
 								{
 									for (auto c = 0ull; c < C; c++)
 									{
-										const auto offset = n * CDHW + c * HW;
-										for (auto hw = offset; hw < offset + HW; hw++)
+										const auto offset = n * CDHW() + c * HW();
+										for (auto hw = offset; hw < offset + HW(); hw++)
 											InputLayer->NeuronsD1[hw] = HardLogistic::df(InputLayerOriginal->Neurons[hw]) * InputLayer->NeuronsD1[hw];
 									}
 								});
@@ -1006,7 +1005,7 @@ namespace dnn
 								{
 									for (auto c = 0ull; c < PaddedC; c += VectorSize)
 									{
-										const auto offset = n * PaddedCDHW + c * HW;
+										const auto offset = n * PaddedCDHW() + c * HW();
 										for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
 											mul_add(HardLogistic::dfVec(VecFloat().load_a(&InputLayerOriginal->Neurons[hw])), VecFloat().load_a(&NeuronsD1[hw]), VecFloat().load_a(&InputLayer->NeuronsD1[hw])).store_a(&InputLayer->NeuronsD1[hw]);
 									}
@@ -1016,8 +1015,8 @@ namespace dnn
 								{
 									for (auto c = 0ull; c < C; c++)
 									{
-										const auto offset = n * CDHW + c * HW;
-										for (auto hw = offset; hw < offset + HW; hw++)
+										const auto offset = n * CDHW() + c * HW();
+										for (auto hw = offset; hw < offset + HW(); hw++)
 											InputLayer->NeuronsD1[hw] += HardLogistic::df(InputLayerOriginal->Neurons[hw]) * NeuronsD1[hw];
 									}
 								});
@@ -1106,15 +1105,15 @@ namespace dnn
 							if (!plain)
 								for (auto c = 0ull; c < PaddedC; c += VectorSize)
 								{
-									const auto offset = c * HW;
+									const auto offset = c * HW();
 									for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
 										(TanhExp::dfVec(VecFloat().load_a(&InputLayerOriginal->Neurons[hw])), VecFloat().load_a(&InputLayer->NeuronsD1[hw])).store_a(&InputLayer->NeuronsD1[hw]);
 								}
 							else
 								for (auto c = 0ull; c < C; c++)
 								{
-									const auto offset = c * HW;
-									for (auto hw = offset; hw < offset + HW; hw++)
+									const auto offset = c * HW();
+									for (auto hw = offset; hw < offset + HW(); hw++)
 										InputLayer->NeuronsD1[hw] = TanhExp::df(InputLayerOriginal->Neurons[hw]) * InputLayer->NeuronsD1[hw];
 								}
 						}
@@ -1123,15 +1122,15 @@ namespace dnn
 							if (!plain)
 								for (auto c = 0ull; c < PaddedC; c += VectorSize)
 								{
-									const auto offset = c * HW;
+									const auto offset = c * HW();
 									for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
 										mul_add(TanhExp::dfVec(VecFloat().load_a(&InputLayerOriginal->Neurons[hw])), VecFloat().load_a(&NeuronsD1[hw]), VecFloat().load_a(&InputLayer->NeuronsD1[hw])).store_a(&InputLayer->NeuronsD1[hw]);
 								}
 							else
 								for (auto c = 0ull; c < C; c++)
 								{
-									const auto offset = c * HW;
-									for (auto hw = offset; hw < offset + HW; hw++)
+									const auto offset = c * HW();
+									for (auto hw = offset; hw < offset + HW(); hw++)
 										InputLayer->NeuronsD1[hw] += TanhExp::df(InputLayerOriginal->Neurons[hw]) * NeuronsD1[hw];
 								}
 						}
@@ -1146,7 +1145,7 @@ namespace dnn
 								{
 									for (auto c = 0ull; c < PaddedC; c += VectorSize)
 									{
-										const auto offset = n * PaddedCDHW + c * HW;
+										const auto offset = n * PaddedCDHW() + c * HW();
 										for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
 											(TanhExp::dfVec(VecFloat().load_a(&InputLayerOriginal->Neurons[hw])), VecFloat().load_a(&InputLayer->NeuronsD1[hw])).store_a(&InputLayer->NeuronsD1[hw]);
 									}
@@ -1156,8 +1155,8 @@ namespace dnn
 								{
 									for (auto c = 0ull; c < C; c++)
 									{
-										const auto offset = n * CDHW + c * HW;
-										for (auto hw = offset; hw < offset + HW; hw++)
+										const auto offset = n * CDHW() + c * HW();
+										for (auto hw = offset; hw < offset + HW(); hw++)
 											InputLayer->NeuronsD1[hw] = TanhExp::df(InputLayerOriginal->Neurons[hw]) * InputLayer->NeuronsD1[hw];
 									}
 								});
@@ -1169,7 +1168,7 @@ namespace dnn
 								{
 									for (auto c = 0ull; c < PaddedC; c += VectorSize)
 									{
-										const auto offset = n * PaddedCDHW + c * HW;
+										const auto offset = n * PaddedCDHW() + c * HW();
 										for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
 											mul_add(TanhExp::dfVec(VecFloat().load_a(&InputLayerOriginal->Neurons[hw])), VecFloat().load_a(&NeuronsD1[hw]), VecFloat().load_a(&InputLayer->NeuronsD1[hw])).store_a(&InputLayer->NeuronsD1[hw]);
 									}
@@ -1179,8 +1178,8 @@ namespace dnn
 								{
 									for (auto c = 0ull; c < C; c++)
 									{
-										const auto offset = n * CDHW + c * HW;
-										for (auto hw = offset; hw < offset + HW; hw++)
+										const auto offset = n * CDHW() + c * HW();
+										for (auto hw = offset; hw < offset + HW(); hw++)
 											InputLayer->NeuronsD1[hw] += TanhExp::df(InputLayerOriginal->Neurons[hw]) * NeuronsD1[hw];
 									}
 								});

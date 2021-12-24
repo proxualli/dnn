@@ -63,7 +63,6 @@ namespace dnn
 		{
 			H = StrideH * ((InputLayer->H - 1) + DilationKernelH - (padding[0] * 2));
 			W = StrideW * ((InputLayer->W - 1) + DilationKernelW - (padding[1] * 2));
-			Layer::UpdateResolution();
 		}
 
 		std::string GetDescription() const final override
@@ -184,7 +183,7 @@ namespace dnn
 
 #ifndef DNN_LEAN
 			if (training)
-				InitArray<Float>(NeuronsD1.data(), batchSize * PaddedCDHW);
+				InitArray<Float>(NeuronsD1.data(), batchSize * PaddedCDHW());
 #else
 			DNN_UNREF_PAR(batchSize);
 #endif // DNN_LEAN

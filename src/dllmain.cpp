@@ -433,7 +433,7 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, LayerInfo* info)
 		info->LayerType = model->Layers[layerIndex]->LayerType;
 		info->Algorithm = Algorithms::Linear;
 		info->InputsCount = model->Layers[layerIndex]->Inputs.size();
-		info->NeuronCount = model->Layers[layerIndex]->CDHW;
+		info->NeuronCount = model->Layers[layerIndex]->CDHW();
 		info->WeightCount = model->Layers[layerIndex]->WeightCount;
 		info->BiasesCount = model->Layers[layerIndex]->BiasCount;
 		info->Multiplier = 1;

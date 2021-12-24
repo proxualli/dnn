@@ -30,7 +30,6 @@ namespace dnn
 		{
 			H = InputLayer->H;
 			W = InputLayer->W;
-			Layer::UpdateResolution();
 		}
 
 		std::string GetDescription() const final override
@@ -100,7 +99,7 @@ namespace dnn
 				Device.stream.wait();
 #else
 				const auto plain = IsPlainFormat();
-				const auto size = plain ? CDHW : PaddedCDHW;
+				const auto size = plain ? CDHW() : PaddedCDHW();
 				const auto part = GetVectorPart(size);
 				const auto elements = size * batchSize;
 				const auto threads = GetThreads(elements);
@@ -144,7 +143,7 @@ namespace dnn
 #endif
 
 			const auto plain = IsPlainFormat();
-			const auto size = plain ? CDHW : PaddedCDHW;
+			const auto size = plain ? CDHW() : PaddedCDHW();
 			const auto part = GetVectorPart(size);
 			const auto elements = size * batchSize;
 			const auto threads = GetThreads(elements);

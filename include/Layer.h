@@ -273,10 +273,7 @@ namespace dnn
 		UInt D;
 		UInt H;
 		UInt W;
-		UInt HW;
-		UInt CDHW;
 		const UInt PaddedC;
-		UInt PaddedCDHW;
 		const UInt PadD;
 		const UInt PadH;
 		const UInt PadW;
@@ -375,10 +372,7 @@ namespace dnn
 			BiasesScale(Float(0)),
 			BiasesLRM(Float(1)),
 			BiasesWDM(Float(1)),
-			HW(h * w),
-			CDHW(c * d * h * w),
 			PaddedC(DivUp(c)),
-			PaddedCDHW((layerType == LayerTypes::Input ? c : DivUp(c)) * d * h * w),
 			HasPadding(padD > 0 || padH > 0 || padW > 0),
 			RandomEngine(std::mt19937(Seed<unsigned>())),
 			Neurons(FloatArray()),
@@ -412,12 +406,11 @@ namespace dnn
 
 		virtual ~Layer() = default;
 		
-		virtual void UpdateResolution()
-		{
-			HW = H * W;
-			CDHW = C * D * HW;
-			PaddedCDHW = LayerType == LayerTypes::Input ? CDHW : PaddedC * D * HW;
-		}
+		const auto HW() const noexcept { return H * W; }
+		const auto CDHW() const noexcept {	return C * D * HW(); }
+		const auto PaddedCDHW() const noexcept { return LayerType == LayerTypes::Input ? CDHW() : PaddedC * D * HW(); }
+
+		virtual void UpdateResolution()	{ }
 
 		void SetParameters(const bool useDefaults, const Fillers weightsFiller, const FillerModes weightsFillerMode, const Float weightsGain, const Float weightsScale, const Float weightsLRM, const Float weightsWDM, const Fillers biasesFiller, const FillerModes biasesFillerMode, const Float biasesGain, const Float biasesScale, const Float biasesLRM, const Float biasesWDM)
 		{
@@ -460,7 +453,7 @@ namespace dnn
 			}
 
 			description.append(nwl + std::string(" Features:") + tab + std::to_string(C) + std::string("x") + std::to_string(H) + std::string("x") + std::to_string(W));
-			description.append(nwl + std::string(" Neurons:") + tab + std::to_string(CDHW));
+			description.append(nwl + std::string(" Neurons:") + tab + std::to_string(CDHW()));
 			description.append(nwl + std::string(" Format:") + tab + std::string(dnnl_fmt_tag2str(static_cast<dnnl_format_tag_t>(ChosenFormat))));
 
 			return description;
@@ -550,7 +543,7 @@ namespace dnn
 
 				if (!Neurons.empty())
 				{
-					const auto ncdhw = batchSize * CDHW;
+					const auto ncdhw = batchSize * CDHW();
 
 					NeuronsStats.Min = std::numeric_limits<Float>::max();
 					NeuronsStats.Max = std::numeric_limits<Float>::lowest();
@@ -2157,9 +2150,9 @@ namespace dnn
 		virtual UInt GetNeuronsSize(const UInt batchSize) const
 		{
 #ifndef DNN_LEAN
-			return batchSize * PaddedCDHW *  sizeof(Float) * (InplaceBwd ? 1 : 2);
+			return batchSize * PaddedCDHW() * sizeof(Float) * (InplaceBwd ? 1 : 2);
 #else
-			return batchSize * PaddedCDHW * sizeof(Float);
+			return batchSize * PaddedCDHW() * sizeof(Float);
 #endif // DNN_LEAN
 		}
 

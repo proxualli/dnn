@@ -23,7 +23,7 @@ namespace dnn
 
 		UInt FanOut() const final override
 		{
-			return CDHW;
+			return CDHW();
 		}
 
 		void InitializeDescriptors(const UInt batchSize) final override

@@ -39,7 +39,6 @@ namespace dnn
 		{
 			H = static_cast<UInt>(InputLayer->H * double(FactorH));
 			W = static_cast<UInt>(InputLayer->W * double(FactorW));
-			Layer::UpdateResolution();
 		}
 
 		std::string GetDescription() const final override
@@ -119,7 +118,7 @@ namespace dnn
 
 #ifndef DNN_LEAN
 			if (training)
-				InitArray<Float>(NeuronsD1.data(), batchSize * PaddedCDHW);
+				InitArray<Float>(NeuronsD1.data(), batchSize * PaddedCDHW());
 #else
 			DNN_UNREF_PAR(batchSize);
 			DNN_UNREF_PAR(training);

@@ -32,7 +32,6 @@ namespace dnn
 		{
 			H = InputLayer->H;
 			W = InputLayer->W;
-			Layer::UpdateResolution();
 		}
 
 		std::string GetDescription() const final override
@@ -90,9 +89,9 @@ namespace dnn
 		void ForwardProp(const UInt batchSize, const bool training) final override
 		{
 			const auto plain = IsPlainFormat();
-			const auto elements = plain ? batchSize * CDHW : batchSize * PaddedCDHW;
+			const auto elements = plain ? batchSize * CDHW() : batchSize * PaddedCDHW();
 			const auto threads = GetThreads(elements);
-			const auto strideHW = HW * VectorSize;
+			const auto strideHW = HW() * VectorSize;
 			const auto vecZero = VecFloat(0);
 
 			auto memSrc = dnnl::memory(*InputLayer->DstMemDesc, Device.engine, InputLayer->Neurons.data());
@@ -113,7 +112,7 @@ namespace dnn
 
 #ifndef DNN_LEAN
 			if (training)
-				InitArray<Float>(NeuronsD1.data(), batchSize * PaddedCDHW);
+				InitArray<Float>(NeuronsD1.data(), batchSize * PaddedCDHW());
 #endif
 		}
 
@@ -124,9 +123,9 @@ namespace dnn
 #endif // DNN_LEAN
 
 			const auto plain = IsPlainFormat();
-			const auto elements = plain ? batchSize * CDHW : batchSize * PaddedCDHW;
+			const auto elements = plain ? batchSize * CDHW() : batchSize * PaddedCDHW();
 			const auto threads = GetThreads(elements);
-			const auto strideHW = HW * VectorSize;
+			const auto strideHW = HW() * VectorSize;
 
 			auto dstMem = dnnl::memory(bwdDescSoftmax->dst_desc(), Device.engine, Neurons.data());
 			auto diffDstMem = dnnl::memory(bwdDescSoftmax->diff_dst_desc(), Device.engine, NeuronsD1.data());

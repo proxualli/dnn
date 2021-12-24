@@ -1820,7 +1820,7 @@ namespace dnn
 				{
 					*label = DataProv->TrainingLabels[RandomTrainingSamples[SampleIndex]];
 
-					for (auto i = 0ull; i < Layers[0]->CDHW; i++)
+					for (auto i = 0ull; i < Layers[0]->CDHW(); i++)
 						(*snapshot)[i] = Layers[0]->Neurons[i];
 
 					return true;
@@ -1829,7 +1829,7 @@ namespace dnn
 				{
 					*label = DataProv->TestingLabels[SampleIndex];
 
-					for (auto i = 0ull; i < Layers[0]->CDHW; i++)
+					for (auto i = 0ull; i < Layers[0]->CDHW(); i++)
 						(*snapshot)[i] = Layers[0]->Neurons[i];
 
 					return true;

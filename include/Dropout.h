@@ -25,7 +25,6 @@ namespace dnn
 		{
 			H = InputLayer->H;
 			W = InputLayer->W;
-			Layer::UpdateResolution();
 		}
 
 		void UpdateDropout(const Float dropout)
@@ -76,8 +75,8 @@ namespace dnn
 			{
 				NeuronsActive.resize(batchSize, C, H, W, dnnl::memory::data_type::f32, BlockedFmt, Device.engine);
 				for (auto n = 0ull; n < batchSize; n++)
-					for (auto i = 0ull; i < CDHW; i++)
-						NeuronsActive[n * PaddedCDHW + i] = Float(1);
+					for (auto i = 0ull; i < CDHW(); i++)
+						NeuronsActive[n * PaddedCDHW() + i] = Float(1);
 			}
 			else
 				NeuronsActive.release();
@@ -86,7 +85,7 @@ namespace dnn
 		void ForwardProp(const UInt batchSize, const bool training) final override
 		{
 			const auto plain = IsPlainFormat();
-			const auto size = plain ? CDHW : PaddedCDHW;
+			const auto size = plain ? CDHW() : PaddedCDHW();
 			const auto part = GetVectorPart(size);
 			const auto elements = batchSize * size;
 			const auto threads = GetThreads(elements);
@@ -172,7 +171,7 @@ namespace dnn
 			ZeroGradient(batchSize);
 #endif
 			const auto plain = IsPlainFormat();
-			const auto size = plain ? CDHW : PaddedCDHW;
+			const auto size = plain ? CDHW() : PaddedCDHW();
 			const auto part = GetVectorPart(size);
 			const auto elements = batchSize * size;
 			const auto threads = GetThreads(elements);

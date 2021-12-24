@@ -25,7 +25,6 @@ namespace dnn
 		{
 			H = InputLayer->H;
 			W = InputLayer->W;
-			Layer::UpdateResolution();
 		}
 
 		std::string GetDescription() const final override
@@ -78,7 +77,7 @@ namespace dnn
 		void ForwardProp(const UInt batchSize, const bool training)  final override
 		{
 			const auto plain = IsPlainFormat();
-			const auto elements = plain ? batchSize * CDHW : batchSize * PaddedCDHW;
+			const auto elements = plain ? batchSize * CDHW() : batchSize * PaddedCDHW();
 			const auto threads = GetThreads(elements);
 			const auto inputs = Inputs.size();
 
@@ -89,7 +88,7 @@ namespace dnn
 				{
 					VecFloat In, Out;
 					VecFloat vecZero = VecFloat(0);
-					for (auto cdhw = 0ull; cdhw < PaddedCDHW; cdhw +=VectorSize)
+					for (auto cdhw = 0ull; cdhw < PaddedCDHW(); cdhw +=VectorSize)
 					{
 						In.load_a(&Inputs[0]->Neurons[cdhw]);
 						In.store_a(&Neurons[cdhw]);
@@ -98,7 +97,7 @@ namespace dnn
 #endif // DNN_LEAN
 					}
 					for (auto i = 1ull; i < inputs; i++)
-						for (auto cdhw = 0ull; cdhw < PaddedCDHW; cdhw += VectorSize)
+						for (auto cdhw = 0ull; cdhw < PaddedCDHW(); cdhw += VectorSize)
 						{
 							Out.load_a(&Neurons[cdhw]);
 							In.load_a(&Inputs[i]->Neurons[cdhw]);
@@ -107,7 +106,7 @@ namespace dnn
 						}
 				}
 				else
-					for (auto cdhw = 0ull; cdhw < CDHW; cdhw++)
+					for (auto cdhw = 0ull; cdhw < CDHW(); cdhw++)
 					{
 						Neurons[cdhw] = Inputs[0]->Neurons[cdhw];
 #ifndef DNN_LEAN
@@ -115,7 +114,7 @@ namespace dnn
 #endif // DNN_LEAN
 					}
 				for (auto i = 1ull; i < inputs; i++)
-					for (auto cdhw = 0ull; cdhw < CDHW; cdhw++)
+					for (auto cdhw = 0ull; cdhw < CDHW(); cdhw++)
 						Neurons[cdhw] *= Inputs[i]->Neurons[cdhw];
 			}
 			else
@@ -130,8 +129,8 @@ namespace dnn
 					case 2:
 						for_i(batchSize, threads, [=](UInt n)
 						{
-							const auto start = n * PaddedCDHW;
-							const auto end = start + PaddedCDHW;
+							const auto start = n * PaddedCDHW();
+							const auto end = start + PaddedCDHW();
 							VecFloat In0, In1;
 							const auto vecZero = VecFloat(0);
 							for (auto cdhw = start; cdhw < end; cdhw += VectorSize)
@@ -149,8 +148,8 @@ namespace dnn
 					case 3:
 						for_i(batchSize, threads, [=](UInt n)
 						{
-							const auto start = n * PaddedCDHW;
-							const auto end = start + PaddedCDHW;
+							const auto start = n * PaddedCDHW();
+							const auto end = start + PaddedCDHW();
 							VecFloat In0, In1, In2;
 							const auto vecZero = VecFloat(0);
 							for (auto cdhw = start; cdhw < end; cdhw += VectorSize)
@@ -169,8 +168,8 @@ namespace dnn
 					case 4:
 						for_i(batchSize, threads, [=](UInt n)
 						{
-							const auto start = n * PaddedCDHW;
-							const auto end = start + PaddedCDHW;
+							const auto start = n * PaddedCDHW();
+							const auto end = start + PaddedCDHW();
 							VecFloat In0, In1, In2, In3;
 							const auto vecZero = VecFloat(0);
 							for (auto cdhw = start; cdhw < end; cdhw += VectorSize)
@@ -190,8 +189,8 @@ namespace dnn
 					default:
 						for_i(batchSize, threads, [=](UInt n)
 						{
-							const auto start = n * PaddedCDHW;
-							const auto end = start + PaddedCDHW;
+							const auto start = n * PaddedCDHW();
+							const auto end = start + PaddedCDHW();
 							VecFloat In, Out;
 							const auto vecZero = VecFloat(0);
 							for (auto cdhw = start; cdhw < end; cdhw += VectorSize)
@@ -221,8 +220,8 @@ namespace dnn
 					case 2:
 						for_i(batchSize, threads, [=](UInt n)
 						{
-							const auto start = n * CDHW;
-							const auto end = start + CDHW;
+							const auto start = n * CDHW();
+							const auto end = start + CDHW();
 							for (auto cdhw = start; cdhw < end; cdhw++)
 							{
 								Neurons[cdhw] = Inputs[0]->Neurons[cdhw] * Inputs[1]->Neurons[cdhw];
@@ -236,8 +235,8 @@ namespace dnn
 					case 3:
 						for_i(batchSize, threads, [=](UInt n)
 						{
-							const auto start = n * CDHW;
-							const auto end = start + CDHW;
+							const auto start = n * CDHW();
+							const auto end = start + CDHW();
 							PRAGMA_OMP_SIMD()
 							for (auto cdhw = start; cdhw < end; cdhw++)
 							{
@@ -252,8 +251,8 @@ namespace dnn
 					case 4:
 						for_i(batchSize, threads, [=](UInt n)
 						{
-							const auto start = n * CDHW;
-							const auto end = start + CDHW;
+							const auto start = n * CDHW();
+							const auto end = start + CDHW();
 							PRAGMA_OMP_SIMD()
 							for (auto cdhw = start; cdhw < end; cdhw++)
 							{
@@ -268,8 +267,8 @@ namespace dnn
 					default:
 						for_i(batchSize, threads, [=](UInt n)
 						{
-							const auto start = n * CDHW;
-							const auto end = start + CDHW;
+							const auto start = n * CDHW();
+							const auto end = start + CDHW();
 							for (auto cdhw = start; cdhw < end; cdhw++)
 							{
 								Neurons[cdhw] = Inputs[0]->Neurons[cdhw];
@@ -294,8 +293,8 @@ namespace dnn
 					case 2:
 						for_i(batchSize, threads, [=](UInt n)
 						{
-							const auto start = n * PaddedCDHW;
-							const auto end = start + PaddedCDHW;
+							const auto start = n * PaddedCDHW();
+							const auto end = start + PaddedCDHW();
 							VecFloat In0, In1;
 							const auto vecZero = VecFloat(0);
 							for (auto cdhw = start; cdhw < end; cdhw += VectorSize)
@@ -310,8 +309,8 @@ namespace dnn
 					case 3:
 						for_i(batchSize, threads, [=](UInt n)
 						{
-							const auto start = n * PaddedCDHW;
-							const auto end = start + PaddedCDHW;
+							const auto start = n * PaddedCDHW();
+							const auto end = start + PaddedCDHW();
 							VecFloat In0, In1, In2;
 							const auto vecZero = VecFloat(0);
 							for (auto cdhw = start; cdhw < end; cdhw += VectorSize)
@@ -327,8 +326,8 @@ namespace dnn
 					case 4:
 						for_i(batchSize, threads, [=](UInt n)
 						{
-							const auto start = n * PaddedCDHW;
-							const auto end = start + PaddedCDHW;
+							const auto start = n * PaddedCDHW();
+							const auto end = start + PaddedCDHW();
 							VecFloat In0, In1, In2, In3;
 							const auto vecZero = VecFloat(0);
 							for (auto cdhw = start; cdhw < end; cdhw += VectorSize)
@@ -345,8 +344,8 @@ namespace dnn
 					default:
 						for_i(batchSize, threads, [=](UInt n)
 						{
-							const auto start = n * PaddedCDHW;
-							const auto end = start + PaddedCDHW;
+							const auto start = n * PaddedCDHW();
+							const auto end = start + PaddedCDHW();
 							VecFloat In, Out;
 							const auto vecZero = VecFloat(0);
 							for (auto cdhw = start; cdhw < end; cdhw += VectorSize)
@@ -373,8 +372,8 @@ namespace dnn
 					case 2:
 						for_i(batchSize, threads, [=](UInt n)
 						{
-							const auto start = n * CDHW;
-							const auto end = start + CDHW;
+							const auto start = n * CDHW();
+							const auto end = start + CDHW();
 							for (auto cdhw = start; cdhw < end; cdhw++)
 								Neurons[cdhw] = Inputs[0]->Neurons[cdhw] * Inputs[1]->Neurons[cdhw];
 						});
@@ -383,8 +382,8 @@ namespace dnn
 					case 3:
 						for_i(batchSize, threads, [=](UInt n)
 						{
-							const auto start = n * CDHW;
-							const auto end = start + CDHW;
+							const auto start = n * CDHW();
+							const auto end = start + CDHW();
 							for (auto cdhw = start; cdhw < end; cdhw++)
 								Neurons[cdhw] = Inputs[0]->Neurons[cdhw] * Inputs[1]->Neurons[cdhw] * Inputs[2]->Neurons[cdhw];
 						});
@@ -393,8 +392,8 @@ namespace dnn
 					case 4:
 						for_i(batchSize, threads, [=](UInt n)
 						{
-							const auto start = n * CDHW;
-							const auto end = start + CDHW;
+							const auto start = n * CDHW();
+							const auto end = start + CDHW();
 							PRAGMA_OMP_SIMD()
 							for (auto cdhw = start; cdhw < end; cdhw++)
 								Neurons[cdhw] = Inputs[0]->Neurons[cdhw] * Inputs[1]->Neurons[cdhw] * Inputs[2]->Neurons[cdhw] * Inputs[3]->Neurons[cdhw];
@@ -404,8 +403,8 @@ namespace dnn
 					default:
 						for_i(batchSize, threads, [=](UInt n)
 						{
-							const auto start = n * CDHW;
-							const auto end = start + CDHW;
+							const auto start = n * CDHW();
+							const auto end = start + CDHW();
 							for (auto cdhw = start; cdhw < end; cdhw++)
 								Neurons[cdhw] = Inputs[0]->Neurons[cdhw];
 							for (auto i = 1ull; i < inputs; i++)
@@ -428,7 +427,7 @@ namespace dnn
 #endif // DNN_LEAN
 
 			const auto plain = IsPlainFormat();
-			const auto elements = plain ? batchSize * CDHW : batchSize * PaddedCDHW;
+			const auto elements = plain ? batchSize * CDHW() : batchSize * PaddedCDHW();
 			const auto threads = GetThreads(elements);
 			const auto inputs = Inputs.size();
 
@@ -439,7 +438,7 @@ namespace dnn
 					switch (inputs)
 					{
 					case 2:
-						for (auto cdhw = 0ull; cdhw < PaddedCDHW; cdhw += VectorSize)
+						for (auto cdhw = 0ull; cdhw < PaddedCDHW(); cdhw += VectorSize)
 						{
 							mul_add(VecFloat().load_a(&InputsOriginal[1]->Neurons[cdhw]), VecFloat().load_a(&NeuronsD1[cdhw]), VecFloat().load_a(&Inputs[0]->NeuronsD1[cdhw])).store_a(&Inputs[0]->NeuronsD1[cdhw]);
 							mul_add(VecFloat().load_a(&InputsOriginal[0]->Neurons[cdhw]), VecFloat().load_a(&NeuronsD1[cdhw]), VecFloat().load_a(&Inputs[1]->NeuronsD1[cdhw])).store_a(&Inputs[1]->NeuronsD1[cdhw]);
@@ -449,7 +448,7 @@ namespace dnn
 					case 3:
 					{
 						VecFloat D1, In0, In1, In2;
-						for (auto cdhw = 0ull; cdhw < PaddedCDHW; cdhw += VectorSize)
+						for (auto cdhw = 0ull; cdhw < PaddedCDHW(); cdhw += VectorSize)
 						{
 							D1.load_a(&NeuronsD1[cdhw]);
 							In0.load_a(&InputsOriginal[0]->Neurons[cdhw]);
@@ -465,7 +464,7 @@ namespace dnn
 					case 4:
 					{
 						VecFloat D1, In0, In1, In2, In3;
-						for (auto cdhw = 0ull; cdhw < PaddedCDHW; cdhw += VectorSize)
+						for (auto cdhw = 0ull; cdhw < PaddedCDHW(); cdhw += VectorSize)
 						{
 							D1.load_a(&NeuronsD1[cdhw]);
 							In0.load_a(&InputsOriginal[0]->Neurons[cdhw]);
@@ -488,7 +487,7 @@ namespace dnn
 					{
 					case 2:
 						PRAGMA_OMP_SIMD()
-						for (auto cdhw = 0ull; cdhw < CDHW; cdhw++)
+						for (auto cdhw = 0ull; cdhw < CDHW(); cdhw++)
 						{
 							Inputs[0]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[1]->Neurons[cdhw];
 							Inputs[1]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[0]->Neurons[cdhw];
@@ -497,7 +496,7 @@ namespace dnn
 
 					case 3:
 						PRAGMA_OMP_SIMD()
-						for (auto cdhw = 0ull; cdhw < CDHW; cdhw++)
+						for (auto cdhw = 0ull; cdhw < CDHW(); cdhw++)
 						{
 							Inputs[0]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[1]->Neurons[cdhw] * InputsOriginal[2]->Neurons[cdhw];
 							Inputs[1]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[0]->Neurons[cdhw] * InputsOriginal[2]->Neurons[cdhw];
@@ -507,7 +506,7 @@ namespace dnn
 
 					case 4:
 						PRAGMA_OMP_SIMD()
-						for (auto cdhw = 0ull; cdhw < CDHW; cdhw++)
+						for (auto cdhw = 0ull; cdhw < CDHW(); cdhw++)
 						{
 							Inputs[0]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[1]->Neurons[cdhw] * InputsOriginal[2]->Neurons[cdhw] * InputsOriginal[3]->Neurons[cdhw];
 							Inputs[1]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[0]->Neurons[cdhw] * InputsOriginal[2]->Neurons[cdhw] * InputsOriginal[3]->Neurons[cdhw];
@@ -529,8 +528,8 @@ namespace dnn
 					case 2:
 						for_i(batchSize, threads, [=](UInt n)
 						{
-							const auto start = n * PaddedCDHW;
-							const auto end = start + PaddedCDHW;
+							const auto start = n * PaddedCDHW();
+							const auto end = start + PaddedCDHW();
 							for (auto cdhw = start; cdhw < end; cdhw += VectorSize)
 							{
 								mul_add(VecFloat().load_a(&InputsOriginal[1]->Neurons[cdhw]), VecFloat().load_a(&NeuronsD1[cdhw]), VecFloat().load_a(&Inputs[0]->NeuronsD1[cdhw])).store_a(&Inputs[0]->NeuronsD1[cdhw]);
@@ -542,8 +541,8 @@ namespace dnn
 					case 3:
 						for_i(batchSize, threads, [=](UInt n)
 						{
-							const auto start = n * PaddedCDHW;
-							const auto end = start + PaddedCDHW;
+							const auto start = n * PaddedCDHW();
+							const auto end = start + PaddedCDHW();
 							VecFloat D1, In0, In1, In2;
 							for (auto cdhw = start; cdhw < end; cdhw+= VectorSize)
 							{
@@ -561,8 +560,8 @@ namespace dnn
 					case 4:
 						for_i(batchSize, threads, [=](UInt n)
 						{
-							const auto start = n * PaddedCDHW;
-							const auto end = start + PaddedCDHW;
+							const auto start = n * PaddedCDHW();
+							const auto end = start + PaddedCDHW();
 							VecFloat D1, In0, In1, In2, In3;
 							for (auto cdhw = start; cdhw < end; cdhw += VectorSize)
 							{
@@ -588,8 +587,8 @@ namespace dnn
 					case 2:
 						for_i(batchSize, threads, [=](UInt n)
 						{
-							const auto start = n * CDHW;
-							const auto end = start + CDHW;
+							const auto start = n * CDHW();
+							const auto end = start + CDHW();
 							PRAGMA_OMP_SIMD()
 							for (auto cdhw = start; cdhw < end; cdhw++)
 							{
@@ -602,8 +601,8 @@ namespace dnn
 					case 3:
 						for_i(batchSize, threads, [=](UInt n)
 						{
-							const auto start = n * CDHW;
-							const auto end = start + CDHW;
+							const auto start = n * CDHW();
+							const auto end = start + CDHW();
 							PRAGMA_OMP_SIMD()
 							for (auto cdhw = start; cdhw < end; cdhw++)
 							{
@@ -617,8 +616,8 @@ namespace dnn
 					case 4:
 						for_i(batchSize, threads, [=](UInt n)
 						{
-							const auto start = n * CDHW;
-							const auto end = start + CDHW;
+							const auto start = n * CDHW();
+							const auto end = start + CDHW();
 							PRAGMA_OMP_SIMD()
 							for (auto cdhw = start; cdhw < end; cdhw++)
 							{

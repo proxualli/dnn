@@ -24,7 +24,7 @@ namespace dnn
 
 	public:
 		Dense(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const UInt c, const std::vector<Layer*>& inputs, const bool hasBias) :
-			Layer(device, format, name, LayerTypes::Dense, c * inputs[0]->CDHW, c, c, 1, 1, 1, 0, 0, 0, inputs, hasBias),
+			Layer(device, format, name, LayerTypes::Dense, c * inputs[0]->CDHW(), c, c, 1, 1, 1, 0, 0, 0, inputs, hasBias),
 			reorderFwdSrc(false),
 			reorderBwdSrc(false),
 			reorderBwdDiffSrc(false),
@@ -41,19 +41,19 @@ namespace dnn
 		{
 			auto description = GetDescriptionHeader() + GetWeightsDescription();
 
-			description.append(nwl + std::string(" Connections:") + tab + std::to_string(CDHW * (InputLayer->CDHW + 1)));
+			description.append(nwl + std::string(" Connections:") + tab + std::to_string(CDHW() * (InputLayer->CDHW() + 1)));
 
 			return description;
 		}
 
 		UInt FanIn() const final override
 		{
-			return InputLayer->CDHW;
+			return InputLayer->CDHW();
 		}
 
 		UInt FanOut() const final override
 		{
-			return CDHW;
+			return CDHW();
 		}
 
 		void InitializeDescriptors(const UInt batchSize) final override
@@ -150,7 +150,7 @@ namespace dnn
 
 #ifndef DNN_LEAN
 			if (training)
-				InitArray<Float>(NeuronsD1.data(), batchSize * PaddedCDHW);
+				InitArray<Float>(NeuronsD1.data(), batchSize * PaddedCDHW());
 #else
 			DNN_UNREF_PAR(batchSize);
 #endif		

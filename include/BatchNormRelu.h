@@ -69,7 +69,6 @@ namespace dnn
 		{
 			H = InputLayer->H;
 			W = InputLayer->W;
-			Layer::UpdateResolution();
 		}
 
 		std::string GetDescription() const final override
@@ -253,7 +252,7 @@ namespace dnn
 #endif
 				Device.stream.wait();
 
-				const auto unbiasedFactor = Float(batchSize * HW) / Float(batchSize * HW - 1);
+				const auto unbiasedFactor = Float(batchSize * HW()) / Float(batchSize * HW() - 1);
 				for (auto c = 0ull; c < C; c++)
 				{
 					RunningMean[c] = (Momentum * RunningMean[c]) + (OneMinusMomentum * Mean[c]);
@@ -262,7 +261,7 @@ namespace dnn
 
 #ifndef DNN_LEAN
 				if (!InplaceBwd)
-					InitArray<Float>(NeuronsD1.data(), batchSize * PaddedCDHW);
+					InitArray<Float>(NeuronsD1.data(), batchSize * PaddedCDHW());
 #else
 				DNN_UNREF_PAR(batchSize);
 #endif // DNN_LEAN

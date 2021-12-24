@@ -42,7 +42,6 @@ namespace dnn
 		{
 			H = Inputs[GetFirst(Inputs)]->H;
 			W = Inputs[GetFirst(Inputs)]->W;
-			Layer::UpdateResolution();
 		}
 
 		std::string GetDescription() const final override
@@ -97,7 +96,7 @@ namespace dnn
 
 #ifndef DNN_LEAN
 			if (training)
-				InitArray<Float>(NeuronsD1.data(), batchSize * PaddedCDHW);
+				InitArray<Float>(NeuronsD1.data(), batchSize * PaddedCDHW());
 #else
 			DNN_UNREF_PAR(batchSize);
 #endif
@@ -110,9 +109,9 @@ namespace dnn
 #endif // DNN_LEAN
 
 			const auto plain = IsPlainFormat();
-			const auto elements = plain ? batchSize * CDHW : batchSize * PaddedCDHW;
+			const auto elements = plain ? batchSize * CDHW() : batchSize * PaddedCDHW();
 			const auto threads = GetThreads(elements);
-			const auto strideHW = HW * VectorSize;
+			const auto strideHW = HW() * VectorSize;
 
 #ifdef DNN_STOCHASTIC
 			if (batchSize == 1)
@@ -122,7 +121,7 @@ namespace dnn
 					VecFloat neuronsD1;
 					for (auto c = 0ull; c < PaddedC; c += VectorSize)
 					{
-						const auto outputOffset = c * HW;
+						const auto outputOffset = c * HW();
 						for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
 						{
 							neuronsD1.load_a(&NeuronsD1[hw + outputOffset]);
@@ -135,8 +134,8 @@ namespace dnn
 				{
 					for (auto c = 0ull; c < C; c++)
 					{
-						const auto outputOffset = c * HW;
-						for (auto hw = 0ull; hw < HW; hw++)
+						const auto outputOffset = c * HW();
+						for (auto hw = 0ull; hw < HW(); hw++)
 						{
 							Inputs[first]->NeuronsD1[hw + outputOffset] += NeuronsD1[hw + outputOffset] * InputsOriginal[second]->Neurons[c];
 							Inputs[second]->NeuronsD1[c] += NeuronsD1[hw + outputOffset] * InputsOriginal[first]->Neurons[hw + outputOffset];
@@ -154,7 +153,7 @@ namespace dnn
 						VecFloat neuronsD1;
 						for (auto c = 0ull; c < PaddedC; c += VectorSize)
 						{
-							const auto outputOffset = n * PaddedCDHW + c * HW;
+							const auto outputOffset = n * PaddedCDHW() + c * HW();
 							const auto channelOffset = n * PaddedC + c;
 							for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
 							{
@@ -171,9 +170,9 @@ namespace dnn
 					{
 						for (auto c = 0ull; c < C; c++)
 						{
-							const auto outputOffset = n * CDHW + c * HW;
+							const auto outputOffset = n * CDHW() + c * HW();
 							const auto channelOffset = n * C + c;
-							for (auto hw = 0ull; hw < HW; hw++)
+							for (auto hw = 0ull; hw < HW(); hw++)
 							{
 								Inputs[first]->NeuronsD1[hw + outputOffset] += NeuronsD1[hw + outputOffset] * InputsOriginal[second]->Neurons[channelOffset];
 								Inputs[second]->NeuronsD1[channelOffset] += NeuronsD1[hw + outputOffset] * InputsOriginal[first]->Neurons[hw + outputOffset];
