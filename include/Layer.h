@@ -407,8 +407,9 @@ namespace dnn
 		virtual ~Layer() = default;
 		
 		const auto HW() const noexcept { return H * W; }
-		const auto CDHW() const noexcept {	return C * D * HW(); }
-		const auto PaddedCDHW() const noexcept { return LayerType == LayerTypes::Input ? CDHW() : PaddedC * D * HW(); }
+		const auto DHW() const noexcept { return D * HW(); }
+		const auto CDHW() const noexcept { return C * DHW(); }
+		const auto PaddedCDHW() const noexcept { return LayerType == LayerTypes::Input ? CDHW() : PaddedC * DHW(); }
 
 		virtual void UpdateResolution()	{ }
 

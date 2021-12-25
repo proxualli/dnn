@@ -561,6 +561,7 @@ namespace dnn
 			if (batchSize == BatchSize && h == H && w == W)
 				return true;
 
+			
 			const auto currentSize = GetNeuronsSize(BatchSize) + GetWeightsSize(PersistOptimizer, Optimizer);
 
 			while (BatchSizeChanging.load() || ResettingWeights.load())
@@ -575,21 +576,24 @@ namespace dnn
 			Layers[0]->W = w;
 			for (auto& layer : Layers)
 				layer->UpdateResolution();
-				
-			auto requestedSize = GetNeuronsSize(batchSize) + GetWeightsSize(PersistOptimizer, Optimizer);
-
-			if (GetTotalFreeMemory() + currentSize < requestedSize)
+			
+			if (batchSize * h * w > BatchSize * H * W)
 			{
-				std::cout << std::string("Memory required: ") << std::to_string(requestedSize / 1024 / 1024) << " MB with resolution" << std::to_string(batchSize) + std::string("x") + std::to_string(h) + std::string("x") + std::to_string(w) << std::endl << std::endl;
-					
-				Layers[0]->H = H;
-				Layers[0]->W = W;
-				for (auto& layer : Layers)
-					layer->UpdateResolution();
+				auto requestedSize = GetNeuronsSize(batchSize) + GetWeightsSize(PersistOptimizer, Optimizer);
 
-				BatchSizeChanging.store(false);
+				if (GetTotalFreeMemory() + currentSize < requestedSize)
+				{
+					std::cout << std::string("Memory required: ") << std::to_string(requestedSize / 1024 / 1024) << " MB with resolution" << std::to_string(batchSize) + std::string("x") + std::to_string(h) + std::string("x") + std::to_string(w) << std::endl << std::endl;
 
-				return false;
+					Layers[0]->H = H;
+					Layers[0]->W = W;
+					for (auto& layer : Layers)
+						layer->UpdateResolution();
+
+					BatchSizeChanging.store(false);
+
+					return false;
+				}
 			}
 
 			for (auto& layer : Layers)
@@ -1413,7 +1417,7 @@ namespace dnn
 						Rate = CurrentTrainingRate.MaximumRate;
 						
 						if (!ChangeResolution(CurrentTrainingRate.BatchSize, CurrentTrainingRate.Height, CurrentTrainingRate.Width))
-								return;
+							return;
 								
 						if (Dropout != CurrentTrainingRate.Dropout)
 							ChangeDropout(CurrentTrainingRate.Dropout, BatchSize);
@@ -1704,7 +1708,7 @@ namespace dnn
 				CurrentTrainingRate = TrainingRates[0];
 				
 				if (!ChangeResolution(CurrentTrainingRate.BatchSize, CurrentTrainingRate.Height, CurrentTrainingRate.Width))
-						return;
+					return;
 
 				Rate = CurrentTrainingRate.MaximumRate;
 
