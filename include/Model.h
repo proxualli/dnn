@@ -1929,7 +1929,7 @@ namespace dnn
 				imgByte = Image<Byte>::RandomCutout(imgByte, DataProv->Mean);
 
 			if (CurrentTrainingRate.Dropout > Float(0))
-				imgByte = Image<Byte>::Dropout(imgByte, CurrentTrainingRate.Dropout, DataProv->Mean);
+				imgByte = Image<Byte>::Dropout(imgByte, CurrentTrainingRate.InputDropout, DataProv->Mean);
 
 			if (RandomCrop)
 				imgByte = Image<Byte>::RandomCrop(imgByte, D, H, W, DataProv->Mean);
@@ -2090,7 +2090,7 @@ namespace dnn
 					imgByte = Image<Byte>::RandomCrop(imgByte, D, H, W, DataProv->Mean);
 
 				if (CurrentTrainingRate.Dropout > Float(0))
-					imgByte = Image<Byte>::Dropout(imgByte, CurrentTrainingRate.Dropout, DataProv->Mean);
+					imgByte = Image<Byte>::Dropout(imgByte, CurrentTrainingRate.InputDropout, DataProv->Mean);
 				
 				for (auto c = 0ull; c < imgByte.C; c++)
 				{
