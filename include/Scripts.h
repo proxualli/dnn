@@ -574,8 +574,9 @@ namespace scripts
                 blocks.push_back(
                     Convolution(C, inputs, hiddenDim, 3, 3, stride, stride, 1, 1) +
                     BatchNormActivation(C, In("C", C), activation) +
+                    (expandRatio > 1 ? Dropout(C, In("B", C)) : "") +
 
-                    GlobalAvgPooling(In("B", C), group) +
+                    GlobalAvgPooling(In((expandRatio > 1 ? "D" : "B"), C), group) +
                     Convolution(1, group + std::string("GAP"), DIV8(hiddenDim / expandRatio), 1, 1, 1, 1, 0, 0, false, group) +
                     BatchNormActivation(1, group + std::string("C1"), (activation == scripts::Activations::FRelu ? scripts::Activations::HardSwish : activation), group) +
                     Convolution(2, group + std::string("B1"), hiddenDim, 1, 1, 1, 1, 0, 0, false, group) +
@@ -617,8 +618,9 @@ namespace scripts
                     BatchNormActivation(C, In("C", C), activation) +
                     DepthwiseConvolution(C + 1, In("B", C), 1, 3, 3, stride, stride, 1, 1) +
                     BatchNormActivation(C + 1, In("DC", C + 1), activation) +
-                    
-                    GlobalAvgPooling(In("B", C + 1), group) +
+                    (expandRatio > 1 ? Dropout(C + 1, In("B", C + 1)) : "") +
+
+                    GlobalAvgPooling(In((expandRatio > 1 ? "D" : "B"), C + 1), group) +
                     Convolution(1, group + std::string("GAP"), DIV8(hiddenDim / expandRatio), 1, 1, 1, 1, 0, 0, false, group) +
                     BatchNormActivation(1, group + std::string("C1"), (activation == scripts::Activations::FRelu ? scripts::Activations::HardSwish : activation), group) +
                     Convolution(2, group + std::string("B1"), hiddenDim, 1, 1, 1, 1, 0, 0, false, group) +
@@ -866,11 +868,12 @@ namespace scripts
                 }
 
                 net +=
-                    BatchNormActivation(C, In("A", A - 1), p.Activation) +
-                    Convolution(C, In("B", C), p.Classes(), 1, 1, 1, 1, 0, 0) +
-                    BatchNorm(C + 1, In("C", C)) +
-                    GlobalAvgPooling(In("B", C + 1)) +
-                    LogSoftmax("GAP") +
+                    Convolution(C, In("A", A - 1), DIV8((UInt)((Float)1792 * width)), 1, 1, 1, 1, 0, 0) +
+                    BatchNormActivation(C, In("C", C), p.Activation) +
+                    GlobalAvgPooling(In("B", C)) +
+                    Dropout(1, "GAP") +
+                    Dense(1, In("D", 1), p.Classes(), true, "", "DS", "Normal(0.001)") +
+                    LogSoftmax("DS1") +
                     Cost("LSM", p.Dataset, p.Classes(), "CategoricalCrossEntropy", 0.125f);
             }
             break;

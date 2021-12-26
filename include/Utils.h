@@ -109,10 +109,10 @@ namespace dnn
 	constexpr auto ULTRALIGHT_COMPUTE_ELEMENTSTHRESHOLD = 2097152ull;	// minimum element threshold for ULTRALIGHT_COMPUTE
 	constexpr auto LIGHT_COMPUTE_ELEMENTSTHRESHOLD = 8338608ull;
 	constexpr auto MEDIUM_COMPUTE_ELEMENTSTHRESHOLD = 68338608ull;
-	constexpr auto GetThreads(const UInt elements, const Float weight = 1) 
+	constexpr auto GetThreads(const UInt elements, const Float weight = 1) noexcept
 	{
-		if (weight <= Float(0.01) || weight > Float(100))
-			throw std::invalid_argument("Weight is out of range in GetThreads function");
+		//if (weight <= Float(0.01) || weight > Float(100))
+		//	throw std::invalid_argument("Weight is out of range in GetThreads function");
 		
 		return elements < static_cast<UInt>(weight * ULTRALIGHT_COMPUTE_ELEMENTSTHRESHOLD) ? ULTRALIGHT_COMPUTE : elements < static_cast<UInt>(weight * LIGHT_COMPUTE_ELEMENTSTHRESHOLD) ? LIGHT_COMPUTE : elements < static_cast<UInt>(weight * MEDIUM_COMPUTE_ELEMENTSTHRESHOLD) ? MEDIUM_COMPUTE : HEAVY_COMPUTE;
 	}
@@ -454,8 +454,8 @@ namespace dnn
 	typedef AlignedArray<Byte, 64ull> ByteArray;
 	typedef std::vector<Float, AlignedAllocator<Float, 64ull>> FloatVector;
 	//constexpr bool IS_LITTLE_ENDIAN = std::endian::native == std::endian::little;
-	constexpr auto NEURONS_LIMIT = Float(10000);		// limit for all the neurons and derivative [-NEURONS_LIMIT,NEURONS_LIMIT]
-	constexpr auto WEIGHTS_LIMIT = Float(100);		// limit for all the weights and biases [-WEIGHTS_LIMIT,WEIGHTS_LIMIT]
+	constexpr auto NEURONS_LIMIT = Float(100000);	// limit for all the neurons and derivative [-NEURONS_LIMIT,NEURONS_LIMIT]
+	constexpr auto WEIGHTS_LIMIT = Float(1000);		// limit for all the weights and biases [-WEIGHTS_LIMIT,WEIGHTS_LIMIT]
 	
 	constexpr auto inline FloatSquare(const Float& value) noexcept { return (value * value); }
 	template<typename T>
