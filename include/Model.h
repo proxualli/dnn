@@ -636,7 +636,7 @@ namespace dnn
 				break;
 				case LayerTypes::BatchNormMishDropout:
 				{
-					auto bn = dynamic_cast<BatchNormActivationDropout<HardSwish, LayerTypes::BatchNormHardSwishDropout>*>(layer.get());
+					auto bn = dynamic_cast<BatchNormActivationDropout<Mish, LayerTypes::BatchNormMishDropout>*>(layer.get());
 					if (bn)
 					{
 						bn->UpdateDropout(dropout);
@@ -646,7 +646,7 @@ namespace dnn
 				break;
 				case LayerTypes::BatchNormReluDropout:
 				{
-					auto bn = dynamic_cast<BatchNormActivationDropout<HardSwish, LayerTypes::BatchNormHardSwishDropout>*>(layer.get());
+					auto bn = dynamic_cast<BatchNormActivationDropout<Relu, LayerTypes::BatchNormReluDropout>*>(layer.get());
 					if (bn)
 					{
 						bn->UpdateDropout(dropout);
@@ -656,7 +656,7 @@ namespace dnn
 				break;
 				case LayerTypes::BatchNormSwishDropout:
 				{
-					auto bn = dynamic_cast<BatchNormActivationDropout<HardSwish, LayerTypes::BatchNormHardSwishDropout>*>(layer.get());
+					auto bn = dynamic_cast<BatchNormActivationDropout<Swish, LayerTypes::BatchNormSwishDropout>*>(layer.get());
 					if (bn)
 					{
 						bn->UpdateDropout(dropout);
@@ -666,7 +666,7 @@ namespace dnn
 				break;
 				case LayerTypes::BatchNormTanhExpDropout:
 				{
-					auto bn = dynamic_cast<BatchNormActivationDropout<HardSwish, LayerTypes::BatchNormHardSwishDropout>*>(layer.get());
+					auto bn = dynamic_cast<BatchNormActivationDropout<TanhExp, LayerTypes::BatchNormTanhExpDropout>*>(layer.get());
 					if (bn)
 					{
 						bn->UpdateDropout(dropout);
