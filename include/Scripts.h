@@ -573,10 +573,9 @@ namespace scripts
                 auto group = In("SE", C);
                 blocks.push_back(
                     Convolution(C, inputs, hiddenDim, 3, 3, stride, stride, 1, 1) +
-                    BatchNormActivation(C, In("C", C), activation) +
-                    (expandRatio > 1 ? Dropout(C, In("B", C)) : "") +
+                    (expandRatio > 1 ? BatchNormActivationDropout(C + 1, In("C", C)) : BatchNormActivation(C, In("C", C), activation)) +
 
-                    GlobalAvgPooling(In((expandRatio > 1 ? "D" : "B"), C), group) +
+                    GlobalAvgPooling(In("B", C), group) +
                     Convolution(1, group + std::string("GAP"), DIV8(hiddenDim / expandRatio), 1, 1, 1, 1, 0, 0, false, group) +
                     BatchNormActivation(1, group + std::string("C1"), (activation == scripts::Activations::FRelu ? scripts::Activations::HardSwish : activation), group) +
                     Convolution(2, group + std::string("B1"), hiddenDim, 1, 1, 1, 1, 0, 0, false, group) +
@@ -617,10 +616,9 @@ namespace scripts
                     Convolution(C, inputs, hiddenDim, 1, 1, 1, 1, 0, 0) +
                     BatchNormActivation(C, In("C", C), activation) +
                     DepthwiseConvolution(C + 1, In("B", C), 1, 3, 3, stride, stride, 1, 1) +
-                    BatchNormActivation(C + 1, In("DC", C + 1), activation) +
-                    (expandRatio > 1 ? Dropout(C + 1, In("B", C + 1)) : "") +
+                    (expandRatio > 1 ? BatchNormActivationDropout(C + 1, In("DC", C + 1)) : BatchNormActivation(C + 1, In("DC", C + 1), activation)) +
 
-                    GlobalAvgPooling(In((expandRatio > 1 ? "D" : "B"), C + 1), group) +
+                    GlobalAvgPooling(In("B", C + 1), group) +
                     Convolution(1, group + std::string("GAP"), DIV8(hiddenDim / expandRatio), 1, 1, 1, 1, 0, 0, false, group) +
                     BatchNormActivation(1, group + std::string("C1"), (activation == scripts::Activations::FRelu ? scripts::Activations::HardSwish : activation), group) +
                     Convolution(2, group + std::string("B1"), hiddenDim, 1, 1, 1, 1, 0, 0, false, group) +
