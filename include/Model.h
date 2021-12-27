@@ -1474,7 +1474,8 @@ namespace dnn
 								for (auto i = 1ull; i < Layers.size(); i++)
 								{
 									timePoint = timer.now();
-									Layers[i]->ForwardProp(1, true);
+									if (!Layers[i]->Skip)
+										Layers[i]->ForwardProp(1, true);
 									Layers[i]->fpropTime = timer.now() - timePoint;
 								}
 
@@ -1492,18 +1493,23 @@ namespace dnn
 									if (Layers[i]->HasWeights)
 									{
 										timePoint = timer.now();
-										Layers[i]->ResetGradients();
-										Layers[i]->BackwardProp(BatchSize);
+										if (!Layers[i]->Skip)
+										{
+											Layers[i]->ResetGradients();
+											Layers[i]->BackwardProp(BatchSize);
+										}
 										Layers[i]->bpropTime = timer.now() - timePoint;
 										timePoint = timer.now();
-										Layers[i]->UpdateWeights(CurrentTrainingRate, Optimizer, DisableLocking);
+										if (!Layers[i]->Skip)
+											Layers[i]->UpdateWeights(CurrentTrainingRate, Optimizer, DisableLocking);
 										Layers[i]->updateTime = timer.now() - timePoint;
 										updateTimeCount += Layers[i]->updateTime;
 									}
 									else
 									{
 										timePoint = timer.now();
-										Layers[i]->BackwardProp(1);
+										if (!Layers[i]->Skip)
+											Layers[i]->BackwardProp(1);
 										Layers[i]->bpropTime = timer.now() - timePoint;
 									}
 									bpropTimeCount += Layers[i]->bpropTime;
@@ -1534,7 +1540,8 @@ namespace dnn
 								for (auto i = 1ull; i < Layers.size(); i++)
 								{
 									timePoint = timer.now();
-									Layers[i]->ForwardProp(BatchSize, true);
+									if (!Layers[i]->Skip)
+										Layers[i]->ForwardProp(BatchSize, true);
 									Layers[i]->fpropTime = timer.now() - timePoint;
 								}
 								
@@ -1553,18 +1560,23 @@ namespace dnn
 									if (Layers[i]->HasWeights)
 									{
 										timePoint = timer.now();
-										Layers[i]->ResetGradients();
-										Layers[i]->BackwardProp(BatchSize);
+										if (!Layers[i]->Skip)
+										{
+											Layers[i]->ResetGradients();
+											Layers[i]->BackwardProp(BatchSize);
+										}
 										Layers[i]->bpropTime = timer.now() - timePoint;
 										timePoint = timer.now();
-										Layers[i]->UpdateWeights(CurrentTrainingRate, Optimizer, DisableLocking);
+										if (!Layers[i]->Skip)
+											Layers[i]->UpdateWeights(CurrentTrainingRate, Optimizer, DisableLocking);
 										Layers[i]->updateTime = timer.now() - timePoint;
 										updateTimeCount += Layers[i]->updateTime;
 									}
 									else
 									{
 										timePoint = timer.now();
-										Layers[i]->BackwardProp(BatchSize);
+										if (!Layers[i]->Skip)
+											Layers[i]->BackwardProp(BatchSize);
 										Layers[i]->bpropTime = timer.now() - timePoint;
 									}
 									bpropTimeCount += Layers[i]->bpropTime;
@@ -1603,7 +1615,8 @@ namespace dnn
 									cost->SetSampleLabel(SampleLabel);
 
 								for (auto i = 1u; i < Layers.size(); i++)
-									Layers[i]->ForwardProp(1, false);
+									if (!Layers[i]->Skip)
+										Layers[i]->ForwardProp(1, false);
 
 								CostFunction(State.load());
 								Recognized(State.load(), SampleLabel);
@@ -1630,7 +1643,8 @@ namespace dnn
 								for (auto i = 1ull; i < Layers.size(); i++)
 								{
 									timePoint = timer.now();
-									Layers[i]->ForwardProp(BatchSize, false);
+									if (!Layers[i]->Skip)
+										Layers[i]->ForwardProp(BatchSize, false);
 									Layers[i]->fpropTime = timer.now() - timePoint;
 								}
 
