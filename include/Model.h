@@ -357,6 +357,8 @@ namespace dnn
 		bool MirrorPad;
 		bool RandomCrop;
 		bool MeanStdNormalization;
+		bool FixedDepthDrop;
+		Float DepthDrop;
 		Fillers WeightsFiller;
 		FillerModes WeightsFillerMode;
 		Float WeightsGain;
@@ -443,6 +445,8 @@ namespace dnn
 			BatchNormScaling(true),					// Scaling
 			BatchNormMomentum(Float(0.995)),		// Momentum
 			BatchNormEps(Float(1e-04)),				// Eps
+			DepthDrop(Float(0.0)),					// DepthDrop  (Stochastic Depth paper: https://www.arxiv-vanity.com/papers/1603.09382/)
+			FixedDepthDrop(false),					// FixedDepthDrop
 			Dropout(Float(0)),						// Dropout
 			WeightsFiller(Fillers::HeNormal),		// WeightsFiller
 			WeightsFillerMode(FillerModes::In),		// WeightsFillerMode
@@ -1222,6 +1226,58 @@ namespace dnn
 				}
 		}
 
+		const auto GetTotalSkipConnections() const
+		{
+			auto totalSkipConnections = 0ull;
+		
+			for (const auto& layer : Layers)
+				if (layer->LayerType == LayerTypes::Add)
+					for (const auto& l : layer->Outputs)
+						if (l->LayerType == LayerTypes::Add)
+							totalSkipConnections++;
+
+			return totalSkipConnections;
+		}
+
+		void StochasticDepth(const UInt totalSkipConnections, const Float dropRate = Float(0.5), const bool fixed = false)
+		{
+			auto isSkipConnection = false;
+			auto endLayer = std::string("");
+			auto survive = true;
+			
+			auto skipConnection = 0ull;
+			for (auto& layer : Layers)
+			{
+				if (layer->LayerType == LayerTypes::Add)
+				{
+					if (isSkipConnection && layer->Name == endLayer)
+					{
+						for (auto inputLayer = 0ull; inputLayer < layer->Inputs.size(); inputLayer++)
+						{
+							if (layer->Inputs[inputLayer]->LayerType != LayerTypes::Add)
+								dynamic_cast<Add*>(layer.get())->SurvivalProbability[inputLayer] = fixed ? Float(1) / (Float(1) - dropRate) : Float(1) / (Float(1) - (dropRate * Float(skipConnection) / Float(totalSkipConnections)));
+							else
+								dynamic_cast<Add*>(layer.get())->SurvivalProbability[inputLayer] = Float(1);
+						}
+					}
+					
+					isSkipConnection = false;
+					for (const auto& outputLayer : layer->Outputs)
+					{
+						if (outputLayer->LayerType == LayerTypes::Add)
+						{
+							isSkipConnection = true;
+							endLayer = outputLayer->Name;
+							skipConnection++;
+							survive = Bernoulli<bool>(fixed ? Float(1) / (Float(1) - dropRate) : (Float(1) - (dropRate * Float(skipConnection) / Float(totalSkipConnections))));
+						}
+					}
+				}
+				else if (isSkipConnection)
+					layer->Skip = !survive;
+			}
+		}
+
 		std::vector<Layer*> GetLayerInputs(const std::vector<std::string>& inputs) const
 		{
 			auto list = std::vector<Layer*>();
@@ -1272,7 +1328,8 @@ namespace dnn
 
 			for (auto& layer : Layers)
 			{
-				auto outputsCount = GetLayerOutputs(layer.get()).size();
+				layer->Outputs = GetLayerOutputs(layer.get());
+				auto outputsCount = layer->Outputs.size();
 
 				if (outputsCount > 1)
 				{
@@ -1340,6 +1397,8 @@ namespace dnn
 			{
 				TaskState.store(TaskStates::Running);
 				State.store(States::Idle);
+
+				const auto totalSkipConnections = GetTotalSkipConnections();
 
 				auto timer = std::chrono::high_resolution_clock();
 				auto timePoint = timer.now();
@@ -1463,6 +1522,9 @@ namespace dnn
 						{
 							for (SampleIndex = 0; SampleIndex < DataProv->TrainingSamplesCount; SampleIndex++)
 							{
+								if (DepthDrop > 0)
+									StochasticDepth(totalSkipConnections, DepthDrop, FixedDepthDrop);
+
 								// Forward
 								timePointGlobal = timer.now();
 								auto SampleLabel = TrainSample(SampleIndex);
@@ -1529,6 +1591,9 @@ namespace dnn
 							auto overflow = false;
 							for (SampleIndex = 0; SampleIndex < AdjustedTrainingSamplesCount; SampleIndex += BatchSize)
 							{
+								if (DepthDrop > 0)
+									StochasticDepth(totalSkipConnections, DepthDrop, FixedDepthDrop);
+
 								// Forward
 								timePointGlobal = timer.now();
 								auto SampleLabels = TrainBatch(SampleIndex, BatchSize);
@@ -1603,8 +1668,6 @@ namespace dnn
 					{
 						State.store(States::Testing);
 #ifdef DNN_STOCHASTIC	
-
-						
 						if (BatchSize == 1)
 						{
 							for (SampleIndex = 0; SampleIndex < DataProv->TestingSamplesCount; SampleIndex++)
@@ -1615,8 +1678,7 @@ namespace dnn
 									cost->SetSampleLabel(SampleLabel);
 
 								for (auto i = 1u; i < Layers.size(); i++)
-									if (!Layers[i]->Skip)
-										Layers[i]->ForwardProp(1, false);
+									Layers[i]->ForwardProp(1, false);
 
 								CostFunction(State.load());
 								Recognized(State.load(), SampleLabel);
@@ -1643,8 +1705,7 @@ namespace dnn
 								for (auto i = 1ull; i < Layers.size(); i++)
 								{
 									timePoint = timer.now();
-									if (!Layers[i]->Skip)
-										Layers[i]->ForwardProp(BatchSize, false);
+									Layers[i]->ForwardProp(BatchSize, false);
 									Layers[i]->fpropTime = timer.now() - timePoint;
 								}
 

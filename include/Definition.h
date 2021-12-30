@@ -45,6 +45,8 @@ namespace dnn
 			defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "MirrorPad=", "MirrorPad=");
 			defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "RandomCrop=", "RandomCrop=");
 			defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "Dropout=", "Dropout=");
+			defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "DepthDrop=", "DepthDrop=");
+			defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "FixedDepthDrop=", "FixedDepthDrop=");
 			defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "Channels=", "Channels=");
 			defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "Kernel=", "Kernel=");
 			defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "Stride=", "Stride=");
@@ -185,6 +187,8 @@ namespace dnn
 			auto dilationW = UInt(1);
 			auto strideH = UInt(1);
 			auto strideW = UInt(1);
+			auto depthDrop = Float(0);
+			auto fixedDepthDrop = false;
 
 			auto iss = std::istringstream(definition);
 			std::string strLine = "", modelName = "", layerName = "", params = "";
@@ -257,6 +261,8 @@ namespace dnn
 							model->BatchNormScaling = scaling;
 							model->BatchNormEps = eps;
 							model->Dropout = dropout;
+							model->DepthDrop = depthDrop;
+							model->FixedDepthDrop = fixedDepthDrop;
 
 							model->Layers.push_back(std::make_unique<Input>(model->Device, model->Format, "Input", c, model->RandomCrop ? d : d + padD, model->RandomCrop ? h : h + padH, model->RandomCrop ? w : w + padW));
 
@@ -946,6 +952,64 @@ namespace dnn
 					}
 
 					model->RandomCrop = StringToBool(params);
+				}
+				else if (strLine.rfind("FixedDepthDrop=") == 0)
+				{
+					if (!isModel)
+					{
+						msg = CheckMsg(line, col, "FixedDepthDrop cannot be specified in a layer.");
+						goto FAIL;
+					}
+
+					params = strLine.erase(0, 15);
+
+					if (!IsStringBool(params))
+					{
+						msg = CheckMsg(line, col, "FixedDepthDrop value must be boolean (Yes/No or True/False).");
+						goto FAIL;
+					}
+
+					model->FixedDepthDrop = StringToBool(params);
+				}
+				else if (strLine.rfind("DepthDrop=") == 0)
+				{
+					if (!isModel)
+					{
+						msg = CheckMsg(line, col, "DepthDrop cannot be specified in a layer.");
+						goto FAIL;
+					}
+
+					params = strLine.erase(0, 10);
+
+					if (params.find_first_not_of(".0123456789") != std::string::npos)
+					{
+						msg = CheckMsg(line, col, "DepthDrop contains illegal characters.");
+						goto FAIL;
+					}
+
+					try
+					{
+						depthDrop = std::stof(params);
+					}
+					catch (std::exception exception)
+					{
+						msg = CheckMsg(line, col, "DepthDrop value not recognized." + nwl + exception.what());
+						goto FAIL;
+					}
+
+					if (depthDrop <= 0 || depthDrop >= 1)
+					{
+						msg = CheckMsg(line, col, "DepthDrop value must be in the range ]0-1[");
+						goto FAIL;
+					}
+
+					if (!IsStringBool(params))
+					{
+						msg = CheckMsg(line, col, "FixedDepthDrop value must be boolean (Yes/No or True/False).");
+						goto FAIL;
+					}
+
+					model->DepthDrop = depthDrop;
 				}
 				else if (strLine.rfind("Type=") == 0)
 				{

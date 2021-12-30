@@ -169,11 +169,11 @@ namespace dnn
 		{
 			PRAGMA_OMP_FOR_SCHEDULE_STATIC(1)
 #if defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER)
-				for (auto i = 0ll; i < static_cast<long long>(range); i++)
-					f(i);
+			for (auto i = 0ll; i < static_cast<long long>(range); i++)
+				f(i);
 #else
-				for (auto i = 0ull; i < range; i++)
-					f(i);
+			for (auto i = 0ull; i < range; i++)
+				f(i);
 #endif
 		}
 #else

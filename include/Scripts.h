@@ -191,6 +191,10 @@ namespace scripts
         bool Bottleneck;
         bool SqueezeExcitation;
         bool ChannelZeroPad;
+        Float DepthDrop = Float(0.2);
+        bool FixedDepthDrop = false;
+        UInt StrideHFirstConv = 2;
+        UInt StrideWFirstConv = 2;
         scripts::Activations Activation = Activations::Relu;
         std::vector<EfficientNetRecord> EfficientNet = { { 1, 24, 2, 1, false }, { 4, 48, 4, 2, false }, { 4, 64, 4, 2, false }, { 4, 128, 6, 2, true }, { 6, 160, 9, 1, true }, { 6, 256, 15, 2, true } };
         std::vector<ShuffleNetRecord> ShuffleNet = { { 6, 3, 1, 2, false }, { 7, 3, 1, 2, true }, { 8, 3, 1, 2, true } };
@@ -235,6 +239,7 @@ namespace scripts
         bool WidthVisible() const { return Script == Scripts::mobilenetv3 || Script == Scripts::resnet || Script == Scripts::shufflenetv2; }
         bool GrowthRateVisible() const { return Script == Scripts::densenet; }
         bool DropoutVisible() const { return Script == Scripts::densenet || Script == Scripts::resnet || Script == Scripts::efficientnetv2; }
+        bool DepthDropVisible() const { return Script == Scripts::densenet || Script == Scripts::mobilenetv3 || Script == Scripts::resnet || Script == Scripts::efficientnetv2; }
         bool CompressionVisible() const { return Script == Scripts::densenet; }
         bool BottleneckVisible() const { return Script == Scripts::densenet || Script == Scripts::resnet; }
         bool SqueezeExcitationVisible() const { return Script == Scripts::mobilenetv3; }
@@ -249,18 +254,18 @@ namespace scripts
             switch (Script)
             {
             case Scripts::densenet:
-                return common + std::to_string(GrowthRate) + (Dropout > 0 ? std::string("-dropout") : std::string("")) + (Compression > 0 ? std::string("-compression") : std::string("")) + (Bottleneck ? std::string("-bottleneck") : std::string("")) + std::string("-") + StringToLower(std::string(magic_enum::enum_name<Activations>(Activation)));
+                return common + std::to_string(GrowthRate) + (Dropout > 0 ? std::string("-dropout") : std::string("")) + (DepthDrop > 0 ? (FixedDepthDrop ? std::string("-fixeddepthdrop") : std::string("-depthdrop")) : std::string("")) + (Compression > 0 ? std::string("-compression") : std::string("")) + (Bottleneck ? std::string("-bottleneck") : std::string("")) + std::string("-") + StringToLower(std::string(magic_enum::enum_name<Activations>(Activation)));
             case Scripts::efficientnetv2:
             {
-                auto name = std::string(magic_enum::enum_name<Scripts>(Script));
+                auto name = std::string(magic_enum::enum_name<Scripts>(Script)) + (DepthDrop > 0 ? (FixedDepthDrop ? std::string("-fixeddepthdrop") : std::string("-depthdrop")) : std::string(""));
                 for (auto rec : EfficientNet)
                     name += rec.to_string();
                 return name;
             }
             case Scripts::mobilenetv3:
-                return common + std::to_string(Width) + std::string("-") + StringToLower(std::string(magic_enum::enum_name<Activations>(Activation))) + (SqueezeExcitation ? std::string("-se") : std::string(""));
+                return common + std::to_string(Width) + std::string("-") + StringToLower(std::string(magic_enum::enum_name<Activations>(Activation))) + (SqueezeExcitation ? std::string("-se") : std::string("")) + (DepthDrop > 0 ? (FixedDepthDrop ? std::string("-fixeddepthdrop") : std::string("-depthdrop")) : std::string(""));
             case Scripts::resnet:
-                return common + std::to_string(Width) + (Dropout > 0 ? std::string("-dropout") : std::string("")) + (Bottleneck ? std::string("-bottleneck") : std::string("")) + (ChannelZeroPad ? std::string("-channelzeropad") : std::string("")) + std::string("-") + StringToLower(std::string(magic_enum::enum_name<Activations>(Activation)));
+                return common + std::to_string(Width) + (Dropout > 0 ? std::string("-dropout") : std::string("")) + (DepthDrop > 0 ? (FixedDepthDrop ? std::string("-fixeddepthdrop") : std::string("-depthdrop")) : std::string("")) + (Bottleneck ? std::string("-bottleneck") : std::string("")) + (ChannelZeroPad ? std::string("-channelzeropad") : std::string("")) + std::string("-") + StringToLower(std::string(magic_enum::enum_name<Activations>(Activation)));
             case Scripts::shufflenetv2:
             {
                 auto name = std::string(magic_enum::enum_name<Scripts>(Script)) + std::string("-") + std::to_string(Width);
@@ -709,6 +714,8 @@ namespace scripts
                 (p.BiasesLRM != 1 ? "BiasesLRM=" + std::to_string(p.BiasesLRM) + nwl : "") +
                 (p.BiasesWDM != 1 ? "BiasesWDM=" + std::to_string(p.BiasesWDM) + nwl : "") : "Biases=No" + nwl) +
                 (p.DropoutVisible() ? "Dropout=" + std::to_string(p.Dropout) + nwl : "") +
+                (p.DepthDropVisible() ? "DepthDrop=" + std::to_string(p.DepthDrop) + nwl : "") +
+                (p.DepthDropVisible() ? "FixedDepthDrop=" + to_string(p.FixedDepthDrop) + nwl : "") +
                 "Scaling=" + to_string(p.BatchNormScaling) + nwl +
                 "Momentum=" + std::to_string(p.BatchNormMomentum) + nwl +
                 "Eps=" + std::to_string(p.BatchNormEps) + nwl + nwl;
@@ -721,7 +728,7 @@ namespace scripts
             {
                 auto channels = DIV8(p.GrowthRate);
 
-                net += Convolution(1, "Input", channels, 3, 3, 2, 2, 1, 1);
+                net += Convolution(1, "Input", channels, 3, 3, p.StrideHFirstConv, p.StrideWFirstConv, 1, 1);
 
                 if (p.Bottleneck)
                 {
@@ -819,7 +826,7 @@ namespace scripts
                     net += block;
 
                 net +=
-                    Convolution(C, In("CC", CC), p.Classes(), 1, 1, 1, 1, 0, 0) +
+                    Convolution(C, In("CC", CC), p.Classes(), 1, 1, p.StrideHFirstConv, p.StrideWFirstConv, 0, 0) +
                     BatchNorm(C + 1, In("C", C)) +
                     GlobalAvgPooling(In("B", C + 1)) +
                     LogSoftmax("GAP") +
@@ -835,7 +842,7 @@ namespace scripts
                 auto C = 1ull;
                 
                 net +=
-                    Convolution(C, "Input", inputChannels, 3, 3, 2, 2, 1, 1) +
+                    Convolution(C, "Input", inputChannels, 3, 3, p.StrideHFirstConv, p.StrideWFirstConv, 1, 1) +
                     BatchNormActivation(C, In("C", C), p.Activation);
 
                 auto stage = 0ull;
@@ -884,7 +891,7 @@ namespace scripts
                 auto W = p.Width * 16;
 
                 net +=
-                    Convolution(1, "Input", DIV8(W), 3, 3, 2, 2, 1, 1) +
+                    Convolution(1, "Input", DIV8(W), 3, 3, p.StrideHFirstConv, p.StrideWFirstConv, 1, 1) +
                     BatchNormActivation(1, "C1", p.Activation);
 
                 blocks.push_back(
@@ -979,7 +986,7 @@ namespace scripts
                 auto A = 1ull;
                 auto C = 5ull;
 
-                net += Convolution(1, "Input", DIV8(W), 3, 3, 2, 2, 1, 1);
+                net += Convolution(1, "Input", DIV8(W), 3, 3, p.StrideHFirstConv, p.StrideWFirstConv, 1, 1);
 
                 if (p.Bottleneck)
                 {
@@ -1091,7 +1098,7 @@ namespace scripts
                 auto channels = DIV8(p.Width * 16);
 
                 net +=
-                    Convolution(1, "Input", channels, 3, 3, 2, 2, 1, 1) +
+                    Convolution(1, "Input", channels, 3, 3, p.StrideHFirstConv, p.StrideWFirstConv, 1, 1) +
                     BatchNormActivation(1, "C1", p.Activation) +
                     Convolution(2, "B1", channels, 1, 1, 1, 1, 0, 0) +
                     BatchNormActivation(2, "C2", p.Activation) +

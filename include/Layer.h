@@ -279,7 +279,7 @@ namespace dnn
 		const UInt PadW;
 		const bool HasPadding;
 		std::vector<Layer*> Inputs;
-		// std::vector<Layer*> Outputs;
+		std::vector<Layer*> Outputs;
 		const std::vector<Layer*> InputsOriginal;
 		const std::vector<Layer*> InputsInplaceBwd;
 		Layer* InputLayer;
