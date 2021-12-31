@@ -1003,12 +1003,6 @@ namespace dnn
 						goto FAIL;
 					}
 
-					if (!IsStringBool(params))
-					{
-						msg = CheckMsg(line, col, "FixedDepthDrop value must be boolean (Yes/No or True/False).");
-						goto FAIL;
-					}
-
 					model->DepthDrop = depthDrop;
 				}
 				else if (strLine.rfind("Type=") == 0)
