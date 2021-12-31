@@ -257,7 +257,7 @@ namespace scripts
                 return common + std::to_string(GrowthRate) + (Dropout > 0 ? std::string("-dropout") : std::string("")) + (DepthDrop > 0 ? (FixedDepthDrop ? std::string("-fixeddepthdrop") : std::string("-depthdrop")) : std::string("")) + (Compression > 0 ? std::string("-compression") : std::string("")) + (Bottleneck ? std::string("-bottleneck") : std::string("")) + std::string("-") + StringToLower(std::string(magic_enum::enum_name<Activations>(Activation)));
             case Scripts::efficientnetv2:
             {
-                auto name = std::string(magic_enum::enum_name<Scripts>(Script)) + (DepthDrop > 0 ? (FixedDepthDrop ? std::string("-fixeddepthdrop") : std::string("-depthdrop")) : std::string(""));
+                auto name = std::string(magic_enum::enum_name<Scripts>(Script)) + (DepthDrop > 0 ? (FixedDepthDrop ? std::string("-fixeddepthdrop-") : std::string("-depthdrop-")) : std::string(""));
                 for (auto rec : EfficientNet)
                     name += rec.to_string();
                 return name;
