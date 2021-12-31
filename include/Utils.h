@@ -587,7 +587,7 @@ namespace dnn
 		if (limit < s)
 	     throw std::invalid_argument("limit out of range in TruncatedNormal function");
 
-		..static thread_local auto generator = std::mt19937(Seed<unsigned>());
+		//static thread_local auto generator = std::mt19937(Seed<unsigned>());
 		
 		T x;
 		do { x = std::normal_distribution<T>(T(0), s)(generator); }
