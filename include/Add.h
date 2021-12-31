@@ -169,8 +169,8 @@ namespace dnn
 					}
 					else
 					{
-						const Float survivalProb0 = SurvivalProbability[0] * Float(Inputs[0]->Skip ? 0.f : 1.f);
-						const Float survivalProb1 = SurvivalProbability[1] * Float(Inputs[1]->Skip ? 0.f : 1.f);
+						const Float survivalProb0 = SurvivalProbability[0] * (Inputs[0]->Skip ? Float(0) : Float(1));
+						const Float survivalProb1 = SurvivalProbability[1] * (Inputs[1]->Skip ? Float(0) : Float(1));
 						
 						for_i(batchSize, threads, [=](UInt n)
 						{
@@ -304,8 +304,8 @@ namespace dnn
 					}
 					else
 					{
-						const auto survivalProb0 = SurvivalProbability[0] * Inputs[0]->Skip ? Float(0) : Float(1);
-						const auto survivalProb1 = SurvivalProbability[1] * Inputs[1]->Skip ? Float(0) : Float(1);
+						const auto survivalProb0 = SurvivalProbability[0] * (Inputs[0]->Skip ? Float(0) : Float(1));
+						const auto survivalProb1 = SurvivalProbability[1] * (Inputs[1]->Skip ? Float(0) : Float(1));
 
 						for_i(batchSize, threads, [=](UInt n)
 						{
