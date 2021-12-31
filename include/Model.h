@@ -1239,7 +1239,7 @@ namespace dnn
 			return totalSkipConnections;
 		}
 
-		void StochasticDepth(const UInt totalSkipConnections, const Float dropRate = Float(0.5), const bool fixed = false)
+		void StochasticDepth(std::mt19937& generator, const UInt totalSkipConnections, const Float dropRate = Float(0.5), const bool fixed = false)
 		{
 			auto isSkipConnection = false;
 			auto endLayer = std::string("");
@@ -1269,7 +1269,7 @@ namespace dnn
 							isSkipConnection = true;
 							endLayer = outputLayer->Name;
 							skipConnection++;
-							survive = Bernoulli<bool>(fixed ? Float(1) / (Float(1) - dropRate) : (Float(1) - (dropRate * Float(skipConnection) / Float(totalSkipConnections))));
+							survive = Bernoulli<bool>(generator, fixed ? Float(1) / (Float(1) - dropRate) : (Float(1) - (dropRate * Float(skipConnection) / Float(totalSkipConnections))));
 						}
 					}
 				}
@@ -1398,6 +1398,7 @@ namespace dnn
 				TaskState.store(TaskStates::Running);
 				State.store(States::Idle);
 
+				auto generator = std::mt19937(Seed<unsigned>());
 				const auto totalSkipConnections = GetTotalSkipConnections();
 
 				auto timer = std::chrono::high_resolution_clock();
@@ -1442,13 +1443,13 @@ namespace dnn
 
 				for (auto index = 0ull; index < DataProv->TrainingSamplesCount; index++)
 				{
-					TrainingSamplesHFlip.push_back(Bernoulli<bool>());
-					TrainingSamplesVFlip.push_back(Bernoulli<bool>());
+					TrainingSamplesHFlip.push_back(Bernoulli<bool>(generator, Float(0.5)));
+					TrainingSamplesVFlip.push_back(Bernoulli<bool>(generator, Float(0.5)));
 				}
 				for (auto index = 0ull; index < DataProv->TestingSamplesCount; index++)
 				{
-					TestingSamplesHFlip.push_back(Bernoulli<bool>());
-					TestingSamplesVFlip.push_back(Bernoulli<bool>());
+					TestingSamplesHFlip.push_back(Bernoulli<bool>(generator, Float(0.5)));
+					TestingSamplesVFlip.push_back(Bernoulli<bool>(generator, Float(0.5)));
 				}
 				
 				SetOptimizer(CurrentTrainingRate.Optimizer);
@@ -1510,9 +1511,9 @@ namespace dnn
 					{
 						State.store(States::Training);
 
-						const auto shuffleCount = UniformInt<UInt>(16, 32);
+						const auto shuffleCount = UniformInt<UInt>(16, 32, generator);
 						for (auto shuffle = 0ull; shuffle < shuffleCount; shuffle++)
-							std::shuffle(std::begin(RandomTrainingSamples), std::end(RandomTrainingSamples), std::mt19937(Seed<unsigned>()));
+							std::shuffle(std::begin(RandomTrainingSamples), std::end(RandomTrainingSamples), generator);
 
 						for (auto cost : CostLayers)
 							cost->Reset();
@@ -1523,7 +1524,7 @@ namespace dnn
 							for (SampleIndex = 0; SampleIndex < DataProv->TrainingSamplesCount; SampleIndex++)
 							{
 								if (DepthDrop > 0)
-									StochasticDepth(totalSkipConnections, DepthDrop, FixedDepthDrop);
+									StochasticDepth(generator, totalSkipConnections, DepthDrop, FixedDepthDrop);
 
 								// Forward
 								timePointGlobal = timer.now();
@@ -1592,7 +1593,7 @@ namespace dnn
 							for (SampleIndex = 0; SampleIndex < AdjustedTrainingSamplesCount; SampleIndex += BatchSize)
 							{
 								if (DepthDrop > 0)
-									StochasticDepth(totalSkipConnections, DepthDrop, FixedDepthDrop);
+									StochasticDepth(generator, totalSkipConnections, DepthDrop, FixedDepthDrop);
 
 								// Forward
 								timePointGlobal = timer.now();
@@ -1775,6 +1776,8 @@ namespace dnn
 
 				State.store(States::Idle);
 
+				auto generator = std::mt19937(Seed<unsigned>());
+
 				auto timer = std::chrono::high_resolution_clock();
 				auto timePoint = timer.now();
 				auto timePointGlobal = timer.now();
@@ -1793,13 +1796,13 @@ namespace dnn
 				TestingSamplesVFlip = std::vector<bool>();
 				for (auto index = 0ull; index < DataProv->TrainingSamplesCount; index++)
 				{
-					TrainingSamplesHFlip.push_back(Bernoulli<bool>());
-					TrainingSamplesVFlip.push_back(Bernoulli<bool>());
+					TrainingSamplesHFlip.push_back(Bernoulli<bool>(generator, Float(0.5)));
+					TrainingSamplesVFlip.push_back(Bernoulli<bool>(generator, Float(0.5)));
 				}
 				for (auto index = 0ull; index < DataProv->TestingSamplesCount; index++)
 				{
-					TestingSamplesHFlip.push_back(Bernoulli<bool>());
-					TestingSamplesVFlip.push_back(Bernoulli<bool>());
+					TestingSamplesHFlip.push_back(Bernoulli<bool>(generator, Float(0.5)));
+					TestingSamplesVFlip.push_back(Bernoulli<bool>(generator, Float(0.5)));
 				}
 
 				State.store(States::Testing);
@@ -1951,6 +1954,8 @@ namespace dnn
 #ifdef DNN_STOCHASTIC
 		std::vector<LabelInfo> TrainSample(const UInt index)
 		{
+			auto generator = std::mt19937(Seed<unsigned>());
+
 			const auto rndIndex = RandomTrainingSamples[index];
 			auto imgByte = DataProv->TrainingSamples[rndIndex];
 
@@ -1963,12 +1968,12 @@ namespace dnn
 			std::vector<LabelInfo> SampleLabel;
 		
 			auto cutout = false;
-			if (Bernoulli<bool>(CurrentTrainingRate.Cutout))
+			if (Bernoulli<bool>(generator, CurrentTrainingRate.Cutout))
 			{
 				if (CurrentTrainingRate.CutMix)
 				{
-					double lambda = BetaDistribution<double>(1, 1);
-					imgByte = Image<Byte>::RandomCutMix(imgByte, imgByteMix, &lambda);
+					double lambda = BetaDistribution<double>(1, 1, generator);
+					imgByte = Image<Byte>::RandomCutMix(imgByte, imgByteMix, &lambda, generator);
 					SampleLabel = GetCutMixLabelInfo(label, labelMix, lambda);
 				}
 				else
@@ -1986,28 +1991,28 @@ namespace dnn
 			if (CurrentTrainingRate.VerticalFlip && TrainingSamplesVFlip[rndIndex])
 				imgByte = Image<Byte>::VerticalMirror(imgByte);
 
-			if (DataProv->C == 3 && Bernoulli<bool>(CurrentTrainingRate.ColorCast))
-				imgByte = Image<Byte>::ColorCast(imgByte, CurrentTrainingRate.ColorAngle);
+			if (DataProv->C == 3 && Bernoulli<bool>(generator, CurrentTrainingRate.ColorCast))
+				imgByte = Image<Byte>::ColorCast(imgByte, CurrentTrainingRate.ColorAngle, generator);
 
 			if (imgByteMix.D != D || imgByte.H != H || imgByte.W != W)
 				imgByte = Image<Byte>::Resize(imgByte, D, H, W, Interpolations(CurrentTrainingRate.Interpolation));
 
-			if (DataProv->C == 3 && Bernoulli<bool>(CurrentTrainingRate.AutoAugment))
-				imgByte = Image<Byte>::AutoAugment(imgByte, PadD, PadH, PadW, DataProv->Mean, MirrorPad);
+			if (DataProv->C == 3 && Bernoulli<bool>(generator, CurrentTrainingRate.AutoAugment))
+				imgByte = Image<Byte>::AutoAugment(imgByte, PadD, PadH, PadW, DataProv->Mean, MirrorPad, generator);
 			else
 				imgByte = Image<Byte>::Padding(imgByte, PadD, PadH, PadW, DataProv->Mean, MirrorPad);
 
-			if (Bernoulli<bool>(CurrentTrainingRate.Distortion))
-				imgByte = Image<Byte>::Distorted(imgByte, CurrentTrainingRate.Scaling, CurrentTrainingRate.Rotation, Interpolations(CurrentTrainingRate.Interpolation), DataProv->Mean);
+			if (Bernoulli<bool>(generator, CurrentTrainingRate.Distortion))
+				imgByte = Image<Byte>::Distorted(imgByte, CurrentTrainingRate.Scaling, CurrentTrainingRate.Rotation, Interpolations(CurrentTrainingRate.Interpolation), DataProv->Mean, generator);
 
 			if (cutout)
-				imgByte = Image<Byte>::RandomCutout(imgByte, DataProv->Mean);
+				imgByte = Image<Byte>::RandomCutout(imgByte, DataProv->Mean, generator);
 
 			if (CurrentTrainingRate.InputDropout > Float(0))
-				imgByte = Image<Byte>::Dropout(imgByte, CurrentTrainingRate.InputDropout, DataProv->Mean);
+				imgByte = Image<Byte>::Dropout(imgByte, CurrentTrainingRate.InputDropout, DataProv->Mean, generator);
 
 			if (RandomCrop)
-				imgByte = Image<Byte>::RandomCrop(imgByte, D, H, W, DataProv->Mean);
+				imgByte = Image<Byte>::RandomCrop(imgByte, D, H, W, DataProv->Mean, generator);
 
 			for (auto c = 0ull; c < imgByte.C; c++)
 			{
@@ -2054,13 +2059,15 @@ namespace dnn
 
 		std::vector<LabelInfo> TestAugmentedSample(const UInt index)
 		{
+			auto generator = std::mt19937(Seed<unsigned>());
+
 			auto label = DataProv->TestingLabels[index];
 			auto SampleLabel = GetLabelInfo(label);
 
 			auto imgByte = DataProv->TestingSamples[index];
 
-			if (DataProv->C == 3 && Bernoulli<bool>(CurrentTrainingRate.ColorCast))
-				imgByte = Image<Byte>::ColorCast(imgByte, CurrentTrainingRate.ColorAngle);
+			if (DataProv->C == 3 && Bernoulli<bool>(generator, CurrentTrainingRate.ColorCast))
+				imgByte = Image<Byte>::ColorCast(imgByte, CurrentTrainingRate.ColorAngle, generator);
 
 			if (CurrentTrainingRate.HorizontalFlip && TestingSamplesHFlip[index])
 				imgByte = Image<Byte>::HorizontalMirror(imgByte);
@@ -2071,22 +2078,22 @@ namespace dnn
 			if (imgByte.D != D || imgByte.H != H || imgByte.W != W)
 				imgByte = Image<Byte>::Resize(imgByte, D, H, W, static_cast<Interpolations>(CurrentTrainingRate.Interpolation));
 
-			if (DataProv->C == 3 && Bernoulli<bool>(CurrentTrainingRate.AutoAugment))
-				imgByte = Image<Byte>::AutoAugment(imgByte, PadD, PadH, PadW, DataProv->Mean, MirrorPad);
+			if (DataProv->C == 3 && Bernoulli<bool>(generator, CurrentTrainingRate.AutoAugment))
+				imgByte = Image<Byte>::AutoAugment(imgByte, PadD, PadH, PadW, DataProv->Mean, MirrorPad, generator);
 			else
 				imgByte = Image<Byte>::Padding(imgByte, PadD, PadH, PadW, DataProv->Mean, MirrorPad);
 
-			if (Bernoulli<bool>(CurrentTrainingRate.Distortion))
-				imgByte = Image<Byte>::Distorted(imgByte, CurrentTrainingRate.Scaling, CurrentTrainingRate.Rotation, static_cast<Interpolations>(CurrentTrainingRate.Interpolation), DataProv->Mean);
+			if (Bernoulli<bool>(generator, CurrentTrainingRate.Distortion))
+				imgByte = Image<Byte>::Distorted(imgByte, CurrentTrainingRate.Scaling, CurrentTrainingRate.Rotation, static_cast<Interpolations>(CurrentTrainingRate.Interpolation), DataProv->Mean, generator);
 
-			if (Bernoulli<bool>(CurrentTrainingRate.Cutout) && !CurrentTrainingRate.CutMix)
-				imgByte = Image<Byte>::RandomCutout(imgByte, DataProv->Mean);
+			if (Bernoulli<bool>(generator, CurrentTrainingRate.Cutout) && !CurrentTrainingRate.CutMix)
+				imgByte = Image<Byte>::RandomCutout(imgByte, DataProv->Mean, generator);
 
 			if (RandomCrop)
 				imgByte = Image<Byte>::Crop(imgByte, Positions::Center, D, H, W, DataProv->Mean);
 
 			if (CurrentTrainingRate.InputDropout > Float(0))
-				imgByte = Image<Byte>::Dropout(imgByte, CurrentTrainingRate.InputDropout, DataProv->Mean);
+				imgByte = Image<Byte>::Dropout(imgByte, CurrentTrainingRate.InputDropout, DataProv->Mean, generator);
 
 			for (auto c = 0ull; c < imgByte.C; c++)
 			{
@@ -2111,6 +2118,8 @@ namespace dnn
 			
 			for_i(batchSize, [=, &SampleLabels](const UInt batchIndex)
 			{
+				auto generator = std::mt19937(Seed<unsigned>());
+
 				const auto randomIndex = (index + batchIndex >= DataProv->TrainingSamplesCount) ? RandomTrainingSamples[batchIndex] : RandomTrainingSamples[index + batchIndex];
 				auto imgByte = Image<Byte>(DataProv->TrainingSamples[randomIndex]);
 
@@ -2121,12 +2130,12 @@ namespace dnn
 				auto mixLabels = DataProv->TrainingLabels[randomIndexMix];
 				
 				auto cutout = false;
-				if (Bernoulli<bool>(CurrentTrainingRate.Cutout))
+				if (Bernoulli<bool>(generator, CurrentTrainingRate.Cutout))
 				{
 					if (CurrentTrainingRate.CutMix)
 					{
-						double lambda = BetaDistribution<double>(1, 1);
-						imgByte = Image<Byte>::RandomCutMix(imgByte, imgByteMix, &lambda);
+						double lambda = BetaDistribution<double>(1, 1, generator);
+						imgByte = Image<Byte>::RandomCutMix(imgByte, imgByteMix, &lambda, generator);
 						SampleLabels[batchIndex] = GetCutMixLabelInfo(labels, mixLabels, lambda);
 					}
 					else
@@ -2144,28 +2153,28 @@ namespace dnn
 				if (CurrentTrainingRate.VerticalFlip && TrainingSamplesVFlip[randomIndex])
 					imgByte = Image<Byte>::VerticalMirror(imgByte);
 
-				if (DataProv->C == 3 && Bernoulli<bool>(CurrentTrainingRate.ColorCast))
-					imgByte = Image<Byte>::ColorCast(imgByte, CurrentTrainingRate.ColorAngle);
+				if (DataProv->C == 3 && Bernoulli<bool>(generator, CurrentTrainingRate.ColorCast))
+					imgByte = Image<Byte>::ColorCast(imgByte, CurrentTrainingRate.ColorAngle, generator);
 
 				if (resize)
 					imgByte = Image<Byte>::Resize(imgByte, D, H, W, Interpolations(CurrentTrainingRate.Interpolation));
 
-				if (DataProv->C == 3 && Bernoulli<bool>(CurrentTrainingRate.AutoAugment))
-					imgByte = Image<Byte>::AutoAugment(imgByte, PadD, PadH, PadW, DataProv->Mean, MirrorPad);
+				if (DataProv->C == 3 && Bernoulli<bool>(generator, CurrentTrainingRate.AutoAugment))
+					imgByte = Image<Byte>::AutoAugment(imgByte, PadD, PadH, PadW, DataProv->Mean, MirrorPad, generator);
 				else
 					imgByte = Image<Byte>::Padding(imgByte, PadD, PadH, PadW, DataProv->Mean, MirrorPad);
 
-				if (Bernoulli<bool>(CurrentTrainingRate.Distortion))
-					imgByte = Image<Byte>::Distorted(imgByte, CurrentTrainingRate.Scaling, CurrentTrainingRate.Rotation, Interpolations(CurrentTrainingRate.Interpolation), DataProv->Mean);
+				if (Bernoulli<bool>(generator, CurrentTrainingRate.Distortion))
+					imgByte = Image<Byte>::Distorted(imgByte, CurrentTrainingRate.Scaling, CurrentTrainingRate.Rotation, Interpolations(CurrentTrainingRate.Interpolation), DataProv->Mean, generator);
 
 				if (cutout)
-					imgByte = Image<Byte>::RandomCutout(imgByte, DataProv->Mean);
+					imgByte = Image<Byte>::RandomCutout(imgByte, DataProv->Mean, generator);
 
 				if (RandomCrop)
-					imgByte = Image<Byte>::RandomCrop(imgByte, D, H, W, DataProv->Mean);
+					imgByte = Image<Byte>::RandomCrop(imgByte, D, H, W, DataProv->Mean, generator);
 
 				if (CurrentTrainingRate.InputDropout > Float(0))
-					imgByte = Image<Byte>::Dropout(imgByte, CurrentTrainingRate.InputDropout, DataProv->Mean);
+					imgByte = Image<Byte>::Dropout(imgByte, CurrentTrainingRate.InputDropout, DataProv->Mean, generator);
 				
 				for (auto c = 0ull; c < imgByte.C; c++)
 				{
@@ -2228,6 +2237,8 @@ namespace dnn
 
 			for_i(batchSize, [=, &SampleLabels](const UInt batchIndex)
 			{
+				auto generator = std::mt19937(Seed<unsigned>());
+
 				const auto sampleIndex = ((index + batchIndex) >= DataProv->TestingSamplesCount) ? batchIndex : index + batchIndex;
 
 				auto labels = DataProv->TestingLabels[sampleIndex];
@@ -2235,8 +2246,8 @@ namespace dnn
 
 				auto imgByte = DataProv->TestingSamples[sampleIndex];
 
-				if (DataProv->C == 3 && Bernoulli<bool>(CurrentTrainingRate.ColorCast))
-					imgByte = Image<Byte>::ColorCast(imgByte, CurrentTrainingRate.ColorAngle);
+				if (DataProv->C == 3 && Bernoulli<bool>(generator, CurrentTrainingRate.ColorCast))
+					imgByte = Image<Byte>::ColorCast(imgByte, CurrentTrainingRate.ColorAngle, generator);
 
 				if (CurrentTrainingRate.HorizontalFlip && TestingSamplesHFlip[sampleIndex])
 					imgByte = Image<Byte>::HorizontalMirror(imgByte);
@@ -2247,22 +2258,22 @@ namespace dnn
 				if (resize)
 					imgByte = Image<Byte>::Resize(imgByte, D, H, W, Interpolations(CurrentTrainingRate.Interpolation));
 
-				if (DataProv->C == 3 && Bernoulli<bool>(CurrentTrainingRate.AutoAugment))
-					imgByte = Image<Byte>::AutoAugment(imgByte, PadD, PadH, PadW, DataProv->Mean, MirrorPad);
+				if (DataProv->C == 3 && Bernoulli<bool>(generator, CurrentTrainingRate.AutoAugment))
+					imgByte = Image<Byte>::AutoAugment(imgByte, PadD, PadH, PadW, DataProv->Mean, MirrorPad, generator);
 				else
 					imgByte = Image<Byte>::Padding(imgByte, PadD, PadH, PadW, DataProv->Mean, MirrorPad);
 
-				if (Bernoulli<bool>(CurrentTrainingRate.Distortion))
-					imgByte = Image<Byte>::Distorted(imgByte, CurrentTrainingRate.Scaling, CurrentTrainingRate.Rotation, Interpolations(CurrentTrainingRate.Interpolation), DataProv->Mean);
+				if (Bernoulli<bool>(generator, CurrentTrainingRate.Distortion))
+					imgByte = Image<Byte>::Distorted(imgByte, CurrentTrainingRate.Scaling, CurrentTrainingRate.Rotation, Interpolations(CurrentTrainingRate.Interpolation), DataProv->Mean, generator);
 
-				if (Bernoulli<bool>(CurrentTrainingRate.Cutout) && !CurrentTrainingRate.CutMix)
-					imgByte = Image<Byte>::RandomCutout(imgByte, DataProv->Mean);
+				if (Bernoulli<bool>(generator, CurrentTrainingRate.Cutout) && !CurrentTrainingRate.CutMix)
+					imgByte = Image<Byte>::RandomCutout(imgByte, DataProv->Mean, generator);
 				
 				if (RandomCrop)
 					imgByte = Image<Byte>::Crop(imgByte, Positions::Center, D, H, W, DataProv->Mean);
 
 				if (CurrentTrainingRate.InputDropout > Float(0))
-					imgByte = Image<Byte>::Dropout(imgByte, CurrentTrainingRate.InputDropout, DataProv->Mean);
+					imgByte = Image<Byte>::Dropout(imgByte, CurrentTrainingRate.InputDropout, DataProv->Mean, generator);
 
 				for (auto c = 0ull; c < imgByte.C; c++)
 				{
