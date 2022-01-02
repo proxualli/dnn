@@ -226,7 +226,7 @@ int main(int argc, char* argv[])
     
     DNNDataprovider(path);
     
-    if (DNNReadDefinition(model, msg) == 1)
+    if (DNNRead(model, msg) == 1)
     {
         if (DNNLoadDataset())
         {
