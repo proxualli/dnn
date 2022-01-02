@@ -3,6 +3,123 @@
 
 namespace dnn
 {
+	const std::string NormalizeDefinition(const std::string& definition)
+	{
+		auto defNorm = std::string(definition);
+
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), tab, "");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), " ", "");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), nwl + nwl + nwl + nwl + nwl + nwl + nwl + nwl, nwl);
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), nwl + nwl + nwl + nwl + nwl + nwl + nwl, nwl);
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), nwl + nwl + nwl + nwl + nwl + nwl, nwl);
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), nwl + nwl + nwl + nwl + nwl, nwl);
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), nwl + nwl + nwl + nwl, nwl);
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), nwl + nwl + nwl, nwl);
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), nwl + nwl, nwl);
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "[", nwl + "[");
+
+		defNorm = Trim(defNorm);
+
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "=Yes", "=Yes");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "=No", "=No");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "=True", "=True");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "=False", "=False");
+
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "Inputs=", "Inputs=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "WeightsScale=", "WeightsScale=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "WeightsLRM=", "WeightsLRM=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "WeightsWDM=", "WeightsWDM=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "BiasesScale=", "BiasesScale=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "BiasesLRM=", "BiasesLRM=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "BiasesWDM=", "BiasesWDM=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "Biases=", "Biases=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "Momentum=", "Momentum=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "Scaling=", "Scaling=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "Eps=", "Eps=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "Dim=", "Dim=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "MeanStd=", "MeanStd=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "ZeroPad=", "ZeroPad=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "MirrorPad=", "MirrorPad=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "RandomCrop=", "RandomCrop=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "Dropout=", "Dropout=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "DepthDrop=", "DepthDrop=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "FixedDepthDrop=", "FixedDepthDrop=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "Channels=", "Channels=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "Kernel=", "Kernel=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "Stride=", "Stride=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "Dilation=", "Dilation=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "Pad=", "Pad=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "Alpha=", "Alpha=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "Beta=", "Beta=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "Factor=", "Factor=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "Groups=", "Groups=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "Group=", "Group=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "Multiplier=", "Multiplier=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "AcrossChannel=", "AcrossChannel=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "LocalSize=", "LocalSize=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "K=", "K=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "CostIndex=", "CostIndex=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "GroupIndex=", "GroupIndex=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "LabelIndex=", "LabelIndex=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "LabelTrue=", "LabelTrue=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "LabelFalse=", "LabelFalse=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "Weight=", "Weight=");
+
+		auto types = magic_enum::enum_names<LayerTypes>();
+		for (auto type : types)
+		{
+			auto text = "Type=" + std::string(type);
+			defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), text, text);
+		}
+
+		auto activations = magic_enum::enum_names<Activations>();
+		for (auto activation : activations)
+		{
+			auto text = "Activation=" + std::string(activation);
+			defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), text, text);
+		}
+
+		auto costs = magic_enum::enum_names<Costs>();
+		for (auto cost : costs)
+		{
+			auto text = "Cost=" + std::string(cost);
+			defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), text, text);
+		}
+
+		auto fillers = magic_enum::enum_names<Fillers>();
+		for (auto filler : fillers)
+		{
+			auto textFillerWeights = "WeightsFiller=" + std::string(filler);
+			defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), textFillerWeights, textFillerWeights);
+
+			auto textFillerBiases = "BiasesFiller=" + std::string(filler);
+			defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), textFillerBiases, textFillerBiases);
+		}
+
+		auto fillerModes = magic_enum::enum_names<FillerModes>();
+		for (auto fillerMode : fillerModes)
+		{
+			auto textFillerMode = "(" + std::string(fillerMode) + ")";
+			defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), textFillerMode, textFillerMode);
+		}
+
+		auto datasets = magic_enum::enum_names<Datasets>();
+		for (auto dataset : datasets)
+		{
+			auto text = "Dataset=" + std::string(dataset);
+			defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), text, text);
+		}
+
+		auto algorithms = magic_enum::enum_names<Algorithms>();
+		for (auto algorithm : algorithms)
+		{
+			auto text = "Algorithm=" + std::string(algorithm);
+			defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), text, text);
+		}
+
+		return defNorm;
+	}
+
 	Model* Parse(const std::string& definition, CheckMsg& msg, const bool onlyCheck = false, Dataprovider* dataprovider = nullptr)
 	{
 		auto userLocale = std::setlocale(LC_ALL, "C");
