@@ -84,11 +84,9 @@ namespace dnn
 
 		void ForwardProp(const UInt batchSize, const bool training) final override
 		{
-			const auto plain = IsPlainFormat();
-			const auto size = plain ? CDHW() : PaddedCDHW();
+			const auto size = IsPlainFormat() ? CDHW() : PaddedCDHW();
 			const auto part = GetVectorPart(size);
-			const auto elements = batchSize * size;
-			const auto threads = GetThreads(elements);
+			const auto threads = GetThreads(batchSize * size);
 
 			if (Enabled && training)
 			{
@@ -185,11 +183,9 @@ namespace dnn
 #ifdef DNN_LEAN
 			ZeroGradient(batchSize);
 #endif
-			const auto plain = IsPlainFormat();
-			const auto size = plain ? CDHW() : PaddedCDHW();
+			const auto size = IsPlainFormat() ? CDHW() : PaddedCDHW();
 			const auto part = GetVectorPart(size);
-			const auto elements = batchSize * size;
-			const auto threads = GetThreads(elements);
+			const auto threads = GetThreads(batchSize * size);
 			
 			if (Enabled)
 			{

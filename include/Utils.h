@@ -87,7 +87,9 @@
 #define MAGIC_ENUM_RANGE_MAX 255
 #include "magic_enum.hpp"
 
-namespace dnn
+using namespace dnn;
+
+namespace
 {
 #ifdef _MSC_VER
 #define DNN_ALIGN(alignment) __declspec(align(alignment))
@@ -102,19 +104,27 @@ namespace dnn
 	typedef size_t UInt;
 	typedef unsigned char Byte;
 
-	constexpr auto ULTRALIGHT_COMPUTE = 3ull;	// number of threads
-	constexpr auto LIGHT_COMPUTE = 6ull;
-	constexpr auto MEDIUM_COMPUTE = 12ull;
-	constexpr auto HEAVY_COMPUTE = 16ull;
-	constexpr auto ULTRALIGHT_COMPUTE_ELEMENTSTHRESHOLD = 2097152ull;	// minimum element threshold for ULTRALIGHT_COMPUTE
-	constexpr auto LIGHT_COMPUTE_ELEMENTSTHRESHOLD = 8338608ull;
-	constexpr auto MEDIUM_COMPUTE_ELEMENTSTHRESHOLD = 68338608ull;
-	constexpr auto GetThreads(const UInt elements, const Float weight = 1) noexcept
+	const auto GetThreads(const UInt elements, const Float weight = 1) noexcept
 	{
-		//if (weight <= Float(0.01) || weight > Float(100))
-		//	throw std::invalid_argument("Weight is out of range in GetThreads function");
-		
-		return elements < static_cast<UInt>(weight * ULTRALIGHT_COMPUTE_ELEMENTSTHRESHOLD) ? ULTRALIGHT_COMPUTE : elements < static_cast<UInt>(weight * LIGHT_COMPUTE_ELEMENTSTHRESHOLD) ? LIGHT_COMPUTE : elements < static_cast<UInt>(weight * MEDIUM_COMPUTE_ELEMENTSTHRESHOLD) ? MEDIUM_COMPUTE : HEAVY_COMPUTE;
+		const auto ULTRALIGHT_THRESHOLD =   2097152ull;	// minimum threshold for ULTRALIGHT load
+		const auto LIGHT_THRESHOLD      =   8338608ull;
+		const auto MEDIUM_THRESHOLD     =  68338608ull;
+		const auto HEAVY_THRESHOLD      = 120338608ull;
+		const auto MAXIMUM_THRESHOLD    = 187538608ull;
+
+		const auto MAXIMUM = omp_get_max_threads();
+		const auto ULTRALIGHT = MAXIMUM >= 32 ?  3ull : MAXIMUM >= 24 ?  2ull :  2ull;
+		const auto LIGHT =      MAXIMUM >= 32 ?  6ull : MAXIMUM >= 24 ?  4ull :  4ull;
+		const auto MEDIUM =     MAXIMUM >= 32 ? 12ull : MAXIMUM >= 24 ?  8ull :  8ull;
+		const auto HEAVY =      MAXIMUM >= 32 ? 16ull : MAXIMUM >= 24 ? 12ull : 10ull;
+		const auto ULTRAHEAVY = MAXIMUM >= 32 ? 24ull : MAXIMUM >= 24 ? 16ull : 12ull;
+
+		return 
+			elements < static_cast<UInt>(weight * Float(ULTRALIGHT_THRESHOLD)) ? ULTRALIGHT : 
+			elements < static_cast<UInt>(weight * Float(LIGHT_THRESHOLD)) ? LIGHT : 
+			elements < static_cast<UInt>(weight * Float(MEDIUM_THRESHOLD)) ? MEDIUM : 
+			elements < static_cast<UInt>(weight * Float(HEAVY_THRESHOLD)) ? HEAVY : 
+			elements < static_cast<UInt>(weight * Float(MAXIMUM_THRESHOLD)) ? ULTRAHEAVY : MAXIMUM;
 	}
 
 	struct LabelInfo
@@ -140,7 +150,7 @@ namespace dnn
 	constexpr auto VectorSize = 4ull;
 	constexpr auto BlockedFmt = dnnl::memory::format_tag::nChw4c;
 #endif
-	constexpr auto GetVectorPart(const UInt& elements) { return (elements / VectorSize) * VectorSize; }
+	constexpr auto GetVectorPart(const UInt& elements) noexcept { return (elements / VectorSize) * VectorSize; }
 	constexpr auto DivUp(const UInt& c) noexcept { return (((c - 1) / VectorSize) + 1) * VectorSize; }
 	constexpr auto IsPlainDataFmt(const dnnl::memory::desc& md) noexcept { return md.data.format_kind == dnnl_blocked && md.data.format_desc.blocking.inner_nblks == 0; }
 	constexpr auto IsBlockedDataFmt(const dnnl::memory::desc& md) noexcept { return md.data.format_kind == dnnl_blocked && md.data.format_desc.blocking.inner_nblks == 1 && md.data.format_desc.blocking.inner_idxs[0] == 1 && (md.data.format_desc.blocking.inner_blks[0] == 4 || md.data.format_desc.blocking.inner_blks[0] == 8 || md.data.format_desc.blocking.inner_blks[0] == 16); }
@@ -207,7 +217,7 @@ namespace dnn
 	}
 
 	template<typename T>
-	static void InitArray(T* destination, const std::size_t elements, const int initValue = 0) noexcept
+	void InitArray(T* destination, const std::size_t elements, const int initValue = 0) noexcept
 	{
 		if (elements < 1048576ull)
 			::memset(destination, initValue, elements * sizeof(T));
@@ -466,21 +476,23 @@ namespace dnn
 	constexpr auto inline GetColorRange(const Float& min, const Float& max) noexcept { return (min == max) ? Float(0) : Float(255) / ((std::signbit(min) && std::signbit(max)) ? -(min + max) : (max - min)); }
 
 #if defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW32__)
-	static const auto nwl = std::string("\r\n");
+	const auto nwl = std::string("\r\n");
+#elif defined(__APPLE__)
+	const auto nwl = std::string("\r");
 #else // assuming Linux
-	static const auto nwl = std::string("\n");
+	const auto nwl = std::string("\n");
 #endif
-	static const auto tab = std::string("\t");
-	static const auto dtab = std::string("\t\t");	
+	const auto tab = std::string("\t");
+	const auto dtab = std::string("\t\t");	
 	
 #ifdef DNN_FAST_SEED
 	template<typename T>
-	inline static T Seed() noexcept
+	inline T Seed() noexcept
 	{
 		return static_cast<T>(__rdtsc());
 	}
 #else
-	static int GetPhysicalSeedType() noexcept
+	int GetPhysicalSeedType() noexcept
 	{
 		int abcd[4];						// return values from cpuid instruction
 		
@@ -496,7 +508,7 @@ namespace dnn
 		return 0;
 	}
 	
-	static int PhysicalSeedType = -1;
+	int PhysicalSeedType = -1;
 	template<typename T>
 	inline T Seed() noexcept
 	{
@@ -522,8 +534,9 @@ namespace dnn
 		return static_cast<T>(ran);			// return random number
 	}
 #endif
+
 	/*
-	inline static auto BernoulliVecFloat(const Float p = Float(0.5)) noexcept
+	inline auto BernoulliVecFloat(const Float p = Float(0.5)) noexcept
 	{
 		//if (p < 0 || p > 1) 
 		//	throw std::invalid_argument("Parameter out of range in BernoulliVecFloat function");
@@ -538,8 +551,9 @@ namespace dnn
 #endif
 	}
 	*/
+
 	template<typename T>
-	inline static auto Bernoulli(const Float p = Float(0.5)) noexcept
+	inline auto Bernoulli(const Float p = Float(0.5)) noexcept
 	{
 		//if (p < 0 || p > 1)
 		//	throw std::invalid_argument("Parameter out of range in Bernoulli function");
@@ -549,7 +563,7 @@ namespace dnn
 	}
 	
 	template<typename T>
-	inline static auto Bernoulli(std::mt19937& generator, const Float p = Float(0.5)) noexcept
+	inline auto Bernoulli(std::mt19937& generator, const Float p = Float(0.5)) noexcept
 	{
 		//if (p < 0 || p > 1)
 		//	throw std::invalid_argument("Parameter out of range in Bernoulli function");
@@ -558,9 +572,9 @@ namespace dnn
 	}
 
 	template<typename T>
-	inline static auto UniformInt(const T min, const T max, std::mt19937& generator) noexcept
+	inline auto UniformInt(std::mt19937& generator, const T min, const T max) noexcept
 	{
-		//static_assert(std::is_integral<T>::value, "Only integral type supported in UniformInt function");
+		static_assert(std::is_integral<T>::value, "Only integral type supported in UniformInt function");
 
 		//if (min > max)
 		//	throw std::invalid_argument("Parameter out of range in UniformInt function");
@@ -569,9 +583,9 @@ namespace dnn
 	}
 
 	template<typename T>
-	inline static auto UniformReal(const T min, const T max, std::mt19937& generator) noexcept
+	inline auto UniformReal(std::mt19937& generator, const T min, const T max) noexcept
 	{
-		//static_assert(std::is_floating_point<T>::value, "Only Floating point type supported in UniformReal function");
+		static_assert(std::is_floating_point<T>::value, "Only Floating point type supported in UniformReal function");
 
 		//if (min > max)
 		//		throw std::invalid_argument("Parameter out of range in UniformReal function");
@@ -580,7 +594,7 @@ namespace dnn
 	}
 
 	template<typename T>
-	static auto TruncatedNormal(const T m, const T s, const T limit, std::mt19937& generator)
+	auto TruncatedNormal(std::mt19937& generator, const T m, const T s, const T limit)
 	{
 		static_assert(std::is_floating_point<T>::value, "Only Floating point type supported in TruncatedNormal function");
 
@@ -686,35 +700,35 @@ namespace dnn
 	};
 
 	template<typename T>
-	inline static auto BetaDistribution(const T a, const T b, std::mt19937& generator) noexcept
+	inline auto BetaDistribution(std::mt19937& generator, const T a, const T b) noexcept
 	{
-		//static_assert(std::is_floating_point<T>::value, "Only Floating point type supported in BetaDistribution function");
+		static_assert(std::is_floating_point<T>::value, "Only Floating point type supported in BetaDistribution function");
 
 		return beta_distribution<T>(a, b)(generator);
 	}
 
-	static auto FloatToString(const Float value, const std::streamsize precision = 8)
+	auto FloatToString(const Float value, const std::streamsize precision = 8)
 	{
 		std::stringstream stream; 
 		stream << std::setprecision(precision) << value;
 		return stream.str();
 	}
 
-	static auto FloatToStringFixed(const Float value, const std::streamsize precision = 8)
+	auto FloatToStringFixed(const Float value, const std::streamsize precision = 8)
 	{
 		std::stringstream stream; 
 		stream << std::setprecision(precision) << std::fixed << value;
 		return stream.str();
 	}
 
-	static auto FloatToStringScientific(const Float value, const std::streamsize precision = 4)
+	auto FloatToStringScientific(const Float value, const std::streamsize precision = 4)
 	{
 		std::stringstream stream; 
 		stream << std::setprecision(precision) << std::scientific << value;
 		return stream.str();
 	}
 
-   	static auto GetFileSize(std::string fileName)
+   	auto GetFileSize(std::string fileName)
 	{
 		auto file = std::ifstream(fileName, std::ifstream::in | std::ifstream::binary);
 
@@ -730,13 +744,13 @@ namespace dnn
 		return static_cast<std::streamsize>(end - start);
 	}
 
-	static auto StringToLower(std::string text)
+	auto StringToLower(std::string text)
 	{
 		std::transform(text.begin(), text.end(), text.begin(), ::tolower);
 		return text;
 	}
 
-	static auto IsStringBool(std::string text)
+	auto IsStringBool(std::string text)
 	{
 		const auto textLower = StringToLower(text);
 		
@@ -746,7 +760,7 @@ namespace dnn
 		return false;
 	}
 
-	static auto StringToBool(std::string text)
+	auto StringToBool(std::string text)
 	{
 		const auto textLower = StringToLower(text);
 		
@@ -756,7 +770,7 @@ namespace dnn
 		return false;
 	}
 
-	static auto GetTotalFreeMemory()
+	auto GetTotalFreeMemory()
 	{
 #if defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW32__)
 		MEMORYSTATUSEX statusEx;
@@ -776,7 +790,7 @@ namespace dnn
 #endif
 	}
 	
-	static auto CaseInsensitiveReplace(std::string::const_iterator begin, std::string::const_iterator end, const std::string& before, const std::string& after)
+	auto CaseInsensitiveReplace(std::string::const_iterator begin, std::string::const_iterator end, const std::string& before, const std::string& after)
 	{
 		auto retval = std::string("");
 		auto dest = std::back_insert_iterator<std::string>(retval);
@@ -797,7 +811,7 @@ namespace dnn
 	}
 
 	// From Stack Overflow https://stackoverflow.com/questions/216823/whats-the-best-way-to-trim-stdstring
-	static auto Trim(std::string text)
+	auto Trim(std::string text)
 	{
 		text.erase(text.begin(), std::find_if(text.begin(), text.end(), [](int ch) { return !std::isspace(ch); }));
 		text.erase(std::find_if(text.rbegin(), text.rend(), [](int ch) { return !std::isspace(ch); }).base(), text.end());
@@ -805,7 +819,7 @@ namespace dnn
 	}
 
 	// from Stack Overflow https://stackoverflow.com/questions/6089231/getting-std-ifstream-to-handle-lf-cr-and-crlf
-	static auto& SafeGetline(std::istream& is, std::string& line)
+	auto& SafeGetline(std::istream& is, std::string& line)
 	{
 		line.clear();
 

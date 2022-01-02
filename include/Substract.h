@@ -113,11 +113,9 @@ namespace dnn
 #endif
 				Device.stream.wait();
 #else
-				const auto plain = IsPlainFormat();
-				const auto size = plain ? CDHW() : PaddedCDHW();
+				const auto size = IsPlainFormat() ? CDHW() : PaddedCDHW();
 				const auto part = GetVectorPart(size);
-				const auto elements = batchSize * size;
-				const auto threads = GetThreads(elements);
+				const auto threads = GetThreads(batchSize * size);
 				const auto inputs = Inputs.size();
 				
 				switch (inputs)
@@ -250,11 +248,9 @@ namespace dnn
 			ZeroGradientMulti(batchSize);
 #endif // DNN_LEAN
 
-			const auto plain = IsPlainFormat();
-			const auto size = plain ? CDHW() : PaddedCDHW();
+			const auto size = IsPlainFormat() ? CDHW() : PaddedCDHW();
 			const auto part = GetVectorPart(size);
-			const auto elements = batchSize * size;
-			const auto threads = GetThreads(elements);
+			const auto threads = GetThreads(batchSize * size);
 			const auto inputs = Inputs.size();
 
 #ifdef DNN_STOCHASTIC

@@ -154,7 +154,7 @@ namespace dnn
 		{
 			Image img(image);
 
-			const auto operation = UniformInt<UInt>(0, 24, generator);
+			const auto operation = UniformInt<UInt>(generator, 0, 24);
 
 			switch (operation)
 			{
@@ -629,7 +629,7 @@ namespace dnn
 
 			imgSource.RGBtoHSL();
 
-			const auto shift = Float(Bernoulli<bool>(generator, Float(0.5)) ? static_cast<int>(UniformInt<UInt>(0, 2 * angle, generator)) - static_cast<int>(angle) : 0);
+			const auto shift = Float(Bernoulli<bool>(generator, Float(0.5)) ? static_cast<int>(UniformInt<UInt>(generator, 0, 2 * angle)) - static_cast<int>(angle) : 0);
 
 			for (auto d = 0u; d < image.D; d++)
 				for (auto h = 0u; h < image.H; h++)
@@ -772,11 +772,11 @@ namespace dnn
 
 		static Image Distorted(const Image& image, const Float scale, const Float angle, const Interpolations interpolation, const std::vector<Float>& mean, std::mt19937& generator)
 		{
-			const auto zoom = scale / Float(100) * UniformReal<Float>(Float(-1), Float(1), generator);
+			const auto zoom = scale / Float(100) * UniformReal<Float>(generator, Float(-1), Float(1));
 			const auto height = static_cast<UInt>(static_cast<int>(image.H) + static_cast<int>(std::round(static_cast<int>(image.H) * zoom)));
 			const auto width = static_cast<UInt>(static_cast<int>(image.W) + static_cast<int>(std::round(static_cast<int>(image.W) * zoom)));
 
-			return Image::Crop(Image::Rotate(Image::Resize(image, image.D, height, width, interpolation), angle * UniformReal<Float>(Float(-1), Float(1), generator), interpolation, mean), Positions::Center, image.D, image.H, image.W, mean);
+			return Image::Crop(Image::Rotate(Image::Resize(image, image.D, height, width, interpolation), angle * UniformReal<Float>(generator, Float(-1), Float(1)), interpolation, mean), Positions::Center, image.D, image.H, image.W, mean);
 		}
 
 		static Image Dropout(const Image& image, const Float dropout, const std::vector<Float>& mean, std::mt19937& generator)
@@ -1053,13 +1053,13 @@ namespace dnn
 			const auto minH = std::min(img.H, image.H);
 			const auto minW = std::min(img.W, image.W);
 			
-			const auto srcDdelta = img.D < image.D ? UniformInt<UInt>(0, image.D - img.D, generator) : 0ull;
-			const auto srcHdelta = img.H < image.H ? UniformInt<UInt>(0, image.H - img.H, generator) : 0ull;
-			const auto srcWdelta = img.W < image.W ? UniformInt<UInt>(0, image.W - img.W, generator) : 0ull;
+			const auto srcDdelta = img.D < image.D ? UniformInt<UInt>(generator, 0, image.D - img.D) : 0ull;
+			const auto srcHdelta = img.H < image.H ? UniformInt<UInt>(generator, 0, image.H - img.H) : 0ull;
+			const auto srcWdelta = img.W < image.W ? UniformInt<UInt>(generator, 0, image.W - img.W) : 0ull;
 			
-			const auto dstDdelta = img.D > image.D ? UniformInt<UInt>(0, img.D - image.D, generator) : 0ull;
-			const auto dstHdelta = img.H > image.H ? UniformInt<UInt>(0, img.H - image.H, generator) : 0ull;
-			const auto dstWdelta = img.W > image.W ? UniformInt<UInt>(0, img.W - image.W, generator) : 0ull;
+			const auto dstDdelta = img.D > image.D ? UniformInt<UInt>(generator, 0, img.D - image.D) : 0ull;
+			const auto dstHdelta = img.H > image.H ? UniformInt<UInt>(generator, 0, img.H - image.H) : 0ull;
+			const auto dstWdelta = img.W > image.W ? UniformInt<UInt>(generator, 0, img.W - image.W) : 0ull;
 
 			for (auto c = 0ull; c < img.C; c++)
 				for (auto d = 0ull; d < minD; d++)
@@ -1074,10 +1074,10 @@ namespace dnn
 		{
 			Image img(image);
 
-			const auto centerH = UniformInt<UInt>(0, img.H, generator);
-			const auto centerW = UniformInt<UInt>(0, img.W, generator);
-			const auto rangeH = UniformInt<UInt>(img.H / 8, img.H / 4, generator);
-			const auto rangeW = UniformInt<UInt>(img.W / 8, img.W / 4, generator);
+			const auto centerH = UniformInt<UInt>(generator, 0, img.H);
+			const auto centerW = UniformInt<UInt>(generator, 0, img.W);
+			const auto rangeH = UniformInt<UInt>(generator, img.H / 8, img.H / 4);
+			const auto rangeW = UniformInt<UInt>(generator, img.W / 8, img.W / 4);
 			const auto startH = static_cast<long>(centerH) - static_cast<long>(rangeH) > 0l ? centerH - rangeH : 0ull;
 			const auto startW = static_cast<long>(centerW) - static_cast<long>(rangeW) > 0l ? centerW - rangeW : 0ull;
 			const auto enheight = centerH + rangeH < img.H ? centerH + rangeH : img.H;
@@ -1105,8 +1105,8 @@ namespace dnn
 			const auto cutRate = std::sqrt(1.0 - *lambda);
 			const auto cutH = static_cast<int>(static_cast<double>(img.H) * cutRate);
 			const auto cutW = static_cast<int>(static_cast<double>(img.W) * cutRate);
-			const auto cy = UniformInt<int>(0, static_cast<int>(img.H), generator);
-			const auto cx = UniformInt<int>(0, static_cast<int>(img.W), generator);
+			const auto cy = UniformInt<int>(generator, 0, static_cast<int>(img.H));
+			const auto cx = UniformInt<int>(generator, 0, static_cast<int>(img.W));
 			const auto bby1 = Clamp<int>(cy - cutH / 2, 0, static_cast<int>(img.H));
 			const auto bby2 = Clamp<int>(cy + cutH / 2, 0, static_cast<int>(img.H));
 			const auto bbx1 = Clamp<int>(cx - cutW / 2, 0, static_cast<int>(img.W));
@@ -1185,7 +1185,7 @@ namespace dnn
 		{
 			Image img(image.C, image.D, image.H, image.W);
 
-			constexpr T maximum = std::is_floating_point_v<T> ?  static_cast<T>(1) :  static_cast<T>(255);
+			constexpr T maximum = std::is_floating_point_v<T> ? static_cast<T>(1) : static_cast<T>(255);
 
 			for (auto c = 0ull; c < img.C; c++)
 				for (auto d = 0ull; d < img.D; d++)

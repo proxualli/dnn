@@ -114,16 +114,16 @@ extern "C" DNN_API bool DNNLoadDataset()
 	return false;
 }
 
-extern "C" DNN_API bool DNNCheckDefinition(std::string& definition, CheckMsg& checkMsg)
+extern "C" DNN_API bool DNNCheck(std::string& definition, CheckMsg& checkMsg)
 {
-	return Definition::CheckDefinition(definition, checkMsg);
+	return Check(definition, checkMsg);
 }
 
-extern "C" DNN_API int DNNReadDefinition(const std::string& definition, CheckMsg& checkMsg)
+extern "C" DNN_API int DNNRead(const std::string& definition, CheckMsg& checkMsg)
 {
 	dnn::Model* ptr = nullptr;
 
-	ptr = Definition::ReadDefinition(definition, dataprovider.get(), checkMsg);
+	ptr = Read(definition, dataprovider.get(), checkMsg);
 
 	if (ptr)
 	{
@@ -137,11 +137,11 @@ extern "C" DNN_API int DNNReadDefinition(const std::string& definition, CheckMsg
 	return 0;
 }
 
-extern "C" DNN_API int DNNLoadDefinition(const std::string& fileName, CheckMsg& checkMsg)
+extern "C" DNN_API int DNNLoad(const std::string& fileName, CheckMsg& checkMsg)
 {
 	dnn::Model* ptr = nullptr;
 
-	ptr = Definition::LoadDefinition(fileName, dataprovider.get(), checkMsg);
+	ptr = Load(fileName, dataprovider.get(), checkMsg);
 	
 	if (ptr)
 	{

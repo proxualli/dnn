@@ -307,6 +307,123 @@ namespace dnn
 		bool Locked;
 	};
 
+	const std::string Normalize(const std::string& definition)
+	{
+		auto defNorm = std::string(definition);
+
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), tab, "");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), " ", "");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), nwl + nwl + nwl + nwl + nwl + nwl + nwl + nwl, nwl);
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), nwl + nwl + nwl + nwl + nwl + nwl + nwl, nwl);
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), nwl + nwl + nwl + nwl + nwl + nwl, nwl);
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), nwl + nwl + nwl + nwl + nwl, nwl);
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), nwl + nwl + nwl + nwl, nwl);
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), nwl + nwl + nwl, nwl);
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), nwl + nwl, nwl);
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "[", nwl + "[");
+
+		defNorm = Trim(defNorm);
+
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "=Yes", "=Yes");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "=No", "=No");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "=True", "=True");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "=False", "=False");
+
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "Inputs=", "Inputs=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "WeightsScale=", "WeightsScale=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "WeightsLRM=", "WeightsLRM=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "WeightsWDM=", "WeightsWDM=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "BiasesScale=", "BiasesScale=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "BiasesLRM=", "BiasesLRM=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "BiasesWDM=", "BiasesWDM=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "Biases=", "Biases=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "Momentum=", "Momentum=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "Scaling=", "Scaling=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "Eps=", "Eps=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "Dim=", "Dim=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "MeanStd=", "MeanStd=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "ZeroPad=", "ZeroPad=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "MirrorPad=", "MirrorPad=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "RandomCrop=", "RandomCrop=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "Dropout=", "Dropout=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "DepthDrop=", "DepthDrop=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "FixedDepthDrop=", "FixedDepthDrop=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "Channels=", "Channels=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "Kernel=", "Kernel=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "Stride=", "Stride=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "Dilation=", "Dilation=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "Pad=", "Pad=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "Alpha=", "Alpha=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "Beta=", "Beta=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "Factor=", "Factor=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "Groups=", "Groups=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "Group=", "Group=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "Multiplier=", "Multiplier=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "AcrossChannel=", "AcrossChannel=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "LocalSize=", "LocalSize=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "K=", "K=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "CostIndex=", "CostIndex=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "GroupIndex=", "GroupIndex=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "LabelIndex=", "LabelIndex=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "LabelTrue=", "LabelTrue=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "LabelFalse=", "LabelFalse=");
+		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "Weight=", "Weight=");
+
+		auto types = magic_enum::enum_names<LayerTypes>();
+		for (auto type : types)
+		{
+			auto text = "Type=" + std::string(type);
+			defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), text, text);
+		}
+
+		auto activations = magic_enum::enum_names<Activations>();
+		for (auto activation : activations)
+		{
+			auto text = "Activation=" + std::string(activation);
+			defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), text, text);
+		}
+
+		auto costs = magic_enum::enum_names<Costs>();
+		for (auto cost : costs)
+		{
+			auto text = "Cost=" + std::string(cost);
+			defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), text, text);
+		}
+
+		auto fillers = magic_enum::enum_names<Fillers>();
+		for (auto filler : fillers)
+		{
+			auto textFillerWeights = "WeightsFiller=" + std::string(filler);
+			defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), textFillerWeights, textFillerWeights);
+
+			auto textFillerBiases = "BiasesFiller=" + std::string(filler);
+			defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), textFillerBiases, textFillerBiases);
+		}
+
+		auto fillerModes = magic_enum::enum_names<FillerModes>();
+		for (auto fillerMode : fillerModes)
+		{
+			auto textFillerMode = "(" + std::string(fillerMode) + ")";
+			defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), textFillerMode, textFillerMode);
+		}
+
+		auto datasets = magic_enum::enum_names<Datasets>();
+		for (auto dataset : datasets)
+		{
+			auto text = "Dataset=" + std::string(dataset);
+			defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), text, text);
+		}
+
+		auto algorithms = magic_enum::enum_names<Algorithms>();
+		for (auto algorithm : algorithms)
+		{
+			auto text = "Algorithm=" + std::string(algorithm);
+			defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), text, text);
+		}
+
+		return defNorm;
+	}
+
 	class Model
 	{
 	private:
@@ -546,6 +663,18 @@ namespace dnn
 				neuronsSize += layer->GetNeuronsSize(batchSize);
 
 			return neuronsSize;
+		}
+
+		void SaveDefinition(const std::string& fileName)
+		{
+			std::fstream file;
+
+			file.open(fileName, std::ios::out);
+			if (file)
+			{
+				file << CaseInsensitiveReplace(Definition.begin(), Definition.end(), nwl, "\n");
+				file.close();
+			}
 		}
 
 		bool BatchNormalizationUsed() const
@@ -1511,7 +1640,7 @@ namespace dnn
 					{
 						State.store(States::Training);
 
-						const auto shuffleCount = UniformInt<UInt>(16, 32, generator);
+						const auto shuffleCount = UniformInt<UInt>(generator, 16, 32);
 						for (auto shuffle = 0ull; shuffle < shuffleCount; shuffle++)
 							std::shuffle(std::begin(RandomTrainingSamples), std::end(RandomTrainingSamples), generator);
 
@@ -1745,16 +1874,18 @@ namespace dnn
 							TestErrorPercentage = CostLayers[CostIndex]->TestErrorPercentage;
 							Accuracy = Float(100) - TestErrorPercentage;
 
-							// save the weights
+							// save the weights and definition
 							State.store(States::SaveWeights);
-							auto directory = DataProv->StorageDirectory / std::string("definitions") / Name;
-							auto fileName = (directory / (std::to_string(CurrentEpoch) + std::string("-") + std::to_string(CurrentCycle) + std::string("-(") + StringToLower(std::string(magic_enum::enum_name<Datasets>(Dataset))) + std::string(")(") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(Optimizer))) + std::string(")-") + std::to_string(TrainErrors) + std::string("-") + std::to_string(TestErrors) + std::string(".bin"))).string();
-							
-							std::filesystem::create_directories(directory);
-							SaveWeights(fileName, PersistOptimizer);
-							
-							State.store(States::NewEpoch);
+							const auto fileName = PersistOptimizer ? (std::string("(") + StringToLower(std::string(magic_enum::enum_name<Datasets>(Dataset))) + std::string(")(") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(Optimizer))) + std::string(").bin")) : (std::string("(") + StringToLower(std::string(magic_enum::enum_name<Datasets>(Dataset))) + std::string(").bin"));
+							const auto dir = DataProv->StorageDirectory / std::string("definitions") / Name;
+							const auto epoch = std::string("(") + StringToLower(std::string(magic_enum::enum_name<Datasets>(Dataset))) + std::string(")(") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(Optimizer))) + std::string(")") + std::to_string(CurrentEpoch) + std::string("-") + std::to_string(CurrentCycle) + std::string("-") + std::to_string(TrainErrors) + std::string("-") + std::to_string(TestErrors);
+							const auto subdir = dir / epoch;
+							std::filesystem::current_path(dir);
+							std::filesystem::create_directories(subdir);
+							SaveWeights((subdir / fileName).string(), PersistOptimizer);
+							SaveDefinition((subdir / std::string("model.txt")).string());
 
+							State.store(States::NewEpoch);
 							NewEpoch(CurrentCycle, CurrentEpoch, TotalEpochs, static_cast<UInt>(CurrentTrainingRate.Optimizer), CurrentTrainingRate.Beta2, CurrentTrainingRate.Gamma, CurrentTrainingRate.Eps, CurrentTrainingRate.HorizontalFlip, CurrentTrainingRate.VerticalFlip, CurrentTrainingRate.InputDropout, CurrentTrainingRate.Cutout, CurrentTrainingRate.CutMix, CurrentTrainingRate.AutoAugment, CurrentTrainingRate.ColorCast, CurrentTrainingRate.ColorAngle, CurrentTrainingRate.Distortion, static_cast<UInt>(CurrentTrainingRate.Interpolation), CurrentTrainingRate.Scaling, CurrentTrainingRate.Rotation, CurrentTrainingRate.MaximumRate, CurrentTrainingRate.BatchSize, CurrentTrainingRate.Height, CurrentTrainingRate.Width, CurrentTrainingRate.Momentum, CurrentTrainingRate.L2Penalty, CurrentTrainingRate.Dropout, AvgTrainLoss, TrainErrorPercentage, Float(100) - TrainErrorPercentage, TrainErrors, AvgTestLoss, TestErrorPercentage, Float(100) - TestErrorPercentage, TestErrors);
 						}
 						else
@@ -1972,7 +2103,7 @@ namespace dnn
 			{
 				if (CurrentTrainingRate.CutMix)
 				{
-					double lambda = BetaDistribution<double>(1, 1, generator);
+					double lambda = BetaDistribution<double>(generator, 1, 1);
 					imgByte = Image<Byte>::RandomCutMix(imgByte, imgByteMix, &lambda, generator);
 					SampleLabel = GetCutMixLabelInfo(label, labelMix, lambda);
 				}
@@ -2134,7 +2265,7 @@ namespace dnn
 				{
 					if (CurrentTrainingRate.CutMix)
 					{
-						double lambda = BetaDistribution<double>(1, 1, generator);
+						double lambda = BetaDistribution<double>(generator, 1, 1);
 						imgByte = Image<Byte>::RandomCutMix(imgByte, imgByteMix, &lambda, generator);
 						SampleLabels[batchIndex] = GetCutMixLabelInfo(labels, mixLabels, lambda);
 					}

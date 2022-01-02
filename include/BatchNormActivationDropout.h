@@ -141,14 +141,18 @@ namespace dnn
 		void ForwardProp(const UInt batchSize, const bool training) final override
 		{
 			const auto strideH = W * VectorSize;
+			const auto plain = IsPlainFormat();
+			const auto size = plain ? CDHW() : PaddedCDHW();
 
 			if (!training)
 			{
-				if (IsPlainFormat()) // nchw
+				const auto threads = GetThreads(batchSize * size, Float(0.25));
+
+				if (plain) // nchw
 				{
 					const auto partialHW = GetVectorPart(HW());
 
-					for_i(C, [=](UInt c)
+					for_i(C, threads, [=](UInt c)
 					{
 						const auto runningMean = RunningMean[c];
 						const auto invStdDev = Float(1) / std::sqrt(RunningVariance[c] + Eps);
@@ -169,7 +173,7 @@ namespace dnn
 				}
 				else
 				{
-					for_i(PaddedC / VectorSize, [=](UInt c)
+					for_i(PaddedC / VectorSize, threads, [=](UInt c)
 					{
 						const auto channelOffset = c * VectorSize;
 						const auto mapOffset = channelOffset * HW();
@@ -195,14 +199,15 @@ namespace dnn
 			}
 			else
 			{
+				const auto threads = GetThreads(batchSize * size, Float(0.1));
 #ifndef DNN_LEAN
 				const auto vecZero = VecFloat(0);
 #endif
-				if (IsPlainFormat())
+				if (plain)
 				{
 					const auto partialHW = GetVectorPart(HW());
 
-					for_i(C, [=](UInt c)
+					for_i(C, threads, [=](UInt c)
 					{
 						auto generator = Ranvec1(Seed<int>(), static_cast<int>(std::hash<std::thread::id>()(std::this_thread::get_id())), 3);
 						auto vecMean = VecFloat(0);
@@ -344,7 +349,7 @@ namespace dnn
 				}
 				else 
 				{
-					for_i(PaddedC / VectorSize, [=](UInt c)
+					for_i(PaddedC / VectorSize, threads, [=](UInt c)
 					{
 						auto generator = Ranvec1(Seed<int>(), static_cast<int>(std::hash<std::thread::id>()(std::this_thread::get_id())), 3);
 						const auto channelOffset = c * VectorSize;
@@ -480,12 +485,15 @@ namespace dnn
 
 			const auto strideH = W * VectorSize;
 			const auto enabled = Enabled;
+			const auto plain = IsPlainFormat();
+			const auto size = plain ? CDHW() : PaddedCDHW();
+			const auto threads = GetThreads(batchSize * size, Float(0.1));
 
-			if (IsPlainFormat())
+			if (plain)
 			{
 				const auto partialHW = GetVectorPart(HW());
 				
-				for_i(C, [=](UInt c)
+				for_i(C, threads, [=](UInt c)
 				{
 					const auto weightedInvStdDev = Scaling ? InvStdDev[c] * Weights[c] : InvStdDev[c];
 					const auto biases = Scaling && HasBias ? Biases[c] : Float(0);
@@ -610,7 +618,7 @@ namespace dnn
 			}
 			else
 			{
-				for_i(PaddedC / VectorSize, [=](UInt c)
+				for_i(PaddedC / VectorSize, threads, [=](UInt c)
 				{
 					const auto channelOffset = c * VectorSize;
 					const auto mapOffset = channelOffset * HW();

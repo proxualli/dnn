@@ -104,16 +104,20 @@ namespace dnn
 		}
 
 		void ForwardProp(const UInt batchSize, const bool training) final override
-		{
+		{		
 			const auto strideH = W * VectorSize;
-
+			const auto plain = IsPlainFormat();
+			const auto size = plain ? CDHW() : PaddedCDHW();
+			
 			if (!training)
 			{
-				if (IsPlainFormat()) // nchw
+				const auto threads = GetThreads(batchSize * size, Float(0.25));
+
+				if (plain) // nchw
 				{
 					const auto partialHW = GetVectorPart(HW());
 
-					for_i(C, [=](UInt c)
+					for_i(C, threads, [=](UInt c)
 					{
 						const auto invStdDev = Float(1) / std::sqrt(RunningVariance[c] + Eps);
 						const auto weightedInvStdDev = Scaling ? invStdDev * Weights[c] : invStdDev;
@@ -132,7 +136,7 @@ namespace dnn
 				}
 				else
 				{
-					for_i(PaddedC / VectorSize, [=](UInt c)
+					for_i(PaddedC / VectorSize, threads, [=](UInt c)
 					{
 						const auto channelOffset = c * VectorSize;
 						const auto mapOffset = channelOffset * HW();
@@ -158,14 +162,15 @@ namespace dnn
 			}
 			else
 			{
+				const auto threads = GetThreads(batchSize * size, Float(0.1));
 #ifndef DNN_LEAN
 				const auto vecZero = VecFloat(0);
 #endif
-				if (IsPlainFormat())
+				if (plain)
 				{
 					const auto partialHW = GetVectorPart(HW());
 
-					for_i(C, [=](UInt c)
+					for_i(C, threads, [=](UInt c)
 					{
 						auto vecMean = VecFloat(0);
 						auto mean = Float(0);
@@ -243,7 +248,7 @@ namespace dnn
 				else
 				{
 
-					for_i(PaddedC / VectorSize, [=](UInt c)
+					for_i(PaddedC / VectorSize, threads, [=](UInt c)
 					{
 						const auto channelOffset = c * VectorSize;
 						const auto mapOffset = channelOffset * HW();
@@ -325,12 +330,15 @@ namespace dnn
 #endif // DNN_LEAN
 
 			const auto strideH = W * VectorSize;
+			const auto plain = IsPlainFormat();
+			const auto size = plain ? CDHW() : PaddedCDHW();
+			const auto threads = GetThreads(batchSize * size, Float(0.1));
 
-			if (IsPlainFormat())
+			if (plain)
 			{
 				const auto partialHW = GetVectorPart(HW());
 
-				for_i(C, [=](UInt c)
+				for_i(C, threads, [=](UInt c)
 				{
 					const auto weightedInvStdDev = Scaling ? InvStdDev[c] * Weights[c] : InvStdDev[c];
 					const auto biases = Scaling && HasBias ? Biases[c] : Float(0);
@@ -454,7 +462,7 @@ namespace dnn
 			}
 			else
 			{
-				for_i(PaddedC / VectorSize, [=](UInt c)
+				for_i(PaddedC / VectorSize, threads, [=](UInt c)
 				{
 					const auto channelOffset = c * VectorSize;
 					const auto mapOffset = channelOffset * HW();

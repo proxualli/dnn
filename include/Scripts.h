@@ -17,11 +17,13 @@ namespace scripts
     typedef unsigned char Byte;
 
 #if defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW32__)
-    static const auto nwl = std::string("\r\n");
+    const auto nwl = std::string("\r\n");
+#elif defined(__APPLE__)
+    const auto nwl = std::string("\r");
 #else // assuming Linux
-    static const auto nwl = std::string("\n");
+    const auto nwl = std::string("\n");
 #endif
-
+   
     enum class Scripts
     {
         densenet = 0,

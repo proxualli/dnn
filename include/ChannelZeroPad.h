@@ -68,8 +68,7 @@ namespace dnn
 		void ForwardProp(const UInt batchSize, const bool training) final override
 		{
 			const auto plain = IsPlainFormat();
-			const auto elements = plain ? batchSize * CDHW() : batchSize * PaddedCDHW();
-			const auto threads = GetThreads(elements);
+			const auto threads = GetThreads(batchSize * (plain ? CDHW() : PaddedCDHW()));
 
 			DNN_UNREF_PAR(training);
 
@@ -259,8 +258,7 @@ namespace dnn
 #endif // DNN_LEAN
 
 			const auto plain = IsPlainFormat();
-			const auto elements = plain ? batchSize * CDHW() : batchSize * PaddedCDHW();
-			const auto threads = GetThreads(elements);
+			const auto threads = GetThreads(batchSize * (plain ? CDHW() : PaddedCDHW()));
 
 			if (InputLayer->DstMemDesc->data.ndims == 2)
 			{
@@ -270,7 +268,7 @@ namespace dnn
 						InputLayer->NeuronsD1[c] += NeuronsD1[c];
 				else
 #endif
-					for_i(batchSize, LIGHT_COMPUTE, [=](UInt n)
+					for_i(batchSize, threads, [=](UInt n)
 					{
 						const auto offsetN = n * CDHW();
 						const auto offsetNinput = n * InputLayer->CDHW();
