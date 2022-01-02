@@ -535,23 +535,6 @@ namespace
 	}
 #endif
 
-	/*
-	inline auto BernoulliVecFloat(const Float p = Float(0.5)) noexcept
-	{
-		//if (p < 0 || p > 1) 
-		//	throw std::invalid_argument("Parameter out of range in BernoulliVecFloat function");
-
-		static thread_local auto generator = Ranvec1(Seed<int>(), static_cast<int>(std::hash<std::thread::id>()(std::this_thread::get_id())), 3);
-#if defined(DNN_AVX512BW) || defined(DNN_AVX512)
-		return select(generator.random16f() < p, VecFloat(1), VecFloat(0));
-#elif defined(DNN_AVX2) || defined(DNN_AVX)
-		return select(generator.random8f() < p, VecFloat(1), VecFloat(0));
-#elif defined(DNN_SSE42) || defined(DNN_SSE41)
-		return select(generator.random4f() < p, VecFloat(1), VecFloat(0));
-#endif
-	}
-	*/
-
 	template<typename T>
 	inline auto Bernoulli(const Float p = Float(0.5)) noexcept
 	{
@@ -601,8 +584,6 @@ namespace
 		if (limit < s)
 	     throw std::invalid_argument("limit out of range in TruncatedNormal function");
 
-		//static thread_local auto generator = std::mt19937(Seed<unsigned>());
-		
 		T x;
 		do { x = std::normal_distribution<T>(T(0), s)(generator); }
 		while (std::abs(x) > limit); // reject if beyond limit
