@@ -3,6 +3,8 @@
 
 namespace dnn
 {
+	using namespace dnn::image;
+
 	enum class Datasets
 	{
 		cifar10 = 0,

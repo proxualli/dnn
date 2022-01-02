@@ -10,6 +10,8 @@
 
 namespace dnn
 {
+	namespace image
+	{
 	constexpr auto MaximumLevels = 10;		// number of levels in AutoAugment
 	constexpr auto FloatLevel(const int level, const Float minValue = Float(0.1), const Float maxValue = Float(1.9)) noexcept { return (Float(level) * (maxValue - minValue) / MaximumLevels) + minValue; }
 	constexpr auto IntLevel(const int level, const int minValue = 0, const int maxValue = MaximumLevels) noexcept { return (level * (maxValue - minValue) / MaximumLevels) + minValue; }
@@ -1309,4 +1311,5 @@ namespace dnn
 			return img;
 		}
 	};
+	}
 }
