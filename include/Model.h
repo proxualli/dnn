@@ -307,7 +307,7 @@ namespace dnn
 		bool Locked;
 	};
 
-	const std::string Normalize(const std::string& definition)
+	const std::string NormalizeDefinition(const std::string& definition)
 	{
 		auto defNorm = std::string(definition);
 

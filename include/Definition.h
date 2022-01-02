@@ -2576,7 +2576,7 @@ namespace dnn
 
 	bool Check(std::string& definition, CheckMsg& checkMsg)
 	{
-		definition = Normalize(definition);
+		definition = NormalizeDefinition(definition);
 
 		Parse(definition, checkMsg, true);
 
@@ -2585,7 +2585,7 @@ namespace dnn
 
 	Model* Read(const std::string& definition, Dataprovider* dataprovider, CheckMsg& checkMsg)
 	{
-		Model* model = Parse(Normalize(definition), checkMsg, false, dataprovider);
+		Model* model = Parse(NormalizeDefinition(definition), checkMsg, false, dataprovider);
 
 		if (checkMsg.Error)
 		{
