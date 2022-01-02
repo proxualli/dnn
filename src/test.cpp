@@ -62,7 +62,7 @@ DNN_API int DNNSaveLayerWeights(const std::string& fileName, const UInt layerInd
 DNN_API void DNNGetLayerWeights(const UInt layerIndex, std::vector<Float>* weights, std::vector<Float>* biases);
 DNN_API void DNNSetCostIndex(const UInt index);
 DNN_API void DNNGetCostInfo(const UInt costIndex, dnn::CostInfo* info);
-DNN_API void DNNGetImage(const UInt layer, const dnn::Byte fillColor, dnn::Byte* image);
+DNN_API void DNNGetImage(const UInt layer, const Byte fillColor, Byte* image);
 DNN_API bool DNNSetFormat(const bool plain);
 DNN_API dnn::Optimizers GetOptimizer();
 //DNN_API void DNNPrintModel(const std::string& fileName);
