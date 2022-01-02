@@ -3,7 +3,7 @@
 
 namespace dnn
 {
-	using namespace dnn::image;
+	using namespace image;
 
 	enum class Datasets
 	{
