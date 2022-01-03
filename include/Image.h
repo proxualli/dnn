@@ -13,8 +13,8 @@ namespace dnn
 	namespace image
 	{
 	constexpr auto MaximumLevels = 10;		// number of levels in AutoAugment
-	constexpr auto FloatLevel(const int level, const Float minValue = Float(0.1), const Float maxValue = Float(1.9)) noexcept { return (Float(level) * (maxValue - minValue) / MaximumLevels) + minValue; }
-	constexpr auto IntLevel(const int level, const int minValue = 0, const int maxValue = MaximumLevels) noexcept { return (level * (maxValue - minValue) / MaximumLevels) + minValue; }
+	constexpr auto FloatLevel(const int level, const Float minValue = Float(0.1), const Float maxValue = Float(1.9)) NOEXCEPT { return (Float(level) * (maxValue - minValue) / MaximumLevels) + minValue; }
+	constexpr auto IntLevel(const int level, const int minValue = 0, const int maxValue = MaximumLevels) NOEXCEPT { return (level * (maxValue - minValue) / MaximumLevels) + minValue; }
 
 	enum class Interpolations
 	{
@@ -46,7 +46,7 @@ namespace dnn
 		UInt H; // Height
 		UInt W; // Width
 
-		Image() :
+		Image() NOEXCEPT :
 			C(0),
 			D(0),
 			H(0),
@@ -64,7 +64,7 @@ namespace dnn
 		{
 		}
 
-		Image(const UInt c, const UInt d, const UInt h, const UInt w, const VectorT& image) :
+		Image(const UInt c, const UInt d, const UInt h, const UInt w, const VectorT& image) NOEXCEPT :
 			C(c),
 			D(d),
 			H(h),
@@ -73,7 +73,7 @@ namespace dnn
 		{
 		}
 
-		Image(const UInt c, const UInt d, const UInt h, const UInt w, const T* image) :
+		Image(const UInt c, const UInt d, const UInt h, const UInt w, const T* image) NOEXCEPT :
 			C(c),
 			D(d),
 			H(h),
@@ -83,7 +83,7 @@ namespace dnn
 			std::memcpy(Data.data(), image, c * d * h * w * sizeof(T));
 		}
 
-		Image(const UInt c, const UInt d, const UInt h, const UInt w) :
+		Image(const UInt c, const UInt d, const UInt h, const UInt w) NOEXCEPT :
 			C(c),
 			D(d),
 			H(h),
@@ -94,42 +94,42 @@ namespace dnn
 
 		~Image() = default;
 
-		T* data()
+		T* data() NOEXCEPT
 		{
 			return Data.data();
 		}
 
-		const T* data() const
+		const T* data() const NOEXCEPT
 		{
 			return Data.data();
 		}
 
-		auto Area() const
+		auto Area() const NOEXCEPT
 		{
 			return H * W;
 		}
 
-		auto ChannelSize() const
+		auto ChannelSize() const NOEXCEPT
 		{
 			return D * H * W;
 		}
 
-		auto Size() const
+		auto Size() const NOEXCEPT
 		{
 			return C * D * H * W;
 		}
 
-		T& operator()(const UInt c, const UInt d, const UInt h, const UInt w)
+		T& operator()(const UInt c, const UInt d, const UInt h, const UInt w) NOEXCEPT
 		{
 			return Data[w + (h * W) + (d * H * W) + (c * D * H * W)];
 		}
 
-		const T& operator()(const UInt c, const UInt d, const UInt h, const UInt w) const
+		const T& operator()(const UInt c, const UInt d, const UInt h, const UInt w) const NOEXCEPT
 		{
 			return Data[w + (h * W) + (d * H * W) + (c * D * H * W)];
 		}
 		
-		static cimg_library::CImg<Float> ImageToCImgFloat(const Image& image)
+		static cimg_library::CImg<Float> ImageToCImgFloat(const Image& image) NOEXCEPT
 		{
 			auto img = cimg_library::CImg<Float>(static_cast<uint32_t>(image.W), static_cast<uint32_t>(image.H), static_cast<uint32_t>(image.D), static_cast<uint32_t>(image.C));
 
@@ -142,17 +142,17 @@ namespace dnn
 				return img;
 		}
 
-		static cimg_library::CImg<T> ImageToCImg(const Image& image)
+		static cimg_library::CImg<T> ImageToCImg(const Image& image) NOEXCEPT
 		{
 			return cimg_library::CImg<T>(image.data(), static_cast<uint32_t>(image.W), static_cast<uint32_t>(image.H), static_cast<uint32_t>(image.D), static_cast<uint32_t>(image.C));
 		}
 
-		static Image CImgToImage(const cimg_library::CImg<T>& image)
+		static Image CImgToImage(const cimg_library::CImg<T>& image) NOEXCEPT
 		{
 			return Image(image._spectrum, image._depth, image._height, image._width, image.data());
 		}
 
-		static Image AutoAugment(const Image& image, const UInt padD, const UInt padH, const UInt padW, const std::vector<Float>& mean, const bool mirrorPad, std::mt19937& generator)
+		static Image AutoAugment(const Image& image, const UInt padD, const UInt padH, const UInt padW, const std::vector<Float>& mean, const bool mirrorPad, std::mt19937& generator) NOEXCEPT
 		{
 			Image img(image);
 
@@ -557,7 +557,7 @@ namespace dnn
 			return img;
 		}
 
-		static Image AutoContrast(const Image& image)
+		static Image AutoContrast(const Image& image) NOEXCEPT
 		{
 			const T maximum = std::is_floating_point_v<T> ? static_cast<T>(1) : static_cast<T>(255);
 			
@@ -573,7 +573,7 @@ namespace dnn
 		// magnitude = 0   // black-and-white image
 		// magnitude = 1   // original
 		// range 0.1 --> 1.9
-		static Image Brightness(const Image& image, const Float magnitude)
+		static Image Brightness(const Image& image, const Float magnitude) NOEXCEPT
 		{
 			auto srcImage = ImageToCImgFloat(image);
 
@@ -602,7 +602,7 @@ namespace dnn
 		// magnitude = 0   // black-and-white image
 		// magnitude = 1   // original
 		// range 0.1 --> 1.9
-		static Image Color(const Image& image, const Float magnitude)
+		static Image Color(const Image& image, const Float magnitude) NOEXCEPT
 		{
 			auto imgSource = ImageToCImgFloat(image);
 
@@ -625,7 +625,7 @@ namespace dnn
 			return img;
 		}
 
-		static Image ColorCast(const Image& image, const UInt angle, std::mt19937& generator)
+		static Image ColorCast(const Image& image, const UInt angle, std::mt19937& generator) NOEXCEPT
 		{
 			auto imgSource = ImageToCImgFloat(image);
 
@@ -653,7 +653,7 @@ namespace dnn
 		// magnitude = 0   // gray image
 		// magnitude = 1   // original
 		// range 0.1 --> 1.9
-		static Image Contrast(const Image& image, const Float magnitude)
+		static Image Contrast(const Image& image, const Float magnitude) NOEXCEPT
 		{
 			auto imgSource = ImageToCImgFloat(image);
 
@@ -679,7 +679,7 @@ namespace dnn
 		// magnitude = 0   // gray image
 		// magnitude = 1   // original
 		// range 0.1 --> 1.9
-		static Image Crop(const Image& image, const Positions position, const UInt depth, const UInt height, const UInt width, const std::vector<Float>& mean)
+		static Image Crop(const Image& image, const Positions position, const UInt depth, const UInt height, const UInt width, const std::vector<Float>& mean) NOEXCEPT
 		{
 			Image img(image.C, depth, height, width);
 
@@ -772,7 +772,7 @@ namespace dnn
 		}
 
 
-		static Image Distorted(const Image& image, const Float scale, const Float angle, const Interpolations interpolation, const std::vector<Float>& mean, std::mt19937& generator)
+		static Image Distorted(const Image& image, const Float scale, const Float angle, const Interpolations interpolation, const std::vector<Float>& mean, std::mt19937& generator) NOEXCEPT
 		{
 			const auto zoom = scale / Float(100) * UniformReal<Float>(generator, Float(-1), Float(1));
 			const auto height = static_cast<UInt>(static_cast<int>(image.H) + static_cast<int>(std::round(static_cast<int>(image.H) * zoom)));
@@ -781,7 +781,7 @@ namespace dnn
 			return Image::Crop(Image::Rotate(Image::Resize(image, image.D, height, width, interpolation), angle * UniformReal<Float>(generator, Float(-1), Float(1)), interpolation, mean), Positions::Center, image.D, image.H, image.W, mean);
 		}
 
-		static Image Dropout(const Image& image, const Float dropout, const std::vector<Float>& mean, std::mt19937& generator)
+		static Image Dropout(const Image& image, const Float dropout, const std::vector<Float>& mean, std::mt19937& generator) NOEXCEPT
 		{
 			Image img(image);
 			
@@ -799,7 +799,7 @@ namespace dnn
 			return img;
 		}
 		
-		static Image Equalize(const Image& image)
+		static Image Equalize(const Image& image) NOEXCEPT
 		{
 			auto imgSource = ImageToCImg(image);
 
@@ -810,7 +810,7 @@ namespace dnn
 			return img;
 		}
 
-		static Float GetChannelMean(const Image& image, const UInt c)
+		static Float GetChannelMean(const Image& image, const UInt c) NOEXCEPT
 		{
 			auto mean = Float(0);
 
@@ -822,7 +822,7 @@ namespace dnn
 			return mean /= image.ChannelSize();
 		}
 
-		static Float GetChannelVariance(const Image& image, const UInt c)
+		static Float GetChannelVariance(const Image& image, const UInt c) NOEXCEPT
 		{
 			const auto mean = Image::GetChannelMean(image, c);
 
@@ -836,12 +836,12 @@ namespace dnn
 			return variance /= image.ChannelSize();
 		}
 
-		static Float GetChannelStdDev(const Image& image, const UInt c)
+		static Float GetChannelStdDev(const Image& image, const UInt c) NOEXCEPT
 		{
 			return std::max(std::sqrt(Image::GetChannelVariance(image, c)), Float(1) / std::sqrt(Float(image.ChannelSize())));
 		}
 
-		static Image HorizontalMirror(const Image& image)
+		static Image HorizontalMirror(const Image& image) NOEXCEPT
 		{
 			Image img(image.C, image.D, image.H, image.W);
 
@@ -854,7 +854,7 @@ namespace dnn
 			return img;
 		}
 
-		static Image Invert(const Image& image)
+		static Image Invert(const Image& image) NOEXCEPT
 		{
 			Image img(image.C, image.D, image.H, image.W);
 
@@ -869,7 +869,7 @@ namespace dnn
 			return img;
 		}
 
-		static Image LoadJPEG(const std::string& fileName, const bool forceColorFormat = false)
+		static Image LoadJPEG(const std::string& fileName, const bool forceColorFormat = false) NOEXCEPT
 		{
 			Image img = CImgToImage(cimg_library::CImg<T>().get_load_jpeg(fileName.c_str()));
 
@@ -889,7 +889,7 @@ namespace dnn
 				return img;
 		}
 
-		static Image LoadPNG(const std::string& fileName, const bool forceColorFormat = false)
+		static Image LoadPNG(const std::string& fileName, const bool forceColorFormat = false) NOEXCEPT
 		{
 			auto bitsPerPixel = 0u;
 			Image img = CImgToImage(cimg_library::CImg<T>().get_load_png(fileName.c_str(), &bitsPerPixel));
@@ -910,7 +910,7 @@ namespace dnn
 				return img;
 		}
 
-		static Image MirrorPad(const Image& image, const UInt depth, const UInt height, const UInt width)
+		static Image MirrorPad(const Image& image, const UInt depth, const UInt height, const UInt width) NOEXCEPT
 		{
 			Image img(image.C, image.D + (depth * 2), image.H + (height * 2), image.W + (width * 2));
 
@@ -1012,12 +1012,12 @@ namespace dnn
 		}
 
 
-		inline static Image Padding(const Image& image, const UInt depth, const UInt height, const UInt width, const std::vector<Float>& mean, const bool mirrorPad = false)
+		inline static Image Padding(const Image& image, const UInt depth, const UInt height, const UInt width, const std::vector<Float>& mean, const bool mirrorPad = false) NOEXCEPT
 		{
 			return mirrorPad ? Image::MirrorPad(image, depth, height, width) : Image::ZeroPad(image, depth, height, width, mean);
 		}
 
-		static Image Posterize(const Image& image, const UInt levels = 16)
+		static Image Posterize(const Image& image, const UInt levels = 16) NOEXCEPT
 		{
 			Image img(image.C, image.D, image.H, image.W);
 
@@ -1035,7 +1035,7 @@ namespace dnn
 			return img;
 		}
 		
-		static Image RandomCrop(const Image& image, const UInt depth, const UInt height, const UInt width, const std::vector<Float>& mean, std::mt19937& generator)
+		static Image RandomCrop(const Image& image, const UInt depth, const UInt height, const UInt width, const std::vector<Float>& mean, std::mt19937& generator) NOEXCEPT
 		{
 			Image img(image.C, depth, height, width);
 
@@ -1072,7 +1072,7 @@ namespace dnn
 			return img;
 		}
 
-		static Image RandomCutout(const Image& image, const std::vector<Float>& mean, std::mt19937& generator)
+		static Image RandomCutout(const Image& image, const std::vector<Float>& mean, std::mt19937& generator) NOEXCEPT
 		{
 			Image img(image);
 
@@ -1099,7 +1099,7 @@ namespace dnn
 			return img;
 		}
 
-		static Image RandomCutMix(const Image& image, const Image& imageMix, double* lambda, std::mt19937& generator)
+		static Image RandomCutMix(const Image& image, const Image& imageMix, double* lambda, std::mt19937& generator) NOEXCEPT
 		{
 			Image img(image);
 			Image imgMix(imageMix);
@@ -1125,7 +1125,7 @@ namespace dnn
 			return img;
 		}
 
-		static Image Resize(const Image& image, const UInt depth, const UInt height, const UInt width, const Interpolations interpolation)
+		static Image Resize(const Image& image, const UInt depth, const UInt height, const UInt width, const Interpolations interpolation) NOEXCEPT
 		{
 			auto imgSource = ImageToCImg(image);
 
@@ -1147,7 +1147,7 @@ namespace dnn
 			return img;
 		}
 
-		static Image Rotate(const Image& image, const Float angle, const Interpolations interpolation, const std::vector<Float>& mean)
+		static Image Rotate(const Image& image, const Float angle, const Interpolations interpolation, const std::vector<Float>& mean) NOEXCEPT
 		{
 			auto imgSource = ImageToCImg(ZeroPad(image, image.D / 2, image.H / 2, image.W / 2, mean));
 
@@ -1172,7 +1172,7 @@ namespace dnn
 		// magnitude = 0   // blurred image
 		// magnitude = 1   // original
 		// range 0.1 --> 1.9
-		static Image Sharpness(const Image& image, const Float magnitude)
+		static Image Sharpness(const Image& image, const Float magnitude) NOEXCEPT
 		{
 			auto imgSource = ImageToCImg(image);
 
@@ -1183,7 +1183,7 @@ namespace dnn
 			return img;
 		}
 
-		static Image Solarize(const Image& image, const T treshold = 128)
+		static Image Solarize(const Image& image, const T treshold = 128) NOEXCEPT
 		{
 			Image img(image.C, image.D, image.H, image.W);
 
@@ -1198,7 +1198,7 @@ namespace dnn
 			return img;
 		}
 		
-		static Image Translate(const Image& image, const int height, const int width, const std::vector<Float>& mean)
+		static Image Translate(const Image& image, const int height, const int width, const std::vector<Float>& mean) NOEXCEPT
 		{
 			if (height == 0 && width == 0)
 				return image;
@@ -1273,7 +1273,7 @@ namespace dnn
 			return img;
 		}
 
-		static Image VerticalMirror(const Image& image)
+		static Image VerticalMirror(const Image& image) NOEXCEPT
 		{
 			Image img(image.C, image.D, image.H, image.W);
 
@@ -1286,7 +1286,7 @@ namespace dnn
 			return img;
 		}
 		
-		static Image ZeroPad(const Image& image, const UInt depth, const UInt height, const UInt width, const std::vector<Float>& mean)
+		static Image ZeroPad(const Image& image, const UInt depth, const UInt height, const UInt width, const std::vector<Float>& mean) NOEXCEPT
 		{
 			Image img(image.C, image.D + (depth * 2), image.H + (height * 2), image.W + (width * 2));
 
