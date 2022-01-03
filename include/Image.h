@@ -55,7 +55,7 @@ namespace dnn
 		{
 		}
 
-		Image(const Image& image) :
+		Image(const Image& image) NOEXCEPT :
 			C(image.C),
 			D(image.D),
 			H(image.H),
