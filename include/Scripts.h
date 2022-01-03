@@ -68,6 +68,7 @@ namespace scripts
         FRelu = 1,
         HardSwish = 10,
         HardLogistic =  11,
+        Logistic = 12,
         Mish = 16,
         Relu = 19,
         Swish = 25,
@@ -583,11 +584,11 @@ namespace scripts
                     (expandRatio > 1 ? BatchNormActivationDropout(C, In("C", C), activation) : BatchNormActivation(C, In("C", C), activation)) +
 
                     GlobalAvgPooling(In("B", C), group) +
-                    Convolution(1, group + std::string("GAP"), DIV8(hiddenDim / expandRatio), 1, 1, 1, 1, 0, 0, false, group) +
-                    BatchNormActivation(1, group + std::string("C1"), (activation == scripts::Activations::FRelu ? scripts::Activations::HardSwish : activation), group) +
-                    Convolution(2, group + std::string("B1"), hiddenDim, 1, 1, 1, 1, 0, 0, false, group) +
-                    BatchNormActivation(2, group + std::string("C2"), scripts::Activations::HardLogistic, group) +
-                    ChannelMultiply(In("B", C) + std::string(",") + group + std::string("B2"), group) +
+                    Convolution(1, group + std::string("GAP"), DIV8(hiddenDim / expandRatio), 1, 1, 1, 1, 0, 0, true, group) +
+                    Activation(1, group + std::string("C1"), to_string(activation == scripts::Activations::FRelu ? scripts::Activations::HardSwish : activation), group) +
+                    Convolution(2, group + std::string("ACT1"), hiddenDim, 1, 1, 1, 1, 0, 0, true, group) +
+                    Activation(2, group + std::string("C2"), to_string(scripts::Activations::Logistic), group) +
+                    ChannelMultiply(In("B", C) + std::string(",") + group + std::string("ACT2"), group) +
 
                     Convolution(C + 1, group + std::string("CM"), DIV8(outputChannels), 1, 1, 1, 1, 0, 0) +
                     BatchNorm(C + 1, In("C", C + 1)));
@@ -627,11 +628,11 @@ namespace scripts
 
 
                     GlobalAvgPooling(In("B", C + 1), group) +
-                    Convolution(1, group + std::string("GAP"), DIV8(hiddenDim / expandRatio), 1, 1, 1, 1, 0, 0, false, group) +
-                    BatchNormActivation(1, group + std::string("C1"), (activation == scripts::Activations::FRelu ? scripts::Activations::HardSwish : activation), group) +
-                    Convolution(2, group + std::string("B1"), hiddenDim, 1, 1, 1, 1, 0, 0, false, group) +
-                    BatchNormActivation(2, group + std::string("C2"), scripts::Activations::HardLogistic, group) +
-                    ChannelMultiply(In("B", C + 1) + std::string(",") + group + std::string("B2"), group) +
+                    Convolution(1, group + std::string("GAP"), DIV8(hiddenDim / expandRatio), 1, 1, 1, 1, 0, 0, true, group) +
+                    Activation(1, group + std::string("C1"), to_string(activation == scripts::Activations::FRelu ? scripts::Activations::HardSwish : activation), group) +
+                    Convolution(2, group + std::string("ACT1"), hiddenDim, 1, 1, 1, 1, 0, 0, true, group) +
+                    Activation(2, group + std::string("C2"), to_string(scripts::Activations::Logistic), group) +
+                    ChannelMultiply(In("B", C + 1) + std::string(",") + group + std::string("ACT2"), group) +
 
                     Convolution(C + 2, group + std::string("CM"), DIV8(outputChannels), 1, 1, 1, 1, 0, 0) +
                     BatchNorm(C + 2, In("C", C + 2)));
@@ -678,11 +679,11 @@ namespace scripts
                 auto group = In("SE", C + 3);
                 auto strSE =
                     se ? GlobalAvgPooling(In("B", C + 3), group) +
-                    Convolution(1, group + std::string("GAP"), DIV8(channels / 4), 1, 1, 1, 1, 0, 0, false, group) +
-                    BatchNormActivation(1, group + std::string("C1"), (activation == scripts::Activations::FRelu ? scripts::Activations::HardSwish : activation), group) +
-                    Convolution(2, group + std::string("B1"), channels, 1, 1, 1, 1, 0, 0, false, group) +
-                    BatchNormActivation(2, group + std::string("C2"), scripts::Activations::HardLogistic, group) +
-                    ChannelMultiply(In("B", C + 3) + std::string(",") + group + std::string("B2"), group) +
+                    Convolution(1, group + std::string("GAP"), DIV8(channels / 4), 1, 1, 1, 1, 0, 0, true, group) +
+                    Activation(1, group + std::string("C1"), to_string(activation == scripts::Activations::FRelu ? scripts::Activations::HardSwish : activation), group) +
+                    Convolution(2, group + std::string("ACT1"), channels, 1, 1, 1, 1, 0, 0, true, group) +
+                    Activation(2, group + std::string("C2"), to_string(scripts::Activations::Logistic), group) +
+                    ChannelMultiply(In("B", C + 3) + std::string(",") + group + std::string("ACT2"), group) +
                     Concat(A + 1, In("LCS", A) + std::string(",") + group + std::string("CM")) :
                     Concat(A + 1, In("LCS", A) + std::string(",") + In("B", C + 3));
 
