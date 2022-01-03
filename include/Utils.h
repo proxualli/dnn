@@ -5,6 +5,12 @@
 #include <sys/sysinfo.h>
 #endif
 
+#if defined(NDEBUG)
+#define NOEXCEPT noexcept
+#else
+#define NOEXCEPT
+#endif
+
 #ifndef MAX_VECTOR_SIZE
 #ifdef DNN_SSE41
 #define INSTRSET 5
@@ -150,10 +156,10 @@ namespace
 	constexpr auto VectorSize = 4ull;
 	constexpr auto BlockedFmt = dnnl::memory::format_tag::nChw4c;
 #endif
-	constexpr auto GetVectorPart(const UInt& elements) noexcept { return (elements / VectorSize) * VectorSize; }
-	constexpr auto DivUp(const UInt& c) noexcept { return (((c - 1) / VectorSize) + 1) * VectorSize; }
-	constexpr auto IsPlainDataFmt(const dnnl::memory::desc& md) noexcept { return md.data.format_kind == dnnl_blocked && md.data.format_desc.blocking.inner_nblks == 0; }
-	constexpr auto IsBlockedDataFmt(const dnnl::memory::desc& md) noexcept { return md.data.format_kind == dnnl_blocked && md.data.format_desc.blocking.inner_nblks == 1 && md.data.format_desc.blocking.inner_idxs[0] == 1 && (md.data.format_desc.blocking.inner_blks[0] == 4 || md.data.format_desc.blocking.inner_blks[0] == 8 || md.data.format_desc.blocking.inner_blks[0] == 16); }
+	constexpr auto GetVectorPart(const UInt& elements) NOEXCEPT { return (elements / VectorSize) * VectorSize; }
+	constexpr auto DivUp(const UInt& c) NOEXCEPT { return (((c - 1) / VectorSize) + 1) * VectorSize; }
+	constexpr auto IsPlainDataFmt(const dnnl::memory::desc& md) NOEXCEPT { return md.data.format_kind == dnnl_blocked && md.data.format_desc.blocking.inner_nblks == 0; }
+	constexpr auto IsBlockedDataFmt(const dnnl::memory::desc& md) NOEXCEPT { return md.data.format_kind == dnnl_blocked && md.data.format_desc.blocking.inner_nblks == 1 && md.data.format_desc.blocking.inner_idxs[0] == 1 && (md.data.format_desc.blocking.inner_blks[0] == 4 || md.data.format_desc.blocking.inner_blks[0] == 8 || md.data.format_desc.blocking.inner_blks[0] == 16); }
 	constexpr auto PlainFmt = dnnl::memory::format_tag::nchw; // equals dnnl::memory::format_tag::abcd
 	constexpr auto GetDataFmt(const dnnl::memory::desc& md)
 	{
@@ -217,7 +223,7 @@ namespace
 	}
 
 	template<typename T>
-	void InitArray(T* destination, const std::size_t elements, const int initValue = 0) noexcept
+	void InitArray(T* destination, const std::size_t elements, const int initValue = 0) NOEXCEPT
 	{
 		if (elements < 1048576ull)
 			::memset(destination, initValue, elements * sizeof(T));
@@ -274,7 +280,7 @@ namespace
 		size_type nelems = 0;
 
 	public:
-		inline void release() noexcept
+		inline void release() NOEXCEPT
 		{
 			if (arrPtr)
 				arrPtr.reset();
@@ -283,11 +289,11 @@ namespace
 			arrPtr = nullptr;
 			dataPtr = nullptr;
 		}
-		AlignedArray() noexcept
+		AlignedArray() NOEXCEPT
 		{
 			//release();
 		}
-		AlignedArray(const size_type elements, const T value = T()) noexcept
+		AlignedArray(const size_type elements, const T value = T()) NOEXCEPT
 		{
 			release();
 
@@ -343,8 +349,8 @@ namespace
 				}
 			}		
 		}
-		inline T& operator[] (size_type i) noexcept { return dataPtr[i]; }
-		inline const T& operator[] (size_type i) const noexcept { return dataPtr[i]; }
+		inline T& operator[] (size_type i) NOEXCEPT { return dataPtr[i]; }
+		inline const T& operator[] (size_type i) const NOEXCEPT { return dataPtr[i]; }
 		inline bool empty() const noexcept { return nelems == 0; }
 	};
 
@@ -359,7 +365,7 @@ namespace
 		dnnl::memory::desc description;
 
 	public:
-		inline void release() noexcept
+		inline void release() NOEXCEPT
 		{
 			if (arrPtr)
 				arrPtr.reset();
@@ -368,11 +374,11 @@ namespace
 			arrPtr = nullptr;
 			dataPtr = nullptr;			
 		}
-		AlignedMemory() noexcept
+		AlignedMemory() NOEXCEPT
 		{
 			//release();
 		}
-		AlignedMemory(const dnnl::memory::desc& md, const dnnl::engine& engine, const T value = T()) noexcept
+		AlignedMemory(const dnnl::memory::desc& md, const dnnl::engine& engine, const T value = T()) NOEXCEPT
 		{
 			if (md)
 			{
@@ -455,8 +461,8 @@ namespace
 		{
 			resize(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(n), dnnl::memory::dim(c), dnnl::memory::dim(d), dnnl::memory::dim(h), dnnl::memory::dim(w) }), dtype, format), engine, value);
 		}
-		inline T& operator[] (size_type i) noexcept { return dataPtr[i]; }
-		inline const T& operator[] (size_type i) const noexcept { return dataPtr[i]; }
+		inline T& operator[] (size_type i) NOEXCEPT { return dataPtr[i]; }
+		inline const T& operator[] (size_type i) const NOEXCEPT { return dataPtr[i]; }
 		inline bool empty() const noexcept { return nelems == 0; }
 	};
 
@@ -468,15 +474,15 @@ namespace
 	constexpr auto WEIGHTS_LIMIT = Float(500);	// limit for all the weights and biases [-WEIGHTS_LIMIT,WEIGHTS_LIMIT]
 	
 	template<typename T>
-	constexpr auto inline Square(const T& value) noexcept { return (value * value); }
+	constexpr auto inline Square(const T& value) NOEXCEPT { return (value * value); }
 	template<typename T>
-	constexpr auto inline Clamp(const T& v, const T& lo, const T& hi) noexcept { return (v < lo) ? lo : (hi < v) ? hi : v; }
+	constexpr auto inline Clamp(const T& v, const T& lo, const T& hi) NOEXCEPT { return (v < lo) ? lo : (hi < v) ? hi : v; }
 	template<typename T>
-	constexpr auto inline Saturate(const T& value) noexcept { return (value > T(255)) ? Byte(255) : (value < T(0)) ? Byte(0) : Byte(value); }
+	constexpr auto inline Saturate(const T& value) NOEXCEPT { return (value > T(255)) ? Byte(255) : (value < T(0)) ? Byte(0) : Byte(value); }
 	template<typename T>
-	constexpr auto inline GetColorFromRange(const T& range, const T& minimum, const T& value) noexcept { return Saturate<T>(T(255) - ((value - minimum) * range)); }
+	constexpr auto inline GetColorFromRange(const T& range, const T& minimum, const T& value) NOEXCEPT { return Saturate<T>(T(255) - ((value - minimum) * range)); }
 	template<typename T>
-	constexpr auto inline GetColorRange(const T& min, const T& max) noexcept { return (min == max) ? T(0) : T(255) / ((std::signbit(min) && std::signbit(max)) ? -(min + max) : (max - min)); }
+	constexpr auto inline GetColorRange(const T& min, const T& max) NOEXCEPT { return (min == max) ? T(0) : T(255) / ((std::signbit(min) && std::signbit(max)) ? -(min + max) : (max - min)); }
 
 #if defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW32__)
 	const auto nwl = std::string("\r\n");
@@ -490,12 +496,12 @@ namespace
 	
 #ifdef DNN_FAST_SEED
 	template<typename T>
-	inline T Seed() noexcept
+	inline T Seed() NOEXCEPT
 	{
 		return static_cast<T>(__rdtsc());
 	}
 #else
-	int GetPhysicalSeedType() noexcept
+	int GetPhysicalSeedType() NOEXCEPT
 	{
 		int abcd[4];						// return values from cpuid instruction
 		
@@ -513,7 +519,7 @@ namespace
 	
 	int PhysicalSeedType = -1;
 	template<typename T>
-	inline T Seed() noexcept
+	inline T Seed() NOEXCEPT
 	{
 		if (PhysicalSeedType < 0)
 			PhysicalSeedType = GetPhysicalSeedType();
@@ -539,54 +545,56 @@ namespace
 #endif
 
 	template<typename T>
-	inline auto Bernoulli(const Float p = Float(0.5)) noexcept
+	inline auto Bernoulli(const Float p = Float(0.5)) NOEXCEPT
 	{
-		//if (p < 0 || p > 1)
-		//	throw std::invalid_argument("Parameter out of range in Bernoulli function");
-
+#ifndef NDEBUG
+		if (p < 0 || p > 1)
+			throw std::invalid_argument("Parameter out of range in Bernoulli function");
+#endif
 		static thread_local auto generator = std::mt19937(Seed<unsigned>());
 		return static_cast<T>(std::bernoulli_distribution(static_cast<double>(p))(generator));
 	}
 	
 	template<typename T>
-	inline auto Bernoulli(std::mt19937& generator, const Float p = Float(0.5)) noexcept
+	inline auto Bernoulli(std::mt19937& generator, const Float p = Float(0.5)) NOEXCEPT
 	{
-		//if (p < 0 || p > 1)
-		//	throw std::invalid_argument("Parameter out of range in Bernoulli function");
-
+#ifndef NDEBUG
+		if (p < 0 || p > 1)
+			throw std::invalid_argument("Parameter out of range in Bernoulli function");
+#endif
 		return static_cast<T>(std::bernoulli_distribution(static_cast<double>(p))(generator));
 	}
 
 	template<typename T>
-	inline auto UniformInt(std::mt19937& generator, const T min, const T max) noexcept
+	inline auto UniformInt(std::mt19937& generator, const T min, const T max) NOEXCEPT
 	{
 		static_assert(std::is_integral<T>::value, "Only integral type supported in UniformInt function");
-
-		//if (min > max)
-		//	throw std::invalid_argument("Parameter out of range in UniformInt function");
-
+#ifndef NDEBUG
+		if (min > max)
+			throw std::invalid_argument("Parameter out of range in UniformInt function");
+#endif
 		return std::uniform_int_distribution<T>(min, max)(generator);
 	}
 
 	template<typename T>
-	inline auto UniformReal(std::mt19937& generator, const T min, const T max) noexcept
+	inline auto UniformReal(std::mt19937& generator, const T min, const T max) NOEXCEPT
 	{
 		static_assert(std::is_floating_point<T>::value, "Only Floating point type supported in UniformReal function");
-
-		//if (min > max)
-		//		throw std::invalid_argument("Parameter out of range in UniformReal function");
-
+#ifndef NDEBUG
+		if (min > max)
+			throw std::invalid_argument("Parameter out of range in UniformReal function");
+#endif
 		return std::uniform_real_distribution<T>(min, max)(generator);
 	}
 
 	template<typename T>
-	auto TruncatedNormal(std::mt19937& generator, const T m, const T s, const T limit)
+	auto TruncatedNormal(std::mt19937& generator, const T m, const T s, const T limit) NOEXCEPT
 	{
 		static_assert(std::is_floating_point<T>::value, "Only Floating point type supported in TruncatedNormal function");
-
+#ifndef NDEBUG
 		if (limit < s)
 	     throw std::invalid_argument("limit out of range in TruncatedNormal function");
-
+#endif
 		T x;
 		do { x = std::normal_distribution<T>(T(0), s)(generator); }
 		while (std::abs(x) > limit); // reject if beyond limit
@@ -684,7 +692,7 @@ namespace
 	};
 
 	template<typename T>
-	inline auto BetaDistribution(std::mt19937& generator, const T a, const T b) noexcept
+	inline auto BetaDistribution(std::mt19937& generator, const T a, const T b) NOEXCEPT
 	{
 		static_assert(std::is_floating_point<T>::value, "Only Floating point type supported in BetaDistribution function");
 
