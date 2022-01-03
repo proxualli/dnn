@@ -274,8 +274,8 @@ namespace dnn
 
 		ByteArray GetImage(const Byte fillColor) final override
 		{
-			const auto rangeWeights = GetColorRange(WeightsStats.Min, WeightsStats.Max);
-			const auto rangeBiases = GetColorRange(BiasesStats.Min, BiasesStats.Max);
+			const auto rangeWeights = GetColorRange<Float>(WeightsStats.Min, WeightsStats.Max);
+			const auto rangeBiases = GetColorRange<Float>(BiasesStats.Min, BiasesStats.Max);
 			const auto border = 1ull;
 			const auto pitchH = KernelH + border;
 			const auto pitchW = KernelW + border;
@@ -305,10 +305,10 @@ namespace dnn
 				const auto idx = c * KernelH * KernelW;
 				for (auto y = 0ull; y < KernelH; y++)
 					for (auto x = 0ull; x < KernelW; x++)
-						image[(y * width) + left + x] = GetColorFromRange(rangeWeights, WeightsStats.Min, weights[idx + (y * KernelW) + x]);
+						image[(y * width) + left + x] = GetColorFromRange<Float>(rangeWeights, WeightsStats.Min, weights[idx + (y * KernelW) + x]);
 
 				if (HasBias)
-					image[left + biasOffset] = GetColorFromRange(rangeBiases, BiasesStats.Min, Biases[c]);
+					image[left + biasOffset] = GetColorFromRange<Float>(rangeBiases, BiasesStats.Min, Biases[c]);
 			}
 
 			return image;

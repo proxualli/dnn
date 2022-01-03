@@ -199,7 +199,7 @@ namespace dnn
 							const auto end = start + HW();
 							PRAGMA_OMP_SIMD()
 							for (auto hw = part; hw < end; hw++)
-								variance += FloatSquare(InputLayer->Neurons[hw] - mean);
+								variance += Square<Float>(InputLayer->Neurons[hw] - mean);
 						}
 						variance += horizontal_add(vecVariance);
 						const auto unbiasedVariance = variance / Float(batchSize * HW() - 1);
@@ -569,8 +569,8 @@ namespace dnn
 		{
 			if (Scaling)
 			{
-				const auto rangeWeights = GetColorRange(WeightsStats.Min, WeightsStats.Max);
-				const auto rangeBiases = GetColorRange(BiasesStats.Min, BiasesStats.Max);
+				const auto rangeWeights = GetColorRange<Float>(WeightsStats.Min, WeightsStats.Max);
+				const auto rangeBiases = GetColorRange<Float>(BiasesStats.Min, BiasesStats.Max);
 
 				const auto width = BiasCount;
 				const auto height = WeightCount / BiasCount;
@@ -583,14 +583,14 @@ namespace dnn
 					const auto start = y * width;
 					const auto end = start + width;
 					for (auto x = start; x < end; x++)
-						image[x] = GetColorFromRange(rangeWeights, WeightsStats.Min, Weights[x]);
+						image[x] = GetColorFromRange<Float>(rangeWeights, WeightsStats.Min, Weights[x]);
 				}
 
 				if (HasBias)
 				{
 					const auto offset = (height + 1) * width;
 					for (auto x = 0ull; x < width; x++)
-						image[x + offset] = GetColorFromRange(rangeBiases, BiasesStats.Min, Biases[x]);
+						image[x + offset] = GetColorFromRange<Float>(rangeBiases, BiasesStats.Min, Biases[x]);
 				}
 
 				return image;

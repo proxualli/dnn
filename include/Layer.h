@@ -615,7 +615,7 @@ namespace dnn
 							
 							PRAGMA_OMP_SIMD()
 							for (auto i = 0ull; i < ncdhw; i++)
-								sum += FloatSquare(Neurons[i] - NeuronsStats.Mean);
+								sum += Square<Float>(Neurons[i] - NeuronsStats.Mean);
 							
 							if (!std::isnan(sum) && !std::isinf(sum))
 								NeuronsStats.StdDev = std::sqrt(sum / ncdhw);
@@ -650,7 +650,7 @@ namespace dnn
 						WeightsStats.Mean = sum / Weights.size();
 						sum = Float(0);
 						for (auto i = 0ull; i < Weights.size(); i++)
-							sum += FloatSquare(Weights[i] - WeightsStats.Mean);
+							sum += Square<Float>(Weights[i] - WeightsStats.Mean);
 
 						if (!std::isnan(sum) && !std::isinf(sum))
 							WeightsStats.StdDev = std::sqrt(sum / Weights.size());
@@ -682,7 +682,7 @@ namespace dnn
 							BiasesStats.Mean = sum / BiasCount;
 							sum = Float(0);
 							for (auto i = 0ull; i < BiasCount; i++)
-								sum += FloatSquare(Biases[i] - BiasesStats.Mean);
+								sum += Square<Float>(Biases[i] - BiasesStats.Mean);
 
 							if (!std::isnan(sum) && !std::isinf(sum))
 								BiasesStats.StdDev = std::sqrt(sum / BiasCount);
@@ -1246,7 +1246,7 @@ namespace dnn
 				for (auto i = 0ull; i < Weights.size(); i++)
 				{
 					WeightsPar1[i] = (beta1 * WeightsPar1[i]) + (oneMinusBeta1 * WeightsD1[i] * batchRecip);
-					WeightsPar2[i] = (beta2 * WeightsPar2[i]) + (oneMinusBeta2 * FloatSquare(WeightsD1[i] * batchRecip));
+					WeightsPar2[i] = (beta2 * WeightsPar2[i]) + (oneMinusBeta2 * Square<Float>(WeightsD1[i] * batchRecip));
 					Weights[i] -= Clamp<Float>(step_size / (std::sqrt(WeightsPar2[i]) + eps), lowerBound, upperBound) * WeightsPar1[i];
 				}
 			else
@@ -1254,7 +1254,7 @@ namespace dnn
 				for (auto i = 0ull; i < Weights.size(); i++)
 				{
 					WeightsPar1[i] = (beta1 * WeightsPar1[i]) + (oneMinusBeta1 * WeightsD1[i] * batchRecip);
-					WeightsPar2[i] = (beta2 * WeightsPar2[i]) + (oneMinusBeta2 * FloatSquare(WeightsD1[i] * batchRecip));
+					WeightsPar2[i] = (beta2 * WeightsPar2[i]) + (oneMinusBeta2 * Square<Float>(WeightsD1[i] * batchRecip));
 					Weights[i] -= Clamp<Float>(step_size / (std::sqrt(std::max(WeightsPar1[i], WeightsPar2[i])) + eps), lowerBound, upperBound) * WeightsPar1[i];
 				}
 
@@ -1271,7 +1271,7 @@ namespace dnn
 					for (auto i = 0ull; i < BiasCount; i++)
 					{
 						BiasesPar1[i] = (beta1 * BiasesPar1[i]) + (oneMinusBeta1 * BiasesD1[i] * batchRecip);
-						BiasesPar2[i] = (beta2 * BiasesPar2[i]) + (oneMinusBeta2 * FloatSquare(BiasesD1[i] * batchRecip));
+						BiasesPar2[i] = (beta2 * BiasesPar2[i]) + (oneMinusBeta2 * Square<Float>(BiasesD1[i] * batchRecip));
 						Biases[i] -= Clamp<Float>(step_size / (std::sqrt(BiasesPar2[i]) + eps), lowerBound, upperBound) * BiasesPar1[i];
 					}
 				else
@@ -1279,7 +1279,7 @@ namespace dnn
 					for (auto i = 0ull; i < BiasCount; i++)
 					{
 						BiasesPar1[i] = (beta1 * BiasesPar1[i]) + (oneMinusBeta1 * BiasesD1[i] * batchRecip);
-						BiasesPar2[i] = (beta2 * BiasesPar2[i]) + (oneMinusBeta2 * FloatSquare(BiasesD1[i] * batchRecip));
+						BiasesPar2[i] = (beta2 * BiasesPar2[i]) + (oneMinusBeta2 * Square<Float>(BiasesD1[i] * batchRecip));
 						Biases[i] -= Clamp<Float>(step_size / (std::sqrt(std::max(BiasesPar1[i], BiasesPar2[i])) + eps), lowerBound, upperBound) * BiasesPar1[i];
 					}
 			}
@@ -1314,7 +1314,7 @@ namespace dnn
 				{
 					WeightsD1[i] += weightDecay * Weights[i];
 					WeightsPar1[i] = (beta1 * WeightsPar1[i]) + (oneMinusBeta1 * WeightsD1[i] * batchRecip);
-					WeightsPar2[i] = (beta2 * WeightsPar2[i]) + (oneMinusBeta2 * FloatSquare(WeightsD1[i] * batchRecip));
+					WeightsPar2[i] = (beta2 * WeightsPar2[i]) + (oneMinusBeta2 * Square<Float>(WeightsD1[i] * batchRecip));
 					Weights[i] -= Clamp<Float>(step_size / (std::sqrt(WeightsPar2[i]) + eps), lowerBound, upperBound) * WeightsPar1[i];
 				}
 			else
@@ -1323,7 +1323,7 @@ namespace dnn
 				{
 					WeightsD1[i] += weightDecay * Weights[i];
 					WeightsPar1[i] = (beta1 * WeightsPar1[i]) + (oneMinusBeta1 * WeightsD1[i] * batchRecip);
-					WeightsPar2[i] = (beta2 * WeightsPar2[i]) + (oneMinusBeta2 * FloatSquare(WeightsD1[i] * batchRecip));
+					WeightsPar2[i] = (beta2 * WeightsPar2[i]) + (oneMinusBeta2 * Square<Float>(WeightsD1[i] * batchRecip));
 					Weights[i] -= Clamp<Float>(step_size / (std::sqrt(std::max(WeightsPar1[i], WeightsPar2[i])) + eps), lowerBound, upperBound) * WeightsPar1[i];
 				}
 
@@ -1341,7 +1341,7 @@ namespace dnn
 					{
 						BiasesD1[i] += weightDecay * Biases[i];
 						BiasesPar1[i] = (beta1 * BiasesPar1[i]) + (oneMinusBeta1 * BiasesD1[i] * batchRecip);
-						BiasesPar2[i] = (beta2 * BiasesPar2[i]) + (oneMinusBeta2 * FloatSquare(BiasesD1[i] * batchRecip));
+						BiasesPar2[i] = (beta2 * BiasesPar2[i]) + (oneMinusBeta2 * Square<Float>(BiasesD1[i] * batchRecip));
 						Biases[i] -= Clamp<Float>(step_size / (std::sqrt(BiasesPar2[i]) + eps), lowerBound, upperBound) * BiasesPar1[i];
 					}
 				else
@@ -1350,7 +1350,7 @@ namespace dnn
 					{
 						BiasesD1[i] += weightDecay * Biases[i];
 						BiasesPar1[i] = (beta1 * BiasesPar1[i]) + (oneMinusBeta1 * BiasesD1[i] * batchRecip);
-						BiasesPar2[i] = (beta2 * BiasesPar2[i]) + (oneMinusBeta2 * FloatSquare(BiasesD1[i] * batchRecip));
+						BiasesPar2[i] = (beta2 * BiasesPar2[i]) + (oneMinusBeta2 * Square<Float>(BiasesD1[i] * batchRecip));
 						Biases[i] -= Clamp<Float>(step_size / (std::sqrt(std::max(BiasesPar1[i], BiasesPar2[i])) + eps), lowerBound, upperBound) * BiasesPar1[i];
 					}
 			}
@@ -1371,9 +1371,9 @@ namespace dnn
 			PRAGMA_OMP_SIMD()
 			for (auto i = 0ull; i < Weights.size(); i++)
 			{
-				WeightsPar1[i] = (momentum * WeightsPar1[i]) + (oneMinMomentum * FloatSquare(WeightsD1[i] * batchRecip));
+				WeightsPar1[i] = (momentum * WeightsPar1[i]) + (oneMinMomentum * Square<Float>(WeightsD1[i] * batchRecip));
 				const auto update = lr * (std::sqrt(WeightsPar2[i] + eps) / std::sqrt(WeightsPar1[i] + eps)) * WeightsD1[i] * batchRecip;
-				WeightsPar2[i] = (momentum * WeightsPar2[i]) + (oneMinMomentum * FloatSquare(update));
+				WeightsPar2[i] = (momentum * WeightsPar2[i]) + (oneMinMomentum * Square<Float>(update));
 				Weights[i] += update;
 			}
 
@@ -1383,9 +1383,9 @@ namespace dnn
 				PRAGMA_OMP_SIMD()
 				for (auto i = 0ull; i < BiasCount; i++)
 				{
-					BiasesPar1[i] = (momentum * BiasesPar1[i]) + (oneMinMomentum * FloatSquare(BiasesD1[i] * batchRecip));
+					BiasesPar1[i] = (momentum * BiasesPar1[i]) + (oneMinMomentum * Square(BiasesD1[i] * batchRecip));
 					const auto update = lr * (std::sqrt(BiasesPar2[i] + eps) / std::sqrt(BiasesPar1[i] + eps)) * BiasesD1[i] * batchRecip;
-					BiasesPar2[i] = (momentum * BiasesPar2[i]) + (oneMinMomentum * FloatSquare(update));
+					BiasesPar2[i] = (momentum * BiasesPar2[i]) + (oneMinMomentum * Square<Float>(update));
 					Biases[i] += update;
 				}
 			}
@@ -1400,7 +1400,7 @@ namespace dnn
 			PRAGMA_OMP_SIMD()
 			for (auto i = 0ull; i < Weights.size(); i++)
 			{
-				WeightsPar1[i] += FloatSquare(WeightsD1[i] * batchRecip);
+				WeightsPar1[i] += Square<Float>(WeightsD1[i] * batchRecip);
 				Weights[i] -= lr * WeightsD1[i] / (std::sqrt(WeightsPar1[i]) + eps);
 			}
 
@@ -1410,7 +1410,7 @@ namespace dnn
 				PRAGMA_OMP_SIMD()
 				for (auto i = 0ull; i < BiasCount; i++)
 				{
-					BiasesPar1[i] += FloatSquare(BiasesD1[i] * batchRecip);
+					BiasesPar1[i] += Square<Float>(BiasesD1[i] * batchRecip);
 					Biases[i] -= lr * BiasesD1[i] / (std::sqrt(BiasesPar1[i]) + eps);
 				}
 			}
@@ -1434,7 +1434,7 @@ namespace dnn
 			for (auto i = 0ull; i < Weights.size(); i++)
 			{
 				WeightsPar1[i] = (beta1 * WeightsPar1[i]) + (oneMinusBeta1 * WeightsD1[i]);
-				WeightsPar2[i] = (beta2 * WeightsPar2[i]) + (oneMinusBeta2 * FloatSquare(WeightsD1[i] * batchRecip));
+				WeightsPar2[i] = (beta2 * WeightsPar2[i]) + (oneMinusBeta2 * Square<Float>(WeightsD1[i] * batchRecip));
 				Weights[i] -= lr * (WeightsPar1[i] / oneMinusB1) / std::sqrt((WeightsPar2[i] / oneMinusB2) + eps);
 			}
 
@@ -1445,7 +1445,7 @@ namespace dnn
 				for (auto i = 0ull; i < BiasCount; i++)
 				{
 					BiasesPar1[i] = (beta1 * BiasesPar1[i]) + (oneMinusBeta1 * BiasesD1[i]);
-					BiasesPar2[i] = (beta2 * BiasesPar2[i]) + (oneMinusBeta2 * FloatSquare(BiasesD1[i] * batchRecip));
+					BiasesPar2[i] = (beta2 * BiasesPar2[i]) + (oneMinusBeta2 * Square<Float>(BiasesD1[i] * batchRecip));
 					Biases[i] -= lr * (BiasesPar1[i] / oneMinusB1) / std::sqrt((BiasesPar2[i] / oneMinusB2) + eps);
 				}
 			}
@@ -1511,7 +1511,7 @@ namespace dnn
 			for (auto i = 0ull; i < Weights.size(); i++)
 			{
 				WeightsPar1[i] = (beta1 * WeightsPar1[i]) + (oneMinusBeta1 * WeightsD1[i] * batchRecip);
-				WeightsPar2[i] = (beta2 * WeightsPar2[i]) + (oneMinusBeta2 * FloatSquare(WeightsD1[i] * batchRecip));
+				WeightsPar2[i] = (beta2 * WeightsPar2[i]) + (oneMinusBeta2 * Square<Float>(WeightsD1[i] * batchRecip));
 				Weights[i] -= lr * ((WeightsPar1[i] / oneMinusB1) / std::sqrt((WeightsPar2[i] / oneMinusB2) + eps) + (weightDecay * Weights[i]));
 			}
 
@@ -1523,7 +1523,7 @@ namespace dnn
 				for (auto i = 0ull; i < BiasCount; i++)
 				{
 					BiasesPar1[i] = (beta1 * BiasesPar1[i]) + (oneMinusBeta1 * BiasesD1[i] * batchRecip);
-					BiasesPar2[i] = (beta2 * BiasesPar2[i]) + (oneMinusBeta2 * FloatSquare(BiasesD1[i] * batchRecip));
+					BiasesPar2[i] = (beta2 * BiasesPar2[i]) + (oneMinusBeta2 * Square<Float>(BiasesD1[i] * batchRecip));
 					Biases[i] -= lr * ((BiasesPar1[i] / oneMinusB1) / std::sqrt((BiasesPar2[i] / oneMinusB2) + eps) + (weightDecay * Biases[i]));
 				}
 			}
@@ -1573,7 +1573,7 @@ namespace dnn
 			PRAGMA_OMP_SIMD()
 			for (auto i = 0ull; i < Weights.size(); i++)
 			{
-				WeightsPar1[i] = (momentum * WeightsPar1[i]) + (oneMinusMomentum * FloatSquare(WeightsD1[i] * batchRecip));
+				WeightsPar1[i] = (momentum * WeightsPar1[i]) + (oneMinusMomentum * Square<Float>(WeightsD1[i] * batchRecip));
 				Weights[i] -= lr * WeightsD1[i] / std::sqrt(WeightsPar1[i] + eps);
 			}
 
@@ -1583,7 +1583,7 @@ namespace dnn
 				PRAGMA_OMP_SIMD()
 				for (auto i = 0ull; i < BiasCount; i++)
 				{
-					BiasesPar1[i] = (momentum * BiasesPar1[i]) + (oneMinusMomentum * FloatSquare(BiasesD1[i] * batchRecip));
+					BiasesPar1[i] = (momentum * BiasesPar1[i]) + (oneMinusMomentum * Square<Float>(BiasesD1[i] * batchRecip));
 					Biases[i] -= lr * BiasesD1[i] / std::sqrt(BiasesPar1[i] + eps);
 				}
 			}

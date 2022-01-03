@@ -125,7 +125,7 @@ namespace dnn
 		{
 			if (HasWeights)
 			{
-				const auto rangeWeights = GetColorRange(BiasesStats.Min, BiasesStats.Max);
+				const auto rangeWeights = GetColorRange<Float>(BiasesStats.Min, BiasesStats.Max);
 
 				const auto width = BiasCount;
 				const auto height = 1;
@@ -138,7 +138,7 @@ namespace dnn
 					const auto start = y * width;
 					const auto end = start + width;
 					for (auto x = start; x < end; x++)
-						image[x] = GetColorFromRange(rangeWeights, BiasesStats.Min, Biases[x]);
+						image[x] = GetColorFromRange<Float>(rangeWeights, BiasesStats.Min, Biases[x]);
 				}
 
 				return image;

@@ -283,11 +283,11 @@ namespace
 			arrPtr = nullptr;
 			dataPtr = nullptr;
 		}
-		AlignedArray()
+		AlignedArray() noexcept
 		{
 			//release();
 		}
-		AlignedArray(const size_type elements, const T value = T()) 
+		AlignedArray(const size_type elements, const T value = T()) noexcept
 		{
 			release();
 
@@ -368,11 +368,11 @@ namespace
 			arrPtr = nullptr;
 			dataPtr = nullptr;			
 		}
-		AlignedMemory()
+		AlignedMemory() noexcept
 		{
 			//release();
 		}
-		AlignedMemory(const dnnl::memory::desc& md, const dnnl::engine& engine, const T value = T())
+		AlignedMemory(const dnnl::memory::desc& md, const dnnl::engine& engine, const T value = T()) noexcept
 		{
 			if (md)
 			{
@@ -464,16 +464,19 @@ namespace
 	typedef AlignedArray<Byte, 64ull> ByteArray;
 	typedef std::vector<Float, AlignedAllocator<Float, 64ull>> FloatVector;
 	//constexpr bool IS_LITTLE_ENDIAN = std::endian::native == std::endian::little;
-	constexpr auto NEURONS_LIMIT = Float(100000);	// limit for all the neurons and derivative [-NEURONS_LIMIT,NEURONS_LIMIT]
-	constexpr auto WEIGHTS_LIMIT = Float(1000);		// limit for all the weights and biases [-WEIGHTS_LIMIT,WEIGHTS_LIMIT]
+	constexpr auto NEURONS_LIMIT = Float(5000);	// limit for all the neurons and derivative [-NEURONS_LIMIT,NEURONS_LIMIT]
+	constexpr auto WEIGHTS_LIMIT = Float(500);	// limit for all the weights and biases [-WEIGHTS_LIMIT,WEIGHTS_LIMIT]
 	
-	constexpr auto inline FloatSquare(const Float& value) noexcept { return (value * value); }
+	template<typename T>
+	constexpr auto inline Square(const T& value) noexcept { return (value * value); }
 	template<typename T>
 	constexpr auto inline Clamp(const T& v, const T& lo, const T& hi) noexcept { return (v < lo) ? lo : (hi < v) ? hi : v; }
 	template<typename T>
 	constexpr auto inline Saturate(const T& value) noexcept { return (value > T(255)) ? Byte(255) : (value < T(0)) ? Byte(0) : Byte(value); }
-	constexpr auto inline GetColorFromRange(const Float& range, const Float& minimum, const Float& value) noexcept { return Saturate<Float>(Float(255) - ((value - minimum) * range)); }
-	constexpr auto inline GetColorRange(const Float& min, const Float& max) noexcept { return (min == max) ? Float(0) : Float(255) / ((std::signbit(min) && std::signbit(max)) ? -(min + max) : (max - min)); }
+	template<typename T>
+	constexpr auto inline GetColorFromRange(const T& range, const T& minimum, const T& value) noexcept { return Saturate<T>(T(255) - ((value - minimum) * range)); }
+	template<typename T>
+	constexpr auto inline GetColorRange(const T& min, const T& max) noexcept { return (min == max) ? T(0) : T(255) / ((std::signbit(min) && std::signbit(max)) ? -(min + max) : (max - min)); }
 
 #if defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW32__)
 	const auto nwl = std::string("\r\n");

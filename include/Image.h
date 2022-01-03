@@ -831,7 +831,7 @@ namespace dnn
 			for (auto d = 0ull; d < image.D; d++)
 				for (auto h = 0ull; h < image.H; h++)
 					for (auto w = 0ull; w < image.W; w++)
-						variance += FloatSquare(image(c, d, h, w) - mean);
+						variance += Square<Float>(image(c, d, h, w) - mean);
 
 			return variance /= image.ChannelSize();
 		}

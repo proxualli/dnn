@@ -454,8 +454,8 @@ namespace dnn
 						for (auto cdhw = 0ull; cdhw < PaddedCDHW(); cdhw++)
 						{
 							Inputs[0]->NeuronsD1[cdhw] += NeuronsD1[cdhw] / (InputsOriginal[1]->Neurons[cdhw] * InputsOriginal[2]->Neurons[cdhw]);
-							Inputs[1]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[0]->Neurons[cdhw] / (FloatSquare(InputsOriginal[1]->Neurons[cdhw]) * InputsOriginal[2]->Neurons[cdhw]);
-							Inputs[2]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[0]->Neurons[cdhw] / (InputsOriginal[1]->Neurons[cdhw] * FloatSquare(InputsOriginal[2]->Neurons[cdhw]));
+							Inputs[1]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[0]->Neurons[cdhw] / (Square<Float>(InputsOriginal[1]->Neurons[cdhw]) * InputsOriginal[2]->Neurons[cdhw]);
+							Inputs[2]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[0]->Neurons[cdhw] / (InputsOriginal[1]->Neurons[cdhw] * Square<Float>(InputsOriginal[2]->Neurons[cdhw]));
 						}
 						break;
 
@@ -464,9 +464,9 @@ namespace dnn
 						for (auto cdhw = 0ull; cdhw < PaddedCDHW(); cdhw++)
 						{
 							Inputs[0]->NeuronsD1[cdhw] += NeuronsD1[cdhw] / (InputsOriginal[1]->Neurons[cdhw] * InputsOriginal[2]->Neurons[cdhw] * InputsOriginal[3]->Neurons[cdhw]);
-							Inputs[1]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[0]->Neurons[cdhw] / (FloatSquare(InputsOriginal[1]->Neurons[cdhw]) * InputsOriginal[2]->Neurons[cdhw] * InputsOriginal[3]->Neurons[cdhw]);
-							Inputs[2]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[0]->Neurons[cdhw] / (InputsOriginal[1]->Neurons[cdhw] * FloatSquare(InputsOriginal[2]->Neurons[cdhw]) * InputsOriginal[3]->Neurons[cdhw]);
-							Inputs[3]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[0]->Neurons[cdhw] / (InputsOriginal[1]->Neurons[cdhw] * InputsOriginal[2]->Neurons[cdhw] * FloatSquare(InputsOriginal[3]->Neurons[cdhw]));
+							Inputs[1]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[0]->Neurons[cdhw] / (Square<Float>(InputsOriginal[1]->Neurons[cdhw]) * InputsOriginal[2]->Neurons[cdhw] * InputsOriginal[3]->Neurons[cdhw]);
+							Inputs[2]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[0]->Neurons[cdhw] / (InputsOriginal[1]->Neurons[cdhw] * Square<Float>(InputsOriginal[2]->Neurons[cdhw]) * InputsOriginal[3]->Neurons[cdhw]);
+							Inputs[3]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[0]->Neurons[cdhw] / (InputsOriginal[1]->Neurons[cdhw] * InputsOriginal[2]->Neurons[cdhw] * Square<Float>(InputsOriginal[3]->Neurons[cdhw]));
 						}
 						break;
 					}
@@ -480,7 +480,7 @@ namespace dnn
 						for (auto cdhw = 0ull; cdhw < CDHW(); cdhw++)
 						{
 							Inputs[0]->NeuronsD1[cdhw] += NeuronsD1[cdhw] / InputsOriginal[1]->Neurons[cdhw];
-							Inputs[1]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[0]->Neurons[cdhw] / FloatSquare(InputsOriginal[1]->Neurons[cdhw]);
+							Inputs[1]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[0]->Neurons[cdhw] / Square<Float>(InputsOriginal[1]->Neurons[cdhw]);
 						}
 						break;
 
@@ -489,8 +489,8 @@ namespace dnn
 						for (auto cdhw = 0ull; cdhw < CDHW(); cdhw++)
 						{
 							Inputs[0]->NeuronsD1[cdhw] += NeuronsD1[cdhw] / (InputsOriginal[1]->Neurons[cdhw] * InputsOriginal[2]->Neurons[cdhw]);
-							Inputs[1]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[0]->Neurons[cdhw] / (FloatSquare(Inputs[1]->Neurons[cdhw]) * InputsOriginal[2]->Neurons[cdhw]);
-							Inputs[2]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[0]->Neurons[cdhw] / (InputsOriginal[1]->Neurons[cdhw] * FloatSquare(InputsOriginal[2]->Neurons[cdhw]));
+							Inputs[1]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[0]->Neurons[cdhw] / (Square<Float>(Inputs[1]->Neurons[cdhw]) * InputsOriginal[2]->Neurons[cdhw]);
+							Inputs[2]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[0]->Neurons[cdhw] / (InputsOriginal[1]->Neurons[cdhw] * Square<Float>(InputsOriginal[2]->Neurons[cdhw]));
 						}
 						break;
 
@@ -499,9 +499,9 @@ namespace dnn
 						for (auto cdhw = 0ull; cdhw < CDHW(); cdhw++)
 						{
 							Inputs[0]->NeuronsD1[cdhw] += NeuronsD1[cdhw] / (InputsOriginal[1]->Neurons[cdhw] * InputsOriginal[2]->Neurons[cdhw] * InputsOriginal[3]->Neurons[cdhw]);
-							Inputs[1]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[0]->Neurons[cdhw] / (FloatSquare(InputsOriginal[1]->Neurons[cdhw]) * InputsOriginal[2]->Neurons[cdhw] * InputsOriginal[3]->Neurons[cdhw]);
-							Inputs[2]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[0]->Neurons[cdhw] / (InputsOriginal[1]->Neurons[cdhw] * FloatSquare(InputsOriginal[2]->Neurons[cdhw]) * InputsOriginal[3]->Neurons[cdhw]);
-							Inputs[3]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[0]->Neurons[cdhw] / (InputsOriginal[1]->Neurons[cdhw] * InputsOriginal[2]->Neurons[cdhw] * FloatSquare(InputsOriginal[3]->Neurons[cdhw]));
+							Inputs[1]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[0]->Neurons[cdhw] / (Square<Float>(InputsOriginal[1]->Neurons[cdhw]) * InputsOriginal[2]->Neurons[cdhw] * InputsOriginal[3]->Neurons[cdhw]);
+							Inputs[2]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[0]->Neurons[cdhw] / (InputsOriginal[1]->Neurons[cdhw] * Square<Float>(InputsOriginal[2]->Neurons[cdhw]) * InputsOriginal[3]->Neurons[cdhw]);
+							Inputs[3]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[0]->Neurons[cdhw] / (InputsOriginal[1]->Neurons[cdhw] * InputsOriginal[2]->Neurons[cdhw] * Square<Float>(InputsOriginal[3]->Neurons[cdhw]));
 						}
 						break;
 					}
@@ -535,8 +535,8 @@ namespace dnn
 							for (auto cdhw = start; cdhw < end; cdhw++)
 							{
 								Inputs[0]->NeuronsD1[n] += NeuronsD1[n] / (InputsOriginal[1]->Neurons[n] * InputsOriginal[2]->Neurons[n]);
-								Inputs[1]->NeuronsD1[n] += NeuronsD1[n] * InputsOriginal[0]->Neurons[n] / (FloatSquare(Inputs[1]->Neurons[n]) * InputsOriginal[2]->Neurons[n]);
-								Inputs[2]->NeuronsD1[n] += NeuronsD1[n] * InputsOriginal[0]->Neurons[n] / (InputsOriginal[1]->Neurons[n] * FloatSquare(InputsOriginal[2]->Neurons[n]));
+								Inputs[1]->NeuronsD1[n] += NeuronsD1[n] * InputsOriginal[0]->Neurons[n] / (Square<Float>(Inputs[1]->Neurons[n]) * InputsOriginal[2]->Neurons[n]);
+								Inputs[2]->NeuronsD1[n] += NeuronsD1[n] * InputsOriginal[0]->Neurons[n] / (InputsOriginal[1]->Neurons[n] * Square<Float>(InputsOriginal[2]->Neurons[n]));
 							}
 						});
 						break;
@@ -550,9 +550,9 @@ namespace dnn
 							for (auto cdhw = start; cdhw < end; cdhw++)
 							{
 								Inputs[0]->NeuronsD1[cdhw] += NeuronsD1[cdhw] / (InputsOriginal[1]->Neurons[cdhw] * InputsOriginal[2]->Neurons[cdhw] * InputsOriginal[3]->Neurons[cdhw]);
-								Inputs[1]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[0]->Neurons[cdhw] / (FloatSquare(InputsOriginal[1]->Neurons[cdhw]) * InputsOriginal[2]->Neurons[cdhw] * InputsOriginal[3]->Neurons[cdhw]);
-								Inputs[2]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[0]->Neurons[cdhw] / (InputsOriginal[1]->Neurons[cdhw] * FloatSquare(InputsOriginal[2]->Neurons[cdhw]) * InputsOriginal[3]->Neurons[cdhw]);
-								Inputs[3]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[0]->Neurons[cdhw] / (InputsOriginal[1]->Neurons[cdhw] * InputsOriginal[2]->Neurons[cdhw] * FloatSquare(InputsOriginal[3]->Neurons[cdhw]));
+								Inputs[1]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[0]->Neurons[cdhw] / (Square<Float>(InputsOriginal[1]->Neurons[cdhw]) * InputsOriginal[2]->Neurons[cdhw] * InputsOriginal[3]->Neurons[cdhw]);
+								Inputs[2]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[0]->Neurons[cdhw] / (InputsOriginal[1]->Neurons[cdhw] * Square<Float>(InputsOriginal[2]->Neurons[cdhw]) * InputsOriginal[3]->Neurons[cdhw]);
+								Inputs[3]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[0]->Neurons[cdhw] / (InputsOriginal[1]->Neurons[cdhw] * InputsOriginal[2]->Neurons[cdhw] * Square<Float>(InputsOriginal[3]->Neurons[cdhw]));
 							}
 						});
 						break;
@@ -571,7 +571,7 @@ namespace dnn
 							for (auto cdhw = start; cdhw < end; cdhw++)
 							{
 								Inputs[0]->NeuronsD1[cdhw] += NeuronsD1[cdhw] / InputsOriginal[1]->Neurons[cdhw];
-								Inputs[1]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[0]->Neurons[cdhw] / FloatSquare(InputsOriginal[1]->Neurons[cdhw]);
+								Inputs[1]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[0]->Neurons[cdhw] / Square<Float>(InputsOriginal[1]->Neurons[cdhw]);
 							}
 						});
 						break;
@@ -584,8 +584,8 @@ namespace dnn
 							for (auto cdhw = start; cdhw < end; cdhw++)
 							{
 								Inputs[0]->NeuronsD1[n] += NeuronsD1[n] / (InputsOriginal[1]->Neurons[n] * InputsOriginal[2]->Neurons[n]);
-								Inputs[1]->NeuronsD1[n] += NeuronsD1[n] * InputsOriginal[0]->Neurons[n] / (FloatSquare(InputsOriginal[1]->Neurons[n]) * InputsOriginal[2]->Neurons[n]);
-								Inputs[2]->NeuronsD1[n] += NeuronsD1[n] * InputsOriginal[0]->Neurons[n] / (InputsOriginal[1]->Neurons[n] * FloatSquare(InputsOriginal[2]->Neurons[n]));
+								Inputs[1]->NeuronsD1[n] += NeuronsD1[n] * InputsOriginal[0]->Neurons[n] / (Square<Float>(InputsOriginal[1]->Neurons[n]) * InputsOriginal[2]->Neurons[n]);
+								Inputs[2]->NeuronsD1[n] += NeuronsD1[n] * InputsOriginal[0]->Neurons[n] / (InputsOriginal[1]->Neurons[n] * Square<Float>(InputsOriginal[2]->Neurons[n]));
 							}
 						});
 						break;
@@ -599,9 +599,9 @@ namespace dnn
 							for (auto cdhw = start; cdhw < end; cdhw++)
 							{
 								Inputs[0]->NeuronsD1[cdhw] += NeuronsD1[cdhw] / (InputsOriginal[1]->Neurons[cdhw] * InputsOriginal[2]->Neurons[cdhw] * InputsOriginal[3]->Neurons[cdhw]);
-								Inputs[1]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[0]->Neurons[cdhw] / (FloatSquare(InputsOriginal[1]->Neurons[cdhw]) * InputsOriginal[2]->Neurons[cdhw] * InputsOriginal[3]->Neurons[cdhw]);
-								Inputs[2]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[0]->Neurons[cdhw] / (InputsOriginal[1]->Neurons[cdhw] * FloatSquare(InputsOriginal[2]->Neurons[cdhw]) * InputsOriginal[3]->Neurons[cdhw]);
-								Inputs[3]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[0]->Neurons[cdhw] / (InputsOriginal[1]->Neurons[cdhw] * InputsOriginal[2]->Neurons[cdhw] * FloatSquare(InputsOriginal[3]->Neurons[cdhw]));
+								Inputs[1]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[0]->Neurons[cdhw] / (Square<Float>(InputsOriginal[1]->Neurons[cdhw]) * InputsOriginal[2]->Neurons[cdhw] * InputsOriginal[3]->Neurons[cdhw]);
+								Inputs[2]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[0]->Neurons[cdhw] / (InputsOriginal[1]->Neurons[cdhw] * Square<Float>(InputsOriginal[2]->Neurons[cdhw]) * InputsOriginal[3]->Neurons[cdhw]);
+								Inputs[3]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsOriginal[0]->Neurons[cdhw] / (InputsOriginal[1]->Neurons[cdhw] * InputsOriginal[2]->Neurons[cdhw] * Square<Float>(InputsOriginal[3]->Neurons[cdhw]));
 							}
 						});
 						break;

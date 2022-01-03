@@ -307,21 +307,21 @@ namespace dnn
 				if (batchSize == 1)
 				{
 					for (auto c = 0ull; c < C; c++)
-						Neurons[c] = FloatSquare(InputLayer->Neurons[c] - LabelFalse);
+						Neurons[c] = Square<Float>(InputLayer->Neurons[c] - LabelFalse);
 
 					const auto label = sampleLabel[LabelIndex].LabelA;
-					Neurons[label] = FloatSquare(InputLayer->Neurons[label] - LabelTrue);
+					Neurons[label] = Square<Float>(InputLayer->Neurons[label] - LabelTrue);
 				}
 				else
 				{
 #endif
 					for (auto nc = 0ull; nc < C * batchSize; nc++)
-						Neurons[nc] = FloatSquare(InputLayer->Neurons[nc] - LabelFalse);
+						Neurons[nc] = Square<Float>(InputLayer->Neurons[nc] - LabelFalse);
 
 					for (auto n = 0ull; n < batchSize; n++)
 					{
 						const auto label = sampleLabels[n][LabelIndex].LabelA + (n * C);
-						Neurons[label] = FloatSquare(InputLayer->Neurons[label] - LabelTrue);
+						Neurons[label] = Square<Float>(InputLayer->Neurons[label] - LabelTrue);
 					}
 #ifdef DNN_STOCHASTIC
 				}
@@ -337,14 +337,14 @@ namespace dnn
 					for (auto c = 0ull; c < C; c++)
 					{
 						const auto ty = LabelFalse * InputLayer->Neurons[c];
-						Neurons[c] = ty <= 0 ? Float(0.5) - ty : ty < Float(1) ? FloatSquare(1 - ty) * Float(0.5) : Float(0);
+						Neurons[c] = ty <= 0 ? Float(0.5) - ty : ty < Float(1) ? Square<Float>(1 - ty) * Float(0.5) : Float(0);
 #ifndef DNN_LEAN
 						NeuronsD1[c] = Float(0);
 #endif
 					}
 					const auto label = sampleLabel[LabelIndex].LabelA;
 					const auto ty = LabelTrue * InputLayer->Neurons[label];
-					Neurons[label] = ty <= 0 ? Float(0.5) - ty : ty < Float(1) ? FloatSquare(1 - ty) * Float(0.5) : Float(0);
+					Neurons[label] = ty <= 0 ? Float(0.5) - ty : ty < Float(1) ? Square<Float>(1 - ty) * Float(0.5) : Float(0);
 				}
 				else
 				{
@@ -352,7 +352,7 @@ namespace dnn
 					for (auto nc = 0ull; nc < C * batchSize; nc++)
 					{
 						const auto ty = LabelFalse * InputLayer->Neurons[nc];
-						Neurons[nc] = ty <= 0 ? Float(0.5) - ty : ty < Float(1) ? FloatSquare(1 - ty) * Float(0.5) : Float(0);
+						Neurons[nc] = ty <= 0 ? Float(0.5) - ty : ty < Float(1) ? Square<Float>(1 - ty) * Float(0.5) : Float(0);
 #ifndef DNN_LEAN
 						NeuronsD1[nc] = Float(0);
 #endif
@@ -361,7 +361,7 @@ namespace dnn
 					{
 						const auto label = sampleLabels[n][LabelIndex].LabelA + (n * C);
 						const auto ty = LabelTrue * InputLayer->Neurons[label];
-						Neurons[label] = ty <= 0 ? Float(0.5) - ty : ty < Float(1) ? FloatSquare(1 - ty) * Float(0.5) : Float(0);
+						Neurons[label] = ty <= 0 ? Float(0.5) - ty : ty < Float(1) ? Square<Float>(1 - ty) * Float(0.5) : Float(0);
 					}
 #ifdef DNN_STOCHASTIC
 				}
