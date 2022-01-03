@@ -898,6 +898,8 @@ extern "C" DNN_API void DNNGetTrainingInfo(TrainingInfo* info)
 		info->BatchSize = model->BatchSize;
 		info->Height = model->H;
 		info->Width = model->W;
+		info->PadH = model->PadH;
+		info->PadW = model->PadW;
 
 		info->HorizontalFlip = model->CurrentTrainingRate.HorizontalFlip;
 		info->VerticalFlip = model->CurrentTrainingRate.VerticalFlip;
@@ -935,7 +937,8 @@ extern "C" DNN_API void DNNGetTestingInfo(TestingInfo* info)
 		info->BatchSize = model->BatchSize;
 		info->Height = model->H;
 		info->Width = model->W;
-
+		info->PadH = model->PadH;
+		info->PadW = model->PadW;
 
 		info->AvgTestLoss = model->AvgTestLoss;
 		info->TestErrorPercentage = model->TestErrorPercentage;

@@ -34,6 +34,8 @@ namespace dnn
 		UInt BatchSize;
 		UInt Height;
 		UInt Width;
+		UInt PadH;
+		UInt PadW;
 		UInt Cycles;
 		UInt Epochs;
 		UInt EpochMultiplier;
@@ -66,6 +68,8 @@ namespace dnn
 			BatchSize(1),
 			Height(32),
 			Width(32),
+			PadH(4),
+			PadW(4),
 			Cycles(1),
 			Epochs(200),
 			EpochMultiplier(1),
@@ -90,7 +94,7 @@ namespace dnn
 		{
 		}
 
-		TrainingRate(const Optimizers optimizer, const Float momentum, const Float beta2, const Float l2Penalty, const Float dropout, const Float eps, const UInt batchSize, const UInt height, const UInt width, const UInt cycles, const UInt epochs, const UInt epochMultiplier, const Float maximumRate, const Float minimumRate, const Float finalRate, const Float gamma, const UInt decayAfterEpochs, const Float decayFactor, const bool horizontalFlip, const bool verticalFlip, const Float inputDropout, const Float cutout, const bool cutMix, const Float autoAugment, const Float colorCast, const UInt colorAngle, const Float distortion, const Interpolations interpolation, const Float scaling, const Float rotation) :
+		TrainingRate(const Optimizers optimizer, const Float momentum, const Float beta2, const Float l2Penalty, const Float dropout, const Float eps, const UInt batchSize, const UInt height, const UInt width, const UInt padH, const UInt padW, const UInt cycles, const UInt epochs, const UInt epochMultiplier, const Float maximumRate, const Float minimumRate, const Float finalRate, const Float gamma, const UInt decayAfterEpochs, const Float decayFactor, const bool horizontalFlip, const bool verticalFlip, const Float inputDropout, const Float cutout, const bool cutMix, const Float autoAugment, const Float colorCast, const UInt colorAngle, const Float distortion, const Interpolations interpolation, const Float scaling, const Float rotation) :
 			Optimizer(optimizer),
 			Momentum(momentum),
 			Beta2(beta2),
@@ -102,6 +106,8 @@ namespace dnn
 			Epochs(epochs),
 			Height(height),
 			Width(width),
+			PadH(padH),
+			PadW(padW),
 			EpochMultiplier(epochMultiplier),
 			MaximumRate(maximumRate),
 			MinimumRate(minimumRate),
