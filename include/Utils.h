@@ -5,7 +5,7 @@
 #include <sys/sysinfo.h>
 #endif
 
-#if defined(NDEBUG)
+#ifdef NDEBUG
 #define NOEXCEPT noexcept
 #else
 #define NOEXCEPT
@@ -110,7 +110,7 @@ namespace
 	typedef size_t UInt;
 	typedef unsigned char Byte;
 
-	const auto GetThreads(const UInt elements, const Float weight = 1) noexcept
+	const auto GetThreads(const UInt elements, const Float weight = 1) NOEXCEPT
 	{
 		const auto ULTRALIGHT_THRESHOLD =   2097152ull;	// minimum threshold for ULTRALIGHT load
 		const auto LIGHT_THRESHOLD      =   8338608ull;
@@ -320,7 +320,7 @@ namespace
 		inline T* data() noexcept { return dataPtr; }
 		inline const T* data() const noexcept { return dataPtr; }
 		inline size_type size() const noexcept { return nelems; }
-		inline void resize(size_type elements, const T value = T())
+		inline void resize(size_type elements, const T value = T()) NOEXCEPT
 		{ 
 			if (elements == nelems)
 				return;
@@ -411,7 +411,7 @@ namespace
 		inline const T* data() const noexcept { return dataPtr; }
 		inline size_type size() const noexcept { return nelems; }
 		inline dnnl::memory::desc desc() { return description; }
-		inline void resize(const dnnl::memory::desc& md, const dnnl::engine& engine, const T value = T())
+		inline void resize(const dnnl::memory::desc& md, const dnnl::engine& engine, const T value = T()) NOEXCEPT
 		{
 			if (md)
 			{
@@ -445,19 +445,19 @@ namespace
 				}
 			}
 		}
-		void resize(const size_type n, const size_type c, const dnnl::memory::data_type dtype, const dnnl::memory::format_tag format, const dnnl::engine& engine, const T value = T())
+		void resize(const size_type n, const size_type c, const dnnl::memory::data_type dtype, const dnnl::memory::format_tag format, const dnnl::engine& engine, const T value = T()) NOEXCEPT
 		{
 			resize(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(n), dnnl::memory::dim(c) }), dtype, format), engine, value);
 		}
-		void resize(const size_type n, const size_type c, const size_type w, const dnnl::memory::data_type dtype, const dnnl::memory::format_tag format, const dnnl::engine& engine, const T value = T())
+		void resize(const size_type n, const size_type c, const size_type w, const dnnl::memory::data_type dtype, const dnnl::memory::format_tag format, const dnnl::engine& engine, const T value = T()) NOEXCEPT
 		{
 			resize(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(n), dnnl::memory::dim(c), dnnl::memory::dim(w) }), dtype, format), engine, value);
 		}
-		void resize(const size_type n, const size_type c, const size_type h, const size_type w, const dnnl::memory::data_type dtype, const dnnl::memory::format_tag format, const dnnl::engine& engine, const T value = T())
+		void resize(const size_type n, const size_type c, const size_type h, const size_type w, const dnnl::memory::data_type dtype, const dnnl::memory::format_tag format, const dnnl::engine& engine, const T value = T()) NOEXCEPT
 		{
 			resize(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(n), dnnl::memory::dim(c), dnnl::memory::dim(h), dnnl::memory::dim(w) }), dtype, format), engine, value);
 		}
-		void resize(const size_type n, const size_type c, const size_type d, const size_type h, const size_type w, const dnnl::memory::data_type dtype, const dnnl::memory::format_tag format, const dnnl::engine& engine, const T value = T())
+		void resize(const size_type n, const size_type c, const size_type d, const size_type h, const size_type w, const dnnl::memory::data_type dtype, const dnnl::memory::format_tag format, const dnnl::engine& engine, const T value = T()) NOEXCEPT
 		{
 			resize(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(n), dnnl::memory::dim(c), dnnl::memory::dim(d), dnnl::memory::dim(h), dnnl::memory::dim(w) }), dtype, format), engine, value);
 		}
@@ -847,7 +847,7 @@ namespace
 	}
 
 	template <typename T>
-	constexpr void SwapEndian(T& buffer)
+	constexpr void SwapEndian(T& buffer) NOEXCEPT
 	{
 		static_assert(std::is_standard_layout<T>::value, "SwapEndian supports standard layout types only");
 		auto startIndex = static_cast<char*>((void*)buffer.data());

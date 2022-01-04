@@ -129,7 +129,7 @@ namespace dnn
 			return Data[w + (h * W) + (d * H * W) + (c * D * H * W)];
 		}
 		
-		static cimg_library::CImg<Float> ImageToCImgFloat(const Image& image) NOEXCEPT
+		inline static cimg_library::CImg<Float> ImageToCImgFloat(const Image& image) NOEXCEPT
 		{
 			auto img = cimg_library::CImg<Float>(static_cast<uint32_t>(image.W), static_cast<uint32_t>(image.H), static_cast<uint32_t>(image.D), static_cast<uint32_t>(image.C));
 
@@ -142,12 +142,12 @@ namespace dnn
 				return img;
 		}
 
-		static cimg_library::CImg<T> ImageToCImg(const Image& image) NOEXCEPT
+		inline static cimg_library::CImg<T> ImageToCImg(const Image& image) NOEXCEPT
 		{
 			return cimg_library::CImg<T>(image.data(), static_cast<uint32_t>(image.W), static_cast<uint32_t>(image.H), static_cast<uint32_t>(image.D), static_cast<uint32_t>(image.C));
 		}
 
-		static Image CImgToImage(const cimg_library::CImg<T>& image) NOEXCEPT
+		inline static Image CImgToImage(const cimg_library::CImg<T>& image) NOEXCEPT
 		{
 			return Image(image._spectrum, image._depth, image._height, image._width, image.data());
 		}
