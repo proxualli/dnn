@@ -139,7 +139,7 @@ namespace dnn
 						for (auto w = 0u; w < image.W; w++)
 							img(w, h, d, c) = image(c, d, h, w);
 
-				return img;
+			return img;
 		}
 
 		inline static cimg_library::CImg<T> ImageToCImg(const Image& image) NOEXCEPT
