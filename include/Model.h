@@ -2007,7 +2007,7 @@ namespace dnn
 				if (CurrentTrainingRate.CutMix)
 				{
 					double lambda = BetaDistribution<double>(generator, 1, 1);
-					imgByte = Image<Byte>::RandomCutMix(imgByte, imgByteMix, &lambda, generator);
+					Image<Byte>::RandomCutMix(imgByte, imgByteMix, &lambda, generator);
 					SampleLabel = GetCutMixLabelInfo(label, labelMix, lambda);
 				}
 				else
@@ -2040,10 +2040,10 @@ namespace dnn
 				imgByte = Image<Byte>::Distorted(imgByte, CurrentTrainingRate.Scaling, CurrentTrainingRate.Rotation, Interpolations(CurrentTrainingRate.Interpolation), DataProv->Mean, generator);
 
 			if (cutout)
-				imgByte = Image<Byte>::RandomCutout(imgByte, DataProv->Mean, generator);
+				Image<Byte>::RandomCutout(imgByte, DataProv->Mean, generator);
 
 			if (CurrentTrainingRate.InputDropout > Float(0))
-				imgByte = Image<Byte>::Dropout(imgByte, CurrentTrainingRate.InputDropout, DataProv->Mean, generator);
+				Image<Byte>::Dropout(imgByte, CurrentTrainingRate.InputDropout, DataProv->Mean, generator);
 
 			if (RandomCrop)
 				imgByte = Image<Byte>::RandomCrop(imgByte, D, H, W, DataProv->Mean, generator);
@@ -2121,13 +2121,13 @@ namespace dnn
 				imgByte = Image<Byte>::Distorted(imgByte, CurrentTrainingRate.Scaling, CurrentTrainingRate.Rotation, static_cast<Interpolations>(CurrentTrainingRate.Interpolation), DataProv->Mean, generator);
 
 			if (Bernoulli<bool>(generator, CurrentTrainingRate.Cutout) && !CurrentTrainingRate.CutMix)
-				imgByte = Image<Byte>::RandomCutout(imgByte, DataProv->Mean, generator);
+				Image<Byte>::RandomCutout(imgByte, DataProv->Mean, generator);
 
 			if (RandomCrop)
 				imgByte = Image<Byte>::Crop(imgByte, Positions::Center, D, H, W, DataProv->Mean);
 
 			if (CurrentTrainingRate.InputDropout > Float(0))
-				imgByte = Image<Byte>::Dropout(imgByte, CurrentTrainingRate.InputDropout, DataProv->Mean, generator);
+				Image<Byte>::Dropout(imgByte, CurrentTrainingRate.InputDropout, DataProv->Mean, generator);
 
 			for (auto c = 0ull; c < imgByte.C; c++)
 			{
@@ -2169,7 +2169,7 @@ namespace dnn
 					if (CurrentTrainingRate.CutMix)
 					{
 						double lambda = BetaDistribution<double>(generator, 1, 1);
-						imgByte = Image<Byte>::RandomCutMix(imgByte, imgByteMix, &lambda, generator);
+						Image<Byte>::RandomCutMix(imgByte, imgByteMix, &lambda, generator);
 						SampleLabels[batchIndex] = GetCutMixLabelInfo(labels, mixLabels, lambda);
 					}
 					else
@@ -2202,13 +2202,13 @@ namespace dnn
 					imgByte = Image<Byte>::Distorted(imgByte, CurrentTrainingRate.Scaling, CurrentTrainingRate.Rotation, Interpolations(CurrentTrainingRate.Interpolation), DataProv->Mean, generator);
 
 				if (cutout)
-					imgByte = Image<Byte>::RandomCutout(imgByte, DataProv->Mean, generator);
+					Image<Byte>::RandomCutout(imgByte, DataProv->Mean, generator);
 
 				if (RandomCrop)
 					imgByte = Image<Byte>::RandomCrop(imgByte, D, H, W, DataProv->Mean, generator);
 
 				if (CurrentTrainingRate.InputDropout > Float(0))
-					imgByte = Image<Byte>::Dropout(imgByte, CurrentTrainingRate.InputDropout, DataProv->Mean, generator);
+					Image<Byte>::Dropout(imgByte, CurrentTrainingRate.InputDropout, DataProv->Mean, generator);
 				
 				for (auto c = 0ull; c < imgByte.C; c++)
 				{
@@ -2301,13 +2301,13 @@ namespace dnn
 					imgByte = Image<Byte>::Distorted(imgByte, CurrentTrainingRate.Scaling, CurrentTrainingRate.Rotation, Interpolations(CurrentTrainingRate.Interpolation), DataProv->Mean, generator);
 
 				if (Bernoulli<bool>(generator, CurrentTrainingRate.Cutout) && !CurrentTrainingRate.CutMix)
-					imgByte = Image<Byte>::RandomCutout(imgByte, DataProv->Mean, generator);
+					Image<Byte>::RandomCutout(imgByte, DataProv->Mean, generator);
 				
 				if (RandomCrop)
 					imgByte = Image<Byte>::Crop(imgByte, Positions::Center, D, H, W, DataProv->Mean);
 
 				if (CurrentTrainingRate.InputDropout > Float(0))
-					imgByte = Image<Byte>::Dropout(imgByte, CurrentTrainingRate.InputDropout, DataProv->Mean, generator);
+					Image<Byte>::Dropout(imgByte, CurrentTrainingRate.InputDropout, DataProv->Mean, generator);
 
 				for (auto c = 0ull; c < imgByte.C; c++)
 				{

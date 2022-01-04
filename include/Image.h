@@ -172,7 +172,7 @@ namespace dnn
 			case 0:
 			{
 				if (Bernoulli<bool>(generator, Float(0.1)))
-					img = Invert(img);
+					Invert(img);
 
 				if (Bernoulli<bool>(generator, Float(0.2)))
 				{
@@ -522,7 +522,7 @@ namespace dnn
 					img = Equalize(img);
 
 				if (Bernoulli<bool>(generator, Float(0.1)))
-					img = Invert(img);
+					Invert(img);
 			}
 			break;
 
@@ -565,9 +565,7 @@ namespace dnn
 
 			imgSource.normalize(0, maximum);
 
-			auto img = CImgToImage(imgSource);
-
-			return img;
+			return CImgToImage(imgSource);
 		}
 
 		// magnitude = 0   // black-and-white image
@@ -781,22 +779,19 @@ namespace dnn
 			return Image::Crop(Image::Rotate(Image::Resize(image, image.D, height, width, interpolation), angle * UniformReal<Float>(generator, Float(-1), Float(1)), interpolation, mean), Positions::Center, image.D, image.H, image.W, mean);
 		}
 
-		static Image Dropout(const Image& image, const Float dropout, const std::vector<Float>& mean, std::mt19937& generator) NOEXCEPT
+		static void Dropout(Image& image, const Float dropout, const std::vector<Float>& mean, std::mt19937& generator) NOEXCEPT
 		{
-			Image img(image);
-			
-			for (auto d = 0ull; d < img.D; d++)
-				for (auto h = 0ull; h < img.H; h++)
-					for (auto w = 0ull; w < img.W; w++)
+			for (auto d = 0ull; d < image.D; d++)
+				for (auto h = 0ull; h < image.H; h++)
+					for (auto w = 0ull; w < image.W; w++)
 						if (Bernoulli<bool>(generator, dropout))
-							for (auto c = 0ull; c < img.C; c++)
+							for (auto c = 0ull; c < image.C; c++)
 							{
 								if constexpr (std::is_floating_point_v<T>)
-									img(c, d, h, w) = static_cast<T>(0);
+									image(c, d, h, w) = static_cast<T>(0);
 								else
-									img(c, d, h, w) = static_cast<T>(mean[c]);
+									image(c, d, h, w) = static_cast<T>(mean[c]);
 							}
-			return img;
 		}
 		
 		static Image Equalize(const Image& image) NOEXCEPT
@@ -805,9 +800,7 @@ namespace dnn
 
 			imgSource.equalize(256);
 
-			auto img = CImgToImage(imgSource);
-
-			return img;
+			return CImgToImage(imgSource);
 		}
 
 		static Float GetChannelMean(const Image& image, const UInt c) NOEXCEPT
@@ -854,19 +847,15 @@ namespace dnn
 			return img;
 		}
 
-		static Image Invert(const Image& image) NOEXCEPT
+		static void Invert(Image& image) NOEXCEPT
 		{
-			Image img(image.C, image.D, image.H, image.W);
-
 			constexpr T maximum = std::is_floating_point_v<T> ? static_cast<T>(1) : static_cast<T>(255);
 
-			for (auto c = 0ull; c < img.C; c++)
-				for (auto d = 0ull; d < img.D; d++)
-					for (auto h = 0ull; h < img.H; h++)
-						for (auto w = 0ull; w < img.W; w++)
-							img(c, d, h, w) = maximum - image(c, d, h, w);
-
-			return img;
+			for (auto c = 0ull; c < image.C; c++)
+				for (auto d = 0ull; d < image.D; d++)
+					for (auto h = 0ull; h < image.H; h++)
+						for (auto w = 0ull; w < image.W; w++)
+							image(c, d, h, w) = maximum - image(c, d, h, w);
 		}
 
 		static Image LoadJPEG(const std::string& fileName, const bool forceColorFormat = false) NOEXCEPT
@@ -1072,57 +1061,48 @@ namespace dnn
 			return img;
 		}
 
-		static Image RandomCutout(const Image& image, const std::vector<Float>& mean, std::mt19937& generator) NOEXCEPT
+		static void RandomCutout(Image& image, const std::vector<Float>& mean, std::mt19937& generator) NOEXCEPT
 		{
-			Image img(image);
-
-			const auto centerH = UniformInt<UInt>(generator, 0, img.H);
-			const auto centerW = UniformInt<UInt>(generator, 0, img.W);
-			const auto rangeH = UniformInt<UInt>(generator, img.H / 8, img.H / 4);
-			const auto rangeW = UniformInt<UInt>(generator, img.W / 8, img.W / 4);
+			const auto centerH = UniformInt<UInt>(generator, 0, image.H);
+			const auto centerW = UniformInt<UInt>(generator, 0, image.W);
+			const auto rangeH = UniformInt<UInt>(generator, image.H / 8, image.H / 4);
+			const auto rangeW = UniformInt<UInt>(generator, image.W / 8, image.W / 4);
 			const auto startH = static_cast<long>(centerH) - static_cast<long>(rangeH) > 0l ? centerH - rangeH : 0ull;
 			const auto startW = static_cast<long>(centerW) - static_cast<long>(rangeW) > 0l ? centerW - rangeW : 0ull;
-			const auto enheight = centerH + rangeH < img.H ? centerH + rangeH : img.H;
-			const auto enwidth = centerW + rangeW < img.W ? centerW + rangeW : img.W;
+			const auto enheight = centerH + rangeH < image.H ? centerH + rangeH : image.H;
+			const auto enwidth = centerW + rangeW < image.W ? centerW + rangeW : image.W;
 
 			auto channelMean =  static_cast<T>(0);
-			for (auto c = 0ull; c < img.C; c++)
+			for (auto c = 0ull; c < image.C; c++)
 			{
 				if constexpr (!std::is_floating_point_v<T>)
 					channelMean =  static_cast<T>(mean[c]);
-				for (auto d = 0ull; d < img.D; d++)
+				for (auto d = 0ull; d < image.D; d++)
 					for (auto h = startH; h < enheight; h++)
 						for (auto w = startW; w < enwidth; w++)
-							img(c, d, h, w) = channelMean;
+							image(c, d, h, w) = channelMean;
 			}
-
-			return img;
 		}
 
-		static Image RandomCutMix(const Image& image, const Image& imageMix, double* lambda, std::mt19937& generator) NOEXCEPT
+		static void RandomCutMix(Image& image, const Image& imageMix, double* lambda, std::mt19937& generator) NOEXCEPT
 		{
-			Image img(image);
-			Image imgMix(imageMix);
-
 			const auto cutRate = std::sqrt(1.0 - *lambda);
-			const auto cutH = static_cast<int>(static_cast<double>(img.H) * cutRate);
-			const auto cutW = static_cast<int>(static_cast<double>(img.W) * cutRate);
-			const auto cy = UniformInt<int>(generator, 0, static_cast<int>(img.H));
-			const auto cx = UniformInt<int>(generator, 0, static_cast<int>(img.W));
-			const auto bby1 = Clamp<int>(cy - cutH / 2, 0, static_cast<int>(img.H));
-			const auto bby2 = Clamp<int>(cy + cutH / 2, 0, static_cast<int>(img.H));
-			const auto bbx1 = Clamp<int>(cx - cutW / 2, 0, static_cast<int>(img.W));
-			const auto bbx2 = Clamp<int>(cx + cutW / 2, 0, static_cast<int>(img.W));
+			const auto cutH = static_cast<int>(static_cast<double>(image.H) * cutRate);
+			const auto cutW = static_cast<int>(static_cast<double>(image.W) * cutRate);
+			const auto cy = UniformInt<int>(generator, 0, static_cast<int>(image.H));
+			const auto cx = UniformInt<int>(generator, 0, static_cast<int>(image.W));
+			const auto bby1 = Clamp<int>(cy - cutH / 2, 0, static_cast<int>(image.H));
+			const auto bby2 = Clamp<int>(cy + cutH / 2, 0, static_cast<int>(image.H));
+			const auto bbx1 = Clamp<int>(cx - cutW / 2, 0, static_cast<int>(image.W));
+			const auto bbx2 = Clamp<int>(cx + cutW / 2, 0, static_cast<int>(image.W));
 
-			for (auto c = 0ull; c < img.C; c++)
-				for (auto d = 0ull; d < img.D; d++)
+			for (auto c = 0ull; c < image.C; c++)
+				for (auto d = 0ull; d < image.D; d++)
 					for (auto h = bby1; h < bby2; h++)
 						for (auto w = bbx1; w < bbx2; w++)
-							img(c, d, h, w) = imgMix(c, d, h, w);
+							image(c, d, h, w) = imageMix(c, d, h, w);
 
-			*lambda = 1.0 - (static_cast<double>((bbx2 - bbx1) * (bby2 - bby1)) / static_cast<double>(img.H * img.W));
-
-			return img;
+			*lambda = 1.0 - (static_cast<double>((bbx2 - bbx1) * (bby2 - bby1)) / static_cast<double>(image.H * image.W));
 		}
 
 		static Image Resize(const Image& image, const UInt depth, const UInt height, const UInt width, const Interpolations interpolation) NOEXCEPT
@@ -1142,9 +1122,7 @@ namespace dnn
 				break;
 			}
 			
-			auto img = CImgToImage(imgSource);
-
-			return img;
+			return CImgToImage(imgSource);
 		}
 
 		static Image Rotate(const Image& image, const Float angle, const Interpolations interpolation, const std::vector<Float>& mean) NOEXCEPT
@@ -1164,9 +1142,7 @@ namespace dnn
 				break;
 			}
 			
-			auto img = CImgToImage(imgSource);
-
-			return Crop(img, Positions::Center, image.D, image.H, image.W, mean);
+			return Crop(CImgToImage(imgSource), Positions::Center, image.D, image.H, image.W, mean);
 		}
 			
 		// magnitude = 0   // blurred image
@@ -1178,9 +1154,7 @@ namespace dnn
 
 			imgSource.sharpen(magnitude, false);
 
-			auto img = CImgToImage(imgSource);
-
-			return img;
+			return CImgToImage(imgSource);
 		}
 
 		static Image Solarize(const Image& image, const T treshold = 128) NOEXCEPT
