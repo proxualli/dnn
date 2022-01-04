@@ -147,17 +147,16 @@ namespace dnn
 						for_i(batchSize, threads, [=](UInt n)
 						{
 							const auto start = n * size;
-							const auto end = start + part;
-
+							
 							VecFloat In0, In1;
-							for (auto cdhw = start; cdhw < end; cdhw += VectorSize)
+							for (auto cdhw = start; cdhw < start + part; cdhw += VectorSize)
 							{
 								In0.load_a(&Inputs[0]->Neurons[cdhw]);
 								In1.load_a(&Inputs[1]->Neurons[cdhw]);
 								(In0 + In1).store_a(&Neurons[cdhw]);
 								vecZero.store_nt(&NeuronsD1[cdhw]);
 							}
-							for (auto cdhw = end; cdhw < start + size; cdhw++)
+							for (auto cdhw = start + part; cdhw < start + size; cdhw++)
 							{
 								Neurons[cdhw] = Inputs[0]->Neurons[cdhw] + Inputs[1]->Neurons[cdhw];
 								NeuronsD1[cdhw] = 0;
@@ -169,19 +168,18 @@ namespace dnn
 						for_i(batchSize, threads, [=](UInt n)
 						{
 							const auto start = n * size;
-							const auto end = start + part;
 							const auto scales0 = scales[0];
 							const auto scales1 = scales[1];
 
 							VecFloat In0, In1;
-							for (auto cdhw = start; cdhw < end; cdhw += VectorSize)
+							for (auto cdhw = start; cdhw < start + part; cdhw += VectorSize)
 							{
 								In0.load_a(&Inputs[0]->Neurons[cdhw]);
 								In1.load_a(&Inputs[1]->Neurons[cdhw]);
 								((In0 * scales0) + (In1 * scales1)).store_a(&Neurons[cdhw]);
 								vecZero.store_nt(&NeuronsD1[cdhw]);
 							}
-							for (auto cdhw = end; cdhw < start + size; cdhw++)
+							for (auto cdhw = start + part; cdhw < start + size; cdhw++)
 							{
 								Neurons[cdhw] = (Inputs[0]->Neurons[cdhw] * scales0) + (Inputs[1]->Neurons[cdhw] * scales1);
 								NeuronsD1[cdhw] = 0;
@@ -196,13 +194,12 @@ namespace dnn
 					for_i(batchSize, threads, [=](UInt n)
 					{
 						const auto start = n * size;
-						const auto end = start + part;
 						const auto scales0 = scales[0];
 						const auto scales1 = scales[1];
 						const auto scales2 = scales[2];
 						
 						VecFloat In0, In1, In2;
-						for (auto cdhw = start; cdhw < end; cdhw += VectorSize)
+						for (auto cdhw = start; cdhw < start + part; cdhw += VectorSize)
 						{
 							In0.load_a(&Inputs[0]->Neurons[cdhw]);
 							In1.load_a(&Inputs[1]->Neurons[cdhw]);
@@ -210,7 +207,7 @@ namespace dnn
 							((In0 * scales0) + (In1 * scales1) + (In2 * scales2)).store_a(&Neurons[cdhw]);
 							vecZero.store_nt(&NeuronsD1[cdhw]);
 						}
-						for (auto cdhw = end; cdhw < start + size; cdhw++)
+						for (auto cdhw = start + part; cdhw < start + size; cdhw++)
 						{
 							Neurons[cdhw] = (Inputs[0]->Neurons[cdhw] * scales0) + (Inputs[1]->Neurons[cdhw] * scales1) + (Inputs[2]->Neurons[cdhw] * scales2);
 							NeuronsD1[cdhw] = 0;
@@ -224,14 +221,13 @@ namespace dnn
 					for_i(batchSize, threads, [=](UInt n)
 					{
 						const auto start = n * size;
-						const auto end = start + part;
 						const auto scales0 = scales[0];
 						const auto scales1 = scales[1];
 						const auto scales2 = scales[2];
 						const auto scales3 = scales[3];
 
 						VecFloat In0, In1, In2, In3;
-						for (auto cdhw = start; cdhw < end; cdhw += VectorSize)
+						for (auto cdhw = start; cdhw < start + part; cdhw += VectorSize)
 						{
 							In0.load_a(&Inputs[0]->Neurons[cdhw]);
 							In1.load_a(&Inputs[1]->Neurons[cdhw]);
@@ -240,7 +236,7 @@ namespace dnn
 							((In0 * scales0) + (In1 * scales1) + (In2 * scales2) + (In3 * scales3)).store_a(&Neurons[cdhw]);
 							vecZero.store_nt(&NeuronsD1[cdhw]);
 						}
-						for (auto cdhw = end; cdhw < start + size; cdhw++)
+						for (auto cdhw = start + part; cdhw < start + size; cdhw++)
 						{
 							Neurons[cdhw] = (Inputs[0]->Neurons[cdhw] * scales0) + (Inputs[1]->Neurons[cdhw] * scales1) + (Inputs[2]->Neurons[cdhw] * scales2) + (Inputs[3]->Neurons[cdhw] * scales3);
 							NeuronsD1[cdhw] = 0;
@@ -254,10 +250,9 @@ namespace dnn
 					for_i(batchSize, threads, [=](UInt n)
 					{
 						const auto start = n * size;
-						const auto end = start + part;
-
+						
 						VecFloat In, sum;
-						for (auto cdhw = start; cdhw < end; cdhw += VectorSize)
+						for (auto cdhw = start; cdhw < start + part; cdhw += VectorSize)
 						{
 							sum = vecZero;
 							for (auto i = 0ull; i < Inputs.size(); i++)
@@ -268,7 +263,7 @@ namespace dnn
 							sum.store_a(&Neurons[cdhw]);
 							vecZero.store_nt(&NeuronsD1[cdhw]);
 						}
-						for (auto cdhw = end; cdhw < start + size; cdhw++)
+						for (auto cdhw = start + part; cdhw < start + size; cdhw++)
 						{
 							NeuronsD1[cdhw] = 0;
 							Neurons[cdhw] = 0;
@@ -362,10 +357,9 @@ namespace dnn
 						for_i(batchSize, threads, [=](UInt n)
 						{
 							const auto start = n * size;
-							const auto end = start + part;
-
+							
 							VecFloat inputD1, D1;
-							for (auto cdhw = start; cdhw < end; cdhw += VectorSize)
+							for (auto cdhw = start; cdhw < start + part; cdhw += VectorSize)
 							{
 								D1.load_a(&NeuronsD1[cdhw]);
 
@@ -375,7 +369,7 @@ namespace dnn
 								inputD1.load_a(&Inputs[1]->NeuronsD1[cdhw]);
 								(inputD1 + D1).store_a(&Inputs[1]->NeuronsD1[cdhw]);
 							}
-							for (auto cdhw = end; cdhw < start + size; cdhw++)
+							for (auto cdhw = start + part; cdhw < start + size; cdhw++)
 							{
 								Inputs[0]->NeuronsD1[cdhw] += NeuronsD1[cdhw];
 								Inputs[1]->NeuronsD1[cdhw] += NeuronsD1[cdhw];
@@ -387,12 +381,11 @@ namespace dnn
 						for_i(batchSize, threads, [=](UInt n)
 						{
 							const auto start = n * size;
-							const auto end = start + part;
 							const auto scale0 = scales[0];
 							const auto scale1 = scales[1];
 
 							VecFloat inputD1, D1;
-							for (auto cdhw = start; cdhw < end; cdhw += VectorSize)
+							for (auto cdhw = start; cdhw < start + part; cdhw += VectorSize)
 							{
 								D1.load_a(&NeuronsD1[cdhw]);
 
@@ -402,7 +395,7 @@ namespace dnn
 								inputD1.load_a(&Inputs[1]->NeuronsD1[cdhw]);
 								mul_add(D1, scale1, inputD1).store_a(&Inputs[1]->NeuronsD1[cdhw]);
 							}
-							for (auto cdhw = end; cdhw < start + size; cdhw++)
+							for (auto cdhw = start + part; cdhw < start + size; cdhw++)
 							{
 								Inputs[0]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * scale0;
 								Inputs[1]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * scale1;
@@ -417,13 +410,12 @@ namespace dnn
 					for_i(batchSize, threads, [=](UInt n)
 					{
 						const auto start = n * size;
-						const auto end = start + part;
 						const auto scale0 = scales[0];
 						const auto scale1 = scales[1];
 						const auto scale2 = scales[2];
 						
 						VecFloat inputD1, D1;
-						for (auto cdhw = start; cdhw < end; cdhw += VectorSize)
+						for (auto cdhw = start; cdhw < start + part; cdhw += VectorSize)
 						{
 							D1.load_a(&NeuronsD1[cdhw]);
 
@@ -439,7 +431,7 @@ namespace dnn
 							inputD1 += D1 * scale2;
 							inputD1.store_a(&Inputs[2]->NeuronsD1[cdhw]);
 						}
-						for (auto cdhw = end; cdhw < start + size; cdhw++)
+						for (auto cdhw = start + part; cdhw < start + size; cdhw++)
 						{
 							Inputs[0]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * scale0;
 							Inputs[1]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * scale1;
@@ -454,14 +446,13 @@ namespace dnn
 					for_i(batchSize, threads, [=](UInt n)
 					{
 						const auto start = n * size;
-						const auto end = start + part;
 						const auto scale0 = scales[0];
 						const auto scale1 = scales[1];
 						const auto scale2 = scales[2];
 						const auto scale3 = scales[3];
 												
 						VecFloat inputD1, D1;
-						for (auto cdhw = start; cdhw < end; cdhw += VectorSize)
+						for (auto cdhw = start; cdhw < start + part; cdhw += VectorSize)
 						{
 							D1.load_a(&NeuronsD1[cdhw]);
 
@@ -481,7 +472,7 @@ namespace dnn
 							inputD1 += D1 * scale3;
 							inputD1.store_a(&Inputs[3]->NeuronsD1[cdhw]);
 						}
-						for (auto cdhw = end; cdhw < start + size; cdhw++)
+						for (auto cdhw = start + part; cdhw < start + size; cdhw++)
 						{
 							Inputs[0]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * scale0;
 							Inputs[1]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * scale1;
@@ -497,10 +488,9 @@ namespace dnn
 					for_i(batchSize, threads, [=](UInt n)
 					{
 						const auto start = n * size;
-						const auto end = start + part;
-
+						
 						VecFloat inputD1, D1;
-						for (auto cdhw = start; cdhw < end; cdhw += VectorSize)
+						for (auto cdhw = start; cdhw < start + part; cdhw += VectorSize)
 						{
 							D1.load_a(&NeuronsD1[cdhw]);
 
@@ -524,7 +514,7 @@ namespace dnn
 							inputD1 += D1 * scales[4];
 							inputD1.store_a(&Inputs[4]->NeuronsD1[cdhw]);
 						}
-						for (auto cdhw = end; cdhw < start + size; cdhw++)
+						for (auto cdhw = start + part; cdhw < start + size; cdhw++)
 						{
 							Inputs[0]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * scales[0];
 							Inputs[1]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * scales[1];
@@ -541,9 +531,8 @@ namespace dnn
 					for_i(batchSize, threads, [=](UInt n)
 					{
 						const auto start = n * size;
-						const auto end = start + size;
 						PRAGMA_OMP_SIMD()
-						for (auto cdhw = start; cdhw < end; cdhw++)
+						for (auto cdhw = start; cdhw < start + size; cdhw++)
 						{
 							Inputs[0]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * scales[0];
 							Inputs[1]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * scales[1];
@@ -561,9 +550,8 @@ namespace dnn
 					for_i(batchSize, threads, [=](UInt n)
 					{
 						const auto start = n * size;
-						const auto end = start + size;
 						PRAGMA_OMP_SIMD()
-						for (auto cdhw = start; cdhw < end; cdhw++)
+						for (auto cdhw = start; cdhw < start + size; cdhw++)
 						{
 							Inputs[0]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * scales[0];
 							Inputs[1]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * scales[1];
@@ -582,9 +570,8 @@ namespace dnn
 					for_i(batchSize, threads, [=](UInt n)
 					{
 						const auto start = n * size;
-						const auto end = start + size;
 						PRAGMA_OMP_SIMD()
-						for (auto cdhw = start; cdhw < end; cdhw++)
+						for (auto cdhw = start; cdhw < start + size; cdhw++)
 						{
 							Inputs[0]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * scales[0];
 							Inputs[1]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * scales[1];
@@ -603,9 +590,8 @@ namespace dnn
 					for_i(batchSize, threads, [=](UInt n)
 					{
 						const auto start = n * size;
-						const auto end = start + size;
 						PRAGMA_OMP_SIMD()
-						for (auto cdhw = start; cdhw < end; cdhw++)
+						for (auto cdhw = start; cdhw < start + size; cdhw++)
 						{
 							Inputs[0]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * scales[0];
 							Inputs[1]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * scales[1];
@@ -617,7 +603,7 @@ namespace dnn
 							Inputs[7]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * scales[7];
 						}
 						for (auto i = 8ull; i < Inputs.size(); i++)
-							for (auto cdhw = start; cdhw < end; cdhw++)
+							for (auto cdhw = start; cdhw < start + size; cdhw++)
 								Inputs[i]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * scales[i];
 					});
 				}
