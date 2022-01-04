@@ -2020,7 +2020,7 @@ namespace dnn
 				SampleLabel = GetLabelInfo(label);
 
 			if (CurrentTrainingRate.HorizontalFlip && TrainingSamplesHFlip[rndIndex])
-				imgByte = Image<Byte>::HorizontalMirror(imgByte);
+				Image<Byte>::HorizontalMirror(imgByte);
 
 			if (CurrentTrainingRate.VerticalFlip && TrainingSamplesVFlip[rndIndex])
 				imgByte = Image<Byte>::VerticalMirror(imgByte);
@@ -2104,7 +2104,7 @@ namespace dnn
 				imgByte = Image<Byte>::ColorCast(imgByte, CurrentTrainingRate.ColorAngle, generator);
 
 			if (CurrentTrainingRate.HorizontalFlip && TestingSamplesHFlip[index])
-				imgByte = Image<Byte>::HorizontalMirror(imgByte);
+				Image<Byte>::HorizontalMirror(imgByte);
 
 			if (CurrentTrainingRate.VerticalFlip && TestingSamplesVFlip[index])
 				imgByte = Image<Byte>::VerticalMirror(imgByte);
@@ -2182,7 +2182,7 @@ namespace dnn
 					SampleLabels[batchIndex] = GetLabelInfo(labels);
 				
 				if (CurrentTrainingRate.HorizontalFlip && TrainingSamplesHFlip[randomIndex])
-					imgByte = Image<Byte>::HorizontalMirror(imgByte);
+					Image<Byte>::HorizontalMirror(imgByte);
 
 				if (CurrentTrainingRate.VerticalFlip && TrainingSamplesVFlip[randomIndex])
 					imgByte = Image<Byte>::VerticalMirror(imgByte);
@@ -2284,7 +2284,7 @@ namespace dnn
 					imgByte = Image<Byte>::ColorCast(imgByte, CurrentTrainingRate.ColorAngle, generator);
 
 				if (CurrentTrainingRate.HorizontalFlip && TestingSamplesHFlip[sampleIndex])
-					imgByte = Image<Byte>::HorizontalMirror(imgByte);
+					Image<Byte>::HorizontalMirror(imgByte);
 
 				if (CurrentTrainingRate.VerticalFlip && TestingSamplesVFlip[sampleIndex])
 					imgByte = Image<Byte>::VerticalMirror(imgByte);

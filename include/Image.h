@@ -834,17 +834,18 @@ namespace dnn
 			return std::max(std::sqrt(Image::GetChannelVariance(image, c)), Float(1) / std::sqrt(Float(image.ChannelSize())));
 		}
 
-		static Image HorizontalMirror(const Image& image) NOEXCEPT
+		static void HorizontalMirror(Image& image) NOEXCEPT
 		{
-			Image img(image.C, image.D, image.H, image.W);
-
-			for (auto c = 0ull; c < img.C; c++)
-				for (auto d = 0ull; d < img.D; d++)
-					for (auto h = 0ull; h < img.H; h++)
-						for (auto w = 0ull; w < img.W; w++)
-							img(c, d, h, w) = image(c, d, h, image.W - 1 - w);
-			
-			return img;
+			T left;
+			for (auto c = 0ull; c < image.C; c++)
+				for (auto d = 0ull; d < image.D; d++)
+					for (auto h = 0ull; h < image.H; h++)
+						for (auto w = 0ull; w < image.W; w++)
+						{
+							left = image(c, d, h, w);
+							image(c, d, h, w) = image(c, d, h, image.W - 1 - w);
+							image(c, d, h, image.W - 1 - w) = left;
+						}
 		}
 
 		static void Invert(Image& image) NOEXCEPT
