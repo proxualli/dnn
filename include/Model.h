@@ -420,7 +420,7 @@ namespace dnn
 
 		void(*NewEpoch)(UInt, UInt, UInt, UInt, Float, Float, Float, bool, bool, Float, Float, bool, Float, Float, UInt, Float, UInt, Float, Float, Float, UInt, UInt, UInt, Float, Float, Float, Float, Float, Float, UInt, Float, Float, Float, UInt);
 
-		const auto GetName(const std::string& definition) const
+		const auto GetModelName(const std::string& definition) const
 		{
 			if (definition.length() > 2)
 			{
@@ -433,7 +433,7 @@ namespace dnn
 		}
 
 		Model(const std::string& definition, Dataprovider* dataprovider) :
-			Name(GetName(definition)),
+			Name(GetModelName(definition)),
 			Definition(definition),
 			DataProv(dataprovider),
 			Engine(dnnl::engine(dnnl::engine::kind::cpu, 0)),

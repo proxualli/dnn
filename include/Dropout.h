@@ -94,7 +94,8 @@ namespace dnn
 #ifdef DNN_STOCHASTIC
 				if (batchSize == 1)
 				{
-					auto generator = Ranvec1(Seed<int>(), static_cast<int>(std::hash<std::thread::id>()(std::this_thread::get_id())), 3);
+					auto generator = Ranvec1(3);
+					generator.init(Seed<int>(), static_cast<int>(std::hash<std::thread::id>()(std::this_thread::get_id())));
 					VecFloat mask;
 					for (auto i = 0ull; i < part; i += VectorSize)
 					{
@@ -124,7 +125,9 @@ namespace dnn
 #endif
 					for_i(batchSize, threads, [=](UInt b)
 					{
-						auto generator = Ranvec1(Seed<int>(), static_cast<int>(std::hash<std::thread::id>()(std::this_thread::get_id())), 3);
+						auto generator = Ranvec1(3);
+						generator.init(Seed<int>(), static_cast<int>(std::hash<std::thread::id>()(std::this_thread::get_id())));
+
 						const auto start = b * size;
 						const auto end = start + part;
 						VecFloat mask;

@@ -209,7 +209,9 @@ namespace dnn
 
 					for_i(C, threads, [=](UInt c)
 					{
-						auto generator = Ranvec1(Seed<int>(), static_cast<int>(std::hash<std::thread::id>()(std::this_thread::get_id())), 3);
+						auto generator = Ranvec1(3);
+						generator.init(Seed<int>(), static_cast<int>(std::hash<std::thread::id>()(std::this_thread::get_id())));
+
 						auto vecMean = VecFloat(0);
 						auto mean = Float(0);
 						for (auto n = 0ull; n < batchSize; n++)
@@ -351,7 +353,9 @@ namespace dnn
 				{
 					for_i(PaddedC / VectorSize, threads, [=](UInt c)
 					{
-						auto generator = Ranvec1(Seed<int>(), static_cast<int>(std::hash<std::thread::id>()(std::this_thread::get_id())), 3);
+						auto generator = Ranvec1(3);
+						generator.init(Seed<int>(), static_cast<int>(std::hash<std::thread::id>()(std::this_thread::get_id())));
+
 						const auto channelOffset = c * VectorSize;
 						const auto mapOffset = channelOffset * HW();
 
