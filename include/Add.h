@@ -10,8 +10,10 @@ namespace dnn
 		std::vector<dnnl::memory::desc> srcsMemsDesc;
 		std::unordered_map<int, dnnl::memory> fwdArgs;
 		std::unique_ptr<dnnl::sum::primitive_desc> fwdDesc;
+		//std::unique_ptr<dnnl::binary::primitive_desc> bwdAddDesc;
 #ifdef DNN_CACHE_PRIMITIVES
 		std::unique_ptr<dnnl::sum> fwd;
+		//std::unique_ptr<dnnl::binary> bwdAdd;
 #endif
 
 	public:
@@ -101,8 +103,15 @@ namespace dnn
 			for (auto i = 0ull; i < Inputs.size(); i++)
 				fwdArgs.insert({ DNNL_ARG_MULTIPLE_SRC + int(i), dnnl::memory(srcsMemsDesc[i], Device.engine, Inputs[i]->Neurons.data()) });
 
+/*
+			bwdAddDesc = std::make_unique<dnnl::binary::primitive_desc>(dnnl::binary::primitive_desc(dnnl::binary::desc(dnnl::algorithm::binary_add, *InputLayer->DiffDstMemDesc, *DiffDstMemDesc, *InputLayer->DiffDstMemDesc), Device.engine));
+			dnnl::primitive_attr binary_attr_ops;
+			binary_attr_ops.set_scales(0, 0, scales);
+*/
+
 #ifdef DNN_CACHE_PRIMITIVES
 			fwd = std::make_unique<dnnl::sum>(dnnl::sum(*fwdDesc));
+			//bwdAdd = std::make_unique<dnnl::binary>(dnnl::binary(*bwdAddDesc));
 #endif
 		}
 
@@ -302,6 +311,17 @@ namespace dnn
 
 			for (auto i = 0ull; i < Inputs.size(); i++)
 				scales[i] = fullDepth ? Float(1) : (Inputs[i]->Skip ? Float(0) : Float(1));
+/*
+			for (auto i = 0ull; i < Inputs.size(); i++)
+			{
+#ifdef DNN_CACHE_PRIMITIVES
+				bwdAdd->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ { DNNL_ARG_SRC_0, dnnl::memory(*Inputs[i]->DiffDstMemDesc, Device.engine, Inputs[i]->NeuronsD1.data()) }, { DNNL_ARG_SRC_1, dnnl::memory(*DiffDstMemDesc, Device.engine, NeuronsD1.data()) }, { DNNL_ARG_DST, dnnl::memory(*Inputs[i]->DiffDstMemDesc, Device.engine, Inputs[i]->NeuronsD1.data()) } });
+#else
+				dnnl::binary(*bwdAddDesc).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ { DNNL_ARG_SRC_0, dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data()) }, { DNNL_ARG_SRC_1, memDiffSrc }, { DNNL_ARG_DST, dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data()) } });
+#endif
+				Device.stream.wait();
+			}
+*/
 
 #ifdef DNN_STOCHASTIC
 			if (batchSize == 1)
@@ -337,7 +357,7 @@ namespace dnn
 
 				default:
 				{
-					for (auto i = 0ull; i < inputs; i++)
+					for (auto i = 0ull; i < Inputs.size(); i++)
 						for (auto cdhw = 0ull; cdhw < size; cdhw++)
 							Inputs[i]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * scales[i];
 				}
@@ -610,6 +630,7 @@ namespace dnn
 #ifdef DNN_STOCHASTIC
 			}
 #endif
+
 #ifdef DNN_LEAN
 			ReleaseGradient();
 #endif // DNN_LEAN

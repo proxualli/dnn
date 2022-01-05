@@ -35,60 +35,32 @@ namespace dnn
 	template<typename T>
 	struct Image
 	{
-		typedef std::vector<T, AlignedAllocator<T, 64ull>> VectorT;
-
 	private:
-		VectorT Data;
+		cimg_library::CImg<T> Data;
 
 	public:
-		UInt C; // Channels
-		UInt D; // Depth
-		UInt H; // Height
-		UInt W; // Width
-
 		Image() NOEXCEPT :
-			C(0),
-			D(0),
-			H(0),
-			W(0),
-			Data(VectorT())
+			Data(cimg_library::CImg<T>())
 		{
 		}
 
 		Image(const Image& image) NOEXCEPT :
-			C(image.C),
-			D(image.D),
-			H(image.H),
-			W(image.W),
 			Data(image.Data)
 		{
 		}
 
-		Image(const UInt c, const UInt d, const UInt h, const UInt w, const VectorT& image) NOEXCEPT :
-			C(c),
-			D(d),
-			H(h),
-			W(w),
+		Image(const cimg_library::CImg<T>& image) NOEXCEPT :
 			Data(image)
 		{
 		}
-
-		Image(const UInt c, const UInt d, const UInt h, const UInt w, const T* image) NOEXCEPT :
-			C(c),
-			D(d),
-			H(h),
-			W(w),
-			Data(VectorT(c * d * h * w))
+		
+		Image(const unsigned c, const unsigned d, const unsigned h, const unsigned w, const T* image) NOEXCEPT :
+			Data(cimg_library::CImg<T>(image, w, h, d, c))
 		{
-			std::memcpy(Data.data(), image, c * d * h * w * sizeof(T));
 		}
 
-		Image(const UInt c, const UInt d, const UInt h, const UInt w) NOEXCEPT :
-			C(c),
-			D(d),
-			H(h),
-			W(w),
-			Data(VectorT(c * d * h * w))
+		Image(const unsigned c, const unsigned d, const unsigned h, const unsigned w) NOEXCEPT :
+			Data(cimg_library::CImg<T>(w, h, d, c))
 		{
 		}
 
@@ -104,52 +76,62 @@ namespace dnn
 			return Data.data();
 		}
 
-		auto Area() const NOEXCEPT
+		const auto C() const NOEXCEPT
 		{
-			return H * W;
-		}
-
-		auto ChannelSize() const NOEXCEPT
-		{
-			return D * H * W;
-		}
-
-		auto Size() const NOEXCEPT
-		{
-			return C * D * H * W;
-		}
-
-		T& operator()(const UInt c, const UInt d, const UInt h, const UInt w) NOEXCEPT
-		{
-			return Data[w + (h * W) + (d * H * W) + (c * D * H * W)];
-		}
-
-		const T& operator()(const UInt c, const UInt d, const UInt h, const UInt w) const NOEXCEPT
-		{
-			return Data[w + (h * W) + (d * H * W) + (c * D * H * W)];
+			return Data._spectrum;
 		}
 		
-		inline static cimg_library::CImg<Float> ImageToCImgFloat(const Image& image) NOEXCEPT
+		const auto D() const NOEXCEPT
 		{
-			auto img = cimg_library::CImg<Float>(static_cast<uint32_t>(image.W), static_cast<uint32_t>(image.H), static_cast<uint32_t>(image.D), static_cast<uint32_t>(image.C));
+			return Data._depth;
+		}
+		
+		const auto H() const NOEXCEPT
+		{
+			return Data._height;
+		}
 
-			for (auto c = 0u; c < image.C; c++)
-				for (auto d = 0u; d < image.D; d++)
-					for (auto h = 0u; h < image.H; h++)
-						for (auto w = 0u; w < image.W; w++)
+		const auto W() const NOEXCEPT
+		{
+			return Data._width;
+		}
+
+		const auto Area() const NOEXCEPT
+		{
+			return Data._height * Data._width;
+		}
+
+		const auto ChannelSize() const NOEXCEPT
+		{
+			return Data._depth * Area();
+		}
+
+		const auto Size() const NOEXCEPT
+		{
+			return Data.size();
+		}
+
+		T& operator()(const unsigned c, const unsigned d, const unsigned h, const unsigned w) NOEXCEPT
+		{
+			return Data[w + (h * W()) + (d * Area()) + (c * ChannelSize())];
+		}
+
+		const T& operator()(const unsigned c, const unsigned d, const unsigned h, const unsigned w) const NOEXCEPT
+		{
+			return Data[w + (h * W()) + (d * Area()) + (c * ChannelSize())];
+		}
+		
+		static cimg_library::CImg<Float> ImageToCImgFloat(const Image& image) NOEXCEPT
+		{
+			auto img = cimg_library::CImg<Float>(image.W(), image.H(), image.D(), image.C());
+
+			for (auto c = 0u; c < image.C(); c++)
+				for (auto d = 0u; d < image.D(); d++)
+					for (auto h = 0u; h < image.H(); h++)
+						for (auto w = 0u; w < image.W(); w++)
 							img(w, h, d, c) = image(c, d, h, w);
 
 			return img;
-		}
-
-		inline static cimg_library::CImg<T> ImageToCImg(const Image& image) NOEXCEPT
-		{
-			return cimg_library::CImg<T>(image.data(), static_cast<uint32_t>(image.W), static_cast<uint32_t>(image.H), static_cast<uint32_t>(image.D), static_cast<uint32_t>(image.C));
-		}
-
-		inline static Image CImgToImage(const cimg_library::CImg<T>& image) NOEXCEPT
-		{
-			return Image(image._spectrum, image._depth, image._height, image._width, image.data());
 		}
 
 		static Image AutoAugment(const Image& image, const UInt padD, const UInt padH, const UInt padW, const std::vector<Float>& mean, const bool mirrorPad, std::mt19937& generator) NOEXCEPT
@@ -177,9 +159,9 @@ namespace dnn
 				if (Bernoulli<bool>(generator, Float(0.2)))
 				{
 					if (Bernoulli<bool>(generator, Float(0.5)))
-						img = Contrast(img, FloatLevel(6));
+						Contrast(img, FloatLevel(6));
 					else
-						img = Contrast(img, FloatLevel(4));
+						Contrast(img, FloatLevel(4));
 				}
 			}
 			break;
@@ -197,9 +179,9 @@ namespace dnn
 				if (Bernoulli<bool>(generator, Float(0.3)))
 				{
 					if (Bernoulli<bool>(generator, Float(0.5)))
-						img = Translate(img, 0, IntLevel(7), mean);
+						Translate(img, 0, IntLevel(7), mean);
 					else
-						img = Translate(img, 0, -IntLevel(7), mean);
+						Translate(img, 0, -IntLevel(7), mean);
 				}
 			}
 			break;
@@ -209,17 +191,17 @@ namespace dnn
 				if (Bernoulli<bool>(generator, Float(0.8)))
 				{
 					if (Bernoulli<bool>(generator, Float(0.5)))
-						img = Sharpness(img, FloatLevel(2));
+						Sharpness(img, FloatLevel(2));
 					else
-						img = Sharpness(img, FloatLevel(8));
+						Sharpness(img, FloatLevel(8));
 				}
 
 				if (Bernoulli<bool>(generator, Float(0.9)))
 				{
 					if (Bernoulli<bool>(generator, Float(0.5)))
-						img = Sharpness(img, FloatLevel(3));
+						Sharpness(img, FloatLevel(3));
 					else
-						img = Sharpness(img, FloatLevel(7));
+						Sharpness(img, FloatLevel(7));
 				}
 			}
 			break;
@@ -237,9 +219,9 @@ namespace dnn
 				if (Bernoulli<bool>(generator, Float(0.7)))
 				{
 					if (Bernoulli<bool>(generator, Float(0.5)))
-						img = Translate(img, IntLevel(7), 0, mean);
+						Translate(img, IntLevel(7), 0, mean);
 					else
-						img = Translate(img, -IntLevel(7), 0, mean);
+						Translate(img, -IntLevel(7), 0, mean);
 				}
 			}
 			break;
@@ -247,10 +229,10 @@ namespace dnn
 			case 4:
 			{
 				if (Bernoulli<bool>(generator, Float(0.5)))
-					img = AutoContrast(img);
+					AutoContrast(img);
 
 				if (Bernoulli<bool>(generator, Float(0.9)))
-					img = Equalize(img);
+					Equalize(img);
 			}
 			break;
 
@@ -279,17 +261,17 @@ namespace dnn
 				if (Bernoulli<bool>(generator, Float(0.4)))
 				{
 					if (Bernoulli<bool>(generator, Float(0.5)))
-						img = Color(img, FloatLevel(3));
+						Color(img, FloatLevel(3));
 					else
-						img = Color(img, FloatLevel(7));
+						Color(img, FloatLevel(7));
 				}
 
 				if (Bernoulli<bool>(generator, Float(0.6)))
 				{
 					if (Bernoulli<bool>(generator, Float(0.5)))
-						img = Brightness(img, FloatLevel(7));
+						Brightness(img, FloatLevel(7));
 					else
-						img = Brightness(img, FloatLevel(3));
+						Brightness(img, FloatLevel(3));
 				}
 			}
 			break;
@@ -299,17 +281,17 @@ namespace dnn
 				if (Bernoulli<bool>(generator, Float(0.3)))
 				{
 					if (Bernoulli<bool>(generator, Float(0.5)))
-						img = Sharpness(img, FloatLevel(9));
+						Sharpness(img, FloatLevel(9));
 					else
-						img = Sharpness(img, FloatLevel(1));
+						Sharpness(img, FloatLevel(1));
 				}
 
 				if (Bernoulli<bool>(generator, Float(0.7)))
 				{
 					if (Bernoulli<bool>(generator, Float(0.5)))
-						img = Brightness(img, FloatLevel(8));
+						Brightness(img, FloatLevel(8));
 					else
-						img = Brightness(img, FloatLevel(2));
+						Brightness(img, FloatLevel(2));
 				}
 			}
 			break;
@@ -317,10 +299,10 @@ namespace dnn
 			case 8:
 			{
 				if (Bernoulli<bool>(generator, Float(0.6)))
-					img = Equalize(img);
+					Equalize(img);
 
 				if (Bernoulli<bool>(generator, Float(0.5)))
-					img = Equalize(img);
+					Equalize(img);
 			}
 			break;
 
@@ -329,17 +311,17 @@ namespace dnn
 				if (Bernoulli<bool>(generator, Float(0.6)))
 				{
 					if (Bernoulli<bool>(generator, Float(0.5)))
-						img = Contrast(img, FloatLevel(7));
+						Contrast(img, FloatLevel(7));
 					else
-						img = Contrast(img, FloatLevel(3));
+						Contrast(img, FloatLevel(3));
 				}
 
 				if (Bernoulli<bool>(generator, Float(0.6)))
 				{
 					if (Bernoulli<bool>(generator, Float(0.5)))
-						img = Sharpness(img, FloatLevel(6));
+						Sharpness(img, FloatLevel(6));
 					else
-						img = Sharpness(img, FloatLevel(4));
+						Sharpness(img, FloatLevel(4));
 				}
 			}
 			break;
@@ -349,17 +331,17 @@ namespace dnn
 				if (Bernoulli<bool>(generator, Float(0.7)))
 				{
 					if (Bernoulli<bool>(generator, Float(0.5)))
-						img = Color(img, FloatLevel(7));
+						Color(img, FloatLevel(7));
 					else
-						img = Color(img, FloatLevel(3));
+						Color(img, FloatLevel(3));
 				}
 
 				if (Bernoulli<bool>(generator, Float(0.5)))
 				{
 					if (Bernoulli<bool>(generator, Float(0.5)))
-						img = Translate(img, 0, IntLevel(8), mean);
+						Translate(img, 0, IntLevel(8), mean);
 					else
-						img = Translate(img, 0, -IntLevel(8), mean);
+						Translate(img, 0, -IntLevel(8), mean);
 				}
 			}
 			break;
@@ -367,10 +349,10 @@ namespace dnn
 			case 11:
 			{
 				if (Bernoulli<bool>(generator, Float(0.3)))
-					img = Equalize(img);
+					Equalize(img);
 
 				if (Bernoulli<bool>(generator, Float(0.4)))
-					img = AutoContrast(img);
+					AutoContrast(img);
 			}
 			break;
 
@@ -379,13 +361,13 @@ namespace dnn
 				if (Bernoulli<bool>(generator, Float(0.4)))
 				{
 					if (Bernoulli<bool>(generator, Float(0.5)))
-						img = Translate(img, IntLevel(3), 0, mean);
+						Translate(img, IntLevel(3), 0, mean);
 					else
-						img = Translate(img, -IntLevel(3), 0, mean);
+						Translate(img, -IntLevel(3), 0, mean);
 				}
 
 				if (Bernoulli<bool>(generator, Float(0.2)))
-					img = Sharpness(img, FloatLevel(6));
+					Sharpness(img, FloatLevel(6));
 			}
 			break;
 
@@ -394,17 +376,17 @@ namespace dnn
 				if (Bernoulli<bool>(generator, Float(0.9)))
 				{
 					if (Bernoulli<bool>(generator, Float(0.5)))
-						img = Brightness(img, FloatLevel(6));
+						Brightness(img, FloatLevel(6));
 					else
-						img = Brightness(img, FloatLevel(4));
+						Brightness(img, FloatLevel(4));
 				}
 
 				if (Bernoulli<bool>(generator, Float(0.2)))
 				{
 					if (Bernoulli<bool>(generator, Float(0.5)))
-						img = Color(img, FloatLevel(8));
+						Color(img, FloatLevel(8));
 					else
-						img = Color(img, FloatLevel(2));
+						Color(img, FloatLevel(2));
 				}
 			}
 			break;
@@ -424,20 +406,19 @@ namespace dnn
 			case 15:
 			{
 				if (Bernoulli<bool>(generator, Float(0.2)))
-					img = Equalize(img);
+					Equalize(img);
 
 				if (Bernoulli<bool>(generator, Float(0.6)))
-					img = AutoContrast(img);
+					AutoContrast(img);
 			}
 			break;
 
 			case 16:
 			{
 				if (Bernoulli<bool>(generator, Float(0.2)))
-					img = Equalize(img);
-
+					Equalize(img);
 				if (Bernoulli<bool>(generator, Float(0.6)))
-					img = Equalize(img);
+					Equalize(img);
 			}
 			break;
 
@@ -446,20 +427,20 @@ namespace dnn
 				if (Bernoulli<bool>(generator, Float(0.9)))
 				{
 					if (Bernoulli<bool>(generator, Float(0.5)))
-						img = Color(img, FloatLevel(8));
+						Color(img, FloatLevel(8));
 					else
-						img = Color(img, FloatLevel(2));
+						Color(img, FloatLevel(2));
 				}
 
 				if (Bernoulli<bool>(generator, Float(0.6)))
-					img = Equalize(img);
+					Equalize(img);
 			}
 			break;
 
 			case 18:
 			{
 				if (Bernoulli<bool>(generator, Float(0.8)))
-					img = AutoContrast(img);
+					AutoContrast(img);
 
 				if (Bernoulli<bool>(generator, Float(0.2)))
 					Solarize(img, IntLevel(8, 0, 256));
@@ -469,10 +450,10 @@ namespace dnn
 			case 19:
 			{
 				if (Bernoulli<bool>(generator, Float(0.1)))
-					img = Brightness(img, FloatLevel(3));
+					Brightness(img, FloatLevel(3));
 
 				if (Bernoulli<bool>(generator, Float(0.7)))
-					img = Color(img, FloatLevel(4));
+					Color(img, FloatLevel(4));
 			}
 			break;
 
@@ -482,7 +463,7 @@ namespace dnn
 					Solarize(img, IntLevel(5, 0, 256));
 
 				if (Bernoulli<bool>(generator, Float(0.9)))
-					img = AutoContrast(img);
+					AutoContrast(img);
 			}
 			break;
 
@@ -491,17 +472,17 @@ namespace dnn
 				if (Bernoulli<bool>(generator, Float(0.9)))
 				{
 					if (Bernoulli<bool>(generator, Float(0.5)))
-						img = Translate(img, IntLevel(7), 0, mean);
+						Translate(img, IntLevel(7), 0, mean);
 					else
-						img = Translate(img, -IntLevel(7), 0, mean);
+						Translate(img, -IntLevel(7), 0, mean);
 				}
 
 				if (Bernoulli<bool>(generator, Float(0.7)))
 				{
 					if (Bernoulli<bool>(generator, Float(0.5)))
-						img = Translate(img, IntLevel(7), 0, mean);
+						Translate(img, IntLevel(7), 0, mean);
 					else
-						img = Translate(img, -IntLevel(7), 0, mean);
+						Translate(img, -IntLevel(7), 0, mean);
 				}
 			}
 			break;
@@ -509,7 +490,7 @@ namespace dnn
 			case 22:
 			{
 				if (Bernoulli<bool>(generator, Float(0.9)))
-					img = AutoContrast(img);
+					AutoContrast(img);
 
 				if (Bernoulli<bool>(generator, Float(0.8)))
 					Solarize(img, IntLevel(3, 0, 256));
@@ -519,7 +500,7 @@ namespace dnn
 			case 23:
 			{
 				if (Bernoulli<bool>(generator, Float(0.8)))
-					img = Equalize(img);
+					Equalize(img);
 
 				if (Bernoulli<bool>(generator, Float(0.1)))
 					Invert(img);
@@ -531,13 +512,13 @@ namespace dnn
 				if (Bernoulli<bool>(generator, Float(0.7)))
 				{
 					if (Bernoulli<bool>(generator, Float(0.5)))
-						img = Translate(img, IntLevel(8), 0, mean);
+						Translate(img, IntLevel(8), 0, mean);
 					else
-						img = Translate(img, -IntLevel(8), 0, mean);
+						Translate(img, -IntLevel(8), 0, mean);
 				}
 
 				if (Bernoulli<bool>(generator, Float(0.9)))
-					img = AutoContrast(img);
+					AutoContrast(img);
 			}
 			break;
 			}
@@ -557,21 +538,16 @@ namespace dnn
 			return img;
 		}
 
-		static Image AutoContrast(const Image& image) NOEXCEPT
+		static void AutoContrast(Image& image) NOEXCEPT
 		{
 			constexpr T maximum = std::is_floating_point_v<T> ? static_cast<T>(1) : static_cast<T>(255);
-			
-			auto imgSource = ImageToCImg(image);
-
-			imgSource.normalize(0, maximum);
-
-			return CImgToImage(imgSource);
+			image.Data.normalize(0, maximum);
 		}
 
 		// magnitude = 0   // black-and-white image
 		// magnitude = 1   // original
 		// range 0.1 --> 1.9
-		static Image Brightness(const Image& image, const Float magnitude) NOEXCEPT
+		static void Brightness(Image& image, const Float magnitude) NOEXCEPT
 		{
 			auto srcImage = ImageToCImgFloat(image);
 
@@ -579,52 +555,44 @@ namespace dnn
 
 			const auto delta = (magnitude - Float(1)) / 2;
 
-			for (auto d = 0u; d < image.D; d++)
-				for (auto h = 0u; h < image.H; h++)
-					for (auto w = 0u; w < image.W; w++)
+			for (auto d = 0u; d < image.D(); d++)
+				for (auto h = 0u; h < image.H(); h++)
+					for (auto w = 0u; w < image.W(); w++)
 						srcImage(w, h, d, 2u) = cimg_library::cimg::cut(srcImage(w, h, d, 2u) + delta, 0, 1);
 
 			srcImage.HSLtoRGB();
 
-			Image img(image.C, image.D, image.H, image.W);
-
-			for (auto c = 0u; c < img.C; c++)
-				for (auto d = 0u; d < img.D; d++)
-					for (auto h = 0u; h < img.H; h++)
-						for (auto w = 0u; w < img.W; w++)
-							img(c, d, h, w) = Saturate<Float>(srcImage(w, h, d, c));
-
-			return img;
+			for (auto c = 0u; c < image.C(); c++)
+				for (auto d = 0u; d < image.D(); d++)
+					for (auto h = 0u; h < image.H(); h++)
+						for (auto w = 0u; w < image.W(); w++)
+							image(c, d, h, w) = Saturate<Float>(srcImage(w, h, d, c));
 		}
 
 		// magnitude = 0   // black-and-white image
 		// magnitude = 1   // original
 		// range 0.1 --> 1.9
-		static Image Color(const Image& image, const Float magnitude) NOEXCEPT
+		static void Color(Image& image, const Float magnitude) NOEXCEPT
 		{
 			auto imgSource = ImageToCImgFloat(image);
 
 			imgSource.RGBtoHSL();
 
-			for (auto d = 0u; d < image.D; d++)
-				for (auto h = 0u; h < image.H; h++)
-					for (auto w = 0u; w < image.W; w++)
+			for (auto d = 0u; d < image.D(); d++)
+				for (auto h = 0u; h < image.H(); h++)
+					for (auto w = 0u; w < image.W(); w++)
 						imgSource(w, h, d, 0u) = cimg_library::cimg::cut(imgSource(w, h, d, 0u) * magnitude, 0, 360);
 
 			imgSource.HSLtoRGB();
 
-			Image img(image.C, image.D, image.H, image.W);
-
-			for (auto c = 0u; c < img.C; c++)
-				for (auto d = 0u; d < img.D; d++)
-					for (auto h = 0u; h < img.H; h++)
-						for (auto w = 0u; w < img.W; w++)
-							img(c, d, h, w) = Saturate<Float>(imgSource(w, h, d, c));
-
-			return img;
+			for (auto c = 0u; c < image.C(); c++)
+				for (auto d = 0u; d < image.D(); d++)
+					for (auto h = 0u; h < image.H(); h++)
+						for (auto w = 0u; w < image.W(); w++)
+							image(c, d, h, w) = Saturate<Float>(imgSource(w, h, d, c));
 		}
 
-		static Image ColorCast(const Image& image, const UInt angle, std::mt19937& generator) NOEXCEPT
+		static void ColorCast(Image& image, const UInt angle, std::mt19937& generator) NOEXCEPT
 		{
 			auto imgSource = ImageToCImgFloat(image);
 
@@ -632,49 +600,41 @@ namespace dnn
 
 			const auto shift = Float(Bernoulli<bool>(generator, Float(0.5)) ? static_cast<int>(UniformInt<UInt>(generator, 0, 2 * angle)) - static_cast<int>(angle) : 0);
 
-			for (auto d = 0u; d < image.D; d++)
-				for (auto h = 0u; h < image.H; h++)
-					for (auto w = 0u; w < image.W; w++)
+			for (auto d = 0u; d < image.D(); d++)
+				for (auto h = 0u; h < image.H(); h++)
+					for (auto w = 0u; w < image.W(); w++)
 						imgSource(w, h, d, 0u) = cimg_library::cimg::cut(imgSource(w, h, d, 0u) + shift, 0, 360);
 				
 			imgSource.HSLtoRGB();
 
-			Image img(image.C, image.D, image.H, image.W);
-
-			for (auto c = 0u; c < img.C; c++)
-				for (auto d = 0u; d < img.D; d++)
-					for (auto h = 0u; h < img.H; h++)
-						for (auto w = 0u; w < img.W; w++)
-							img(c, d, h, w) = Saturate<Float>(imgSource(w, h, d, c));
-					
-			return img;
+			for (auto c = 0u; c < image.C(); c++)
+				for (auto d = 0u; d < image.D(); d++)
+					for (auto h = 0u; h < image.H(); h++)
+						for (auto w = 0u; w < image.W(); w++)
+							image(c, d, h, w) = Saturate<Float>(imgSource(w, h, d, c));
 		}
 		
 		// magnitude = 0   // gray image
 		// magnitude = 1   // original
 		// range 0.1 --> 1.9
-		static Image Contrast(const Image& image, const Float magnitude) NOEXCEPT
+		static void Contrast(Image& image, const Float magnitude) NOEXCEPT
 		{
 			auto imgSource = ImageToCImgFloat(image);
 
 			imgSource.RGBtoHSL();
 
-			for (auto d = 0u; d < image.D; d++)
-				for (auto h = 0u; h < image.H; h++)
-					for (auto w = 0u; w < image.W; w++)
+			for (auto d = 0u; d < image.D(); d++)
+				for (auto h = 0u; h < image.H(); h++)
+					for (auto w = 0u; w < image.W(); w++)
 						imgSource(w, h, d, 1u) = cimg_library::cimg::cut(imgSource(w, h, d, 1u) * magnitude, 0, 1);
 
 			imgSource.HSLtoRGB();
 
-			Image img(image.C, image.D, image.H, image.W);
-
-			for (auto c = 0u; c < img.C; c++)
-				for (auto d = 0u; d < img.D; d++)
-					for (auto h = 0u; h < img.H; h++)
-						for (auto w = 0u; w < img.W; w++)
-							img(c, d, h, w) = Saturate<Float>(imgSource(w, h, d, c));
-
-			return img;
+			for (auto c = 0u; c < image.C(); c++)
+				for (auto d = 0u; d < image.D(); d++)
+					for (auto h = 0u; h < image.H(); h++)
+						for (auto w = 0u; w < image.W(); w++)
+							image(c, d, h, w) = Saturate<Float>(imgSource(w, h, d, c));
 		}
 
 		// magnitude = 0   // gray image
@@ -682,88 +642,88 @@ namespace dnn
 		// range 0.1 --> 1.9
 		inline static Image Crop(const Image& image, const Positions position, const UInt depth, const UInt height, const UInt width, const std::vector<Float>& mean) NOEXCEPT
 		{
-			Image img(image.C, depth, height, width);
+			Image img(image.C(), static_cast<unsigned>(depth), static_cast<unsigned>(height), static_cast<unsigned>(width));
 
-			for (auto c = 0ull; c < img.C; c++)
+			for (auto c = 0u; c < img.C(); c++)
 			{
 				const T channelMean = std::is_floating_point_v<T> ? static_cast<T>(0) : static_cast<T>(mean[c]);
-				for (auto d = 0ull; d < img.D; d++)
-					for (auto h = 0ull; h < img.H; h++)
-						for (auto w = 0ull; w < img.W; w++)
+				for (auto d = 0u; d < img.D(); d++)
+					for (auto h = 0u; h < img.H(); h++)
+						for (auto w = 0u; w < img.W(); w++)
 							img(c, d, h, w) = channelMean;
 			}
 
-			const auto minDepth = std::min(img.D, image.D);
-			const auto minHeight = std::min(img.H, image.H);
-			const auto minWidth = std::min(img.W, image.W);
+			const auto minDepth = std::min(img.D(), image.D());
+			const auto minHeight = std::min(img.H(), image.H());
+			const auto minWidth = std::min(img.W(), image.W());
 
-			const auto srcDdelta = img.D < image.D ? (image.D - img.D) / 2 : 0ull;
-			const auto dstDdelta = img.D > image.D ? (img.D - image.D) / 2 : 0ull;
+			const auto srcDdelta = img.D() < image.D() ? (image.D() - img.D()) / 2 : 0u;
+			const auto dstDdelta = img.D() > image.D() ? (img.D() - image.D()) / 2 : 0u;
 
 			switch (position)
 			{
 			case Positions::Center:
 			{
-				const auto srcHdelta = img.H < image.H ? (image.H - img.H) / 2 : 0ull;
-				const auto dstHdelta = img.H > image.H ? (img.H - image.H) / 2 : 0ull;
-				const auto srcWdelta = img.W < image.W ? (image.W - img.W) / 2 : 0ull;
-				const auto dstWdelta = img.W > image.W ? (img.W - image.W) / 2 : 0ull;
+				const auto srcHdelta = img.H() < image.H() ? (image.H() - img.H()) / 2 : 0u;
+				const auto dstHdelta = img.H() > image.H() ? (img.H() - image.H()) / 2 : 0u;
+				const auto srcWdelta = img.W() < image.W() ? (image.W() - img.W()) / 2 : 0u;
+				const auto dstWdelta = img.W() > image.W() ? (img.W() - image.W()) / 2 : 0u;
 
-				for (auto c = 0ull; c < img.C; c++)
-					for (auto d = 0ull; d < minDepth; d++)
-						for (auto h = 0ull; h < minHeight; h++)
-							for (auto w = 0ull; w < minWidth; w++)
+				for (auto c = 0u; c < img.C(); c++)
+					for (auto d = 0u; d < minDepth; d++)
+						for (auto h = 0u; h < minHeight; h++)
+							for (auto w = 0u; w < minWidth; w++)
 								img(c, d + dstDdelta, h + dstHdelta, w + dstWdelta) = image(c, d + srcDdelta, h + srcHdelta, w + srcWdelta);
 			}
 			break;
 
 			case Positions::TopLeft:
 			{
-				for (auto c = 0ull; c < img.C; c++)
-					for (auto d = 0ull; d < minDepth; d++)
-						for (auto h = 0ull; h < minHeight; h++)
-							for (auto w = 0ull; w < minWidth; w++)
+				for (auto c = 0u; c < img.C(); c++)
+					for (auto d = 0u; d < minDepth; d++)
+						for (auto h = 0u; h < minHeight; h++)
+							for (auto w = 0u; w < minWidth; w++)
 								img(c, d + dstDdelta, h, w) = image(c, d + srcDdelta, h, w);
 			}
 			break;
 
 			case Positions::TopRight:
 			{
-				const auto srcWdelta = img.W < image.W ? (image.W - img.W) : 0ull;
-				const auto dstWdelta = img.W > image.W ? (img.W - image.W) : 0ull;
+				const auto srcWdelta = img.W() < image.W() ? (image.W() - img.W()) : 0u;
+				const auto dstWdelta = img.W() > image.W() ? (img.W() - image.W()) : 0u;
 
-				for (auto c = 0ull; c < img.C; c++)
-					for (auto d = 0ull; d < minDepth; d++)
-						for (auto h = 0ull; h < minHeight; h++)
-							for (auto w = 0ull; w < minWidth; w++)
+				for (auto c = 0u; c < img.C(); c++)
+					for (auto d = 0u; d < minDepth; d++)
+						for (auto h = 0u; h < minHeight; h++)
+							for (auto w = 0u; w < minWidth; w++)
 								img(c, d + dstDdelta, h, w + dstWdelta) = image(c, d + srcDdelta, h, w + srcWdelta);
 			}
 			break;
 
 			case Positions::BottomRight:
 			{
-				const auto srcHdelta = img.H < image.H ? (image.H - img.H) : 0ull;
-				const auto dstHdelta = img.H > image.H ? (img.H - image.H) : 0ull;
-				const auto srcWdelta = img.W < image.W ? (image.W- img.W) : 0ull;
-				const auto dstWdelta = img.W > image.W ? (img.W - image.W) : 0ull;
+				const auto srcHdelta = img.H() < image.H() ? (image.H() - img.H()) : 0u;
+				const auto dstHdelta = img.H() > image.H() ? (img.H() - image.H()) : 0u;
+				const auto srcWdelta = img.W() < image.W() ? (image.W() - img.W()) : 0u;
+				const auto dstWdelta = img.W() > image.W() ? (img.W() - image.W()) : 0u;
 
-				for (auto c = 0ull; c < img.C; c++)
-					for (auto d = 0ull; d < minDepth; d++)
-						for (auto h = 0ull; h < minHeight; h++)
-							for (auto w = 0ull; w < minWidth; w++)
+				for (auto c = 0u; c < img.C(); c++)
+					for (auto d = 0u; d < minDepth; d++)
+						for (auto h = 0u; h < minHeight; h++)
+							for (auto w = 0u; w < minWidth; w++)
 								img(c, d + dstDdelta, h + dstHdelta, w + dstWdelta) = image(c, d + srcDdelta, h + srcHdelta, w + srcWdelta);
 			}
 			break;
 
 			case Positions::BottomLeft:
 			{
-				const auto srcHdelta = img.H < image.H ? (image.H - img.H) : 0ull;
-				const auto dstHdelta = img.H > image.H ? (img.H - image.H) : 0ull;
+				const auto srcHdelta = img.H() < image.H() ? (image.H() - img.H()) : 0u;
+				const auto dstHdelta = img.H() > image.H() ? (img.H() - image.H()) : 0u;
 
-				for (auto c = 0ull; c < img.C; c++)
-					for (auto d = 0ull; d < minDepth; d++)
-						for (auto h = 0ull; h < minHeight; h++)
-							for (auto w = 0ull; w < minWidth; w++)
+				for (auto c = 0u; c < img.C(); c++)
+					for (auto d = 0u; d < minDepth; d++)
+						for (auto h = 0u; h < minHeight; h++)
+							for (auto w = 0u; w < minWidth; w++)
 								img(c, d + dstDdelta, h + dstHdelta, w) = image(c, d + srcDdelta, h + srcHdelta, w);
 			}
 			break;
@@ -772,22 +732,24 @@ namespace dnn
 			return img;
 		}
 
-		static Image Distorted(const Image& image, const Float scale, const Float angle, const Interpolations interpolation, const std::vector<Float>& mean, std::mt19937& generator) NOEXCEPT
+		static Image Distorted(Image& image, const Float scale, const Float angle, const Interpolations interpolation, const std::vector<Float>& mean, std::mt19937& generator) NOEXCEPT
 		{
 			const auto zoom = scale / Float(100) * UniformReal<Float>(generator, Float(-1), Float(1));
-			const auto height = static_cast<UInt>(static_cast<int>(image.H) + static_cast<int>(std::round(static_cast<int>(image.H) * zoom)));
-			const auto width = static_cast<UInt>(static_cast<int>(image.W) + static_cast<int>(std::round(static_cast<int>(image.W) * zoom)));
-
-			return Image::Rotate(Image::Resize(image, image.D, height, width, interpolation), angle * UniformReal<Float>(generator, Float(-1), Float(1)), interpolation, mean);
+			const auto height = static_cast<unsigned>(static_cast<int>(image.H()) + static_cast<int>(std::round(static_cast<int>(image.H()) * zoom)));
+			const auto width = static_cast<unsigned>(static_cast<int>(image.W()) + static_cast<int>(std::round(static_cast<int>(image.W()) * zoom)));
+			
+			Resize(image, image.D(), height, width, interpolation);
+			
+			return Rotate(image, angle * UniformReal<Float>(generator, Float(-1), Float(1)), interpolation, mean);
 		}
 
 		static void Dropout(Image& image, const Float dropout, const std::vector<Float>& mean, std::mt19937& generator) NOEXCEPT
 		{
-			for (auto d = 0ull; d < image.D; d++)
-				for (auto h = 0ull; h < image.H; h++)
-					for (auto w = 0ull; w < image.W; w++)
+			for (auto d = 0u; d < image.D(); d++)
+				for (auto h = 0u; h < image.H(); h++)
+					for (auto w = 0u; w < image.W(); w++)
 						if (Bernoulli<bool>(generator, dropout))
-							for (auto c = 0ull; c < image.C; c++)
+							for (auto c = 0u; c < image.C(); c++)
 							{
 								if constexpr (std::is_floating_point_v<T>)
 									image(c, d, h, w) = static_cast<T>(0);
@@ -796,57 +758,53 @@ namespace dnn
 							}
 		}
 		
-		static Image Equalize(const Image& image) NOEXCEPT
+		static void Equalize(Image& image) NOEXCEPT
 		{
-			auto imgSource = ImageToCImg(image);
-
-			imgSource.equalize(256);
-
-			return CImgToImage(imgSource);
+			image.Data.equalize(256);
 		}
 
-		static Float GetChannelMean(const Image& image, const UInt c) NOEXCEPT
+		static Float GetChannelMean(const Image& image, const unsigned c) NOEXCEPT
 		{
 			auto mean = Float(0);
 
-			for (auto d = 0ull; d < image.D; d++)
-				for (auto h = 0ull; h < image.H; h++)
-					for (auto w = 0ull; w < image.W; w++)
+			for (auto d = 0u; d < image.D(); d++)
+				for (auto h = 0u; h < image.H(); h++)
+					for (auto w = 0u; w < image.W(); w++)
 						mean += image(c, d, h, w);
 
 			return mean /= image.ChannelSize();
 		}
 
-		static Float GetChannelVariance(const Image& image, const UInt c) NOEXCEPT
+		static Float GetChannelVariance(const Image& image, const unsigned c) NOEXCEPT
 		{
-			const auto mean = Image::GetChannelMean(image, c);
+			const auto mean = GetChannelMean(image, c);
 
 			auto variance = Float(0);
 
-			for (auto d = 0ull; d < image.D; d++)
-				for (auto h = 0ull; h < image.H; h++)
-					for (auto w = 0ull; w < image.W; w++)
+			for (auto d = 0u; d < image.D(); d++)
+				for (auto h = 0u; h < image.H(); h++)
+					for (auto w = 0u; w < image.W(); w++)
 						variance += Square<Float>(image(c, d, h, w) - mean);
 
 			return variance /= image.ChannelSize();
 		}
 
-		static Float GetChannelStdDev(const Image& image, const UInt c) NOEXCEPT
+		static Float GetChannelStdDev(const Image& image, const unsigned c) NOEXCEPT
 		{
-			return std::max(std::sqrt(Image::GetChannelVariance(image, c)), Float(1) / std::sqrt(Float(image.ChannelSize())));
+			return std::max(std::sqrt(GetChannelVariance(image, c)), Float(1) / std::sqrt(Float(image.ChannelSize())));
 		}
 
 		static void HorizontalMirror(Image& image) NOEXCEPT
 		{
 			T left;
-			for (auto c = 0ull; c < image.C; c++)
-				for (auto d = 0ull; d < image.D; d++)
-					for (auto h = 0ull; h < image.H; h++)
-						for (auto w = 0ull; w < image.W; w++)
+			for (auto c = 0u; c < image.C(); c++)
+				for (auto d = 0u; d < image.D(); d++)
+					for (auto h = 0u; h < image.H(); h++)
+						for (auto w = 0u; w < image.W(); w++)
 						{
 							left = image(c, d, h, w);
-							image(c, d, h, w) = image(c, d, h, image.W - 1 - w);
-							image(c, d, h, image.W - 1 - w) = left;
+							image(c, d, h, w) = image(c, d, h, image.W() - 1 - w);
+							image(c, d, h, image.W() - 1 - w) = left;
 						}
 		}
 
@@ -854,25 +812,25 @@ namespace dnn
 		{
 			constexpr T maximum = std::is_floating_point_v<T> ? static_cast<T>(1) : static_cast<T>(255);
 
-			for (auto c = 0ull; c < image.C; c++)
-				for (auto d = 0ull; d < image.D; d++)
-					for (auto h = 0ull; h < image.H; h++)
-						for (auto w = 0ull; w < image.W; w++)
+			for (auto c = 0u; c < image.C(); c++)
+				for (auto d = 0u; d < image.D(); d++)
+					for (auto h = 0u; h < image.H(); h++)
+						for (auto w = 0u; w < image.W(); w++)
 							image(c, d, h, w) = maximum - image(c, d, h, w);
 		}
 
-		static Image LoadJPEG(const std::string& fileName, const bool forceColorFormat = false) NOEXCEPT
+		static cimg_library::CImg<T> LoadJPEG(const std::string& fileName, const bool forceColorFormat = false) NOEXCEPT
 		{
-			Image img = CImgToImage(cimg_library::CImg<T>().get_load_jpeg(fileName.c_str()));
+			auto img = cimg_library::CImg<T>().get_load_jpeg(fileName.c_str());
 
-			if (forceColorFormat && img.C == 1)
+			if (forceColorFormat && img._spectrum == 1)
 			{
-				Image imgToColor = Image(3, img.D, img.W, img.H);
+				auto imgToColor = cimg_library::CImg<T>(img._width, img._height, img._depth, 3);
 
-				for (auto c = 0ull; c < 3ull; c++)
-					for (auto d = 0ull; d < img.D; d++)
-						for (auto h = 0ull; h < img.H; h++)
-							for (auto w = 0ull; w < img.W; w++)
+				for (auto c = 0u; c < 3u; c++)
+					for (auto d = 0u; d < img._depth; d++)
+						for (auto h = 0u; h < img._height; h++)
+							for (auto w = 0u; w < img._width; w++)
 								imgToColor(c, d, h, w) = img(0, d, h, w);
 
 				return imgToColor;
@@ -881,19 +839,19 @@ namespace dnn
 				return img;
 		}
 
-		static Image LoadPNG(const std::string& fileName, const bool forceColorFormat = false) NOEXCEPT
+		static cimg_library::CImg<T> LoadPNG(const std::string& fileName, const bool forceColorFormat = false) NOEXCEPT
 		{
 			auto bitsPerPixel = 0u;
-			Image img = CImgToImage(cimg_library::CImg<T>().get_load_png(fileName.c_str(), &bitsPerPixel));
+			auto img = cimg_library::CImg<T>().get_load_png(fileName.c_str(), &bitsPerPixel);
 
-			if (forceColorFormat && img.C == 1)
+			if (forceColorFormat && img._spectrum == 1)
 			{
-				Image imgToColor = Image(3, img.D, img.W, img.H);
+				auto imgToColor = cimg_library::CImg<T>(img._width, img._height, img._depth, 3);
 
-				for (auto c = 0ull; c < 3ull; c++)
-					for (auto d = 0ull; d < img.D; d++)
-						for (auto h = 0ull; h < img.H; h++)
-							for (auto w = 0ull; w < img.W; w++)
+				for (auto c = 0u; c < 3u; c++)
+					for (auto d = 0u; d < img._depth; d++)
+						for (auto h = 0u; h < img._hright; h++)
+							for (auto w = 0u; w < img._width; w++)
 								imgToColor(c, d, h, w) = img(0, d, h, w);
 
 				return imgToColor;
@@ -902,100 +860,100 @@ namespace dnn
 				return img;
 		}
 
-		static Image MirrorPad(const Image& image, const UInt depth, const UInt height, const UInt width) NOEXCEPT
+		static Image MirrorPad(const Image& image, const unsigned depth, const unsigned height, const unsigned width) NOEXCEPT
 		{
-			Image img(image.C, image.D + (depth * 2), image.H + (height * 2), image.W + (width * 2));
+			Image img(image.C(), image.D() + (depth * 2), image.H() + (height * 2), image.W() + (width * 2));
 
-			for (auto c = 0ull; c < image.C; c++)
+			for (auto c = 0u; c < image.C(); c++)
 			{
-				for (auto d = 0ull; d < depth; d++)
+				for (auto d = 0u; d < depth; d++)
 				{
-					for (auto h = 0ull; h < height; h++)
+					for (auto h = 0u; h < height; h++)
 					{
-						for (auto w = 0ull; w < width; w++)
+						for (auto w = 0u; w < width; w++)
 							img(c, d, h, w) = image(c, d, height - (h + 1), width - (w + 1));
-						for (auto w = 0ull; w < image.W; w++)
+						for (auto w = 0u; w < image.W(); w++)
 							img(c, d, h, w + width) = image(c, d, height - (h + 1), w);
-						for (auto w = 0ull; w < width; w++)
-							img(c, d, h, w + width + image.W) = image(c, d, height - (h + 1), image.W - (w + 1));
+						for (auto w = 0u; w < width; w++)
+							img(c, d, h, w + width + image.W()) = image(c, d, height - (h + 1), image.W() - (w + 1));
 					}
-					for (auto h = 0ull; h < image.H; h++)
+					for (auto h = 0u; h < image.H(); h++)
 					{
-						for (auto w = 0ull; w < width; w++)
+						for (auto w = 0u; w < width; w++)
 							img(c, d, h + height, w) = image(c, d, h, width - (w + 1));
-						for (auto w = 0ull; w < image.W; w++)
+						for (auto w = 0u; w < image.W(); w++)
 							img(c, d + depth, h + height, w + width) = image(c, d, h, w);
-						for (auto w = 0ull; w < width; w++)
-							img(c, d, h + height, w + width + image.W) = image(c, d, h, image.W - (w + 1));
+						for (auto w = 0u; w < width; w++)
+							img(c, d, h + height, w + width + image.W()) = image(c, d, h, image.W() - (w + 1));
 					}
-					for (auto h = 0ull; h < height; h++)
+					for (auto h = 0u; h < height; h++)
 					{
-						for (auto w = 0ull; w < width; w++)
-							img(c, d, h + height + image.H, w) = image(c, d, image.H - (h + 1), width - (w + 1));
-						for (auto w = 0ull; w < image.W; w++)
-							img(c, d, h + height + image.H, w + width) = image(c, d, image.H - (h + 1), w);
-						for (auto w = 0ull; w < width; w++)
-							img(c, d, h + height + image.H, w + width + image.W) = image(c, d, image.H - (h + 1), image.W - (w + 1));
+						for (auto w = 0u; w < width; w++)
+							img(c, d, h + height + image.H(), w) = image(c, d, image.H() - (h + 1), width - (w + 1));
+						for (auto w = 0u; w < image.W(); w++)
+							img(c, d, h + height + image.H(), w + width) = image(c, d, image.H() - (h + 1), w);
+						for (auto w = 0u; w < width; w++)
+							img(c, d, h + height + image.H(), w + width + image.W()) = image(c, d, image.H() - (h + 1), image.W() - (w + 1));
 					}
 				}
-				for (auto d = 0ull; d < image.D; d++)
+				for (auto d = 0u; d < image.D(); d++)
 				{
-					for (auto h = 0ull; h < height; h++)
+					for (auto h = 0u; h < height; h++)
 					{
-						for (auto w = 0ull; w < width; w++)
+						for (auto w = 0u; w < width; w++)
 							img(c, d + depth, h, w) = image(c, d + depth, height - (h + 1), width - (w + 1));
-						for (auto w = 0ull; w < image.W; w++)
+						for (auto w = 0u; w < image.W(); w++)
 							img(c, d + depth, h, w + width) = image(c, d + depth, height - (h + 1), w);
-						for (auto w = 0ull; w < width; w++)
-							img(c, d + depth, h, w + width + image.W) = image(c, d + depth, height - (h + 1), image.W - (w + 1));
+						for (auto w = 0u; w < width; w++)
+							img(c, d + depth, h, w + width + image.W()) = image(c, d + depth, height - (h + 1), image.W() - (w + 1));
 					}
-					for (auto h = 0ull; h < image.H; h++)
+					for (auto h = 0u; h < image.H(); h++)
 					{
-						for (auto w = 0ull; w < width; w++)
+						for (auto w = 0u; w < width; w++)
 							img(c, d + depth, h + height, w) = image(c, d + depth, h, width - (w + 1));
-						for (auto w = 0ull; w < image.W; w++)
+						for (auto w = 0u; w < image.W(); w++)
 							img(c, d + depth, h + height, w + width) = image(c, d + depth, h, w);
-						for (auto w = 0ull; w < width; w++)
-							img(c, d + depth, h + height, w + width + image.W) = image(c, d + depth, h, image.W - (w + 1));
+						for (auto w = 0u; w < width; w++)
+							img(c, d + depth, h + height, w + width + image.W()) = image(c, d + depth, h, image.W() - (w + 1));
 					}
-					for (auto h = 0ull; h < height; h++)
+					for (auto h = 0u; h < height; h++)
 					{
-						for (auto w = 0ull; w < width; w++)
-							img(c, d + depth, h + height + image.H, w) = image(c, d + depth, image.H - (h + 1), width - (w + 1));
-						for (auto w = 0ull; w < image.W; w++)
-							img(c, d + depth, h + height + image.H, w + width) = image(c, d + depth, image.H - (h + 1), w);
-						for (auto w = 0ull; w < width; w++)
-							img(c, d + depth, h + height + image.H, w + width + image.W) = image(c, d + depth, image.H - (h + 1), image.W - (w + 1));
+						for (auto w = 0u; w < width; w++)
+							img(c, d + depth, h + height + image.H(), w) = image(c, d + depth, image.H() - (h + 1), width - (w + 1));
+						for (auto w = 0u; w < image.W(); w++)
+							img(c, d + depth, h + height + image.H(), w + width) = image(c, d + depth, image.H() - (h + 1), w);
+						for (auto w = 0u; w < width; w++)
+							img(c, d + depth, h + height + image.H(), w + width + image.W()) = image(c, d + depth, image.H() - (h + 1), image.W() - (w + 1));
 					}
 				}
-				for (auto d = 0ull; d < depth; d++)
+				for (auto d = 0u; d < depth; d++)
 				{
-					for (auto h = 0ull; h < height; h++)
+					for (auto h = 0u; h < height; h++)
 					{
-						for (auto w = 0ull; w < width; w++)
-							img(c, d + depth + image.D, h, w) = image(c, d + depth + image.D, height - (h + 1), width - (w + 1));
-						for (auto w = 0ull; w < image.W; w++)
-							img(c, d + depth + image.D, h, w + width) = image(c, d + depth + image.D, height - (h + 1), w);
-						for (auto w = 0ull; w < width; w++)
-							img(c, d + depth + image.D, h, w + width + image.W) = image(c, d + depth + image.D, height - (h + 1), image.W - (w + 1));
+						for (auto w = 0u; w < width; w++)
+							img(c, d + depth + image.D(), h, w) = image(c, d + depth + image.D(), height - (h + 1), width - (w + 1));
+						for (auto w = 0u; w < image.W(); w++)
+							img(c, d + depth + image.D(), h, w + width) = image(c, d + depth + image.D(), height - (h + 1), w);
+						for (auto w = 0u; w < width; w++)
+							img(c, d + depth + image.D(), h, w + width + image.W()) = image(c, d + depth + image.D(), height - (h + 1), image.W() - (w + 1));
 					}
-					for (auto h = 0ull; h < image.H; h++)
+					for (auto h = 0u; h < image.H(); h++)
 					{
-						for (auto w = 0ull; w < width; w++)
-							img(c, d + depth + image.D, h + height, w) = image(c, d + depth + image.D, h, width - (w + 1));
-						for (auto w = 0ull; w < image.W; w++)
-							img(c, d + depth + image.D, h + height, w + width) = image(c, d + depth + image.D, h, w);
-						for (auto w = 0ull; w < width; w++)
-							img(c, d + depth + image.D, h + height, w + width + image.W) = image(c, d + depth + image.D, h, image.W - (w + 1));
+						for (auto w = 0u; w < width; w++)
+							img(c, d + depth + image.D(), h + height, w) = image(c, d + depth + image.D(), h, width - (w + 1));
+						for (auto w = 0u; w < image.W(); w++)
+							img(c, d + depth + image.D(), h + height, w + width) = image(c, d + depth + image.D(), h, w);
+						for (auto w = 0u; w < width; w++)
+							img(c, d + depth + image.D(), h + height, w + width + image.W()) = image(c, d + depth + image.D(), h, image.W() - (w + 1));
 					}
-					for (auto h = 0ull; h < height; h++)
+					for (auto h = 0u; h < height; h++)
 					{
-						for (auto w = 0ull; w < width; w++)
-							img(c, d + depth + image.D, h + height + image.H, w) = image(c, d + depth + image.D, image.H - (h + 1), width - (w + 1));
-						for (auto w = 0ull; w < image.W; w++)
-							img(c, d + depth + image.D, h + height + image.H, w + width) = image(c, d + depth + image.D, image.H - (h + 1), w);
-						for (auto w = 0ull; w < width; w++)
-							img(c, d + depth + image.D, h + height + image.H, w + width + image.W) = image(c, d + depth + image.D, image.H - (h + 1), image.W - (w + 1));
+						for (auto w = 0u; w < width; w++)
+							img(c, d + depth + image.D(), h + height + image.H(), w) = image(c, d + depth + image.D(), image.H() - (h + 1), width - (w + 1));
+						for (auto w = 0u; w < image.W(); w++)
+							img(c, d + depth + image.D(), h + height + image.H(), w + width) = image(c, d + depth + image.D(), image.H() - (h + 1), w);
+						for (auto w = 0u; w < width; w++)
+							img(c, d + depth + image.D(), h + height + image.H(), w + width + image.W()) = image(c, d + depth + image.D(), image.H() - (h + 1), image.W() - (w + 1));
 					}
 				}
 			}
@@ -1006,55 +964,55 @@ namespace dnn
 
 		inline static Image Padding(const Image& image, const UInt depth, const UInt height, const UInt width, const std::vector<Float>& mean, const bool mirrorPad = false) NOEXCEPT
 		{
-			return mirrorPad ? Image::MirrorPad(image, depth, height, width) : Image::ZeroPad(image, depth, height, width, mean);
+			return mirrorPad ? Image::MirrorPad(image, static_cast<unsigned>(depth), static_cast<unsigned>(height), static_cast<unsigned>(width)) : Image::ZeroPad(image, static_cast<unsigned>(depth), static_cast<unsigned>(height), static_cast<unsigned>(width), mean);
 		}
 
-		static void Posterize(Image& image, const UInt levels = 16) NOEXCEPT
+		static void Posterize(Image& image, const unsigned levels = 16) NOEXCEPT
 		{
 			auto palette = std::vector<Byte>(256);
-			const auto q = 256ull / levels;
-			for (auto c = 0ull; c < 255ull; c++)
-				palette[c] = Saturate<UInt>((((c / q) * q) * levels) / (levels - 1));
+			const auto q = 256u / levels;
+			for (auto c = 0u; c < 255u; c++)
+				palette[c] = Saturate<unsigned>((((c / q) * q) * levels) / (levels - 1));
 
-			for (auto c = 0ull; c < image.C; c++)
-				for (auto d = 0ull; d < image.D; d++)
-					for (auto h = 0ull; h < image.H; h++)
-						for (auto w = 0ull; w < image.W; w++)
+			for (auto c = 0u; c < image.C(); c++)
+				for (auto d = 0u; d < image.D(); d++)
+					for (auto h = 0u; h < image.H(); h++)
+						for (auto w = 0u; w < image.W(); w++)
 							image(c, d, h, w) = palette[image(c, d, h, w)];
 		}
 		
 		static Image RandomCrop(const Image& image, const UInt depth, const UInt height, const UInt width, const std::vector<Float>& mean, std::mt19937& generator) NOEXCEPT
 		{
-			Image img(image.C, depth, height, width);
+			Image img(image.C(), static_cast<unsigned>(depth), static_cast<unsigned>(height), static_cast<unsigned>(width));
 
 			auto channelMean = static_cast<T>(0);
-			for (auto c = 0ull; c < img.C; c++)
+			for (auto c = 0u; c < img.C(); c++)
 			{
 				if constexpr (!std::is_floating_point_v<T>)
 					channelMean = static_cast<T>(mean[c]);
 				
-				for (auto d = 0ull; d < img.D; d++)
-					for (auto h = 0ull; h < img.H; h++)
-						for (auto w = 0ull; w < img.W; w++)
+				for (auto d = 0u; d < img.D(); d++)
+					for (auto h = 0u; h < img.H(); h++)
+						for (auto w = 0u; w < img.W(); w++)
 							img(c, d, h, w) = channelMean;
 			}
 			
-			const auto minD = std::min(img.D, image.D);
-			const auto minH = std::min(img.H, image.H);
-			const auto minW = std::min(img.W, image.W);
+			const auto minD = std::min(img.D(), image.D());
+			const auto minH = std::min(img.H(), image.H());
+			const auto minW = std::min(img.W(), image.W());
 			
-			const auto srcDdelta = img.D < image.D ? UniformInt<UInt>(generator, 0, image.D - img.D) : 0ull;
-			const auto srcHdelta = img.H < image.H ? UniformInt<UInt>(generator, 0, image.H - img.H) : 0ull;
-			const auto srcWdelta = img.W < image.W ? UniformInt<UInt>(generator, 0, image.W - img.W) : 0ull;
+			const auto srcDdelta = img.D() < image.D() ? UniformInt<unsigned>(generator, 0, image.D() - img.D()) : 0u;
+			const auto srcHdelta = img.H() < image.H() ? UniformInt<unsigned>(generator, 0, image.H() - img.H()) : 0u;
+			const auto srcWdelta = img.W() < image.W() ? UniformInt<unsigned>(generator, 0, image.W() - img.W()) : 0u;
 			
-			const auto dstDdelta = img.D > image.D ? UniformInt<UInt>(generator, 0, img.D - image.D) : 0ull;
-			const auto dstHdelta = img.H > image.H ? UniformInt<UInt>(generator, 0, img.H - image.H) : 0ull;
-			const auto dstWdelta = img.W > image.W ? UniformInt<UInt>(generator, 0, img.W - image.W) : 0ull;
+			const auto dstDdelta = img.D() > image.D() ? UniformInt<unsigned>(generator, 0, img.D() - image.D()) : 0u;
+			const auto dstHdelta = img.H() > image.H() ? UniformInt<unsigned>(generator, 0, img.H() - image.H()) : 0u;
+			const auto dstWdelta = img.W() > image.W() ? UniformInt<unsigned>(generator, 0, img.W() - image.W()) : 0u;
 
-			for (auto c = 0ull; c < img.C; c++)
-				for (auto d = 0ull; d < minD; d++)
-					for (auto h = 0ull; h < minH; h++)
-						for (auto w = 0ull; w < minW; w++)
+			for (auto c = 0u; c < img.C(); c++)
+				for (auto d = 0u; d < minD; d++)
+					for (auto h = 0u; h < minH; h++)
+						for (auto w = 0u; w < minW; w++)
 							img(c, d + dstDdelta, h + dstHdelta, w + dstWdelta) = image(c, d + srcDdelta, h + srcHdelta, w + srcWdelta);
 			
 			return img;
@@ -1062,21 +1020,21 @@ namespace dnn
 
 		static void RandomCutout(Image& image, const std::vector<Float>& mean, std::mt19937& generator) NOEXCEPT
 		{
-			const auto centerH = UniformInt<UInt>(generator, 0, image.H);
-			const auto centerW = UniformInt<UInt>(generator, 0, image.W);
-			const auto rangeH = UniformInt<UInt>(generator, image.H / 8, image.H / 4);
-			const auto rangeW = UniformInt<UInt>(generator, image.W / 8, image.W / 4);
-			const auto startH = static_cast<long>(centerH) - static_cast<long>(rangeH) > 0l ? centerH - rangeH : 0ull;
-			const auto startW = static_cast<long>(centerW) - static_cast<long>(rangeW) > 0l ? centerW - rangeW : 0ull;
-			const auto enheight = centerH + rangeH < image.H ? centerH + rangeH : image.H;
-			const auto enwidth = centerW + rangeW < image.W ? centerW + rangeW : image.W;
+			const auto centerH = UniformInt<unsigned>(generator, 0, image.H());
+			const auto centerW = UniformInt<unsigned>(generator, 0, image.W());
+			const auto rangeH = UniformInt<unsigned>(generator, image.H() / 8, image.H() / 4);
+			const auto rangeW = UniformInt<unsigned>(generator, image.W() / 8, image.W() / 4);
+			const auto startH = static_cast<long>(centerH) - static_cast<long>(rangeH) > 0l ? centerH - rangeH : 0u;
+			const auto startW = static_cast<long>(centerW) - static_cast<long>(rangeW) > 0l ? centerW - rangeW : 0u;
+			const auto enheight = centerH + rangeH < image.H() ? centerH + rangeH : image.H();
+			const auto enwidth = centerW + rangeW < image.W() ? centerW + rangeW : image.W();
 
 			auto channelMean =  static_cast<T>(0);
-			for (auto c = 0ull; c < image.C; c++)
+			for (auto c = 0u; c < image.C(); c++)
 			{
 				if constexpr (!std::is_floating_point_v<T>)
 					channelMean =  static_cast<T>(mean[c]);
-				for (auto d = 0ull; d < image.D; d++)
+				for (auto d = 0u; d < image.D(); d++)
 					for (auto h = startH; h < enheight; h++)
 						for (auto w = startW; w < enwidth; w++)
 							image(c, d, h, w) = channelMean;
@@ -1086,196 +1044,179 @@ namespace dnn
 		static void RandomCutMix(Image& image, const Image& imageMix, double* lambda, std::mt19937& generator) NOEXCEPT
 		{
 			const auto cutRate = std::sqrt(1.0 - *lambda);
-			const auto cutH = static_cast<int>(static_cast<double>(image.H) * cutRate);
-			const auto cutW = static_cast<int>(static_cast<double>(image.W) * cutRate);
-			const auto cy = UniformInt<int>(generator, 0, static_cast<int>(image.H));
-			const auto cx = UniformInt<int>(generator, 0, static_cast<int>(image.W));
-			const auto bby1 = Clamp<int>(cy - cutH / 2, 0, static_cast<int>(image.H));
-			const auto bby2 = Clamp<int>(cy + cutH / 2, 0, static_cast<int>(image.H));
-			const auto bbx1 = Clamp<int>(cx - cutW / 2, 0, static_cast<int>(image.W));
-			const auto bbx2 = Clamp<int>(cx + cutW / 2, 0, static_cast<int>(image.W));
+			const auto cutH = static_cast<int>(static_cast<double>(image.H()) * cutRate);
+			const auto cutW = static_cast<int>(static_cast<double>(image.W()) * cutRate);
+			const auto cy = UniformInt<int>(generator, 0, static_cast<int>(image.H()));
+			const auto cx = UniformInt<int>(generator, 0, static_cast<int>(image.W()));
+			const auto bby1 = Clamp<int>(cy - cutH / 2, 0, static_cast<int>(image.H()));
+			const auto bby2 = Clamp<int>(cy + cutH / 2, 0, static_cast<int>(image.H()));
+			const auto bbx1 = Clamp<int>(cx - cutW / 2, 0, static_cast<int>(image.W()));
+			const auto bbx2 = Clamp<int>(cx + cutW / 2, 0, static_cast<int>(image.W()));
 
-			for (auto c = 0ull; c < image.C; c++)
-				for (auto d = 0ull; d < image.D; d++)
+			for (auto c = 0u; c < image.C(); c++)
+				for (auto d = 0u; d < image.D(); d++)
 					for (auto h = bby1; h < bby2; h++)
 						for (auto w = bbx1; w < bbx2; w++)
 							image(c, d, h, w) = imageMix(c, d, h, w);
 
-			*lambda = 1.0 - (static_cast<double>((bbx2 - bbx1) * (bby2 - bby1)) / static_cast<double>(image.H * image.W));
+			*lambda = 1.0 - (static_cast<double>((bbx2 - bbx1) * (bby2 - bby1)) / static_cast<double>(image.H() * image.W()));
 		}
 
-		inline static Image Resize(const Image& image, const UInt depth, const UInt height, const UInt width, const Interpolations interpolation) NOEXCEPT
+		inline static void Resize(Image& image, const UInt depth, const UInt height, const UInt width, const Interpolations interpolation) NOEXCEPT
 		{
-			auto imgSource = ImageToCImg(image);
-
 			switch (interpolation)
 			{
 			case Interpolations::Cubic:
-				imgSource.resize(static_cast<int>(width), static_cast<int>(height), static_cast<int>(depth), static_cast<int>(image.C), 5, 0);
+				image.Data.resize(static_cast<int>(width), static_cast<int>(height), static_cast<int>(depth), static_cast<int>(image.C()), 5, 0);
 				break;
 			case Interpolations::Linear:
-				imgSource.resize(static_cast<int>(width), static_cast<int>(height), static_cast<int>(depth), static_cast<int>(image.C), 3, 0);
+				image.Data.resize(static_cast<int>(width), static_cast<int>(height), static_cast<int>(depth), static_cast<int>(image.C()), 3, 0);
 				break;
 			case Interpolations::Nearest:
-				imgSource.resize(static_cast<int>(width), static_cast<int>(height), static_cast<int>(depth), static_cast<int>(image.C), 1, 0);
+				image.Data.resize(static_cast<int>(width), static_cast<int>(height), static_cast<int>(depth), static_cast<int>(image.C()), 1, 0);
 				break;
 			}
-			
-			return CImgToImage(imgSource);
 		}
 
 		inline static Image Rotate(const Image& image, const Float angle, const Interpolations interpolation, const std::vector<Float>& mean) NOEXCEPT
 		{
-			auto imgSource = ImageToCImg(ZeroPad(image, image.D / 2, image.H / 2, image.W / 2, mean));
+			auto img = ZeroPad(image, image.D() / 2, image.H() / 2, image.W() / 2, mean).Data;
 
 			switch (interpolation)
 			{
 			case Interpolations::Cubic:
-				imgSource.rotate(angle, 2, 0);
+				img.rotate(angle, 2, 0);
 				break;
 			case Interpolations::Linear:
-				imgSource.rotate(angle, 1, 0);
+				img.rotate(angle, 1, 0);
 				break;
 			case Interpolations::Nearest:
-				imgSource.rotate(angle, 0, 0);
+				img.rotate(angle, 0, 0);
 				break;
 			}
 			
-			return Crop(CImgToImage(imgSource), Positions::Center, image.D, image.H, image.W, mean);
+			return Crop(Image(img), Positions::Center, image.D(), image.H(), image.W(), mean);
 		}
 			
 		// magnitude = 0   // blurred image
 		// magnitude = 1   // original
 		// range 0.1 --> 1.9
-		static Image Sharpness(const Image& image, const Float magnitude) NOEXCEPT
+		static void Sharpness(Image& image, const Float magnitude) NOEXCEPT
 		{
-			auto imgSource = ImageToCImg(image);
-
-			imgSource.sharpen(magnitude, false);
-
-			return CImgToImage(imgSource);
+			image.Data.sharpen(magnitude, false);
 		}
 
 		static void Solarize(Image& image, const T treshold = 128) NOEXCEPT
 		{
 			constexpr T maximum = std::is_floating_point_v<T> ? static_cast<T>(1) : static_cast<T>(255);
 
-			for (auto c = 0ull; c < image.C; c++)
-				for (auto d = 0ull; d < image.D; d++)
-					for (auto h = 0ull; h < image.H; h++)
-						for (auto w = 0ull; w < image.W; w++)
+			for (auto c = 0u; c < image.C(); c++)
+				for (auto d = 0u; d < image.D(); d++)
+					for (auto h = 0u; h < image.H(); h++)
+						for (auto w = 0u; w < image.W(); w++)
 							image(c, d, h, w) = image(c, d, h, w) < treshold ? image(c, d, h, w) : maximum - image(c, d, h, w);
 		}
 		
-		static Image Translate(const Image& image, const int height, const int width, const std::vector<Float>& mean) NOEXCEPT
+		static void Translate(Image& image, const int height, const int width, const std::vector<Float>& mean) NOEXCEPT
 		{
 			if (height == 0 && width == 0)
-				return image;
+				return;
 
-			if (width <= -static_cast<int>(image.W) || width >= static_cast<int>(image.W) || height <= -static_cast<int>(image.H) || height >= static_cast<int>(image.H))
+			if (width <= -static_cast<int>(image.W()) || width >= static_cast<int>(image.W()) || height <= -static_cast<int>(image.H()) || height >= static_cast<int>(image.H()))
 			{
-				Image img(image.C, image.D, image.H, image.W);
-				
 				T channelMean =  static_cast<T>(0);
-				for (auto c = 0ull; c < image.C; c++)
+				for (auto c = 0u; c < image.C(); c++)
 				{
 					if constexpr (!std::is_floating_point_v<T>)
 						channelMean =  static_cast<T>(mean[c]);
 
-					for (auto d = 0ull; d < image.D; d++)
-						for (auto h = 0ull; h < image.H; h++)
-							for (auto w = 0ull; w < image.W; w++)
-								img(c, d, h, w) = channelMean;
+					for (auto d = 0u; d < image.D(); d++)
+						for (auto h = 0u; h < image.H(); h++)
+							for (auto w = 0u; w < image.W(); w++)
+								image(c, d, h, w) = channelMean;
 				}
-
-				return img;
+				return;
 			}
-
-			auto imgSource = ImageToCImg(image);
 
 			if (width != 0)
 			{
 				if (width < 0)
-					cimg_forYZC(imgSource, y, z, c)
+					cimg_forYZC(image.Data, y, z, c)
 					{
-						std::memmove(imgSource.data(0, y, z, c), imgSource.data(-width, y, z, c), static_cast<UInt>(imgSource._width + width) * sizeof(T));
+						std::memmove(image.Data.data(0, y, z, c), image.Data.data(-width, y, z, c), static_cast<UInt>(image.W() + width) * sizeof(T));
 						if constexpr (std::is_floating_point_v<T>)
-							std::memset(imgSource.data(imgSource._width + width, y, z, c), 0, -width * sizeof(T));
+							std::memset(image.Data.data(image.W() + width, y, z, c), 0, -width * sizeof(T));
 						else
-							std::memset(imgSource.data(imgSource._width + width, y, z, c), (int)mean[c], -width * sizeof(T));
+							std::memset(image.Data.data(image.W() + width, y, z, c), (int)mean[c], -width * sizeof(T));
 					}
 				else
-					cimg_forYZC(imgSource, y, z, c)
+					cimg_forYZC(image.Data, y, z, c)
 					{
-						std::memmove(imgSource.data(width, y, z, c), imgSource.data(0, y, z, c), static_cast<UInt>(imgSource._width - width) * sizeof(T));
+						std::memmove(image.Data.data(width, y, z, c), image.Data.data(0, y, z, c), static_cast<UInt>(image.W() - width) * sizeof(T));
 						if constexpr (std::is_floating_point_v<T>)
-							std::memset(imgSource.data(0, y, z, c), 0, width * sizeof(T));
+							std::memset(image.Data.data(0, y, z, c), 0, width * sizeof(T));
 						else
-							std::memset(imgSource.data(0, y, z, c), (int)mean[c], width * sizeof(T));
+							std::memset(image.Data.data(0, y, z, c), (int)mean[c], width * sizeof(T));
 					}
 			}
 
 			if (height != 0)
 			{
 				if (height < 0)
-					cimg_forZC(imgSource, z, c)
+					cimg_forZC(image.Data, z, c)
 					{
-						std::memmove(imgSource.data(0, 0, z, c), imgSource.data(0, -height, z, c), static_cast<UInt>(imgSource._width) * static_cast<UInt>(imgSource._height + height) * sizeof(T));
+						std::memmove(image.Data.data(0, 0, z, c), image.Data.data(0, -height, z, c), static_cast<UInt>(image.W()) * static_cast<UInt>(image.H() + height) * sizeof(T));
 						if constexpr (std::is_floating_point_v<T>)
-							std::memset(imgSource.data(0, imgSource._height + height, z, c), 0, -height * static_cast<UInt>(imgSource._width) * sizeof(T));
+							std::memset(image.Data.data(0, image.H() + height, z, c), 0, -height * static_cast<UInt>(image.W()) * sizeof(T));
 						else
-							std::memset(imgSource.data(0, imgSource._height + height, z, c), (int)mean[c], -height * static_cast<UInt>(imgSource._width) * sizeof(T));
+							std::memset(image.Data.data(0, image.H() + height, z, c), (int)mean[c], -height * static_cast<UInt>(image.W()) * sizeof(T));
 					}
 				else
-					cimg_forZC(imgSource, z, c)
+					cimg_forZC(image.Data, z, c)
 					{
-						std::memmove(imgSource.data(0, height, z, c), imgSource.data(0, 0, z, c), static_cast<UInt>(imgSource._width) * static_cast<UInt>(imgSource._height - height) * sizeof(T));
+						std::memmove(image.Data.data(0, height, z, c), image.Data.data(0, 0, z, c), static_cast<UInt>(image.W()) * static_cast<UInt>(image.H() - height) * sizeof(T));
 						if constexpr (std::is_floating_point_v<T>)
-							std::memset(imgSource.data(0, 0, z, c), 0, height * static_cast<UInt>(imgSource._width) * sizeof(T));
+							std::memset(image.Data.data(0, 0, z, c), 0, height * static_cast<UInt>(image.W()) * sizeof(T));
 						else
-							std::memset(imgSource.data(0, 0, z, c), (int)mean[c], height * static_cast<UInt>(imgSource._width) * sizeof(T));
+							std::memset(image.Data.data(0, 0, z, c), (int)mean[c], height * static_cast<UInt>(image.W()) * sizeof(T));
 					}
 			}
-
-			auto img = CImgToImage(imgSource);
-
-			return img;
 		}
 
 		static void VerticalMirror(Image& image) NOEXCEPT
 		{
 			T top;
-			for (auto c = 0ull; c < image.C; c++)
-				for (auto d = 0ull; d < image.D; d++)
-					for (auto w = 0ull; w < image.W; w++)
-						for (auto h = 0ull; h < image.H; h++)
+			for (auto c = 0u; c < image.C(); c++)
+				for (auto d = 0u; d < image.D(); d++)
+					for (auto w = 0u; w < image.W(); w++)
+						for (auto h = 0u; h < image.H(); h++)
 						{
 							top = image(c, d, h, w);
-							image(c, d, h, w) = image(c, d, image.H - 1 - h, w);
-							image(c, d, image.H - 1 - h, w) = top;
+							image(c, d, h, w) = image(c, d, image.H() - 1 - h, w);
+							image(c, d, image.H() - 1 - h, w) = top;
 						}
 		}
 		
-		static Image ZeroPad(const Image& image, const UInt depth, const UInt height, const UInt width, const std::vector<Float>& mean) NOEXCEPT
+		static Image ZeroPad(const Image& image, const unsigned depth, const unsigned height, const unsigned width, const std::vector<Float>& mean) NOEXCEPT
 		{
-			Image img(image.C, image.D + (depth * 2), image.H + (height * 2), image.W + (width * 2));
+			Image img(image.C(), image.D() + (depth * 2), image.H() + (height * 2), image.W() + (width * 2));
 
 			T channelMean = static_cast<T>(0);
-			for (auto c = 0ull; c < img.C; c++)
+			for (auto c = 0u; c < img.C(); c++)
 			{
 				if constexpr (!std::is_floating_point_v<T>)
 					channelMean = static_cast<T>(mean[c]);
 
-				for (auto d = 0ull; d < img.D; d++)
-					for (auto h = 0ull; h < img.H; h++)
-						for (auto w = 0ull; w < img.W; w++)
+				for (auto d = 0u; d < img.D(); d++)
+					for (auto h = 0u; h < img.H(); h++)
+						for (auto w = 0u; w < img.W(); w++)
 							img(c, d, h, w) = channelMean;
 			}
 
-			for (auto c = 0ull; c < image.C; c++)
-				for (auto d = 0ull; d < image.D; d++)
-					for (auto h = 0ull; h < image.H; h++)
-						for (auto w = 0ull; w < image.W; w++)
+			for (auto c = 0u; c < image.C(); c++)
+				for (auto d = 0u; d < image.D(); d++)
+					for (auto h = 0u; h < image.H(); h++)
+						for (auto w = 0u; w < image.W(); w++)
 							img(c, d + depth, h + height, w + width) = image(c, d, h, w);
 
 			return img;

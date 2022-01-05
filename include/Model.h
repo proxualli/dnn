@@ -1991,7 +1991,7 @@ namespace dnn
 			auto generator = std::mt19937(Seed<unsigned>());
 
 			const auto rndIndex = RandomTrainingSamples[index];
-			auto imgByte = DataProv->TrainingSamples[rndIndex];
+			auto imgByte = Image<Byte>(DataProv->TrainingSamples[rndIndex]);
 
 			const auto rndIndexMix = (index + 1 >= DataProv->TrainingSamplesCount) ? RandomTrainingSamples[1] : RandomTrainingSamples[index + 1];
 			auto imgByteMix = Image<Byte>(DataProv->TrainingSamples[rndIndexMix]);
@@ -2026,10 +2026,10 @@ namespace dnn
 				Image<Byte>::VerticalMirror(imgByte);
 
 			if (DataProv->C == 3 && Bernoulli<bool>(generator, CurrentTrainingRate.ColorCast))
-				imgByte = Image<Byte>::ColorCast(imgByte, CurrentTrainingRate.ColorAngle, generator);
+				Image<Byte>::ColorCast(imgByte, CurrentTrainingRate.ColorAngle, generator);
 
-			if (imgByteMix.D != D || imgByte.H != H || imgByte.W != W)
-				imgByte = Image<Byte>::Resize(imgByte, D, H, W, Interpolations(CurrentTrainingRate.Interpolation));
+			if (imgByteMix.D() != D || imgByte.H() != H || imgByte.W() != W)
+				Image<Byte>::Resize(imgByte, D, H, W, Interpolations(CurrentTrainingRate.Interpolation));
 
 			if (DataProv->C == 3 && Bernoulli<bool>(generator, CurrentTrainingRate.AutoAugment))
 				imgByte = Image<Byte>::AutoAugment(imgByte, PadD, PadH, PadW, DataProv->Mean, MirrorPad, generator);
@@ -2048,15 +2048,15 @@ namespace dnn
 			if (RandomCrop)
 				imgByte = Image<Byte>::RandomCrop(imgByte, D, H, W, DataProv->Mean, generator);
 
-			for (auto c = 0ull; c < imgByte.C; c++)
+			for (auto c = 0u; c < imgByte.C(); c++)
 			{
 				const auto mean = MeanStdNormalization ? DataProv->Mean[c] : Image<Byte>::GetChannelMean(imgByte, c);
 				const auto stddev = MeanStdNormalization ? DataProv->StdDev[c] : Image<Byte>::GetChannelStdDev(imgByte, c);
 
-				for (auto d = 0ull; d < imgByte.D; d++)
-					for (auto h = 0ull; h < imgByte.H; h++)
-						for (auto w = 0ull; w < imgByte.W; w++)
-							Layers[0]->Neurons[(c * imgByte.ChannelSize()) + (d * imgByte.Area()) + (h * imgByte.W) + w] = (imgByte(c, d, h, w) - mean) / stddev;
+				for (auto d = 0u; d < imgByte.D(); d++)
+					for (auto h = 0u; h < imgByte.H(); h++)
+						for (auto w = 0u; w < imgByte.W(); w++)
+							Layers[0]->Neurons[(c * imgByte.ChannelSize()) + (d * imgByte.Area()) + (h * imgByte.W()) + w] = (imgByte(c, d, h, w) - mean) / stddev;
 			}
 
 			return SampleLabel;
@@ -2067,25 +2067,25 @@ namespace dnn
 			auto label = DataProv->TestingLabels[index];
 			auto SampleLabel = GetLabelInfo(label);
 
-			auto imgByte = DataProv->TestingSamples[index];
+			auto imgByte = Image<Byte>(DataProv->TestingSamples[index]);
 
-			if (imgByte.D != D || imgByte.H != H || imgByte.W != W)
-				imgByte = Image<Byte>::Resize(imgByte, D, H, W, Interpolations(CurrentTrainingRate.Interpolation));
+			if (imgByte.D() != D || imgByte.H() != H || imgByte.W() != W)
+				Image<Byte>::Resize(imgByte, D, H, W, Interpolations(CurrentTrainingRate.Interpolation));
 
 			imgByte = Image<Byte>::Padding(imgByte, PadD, PadH, PadW, DataProv->Mean, MirrorPad);
 
 			if (RandomCrop)
 				imgByte = Image<Byte>::Crop(imgByte, Positions::Center, D, H, W, DataProv->Mean);
 
-			for (auto c = 0ull; c < imgByte.C; c++)
+			for (auto c = 0u; c < imgByte.C(); c++)
 			{
 				const auto mean = MeanStdNormalization ? DataProv->Mean[c] : Image<Byte>::GetChannelMean(imgByte, c);
 				const auto stddev = MeanStdNormalization ? DataProv->StdDev[c] : Image<Byte>::GetChannelStdDev(imgByte, c);
 
-				for (auto d = 0ull; d < imgByte.D; d++)
-					for (auto h = 0ull; h < imgByte.H; h++)
-						for (auto w = 0ull; w < imgByte.W; w++)
-							Layers[0]->Neurons[(c * imgByte.ChannelSize()) + (d * imgByte.Area()) + (h * imgByte.W) + w] = (imgByte(c, d, h, w) - mean) / stddev;
+				for (auto d = 0u; d < imgByte.D(); d++)
+					for (auto h = 0u; h < imgByte.H(); h++)
+						for (auto w = 0u; w < imgByte.W(); w++)
+							Layers[0]->Neurons[(c * imgByte.ChannelSize()) + (d * imgByte.Area()) + (h * imgByte.W()) + w] = (imgByte(c, d, h, w) - mean) / stddev;
 			}
 
 			return SampleLabel;
@@ -2098,10 +2098,10 @@ namespace dnn
 			auto label = DataProv->TestingLabels[index];
 			auto SampleLabel = GetLabelInfo(label);
 
-			auto imgByte = DataProv->TestingSamples[index];
+			auto imgByte = Image<Byte>(DataProv->TestingSamples[index]);
 
 			if (DataProv->C == 3 && Bernoulli<bool>(generator, CurrentTrainingRate.ColorCast))
-				imgByte = Image<Byte>::ColorCast(imgByte, CurrentTrainingRate.ColorAngle, generator);
+				Image<Byte>::ColorCast(imgByte, CurrentTrainingRate.ColorAngle, generator);
 
 			if (CurrentTrainingRate.HorizontalFlip && TestingSamplesHFlip[index])
 				Image<Byte>::HorizontalMirror(imgByte);
@@ -2109,8 +2109,8 @@ namespace dnn
 			if (CurrentTrainingRate.VerticalFlip && TestingSamplesVFlip[index])
 				Image<Byte>::VerticalMirror(imgByte);
 
-			if (imgByte.D != D || imgByte.H != H || imgByte.W != W)
-				imgByte = Image<Byte>::Resize(imgByte, D, H, W, static_cast<Interpolations>(CurrentTrainingRate.Interpolation));
+			if (imgByte.D() != D || imgByte.H() != H || imgByte.W() != W)
+				Image<Byte>::Resize(imgByte, D, H, W, static_cast<Interpolations>(CurrentTrainingRate.Interpolation));
 
 			if (DataProv->C == 3 && Bernoulli<bool>(generator, CurrentTrainingRate.AutoAugment))
 				imgByte = Image<Byte>::AutoAugment(imgByte, PadD, PadH, PadW, DataProv->Mean, MirrorPad, generator);
@@ -2129,15 +2129,15 @@ namespace dnn
 			if (CurrentTrainingRate.InputDropout > Float(0))
 				Image<Byte>::Dropout(imgByte, CurrentTrainingRate.InputDropout, DataProv->Mean, generator);
 
-			for (auto c = 0ull; c < imgByte.C; c++)
+			for (auto c = 0u; c < imgByte.C(); c++)
 			{
 				const auto mean = MeanStdNormalization ? DataProv->Mean[c] : Image<Byte>::GetChannelMean(imgByte, c);
 				const auto stddev = MeanStdNormalization ? DataProv->StdDev[c] : Image<Byte>::GetChannelStdDev(imgByte, c);
 
-				for (auto d = 0ull; d < imgByte.D; d++)
-					for (auto h = 0ull; h < imgByte.H; h++)
-						for (auto w = 0ull; w < imgByte.W; w++)
-							Layers[0]->Neurons[(c * imgByte.ChannelSize()) + (d * imgByte.Area()) + (h * imgByte.W) + w] = (imgByte(c, d, h, w) - mean) / stddev;
+				for (auto d = 0u; d < imgByte.D(); d++)
+					for (auto h = 0u; h < imgByte.H(); h++)
+						for (auto w = 0u; w < imgByte.W(); w++)
+							Layers[0]->Neurons[(c * imgByte.ChannelSize()) + (d * imgByte.Area()) + (h * imgByte.W()) + w] = (imgByte(c, d, h, w) - mean) / stddev;
 			}
 
 			return SampleLabel;
@@ -2148,7 +2148,7 @@ namespace dnn
 		{
 			const auto hierarchies = DataProv->Hierarchies;
 			auto SampleLabels = std::vector<std::vector<LabelInfo>>(batchSize, std::vector<LabelInfo>(hierarchies));
-			const auto resize = DataProv->TrainingSamples[0].D != D || DataProv->TrainingSamples[0].H != H || DataProv->TrainingSamples[0].W != W;
+			const auto resize = DataProv->TrainingSamples[0]._depth != D || DataProv->TrainingSamples[0]._height != H || DataProv->TrainingSamples[0]._width != W;
 			
 			for_i(batchSize, [=, &SampleLabels](const UInt batchIndex)
 			{
@@ -2188,10 +2188,10 @@ namespace dnn
 					Image<Byte>::VerticalMirror(imgByte);
 
 				if (DataProv->C == 3 && Bernoulli<bool>(generator, CurrentTrainingRate.ColorCast))
-					imgByte = Image<Byte>::ColorCast(imgByte, CurrentTrainingRate.ColorAngle, generator);
+					Image<Byte>::ColorCast(imgByte, CurrentTrainingRate.ColorAngle, generator);
 
 				if (resize)
-					imgByte = Image<Byte>::Resize(imgByte, D, H, W, Interpolations(CurrentTrainingRate.Interpolation));
+					Image<Byte>::Resize(imgByte, D, H, W, Interpolations(CurrentTrainingRate.Interpolation));
 
 				if (DataProv->C == 3 && Bernoulli<bool>(generator, CurrentTrainingRate.AutoAugment))
 					imgByte = Image<Byte>::AutoAugment(imgByte, PadD, PadH, PadW, DataProv->Mean, MirrorPad, generator);
@@ -2210,15 +2210,15 @@ namespace dnn
 				if (CurrentTrainingRate.InputDropout > Float(0))
 					Image<Byte>::Dropout(imgByte, CurrentTrainingRate.InputDropout, DataProv->Mean, generator);
 				
-				for (auto c = 0ull; c < imgByte.C; c++)
+				for (auto c = 0u; c < imgByte.C(); c++)
 				{
 					const auto mean = MeanStdNormalization ? DataProv->Mean[c] : Image<Byte>::GetChannelMean(imgByte, c);
 					const auto stddevRecip = Float(1) / (MeanStdNormalization ? DataProv->StdDev[c] : Image<Byte>::GetChannelStdDev(imgByte, c));
 
-					for (auto d = 0ull; d < imgByte.D; d++)
-						for (auto h = 0ull; h < imgByte.H; h++)
-							for (auto w = 0ull; w < imgByte.W; w++)
-								Layers[0]->Neurons[batchIndex * imgByte.Size() + (c * imgByte.ChannelSize()) + (d * imgByte.Area()) + (h * imgByte.W) + w] = (imgByte(c, d, h, w) - mean) * stddevRecip;
+					for (auto d = 0u; d < imgByte.D(); d++)
+						for (auto h = 0u; h < imgByte.H(); h++)
+							for (auto w = 0u; w < imgByte.W(); w++)
+								Layers[0]->Neurons[batchIndex * imgByte.Size() + (c * imgByte.ChannelSize()) + (d * imgByte.Area()) + (h * imgByte.W()) + w] = (imgByte(c, d, h, w) - mean) * stddevRecip;
 				}
 			});
 
@@ -2228,7 +2228,7 @@ namespace dnn
 		std::vector<std::vector<LabelInfo>> TestBatch(const UInt index, const UInt batchSize)
 		{
 			auto SampleLabels = std::vector<std::vector<LabelInfo>>(batchSize, std::vector<LabelInfo>(DataProv->Hierarchies));
-			const auto resize = DataProv->TestingSamples[0].D != D || DataProv->TestingSamples[0].H != H || DataProv->TestingSamples[0].W != W;
+			const auto resize = DataProv->TestingSamples[0]._depth != D || DataProv->TestingSamples[0]._height != H || DataProv->TestingSamples[0]._width != W;
 
 			const auto elements = batchSize * C * D * H * W;
 			const auto threads = GetThreads(elements);
@@ -2240,24 +2240,24 @@ namespace dnn
 				auto labels = DataProv->TestingLabels[sampleIndex];
 				SampleLabels[batchIndex] = GetLabelInfo(labels);
 
-				auto imgByte = DataProv->TestingSamples[sampleIndex];
+				auto imgByte = Image<Byte>(DataProv->TestingSamples[sampleIndex]);
 
 				if (resize)
-					imgByte = Image<Byte>::Resize(imgByte, D, H, W, Interpolations(CurrentTrainingRate.Interpolation));
+					Image<Byte>::Resize(imgByte, D, H, W, Interpolations(CurrentTrainingRate.Interpolation));
 
 				imgByte = Image<Byte>::Padding(imgByte, PadD, PadH, PadW, DataProv->Mean, MirrorPad);
 
 				imgByte = Image<Byte>::Crop(imgByte, Positions::Center, D, H, W, DataProv->Mean);
 
-				for (auto c = 0ull; c < imgByte.C; c++)
+				for (auto c = 0u; c < imgByte.C(); c++)
 				{
 					const auto mean = MeanStdNormalization ? DataProv->Mean[c] : Image<Byte>::GetChannelMean(imgByte, c);
 					const auto stddevRecip = Float(1) / (MeanStdNormalization ? DataProv->StdDev[c] : Image<Byte>::GetChannelStdDev(imgByte, c));
 
-					for (auto d = 0ull; d < imgByte.D; d++)
-						for (auto h = 0ull; h < imgByte.H; h++)
-							for (auto w = 0ull; w < imgByte.W; w++)
-								Layers[0]->Neurons[batchIndex * imgByte.Size() + (c * imgByte.ChannelSize()) + (d * imgByte.Area()) + (h * imgByte.W) + w] = (imgByte(c, d, h, w) - mean) * stddevRecip;
+					for (auto d = 0u; d < imgByte.D(); d++)
+						for (auto h = 0u; h < imgByte.H(); h++)
+							for (auto w = 0u; w < imgByte.W(); w++)
+								Layers[0]->Neurons[batchIndex * imgByte.Size() + (c * imgByte.ChannelSize()) + (d * imgByte.Area()) + (h * imgByte.W()) + w] = (imgByte(c, d, h, w) - mean) * stddevRecip;
 				}
 			});
 
@@ -2267,7 +2267,7 @@ namespace dnn
 		std::vector<std::vector<LabelInfo>> TestAugmentedBatch(const UInt index, const UInt batchSize)
 		{
 			auto SampleLabels = std::vector<std::vector<LabelInfo>>(batchSize, std::vector<LabelInfo>(DataProv->Hierarchies));
-			const auto resize = DataProv->TestingSamples[0].D != D || DataProv->TestingSamples[0].H != H || DataProv->TestingSamples[0].W != W;
+			const auto resize = DataProv->TestingSamples[0]._depth != D || DataProv->TestingSamples[0]._height != H || DataProv->TestingSamples[0]._width != W;
 
 			for_i(batchSize, [=, &SampleLabels](const UInt batchIndex)
 			{
@@ -2278,10 +2278,10 @@ namespace dnn
 				auto labels = DataProv->TestingLabels[sampleIndex];
 				SampleLabels[batchIndex] = GetLabelInfo(labels);
 
-				auto imgByte = DataProv->TestingSamples[sampleIndex];
+				auto imgByte = Image<Byte>(DataProv->TestingSamples[sampleIndex]);
 
 				if (DataProv->C == 3 && Bernoulli<bool>(generator, CurrentTrainingRate.ColorCast))
-					imgByte = Image<Byte>::ColorCast(imgByte, CurrentTrainingRate.ColorAngle, generator);
+					Image<Byte>::ColorCast(imgByte, CurrentTrainingRate.ColorAngle, generator);
 
 				if (CurrentTrainingRate.HorizontalFlip && TestingSamplesHFlip[sampleIndex])
 					Image<Byte>::HorizontalMirror(imgByte);
@@ -2290,7 +2290,7 @@ namespace dnn
 					Image<Byte>::VerticalMirror(imgByte);
 
 				if (resize)
-					imgByte = Image<Byte>::Resize(imgByte, D, H, W, Interpolations(CurrentTrainingRate.Interpolation));
+					Image<Byte>::Resize(imgByte, D, H, W, Interpolations(CurrentTrainingRate.Interpolation));
 
 				if (DataProv->C == 3 && Bernoulli<bool>(generator, CurrentTrainingRate.AutoAugment))
 					imgByte = Image<Byte>::AutoAugment(imgByte, PadD, PadH, PadW, DataProv->Mean, MirrorPad, generator);
@@ -2309,15 +2309,15 @@ namespace dnn
 				if (CurrentTrainingRate.InputDropout > Float(0))
 					Image<Byte>::Dropout(imgByte, CurrentTrainingRate.InputDropout, DataProv->Mean, generator);
 
-				for (auto c = 0ull; c < imgByte.C; c++)
+				for (auto c = 0u; c < imgByte.C(); c++)
 				{
 					const auto mean = MeanStdNormalization ? DataProv->Mean[c] : Image<Byte>::GetChannelMean(imgByte, c);
 					const auto stddev = MeanStdNormalization ? DataProv->StdDev[c] : Image<Byte>::GetChannelStdDev(imgByte, c);
 
-					for (auto d = 0ull; d < imgByte.D; d++)
-						for (auto h = 0ull; h < imgByte.H; h++)
-							for (auto w = 0ull; w < imgByte.W; w++)
-								Layers[0]->Neurons[batchIndex * imgByte.Size() + (c * imgByte.ChannelSize()) + (d * imgByte.Area()) + (h * imgByte.W) + w] = (imgByte(c, d, h, w) - mean) / stddev;
+					for (auto d = 0u; d < imgByte.D(); d++)
+						for (auto h = 0u; h < imgByte.H(); h++)
+							for (auto w = 0u; w < imgByte.W(); w++)
+								Layers[0]->Neurons[batchIndex * imgByte.Size() + (c * imgByte.ChannelSize()) + (d * imgByte.Area()) + (h * imgByte.W()) + w] = (imgByte(c, d, h, w) - mean) / stddev;
 				}
 			});
 
