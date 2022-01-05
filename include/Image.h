@@ -680,7 +680,7 @@ namespace dnn
 		// magnitude = 0   // gray image
 		// magnitude = 1   // original
 		// range 0.1 --> 1.9
-		static Image Crop(const Image& image, const Positions position, const UInt depth, const UInt height, const UInt width, const std::vector<Float>& mean) NOEXCEPT
+		inline static Image Crop(const Image& image, const Positions position, const UInt depth, const UInt height, const UInt width, const std::vector<Float>& mean) NOEXCEPT
 		{
 			Image img(image.C, depth, height, width);
 
@@ -772,14 +772,13 @@ namespace dnn
 			return img;
 		}
 
-
 		static Image Distorted(const Image& image, const Float scale, const Float angle, const Interpolations interpolation, const std::vector<Float>& mean, std::mt19937& generator) NOEXCEPT
 		{
 			const auto zoom = scale / Float(100) * UniformReal<Float>(generator, Float(-1), Float(1));
 			const auto height = static_cast<UInt>(static_cast<int>(image.H) + static_cast<int>(std::round(static_cast<int>(image.H) * zoom)));
 			const auto width = static_cast<UInt>(static_cast<int>(image.W) + static_cast<int>(std::round(static_cast<int>(image.W) * zoom)));
 
-			return Image::Crop(Image::Rotate(Image::Resize(image, image.D, height, width, interpolation), angle * UniformReal<Float>(generator, Float(-1), Float(1)), interpolation, mean), Positions::Center, image.D, image.H, image.W, mean);
+			return Image::Rotate(Image::Resize(image, image.D, height, width, interpolation), angle * UniformReal<Float>(generator, Float(-1), Float(1)), interpolation, mean);
 		}
 
 		static void Dropout(Image& image, const Float dropout, const std::vector<Float>& mean, std::mt19937& generator) NOEXCEPT
@@ -1159,7 +1158,7 @@ namespace dnn
 
 		static void Solarize(Image& image, const T treshold = 128) NOEXCEPT
 		{
-			constexpr T maximum = std::is_floating_point_v<T> ? static_cast<T>(1) : static_cast<T>(255);
+			const T maximum = std::is_floating_point_v<T> ? static_cast<T>(1) : static_cast<T>(255);
 
 			for (auto c = 0ull; c < image.C; c++)
 				for (auto d = 0ull; d < image.D; d++)
