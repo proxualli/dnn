@@ -2023,7 +2023,7 @@ namespace dnn
 				Image<Byte>::HorizontalMirror(imgByte);
 
 			if (CurrentTrainingRate.VerticalFlip && TrainingSamplesVFlip[rndIndex])
-				imgByte = Image<Byte>::VerticalMirror(imgByte);
+				Image<Byte>::VerticalMirror(imgByte);
 
 			if (DataProv->C == 3 && Bernoulli<bool>(generator, CurrentTrainingRate.ColorCast))
 				imgByte = Image<Byte>::ColorCast(imgByte, CurrentTrainingRate.ColorAngle, generator);
@@ -2107,7 +2107,7 @@ namespace dnn
 				Image<Byte>::HorizontalMirror(imgByte);
 
 			if (CurrentTrainingRate.VerticalFlip && TestingSamplesVFlip[index])
-				imgByte = Image<Byte>::VerticalMirror(imgByte);
+				Image<Byte>::VerticalMirror(imgByte);
 
 			if (imgByte.D != D || imgByte.H != H || imgByte.W != W)
 				imgByte = Image<Byte>::Resize(imgByte, D, H, W, static_cast<Interpolations>(CurrentTrainingRate.Interpolation));
@@ -2185,7 +2185,7 @@ namespace dnn
 					Image<Byte>::HorizontalMirror(imgByte);
 
 				if (CurrentTrainingRate.VerticalFlip && TrainingSamplesVFlip[randomIndex])
-					imgByte = Image<Byte>::VerticalMirror(imgByte);
+					Image<Byte>::VerticalMirror(imgByte);
 
 				if (DataProv->C == 3 && Bernoulli<bool>(generator, CurrentTrainingRate.ColorCast))
 					imgByte = Image<Byte>::ColorCast(imgByte, CurrentTrainingRate.ColorAngle, generator);
@@ -2287,7 +2287,7 @@ namespace dnn
 					Image<Byte>::HorizontalMirror(imgByte);
 
 				if (CurrentTrainingRate.VerticalFlip && TestingSamplesVFlip[sampleIndex])
-					imgByte = Image<Byte>::VerticalMirror(imgByte);
+					Image<Byte>::VerticalMirror(imgByte);
 
 				if (resize)
 					imgByte = Image<Byte>::Resize(imgByte, D, H, W, Interpolations(CurrentTrainingRate.Interpolation));

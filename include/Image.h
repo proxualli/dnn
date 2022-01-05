@@ -267,9 +267,9 @@ namespace dnn
 				if (Bernoulli<bool>(generator, Float(0.3)))
 				{
 					if (Bernoulli<bool>(generator, Float(0.5)))
-						img = Posterize(img, 32);
+						Posterize(img, 32);
 					else
-						img = Posterize(img, 64);
+						Posterize(img, 64);
 				}
 			}
 			break;
@@ -414,9 +414,9 @@ namespace dnn
 				if (Bernoulli<bool>(generator, Float(0.5)))
 				{
 					if (Bernoulli<bool>(generator, Float(0.5)))
-						img = Solarize(img, IntLevel(2, 0, 256));
+						Solarize(img, IntLevel(2, 0, 256));
 					else
-						img = Solarize(img, IntLevel(8, 0, 256));
+						Solarize(img, IntLevel(8, 0, 256));
 				}
 			}
 			break;
@@ -462,7 +462,7 @@ namespace dnn
 					img = AutoContrast(img);
 
 				if (Bernoulli<bool>(generator, Float(0.2)))
-					img = Solarize(img, IntLevel(8, 0, 256));
+					Solarize(img, IntLevel(8, 0, 256));
 			}
 			break;
 
@@ -479,7 +479,7 @@ namespace dnn
 			case 20:
 			{
 				if (Bernoulli<bool>(generator, Float(0.4)))
-					img = Solarize(img, IntLevel(5, 0, 256));
+					Solarize(img, IntLevel(5, 0, 256));
 
 				if (Bernoulli<bool>(generator, Float(0.9)))
 					img = AutoContrast(img);
@@ -512,7 +512,7 @@ namespace dnn
 					img = AutoContrast(img);
 
 				if (Bernoulli<bool>(generator, Float(0.8)))
-					img = Solarize(img, IntLevel(3, 0, 256));
+					Solarize(img, IntLevel(3, 0, 256));
 			}
 			break;
 
@@ -559,7 +559,7 @@ namespace dnn
 
 		static Image AutoContrast(const Image& image) NOEXCEPT
 		{
-			const T maximum = std::is_floating_point_v<T> ? static_cast<T>(1) : static_cast<T>(255);
+			constexpr T maximum = std::is_floating_point_v<T> ? static_cast<T>(1) : static_cast<T>(255);
 			
 			auto imgSource = ImageToCImg(image);
 
@@ -614,6 +614,7 @@ namespace dnn
 			imgSource.HSLtoRGB();
 
 			Image img(image.C, image.D, image.H, image.W);
+
 			for (auto c = 0u; c < img.C; c++)
 				for (auto d = 0u; d < img.D; d++)
 					for (auto h = 0u; h < img.H; h++)
@@ -639,6 +640,7 @@ namespace dnn
 			imgSource.HSLtoRGB();
 
 			Image img(image.C, image.D, image.H, image.W);
+
 			for (auto c = 0u; c < img.C; c++)
 				for (auto d = 0u; d < img.D; d++)
 					for (auto h = 0u; h < img.H; h++)
@@ -665,6 +667,7 @@ namespace dnn
 			imgSource.HSLtoRGB();
 
 			Image img(image.C, image.D, image.H, image.W);
+
 			for (auto c = 0u; c < img.C; c++)
 				for (auto d = 0u; d < img.D; d++)
 					for (auto h = 0u; h < img.H; h++)
@@ -1007,22 +1010,18 @@ namespace dnn
 			return mirrorPad ? Image::MirrorPad(image, depth, height, width) : Image::ZeroPad(image, depth, height, width, mean);
 		}
 
-		static Image Posterize(const Image& image, const UInt levels = 16) NOEXCEPT
+		static void Posterize(Image& image, const UInt levels = 16) NOEXCEPT
 		{
-			Image img(image.C, image.D, image.H, image.W);
-
 			auto palette = std::vector<Byte>(256);
 			const auto q = 256ull / levels;
 			for (auto c = 0ull; c < 255ull; c++)
 				palette[c] = Saturate<UInt>((((c / q) * q) * levels) / (levels - 1));
 
-			for (auto c = 0ull; c < img.C; c++)
-				for (auto d = 0ull; d < img.D; d++)
-					for (auto h = 0ull; h < img.H; h++)
-						for (auto w = 0ull; w < img.W; w++)
-							img(c, d, h, w) = palette[image(c, d, h, w)];
-
-			return img;
+			for (auto c = 0ull; c < image.C; c++)
+				for (auto d = 0ull; d < image.D; d++)
+					for (auto h = 0ull; h < image.H; h++)
+						for (auto w = 0ull; w < image.W; w++)
+							image(c, d, h, w) = palette[image(c, d, h, w)];
 		}
 		
 		static Image RandomCrop(const Image& image, const UInt depth, const UInt height, const UInt width, const std::vector<Float>& mean, std::mt19937& generator) NOEXCEPT
@@ -1106,7 +1105,7 @@ namespace dnn
 			*lambda = 1.0 - (static_cast<double>((bbx2 - bbx1) * (bby2 - bby1)) / static_cast<double>(image.H * image.W));
 		}
 
-		static Image Resize(const Image& image, const UInt depth, const UInt height, const UInt width, const Interpolations interpolation) NOEXCEPT
+		inline static Image Resize(const Image& image, const UInt depth, const UInt height, const UInt width, const Interpolations interpolation) NOEXCEPT
 		{
 			auto imgSource = ImageToCImg(image);
 
@@ -1126,7 +1125,7 @@ namespace dnn
 			return CImgToImage(imgSource);
 		}
 
-		static Image Rotate(const Image& image, const Float angle, const Interpolations interpolation, const std::vector<Float>& mean) NOEXCEPT
+		inline static Image Rotate(const Image& image, const Float angle, const Interpolations interpolation, const std::vector<Float>& mean) NOEXCEPT
 		{
 			auto imgSource = ImageToCImg(ZeroPad(image, image.D / 2, image.H / 2, image.W / 2, mean));
 
@@ -1158,19 +1157,15 @@ namespace dnn
 			return CImgToImage(imgSource);
 		}
 
-		static Image Solarize(const Image& image, const T treshold = 128) NOEXCEPT
+		static void Solarize(Image& image, const T treshold = 128) NOEXCEPT
 		{
-			Image img(image.C, image.D, image.H, image.W);
-
 			constexpr T maximum = std::is_floating_point_v<T> ? static_cast<T>(1) : static_cast<T>(255);
 
-			for (auto c = 0ull; c < img.C; c++)
-				for (auto d = 0ull; d < img.D; d++)
-					for (auto h = 0ull; h < img.H; h++)
-						for (auto w = 0ull; w < img.W; w++)
-							img(c, d, h, w) = (image(c, d, h, w) < treshold) ? image(c, d, h, w) : (maximum - image(c, d, h, w));
-
-			return img;
+			for (auto c = 0ull; c < image.C; c++)
+				for (auto d = 0ull; d < image.D; d++)
+					for (auto h = 0ull; h < image.H; h++)
+						for (auto w = 0ull; w < image.W; w++)
+							image(c, d, h, w) = image(c, d, h, w) < treshold ? image(c, d, h, w) : maximum - image(c, d, h, w);
 		}
 		
 		static Image Translate(const Image& image, const int height, const int width, const std::vector<Float>& mean) NOEXCEPT
@@ -1248,17 +1243,18 @@ namespace dnn
 			return img;
 		}
 
-		static Image VerticalMirror(const Image& image) NOEXCEPT
+		static void VerticalMirror(Image& image) NOEXCEPT
 		{
-			Image img(image.C, image.D, image.H, image.W);
-
-			for (auto c = 0ull; c < img.C; c++)
-				for (auto d = 0ull; d < img.D; d++)
-					for (auto h = 0ull; h < img.H; h++)
-						for (auto w = 0ull; w < img.W; w++)
-							img(c, d, h, w) = image(c, d, image.H - 1 - h, w);
-
-			return img;
+			T top;
+			for (auto c = 0ull; c < image.C; c++)
+				for (auto d = 0ull; d < image.D; d++)
+					for (auto w = 0ull; w < image.W; w++)
+						for (auto h = 0ull; h < image.H; h++)
+						{
+							top = image(c, d, h, w);
+							image(c, d, h, w) = image(c, d, image.H - 1 - h, w);
+							image(c, d, image.H - 1 - h, w) = top;
+						}
 		}
 		
 		static Image ZeroPad(const Image& image, const UInt depth, const UInt height, const UInt width, const std::vector<Float>& mean) NOEXCEPT
