@@ -1158,7 +1158,7 @@ namespace dnn
 
 		static void Solarize(Image& image, const T treshold = 128) NOEXCEPT
 		{
-			const T maximum = std::is_floating_point_v<T> ? static_cast<T>(1) : static_cast<T>(255);
+			constexpr T maximum = std::is_floating_point_v<T> ? static_cast<T>(1) : static_cast<T>(255);
 
 			for (auto c = 0ull; c < image.C; c++)
 				for (auto d = 0ull; d < image.D; d++)
