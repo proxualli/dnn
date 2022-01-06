@@ -2159,7 +2159,7 @@ namespace dnn
 			const auto resize = DataProv->TrainingSamples[0]._depth != D || DataProv->TrainingSamples[0]._height != H || DataProv->TrainingSamples[0]._width != W;
 			
 			const auto elements = batchSize * C * D * H * W;
-			const auto threads = GetThreads(elements, Float(0.15));
+			const auto threads = GetThreads(elements, Float(0.1));
 
 			for_i(batchSize, threads, [=, &SampleLabels](const UInt batchIndex)
 			{
