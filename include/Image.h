@@ -146,12 +146,8 @@ namespace dnn
 		{
 			auto img = cimg_library::CImg<Float>(image.W(), image.H(), image.D(), image.C());
 
-			for (auto c = 0u; c < image.C(); c++)
-				for (auto d = 0u; d < image.D(); d++)
-					for (auto h = 0u; h < image.H(); h++)
-						for (auto w = 0u; w < image.W(); w++)
-							img(w, h, d, c) = image(c, d, h, w);
-
+			cimg_forXYZC(img, w, h, d, c) { img(w, h, d, c) = image(c, d, h, w); }
+			
 			return img;
 		}
 
@@ -576,18 +572,11 @@ namespace dnn
 
 			const auto delta = (magnitude - Float(1)) / 2;
 
-			for (auto d = 0u; d < image.D(); d++)
-				for (auto h = 0u; h < image.H(); h++)
-					for (auto w = 0u; w < image.W(); w++)
-						srcImage(w, h, d, 2u) = cimg_library::cimg::cut(srcImage(w, h, d, 2u) + delta, 0, 1);
+			cimg_forXYZ(srcImage, w, h, d) { srcImage(w, h, d, 2u) = cimg_library::cimg::cut(srcImage(w, h, d, 2u) + delta, 0, 1);	}
 
 			srcImage.HSLtoRGB();
 
-			for (auto c = 0u; c < image.C(); c++)
-				for (auto d = 0u; d < image.D(); d++)
-					for (auto h = 0u; h < image.H(); h++)
-						for (auto w = 0u; w < image.W(); w++)
-							image(c, d, h, w) = Saturate<Float>(srcImage(w, h, d, c));
+			cimg_forXYZC(srcImage, w, h, d, c) { image(c, d, h, w) = Saturate<Float>(srcImage(w, h, d, c));	}
 		}
 
 		// magnitude = 0   // black-and-white image
@@ -599,18 +588,11 @@ namespace dnn
 
 			imgSource.RGBtoHSL();
 
-			for (auto d = 0u; d < image.D(); d++)
-				for (auto h = 0u; h < image.H(); h++)
-					for (auto w = 0u; w < image.W(); w++)
-						imgSource(w, h, d, 0u) = cimg_library::cimg::cut(imgSource(w, h, d, 0u) * magnitude, 0, 360);
+			cimg_forXYZ(imgSource, w, h, d)	{ imgSource(w, h, d, 0u) = cimg_library::cimg::cut(imgSource(w, h, d, 0u) * magnitude, 0, 360);	}
 
 			imgSource.HSLtoRGB();
 
-			for (auto c = 0u; c < image.C(); c++)
-				for (auto d = 0u; d < image.D(); d++)
-					for (auto h = 0u; h < image.H(); h++)
-						for (auto w = 0u; w < image.W(); w++)
-							image(c, d, h, w) = Saturate<Float>(imgSource(w, h, d, c));
+			cimg_forXYZC(imgSource, w, h, d, c) { image(c, d, h, w) = Saturate<Float>(imgSource(w, h, d, c)); }
 		}
 
 		static void ColorCast(Image& image, const UInt angle, std::mt19937& generator) NOEXCEPT
@@ -621,18 +603,11 @@ namespace dnn
 
 			const auto shift = Float(Bernoulli<bool>(generator, Float(0.5)) ? static_cast<int>(UniformInt<UInt>(generator, 0, 2 * angle)) - static_cast<int>(angle) : 0);
 
-			for (auto d = 0u; d < image.D(); d++)
-				for (auto h = 0u; h < image.H(); h++)
-					for (auto w = 0u; w < image.W(); w++)
-						imgSource(w, h, d, 0u) = cimg_library::cimg::cut(imgSource(w, h, d, 0u) + shift, 0, 360);
-				
+			cimg_forXYZ(imgSource, w, h, d)	{ imgSource(w, h, d, 0u) = cimg_library::cimg::cut(imgSource(w, h, d, 0u) + shift, 0, 360);	}
+	
 			imgSource.HSLtoRGB();
 
-			for (auto c = 0u; c < image.C(); c++)
-				for (auto d = 0u; d < image.D(); d++)
-					for (auto h = 0u; h < image.H(); h++)
-						for (auto w = 0u; w < image.W(); w++)
-							image(c, d, h, w) = Saturate<Float>(imgSource(w, h, d, c));
+			cimg_forXYZC(imgSource, w, h, d, c) { image(c, d, h, w) = Saturate<Float>(imgSource(w, h, d, c)); }
 		}
 		
 		// magnitude = 0   // gray image
@@ -644,18 +619,11 @@ namespace dnn
 
 			imgSource.RGBtoHSL();
 
-			for (auto d = 0u; d < image.D(); d++)
-				for (auto h = 0u; h < image.H(); h++)
-					for (auto w = 0u; w < image.W(); w++)
-						imgSource(w, h, d, 1u) = cimg_library::cimg::cut(imgSource(w, h, d, 1u) * magnitude, 0, 1);
+			cimg_forXYZ(imgSource, w, h, d)	{ imgSource(w, h, d, 1u) = cimg_library::cimg::cut(imgSource(w, h, d, 1u) * magnitude, 0, 1); }
 
 			imgSource.HSLtoRGB();
 
-			for (auto c = 0u; c < image.C(); c++)
-				for (auto d = 0u; d < image.D(); d++)
-					for (auto h = 0u; h < image.H(); h++)
-						for (auto w = 0u; w < image.W(); w++)
-							image(c, d, h, w) = Saturate<Float>(imgSource(w, h, d, c));
+			cimg_forXYZC(imgSource, w, h, d, c) { image(c, d, h, w) = Saturate<Float>(imgSource(w, h, d, c)); }
 		}
 
 		// magnitude = 0   // gray image
@@ -664,6 +632,8 @@ namespace dnn
 		static Image Crop(const Image& image, const Positions position, const UInt depth, const UInt height, const UInt width, const std::vector<Float>& mean) NOEXCEPT
 		{
 			Image img(image.C(), static_cast<unsigned>(depth), static_cast<unsigned>(height), static_cast<unsigned>(width));
+			
+			//cimg_forXYZC(img, w, h, d, c) { img(c, d, h, w) = std::is_floating_point_v<T> ? static_cast<T>(0) : static_cast<T>(mean[c]); }
 
 			for (auto c = 0u; c < img.C(); c++)
 			{

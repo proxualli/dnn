@@ -1066,9 +1066,9 @@ namespace dnn
 				    {
 					    task.get();
 				    }
-				    catch (const std::runtime_error& e)
+				    catch (const std::future_error& e)
 				    {
-					    std::cout << "Async task threw exception: " << e.what() << std::endl;
+					    std::cout << std::string("StopTask exception: ") << e.what() << std::endl << std::string("code: ") << e.code() << std::endl;
 				    }
 
 				State.store(States::Completed);
@@ -1807,7 +1807,6 @@ namespace dnn
 			if (TaskState == TaskStates::Stopped && !BatchSizeChanging.load() && !ResettingWeights.load())
 			{
 				TaskState.store(TaskStates::Running);
-
 				State.store(States::Idle);
 
 				auto generator = std::mt19937(Seed<unsigned>());
@@ -1818,11 +1817,14 @@ namespace dnn
 				auto elapsedTime = std::chrono::duration<Float>(Float(0));
 
 				CurrentTrainingRate = TrainingRates[0];
-				
+				Rate = CurrentTrainingRate.MaximumRate;
+
 				if (!ChangeResolution(CurrentTrainingRate.BatchSize, CurrentTrainingRate.Height, CurrentTrainingRate.Width, CurrentTrainingRate.PadH, CurrentTrainingRate.PadW))
 					return;
 
-				Rate = CurrentTrainingRate.MaximumRate;
+				if (Dropout != CurrentTrainingRate.Dropout)
+					ChangeDropout(CurrentTrainingRate.Dropout, BatchSize);
+
 
 				TrainingSamplesHFlip = std::vector<bool>();
 				TrainingSamplesVFlip = std::vector<bool>();
@@ -1841,90 +1843,96 @@ namespace dnn
 
 				State.store(States::Testing);
 
-				for (auto cost : CostLayers)
-					cost->Reset();
-
-#ifdef DNN_STOCHASTIC
-				if (BatchSize == 1)
+				if (CheckTaskState())
 				{
-					for (SampleIndex = 0; SampleIndex < DataProv->TestingSamplesCount; SampleIndex++)
-					{
-						auto SampleLabel = TestAugmentedSample(SampleIndex);
-
-						for (auto cost : CostLayers)
-							cost->SetSampleLabel(SampleLabel);
-
-						for (auto i = 1ull; i < Layers.size(); i++)
-							Layers[i]->ForwardProp(1, false);
-
-						CostFunction(State.load());
-						Recognized(State.load(), SampleLabel);
-
-						if (TaskState.load() != TaskStates::Running && !CheckTaskState())
-							break;
-					}
-				}
-				else
-				{
-#else
-				auto overflow = false;
-				for (SampleIndex = 0; SampleIndex < AdjustedTestingSamplesCount; SampleIndex += BatchSize)
-				{
-					timePointGlobal = timer.now();
-
-					auto SampleLabels = TestAugmentedBatch(SampleIndex, BatchSize);
-					Layers[0]->fpropTime = timer.now() - timePointGlobal;
+					if (UseInplace)
+						SwitchInplaceBwd(false);
 
 					for (auto cost : CostLayers)
-						cost->SetSampleLabels(SampleLabels);
+						cost->Reset();
 
-					for (auto i = 1ull; i < Layers.size(); i++)
+#ifdef DNN_STOCHASTIC
+					if (BatchSize == 1)
 					{
-						timePoint = timer.now();
-						Layers[i]->ForwardProp(BatchSize, false);
-						Layers[i]->fpropTime = timer.now() - timePoint;
+						for (SampleIndex = 0; SampleIndex < DataProv->TestingSamplesCount; SampleIndex++)
+						{
+							auto SampleLabel = TestAugmentedSample(SampleIndex);
+
+							for (auto cost : CostLayers)
+								cost->SetSampleLabel(SampleLabel);
+
+							for (auto i = 1ull; i < Layers.size(); i++)
+								Layers[i]->ForwardProp(1, false);
+
+							CostFunction(State.load());
+							Recognized(State.load(), SampleLabel);
+
+							if (TaskState.load() != TaskStates::Running && !CheckTaskState())
+								break;
+						}
 					}
+					else
+					{
+#else
+						auto overflow = false;
+						for (SampleIndex = 0; SampleIndex < AdjustedTestingSamplesCount; SampleIndex += BatchSize)
+						{
+							timePointGlobal = timer.now();
 
-					overflow = SampleIndex >= TestOverflowCount;
-					CostFunctionBatch(State.load(), BatchSize, overflow, TestSkipCount);
-					RecognizedBatch(State.load(), BatchSize, overflow, TestSkipCount, SampleLabels);
+							auto SampleLabels = TestAugmentedBatch(SampleIndex, BatchSize);
+							Layers[0]->fpropTime = timer.now() - timePointGlobal;
 
-					fpropTime = timer.now() - timePointGlobal;
-					
-					SampleSpeed = BatchSize / (Float(std::chrono::duration_cast<std::chrono::microseconds>(fpropTime).count()) / 1000000);
-					
-					if (TaskState.load() != TaskStates::Running && !CheckTaskState())
-						break;
-				}
+							for (auto cost : CostLayers)
+								cost->SetSampleLabels(SampleLabels);
+
+							for (auto i = 1ull; i < Layers.size(); i++)
+							{
+								timePoint = timer.now();
+								Layers[i]->ForwardProp(BatchSize, false);
+								Layers[i]->fpropTime = timer.now() - timePoint;
+							}
+
+							overflow = SampleIndex >= TestOverflowCount;
+							CostFunctionBatch(State.load(), BatchSize, overflow, TestSkipCount);
+							RecognizedBatch(State.load(), BatchSize, overflow, TestSkipCount, SampleLabels);
+
+							fpropTime = timer.now() - timePointGlobal;
+
+							SampleSpeed = BatchSize / (Float(std::chrono::duration_cast<std::chrono::microseconds>(fpropTime).count()) / 1000000);
+
+							if (TaskState.load() != TaskStates::Running && !CheckTaskState())
+								break;
+						}
 #endif
 #ifdef DNN_STOCHASTIC
-				}
+					}
 #endif
-			for (auto cost : CostLayers)
-			{
-				cost->AvgTestLoss = cost->TestLoss / DataProv->TestingSamplesCount;
-				cost->TestErrorPercentage = cost->TestErrors / Float(DataProv->TestingSamplesCount / 100);
-			}
+					for (auto cost : CostLayers)
+					{
+						cost->AvgTestLoss = cost->TestLoss / DataProv->TestingSamplesCount;
+						cost->TestErrorPercentage = cost->TestErrors / Float(DataProv->TestingSamplesCount / 100);
+					}
+				}
+			
+				TestLoss = CostLayers[CostIndex]->TestLoss;
+				AvgTestLoss = CostLayers[CostIndex]->AvgTestLoss;
+				TestErrors = CostLayers[CostIndex]->TestErrors;
+				TestErrorPercentage = CostLayers[CostIndex]->TestErrorPercentage;
+				Accuracy = Float(100) - TestErrorPercentage;
 
-			TestLoss = CostLayers[CostIndex]->TestLoss;
-			AvgTestLoss = CostLayers[CostIndex]->AvgTestLoss;
-			TestErrors = CostLayers[CostIndex]->TestErrors;
-			TestErrorPercentage = CostLayers[CostIndex]->TestErrorPercentage;
-			Accuracy = Float(100) - TestErrorPercentage;
+				/*
+				auto fileName = std::string("C:\\test.txt");
+				auto ofs = std::ofstream(fileName);
+				if (!ofs.bad())
+				{
+					for (auto i = 0ull; i < 10000ull; i++)
+						ofs << labels[i] << std::endl;
+					ofs.flush();
+					ofs.close();
+				}
+				*/
 
-			/*
-			auto fileName = std::string("C:\\test.txt");
-			auto ofs = std::ofstream(fileName);
-			if (!ofs.bad())
-			{
-				for (auto i = 0ull; i < 10000ull; i++)
-					ofs << labels[i] << std::endl;
-				ofs.flush();
-				ofs.close();
-			}
-			*/
-
-			State.store(States::Completed);;
+				State.store(States::Completed);;
 			}
 		}
 
