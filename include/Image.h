@@ -146,10 +146,11 @@ namespace dnn
 		{
 			auto img = cimg_library::CImg<Float>(image.W(), image.H(), image.D(), image.C());
 
-			if (image.D() > 0)
-				cimg_forXYZC(img, w, h, d, c) { img(w, h, d, c) = image(c, d, h, w); }
-			else
-				cimg_forXYC(img, w, h, c) { img(w, h, 0, c) = image(c, 0, h, w); }
+#ifdef DNN_IMAGEDEPTH
+			cimg_forXYZC(img, w, h, d, c) { img(w, h, d, c) = image(c, d, h, w); }
+#else
+			cimg_forXYC(img, w, h, c) { img(w, h, 0, c) = image(c, 0, h, w); }
+#endif
 			
 			return img;
 		}
@@ -575,22 +576,19 @@ namespace dnn
 
 			const auto delta = (magnitude - Float(1)) / 2;
 
-			if (image.D() > 0)
-			{
-				cimg_forXYZ(srcImage, w, h, d) { srcImage(w, h, d, 2) = cimg_library::cimg::cut(srcImage(w, h, d, 2) + delta, 0, 1); }
+#ifdef DNN_IMAGEDEPTH
+			cimg_forXYZ(srcImage, w, h, d) { srcImage(w, h, d, 2) = cimg_library::cimg::cut(srcImage(w, h, d, 2) + delta, 0, 1); }
 
-				srcImage.HSLtoRGB();
+			srcImage.HSLtoRGB();
 
-				cimg_forXYZC(srcImage, w, h, d, c) { image(c, d, h, w) = Saturate<Float>(srcImage(w, h, d, c)); }
-			}
-			else
-			{
-				cimg_forXY(srcImage, w, h) { srcImage(w, h, 0, 2) = cimg_library::cimg::cut(srcImage(w, h, 0, 2) + delta, 0, 1); }
+			cimg_forXYZC(srcImage, w, h, d, c) { image(c, d, h, w) = Saturate<Float>(srcImage(w, h, d, c)); }
+#else
+			cimg_forXY(srcImage, w, h) { srcImage(w, h, 0, 2) = cimg_library::cimg::cut(srcImage(w, h, 0, 2) + delta, 0, 1); }
 
-				srcImage.HSLtoRGB();
+			srcImage.HSLtoRGB();
 
-				cimg_forXYC(srcImage, w, h, c) { image(c, 0, h, w) = Saturate<Float>(srcImage(w, h, 0, c)); }
-			}
+			cimg_forXYC(srcImage, w, h, c) { image(c, 0, h, w) = Saturate<Float>(srcImage(w, h, 0, c)); }
+#endif
 		}
 
 		// magnitude = 0   // black-and-white image
@@ -602,22 +600,20 @@ namespace dnn
 
 			srcImage.RGBtoHSL();
 
-			if (image.D() > 0)
-			{
-				cimg_forXYZ(srcImage, w, h, d) { srcImage(w, h, d, 0) = cimg_library::cimg::cut(srcImage(w, h, d, 0) * magnitude, 0, 360); }
+#ifdef DNN_IMAGEDEPTH
+			cimg_forXYZ(srcImage, w, h, d) { srcImage(w, h, d, 0) = cimg_library::cimg::cut(srcImage(w, h, d, 0) * magnitude, 0, 360); }
 
-				srcImage.HSLtoRGB();
+			srcImage.HSLtoRGB();
 
-				cimg_forXYZC(srcImage, w, h, d, c) { image(c, d, h, w) = Saturate<Float>(srcImage(w, h, d, c)); }
-			}
-			else
-			{
-				cimg_forXY(srcImage, w, h) { srcImage(w, h, 0, 0) = cimg_library::cimg::cut(srcImage(w, h, 0, 0) * magnitude, 0, 360); }
+			cimg_forXYZC(srcImage, w, h, d, c) { image(c, d, h, w) = Saturate<Float>(srcImage(w, h, d, c)); }
+#else
 
-				srcImage.HSLtoRGB();
+			cimg_forXY(srcImage, w, h) { srcImage(w, h, 0, 0) = cimg_library::cimg::cut(srcImage(w, h, 0, 0) * magnitude, 0, 360); }
 
-				cimg_forXYC(srcImage, w, h, c) { image(c, 0, h, w) = Saturate<Float>(srcImage(w, h, 0, c)); }
-			}
+			srcImage.HSLtoRGB();
+
+			cimg_forXYC(srcImage, w, h, c) { image(c, 0, h, w) = Saturate<Float>(srcImage(w, h, 0, c)); }
+#endif
 		}
 
 		static void ColorCast(Image& image, const UInt angle, std::mt19937& generator) NOEXCEPT
@@ -628,22 +624,19 @@ namespace dnn
 
 			const auto shift = Float(Bernoulli<bool>(generator, Float(0.5)) ? static_cast<int>(UniformInt<UInt>(generator, 0, 2 * angle)) - static_cast<int>(angle) : 0);
 
-			if (image.D() > 0)
-			{
-				cimg_forXYZ(srcImage, w, h, d) { srcImage(w, h, d, 0) = cimg_library::cimg::cut(srcImage(w, h, d, 0) + shift, 0, 360); }
+#ifdef DNN_IMAGEDEPTH
+			cimg_forXYZ(srcImage, w, h, d) { srcImage(w, h, d, 0) = cimg_library::cimg::cut(srcImage(w, h, d, 0) + shift, 0, 360); }
 
-				srcImage.HSLtoRGB();
+			srcImage.HSLtoRGB();
 
-				cimg_forXYZC(srcImage, w, h, d, c) { image(c, d, h, w) = Saturate<Float>(srcImage(w, h, d, c)); }
-			}
-			else
-			{
-				cimg_forXY(srcImage, w, h) { srcImage(w, h, 0, 0) = cimg_library::cimg::cut(srcImage(w, h, 0, 0) + shift, 0, 360); }
+			cimg_forXYZC(srcImage, w, h, d, c) { image(c, d, h, w) = Saturate<Float>(srcImage(w, h, d, c)); }
+#else
+			cimg_forXY(srcImage, w, h) { srcImage(w, h, 0, 0) = cimg_library::cimg::cut(srcImage(w, h, 0, 0) + shift, 0, 360); }
 
-				srcImage.HSLtoRGB();
+			srcImage.HSLtoRGB();
 
-				cimg_forXYC(srcImage, w, h, c) { image(c, 0, h, w) = Saturate<Float>(srcImage(w, h, 0, c)); }
-			}
+			cimg_forXYC(srcImage, w, h, c) { image(c, 0, h, w) = Saturate<Float>(srcImage(w, h, 0, c)); }
+#endif
 		}
 		
 		// magnitude = 0   // gray image
@@ -655,22 +648,19 @@ namespace dnn
 
 			srcImage.RGBtoHSL();
 
-			if (image.D() > 0)
-			{
-				cimg_forXYZ(srcImage, w, h, d) { srcImage(w, h, d, 1) = cimg_library::cimg::cut(srcImage(w, h, d, 1) * magnitude, 0, 1); }
+#ifdef DNN_IMAGEDEPTH
+			cimg_forXYZ(srcImage, w, h, d) { srcImage(w, h, d, 1) = cimg_library::cimg::cut(srcImage(w, h, d, 1) * magnitude, 0, 1); }
 
-				srcImage.HSLtoRGB();
+			srcImage.HSLtoRGB();
 
-				cimg_forXYZC(srcImage, w, h, d, c) { image(c, d, h, w) = Saturate<Float>(srcImage(w, h, d, c)); }
-			}
-			else
-			{
-				cimg_forXY(srcImage, w, h) { srcImage(w, h, 0, 1) = cimg_library::cimg::cut(srcImage(w, h, 0, 1) * magnitude, 0, 1); }
+			cimg_forXYZC(srcImage, w, h, d, c) { image(c, d, h, w) = Saturate<Float>(srcImage(w, h, d, c)); }
+#else
+			cimg_forXY(srcImage, w, h) { srcImage(w, h, 0, 1) = cimg_library::cimg::cut(srcImage(w, h, 0, 1) * magnitude, 0, 1); }
 
-				srcImage.HSLtoRGB();
+			srcImage.HSLtoRGB();
 
-				cimg_forXYC(srcImage, w, h, c) { image(c, 0, h, w) = Saturate<Float>(srcImage(w, h, 0, c)); }
-			}
+			cimg_forXYC(srcImage, w, h, c) { image(c, 0, h, w) = Saturate<Float>(srcImage(w, h, 0, c)); }
+#endif
 		}
 
 		// magnitude = 0   // gray image
@@ -804,30 +794,33 @@ namespace dnn
 		static void HorizontalMirror(Image& image) NOEXCEPT
 		{
 			T left;
-			if (image.D() > 0)
-				cimg_forXYZC(image.Data, w, h, d, c)
-				{
-					left = image(c, d, h, w);
-					image(c, d, h, w) = image(c, d, h, image.W() - 1 - w);
-					image(c, d, h, image.W() - 1 - w) = left;
-				}
-			else
-				cimg_forXYC(image.Data, w, h, c)
-				{
-					left = image(c, 0, h, w);
-					image(c, 0, h, w) = image(c, 0, h, image.W() - 1 - w);
-					image(c, 0, h, image.W() - 1 - w) = left;
-				}
+#ifdef DNN_IMAGEDEPTH
+			cimg_forXYZC(image.Data, w, h, d, c)
+			{
+				left = image(c, d, h, w);
+				image(c, d, h, w) = image(c, d, h, image.W() - 1 - w);
+				image(c, d, h, image.W() - 1 - w) = left;
+			}
+#else
+			cimg_forXYC(image.Data, w, h, c)
+			{
+				left = image(c, 0, h, w);
+				image(c, 0, h, w) = image(c, 0, h, image.W() - 1 - w);
+				image(c, 0, h, image.W() - 1 - w) = left;
+			}
+#endif
 		}
 
 		static void Invert(Image& image) NOEXCEPT
 		{
 			constexpr T maximum = std::is_floating_point_v<T> ? static_cast<T>(1) : static_cast<T>(255);
 			
-			if (image.D() > 0)
-				cimg_forXYZC(image.Data, w, h, d, c) { image(c, d, h, w) = maximum - image(c, d, h, w); }
-			else
-				cimg_forXYC(image.Data, w, h, c) { image(c, 0, h, w) = maximum - image(c, 0, h, w); }
+#ifdef DNN_IMAGEDEPTH
+			cimg_forXYZC(image.Data, w, h, d, c) { image(c, d, h, w) = maximum - image(c, d, h, w); }
+#else
+
+			cimg_forXYC(image.Data, w, h, c) { image(c, 0, h, w) = maximum - image(c, 0, h, w); }
+#endif
 		}
 
 		static Image MirrorPad(const Image& image, const unsigned depth, const unsigned height, const unsigned width) NOEXCEPT
@@ -944,10 +937,11 @@ namespace dnn
 			for (auto c = 0u; c < 255u; c++)
 				palette[c] = Saturate<unsigned>((((c / q) * q) * levels) / (levels - 1));
 
-			if (image.D() > 0)
-				cimg_forXYZC(image.Data, w, h, d, c) { image(c, d, h, w) = palette[image(c, d, h, w)]; }
-			else
-				cimg_forXYC(image.Data, w, h, c) { image(c, 0, h, w) = palette[image(c, 0, h, w)]; }
+#ifdef DNN_IMAGEDEPTH
+			cimg_forXYZC(image.Data, w, h, d, c) { image(c, d, h, w) = palette[image(c, d, h, w)]; }
+#else
+			cimg_forXYC(image.Data, w, h, c) { image(c, 0, h, w) = palette[image(c, 0, h, w)]; }
+#endif
 		}
 		
 		static Image RandomCrop(const Image& image, const UInt depth, const UInt height, const UInt width, const std::vector<Float>& mean, std::mt19937& generator) NOEXCEPT
@@ -1079,10 +1073,11 @@ namespace dnn
 		{
 			constexpr T maximum = std::is_floating_point_v<T> ? static_cast<T>(1) : static_cast<T>(255);
 
-			if (image.D() > 0)
-				cimg_forXYZC(image.Data, w, h, d, c) { image(c, d, h, w) = image(c, d, h, w) < treshold ? image(c, d, h, w) : maximum - image(c, d, h, w); }
-			else
-				cimg_forXYC(image.Data, w, h, c) { image(c, 0, h, w) = image(c, 0, h, w) < treshold ? image(c, 0, h, w) : maximum - image(c, 0, h, w); }
+#ifdef DNN_IMAGEDEPTH
+			cimg_forXYZC(image.Data, w, h, d, c) { image(c, d, h, w) = image(c, d, h, w) < treshold ? image(c, d, h, w) : maximum - image(c, d, h, w); }
+#else
+			cimg_forXYC(image.Data, w, h, c) { image(c, 0, h, w) = image(c, 0, h, w) < treshold ? image(c, 0, h, w) : maximum - image(c, 0, h, w); }
+#endif
 		}
 		
 		static void Translate(Image& image, const int height, const int width, const std::vector<Float>& mean) NOEXCEPT
@@ -1171,34 +1166,31 @@ namespace dnn
 			
 			T channelMean = static_cast<T>(0);
 
-			if (image.D() > 0)
+#ifdef DNN_IMAGEDEPTH
+			for (auto c = 0u; c < img.C(); c++)
 			{
-				for (auto c = 0u; c < img.C(); c++)
-				{
-					if constexpr (!std::is_floating_point_v<T>)
-						channelMean = static_cast<T>(mean[c]);
+				if constexpr (!std::is_floating_point_v<T>)
+					channelMean = static_cast<T>(mean[c]);
 
-					for (auto d = 0u; d < img.D(); d++)
-						for (auto h = 0u; h < img.H(); h++)
-							for (auto w = 0u; w < img.W(); w++)
-								img(c, d, h, w) = channelMean;
-				}
-
-				cimg_forXYZC(image.Data, w, h, d, c) { img(c, d + depth, h + height, w + width) = image(c, d, h, w); }
-			}
-			else
-			{
-				for (auto c = 0u; c < img.C(); c++)
-				{
-					if constexpr (!std::is_floating_point_v<T>)
-						channelMean = static_cast<T>(mean[c]);
+				for (auto d = 0u; d < img.D(); d++)
 					for (auto h = 0u; h < img.H(); h++)
 						for (auto w = 0u; w < img.W(); w++)
-							img(c, 0, h, w) = channelMean;
-				}
-
-				cimg_forXYC(image.Data, w, h, c) { img(c, depth, h + height, w + width) = image(c, 0, h, w); }
+							img(c, d, h, w) = channelMean;
 			}
+
+			cimg_forXYZC(image.Data, w, h, d, c) { img(c, d + depth, h + height, w + width) = image(c, d, h, w); }
+#else
+			for (auto c = 0u; c < img.C(); c++)
+			{
+				if constexpr (!std::is_floating_point_v<T>)
+					channelMean = static_cast<T>(mean[c]);
+				for (auto h = 0u; h < img.H(); h++)
+					for (auto w = 0u; w < img.W(); w++)
+						img(c, 0, h, w) = channelMean;
+			}
+
+			cimg_forXYC(image.Data, w, h, c) { img(c, depth, h + height, w + width) = image(c, 0, h, w); }
+#endif
 			
 			return img;
 		}
