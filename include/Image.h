@@ -44,21 +44,11 @@ namespace dnn
 		{
 		}
 
-		Image(const Image& image) NOEXCEPT :
-			Data(image.Data)
-		{
-		}
-
 		Image(const cimg_library::CImg<T>& image) NOEXCEPT :
 			Data(image)
 		{
 		}
 		
-		Image(const unsigned c, const unsigned d, const unsigned h, const unsigned w, const T* image) NOEXCEPT :
-			Data(cimg_library::CImg<T>(image, w, h, d, c))
-		{
-		}
-
 		Image(const unsigned c, const unsigned d, const unsigned h, const unsigned w) NOEXCEPT :
 			Data(cimg_library::CImg<T>(w, h, d, c))
 		{
@@ -66,61 +56,92 @@ namespace dnn
 
 		~Image() = default;
 
-		T* data() NOEXCEPT
+		inline T* data() NOEXCEPT
 		{
 			return Data.data();
 		}
 
-		const T* data() const NOEXCEPT
+		inline const T* data() const NOEXCEPT
 		{
 			return Data.data();
 		}
 
-		const auto C() const NOEXCEPT
+		inline const auto C() const NOEXCEPT
 		{
 			return Data._spectrum;
 		}
 		
-		const auto D() const NOEXCEPT
+		inline const auto D() const NOEXCEPT
 		{
 			return Data._depth;
 		}
 		
-		const auto H() const NOEXCEPT
+		inline const auto H() const NOEXCEPT
 		{
 			return Data._height;
 		}
 
-		const auto W() const NOEXCEPT
+		inline const auto W() const NOEXCEPT
 		{
 			return Data._width;
 		}
 
-		const auto Area() const NOEXCEPT
+		inline const auto Area() const NOEXCEPT
 		{
 			return Data._height * Data._width;
 		}
 
-		const auto ChannelSize() const NOEXCEPT
+		inline const auto ChannelSize() const NOEXCEPT
 		{
-			return Data._depth * Area();
+			return Data._depth * Data._height * Data._width;
 		}
 
-		const auto Size() const NOEXCEPT
+		inline const auto Size() const NOEXCEPT
 		{
 			return Data.size();
 		}
 
-		T& operator()(const unsigned c, const unsigned d, const unsigned h, const unsigned w) NOEXCEPT
+		inline T& operator()(const unsigned c, const unsigned d, const unsigned h, const unsigned w) NOEXCEPT
 		{
-			return Data[w + (h * W()) + (d * Area()) + (c * ChannelSize())];
+			return Data[w + (h * Data._width) + (d * Data._height * Data._width) + (c * Data._depth * Data._height * Data._width)];
 		}
 
-		const T& operator()(const unsigned c, const unsigned d, const unsigned h, const unsigned w) const NOEXCEPT
+		inline const T& operator()(const unsigned c, const unsigned d, const unsigned h, const unsigned w) const NOEXCEPT
 		{
-			return Data[w + (h * W()) + (d * Area()) + (c * ChannelSize())];
+			return Data[w + (h * Data._width) + (d * Data._height * Data._width) + (c * Data._depth * Data._height * Data._width)];
 		}
 		
+		static Float GetChannelMean(const Image& image, const unsigned c) NOEXCEPT
+		{
+			auto mean = Float(0);
+
+			for (auto d = 0u; d < image.D(); d++)
+				for (auto h = 0u; h < image.H(); h++)
+					for (auto w = 0u; w < image.W(); w++)
+						mean += image(c, d, h, w);
+
+			return mean /= image.ChannelSize();
+		}
+
+		static Float GetChannelVariance(const Image& image, const unsigned c) NOEXCEPT
+		{
+			const auto mean = GetChannelMean(image, c);
+
+			auto variance = Float(0);
+
+			for (auto d = 0u; d < image.D(); d++)
+				for (auto h = 0u; h < image.H(); h++)
+					for (auto w = 0u; w < image.W(); w++)
+						variance += Square<Float>(image(c, d, h, w) - mean);
+
+			return variance /= image.ChannelSize();
+		}
+
+		static Float GetChannelStdDev(const Image& image, const unsigned c) NOEXCEPT
+		{
+			return std::max(std::sqrt(GetChannelVariance(image, c)), Float(1) / std::sqrt(Float(image.ChannelSize())));
+		}
+
 		static cimg_library::CImg<Float> ImageToCImgFloat(const Image& image) NOEXCEPT
 		{
 			auto img = cimg_library::CImg<Float>(image.W(), image.H(), image.D(), image.C());
@@ -145,7 +166,7 @@ namespace dnn
 			case 1:
 			case 3:
 			case 5:
-				img = Padding(img, padD, padH, padW, mean, mirrorPad);
+				img = Image::Padding(img, padD, padH, padW, mean, mirrorPad);
 				break;
 			}
 
@@ -154,14 +175,14 @@ namespace dnn
 			case 0:
 			{
 				if (Bernoulli<bool>(generator, Float(0.1)))
-					Invert(img);
+					Image::Invert(img);
 
 				if (Bernoulli<bool>(generator, Float(0.2)))
 				{
 					if (Bernoulli<bool>(generator, Float(0.5)))
-						Contrast(img, FloatLevel(6));
+						Image::Contrast(img, FloatLevel(6));
 					else
-						Contrast(img, FloatLevel(4));
+						Image::Contrast(img, FloatLevel(4));
 				}
 			}
 			break;
@@ -171,17 +192,17 @@ namespace dnn
 				if (Bernoulli<bool>(generator, Float(0.7)))
 				{
 					if (Bernoulli<bool>(generator, Float(0.5)))
-						img = Rotate(img, FloatLevel(2, 0, 20), Interpolations::Cubic, mean);
+						Image::Rotate(img, FloatLevel(2, 0, 20), Interpolations::Cubic);
 					else
-						img = Rotate(img, -FloatLevel(2, 0, 20), Interpolations::Cubic, mean);
+						Image::Rotate(img, -FloatLevel(2, 0, 20), Interpolations::Cubic);
 				}
 
 				if (Bernoulli<bool>(generator, Float(0.3)))
 				{
 					if (Bernoulli<bool>(generator, Float(0.5)))
-						Translate(img, 0, IntLevel(7), mean);
+						Image::Translate(img, 0, IntLevel(7), mean);
 					else
-						Translate(img, 0, -IntLevel(7), mean);
+						Image::Translate(img, 0, -IntLevel(7), mean);
 				}
 			}
 			break;
@@ -191,17 +212,17 @@ namespace dnn
 				if (Bernoulli<bool>(generator, Float(0.8)))
 				{
 					if (Bernoulli<bool>(generator, Float(0.5)))
-						Sharpness(img, FloatLevel(2));
+						Image::Sharpness(img, FloatLevel(2));
 					else
-						Sharpness(img, FloatLevel(8));
+						Image::Sharpness(img, FloatLevel(8));
 				}
 
 				if (Bernoulli<bool>(generator, Float(0.9)))
 				{
 					if (Bernoulli<bool>(generator, Float(0.5)))
-						Sharpness(img, FloatLevel(3));
+						Image::Sharpness(img, FloatLevel(3));
 					else
-						Sharpness(img, FloatLevel(7));
+						Image::Sharpness(img, FloatLevel(7));
 				}
 			}
 			break;
@@ -211,17 +232,17 @@ namespace dnn
 				if (Bernoulli<bool>(generator, Float(0.5)))
 				{
 					if (Bernoulli<bool>(generator, Float(0.5)))
-						img = Rotate(img, FloatLevel(6, 0, 20), Interpolations::Cubic, mean);
+						Image::Rotate(img, FloatLevel(6, 0, 20), Interpolations::Cubic);
 					else
-						img = Rotate(img, -FloatLevel(6, 0, 20), Interpolations::Cubic, mean);
+						Image::Rotate(img, -FloatLevel(6, 0, 20), Interpolations::Cubic);
 				}
 
 				if (Bernoulli<bool>(generator, Float(0.7)))
 				{
 					if (Bernoulli<bool>(generator, Float(0.5)))
-						Translate(img, IntLevel(7), 0, mean);
+						Image::Translate(img, IntLevel(7), 0, mean);
 					else
-						Translate(img, -IntLevel(7), 0, mean);
+						Image::Translate(img, -IntLevel(7), 0, mean);
 				}
 			}
 			break;
@@ -229,10 +250,10 @@ namespace dnn
 			case 4:
 			{
 				if (Bernoulli<bool>(generator, Float(0.5)))
-					AutoContrast(img);
+					Image::AutoContrast(img);
 
 				if (Bernoulli<bool>(generator, Float(0.9)))
-					Equalize(img);
+					Image::Equalize(img);
 			}
 			break;
 
@@ -241,17 +262,17 @@ namespace dnn
 				if (Bernoulli<bool>(generator, Float(0.2)))
 				{
 					if (Bernoulli<bool>(generator, Float(0.5)))
-						img = Rotate(img, FloatLevel(4, 0, 20), Interpolations::Cubic, mean);
+						Image::Rotate(img, FloatLevel(4, 0, 20), Interpolations::Cubic);
 					else
-						img = Rotate(img, -FloatLevel(4, 0, 20), Interpolations::Cubic, mean);
+						Image::Rotate(img, -FloatLevel(4, 0, 20), Interpolations::Cubic);
 				}
 
 				if (Bernoulli<bool>(generator, Float(0.3)))
 				{
 					if (Bernoulli<bool>(generator, Float(0.5)))
-						Posterize(img, 32);
+						Image::Posterize(img, 32);
 					else
-						Posterize(img, 64);
+						Image::Posterize(img, 64);
 				}
 			}
 			break;
@@ -261,17 +282,17 @@ namespace dnn
 				if (Bernoulli<bool>(generator, Float(0.4)))
 				{
 					if (Bernoulli<bool>(generator, Float(0.5)))
-						Color(img, FloatLevel(3));
+						Image::Color(img, FloatLevel(3));
 					else
-						Color(img, FloatLevel(7));
+						Image::Color(img, FloatLevel(7));
 				}
 
 				if (Bernoulli<bool>(generator, Float(0.6)))
 				{
 					if (Bernoulli<bool>(generator, Float(0.5)))
-						Brightness(img, FloatLevel(7));
+						Image::Brightness(img, FloatLevel(7));
 					else
-						Brightness(img, FloatLevel(3));
+						Image::Brightness(img, FloatLevel(3));
 				}
 			}
 			break;
@@ -281,17 +302,17 @@ namespace dnn
 				if (Bernoulli<bool>(generator, Float(0.3)))
 				{
 					if (Bernoulli<bool>(generator, Float(0.5)))
-						Sharpness(img, FloatLevel(9));
+						Image::Sharpness(img, FloatLevel(9));
 					else
-						Sharpness(img, FloatLevel(1));
+						Image::Sharpness(img, FloatLevel(1));
 				}
 
 				if (Bernoulli<bool>(generator, Float(0.7)))
 				{
 					if (Bernoulli<bool>(generator, Float(0.5)))
-						Brightness(img, FloatLevel(8));
+						Image::Brightness(img, FloatLevel(8));
 					else
-						Brightness(img, FloatLevel(2));
+						Image::Brightness(img, FloatLevel(2));
 				}
 			}
 			break;
@@ -299,10 +320,10 @@ namespace dnn
 			case 8:
 			{
 				if (Bernoulli<bool>(generator, Float(0.6)))
-					Equalize(img);
+					Image::Equalize(img);
 
 				if (Bernoulli<bool>(generator, Float(0.5)))
-					Equalize(img);
+					Image::Equalize(img);
 			}
 			break;
 
@@ -311,17 +332,17 @@ namespace dnn
 				if (Bernoulli<bool>(generator, Float(0.6)))
 				{
 					if (Bernoulli<bool>(generator, Float(0.5)))
-						Contrast(img, FloatLevel(7));
+						Image::Contrast(img, FloatLevel(7));
 					else
-						Contrast(img, FloatLevel(3));
+						Image::Contrast(img, FloatLevel(3));
 				}
 
 				if (Bernoulli<bool>(generator, Float(0.6)))
 				{
 					if (Bernoulli<bool>(generator, Float(0.5)))
-						Sharpness(img, FloatLevel(6));
+						Image::Sharpness(img, FloatLevel(6));
 					else
-						Sharpness(img, FloatLevel(4));
+						Image::Sharpness(img, FloatLevel(4));
 				}
 			}
 			break;
@@ -331,17 +352,17 @@ namespace dnn
 				if (Bernoulli<bool>(generator, Float(0.7)))
 				{
 					if (Bernoulli<bool>(generator, Float(0.5)))
-						Color(img, FloatLevel(7));
+						Image::Color(img, FloatLevel(7));
 					else
-						Color(img, FloatLevel(3));
+						Image::Color(img, FloatLevel(3));
 				}
 
 				if (Bernoulli<bool>(generator, Float(0.5)))
 				{
 					if (Bernoulli<bool>(generator, Float(0.5)))
-						Translate(img, 0, IntLevel(8), mean);
+						Image::Translate(img, 0, IntLevel(8), mean);
 					else
-						Translate(img, 0, -IntLevel(8), mean);
+						Image::Translate(img, 0, -IntLevel(8), mean);
 				}
 			}
 			break;
@@ -349,10 +370,10 @@ namespace dnn
 			case 11:
 			{
 				if (Bernoulli<bool>(generator, Float(0.3)))
-					Equalize(img);
+					Image::Equalize(img);
 
 				if (Bernoulli<bool>(generator, Float(0.4)))
-					AutoContrast(img);
+					Image::AutoContrast(img);
 			}
 			break;
 
@@ -361,13 +382,13 @@ namespace dnn
 				if (Bernoulli<bool>(generator, Float(0.4)))
 				{
 					if (Bernoulli<bool>(generator, Float(0.5)))
-						Translate(img, IntLevel(3), 0, mean);
+						Image::Translate(img, IntLevel(3), 0, mean);
 					else
-						Translate(img, -IntLevel(3), 0, mean);
+						Image::Translate(img, -IntLevel(3), 0, mean);
 				}
 
 				if (Bernoulli<bool>(generator, Float(0.2)))
-					Sharpness(img, FloatLevel(6));
+					Image::Sharpness(img, FloatLevel(6));
 			}
 			break;
 
@@ -376,17 +397,17 @@ namespace dnn
 				if (Bernoulli<bool>(generator, Float(0.9)))
 				{
 					if (Bernoulli<bool>(generator, Float(0.5)))
-						Brightness(img, FloatLevel(6));
+						Image::Brightness(img, FloatLevel(6));
 					else
-						Brightness(img, FloatLevel(4));
+						Image::Brightness(img, FloatLevel(4));
 				}
 
 				if (Bernoulli<bool>(generator, Float(0.2)))
 				{
 					if (Bernoulli<bool>(generator, Float(0.5)))
-						Color(img, FloatLevel(8));
+						Image::Color(img, FloatLevel(8));
 					else
-						Color(img, FloatLevel(2));
+						Image::Color(img, FloatLevel(2));
 				}
 			}
 			break;
@@ -396,9 +417,9 @@ namespace dnn
 				if (Bernoulli<bool>(generator, Float(0.5)))
 				{
 					if (Bernoulli<bool>(generator, Float(0.5)))
-						Solarize(img, IntLevel(2, 0, 256));
+						Image::Solarize(img, IntLevel(2, 0, 256));
 					else
-						Solarize(img, IntLevel(8, 0, 256));
+						Image::Solarize(img, IntLevel(8, 0, 256));
 				}
 			}
 			break;
@@ -406,19 +427,19 @@ namespace dnn
 			case 15:
 			{
 				if (Bernoulli<bool>(generator, Float(0.2)))
-					Equalize(img);
+					Image::Equalize(img);
 
 				if (Bernoulli<bool>(generator, Float(0.6)))
-					AutoContrast(img);
+					Image::AutoContrast(img);
 			}
 			break;
 
 			case 16:
 			{
 				if (Bernoulli<bool>(generator, Float(0.2)))
-					Equalize(img);
+					Image::Equalize(img);
 				if (Bernoulli<bool>(generator, Float(0.6)))
-					Equalize(img);
+					Image::Equalize(img);
 			}
 			break;
 
@@ -427,43 +448,43 @@ namespace dnn
 				if (Bernoulli<bool>(generator, Float(0.9)))
 				{
 					if (Bernoulli<bool>(generator, Float(0.5)))
-						Color(img, FloatLevel(8));
+						Image::Color(img, FloatLevel(8));
 					else
-						Color(img, FloatLevel(2));
+						Image::Color(img, FloatLevel(2));
 				}
 
 				if (Bernoulli<bool>(generator, Float(0.6)))
-					Equalize(img);
+					Image::Equalize(img);
 			}
 			break;
 
 			case 18:
 			{
 				if (Bernoulli<bool>(generator, Float(0.8)))
-					AutoContrast(img);
+					Image::AutoContrast(img);
 
 				if (Bernoulli<bool>(generator, Float(0.2)))
-					Solarize(img, IntLevel(8, 0, 256));
+					Image::Solarize(img, IntLevel(8, 0, 256));
 			}
 			break;
 
 			case 19:
 			{
 				if (Bernoulli<bool>(generator, Float(0.1)))
-					Brightness(img, FloatLevel(3));
+					Image::Brightness(img, FloatLevel(3));
 
 				if (Bernoulli<bool>(generator, Float(0.7)))
-					Color(img, FloatLevel(4));
+					Image::Color(img, FloatLevel(4));
 			}
 			break;
 
 			case 20:
 			{
 				if (Bernoulli<bool>(generator, Float(0.4)))
-					Solarize(img, IntLevel(5, 0, 256));
+					Image::Solarize(img, IntLevel(5, 0, 256));
 
 				if (Bernoulli<bool>(generator, Float(0.9)))
-					AutoContrast(img);
+					Image::AutoContrast(img);
 			}
 			break;
 
@@ -472,17 +493,17 @@ namespace dnn
 				if (Bernoulli<bool>(generator, Float(0.9)))
 				{
 					if (Bernoulli<bool>(generator, Float(0.5)))
-						Translate(img, IntLevel(7), 0, mean);
+						Image::Translate(img, IntLevel(7), 0, mean);
 					else
-						Translate(img, -IntLevel(7), 0, mean);
+						Image::Translate(img, -IntLevel(7), 0, mean);
 				}
 
 				if (Bernoulli<bool>(generator, Float(0.7)))
 				{
 					if (Bernoulli<bool>(generator, Float(0.5)))
-						Translate(img, IntLevel(7), 0, mean);
+						Image::Translate(img, IntLevel(7), 0, mean);
 					else
-						Translate(img, -IntLevel(7), 0, mean);
+						Image::Translate(img, -IntLevel(7), 0, mean);
 				}
 			}
 			break;
@@ -490,20 +511,20 @@ namespace dnn
 			case 22:
 			{
 				if (Bernoulli<bool>(generator, Float(0.9)))
-					AutoContrast(img);
+					Image::AutoContrast(img);
 
 				if (Bernoulli<bool>(generator, Float(0.8)))
-					Solarize(img, IntLevel(3, 0, 256));
+					Image::Solarize(img, IntLevel(3, 0, 256));
 			}
 			break;
 
 			case 23:
 			{
 				if (Bernoulli<bool>(generator, Float(0.8)))
-					Equalize(img);
+					Image::Equalize(img);
 
 				if (Bernoulli<bool>(generator, Float(0.1)))
-					Invert(img);
+					Image::Invert(img);
 			}
 			break;
 
@@ -512,13 +533,13 @@ namespace dnn
 				if (Bernoulli<bool>(generator, Float(0.7)))
 				{
 					if (Bernoulli<bool>(generator, Float(0.5)))
-						Translate(img, IntLevel(8), 0, mean);
+						Image::Translate(img, IntLevel(8), 0, mean);
 					else
-						Translate(img, -IntLevel(8), 0, mean);
+						Image::Translate(img, -IntLevel(8), 0, mean);
 				}
 
 				if (Bernoulli<bool>(generator, Float(0.9)))
-					AutoContrast(img);
+					Image::AutoContrast(img);
 			}
 			break;
 			}
@@ -531,7 +552,7 @@ namespace dnn
 				break;
 
 			default:
-				img = Padding(img, padD, padH, padW, mean, mirrorPad);
+				img = Image::Padding(img, padD, padH, padW, mean, mirrorPad);
 				break;
 			}
 
@@ -640,7 +661,7 @@ namespace dnn
 		// magnitude = 0   // gray image
 		// magnitude = 1   // original
 		// range 0.1 --> 1.9
-		inline static Image Crop(const Image& image, const Positions position, const UInt depth, const UInt height, const UInt width, const std::vector<Float>& mean) NOEXCEPT
+		static Image Crop(const Image& image, const Positions position, const UInt depth, const UInt height, const UInt width, const std::vector<Float>& mean) NOEXCEPT
 		{
 			Image img(image.C(), static_cast<unsigned>(depth), static_cast<unsigned>(height), static_cast<unsigned>(width));
 
@@ -738,9 +759,10 @@ namespace dnn
 			const auto height = static_cast<unsigned>(static_cast<int>(image.H()) + static_cast<int>(std::round(static_cast<int>(image.H()) * zoom)));
 			const auto width = static_cast<unsigned>(static_cast<int>(image.W()) + static_cast<int>(std::round(static_cast<int>(image.W()) * zoom)));
 			
-			Resize(image, image.D(), height, width, interpolation);
-			
-			return Rotate(image, angle * UniformReal<Float>(generator, Float(-1), Float(1)), interpolation, mean);
+			Image::Resize(image, image.D(), height, width, interpolation);
+			auto img = ZeroPad(image, image.D() / 2, image.H() / 2, image.W() / 2, mean);
+			Image::Rotate(img, angle * UniformReal<Float>(generator, Float(-1), Float(1)), interpolation);
+			return Crop(img, Positions::Center, image.D(), image.H(), image.W(), mean);
 		}
 
 		static void Dropout(Image& image, const Float dropout, const std::vector<Float>& mean, std::mt19937& generator) NOEXCEPT
@@ -762,38 +784,7 @@ namespace dnn
 		{
 			image.Data.equalize(256);
 		}
-
-		static Float GetChannelMean(const Image& image, const unsigned c) NOEXCEPT
-		{
-			auto mean = Float(0);
-
-			for (auto d = 0u; d < image.D(); d++)
-				for (auto h = 0u; h < image.H(); h++)
-					for (auto w = 0u; w < image.W(); w++)
-						mean += image(c, d, h, w);
-
-			return mean /= image.ChannelSize();
-		}
-
-		static Float GetChannelVariance(const Image& image, const unsigned c) NOEXCEPT
-		{
-			const auto mean = GetChannelMean(image, c);
-
-			auto variance = Float(0);
-
-			for (auto d = 0u; d < image.D(); d++)
-				for (auto h = 0u; h < image.H(); h++)
-					for (auto w = 0u; w < image.W(); w++)
-						variance += Square<Float>(image(c, d, h, w) - mean);
-
-			return variance /= image.ChannelSize();
-		}
-
-		static Float GetChannelStdDev(const Image& image, const unsigned c) NOEXCEPT
-		{
-			return std::max(std::sqrt(GetChannelVariance(image, c)), Float(1) / std::sqrt(Float(image.ChannelSize())));
-		}
-
+		
 		static void HorizontalMirror(Image& image) NOEXCEPT
 		{
 			T left;
@@ -817,47 +808,6 @@ namespace dnn
 					for (auto h = 0u; h < image.H(); h++)
 						for (auto w = 0u; w < image.W(); w++)
 							image(c, d, h, w) = maximum - image(c, d, h, w);
-		}
-
-		static cimg_library::CImg<T> LoadJPEG(const std::string& fileName, const bool forceColorFormat = false) NOEXCEPT
-		{
-			auto img = cimg_library::CImg<T>().get_load_jpeg(fileName.c_str());
-
-			if (forceColorFormat && img._spectrum == 1)
-			{
-				auto imgToColor = cimg_library::CImg<T>(img._width, img._height, img._depth, 3);
-
-				for (auto c = 0u; c < 3u; c++)
-					for (auto d = 0u; d < img._depth; d++)
-						for (auto h = 0u; h < img._height; h++)
-							for (auto w = 0u; w < img._width; w++)
-								imgToColor(c, d, h, w) = img(0, d, h, w);
-
-				return imgToColor;
-			}
-			else
-				return img;
-		}
-
-		static cimg_library::CImg<T> LoadPNG(const std::string& fileName, const bool forceColorFormat = false) NOEXCEPT
-		{
-			auto bitsPerPixel = 0u;
-			auto img = cimg_library::CImg<T>().get_load_png(fileName.c_str(), &bitsPerPixel);
-
-			if (forceColorFormat && img._spectrum == 1)
-			{
-				auto imgToColor = cimg_library::CImg<T>(img._width, img._height, img._depth, 3);
-
-				for (auto c = 0u; c < 3u; c++)
-					for (auto d = 0u; d < img._depth; d++)
-						for (auto h = 0u; h < img._hright; h++)
-							for (auto w = 0u; w < img._width; w++)
-								imgToColor(c, d, h, w) = img(0, d, h, w);
-
-				return imgToColor;
-			}
-			else
-				return img;
 		}
 
 		static Image MirrorPad(const Image& image, const unsigned depth, const unsigned height, const unsigned width) NOEXCEPT
@@ -961,8 +911,7 @@ namespace dnn
 			return img;
 		}
 
-
-		inline static Image Padding(const Image& image, const UInt depth, const UInt height, const UInt width, const std::vector<Float>& mean, const bool mirrorPad = false) NOEXCEPT
+		static Image Padding(const Image& image, const UInt depth, const UInt height, const UInt width, const std::vector<Float>& mean, const bool mirrorPad = false) NOEXCEPT
 		{
 			return mirrorPad ? Image::MirrorPad(image, static_cast<unsigned>(depth), static_cast<unsigned>(height), static_cast<unsigned>(width)) : Image::ZeroPad(image, static_cast<unsigned>(depth), static_cast<unsigned>(height), static_cast<unsigned>(width), mean);
 		}
@@ -1062,7 +1011,7 @@ namespace dnn
 			*lambda = 1.0 - (static_cast<double>((bbx2 - bbx1) * (bby2 - bby1)) / static_cast<double>(image.H() * image.W()));
 		}
 
-		inline static void Resize(Image& image, const UInt depth, const UInt height, const UInt width, const Interpolations interpolation) NOEXCEPT
+		static void Resize(Image& image, const UInt depth, const UInt height, const UInt width, const Interpolations interpolation) NOEXCEPT
 		{
 			switch (interpolation)
 			{
@@ -1078,24 +1027,20 @@ namespace dnn
 			}
 		}
 
-		inline static Image Rotate(const Image& image, const Float angle, const Interpolations interpolation, const std::vector<Float>& mean) NOEXCEPT
+		static void Rotate(Image& image, const Float angle, const Interpolations interpolation) NOEXCEPT
 		{
-			auto img = ZeroPad(image, image.D() / 2, image.H() / 2, image.W() / 2, mean).Data;
-
 			switch (interpolation)
 			{
 			case Interpolations::Cubic:
-				img.rotate(angle, 2, 0);
+				image.Data.rotate(angle, 2, 0);
 				break;
 			case Interpolations::Linear:
-				img.rotate(angle, 1, 0);
+				image.Data.rotate(angle, 1, 0);
 				break;
 			case Interpolations::Nearest:
-				img.rotate(angle, 0, 0);
+				image.Data.rotate(angle, 0, 0);
 				break;
 			}
-			
-			return Crop(Image(img), Positions::Center, image.D(), image.H(), image.W(), mean);
 		}
 			
 		// magnitude = 0   // blurred image

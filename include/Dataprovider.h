@@ -660,12 +660,13 @@ namespace dnn
 
                 for_i(200ull, [=](UInt item)
 				{
+					auto bitsppx = 0u;
 					const auto offset = item * 500;
 					for (UInt i = 0; i < 500; i++)
 					{
 						const auto pos = i + offset;
 						const auto fileName = (DatasetsDirectory / std::string(magic_enum::enum_name<Datasets>(dataset))  / "train" / ClassNames[item] / "images" / (ClassNames[item] + "_" + std::to_string(i) + ".JPEG")).string();
-						TrainingSamples[pos] = Image<Byte>::LoadJPEG(fileName, true);
+						TrainingSamples[pos] = LoadJPEG(fileName, true);
 						TrainingLabels[pos][0] = item;
 					}
 				});
@@ -703,7 +704,7 @@ namespace dnn
 				{
 					const auto fileName = (DatasetsDirectory / std::string(magic_enum::enum_name<Datasets>(dataset))  / "val" / "images" / ("val_" + std::to_string(i) + ".JPEG")).string();
 					//const auto fileName = (DatasetsDirectory() / std::string(magic_enum::enum_name<Datasets>(dataset))  / "test" / "images" / ("test_" + std::to_string(i) + ".JPEG")).string();
-					TestingSamples[i] = Image<Byte>::LoadJPEG(fileName, true);
+					TestingSamples[i] = LoadJPEG(fileName, true);
 					TestingLabels[i][0] = labels_idx[i];
 				});
 			}
@@ -922,6 +923,47 @@ namespace dnn
 				"African_elephant" << std::endl;
 
 			classnames.close();
+		}
+
+		static cimg_library::CImg<Byte> LoadJPEG(const std::string& fileName, const bool forceColorFormat = false) NOEXCEPT
+		{
+			auto img = cimg_library::CImg<Byte>().get_load_jpeg(fileName.c_str());
+
+			if (forceColorFormat && img._spectrum == 1)
+			{
+				auto imgToColor = cimg_library::CImg<Byte>(img._width, img._height, img._depth, 3);
+
+				for (auto c = 0u; c < 3u; c++)
+					for (auto d = 0u; d < img._depth; d++)
+						for (auto h = 0u; h < img._height; h++)
+							for (auto w = 0u; w < img._width; w++)
+								imgToColor(c, d, h, w) = img(0, d, h, w);
+
+				return imgToColor;
+			}
+			else
+				return img;
+		}
+
+		static cimg_library::CImg<Byte> LoadPNG(const std::string& fileName, const bool forceColorFormat = false) NOEXCEPT
+		{
+			auto bitsPerPixel = 0u;
+			auto img = cimg_library::CImg<Byte>().get_load_png(fileName.c_str(), &bitsPerPixel);
+
+			if (forceColorFormat && img._spectrum == 1)
+			{
+				auto imgToColor = cimg_library::CImg<Byte>(img._width, img._height, img._depth, 3);
+
+				for (auto c = 0u; c < 3u; c++)
+					for (auto d = 0u; d < img._depth; d++)
+						for (auto h = 0u; h < img._height; h++)
+							for (auto w = 0u; w < img._width; w++)
+								imgToColor(c, d, h, w) = img(0, d, h, w);
+
+				return imgToColor;
+			}
+			else
+				return img;
 		}
 	};
 }
