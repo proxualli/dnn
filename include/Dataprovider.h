@@ -931,15 +931,15 @@ namespace dnn
 
 			if (forceColorFormat && img._spectrum == 1)
 			{
-				auto imgToColor = cimg_library::CImg<Byte>(img._width, img._height, img._depth, 3);
+				auto imgColor = cimg_library::CImg<Byte>(img._width, img._height, img._depth, 3);
 
 				for (auto c = 0u; c < 3u; c++)
 					for (auto d = 0u; d < img._depth; d++)
 						for (auto h = 0u; h < img._height; h++)
 							for (auto w = 0u; w < img._width; w++)
-								imgToColor(c, d, h, w) = img(0, d, h, w);
+								imgColor(c, d, h, w) = img(0, d, h, w);
 
-				return imgToColor;
+				return imgColor;
 			}
 			else
 				return img;
@@ -952,15 +952,15 @@ namespace dnn
 
 			if (forceColorFormat && img._spectrum == 1)
 			{
-				auto imgToColor = cimg_library::CImg<Byte>(img._width, img._height, img._depth, 3);
+				auto imgColor = cimg_library::CImg<Byte>(img._width, img._height, img._depth, 3);
 
 				for (auto c = 0u; c < 3u; c++)
 					for (auto d = 0u; d < img._depth; d++)
 						for (auto h = 0u; h < img._height; h++)
 							for (auto w = 0u; w < img._width; w++)
-								imgToColor(c, d, h, w) = img(0, d, h, w);
+								imgColor(c, d, h, w) = img(0, d, h, w);
 
-				return imgToColor;
+				return imgColor;
 			}
 			else
 				return img;
