@@ -192,9 +192,9 @@ namespace dnn
 				if (Bernoulli<bool>(generator, Float(0.7)))
 				{
 					if (Bernoulli<bool>(generator, Float(0.5)))
-						Image::Rotate(img, FloatLevel(2, 0, 20), Interpolations::Cubic);
+						Image::Rotate(img, FloatLevel(2, 0, 20), Interpolations::Cubic, mean);
 					else
-						Image::Rotate(img, -FloatLevel(2, 0, 20), Interpolations::Cubic);
+						Image::Rotate(img, -FloatLevel(2, 0, 20), Interpolations::Cubic, mean);
 				}
 
 				if (Bernoulli<bool>(generator, Float(0.3)))
@@ -232,9 +232,9 @@ namespace dnn
 				if (Bernoulli<bool>(generator, Float(0.5)))
 				{
 					if (Bernoulli<bool>(generator, Float(0.5)))
-						Image::Rotate(img, FloatLevel(6, 0, 20), Interpolations::Cubic);
+						Image::Rotate(img, FloatLevel(6, 0, 20), Interpolations::Cubic, mean);
 					else
-						Image::Rotate(img, -FloatLevel(6, 0, 20), Interpolations::Cubic);
+						Image::Rotate(img, -FloatLevel(6, 0, 20), Interpolations::Cubic, mean);
 				}
 
 				if (Bernoulli<bool>(generator, Float(0.7)))
@@ -262,9 +262,9 @@ namespace dnn
 				if (Bernoulli<bool>(generator, Float(0.2)))
 				{
 					if (Bernoulli<bool>(generator, Float(0.5)))
-						Image::Rotate(img, FloatLevel(4, 0, 20), Interpolations::Cubic);
+						Image::Rotate(img, FloatLevel(4, 0, 20), Interpolations::Cubic, mean);
 					else
-						Image::Rotate(img, -FloatLevel(4, 0, 20), Interpolations::Cubic);
+						Image::Rotate(img, -FloatLevel(4, 0, 20), Interpolations::Cubic, mean);
 				}
 
 				if (Bernoulli<bool>(generator, Float(0.3)))
@@ -760,9 +760,8 @@ namespace dnn
 			const auto width = static_cast<unsigned>(static_cast<int>(image.W()) + static_cast<int>(std::round(static_cast<int>(image.W()) * zoom)));
 			
 			Image::Resize(image, image.D(), height, width, interpolation);
-			auto img = ZeroPad(image, image.D() / 2, image.H() / 2, image.W() / 2, mean);
-			Image::Rotate(img, angle * UniformReal<Float>(generator, Float(-1), Float(1)), interpolation);
-			return Crop(img, Positions::Center, image.D(), image.H(), image.W(), mean);
+
+			return Image::Rotate(image, angle * UniformReal<Float>(generator, Float(-1), Float(1)), interpolation, mean);
 		}
 
 		static void Dropout(Image& image, const Float dropout, const std::vector<Float>& mean, std::mt19937& generator) NOEXCEPT
@@ -1027,20 +1026,24 @@ namespace dnn
 			}
 		}
 
-		static void Rotate(Image& image, const Float angle, const Interpolations interpolation) NOEXCEPT
+		static Image Rotate(const Image& image, const Float angle, const Interpolations interpolation, const std::vector<Float>& mean) NOEXCEPT
 		{
+			auto img = ZeroPad(image, image.D() / 2, image.H() / 2, image.W() / 2, mean);
+
 			switch (interpolation)
 			{
 			case Interpolations::Cubic:
-				image.Data.rotate(angle, 2, 0);
+				img.Data.rotate(angle, 2, 0);
 				break;
 			case Interpolations::Linear:
-				image.Data.rotate(angle, 1, 0);
+				img.Data.rotate(angle, 1, 0);
 				break;
 			case Interpolations::Nearest:
-				image.Data.rotate(angle, 0, 0);
+				img.Data.rotate(angle, 0, 0);
 				break;
 			}
+
+			return Crop(img, Positions::Center, image.D(), image.H(), image.W(), mean);
 		}
 			
 		// magnitude = 0   // blurred image
