@@ -760,7 +760,7 @@ namespace dnn
 			const auto width = static_cast<unsigned>(static_cast<int>(image.W()) + static_cast<int>(std::round(static_cast<int>(image.W()) * zoom)));
 			
 			Image::Resize(image, image.D(), height, width, interpolation);
-			auto& img = ZeroPad(image, image.D() / 2, image.H() / 2, image.W() / 2, mean);
+			auto img = ZeroPad(image, image.D() / 2, image.H() / 2, image.W() / 2, mean);
 			Image::Rotate(img, angle * UniformReal<Float>(generator, Float(-1), Float(1)), interpolation);
 			return Crop(img, Positions::Center, image.D(), image.H(), image.W(), mean);
 		}
