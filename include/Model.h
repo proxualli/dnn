@@ -2159,7 +2159,7 @@ namespace dnn
 			const auto resize = DataProv->TrainingSamples[0]._depth != D || DataProv->TrainingSamples[0]._height != H || DataProv->TrainingSamples[0]._width != W;
 			
 			const auto elements = batchSize * C * D * H * W;
-			const auto threads = GetThreads(elements, Float(0.1));
+			const auto threads = GetThreads(elements, Float(0.05));
 
 			for_i(batchSize, threads, [=, &SampleLabels](const UInt batchIndex)
 			{
@@ -2280,7 +2280,10 @@ namespace dnn
 			auto SampleLabels = std::vector<std::vector<LabelInfo>>(batchSize, std::vector<LabelInfo>(DataProv->Hierarchies));
 			const auto resize = DataProv->TestingSamples[0]._depth != D || DataProv->TestingSamples[0]._height != H || DataProv->TestingSamples[0]._width != W;
 
-			for_i(batchSize, [=, &SampleLabels](const UInt batchIndex)
+			const auto elements = batchSize * C * D * H * W;
+			const auto threads = GetThreads(elements, Float(0.05));
+
+			for_i(batchSize, threads, [=, &SampleLabels](const UInt batchIndex)
 			{
 				auto generator = std::mt19937(Seed<unsigned>());
 
