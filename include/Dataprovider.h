@@ -924,7 +924,7 @@ namespace dnn
 
 			classnames.close();
 		}
-
+		
 		static cimg_library::CImg<Byte> LoadJPEG(const std::string& fileName, const bool forceColorFormat = false) NOEXCEPT
 		{
 			auto img = cimg_library::CImg<Byte>().get_load_jpeg(fileName.c_str());
@@ -933,12 +933,8 @@ namespace dnn
 			{
 				auto imgColor = cimg_library::CImg<Byte>(img._width, img._height, img._depth, 3);
 
-				for (auto c = 0u; c < 3u; c++)
-					for (auto d = 0u; d < img._depth; d++)
-						for (auto h = 0u; h < img._height; h++)
-							for (auto w = 0u; w < img._width; w++)
-								imgColor(c, d, h, w) = img(0, d, h, w);
-
+				cimg_forXYZC(imgColor, w, h, d, c) { imgColor(w, h, d, c) = img(w, h, d, 0); }
+				
 				return imgColor;
 			}
 			else
@@ -954,11 +950,7 @@ namespace dnn
 			{
 				auto imgColor = cimg_library::CImg<Byte>(img._width, img._height, img._depth, 3);
 
-				for (auto c = 0u; c < 3u; c++)
-					for (auto d = 0u; d < img._depth; d++)
-						for (auto h = 0u; h < img._height; h++)
-							for (auto w = 0u; w < img._width; w++)
-								imgColor(c, d, h, w) = img(0, d, h, w);
+				cimg_forXYZC(imgColor, w, h, d, c) { imgColor(w, h, d, c) = img(w, h, d, 0); }
 
 				return imgColor;
 			}
