@@ -932,9 +932,11 @@ namespace dnn
 			if (forceColorFormat && img._spectrum == 1)
 			{
 				auto imgColor = cimg_library::CImg<Byte>(img._width, img._height, img._depth, 3);
-
+#ifdef DNN_IMAGEDEPTH
 				cimg_forXYZC(imgColor, w, h, d, c) { imgColor(w, h, d, c) = img(w, h, d, 0); }
-				
+#else
+				cimg_forXYC(imgColor, w, h, c) { imgColor(w, h, 0, c) = img(w, h, 0, 0); }
+#endif		
 				return imgColor;
 			}
 			else
@@ -949,9 +951,11 @@ namespace dnn
 			if (forceColorFormat && img._spectrum == 1)
 			{
 				auto imgColor = cimg_library::CImg<Byte>(img._width, img._height, img._depth, 3);
-
+#ifdef DNN_IMAGEDEPTH
 				cimg_forXYZC(imgColor, w, h, d, c) { imgColor(w, h, d, c) = img(w, h, d, 0); }
-
+#else
+				cimg_forXYC(imgColor, w, h, c) { imgColor(w, h, 0, c) = img(w, h, 0, 0); }
+#endif
 				return imgColor;
 			}
 			else
