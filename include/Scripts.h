@@ -537,6 +537,13 @@ namespace scripts
                 "Inputs=" + inputs + nwl + nwl;
         }
 
+        static std::string Softmax(std::string inputs, std::string group = "", std::string prefix = "SM")
+        {
+            return "[" + group + prefix + "]" + nwl +
+                "Type=Softmax" + nwl +
+                "Inputs=" + inputs + nwl + nwl;
+        }
+
         static std::string LogSoftmax(UInt id, std::string inputs, std::string group = "", std::string prefix = "LSM")
         {
             return "[" + group + prefix + std::to_string(id) + "]" + nwl +
@@ -832,8 +839,8 @@ namespace scripts
                     Convolution(C, In("CC", CC), p.Classes(), 1, 1, p.StrideHFirstConv, p.StrideWFirstConv, 0, 0) +
                     BatchNorm(C + 1, In("C", C)) +
                     GlobalAvgPooling(In("B", C + 1)) +
-                    LogSoftmax("GAP") +
-                    Cost("LSM", p.Dataset, p.Classes(), "CategoricalCrossEntropy", 0.125f);
+                    Softmax("GAP") +
+                    Cost("SM", p.Dataset, p.Classes(), "CategoricalCrossEntropy", 0.125f);
             }
             break;
 
@@ -858,7 +865,8 @@ namespace scripts
                         auto stride = n == 0ull ? rec.Stride : 1ull;
                         auto identity = stride == 1ull && inputChannels == outputChannels;
 
-                        auto subblocks = stage < 3ull ? FusedMBConv(A, C, input, inputChannels, outputChannels, stride, rec.ExpandRatio, rec.SE, p.Activation) : MBConv(A, C, input, inputChannels, outputChannels, stride, rec.ExpandRatio, rec.SE, p.Activation);
+                        auto subblocks = stage < 3ull ? FusedMBConv(A, C, input, inputChannels, outputChannels, stride, rec.ExpandRatio, rec.SE, p.Activation) : 
+                                                             MBConv(A, C, input, inputChannels, outputChannels, stride, rec.ExpandRatio, rec.SE, p.Activation);
                         for(auto blk : subblocks)
                             net += blk;
 
@@ -882,8 +890,8 @@ namespace scripts
                     GlobalAvgPooling(In("B", C)) +
                     Dropout(1, "GAP") +
                     Dense(1, In("D", 1), p.Classes(), true, "", "DS", "Normal(0.001)") +
-                    LogSoftmax("DS1") +
-                    Cost("LSM", p.Dataset, p.Classes(), "CategoricalCrossEntropy", 0.125f);
+                    Softmax("DS1") +
+                    Cost("SM", p.Dataset, p.Classes(), "CategoricalCrossEntropy", 0.125f);
             }
             break;
 
@@ -976,8 +984,8 @@ namespace scripts
                     Convolution(C, In("B", C), p.Classes(), 1, 1, 1, 1, 0, 0) +
                     BatchNorm(C + 1, In("C", C)) +
                     GlobalAvgPooling(In("B", C + 1)) +
-                    LogSoftmax("GAP") +
-                    Cost("LSM", p.Dataset, p.Classes(), "CategoricalCrossEntropy", 0.125f);
+                    Softmax("GAP") +
+                    Cost("SM", p.Dataset, p.Classes(), "CategoricalCrossEntropy", 0.125f);
             }
             break;
 
@@ -1091,8 +1099,8 @@ namespace scripts
                     Convolution(C, In("B", C), p.Classes(), 1, 1, 1, 1, 0, 0) +
                     BatchNorm(C + 1, In("C", C)) +
                     GlobalAvgPooling(In("B", C + 1)) +
-                    LogSoftmax("GAP") +
-                    Cost("LSM", p.Dataset, p.Classes(), "CategoricalCrossEntropy", 0.125f);
+                    Softmax("GAP") +
+                    Cost("SM", p.Dataset, p.Classes(), "CategoricalCrossEntropy", 0.125f);
             }
             break;
 
@@ -1135,8 +1143,8 @@ namespace scripts
                     Convolution(C, In("CC", A), p.Classes(), 1, 1, 1, 1, 0, 0) +
                     BatchNorm(C + 1, In("C", C)) +
                     GlobalAvgPooling(In("B", C + 1)) +
-                    LogSoftmax("GAP") +
-                    Cost("LSM", p.Dataset, p.Classes(), "CategoricalCrossEntropy", 0.125f);
+                    Softmax("GAP") +
+                    Cost("SM", p.Dataset, p.Classes(), "CategoricalCrossEntropy", 0.125f);
             }
             break;
 
