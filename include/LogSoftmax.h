@@ -14,14 +14,12 @@ namespace dnn
 		std::unique_ptr<dnnl::softmax_v2_backward> bwdLogSoftmax;
 		std::unique_ptr<dnnl::binary> bwdAdd;
 #endif
-		bool reorderFwdSrc;
 		bool reorderBwdSrc;
 		bool reorderBwdDiffSrc;
 
 	public:
 		LogSoftmax(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs) :
 			Layer(device, format, name, LayerTypes::LogSoftmax, 0, 0, inputs[0]->C, inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs, false),
-			reorderFwdSrc(false),
 			reorderBwdSrc(false),
 			reorderBwdDiffSrc(false)
 		{
@@ -77,7 +75,6 @@ namespace dnn
 			const auto axis = (H == 1 && W == 1) ? 1 : 3;
 			fwdDescLogSoftmax = std::make_unique<dnnl::softmax_v2_forward::primitive_desc>(dnnl::softmax_v2_forward::primitive_desc(dnnl::softmax_v2_forward::desc(dnnl::prop_kind::forward, dnnl::algorithm::softmax_log, *InputLayer->DstMemDesc, *DstMemDesc, axis), Device.engine));
 			bwdDescLogSoftmax = std::make_unique<dnnl::softmax_v2_backward::primitive_desc>(dnnl::softmax_v2_backward::primitive_desc(dnnl::softmax_v2_backward::desc(dnnl::algorithm::softmax_log, *InputLayer->DiffDstMemDesc, *DiffDstMemDesc, *DstMemDesc, axis), Device.engine, *fwdDescLogSoftmax));
-			reorderFwdSrc = fwdDescLogSoftmax->src_desc() != *InputLayer->DstMemDesc;
 			reorderBwdSrc = bwdDescLogSoftmax->src_desc() != *InputLayer->DstMemDesc;
 			reorderBwdDiffSrc = bwdDescLogSoftmax->diff_src_desc() != *InputLayer->DiffDstMemDesc;
 #ifdef DNN_CACHE_PRIMITIVES
@@ -95,18 +92,11 @@ namespace dnn
 			const auto vecZero = VecFloat(0);
 			
 			auto memSrc = dnnl::memory(*InputLayer->DstMemDesc, Device.engine, InputLayer->Neurons.data());
-			auto srcMem = reorderFwdSrc ? dnnl::memory(fwdDescLogSoftmax->src_desc(), Device.engine) : memSrc;
-			if (reorderFwdSrc)
-			{
-				dnnl::reorder(memSrc, srcMem).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_FROM, memSrc}, { DNNL_ARG_TO, srcMem } });
-				Device.stream.wait();
-			}
-
 			auto dstMem = dnnl::memory(fwdDescLogSoftmax->dst_desc(), Device.engine, Neurons.data());
 #ifdef DNN_CACHE_PRIMITIVES
-			fwdLogSoftmax->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DST,  dstMem } });
+			fwdLogSoftmax->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, memSrc}, { DNNL_ARG_DST,  dstMem } });
 #else
-			dnnl::softmax_v2_forward(*fwdDescLogSoftmax).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DST, dstMem } });
+			dnnl::softmax_v2_forward(*fwdDescLogSoftmax).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, memSrc}, { DNNL_ARG_DST, dstMem } });
 #endif
 			Device.stream.wait();
 
