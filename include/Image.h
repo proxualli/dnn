@@ -56,57 +56,57 @@ namespace dnn
 
 		~Image() = default;
 
-		inline T* data() NOEXCEPT
+		T* data() NOEXCEPT
 		{
 			return Data.data();
 		}
 
-		inline const T* data() const NOEXCEPT
+		const T* data() const NOEXCEPT
 		{
 			return Data.data();
 		}
 
-		inline const auto C() const NOEXCEPT
+		auto C() const NOEXCEPT
 		{
 			return Data._spectrum;
 		}
 		
-		inline const auto D() const NOEXCEPT
+		auto D() const NOEXCEPT
 		{
 			return Data._depth;
 		}
 		
-		inline const auto H() const NOEXCEPT
+		auto H() const NOEXCEPT
 		{
 			return Data._height;
 		}
 
-		inline const auto W() const NOEXCEPT
+		auto W() const NOEXCEPT
 		{
 			return Data._width;
 		}
 
-		inline const auto Area() const NOEXCEPT
+		auto Area() const NOEXCEPT
 		{
 			return Data._height * Data._width;
 		}
 
-		inline const auto ChannelSize() const NOEXCEPT
+		auto ChannelSize() const NOEXCEPT
 		{
 			return Data._depth * Data._height * Data._width;
 		}
 
-		inline const auto Size() const NOEXCEPT
+		auto Size() const NOEXCEPT
 		{
 			return Data.size();
 		}
 
-		inline T& operator()(const unsigned c, const unsigned d, const unsigned h, const unsigned w) NOEXCEPT
+		T& operator()(const unsigned c, const unsigned d, const unsigned h, const unsigned w) NOEXCEPT
 		{
 			return Data[w + (h * Data._width) + (d * Data._height * Data._width) + (c * Data._depth * Data._height * Data._width)];
 		}
 
-		inline const T& operator()(const unsigned c, const unsigned d, const unsigned h, const unsigned w) const NOEXCEPT
+		const T& operator()(const unsigned c, const unsigned d, const unsigned h, const unsigned w) const NOEXCEPT
 		{
 			return Data[w + (h * Data._width) + (d * Data._height * Data._width) + (c * Data._depth * Data._height * Data._width)];
 		}

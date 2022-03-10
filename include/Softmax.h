@@ -77,9 +77,11 @@ namespace dnn
 			const auto axis = (H == 1 && W == 1) ? 1 : 3;
 			fwdDescSoftmax = std::make_unique<dnnl::softmax_forward::primitive_desc>(dnnl::softmax_forward::primitive_desc(dnnl::softmax_forward::desc(dnnl::prop_kind::forward, *DstMemDesc, axis), Device.engine));
 			bwdDescSoftmax = std::make_unique<dnnl::softmax_backward::primitive_desc>(dnnl::softmax_backward::primitive_desc(dnnl::softmax_backward::desc(*DiffDstMemDesc, *DstMemDesc, axis), Device.engine, *fwdDescSoftmax));
+
 			reorderFwdSrc = fwdDescSoftmax->src_desc() != *InputLayer->DstMemDesc;
 			reorderBwdSrc = bwdDescSoftmax->src_desc() != *InputLayer->DstMemDesc;
 			reorderBwdDiffSrc = bwdDescSoftmax->diff_src_desc() != *InputLayer->DiffDstMemDesc;
+
 #ifdef DNN_CACHE_PRIMITIVES
 			fwdSoftmax = std::make_unique<dnnl::softmax_forward>(dnnl::softmax_forward(*fwdDescSoftmax));
 			bwdSoftmax = std::make_unique<dnnl::softmax_backward>(dnnl::softmax_backward(*bwdDescSoftmax));

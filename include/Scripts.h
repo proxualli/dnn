@@ -75,7 +75,7 @@ namespace scripts
         TanhExp = 27
     };
 
-    static const auto StringToLower(std::string text)
+    static auto StringToLower(std::string text)
     {
         std::transform(text.begin(), text.end(), text.begin(), ::tolower);
         return text;

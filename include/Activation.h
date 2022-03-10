@@ -155,15 +155,6 @@ namespace dnn
 		inline static VecFloat dfVec(const VecFloat& x) NOEXCEPT { const auto tmpExp = exp(x); const auto tmpSoftplus = log1p(tmpExp); const auto tmpSech = VecFloat(1) / cosh(tmpSoftplus); return tanh(tmpSoftplus) + x * tmpExp * square(tmpSech) / (tmpExp + VecFloat(1)); }
 	};
 	
-	struct FTS
-	{
-		inline static Float f(const Float& x, const Float& alpha = Float(-0.2)) NOEXCEPT { return x >= Float(0) ? x * Logistic::f(x) + alpha : alpha; }
-		inline static Float df(const Float& x, const Float& alpha = Float(-0.2)) NOEXCEPT { return x >= Float(0) ? Logistic::f(x) * (Float(1) - x) + x : Float(0); }
-		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(Float(-0.2))) NOEXCEPT { return select(x >= VecFloat(0), x * Logistic::fVec(x) + alpha, alpha); }
-		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(Float(-0.2))) NOEXCEPT { return select(x >= VecFloat(0), Logistic::fVec(x) * (VecFloat(1) - x) + x, VecFloat(0)); }
-	};
-	
-
 	enum class Activations
 	{
 		Abs = 0,

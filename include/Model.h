@@ -420,7 +420,7 @@ namespace dnn
 
 		void(*NewEpoch)(UInt, UInt, UInt, UInt, Float, Float, Float, bool, bool, Float, Float, bool, Float, Float, UInt, Float, UInt, Float, Float, Float, UInt, UInt, UInt, Float, Float, Float, Float, Float, Float, UInt, Float, Float, Float, UInt);
 
-		const auto GetModelName(const std::string& definition) const
+		auto GetModelName(const std::string& definition) const
 		{
 			if (definition.length() > 2)
 			{
@@ -1258,7 +1258,7 @@ namespace dnn
 				}
 		}
 
-		const auto GetTotalSkipConnections() const
+		auto GetTotalSkipConnections() const
 		{
 			auto totalSkipConnections = 0ull;
 		

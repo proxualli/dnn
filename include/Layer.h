@@ -220,14 +220,6 @@ namespace dnn
 		{
 		}
 
-		Stats(const Stats& stats) :
-		   Mean(stats.Mean),
-		   StdDev(stats.StdDev),
-		   Min(stats.Min),
-		   Max(stats.Max)
-		{
-		}
-
 		Stats(const Float mean, const Float stddev, const Float min, const Float max) :
 			Mean(mean),
 			StdDev(stddev),
@@ -414,10 +406,10 @@ namespace dnn
 
 		virtual ~Layer() = default;
 		
-		const auto HW() const noexcept { return H * W; }
-		const auto DHW() const noexcept { return D * HW(); }
-		const auto CDHW() const noexcept { return C * DHW(); }
-		const auto PaddedCDHW() const noexcept { return LayerType == LayerTypes::Input ? CDHW() : PaddedC * DHW(); }
+		auto HW() const noexcept { return H * W; }
+		auto DHW() const noexcept { return D * HW(); }
+		auto CDHW() const noexcept { return C * DHW(); }
+		auto PaddedCDHW() const noexcept { return LayerType == LayerTypes::Input ? CDHW() : PaddedC * DHW(); }
 
 		virtual void UpdateResolution()	{ }
 
@@ -443,7 +435,7 @@ namespace dnn
 			return ChosenFormat == dnnl::memory::format_tag::ab || ChosenFormat == dnnl::memory::format_tag::abc || ChosenFormat == dnnl::memory::format_tag::abcd || ChosenFormat == dnnl::memory::format_tag::abcde; 
 		}
 
-		const bool IsBatchNorm() const 
+		bool IsBatchNorm() const 
 		{ 
 			return std::string(magic_enum::enum_name<LayerTypes>(LayerType)).find("BatchNorm", 0) != std::string::npos;
 		}
