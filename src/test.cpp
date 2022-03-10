@@ -74,6 +74,9 @@ void NewEpoch(UInt CurrentCycle, UInt CurrentEpoch, UInt TotalEpochs, UInt Optim
     std::cout.flush();
 
     DNN_UNREF_PAR(TotalEpochs);
+    DNN_UNREF_PAR(Optimizer);
+    DNN_UNREF_PAR(Beta2);
+    DNN_UNREF_PAR(Eps);
     DNN_UNREF_PAR(HorizontalFlip);
     DNN_UNREF_PAR(VerticalFlip);
     DNN_UNREF_PAR(InputDropout);
