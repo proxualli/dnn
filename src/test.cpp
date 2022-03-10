@@ -168,6 +168,9 @@ int __cdecl wmain(int argc, wchar_t* argv[])
 int main(int argc, char* argv[])
 #endif
 {
+    DNN_UNREF_PAR(argc);
+    DNN_UNREF_PAR(argv);
+
     CheckMsg msg;
 
     scripts::ScriptParameters p;
