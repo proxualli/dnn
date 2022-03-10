@@ -129,8 +129,9 @@ void GetTrainingProgress(int seconds = 5, UInt trainingSamples = 50000, UInt tes
        
         if (info->State == States::Testing)
             progress = Float(info->SampleIndex) / testingSamples; 
-        else
-            progress = Float(info->SampleIndex) / trainingSamples; 
+        else 
+            if (info->State == States::Training)
+                progress = Float(info->SampleIndex) / trainingSamples; 
 
         if (info->State != States::Completed)
         {
@@ -150,7 +151,9 @@ void GetTrainingProgress(int seconds = 5, UInt trainingSamples = 50000, UInt tes
             if (info->State == States::Testing)
                 std::cout << FloatToStringFixed(info->TestErrorPercentage, 2);
             else
-                std::cout << FloatToStringFixed(info->TrainErrorPercentage, 2);
+                if (info->State == States::Training)
+                    std::cout << FloatToStringFixed(info->TrainErrorPercentage, 2);
+
             std::cout << "%  " << FloatToStringFixed(info->SampleSpeed, 2) << " samples/s   \r";
             std::cout.flush();
         }
@@ -218,7 +221,7 @@ int main(int argc, char* argv[])
     rate.MinimumRate = 0.0001f;
     rate.FinalRate = 0.1f;
     rate.Gamma = 0.003f;
-    rate.DecayAfterEpochs = 1;
+    rate.DecayAfterEpochs = 200;
     rate.DecayFactor = 1.0f;
     rate.HorizontalFlip = true;
     rate.VerticalFlip = false;
