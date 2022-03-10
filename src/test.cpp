@@ -170,23 +170,25 @@ int main(int argc, char* argv[])
     p.Script = scripts::Scripts::shufflenetv2;
     p.Dataset = scripts::Datasets::cifar10;
     p.C = 3;
-    p.H = 128;
-    p.W = 128;
-    p.PadH = 16;
-    p.PadW = 16;
+    p.H = 32;
+    p.W = 32;
+    p.PadH = 8;
+    p.PadW = 8;
     p.MirrorPad = false;
     p.Groups = 5;
     p.Iterations = 6;
-    p.Width = 5;
+    p.Width = 12;
     p.Activation = scripts::Activations::HardSwish;
     p.Dropout = Float(0);
     p.Bottleneck = false;
     p.SqueezeExcitation = true;
     p.ChannelZeroPad = false;
     p.EfficientNet = { { 1, 24, 2, 1, false }, { 4, 48, 4, 2, false }, { 4, 64, 4, 2, false }, { 4, 128, 6, 2, true }, { 6, 160, 9, 1, true }, { 6, 256, 15, 2, true } };
-    p.ShuffleNet = { { 5, 3, 1, 2, false }, { 6, 3, 1, 2, true }, { 7, 3, 1, 2, true }, { 8, 3, 1, 2, true } };
+    p.ShuffleNet = { { 7, 3, 1, 2, false }, { 7, 3, 1, 2, true }, { 7, 3, 1, 2, true } };
     p.WeightsFiller = scripts::Fillers::HeNormal;
     p.WeightsFillerMode = scripts::FillerModes::In;
+    p.StrideHFirstConv = 1;
+    p.StrideWFirstConv = 1;
 
     auto model = scripts::ScriptsCatalog::Generate(p);
 
@@ -202,10 +204,10 @@ int main(int argc, char* argv[])
     rate.Dropout = 0.0f;
     rate.Eps = 0.00001f,
     rate.BatchSize = 128;
-    rate.Height = 128;
-    rate.Width = 128;
-    rate.PadH = 16;
-    rate.PadW = 16;
+    rate.Height = 32;
+    rate.Width = 32;
+    rate.PadH = 8;
+    rate.PadW = 8;
     rate.Cycles = 1;
     rate.Epochs = 200;
     rate.EpochMultiplier = 1;
