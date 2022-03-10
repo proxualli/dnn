@@ -110,7 +110,7 @@ namespace
 	typedef size_t UInt;
 	typedef unsigned char Byte;
 
-	const auto GetThreads(const UInt elements, const Float weight = 1) NOEXCEPT
+	auto GetThreads(const UInt elements, const Float weight = 1) NOEXCEPT
 	{
 		const auto ULTRALIGHT_THRESHOLD =   2097152ull;	// minimum threshold for ULTRALIGHT load
 		const auto LIGHT_THRESHOLD      =   8338608ull;
