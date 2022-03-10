@@ -252,7 +252,7 @@ int main(int argc, char* argv[])
             DNNAddTrainingRateSGDR(rate, true, 1, info->TrainingSamplesCount);
             DNNTraining();
 
-            GetTrainingProgress(1, info->TrainingSamplesCount, info->TestingSamplesCount);
+            GetTrainingProgress(5, info->TrainingSamplesCount, info->TestingSamplesCount);
             
             delete info;
                    
