@@ -123,38 +123,37 @@ void GetTrainingProgress(int seconds = 5, UInt trainingSamples = 50000, UInt tes
   
     while (info->State != States::Completed)
     {
-        std::this_thread::sleep_for(std::chrono::seconds(info->State == States::Testing ? 1 : seconds));
+        std::this_thread::sleep_for(std::chrono::seconds(seconds));
         
         DNNGetTrainingInfo(info);
        
-        if (info->State == States::Testing)
-            progress = Float(info->SampleIndex) / testingSamples; 
-        else 
-            if (info->State == States::Training)
-                progress = Float(info->SampleIndex) / trainingSamples; 
-
-        if (info->State != States::Completed)
+        if (info->State == States::Testing || info->State == States::Training)
         {
-            std::cout << "[";
+            if (info->State == States::Testing)
+                progress = Float(info->SampleIndex) / testingSamples;
+            else
+                progress = Float(info->SampleIndex) / trainingSamples;
+
+            std::cout << std::string("[");
             int pos = int(barWidth * progress);
             for (int i = 0; i < barWidth; ++i)
             {
                 if (i < pos)
-                    std::cout << "=";
+                    std::cout << std::string("=");
                 else
                     if (i == pos)
-                        std::cout << ">";
+                        std::cout << std::string(">");
                     else
-                        std::cout << " ";
+                        std::cout << std::string(" ");
             }
-            std::cout << "] " << int(progress * 100.0) << "%  Cycle:" << std::to_string(info->Cycle) << "  Epoch:" << std::to_string(info->Epoch) << "  Error:";
+            std::cout << std::string("] ") << FloatToStringFixed(progress * 100.0, 2) << std::string("%  Cycle:") << std::to_string(info->Cycle) << std::string("  Epoch:") << std::to_string(info->Epoch) << std::string("  Error:");
+
             if (info->State == States::Testing)
                 std::cout << FloatToStringFixed(info->TestErrorPercentage, 2);
             else
-                if (info->State == States::Training)
-                    std::cout << FloatToStringFixed(info->TrainErrorPercentage, 2);
+                std::cout << FloatToStringFixed(info->TrainErrorPercentage, 2);
 
-            std::cout << "%  " << FloatToStringFixed(info->SampleSpeed, 2) << " samples/s   \r";
+            std::cout << std::string("%  ") << FloatToStringFixed(info->SampleSpeed, 2) << std::string(" samples/s   \r");
             std::cout.flush();
         }
     }
