@@ -204,10 +204,10 @@ int main(int argc, char* argv[])
     rate.Dropout = 0.0f;
     rate.Eps = 0.00001f,
     rate.BatchSize = 128;
-    rate.Height = 128;
-    rate.Width = 128;
-    rate.PadH = 16;
-    rate.PadW = 16;
+    rate.Height = 32;
+    rate.Width = 32;
+    rate.PadH = 8;
+    rate.PadW = 8;
     rate.Cycles = 1;
     rate.Epochs = 200;
     rate.EpochMultiplier = 1;
