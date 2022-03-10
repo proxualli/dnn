@@ -1781,6 +1781,7 @@ namespace dnn
 							State.store(States::SaveWeights);
 							const auto fileName = PersistOptimizer ? (std::string("(") + StringToLower(std::string(magic_enum::enum_name<Datasets>(Dataset))) + std::string(")(") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(Optimizer))) + std::string(").bin")) : (std::string("(") + StringToLower(std::string(magic_enum::enum_name<Datasets>(Dataset))) + std::string(").bin"));
 							const auto dir = DataProv->StorageDirectory / std::string("definitions") / Name;
+							std::filesystem::create_directories(dir);
 							const auto epoch = std::string("(") + StringToLower(std::string(magic_enum::enum_name<Datasets>(Dataset))) + std::string(")(") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(Optimizer))) + std::string(")") + std::to_string(CurrentEpoch) + std::string("-") + std::to_string(CurrentCycle) + std::string("-") + std::to_string(TrainErrors) + std::string("-") + std::to_string(TestErrors);
 							const auto subdir = dir / epoch;
 							std::filesystem::current_path(dir);
