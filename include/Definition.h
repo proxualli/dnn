@@ -994,9 +994,9 @@ namespace dnn
 					goto FAIL;
 				}
 
-				if (depthDrop <= 0 || depthDrop >= 1)
+				if (depthDrop < 0 || depthDrop >= 1)
 				{
-					msg = CheckMsg(line, col, "DepthDrop value must be in the range ]0-1[");
+					msg = CheckMsg(line, col, "DepthDrop value must be in the range [0-1[");
 					goto FAIL;
 				}
 
