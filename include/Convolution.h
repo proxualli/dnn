@@ -22,9 +22,9 @@ namespace dnn
 		bool reorderFwdSrc;
 		bool reorderBwdSrc;
 		bool reorderBwdDiffSrc;
-		bool reorderBwdWeights;
-		bool reorderBwdDiffWeights;
 		bool reorderBwdDiffDst;
+		bool reorderBwdDiffWeights;
+		bool reorderBwdWeights;
 
 	public:
 		const UInt Groups;
