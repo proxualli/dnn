@@ -920,7 +920,7 @@ namespace scripts
 
                 for (auto g = 1ull; g <= p.Groups; g++)
                 {
-                    auto mix = 0ull; // g - 1ull;
+                    auto mix = g - 1ull;
 
                     if (g > 1)
                     {

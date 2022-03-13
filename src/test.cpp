@@ -146,7 +146,7 @@ void GetTrainingProgress(int seconds = 5, UInt trainingSamples = 50000, UInt tes
                     else
                         std::cout << std::string(" ");
             }
-            std::cout << std::string("] ") << FloatToStringFixed(progress * 100.0, 2) << std::string("%  Cycle:") << std::to_string(info->Cycle) << std::string("  Epoch:") << std::to_string(info->Epoch) << std::string("  Error:");
+            std::cout << std::string("] ") << FloatToStringFixed(progress * 100.0f, 2) << std::string("%  Cycle:") << std::to_string(info->Cycle) << std::string("  Epoch:") << std::to_string(info->Epoch) << std::string("  Error:");
 
             if (info->State == States::Testing)
                 std::cout << FloatToStringFixed(info->TestErrorPercentage, 2);
@@ -175,7 +175,7 @@ int main(int argc, char* argv[])
 
     scripts::ScriptParameters p;
 
-    p.Script = scripts::Scripts::shufflenetv2;
+    p.Script = scripts::Scripts::mobilenetv3;
     p.Dataset = scripts::Datasets::cifar10;
     p.C = 3;
     p.H = 32;
@@ -183,9 +183,9 @@ int main(int argc, char* argv[])
     p.PadH = 8;
     p.PadW = 8;
     p.MirrorPad = false;
-    p.Groups = 5;
-    p.Iterations = 6;
-    p.Width = 12;
+    p.Groups = 3;
+    p.Iterations = 4;
+    p.Width = 4;
     p.Activation = scripts::Activations::HardSwish;
     p.Dropout = Float(0);
     p.Bottleneck = false;
