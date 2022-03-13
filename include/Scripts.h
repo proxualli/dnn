@@ -132,6 +132,7 @@ namespace scripts
         UInt Iterations;
         UInt Stride;
         bool SE;
+
         std::string to_string()
         {
             return "(" + std::to_string(ExpandRatio) + "-" + std::to_string(Channels) + "-" + std::to_string(Iterations) + "-" + std::to_string(Stride) + (SE ? "-se" : "") + ")";
@@ -145,6 +146,7 @@ namespace scripts
         UInt Pad;
         UInt Shuffle;
         bool SE;
+
         std::string to_string()
         {
             return "(" + std::to_string(Iterations) + "-" + std::to_string(Kernel) + "-" + std::to_string(Pad) + "-" + std::to_string(Shuffle) + (SE ? "-se" : "") + ")";
@@ -153,7 +155,7 @@ namespace scripts
 
     struct ScriptParameters
     {
-        // Model defaullt parameters
+        // Model default parameters
         scripts::Scripts Script;
         scripts::Datasets Dataset;
         UInt C;
@@ -1123,7 +1125,7 @@ namespace scripts
                 auto C = 6ull;
                 auto A = 1ull;
                 auto subsample = false;
-                for(auto rec : p.ShuffleNet)
+                for(const auto& rec : p.ShuffleNet)
                 {
                     if (subsample)
                     {
