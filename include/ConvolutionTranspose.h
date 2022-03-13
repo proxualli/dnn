@@ -110,13 +110,11 @@ namespace dnn
 
 			fwdDesc = std::make_unique<dnnl::deconvolution_forward::primitive_desc>(dnnl::deconvolution_forward::primitive_desc(HasBias ?
 				dnnl::deconvolution_forward::desc(dnnl::prop_kind::forward, dnnl::algorithm::convolution_auto, memDesc[0], memDesc[2], memDesc[3], memDesc[1], strides, dilates, padding, padding) :
-				dnnl::deconvolution_forward::desc(dnnl::prop_kind::forward, dnnl::algorithm::convolution_auto, memDesc[0], memDesc[2], memDesc[1], strides, dilates, padding, padding),
-				Device.engine));
+				dnnl::deconvolution_forward::desc(dnnl::prop_kind::forward, dnnl::algorithm::convolution_auto, memDesc[0], memDesc[2], memDesc[1], strides, dilates, padding, padding),	Device.engine));
 
 			bwdWeightsDesc = std::make_unique<dnnl::deconvolution_backward_weights::primitive_desc>(dnnl::deconvolution_backward_weights::primitive_desc(HasBias ?
 				dnnl::deconvolution_backward_weights::desc(dnnl::algorithm::convolution_auto, memDesc[0], memDesc[2], memDesc[3], memDesc[1], strides, dilates, padding, padding) :
-				dnnl::deconvolution_backward_weights::desc(dnnl::algorithm::convolution_auto, memDesc[0], memDesc[2], memDesc[1], strides, dilates, padding, padding),
-				Device.engine, *fwdDesc));
+				dnnl::deconvolution_backward_weights::desc(dnnl::algorithm::convolution_auto, memDesc[0], memDesc[2], memDesc[1], strides, dilates, padding, padding), Device.engine, *fwdDesc));
 
 			bwdDataDesc = std::make_unique<dnnl::deconvolution_backward_data::primitive_desc>(dnnl::deconvolution_backward_data::primitive_desc(dnnl::deconvolution_backward_data::desc(dnnl::algorithm::convolution_auto, memDesc[0], memDesc[2], memDesc[1], strides, dilates, padding, padding), Device.engine, *fwdDesc));
 
