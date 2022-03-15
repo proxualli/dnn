@@ -295,7 +295,7 @@ namespace
 		}
 		AlignedArray(const size_type elements, const T value = T()) NOEXCEPT
 		{
-			release();
+			AlignedArray::release();
 
 			arrPtr = aligned_unique_ptr<T, alignment>(elements, alignment);
 			if (arrPtr)
@@ -325,7 +325,7 @@ namespace
 			if (elements == nelems)
 				return;
 
-			release();
+			AlignedArray::release();
 			
 			if (elements > 0)
 			{
@@ -382,7 +382,7 @@ namespace
 		{
 			if (md)
 			{
-				release();
+				AlignedMemory::release();
 
 				arrPtr = std::make_unique<dnnl::memory>(md, engine);
 				if (arrPtr)
@@ -418,7 +418,7 @@ namespace
 				if (md.get_size() / sizeof(T) == nelems)
 					return;
 
-				release();
+				AlignedMemory::release();
 
 				if (md.get_size() / sizeof(T) > 0)
 				{
