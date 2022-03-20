@@ -114,6 +114,12 @@ extern "C" DNN_API bool DNNLoadDataset()
 	return false;
 }
 
+extern "C" DNN_API void DNNDataproviderDispose()
+{
+	if (dataprovider)
+		dataprovider.reset();
+}
+
 extern "C" DNN_API bool DNNCheck(std::string& definition, CheckMsg& checkMsg)
 {
 	return Check(definition, checkMsg);
