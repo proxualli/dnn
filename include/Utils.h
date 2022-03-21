@@ -291,7 +291,7 @@ namespace
 		}
 		AlignedArray() NOEXCEPT
 		{
-			//release();
+			AlignedArray::release();
 		}
 		AlignedArray(const size_type elements, const T value = T()) NOEXCEPT
 		{
@@ -376,7 +376,7 @@ namespace
 		}
 		AlignedMemory() NOEXCEPT
 		{
-			//release();
+			AlignedMemory::release();
 		}
 		AlignedMemory(const dnnl::memory::desc& md, const dnnl::engine& engine, const T value = T()) NOEXCEPT
 		{
@@ -411,7 +411,7 @@ namespace
 		inline const T* data() const noexcept { return dataPtr; }
 		inline size_type size() const noexcept { return nelems; }
 		inline dnnl::memory::desc desc() { return description; }
-		inline void resize(const dnnl::memory::desc& md, const dnnl::engine& engine, const T value = T()) NOEXCEPT
+		inline void resizeMem(const dnnl::memory::desc& md, const dnnl::engine& engine, const T value = T()) NOEXCEPT
 		{
 			if (md)
 			{
@@ -447,19 +447,19 @@ namespace
 		}
 		void resize(const size_type n, const size_type c, const dnnl::memory::data_type dtype, const dnnl::memory::format_tag format, const dnnl::engine& engine, const T value = T()) NOEXCEPT
 		{
-			resize(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(n), dnnl::memory::dim(c) }), dtype, format), engine, value);
+			AlignedMemory::resizeMem(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(n), dnnl::memory::dim(c) }), dtype, format), engine, value);
 		}
 		void resize(const size_type n, const size_type c, const size_type w, const dnnl::memory::data_type dtype, const dnnl::memory::format_tag format, const dnnl::engine& engine, const T value = T()) NOEXCEPT
 		{
-			resize(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(n), dnnl::memory::dim(c), dnnl::memory::dim(w) }), dtype, format), engine, value);
+			AlignedMemory::resizeMem(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(n), dnnl::memory::dim(c), dnnl::memory::dim(w) }), dtype, format), engine, value);
 		}
 		void resize(const size_type n, const size_type c, const size_type h, const size_type w, const dnnl::memory::data_type dtype, const dnnl::memory::format_tag format, const dnnl::engine& engine, const T value = T()) NOEXCEPT
 		{
-			resize(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(n), dnnl::memory::dim(c), dnnl::memory::dim(h), dnnl::memory::dim(w) }), dtype, format), engine, value);
+			AlignedMemory::resizeMem(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(n), dnnl::memory::dim(c), dnnl::memory::dim(h), dnnl::memory::dim(w) }), dtype, format), engine, value);
 		}
 		void resize(const size_type n, const size_type c, const size_type d, const size_type h, const size_type w, const dnnl::memory::data_type dtype, const dnnl::memory::format_tag format, const dnnl::engine& engine, const T value = T()) NOEXCEPT
 		{
-			resize(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(n), dnnl::memory::dim(c), dnnl::memory::dim(d), dnnl::memory::dim(h), dnnl::memory::dim(w) }), dtype, format), engine, value);
+			AlignedMemory::resizeMem(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(n), dnnl::memory::dim(c), dnnl::memory::dim(d), dnnl::memory::dim(h), dnnl::memory::dim(w) }), dtype, format), engine, value);
 		}
 		inline T& operator[] (size_type i) NOEXCEPT { return dataPtr[i]; }
 		inline const T& operator[] (size_type i) const NOEXCEPT { return dataPtr[i]; }

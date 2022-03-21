@@ -39,6 +39,7 @@ DNN_API void DNNClearTrainingStrategies();
 DNN_API void DNNSetUseTrainingStrategy(const bool enable);
 DNN_API void DNNAddTrainingStrategy(const dnn::TrainingStrategy& strategy);
 DNN_API bool DNNLoadDataset();
+DNN_API void DNNDataproviderDispose();
 DNN_API void DNNTraining();
 DNN_API void DNNStop();
 DNN_API void DNNPause();
@@ -246,7 +247,7 @@ int main(int argc, char* argv[])
             auto info = new ModelInfo();
             DNNGetModelInfo(info);
 
-            std::cout << std::string("Training ") << info->Name << std::string(" on ") << std::string(magic_enum::enum_name<Datasets>(info->Dataset)) << std::string(" with " +  std::string(magic_enum::enum_name<Optimizers>(optimizer)) + " optimizer") << std::endl << std::endl;
+            std::cout << std::string("Training ") << info->Name << std::string(" on ") << std::string(magic_enum::enum_name<Datasets>(info->Dataset)) << std::string(" with ") +  std::string(magic_enum::enum_name<Optimizers>(optimizer)) + std::string(" optimizer") << std::endl << std::endl;
             std::cout.flush();
 
             DNNSetNewEpochDelegate(&NewEpoch);
@@ -261,8 +262,10 @@ int main(int argc, char* argv[])
             DNNStop();
         }
         else
-            std::cout << std::endl << "Could not load dataset" << std::endl;
+            std::cout << std::endl << std::string("Could not load dataset") << std::endl;
     }
     else
-        std::cout << std::endl << "Could not load model" << std::endl << msg.Message << std::endl << model << std::endl;
+        std::cout << std::endl << std::string("Could not load model") << std::endl << msg.Message << std::endl << model << std::endl;
+
+    DNNDataproviderDispose();
 }
