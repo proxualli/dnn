@@ -80,7 +80,7 @@ namespace dnn
 		}
 
 	protected:
-		std::size_t DIVALIGN(std::size_t align, std::size_t size) const
+		size_type DIVALIGN(const size_type align, const size_type size) const
 		{
 			if (size % align == 0ull)
 				return size;
