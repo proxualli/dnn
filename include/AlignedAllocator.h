@@ -11,7 +11,7 @@
 
 namespace dnn
 {
-	std::size_t DIV(std::size_t align, std::size_t size)
+	std::size_t DIVALIGN(std::size_t align, std::size_t size)
 	{
 		if (size % align == 0ull)
 			return size;
@@ -91,13 +91,13 @@ namespace dnn
 		inline void* AlignedAlloc(const size_type align, const size_type size) const
 		{
 #if defined(_WIN32) || defined(__CYGWIN__)
-			return ::_aligned_malloc(DIV(align, size), align);
+			return ::_aligned_malloc(DIVALIGN(align, size), align);
 #elif defined(__ANDROID__)
-			return ::memalign(align, DIV(align, size));
+			return ::memalign(align, DIVALIGN(align, size));
 #elif defined(__MINGW32__)
-			return ::_mm_malloc(DIV(align, size), align);
+			return ::_mm_malloc(DIVALIGN(align, size), align);
 #else  // posix assumed
-			return ::aligned_alloc(align, DIV(align, size));
+			return ::aligned_alloc(align, DIVALIGN(align, size));
 #endif
 		}
 
