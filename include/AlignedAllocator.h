@@ -11,14 +11,6 @@
 
 namespace dnn
 {
-	std::size_t DIVALIGN(std::size_t align, std::size_t size)
-	{
-		if (size % align == 0ull)
-			return size;
-
-		return ((size / align) + 1ull) * align;
-	}
-
 	template <typename T, std::size_t alignment>
 	class AlignedAllocator
 	{
@@ -88,6 +80,14 @@ namespace dnn
 		}
 
 	protected:
+		std::size_t DIVALIGN(std::size_t align, std::size_t size) const
+		{
+			if (size % align == 0ull)
+				return size;
+
+			return ((size / align) + 1ull) * align;
+		}
+
 		inline void* AlignedAlloc(const size_type align, const size_type size) const
 		{
 #if defined(_WIN32) || defined(__CYGWIN__)
