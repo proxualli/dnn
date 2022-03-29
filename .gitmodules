@@ -19,3 +19,6 @@
 [submodule "deps/version2"]
 	path = deps/version2
 	url = https://github.com/zamir1001/version2
+[submodule "deps/libjpeg-turbo"]
+	path = deps/libjpeg-turbo
+	url = https://github.com/libjpeg-turbo/libjpeg-turbo
