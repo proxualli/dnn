@@ -606,18 +606,21 @@ namespace dnn
 
 			BatchSizeChanging.store(true);
 
-			Layers[0]->H = h;
-			Layers[0]->W = w;
-			for (auto& layer : Layers)
-				layer->UpdateResolution();
-			
+			if (Layers[0]->H != h && Layers[0]->W != w)
+			{
+				Layers[0]->H = h;
+				Layers[0]->W = w;
+				for (auto& layer : Layers)
+					layer->UpdateResolution();
+			}
+
 			if (batchSize * h * w > BatchSize * H * W)
 			{
 				auto requestedSize = GetNeuronsSize(batchSize) + GetWeightsSize(PersistOptimizer, Optimizer);
 
 				if (GetTotalFreeMemory() + currentSize < requestedSize)
 				{
-					std::cout << std::string("Memory required: ") << std::to_string(requestedSize / 1024 / 1024) << " MB with resolution" << std::to_string(batchSize) + std::string("x") + std::to_string(h) + std::string("x") + std::to_string(w) << std::endl << std::endl;
+					std::cout << std::string("Memory required: ") << std::to_string(requestedSize / 1024 / 1024) << std::string(" MB with resolution") << std::to_string(batchSize) + std::string("x") + std::to_string(h) + std::string("x") + std::to_string(w) << std::endl << std::endl;
 
 					Layers[0]->H = H;
 					Layers[0]->W = W;
@@ -1328,7 +1331,7 @@ namespace dnn
 				}
 
 				if (!exists)
-					throw std::invalid_argument(std::string("Invalid input layer: " + name).c_str());
+					throw std::invalid_argument((std::string("Invalid input layer: ") + name).c_str());
 			}
 
 			return list;
@@ -1651,7 +1654,7 @@ namespace dnn
 								// Backward
 								bpropTimeCount = std::chrono::duration<Float>(Float(0));
 								updateTimeCount = std::chrono::duration<Float>(Float(0));
-								if (UseInplace)
+								if constexpr (UseInplace)
 									SwitchInplaceBwd(true);
 								for (auto i = Layers.size() - 1; i >= FirstUnlockedLayer.load(); --i)
 								{
@@ -1679,7 +1682,7 @@ namespace dnn
 									}
 									bpropTimeCount += Layers[i]->bpropTime;
 								}
-								if (UseInplace)
+								if constexpr (UseInplace)
 									SwitchInplaceBwd(false);
 								bpropTime = bpropTimeCount;
 								updateTime = updateTimeCount;
@@ -1846,7 +1849,7 @@ namespace dnn
 
 				if (CheckTaskState())
 				{
-					if (UseInplace)
+					if constexpr (UseInplace)
 						SwitchInplaceBwd(false);
 
 					for (auto cost : CostLayers)
@@ -2347,7 +2350,7 @@ namespace dnn
 
 		void BackwardProp(const UInt batchSize)
 		{
-			if (UseInplace)
+			if constexpr (UseInplace)
 				SwitchInplaceBwd(true);
 
 			for (auto i = Layers.size() - 1; i > 0ull; --i)
@@ -2363,7 +2366,7 @@ namespace dnn
 					Layers[i]->BackwardProp(batchSize);
 			}
 
-			if (UseInplace)
+			if constexpr (UseInplace)
 				SwitchInplaceBwd(false);
 		}
 		

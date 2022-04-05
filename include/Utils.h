@@ -113,23 +113,23 @@ namespace
 	auto GetThreads(const UInt elements, const Float weight = 1) NOEXCEPT
 	{
 		const auto ULTRALIGHT_THRESHOLD =   2097152ull;	// minimum threshold for ULTRALIGHT load
-		const auto LIGHT_THRESHOLD      =   8338608ull;
-		const auto MEDIUM_THRESHOLD     =  68338608ull;
-		const auto HEAVY_THRESHOLD      = 120338608ull;
-		const auto MAXIMUM_THRESHOLD    = 187538608ull;
+		const auto LIGHT_THRESHOLD =        8338608ull;
+		const auto MEDIUM_THRESHOLD =      68338608ull;
+		const auto HEAVY_THRESHOLD =      120338608ull;
+		const auto MAXIMUM_THRESHOLD =    187538608ull;
 
 		const auto MAXIMUM = omp_get_max_threads();
 		const auto ULTRALIGHT = MAXIMUM >= 32 ?  3ull : MAXIMUM >= 24 ?  2ull :  2ull;
-		const auto LIGHT =      MAXIMUM >= 32 ?  6ull : MAXIMUM >= 24 ?  4ull :  4ull;
-		const auto MEDIUM =     MAXIMUM >= 32 ? 12ull : MAXIMUM >= 24 ?  8ull :  8ull;
-		const auto HEAVY =      MAXIMUM >= 32 ? 16ull : MAXIMUM >= 24 ? 12ull : 10ull;
+		const auto LIGHT      = MAXIMUM >= 32 ?  6ull : MAXIMUM >= 24 ?  4ull :  4ull;
+		const auto MEDIUM     = MAXIMUM >= 32 ? 12ull : MAXIMUM >= 24 ?  8ull :  8ull;
+		const auto HEAVY      = MAXIMUM >= 32 ? 16ull : MAXIMUM >= 24 ? 12ull : 10ull;
 		const auto ULTRAHEAVY = MAXIMUM >= 32 ? 24ull : MAXIMUM >= 24 ? 16ull : 12ull;
 
-		return 
-			elements < static_cast<UInt>(weight * Float(ULTRALIGHT_THRESHOLD)) ? ULTRALIGHT : 
-			elements < static_cast<UInt>(weight * Float(LIGHT_THRESHOLD)) ? LIGHT : 
-			elements < static_cast<UInt>(weight * Float(MEDIUM_THRESHOLD)) ? MEDIUM : 
-			elements < static_cast<UInt>(weight * Float(HEAVY_THRESHOLD)) ? HEAVY : 
+		return
+			elements < static_cast<UInt>(weight * Float(ULTRALIGHT_THRESHOLD)) ? ULTRALIGHT :
+			elements < static_cast<UInt>(weight * Float(LIGHT_THRESHOLD)) ? LIGHT :
+			elements < static_cast<UInt>(weight * Float(MEDIUM_THRESHOLD)) ? MEDIUM :
+			elements < static_cast<UInt>(weight * Float(HEAVY_THRESHOLD)) ? HEAVY :
 			elements < static_cast<UInt>(weight * Float(MAXIMUM_THRESHOLD)) ? ULTRAHEAVY : MAXIMUM;
 	}
 

@@ -82,10 +82,14 @@ namespace dnn
 	protected:
 		size_type DIVALIGN(const size_type align, const size_type size) const
 		{
+#if defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW32__)
+			return size;
+#else
 			if (size % align == 0ull)
 				return size;
 
 			return ((size / align) + 1ull) * align;
+#endif
 		}
 
 		inline void* AlignedAlloc(const size_type align, const size_type size) const
