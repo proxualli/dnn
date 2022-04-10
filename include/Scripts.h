@@ -13,7 +13,7 @@
 namespace scripts
 {
     typedef float Float;
-    typedef size_t UInt;
+    typedef std::size_t UInt;
     typedef unsigned char Byte;
 
 #if defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW32__)
