@@ -107,7 +107,7 @@ namespace
 	constexpr auto UseInplace = true;
 
 	typedef float Float;
-	typedef size_t UInt;
+	typedef std::size_t UInt;
 	typedef unsigned char Byte;
 
 	auto GetThreads(const UInt elements, const Float weight = 1) NOEXCEPT
@@ -930,7 +930,7 @@ namespace
 		CHECK(dnnl_memory_get_engine(mem, &eng));
 		CHECK(dnnl_engine_get_kind(eng, &eng_kind));
 		CHECK(dnnl_memory_get_memory_desc(mem, &md));
-		size_t bytes = dnnl_memory_desc_get_size(md);
+		std::size_t bytes = dnnl_memory_desc_get_size(md);
 
 		bool is_cpu_sycl
 			= (DNNL_CPU_RUNTIME == DNNL_RUNTIME_SYCL && eng_kind == dnnl_cpu);
@@ -946,7 +946,7 @@ namespace
 			void* ptr = NULL;
 			CHECK(dnnl_memory_get_data_handle(mem, &ptr));
 			if (ptr) {
-				for (size_t i = 0; i < bytes; ++i) {
+				for (std::size_t i = 0; i < bytes; ++i) {
 					((char*)handle)[i] = ((char*)ptr)[i];
 				}
 			}
@@ -967,7 +967,7 @@ namespace
 		CHECK(dnnl_memory_get_engine(mem, &eng));
 		CHECK(dnnl_engine_get_kind(eng, &eng_kind));
 		CHECK(dnnl_memory_get_memory_desc(mem, &md));
-		size_t bytes = dnnl_memory_desc_get_size(md);
+		std::size_t bytes = dnnl_memory_desc_get_size(md);
 
 #ifdef DNNL_WITH_SYCL
 		bool is_cpu_sycl
@@ -978,7 +978,7 @@ namespace
 			void* mapped_ptr = NULL;
 			CHECK(dnnl_memory_map_data(mem, &mapped_ptr));
 			if (mapped_ptr) {
-				for (size_t i = 0; i < bytes; ++i) {
+				for (std::size_t i = 0; i < bytes; ++i) {
 					((char*)mapped_ptr)[i] = ((char*)handle)[i];
 				}
 			}
@@ -1001,7 +1001,7 @@ namespace
 			void* ptr = NULL;
 			CHECK(dnnl_memory_get_data_handle(mem, &ptr));
 			if (ptr) {
-				for (size_t i = 0; i < bytes; ++i) {
+				for (std::size_t i = 0; i < bytes; ++i) {
 					((char*)ptr)[i] = ((char*)handle)[i];
 				}
 			}

@@ -15,13 +15,12 @@ namespace dnn
 		std::unique_ptr<dnnl::binary> bwdAdd;
 #endif
 		bool reorderFwdSrc;
-		bool reorderBwdSrc;
 		bool reorderBwdDiffSrc;
 
 	public:
 		LogSoftmax(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs) :
 			Layer(device, format, name, LayerTypes::LogSoftmax, 0, 0, inputs[0]->C, inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs, false),
-			reorderBwdSrc(false),
+			reorderFwdSrc(false),
 			reorderBwdDiffSrc(false)
 		{
 			assert(Inputs.size() == 1);
@@ -76,9 +75,10 @@ namespace dnn
 			const auto axis = (H == 1 && W == 1) ? 1 : 3;
 			fwdDescLogSoftmax = std::make_unique<dnnl::logsoftmax_forward::primitive_desc>(dnnl::logsoftmax_forward::primitive_desc(dnnl::logsoftmax_forward::desc(dnnl::prop_kind::forward, *DstMemDesc, axis), Device.engine));
 			bwdDescLogSoftmax = std::make_unique<dnnl::logsoftmax_backward::primitive_desc>(dnnl::logsoftmax_backward::primitive_desc(dnnl::logsoftmax_backward::desc(*DiffDstMemDesc, *DstMemDesc, axis), Device.engine, *fwdDescLogSoftmax));
+			
 			reorderFwdSrc = bwdDescLogSoftmax->src_desc() != *InputLayer->DstMemDesc;
-			reorderBwdSrc = bwdDescLogSoftmax->src_desc() != *InputLayer->DstMemDesc;
 			reorderBwdDiffSrc = bwdDescLogSoftmax->diff_src_desc() != *InputLayer->DiffDstMemDesc;
+
 #ifdef DNN_CACHE_PRIMITIVES
 			fwdLogSoftmax = std::make_unique<dnnl::logsoftmax_forward>(dnnl::logsoftmax_forward(*fwdDescLogSoftmax));
 			bwdLogSoftmax = std::make_unique<dnnl::logsoftmax_backward>(dnnl::logsoftmax_backward(*bwdDescLogSoftmax));

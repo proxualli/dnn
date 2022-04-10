@@ -115,6 +115,7 @@ namespace dnn
 			reorderBwdSrc = bwdDescPRelu->src_desc() != *InputLayer->DstMemDesc;
 			reorderBwdDiffSrc = bwdDescPRelu->diff_src_desc() != *InputLayer->DiffDstMemDesc;
 			reorderBwdDiffWeights = bwdDescPRelu->diff_weights_desc() != fwdDescPRelu->weights_desc();
+
 #ifdef DNN_CACHE_PRIMITIVES
 			fwdPRelu = std::make_unique<dnnl::prelu_forward>(dnnl::prelu_forward(*fwdDescPRelu));
 			bwdPRelu = std::make_unique<dnnl::prelu_backward>(dnnl::prelu_backward(*bwdDescPRelu));
@@ -170,29 +171,28 @@ namespace dnn
 			const auto strideHW = HW() * VectorSize;
 			const auto vecZero = VecFloat(0);
 
-				auto memSrc = dnnl::memory(*InputLayer->DstMemDesc, Device.engine, InputLayer->Neurons.data());
-				auto srcMem = reorderFwdSrc ? dnnl::memory(fwdDescPRelu->src_desc(), Device.engine) : memSrc;
-				if (reorderFwdSrc)
-				{
-					dnnl::reorder(memSrc, srcMem).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_FROM, memSrc}, { DNNL_ARG_TO, srcMem } });
-					Device.stream.wait();
-				}
-
-				auto weightsMem = dnnl::memory(fwdDescPRelu->weights_desc(), Device.engine, Biases.data());
-
-				auto dstMem = dnnl::memory(*DstMemDesc, Device.engine, Neurons.data());
-#ifdef DNN_CACHE_PRIMITIVES
-				fwdPRelu->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_WEIGHTS, weightsMem }, { DNNL_ARG_DST, dstMem } });
-#else
-				dnnl::prelu_forward(*fwdDescPRelu).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_WEIGHTS, weightsMem }, { DNNL_ARG_DST, dstMem } });
-#endif
+			auto memSrc = dnnl::memory(*InputLayer->DstMemDesc, Device.engine, InputLayer->Neurons.data());
+			auto srcMem = reorderFwdSrc ? dnnl::memory(fwdDescPRelu->src_desc(), Device.engine) : memSrc;
+			if (reorderFwdSrc)
+			{
+				dnnl::reorder(memSrc, srcMem).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_FROM, memSrc}, { DNNL_ARG_TO, srcMem } });
 				Device.stream.wait();
+			}
+
+			auto weightsMem = dnnl::memory(fwdDescPRelu->weights_desc(), Device.engine, Biases.data());
+
+			auto dstMem = dnnl::memory(*DstMemDesc, Device.engine, Neurons.data());
+#ifdef DNN_CACHE_PRIMITIVES
+			fwdPRelu->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_WEIGHTS, weightsMem }, { DNNL_ARG_DST, dstMem } });
+#else
+			dnnl::prelu_forward(*fwdDescPRelu).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_WEIGHTS, weightsMem }, { DNNL_ARG_DST, dstMem } });
+#endif
+			Device.stream.wait();
 
 #ifndef DNN_LEAN
-				if (training)
-					InitArray<Float>(NeuronsD1.data(), batchSize * PaddedCDHW());
+			if (training)
+				InitArray<Float>(NeuronsD1.data(), batchSize * PaddedCDHW());
 #endif
-			
 		}
 
 		void BackwardProp(const UInt batchSize) final override
@@ -252,8 +252,7 @@ namespace dnn
 #endif
 				Device.stream.wait();
 			}
-			
-			
+
 #ifdef DNN_LEAN
 			ReleaseGradient();
 #endif // DNN_LEAN

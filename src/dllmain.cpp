@@ -276,6 +276,7 @@ extern "C" DNN_API void DNNGetImage(const UInt layerIndex, const Byte fillColor,
 			{
 				auto img = model->Layers[layerIndex]->GetImage(fillColor);
 				std::memcpy(image, img.data(), img.size());
+				img.release();
 			}
 			break;
 
@@ -956,7 +957,6 @@ extern "C" DNN_API void DNNGetTestingInfo(TestingInfo* info)
 		info->TaskState = model->TaskState.load();
 	}
 }
-
 
 extern "C" DNN_API Optimizers GetOptimizer()
 {

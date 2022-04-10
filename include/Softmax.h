@@ -15,14 +15,12 @@ namespace dnn
 		std::unique_ptr<dnnl::binary> bwdAdd;
 #endif
 		bool reorderFwdSrc;
-		bool reorderBwdSrc;
 		bool reorderBwdDiffSrc;
 
 	public:
 		Softmax(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs) :
 			Layer(device, format, name, LayerTypes::Softmax, 0, 0, inputs[0]->C, inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs, false),
 			reorderFwdSrc(false),
-			reorderBwdSrc(false),
 			reorderBwdDiffSrc(false)
 		{
 			assert(Inputs.size() == 1);
@@ -79,7 +77,6 @@ namespace dnn
 			bwdDescSoftmax = std::make_unique<dnnl::softmax_backward::primitive_desc>(dnnl::softmax_backward::primitive_desc(dnnl::softmax_backward::desc(*DiffDstMemDesc, *DstMemDesc, axis), Device.engine, *fwdDescSoftmax));
 
 			reorderFwdSrc = fwdDescSoftmax->src_desc() != *InputLayer->DstMemDesc;
-			reorderBwdSrc = bwdDescSoftmax->src_desc() != *InputLayer->DstMemDesc;
 			reorderBwdDiffSrc = bwdDescSoftmax->diff_src_desc() != *InputLayer->DiffDstMemDesc;
 
 #ifdef DNN_CACHE_PRIMITIVES
