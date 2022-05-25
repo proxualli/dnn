@@ -1,8 +1,8 @@
 [submodule "deps/CImg"]
 	path = deps/CImg
 	url = https://github.com/dtschump/CImg
-[submodule "deps/zlib-1.2.11"]
-	path = deps/zlib-1.2.11
+[submodule "deps/zlib-1.2.12"]
+	path = deps/zlib-1.2.12
 	url = https://github.com/madler/zlib
 [submodule "deps/magic_enum"]
 	path = deps/magic_enum
