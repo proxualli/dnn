@@ -176,14 +176,14 @@ SET(DNN_DEPENDENCIES_BINARY_DIR ${CMAKE_BINARY_DIR}/deps
   CACHE PATH "Confu-style dependencies binary directory")
 
 IF(NOT DEFINED ZLIB_SOURCE_DIR)
-  MESSAGE(STATUS "Downloading zlib to ${DNN_DEPENDENCIES_SOURCE_DIR}/zlib-1.2.12 (define ZLIB_SOURCE_DIR to avoid it)")
+  MESSAGE(STATUS "Downloading zlib to ${DNN_DEPENDENCIES_SOURCE_DIR}/zlib (define ZLIB_SOURCE_DIR to avoid it)")
   CONFIGURE_FILE(cmake/DownloadZLIB.cmake "${DNN_DEPENDENCIES_BINARY_DIR}/zlib-download/CMakeLists.txt")
   EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
     WORKING_DIRECTORY "${DNN_DEPENDENCIES_BINARY_DIR}/zlib-download")
   EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" --build .
     WORKING_DIRECTORY "${DNN_DEPENDENCIES_BINARY_DIR}/zlib-download")
-  SET(ZLIB_SOURCE_DIR "${DNN_DEPENDENCIES_SOURCE_DIR}/zlib-1.2.12" CACHE STRING "zlib source directory")
-  SET(ZLIB_INCLUDE_DIR "${DNN_DEPENDENCIES_BINARY_DIR}/zlib-1.2.12" CACHE STRING "zlib include directory")
+  SET(ZLIB_SOURCE_DIR "${DNN_DEPENDENCIES_SOURCE_DIR}/zlib" CACHE STRING "zlib source directory")
+  SET(ZLIB_INCLUDE_DIR "${DNN_DEPENDENCIES_BINARY_DIR}/zlib" CACHE STRING "zlib include directory")
   set(ZLIB_LIBRARY zlib)
   EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E copy "${ZLIB_SOURCE_DIR}/zlib.h" "${ZLIB_INCLUDE_DIR}/zlib.h")
  ENDIF()
@@ -287,8 +287,8 @@ target_include_directories(test
     PRIVATE
        ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
-include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/zlib-1.2.12)
-include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/zlib-1.2.12)
+include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/zlib)
+include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/zlib)
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/libpng)
 include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/libpng)
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/libjpeg-turbo)
@@ -305,7 +305,7 @@ include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/CImg)
 IF(NOT TARGET zlib)
   ADD_SUBDIRECTORY(
     "${ZLIB_SOURCE_DIR}"
-    "${DNN_DEPENDENCIES_BINARY_DIR}/zlib-1.2.12")
+    "${DNN_DEPENDENCIES_BINARY_DIR}/zlib")
 ENDIF()
 if(BUILD_SHARED_LIBS)
   TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC zlib)
