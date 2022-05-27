@@ -22,3 +22,6 @@
 [submodule "deps/zlib"]
 	path = deps/zlib
 	url = https://github.com/madler/zlib
+[submodule "deps/csv-parser"]
+	path = deps/csv-parser
+	url = https://github.com/vincentlaucsb/csv-parser
