@@ -175,6 +175,16 @@ SET(DNN_DEPENDENCIES_SOURCE_DIR ${CMAKE_SOURCE_DIR}/deps
 SET(DNN_DEPENDENCIES_BINARY_DIR ${CMAKE_BINARY_DIR}/deps
   CACHE PATH "Confu-style dependencies binary directory")
 
+IF(NOT DEFINED CSVPARSER_SOURCE_DIR)
+  MESSAGE(STATUS "Downloading csv-parser to ${DNN_DEPENDENCIES_SOURCE_DIR}/csv-parser (define CSVPARSER_SOURCE_DIR to avoid it)")
+  CONFIGURE_FILE(cmake/DownloadCSVParser.cmake "${DNN_DEPENDENCIES_BINARY_DIR}/csv-parser-download/CMakeLists.txt")
+  EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
+    WORKING_DIRECTORY "${DNN_DEPENDENCIES_BINARY_DIR}/csv-parser-download")
+  EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" --build .
+    WORKING_DIRECTORY "${DNN_DEPENDENCIES_BINARY_DIR}/csv-parser-download")
+  SET(CSVPARSER_SOURCE_DIR "${DNN_DEPENDENCIES_SOURCE_DIR}/csv-parser" CACHE STRING "csv-parser source directory")
+ENDIF()
+
 IF(NOT DEFINED ZLIB_SOURCE_DIR)
   MESSAGE(STATUS "Downloading zlib to ${DNN_DEPENDENCIES_SOURCE_DIR}/zlib (define ZLIB_SOURCE_DIR to avoid it)")
   CONFIGURE_FILE(cmake/DownloadZLIB.cmake "${DNN_DEPENDENCIES_BINARY_DIR}/zlib-download/CMakeLists.txt")
@@ -287,6 +297,7 @@ target_include_directories(test
     PRIVATE
        ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
+include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/csv-parser)
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/zlib)
 include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/zlib)
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/libpng)
@@ -300,6 +311,14 @@ include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/oneDNN/src)
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/version2)
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/magic_enum/include)
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/CImg)
+
+# ---[ Configure csv
+IF(NOT TARGET csv)
+ADD_SUBDIRECTORY(
+  "${CSVPARSER_SOURCE_DIR}"
+  "${DNN_DEPENDENCIES_BINARY_DIR}/csv-parser")
+ENDIF()
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC csv)
 
 # ---[ Configure ZLIB
 IF(NOT TARGET zlib)
