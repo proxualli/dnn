@@ -176,17 +176,17 @@ int main(int argc, char* argv[])
 
     scripts::ScriptParameters p;
 
-    p.Script = scripts::Scripts::mobilenetv3;
+    p.Script = scripts::Scripts::shufflenetv2;
     p.Dataset = scripts::Datasets::cifar10;
     p.C = 3;
     p.H = 32;
     p.W = 32;
-    p.PadH = 8;
-    p.PadW = 8;
+    p.PadH = 4;
+    p.PadW = 4;
     p.MirrorPad = false;
     p.Groups = 3;
     p.Iterations = 4;
-    p.Width = 4;
+    p.Width = 12;
     p.Activation = scripts::Activations::HardSwish;
     p.Dropout = Float(0);
     p.Bottleneck = false;
@@ -215,8 +215,8 @@ int main(int argc, char* argv[])
     rate.BatchSize = 128;
     rate.Height = 32;
     rate.Width = 32;
-    rate.PadH = 8;
-    rate.PadW = 8;
+    rate.PadH = 4;
+    rate.PadW = 4;
     rate.Cycles = 1;
     rate.Epochs = 200;
     rate.EpochMultiplier = 1;
