@@ -29,10 +29,10 @@ namespace dnn
 
 	struct HardLogistic
 	{
-		inline static Float f(const Float& x, const Float& alpha = Float(1.0 / 6.0), const Float& beta = Float(0.5)) NOEXCEPT { return std::min(Float(1), std::max(Float(0), x * alpha + beta)); }
-		inline static Float df(const Float& x, const Float& alpha = Float(1.0 / 6.0), const Float& beta = Float(0.5)) NOEXCEPT { return std::abs(x) > (beta / alpha) ? Float(0) : alpha; }
-		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(Float(1.0 / 6.0)), const VecFloat& beta = VecFloat(0.5)) NOEXCEPT { return min(VecFloat(1), max(VecFloat(0), x * alpha + beta)); }
-		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(Float(1.0 / 6.0)), const VecFloat& beta = VecFloat(0.5)) NOEXCEPT { return select(abs(x) > (beta / alpha), VecFloat(0), alpha); }
+		inline static Float f(const Float& x, const Float& alpha = Float(0.2), const Float& beta = Float(0.5)) NOEXCEPT { return std::min(Float(1), std::max(Float(0), x * alpha + beta)); }
+		inline static Float df(const Float& x, const Float& alpha = Float(0.2), const Float& beta = Float(0.5)) NOEXCEPT { return std::abs(x) > (beta / alpha) ? Float(0) : alpha; }
+		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(Float(0.2)), const VecFloat& beta = VecFloat(0.5)) NOEXCEPT { return min(VecFloat(1), max(VecFloat(0), x * alpha + beta)); }
+		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(Float(0.2)), const VecFloat& beta = VecFloat(0.5)) NOEXCEPT { return select(abs(x) > (beta / alpha), VecFloat(0), alpha); }
 	};
 
 	struct Relu6

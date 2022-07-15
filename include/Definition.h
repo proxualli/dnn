@@ -311,6 +311,7 @@ namespace dnn
 						case Activations::Elu:
 						case Activations::Linear:
 						case Activations::Swish:
+						case Activations::HardLogistic:
 							break;
 
 						case Activations::Mish:
@@ -318,7 +319,6 @@ namespace dnn
 						case Activations::Exp:
 						case Activations::Gelu:
 						case Activations::GeluErf:
-						case Activations::HardLogistic:
 						case Activations::HardSwish:
 						case Activations::Log:
 						case Activations::Logistic:
@@ -2366,6 +2366,11 @@ namespace dnn
 					alpha = Float(1);
 					break;
 				case Activations::HardLogistic:
+					alpha = Float(0.2);
+					beta = Float(0.5);
+					labelTrue = Float(1);
+					labelFalse = Float(0);
+					break;
 				case Activations::Log:
 					labelTrue = Float(1);
 					labelFalse = Float(0);
