@@ -94,19 +94,10 @@ namespace dnn
 #ifdef DNN_STOCHASTIC
 				if (batchSize == 1)
 				{
-					auto generator = Ranvec1(3);
-					generator.init(Seed<int>(), static_cast<int>(std::hash<std::thread::id>()(std::this_thread::get_id())));
-
 					VecFloat mask;
 					for (auto i = 0ull; i < part; i += VectorSize)
 					{
-#if defined(DNN_AVX512BW) || defined(DNN_AVX512)
-						mask = select(generator.random16f() < Keep, VecFloat(1), VecFloat(0));
-#elif defined(DNN_AVX2) || defined(DNN_AVX)
-						mask = select(generator.random8f() < Keep, VecFloat(1), VecFloat(0));
-#elif defined(DNN_SSE42) || defined(DNN_SSE41)
-						mask = select(generator.random4f() < Keep, VecFloat(1), VecFloat(0));
-#endif
+						mask = BernoulliVecFloat(Keep);
 						mask.store_a(&NeuronsActive[i]);
 						(mask * Scale * VecFloat().load_a(&InputLayer->Neurons[i])).store_a(&Neurons[i]);
 #ifndef DNN_LEAN
@@ -126,21 +117,12 @@ namespace dnn
 #endif
 					for_i(batchSize, threads, [=](UInt b)
 					{
-						auto generator = Ranvec1(3);
-						generator.init(Seed<int>(), static_cast<int>(std::hash<std::thread::id>()(std::this_thread::get_id())));
-
 						const auto start = b * size;
 						const auto end = start + part;
 						VecFloat mask;
 						for (auto i = start; i < end; i += VectorSize)
 						{
-#if defined(DNN_AVX512BW) || defined(DNN_AVX512)
-							mask = select(generator.random16f() < Keep, VecFloat(1), VecFloat(0));
-#elif defined(DNN_AVX2) || defined(DNN_AVX)
-							mask = select(generator.random8f() < Keep, VecFloat(1), VecFloat(0));
-#elif defined(DNN_SSE42) || defined(DNN_SSE41)
-							mask = select(generator.random4f() < Keep, VecFloat(1), VecFloat(0));
-#endif
+							mask = BernoulliVecFloat(Keep);
 							mask.store_a(&NeuronsActive[i]);
 							(mask * Scale * VecFloat().load_a(&InputLayer->Neurons[i])).store_a(&Neurons[i]);
 #ifndef DNN_LEAN

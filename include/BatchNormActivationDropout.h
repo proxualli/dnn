@@ -209,9 +209,6 @@ namespace dnn
 
 					for_i(C, threads, [=](UInt c)
 					{
-						auto generator = Ranvec1(3);
-						generator.init(Seed<int>(), static_cast<int>(std::hash<std::thread::id>()(std::this_thread::get_id())));
-
 						auto vecMean = VecFloat(0);
 						auto mean = Float(0);
 						for (auto n = 0ull; n < batchSize; n++)
@@ -262,13 +259,7 @@ namespace dnn
 									const auto part = start + partialHW;
 									for (auto hw = start; hw < part; hw += VectorSize)
 									{
-#if defined(DNN_AVX512BW) || defined(DNN_AVX512)
-										mask = select(generator.random16f() < Keep, VecFloat(1), VecFloat(0));
-#elif defined(DNN_AVX2) || defined(DNN_AVX)
-										mask = select(generator.random8f() < Keep, VecFloat(1), VecFloat(0));
-#elif defined(DNN_SSE42) || defined(DNN_SSE41)
-										mask = select(generator.random4f() < Keep, VecFloat(1), VecFloat(0));
-#endif
+										mask = BernoulliVecFloat(Keep);
 										mask.store_a(&NeuronsActive[hw]);
 										(mask * Scale * Activation::fVec(((VecFloat().load_a(&InputLayer->Neurons[hw]) - mean) * weightedInvStdDev + biases))).store_a(&Neurons[hw]);
 									}
@@ -286,13 +277,7 @@ namespace dnn
 									const auto part = start + partialHW;
 									for (auto hw = start; hw < part; hw += VectorSize)
 									{
-#if defined(DNN_AVX512BW) || defined(DNN_AVX512)
-										mask = select(generator.random16f() < Keep, VecFloat(1), VecFloat(0));
-#elif defined(DNN_AVX2) || defined(DNN_AVX)
-										mask = select(generator.random8f() < Keep, VecFloat(1), VecFloat(0));
-#elif defined(DNN_SSE42) || defined(DNN_SSE41)
-										mask = select(generator.random4f() < Keep, VecFloat(1), VecFloat(0));
-#endif
+										mask = BernoulliVecFloat(Keep);
 										mask.store_a(&NeuronsActive[hw]);
 										(mask * Scale * Activation::fVec(((VecFloat().load_a(&InputLayer->Neurons[hw]) - mean) * weightedInvStdDev + biases))).store_a(&Neurons[hw]);
 #ifndef DNN_LEAN
@@ -353,9 +338,6 @@ namespace dnn
 				{
 					for_i(PaddedC / VectorSize, threads, [=](UInt c)
 					{
-						auto generator = Ranvec1(3);
-						generator.init(Seed<int>(), static_cast<int>(std::hash<std::thread::id>()(std::this_thread::get_id())));
-
 						const auto channelOffset = c * VectorSize;
 						const auto mapOffset = channelOffset * HW();
 
@@ -409,13 +391,7 @@ namespace dnn
 										const auto offsetH = offsetC + h * strideH;
 										for (auto w = offsetH; w < offsetH + strideH; w += VectorSize)
 										{
-#if defined(DNN_AVX512BW) || defined(DNN_AVX512)
-											mask = select(generator.random16f() < Keep, VecFloat(1), VecFloat(0));
-#elif defined(DNN_AVX2) || defined(DNN_AVX)
-											mask = select(generator.random8f() < Keep, VecFloat(1), VecFloat(0));
-#elif defined(DNN_SSE42) || defined(DNN_SSE41)
-											mask = select(generator.random4f() < Keep, VecFloat(1), VecFloat(0));
-#endif
+											mask = BernoulliVecFloat(Keep);
 											mask.store_a(&NeuronsActive[w]);
 											(mask * Scale * Activation::fVec(mul_add(VecFloat().load_a(&InputLayer->Neurons[w]) - mean, weightedInvStdDev, biases))).store_a(&Neurons[w]);
 										}
@@ -430,13 +406,7 @@ namespace dnn
 										const auto offsetH = offsetC + h * strideH;
 										for (auto w = offsetH; w < offsetH + strideH; w += VectorSize)
 										{
-#if defined(DNN_AVX512BW) || defined(DNN_AVX512)
-											mask = select(generator.random16f() < Keep, VecFloat(1), VecFloat(0));
-#elif defined(DNN_AVX2) || defined(DNN_AVX)
-											mask = select(generator.random8f() < Keep, VecFloat(1), VecFloat(0));
-#elif defined(DNN_SSE42) || defined(DNN_SSE41)
-											mask = select(generator.random4f() < Keep, VecFloat(1), VecFloat(0));
-#endif
+											mask = BernoulliVecFloat(Keep);
 											mask.store_a(&NeuronsActive[w]);
 											(mask * Scale * Activation::fVec(mul_add(VecFloat().load_a(&InputLayer->Neurons[w]) - mean, weightedInvStdDev, biases))).store_a(&Neurons[w]);
 #ifndef DNN_LEAN
