@@ -548,9 +548,7 @@ namespace
 
 	inline static auto BernoulliVecFloat(const Float prob = Float(0.5)) noexcept
 	{
-		static thread_local auto generator = Ranvec1(3);
-		generator.init(Seed<int>(), static_cast<int>(std::hash<std::thread::id>()(std::this_thread::get_id())));
-
+		static thread_local auto generator = Ranvec1(3, Seed<int>() + static_cast<int>(std::hash<std::thread::id>()(std::this_thread::get_id())));
 #if defined(DNN_AVX512BW) || defined(DNN_AVX512)
 		return select(generator.random16f() < prob, VecFloat(1), VecFloat(0));
 #elif defined(DNN_AVX2) || defined(DNN_AVX)
