@@ -98,7 +98,7 @@ namespace dnn
 		{
 			if (InputLayer->DstMemDesc->data.ndims == 2)
 			{
-				ChosenFormat = dnnl::memory::format_tag::ab;
+				ChosenFormat = dnnl::memory::format_tag::nc;
 
 				DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, ChosenFormat));
 				DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, ChosenFormat));
@@ -108,17 +108,19 @@ namespace dnn
 			}
 			else
 			{
-				/*if (Format == dnnl::memory::format_tag::any)
+				
+				if (Format == dnnl::memory::format_tag::any)
 				{
 					ChosenFormat = GetDataFmt(*InputLayer->DstMemDesc);
 					if (ChosenFormat != GetDataFmt(*InputLayer->DiffDstMemDesc))
 						throw std::invalid_argument(std::string("Src and Diff format are different in ") + std::string(magic_enum::enum_name<LayerTypes>(LayerType)) + std::string(" layer ") + Name);
 				}
 				else
-					ChosenFormat = PlainFmt;*/
+					ChosenFormat = PlainFmt;
+				
 
 				ChosenFormat = dnnl::memory::format_tag::acdb;
-			   
+							   
 				DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, ChosenFormat));
 				DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, ChosenFormat));
 
