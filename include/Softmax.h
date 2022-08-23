@@ -6,12 +6,12 @@ namespace dnn
 	class Softmax final : public Layer
 	{
 	private:
-		std::unique_ptr<dnnl::softmax_forward::primitive_desc> fwdDescSoftmax;
-		std::unique_ptr<dnnl::softmax_backward::primitive_desc> bwdDescSoftmax;
+		std::unique_ptr<dnnl::softmax_v2_forward::primitive_desc> fwdDescSoftmax;
+		std::unique_ptr<dnnl::softmax_v2_backward::primitive_desc> bwdDescSoftmax;
 		std::unique_ptr<dnnl::binary::primitive_desc> bwdAddDesc;
 #ifdef DNN_CACHE_PRIMITIVES
-		std::unique_ptr<dnnl::softmax_forward> fwdSoftmax;
-		std::unique_ptr<dnnl::softmax_backward> bwdSoftmax;
+		std::unique_ptr<dnnl::softmax_v2_forward> fwdSoftmax;
+		std::unique_ptr<dnnl::softmax_v2_backward> bwdSoftmax;
 		std::unique_ptr<dnnl::binary> bwdAdd;
 #endif
 		bool reorderFwdSrc;
@@ -73,15 +73,15 @@ namespace dnn
 #endif
 
 			const auto axis = (H == 1 && W == 1) ? 1 : 3;
-			fwdDescSoftmax = std::make_unique<dnnl::softmax_forward::primitive_desc>(dnnl::softmax_forward::primitive_desc(dnnl::softmax_forward::desc(dnnl::prop_kind::forward, *DstMemDesc, axis), Device.engine));
-			bwdDescSoftmax = std::make_unique<dnnl::softmax_backward::primitive_desc>(dnnl::softmax_backward::primitive_desc(dnnl::softmax_backward::desc(*DiffDstMemDesc, *DstMemDesc, axis), Device.engine, *fwdDescSoftmax));
-
+			fwdDescSoftmax = std::make_unique<dnnl::softmax_v2_forward::primitive_desc>(dnnl::softmax_v2_forward::primitive_desc(dnnl::softmax_v2_forward::desc(dnnl::prop_kind::forward, dnnl::algorithm::softmax_accurate, *InputLayer->DstMemDesc, *DstMemDesc, axis), Device.engine));
+			bwdDescSoftmax = std::make_unique<dnnl::softmax_v2_backward::primitive_desc>(dnnl::softmax_v2_backward::primitive_desc(dnnl::softmax_v2_backward::desc(dnnl::algorithm::softmax_accurate, *InputLayer->DiffDstMemDesc, *DiffDstMemDesc, *DstMemDesc, axis), Device.engine, *fwdDescSoftmax));
+			
 			reorderFwdSrc = fwdDescSoftmax->src_desc() != *InputLayer->DstMemDesc;
 			reorderBwdDiffSrc = bwdDescSoftmax->diff_src_desc() != *InputLayer->DiffDstMemDesc;
 
 #ifdef DNN_CACHE_PRIMITIVES
-			fwdSoftmax = std::make_unique<dnnl::softmax_forward>(dnnl::softmax_forward(*fwdDescSoftmax));
-			bwdSoftmax = std::make_unique<dnnl::softmax_backward>(dnnl::softmax_backward(*bwdDescSoftmax));
+			fwdSoftmax = std::make_unique<dnnl::softmax_v2_forward>(dnnl::softmax_v2_forward(*fwdDescSoftmax));
+			bwdSoftmax = std::make_unique<dnnl::softmax_v2_backward>(dnnl::softmax_v2_backward(*bwdDescSoftmax));
 #endif
 		}
 
@@ -100,12 +100,13 @@ namespace dnn
 				dnnl::reorder(memSrc, srcMem).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_FROM, memSrc}, { DNNL_ARG_TO, srcMem } });
 				Device.stream.wait();
 			}
-
+			
 			auto dstMem = dnnl::memory(fwdDescSoftmax->dst_desc(), Device.engine, Neurons.data());
+						
 #ifdef DNN_CACHE_PRIMITIVES
-			fwdSoftmax->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DST, dstMem }});
+			fwdSoftmax->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DST, dstMem } });			
 #else
-			dnnl::softmax_forward(*fwdDescSoftmax).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DST, dstMem }});
+			dnnl::softmax_v2_forward(*fwdDescSoftmax).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DST, dstMem }});
 #endif
 			Device.stream.wait();
 
@@ -135,7 +136,7 @@ namespace dnn
 #ifdef DNN_CACHE_PRIMITIVES
 			bwdSoftmax->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_DST, dstMem}, { DNNL_ARG_DIFF_DST, diffDstMem }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
 #else
-			dnnl::softmax_backward(*bwdDescSoftmax).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_DST, dstMem}, {DNNL_ARG_DIFF_DST, diffDstMem}, {DNNL_ARG_DIFF_SRC, diffSrcMem} });
+			dnnl::softmax_v2_backward(*bwdDescSoftmax).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_DST, dstMem}, {DNNL_ARG_DIFF_DST, diffDstMem}, {DNNL_ARG_DIFF_SRC, diffSrcMem} });
 #endif
 			Device.stream.wait();
 
