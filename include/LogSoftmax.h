@@ -6,12 +6,12 @@ namespace dnn
 	class LogSoftmax final : public Layer
 	{
 	private:
-		std::unique_ptr<dnnl::logsoftmax_forward::primitive_desc> fwdDescLogSoftmax;
-		std::unique_ptr<dnnl::logsoftmax_backward::primitive_desc> bwdDescLogSoftmax;
+		std::unique_ptr<dnnl::softmax_v2_forward::primitive_desc> fwdDescLogSoftmax;
+		std::unique_ptr<dnnl::softmax_v2_backward::primitive_desc> bwdDescLogSoftmax;
 		std::unique_ptr<dnnl::binary::primitive_desc> bwdAddDesc;
 #ifdef DNN_CACHE_PRIMITIVES
-		std::unique_ptr<dnnl::logsoftmax_forward> fwdLogSoftmax;
-		std::unique_ptr<dnnl::logsoftmax_backward> bwdLogSoftmax;
+		std::unique_ptr<dnnl::softmax_v2_forward> fwdLogSoftmax;
+		std::unique_ptr<dnnl::softmax_v2_backward> bwdLogSoftmax;
 		std::unique_ptr<dnnl::binary> bwdAdd;
 #endif
 		bool reorderFwdSrc;
@@ -73,15 +73,15 @@ namespace dnn
 #endif
 			
 			const auto axis = (H == 1 && W == 1) ? 1 : 3;
-			fwdDescLogSoftmax = std::make_unique<dnnl::logsoftmax_forward::primitive_desc>(dnnl::logsoftmax_forward::primitive_desc(dnnl::logsoftmax_forward::desc(dnnl::prop_kind::forward, *DstMemDesc, axis), Device.engine));
-			bwdDescLogSoftmax = std::make_unique<dnnl::logsoftmax_backward::primitive_desc>(dnnl::logsoftmax_backward::primitive_desc(dnnl::logsoftmax_backward::desc(*DiffDstMemDesc, *DstMemDesc, axis), Device.engine, *fwdDescLogSoftmax));
-			
-			reorderFwdSrc = bwdDescLogSoftmax->src_desc() != *InputLayer->DstMemDesc;
+			fwdDescLogSoftmax = std::make_unique<dnnl::softmax_v2_forward::primitive_desc>(dnnl::softmax_v2_forward::primitive_desc(dnnl::softmax_v2_forward::desc(dnnl::prop_kind::forward, dnnl::algorithm::softmax_log, *InputLayer->DstMemDesc, *DstMemDesc, axis), Device.engine));
+			bwdDescLogSoftmax = std::make_unique<dnnl::softmax_v2_backward::primitive_desc>(dnnl::softmax_v2_backward::primitive_desc(dnnl::softmax_v2_backward::desc(dnnl::algorithm::softmax_log, *InputLayer->DiffDstMemDesc, *DiffDstMemDesc, *DstMemDesc, axis), Device.engine, *fwdDescLogSoftmax));
+
+			reorderFwdSrc = fwdDescLogSoftmax->src_desc() != *InputLayer->DstMemDesc;
 			reorderBwdDiffSrc = bwdDescLogSoftmax->diff_src_desc() != *InputLayer->DiffDstMemDesc;
 
 #ifdef DNN_CACHE_PRIMITIVES
-			fwdLogSoftmax = std::make_unique<dnnl::logsoftmax_forward>(dnnl::logsoftmax_forward(*fwdDescLogSoftmax));
-			bwdLogSoftmax = std::make_unique<dnnl::logsoftmax_backward>(dnnl::logsoftmax_backward(*bwdDescLogSoftmax));
+			fwdLogSoftmax = std::make_unique<dnnl::softmax_v2_forward>(dnnl::softmax_v2_forward(*fwdDescLogSoftmax));
+			bwdLogSoftmax = std::make_unique<dnnl::softmax_v2_backward>(dnnl::softmax_v2_backward(*bwdDescLogSoftmax));
 #endif
 		}
 
@@ -135,7 +135,7 @@ namespace dnn
 #ifdef DNN_CACHE_PRIMITIVES
 			bwdLogSoftmax->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_DST, dstMem}, { DNNL_ARG_DIFF_DST, diffDstMem }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
 #else
-			dnnl::logsoftmax_backward(*bwdDescLogSoftmax).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_DST, dstMem}, { DNNL_ARG_DIFF_DST, diffDstMem }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
+			dnnl::softmax_v2_backward(*bwdDescLogSoftmax).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_DST, dstMem}, { DNNL_ARG_DIFF_DST, diffDstMem }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
 #endif
 			Device.stream.wait();
 
