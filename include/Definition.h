@@ -362,7 +362,7 @@ namespace dnn
 						}
 					}
 
-					if (layerType == LayerTypes::Convolution || layerType == LayerTypes::DepthwiseConvolution || layerType == LayerTypes::ConvolutionTranspose || layerType == LayerTypes::PartialDepthwiseConvolution)
+					if (layerType == LayerTypes::Convolution || layerType == LayerTypes::DepthwiseConvolution || layerType == LayerTypes::ConvolutionTranspose || layerType == LayerTypes::PartialDepthwiseConvolution || layerType == LayerTypes::MaxPooling || layerType == LayerTypes::AvgPooling)
 					{
 						auto kerH = 1 + ((int)kernelH - 1) * (int)dilationH;
 						auto kerW = 1 + ((int)kernelW - 1) * (int)dilationW;
@@ -384,26 +384,6 @@ namespace dnn
 						if (!ok)
 						{
 							msg = CheckMsg(line - 1, col, "Kernel, Stride, Dilation or Pad invalid in layer " + layerNames[model->Layers.size()].first);
-							goto FAIL;
-						}
-					}
-
-					if (layerType == LayerTypes::MaxPooling || layerType == LayerTypes::AvgPooling)
-					{
-						auto x = w / (double)strideH;
-						auto y = h / (double)strideW;
-
-						auto ok = true;
-						if (x - std::floor(x) != 0.0)
-							ok = false;
-						if (y - std::floor(y) != 0.0)
-							ok = false;
-						if (x != y)
-							ok = false;
-
-						if (!ok)
-						{
-							msg = CheckMsg(line - 1, col, "Stride invalid in pooling layer " + layerNames[model->Layers.size()].first);
 							goto FAIL;
 						}
 					}
@@ -520,7 +500,7 @@ namespace dnn
 							model->Layers.push_back(std::make_unique<Average>(model->Device, model->Format, name, inputs));
 							break;
 						case LayerTypes::AvgPooling:
-							model->Layers.push_back(std::make_unique<AvgPooling>(model->Device, model->Format, name, inputs, kernelH, kernelW, strideH, strideW, padH, padW));
+							model->Layers.push_back(std::make_unique<AvgPooling>(model->Device, model->Format, name, inputs, kernelH, kernelW, strideH, strideW, dilationH, dilationW, padH, padW));
 							break;
 						case LayerTypes::BatchNorm:
 							model->Layers.push_back(std::make_unique<BatchNorm>(model->Device, model->Format, name, inputs, scaling, momentum, eps, biases));
@@ -632,7 +612,7 @@ namespace dnn
 							model->Layers.push_back(std::make_unique<Max>(model->Device, model->Format, name, inputs));
 							break;
 						case LayerTypes::MaxPooling:
-							model->Layers.push_back(std::make_unique<MaxPooling>(model->Device, model->Format, name, inputs, kernelH, kernelW, strideH, strideW, padH, padW));
+							model->Layers.push_back(std::make_unique<MaxPooling>(model->Device, model->Format, name, inputs, kernelH, kernelW, strideH, strideW, dilationH, dilationW, padH, padW));
 							break;
 						case LayerTypes::Min:
 							model->Layers.push_back(std::make_unique<Min>(model->Device, model->Format, name, inputs));
@@ -2473,9 +2453,9 @@ namespace dnn
 					goto FAIL;
 				}
 
-				if (layerType != LayerTypes::Convolution && layerType != LayerTypes::ConvolutionTranspose && layerType != LayerTypes::DepthwiseConvolution && layerType != LayerTypes::PartialDepthwiseConvolution)
+				if (layerType != LayerTypes::Convolution && layerType != LayerTypes::ConvolutionTranspose && layerType != LayerTypes::DepthwiseConvolution && layerType != LayerTypes::PartialDepthwiseConvolution && layerType != LayerTypes::AvgPooling && layerType != LayerTypes::MaxPooling)
 				{
-					msg = CheckMsg(line, col, "Stride cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
+					msg = CheckMsg(line, col, "Dilation cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
 					goto FAIL;
 				}
 
