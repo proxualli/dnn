@@ -35,7 +35,7 @@ namespace dnn
 			kernel(dnnl::memory::dims({ dnnl::memory::dim(inputs[0]->H), dnnl::memory::dim(inputs[0]->W) })),
 			stride(dnnl::memory::dims({ dnnl::memory::dim(inputs[0]->H) , dnnl::memory::dim(inputs[0]->W) })),
 			padding(dnnl::memory::dims({ dnnl::memory::dim(0), dnnl::memory::dim(0) })),
-			dilation(dnnl::memory::dims({ dnnl::memory::dim(1), dnnl::memory::dim(1) })),
+			dilation(dnnl::memory::dims({ dnnl::memory::dim(0), dnnl::memory::dim(0) })),
 			reorderFwdSrc(false),
 			reorderBwdDiffSrc(false)
 		{
