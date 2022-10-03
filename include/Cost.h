@@ -93,9 +93,9 @@ namespace dnn
 
 		void InitializeDescriptors(const UInt batchSize) final override
 		{
-			ChosenFormat = dnnl::memory::format_tag::nc;
-			DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ int(batchSize), int(C) }), dnnl::memory::data_type::f32, ChosenFormat));
-			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ int(batchSize), int(C) }), dnnl::memory::data_type::f32, ChosenFormat));
+			ChosenFormat = dnnl::memory::format_tag::ab;
+			DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C)}), dnnl::memory::data_type::f32, ChosenFormat));
+			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, ChosenFormat));
 			isLogSoftmax = InputLayer->LayerType == LayerTypes::LogSoftmax;
 		}
 

@@ -11,12 +11,12 @@ namespace dnn
 		const dnnl::memory::dims padding;
 		const dnnl::memory::dims dilation;
 		std::unique_ptr<dnnl::memory> workspaceMemory;
-		std::unique_ptr<dnnl::pooling_v2_forward::primitive_desc> fwdDesc;
-		std::unique_ptr<dnnl::pooling_v2_backward::primitive_desc> bwdDesc;
+		std::unique_ptr<dnnl::pooling_forward::primitive_desc> fwdDesc;
+		std::unique_ptr<dnnl::pooling_backward::primitive_desc> bwdDesc;
 		std::unique_ptr<dnnl::binary::primitive_desc> bwdAddDesc;
 #ifdef DNN_CACHE_PRIMITIVES
-		std::unique_ptr<dnnl::pooling_v2_forward> fwd;
-		std::unique_ptr<dnnl::pooling_v2_backward> bwd;
+		std::unique_ptr<dnnl::pooling_forward> fwd;
+		std::unique_ptr<dnnl::pooling_backward> bwd;
 		std::unique_ptr<dnnl::binary> bwdAdd;
 #endif
 		bool reorderFwdSrc;
@@ -72,7 +72,7 @@ namespace dnn
 
 		void InitializeDescriptors(const UInt batchSize) final override
 		{
-			if (InputLayer->DstMemDesc->data.ndims == 2)
+			if (InputLayer->DstMemDesc->get_ndims() == 2)
 			{
 				ChosenFormat = dnnl::memory::format_tag::nc;
 
@@ -90,8 +90,8 @@ namespace dnn
 				DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(1), dnnl::memory::dim(1) }), dnnl::memory::data_type::f32, ChosenFormat));
 			}
 
-			fwdDesc = std::make_unique<dnnl::pooling_v2_forward::primitive_desc>(dnnl::pooling_v2_forward::primitive_desc(dnnl::pooling_v2_forward::desc(dnnl::prop_kind::forward, dnnl::algorithm::pooling_max, *InputLayer->DstMemDesc, *DstMemDesc, stride, kernel, dilation, padding, padding), Device.engine));
-			bwdDesc = std::make_unique<dnnl::pooling_v2_backward::primitive_desc>(dnnl::pooling_v2_backward::primitive_desc(dnnl::pooling_v2_backward::desc(dnnl::algorithm::pooling_max, *InputLayer->DiffDstMemDesc, *DiffDstMemDesc, stride, kernel, dilation, padding, padding), Device.engine, *fwdDesc));
+			fwdDesc = std::make_unique<dnnl::pooling_forward::primitive_desc>(dnnl::pooling_forward::primitive_desc(Device.engine, dnnl::prop_kind::forward, dnnl::algorithm::pooling_max, *InputLayer->DstMemDesc, *DstMemDesc, stride, kernel, dilation, padding, padding));
+			bwdDesc = std::make_unique<dnnl::pooling_backward::primitive_desc>(dnnl::pooling_backward::primitive_desc(Device.engine, dnnl::algorithm::pooling_max, *InputLayer->DiffDstMemDesc, *DiffDstMemDesc, stride, kernel, dilation, padding, padding, *fwdDesc));
 
 			workspaceMemory = std::make_unique<dnnl::memory>(dnnl::memory(fwdDesc->workspace_desc(), Device.engine));
 
@@ -101,11 +101,11 @@ namespace dnn
 			DstMemDesc = std::make_unique<dnnl::memory::desc>(fwdDesc->dst_desc());
 			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(bwdDesc->diff_dst_desc());
 
-			bwdAddDesc = std::make_unique<dnnl::binary::primitive_desc>(dnnl::binary::primitive_desc(dnnl::binary::desc(dnnl::algorithm::binary_add, *InputLayer->DiffDstMemDesc, *InputLayer->DiffDstMemDesc, *InputLayer->DiffDstMemDesc), Device.engine));
+			bwdAddDesc = std::make_unique<dnnl::binary::primitive_desc>(dnnl::binary::primitive_desc(Device.engine, dnnl::algorithm::binary_add, *InputLayer->DiffDstMemDesc, *InputLayer->DiffDstMemDesc, *InputLayer->DiffDstMemDesc));
 
 #ifdef DNN_CACHE_PRIMITIVES
-			fwd = std::make_unique<dnnl::pooling_v2_forward>(dnnl::pooling_v2_forward(*fwdDesc));
-			bwd = std::make_unique<dnnl::pooling_v2_backward>(dnnl::pooling_v2_backward(*bwdDesc));
+			fwd = std::make_unique<dnnl::pooling_forward>(dnnl::pooling_forward(*fwdDesc));
+			bwd = std::make_unique<dnnl::pooling_backward>(dnnl::pooling_backward(*bwdDesc));
 			bwdAdd = std::make_unique<dnnl::binary>(dnnl::binary(*bwdAddDesc));
 #endif
 		}

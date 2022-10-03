@@ -38,7 +38,7 @@ namespace dnn
 
 		void InitializeDescriptors(const UInt batchSize) final override
 		{
-			if (InputLayer->DstMemDesc->data.ndims == 2)
+			if (InputLayer->DstMemDesc->get_ndims() == 2)
 			{
 				ChosenFormat = dnnl::memory::format_tag::nc;
 
@@ -72,7 +72,7 @@ namespace dnn
 
 			DNN_UNREF_PAR(training);
 
-			if (InputLayer->DstMemDesc->data.ndims == 2)
+			if (InputLayer->DstMemDesc->get_ndims() == 2)
 			{
 #ifdef DNN_STOCHASTIC
 				if (batchSize == 1)
@@ -260,7 +260,7 @@ namespace dnn
 			const auto plain = IsPlainFormat();
 			const auto threads = GetThreads(batchSize * (plain ? CDHW() : PaddedCDHW()));
 
-			if (InputLayer->DstMemDesc->data.ndims == 2)
+			if (InputLayer->DstMemDesc->get_ndims() == 2)
 			{
 #ifdef DNN_STOCHASTIC
 				if (batchSize == 1)

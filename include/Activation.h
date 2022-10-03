@@ -246,7 +246,7 @@ namespace dnn
 
 		void InitializeDescriptors(const UInt batchSize) final override
 		{
-			if (InputLayer->DstMemDesc->data.ndims == 2)
+			if (InputLayer->DstMemDesc->get_ndims() == 2)
 			{
 				ChosenFormat = dnnl::memory::format_tag::nc;
 				
@@ -264,7 +264,7 @@ namespace dnn
 				DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, ChosenFormat));
 			}
 
-			bwdAddDesc = std::make_unique<dnnl::binary::primitive_desc>(dnnl::binary::primitive_desc(dnnl::binary::desc(dnnl::algorithm::binary_add, *InputLayer->DiffDstMemDesc, *InputLayer->DiffDstMemDesc, *InputLayer->DiffDstMemDesc), Device.engine));
+			bwdAddDesc = std::make_unique<dnnl::binary::primitive_desc>(dnnl::binary::primitive_desc(Device.engine, dnnl::algorithm::binary_add, *InputLayer->DiffDstMemDesc, *InputLayer->DiffDstMemDesc, *InputLayer->DiffDstMemDesc));
 #ifdef DNN_CACHE_PRIMITIVES
 			bwdAdd = std::make_unique<dnnl::binary>(dnnl::binary(*bwdAddDesc));
 #endif
@@ -283,7 +283,7 @@ namespace dnn
 					algorithm = dnnl::algorithm::eltwise_clip_v2;
 					break;
 				case Activations::BoundedRelu:
-					algorithm = dnnl::algorithm::eltwise_bounded_relu;
+					algorithm = dnnl::algorithm::eltwise_clip; // alpha = 0 , Beta = former alpha
 					break;
 				case Activations::Elu:
 					algorithm = dnnl::algorithm::eltwise_elu;
@@ -292,7 +292,7 @@ namespace dnn
 					algorithm = dnnl::algorithm::eltwise_exp;
 					break;
 				case Activations::Gelu:
-					algorithm = dnnl::algorithm::eltwise_gelu;
+					algorithm = dnnl::algorithm::eltwise_gelu_tanh;
 					break;
 				case Activations::GeluErf:
 					algorithm = dnnl::algorithm::eltwise_gelu_erf;
@@ -313,7 +313,7 @@ namespace dnn
 					algorithm = dnnl::algorithm::eltwise_logistic;
 					break;
 				case Activations::LogLogistic:
-					algorithm = dnnl::algorithm::eltwise_logsigmoid;
+					algorithm = dnnl::algorithm::eltwise_soft_relu;  // alpha = -1
 					break;
 				case Activations::Mish:
 					algorithm = dnnl::algorithm::eltwise_mish;
@@ -344,8 +344,8 @@ namespace dnn
 					break;
 			}
 
-			fwdDesc = std::make_unique<dnnl::eltwise_forward::primitive_desc>(dnnl::eltwise_forward::primitive_desc(dnnl::eltwise_forward::desc(dnnl::prop_kind::forward, algorithm, *InputLayer->DstMemDesc, Alpha, Beta), Device.engine));
-			bwdDesc = std::make_unique<dnnl::eltwise_backward::primitive_desc>(dnnl::eltwise_backward::primitive_desc(dnnl::eltwise_backward::desc(algorithm, *DiffDstMemDesc, *DstMemDesc, Alpha, Beta), Device.engine, *fwdDesc));
+			fwdDesc = std::make_unique<dnnl::eltwise_forward::primitive_desc>(dnnl::eltwise_forward::primitive_desc(Device.engine, dnnl::prop_kind::forward, algorithm, *InputLayer->DstMemDesc, Alpha, Beta));
+			bwdDesc = std::make_unique<dnnl::eltwise_backward::primitive_desc>(dnnl::eltwise_backward::primitive_desc(Device.engine, algorithm, *DiffDstMemDesc, *DstMemDesc, Alpha, Beta, *fwdDesc));
 
 			reorderFwdSrc = fwdDesc->src_desc() != *InputLayer->DstMemDesc;
 			reorderBwdSrc = bwdDesc->src_desc() != *InputLayer->DstMemDesc;
@@ -369,7 +369,7 @@ namespace dnn
 			{
 			case Activations::TanhExp:
 			{
-				if (InputLayer->DstMemDesc->data.ndims == 2)
+				if (InputLayer->DstMemDesc->get_ndims () == 2)
 				{
 #ifdef DNN_STOCHASTIC
 					if (batchSize == 1)
@@ -629,7 +629,7 @@ namespace dnn
 			{
 			case Activations::TanhExp:
 			{
-				if (InputLayer->DstMemDesc->data.ndims == 2)
+				if (InputLayer->DstMemDesc->get_ndims() == 2)
 				{
 #ifdef DNN_STOCHASTIC
 					if (batchSize == 1)

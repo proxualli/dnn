@@ -56,7 +56,7 @@ namespace dnn
 
 		void InitializeDescriptors(const UInt batchSize) final override
 		{
-			if (InputLayer->DstMemDesc->data.ndims == 2)
+			if (InputLayer->DstMemDesc->get_ndims() == 2)
 			{
 				ChosenFormat = dnnl::memory::format_tag::nc;
 
@@ -78,8 +78,8 @@ namespace dnn
 				DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, ChosenFormat));
 			}
 
-			fwdDesc = std::make_unique<dnnl::shuffle_forward::primitive_desc>(dnnl::shuffle_forward::primitive_desc(dnnl::shuffle_forward::desc(dnnl::prop_kind::forward_training, *DstMemDesc, 1, int(GroupSize)), Device.engine));
-			bwdDesc = std::make_unique<dnnl::shuffle_backward::primitive_desc>(dnnl::shuffle_backward::primitive_desc(dnnl::shuffle_backward::desc(*DiffDstMemDesc, 1, int(GroupSize)), Device.engine, *fwdDesc));
+			fwdDesc = std::make_unique<dnnl::shuffle_forward::primitive_desc>(dnnl::shuffle_forward::primitive_desc(Device.engine, dnnl::prop_kind::forward_training, *DstMemDesc, 1, int(GroupSize)));
+			bwdDesc = std::make_unique<dnnl::shuffle_backward::primitive_desc>(dnnl::shuffle_backward::primitive_desc(Device.engine, *DiffDstMemDesc, 1, int(GroupSize), *fwdDesc));
 #ifdef DNN_CACHE_PRIMITIVES
 			fwd = std::make_unique<dnnl::shuffle_forward>(dnnl::shuffle_forward(*fwdDesc));
 			bwd = std::make_unique<dnnl::shuffle_backward>(dnnl::shuffle_backward(*bwdDesc));

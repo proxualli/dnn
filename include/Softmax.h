@@ -6,12 +6,12 @@ namespace dnn
 	class Softmax final : public Layer
 	{
 	private:
-		std::unique_ptr<dnnl::softmax_v2_forward::primitive_desc> fwdDescSoftmax;
-		std::unique_ptr<dnnl::softmax_v2_backward::primitive_desc> bwdDescSoftmax;
+		std::unique_ptr<dnnl::softmax_forward::primitive_desc> fwdDescSoftmax;
+		std::unique_ptr<dnnl::softmax_backward::primitive_desc> bwdDescSoftmax;
 		std::unique_ptr<dnnl::binary::primitive_desc> bwdAddDesc;
 #ifdef DNN_CACHE_PRIMITIVES
-		std::unique_ptr<dnnl::softmax_v2_forward> fwdSoftmax;
-		std::unique_ptr<dnnl::softmax_v2_backward> bwdSoftmax;
+		std::unique_ptr<dnnl::softmax_forward> fwdSoftmax;
+		std::unique_ptr<dnnl::softmax_backward> bwdSoftmax;
 		std::unique_ptr<dnnl::binary> bwdAdd;
 		std::unique_ptr<dnnl::memory::desc> InputLayerDstMemDesc;
 		std::unique_ptr<dnnl::memory::desc> InputLayerDiffDstMemDesc;
@@ -51,7 +51,7 @@ namespace dnn
 
 		void InitializeDescriptors(const UInt batchSize) final override
 		{
-			if (InputLayer->DstMemDesc->data.ndims == 2)
+			if (InputLayer->DstMemDesc->get_ndims() == 2)
 			{
 				ChosenFormat = dnnl::memory::format_tag::nc;
 
@@ -73,21 +73,21 @@ namespace dnn
 				InputLayerDiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(InputLayer->C), dnnl::memory::dim(InputLayer->H), dnnl::memory::dim(InputLayer->W) }), dnnl::memory::data_type::f32, ChosenFormat));
 			}
 
-			bwdAddDesc = std::make_unique<dnnl::binary::primitive_desc>(dnnl::binary::primitive_desc(dnnl::binary::desc(dnnl::algorithm::binary_add, *InputLayer->DiffDstMemDesc, *InputLayer->DiffDstMemDesc, *InputLayer->DiffDstMemDesc), Device.engine));
+			bwdAddDesc = std::make_unique<dnnl::binary::primitive_desc>(dnnl::binary::primitive_desc(Device.engine, dnnl::algorithm::binary_add, *InputLayer->DiffDstMemDesc, *InputLayer->DiffDstMemDesc, *InputLayer->DiffDstMemDesc));
 #ifdef DNN_CACHE_PRIMITIVES
 			bwdAdd = std::make_unique<dnnl::binary>(dnnl::binary(*bwdAddDesc));
 #endif
 
 			const auto axis = (H == 1 && W == 1) ? 1 : 3;
-			fwdDescSoftmax = std::make_unique<dnnl::softmax_v2_forward::primitive_desc>(dnnl::softmax_v2_forward::primitive_desc(dnnl::softmax_v2_forward::desc(dnnl::prop_kind::forward, dnnl::algorithm::softmax_accurate, *InputLayerDstMemDesc, *DstMemDesc, axis), Device.engine));
-			bwdDescSoftmax = std::make_unique<dnnl::softmax_v2_backward::primitive_desc>(dnnl::softmax_v2_backward::primitive_desc(dnnl::softmax_v2_backward::desc(dnnl::algorithm::softmax_accurate, *InputLayerDiffDstMemDesc, *DiffDstMemDesc, *DstMemDesc, axis), Device.engine, *fwdDescSoftmax));
+			fwdDescSoftmax = std::make_unique<dnnl::softmax_forward::primitive_desc>(dnnl::softmax_forward::primitive_desc(Device.engine, dnnl::prop_kind::forward, dnnl::algorithm::softmax_accurate, *InputLayerDstMemDesc, *DstMemDesc, axis));
+			bwdDescSoftmax = std::make_unique<dnnl::softmax_backward::primitive_desc>(dnnl::softmax_backward::primitive_desc(Device.engine, dnnl::algorithm::softmax_accurate, *InputLayerDiffDstMemDesc, *DiffDstMemDesc, *DstMemDesc, axis, *fwdDescSoftmax));
 			
 			reorderFwdSrc = fwdDescSoftmax->src_desc() != *InputLayer->DstMemDesc;
 			reorderBwdDiffSrc = bwdDescSoftmax->diff_src_desc() != *InputLayer->DiffDstMemDesc;
 
 #ifdef DNN_CACHE_PRIMITIVES
-			fwdSoftmax = std::make_unique<dnnl::softmax_v2_forward>(dnnl::softmax_v2_forward(*fwdDescSoftmax));
-			bwdSoftmax = std::make_unique<dnnl::softmax_v2_backward>(dnnl::softmax_v2_backward(*bwdDescSoftmax));
+			fwdSoftmax = std::make_unique<dnnl::softmax_forward>(dnnl::softmax_forward(*fwdDescSoftmax));
+			bwdSoftmax = std::make_unique<dnnl::softmax_backward>(dnnl::softmax_backward(*bwdDescSoftmax));
 #endif
 		}
 
