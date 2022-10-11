@@ -16,8 +16,10 @@ namespace dnn
 		std::unique_ptr<dnnl::batch_normalization_backward> bwd;
 		std::unique_ptr<dnnl::binary> bwdAdd;
 #endif
-		FloatVector scaleShift;
-		FloatVector diffScaleShift;
+		FloatVector scale;
+		FloatVector shift;
+		FloatVector diffScale;
+		FloatVector diffShift;
 		bool inference;
 		bool reorderFwdSrc;
 		bool reorderBwdSrc;
@@ -54,15 +56,14 @@ namespace dnn
 
 			if (Scaling)
 			{
-				scaleShift = FloatVector(2 * PaddedC, Float(1));
-				for (auto c = 0ull; c < C; c++)
-					scaleShift[PaddedC + c] = Float(0);
-
-				diffScaleShift = FloatVector(2 * PaddedC, Float(0));
+				scale = FloatVector(PaddedC, Float(1));
+				shift = FloatVector(PaddedC, Float(0));
+				diffScale = FloatVector(PaddedC, Float(0));
+				diffShift = FloatVector(PaddedC, Float(0));
 			}
 
-			WeightsMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ 2, dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::nc));
-			PersistWeightsMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ 2, dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::nc));
+			WeightsMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::a));
+			PersistWeightsMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::a));
 		}
 
 		void UpdateResolution() final override
@@ -129,9 +130,9 @@ namespace dnn
 			}
 
 			if (inference)
-				flags = Scaling ? dnnl::normalization_flags::fuse_norm_relu | dnnl::normalization_flags::use_global_stats | dnnl::normalization_flags::use_scale_shift : dnnl::normalization_flags::fuse_norm_relu | dnnl::normalization_flags::use_global_stats;
+				flags = Scaling ? dnnl::normalization_flags::fuse_norm_relu | dnnl::normalization_flags::use_global_stats | dnnl::normalization_flags::use_scale | dnnl::normalization_flags::use_shift : dnnl::normalization_flags::fuse_norm_relu | dnnl::normalization_flags::use_global_stats;
 			else
-				flags = Scaling ? dnnl::normalization_flags::fuse_norm_relu | dnnl::normalization_flags::use_scale_shift : dnnl::normalization_flags::fuse_norm_relu;
+				flags = Scaling ? dnnl::normalization_flags::fuse_norm_relu | dnnl::normalization_flags::use_scale | dnnl::normalization_flags::use_shift : dnnl::normalization_flags::fuse_norm_relu;
 
 			fwdDesc = std::make_unique<dnnl::batch_normalization_forward::primitive_desc>(dnnl::batch_normalization_forward::primitive_desc(Device.engine, inference ? dnnl::prop_kind::forward_inference : dnnl::prop_kind::forward, *DstMemDesc, Eps, flags));
 
@@ -190,15 +191,15 @@ namespace dnn
 				{
 					for (auto c = 0ull; c < C; c++)
 					{
-						scaleShift[c] = Weights[c];
-						scaleShift[PaddedC + c] = Biases[c];
+						scale[c] = Weights[c];
+						shift[c] = Biases[c];
 					}
-					auto memScaleShift = dnnl::memory(*WeightsMemDesc, Device.engine, scaleShift.data());
-
+					auto memScale = dnnl::memory(*WeightsMemDesc, Device.engine, scale.data());
+					auto memShift = dnnl::memory(*WeightsMemDesc, Device.engine, shift.data());
 #ifdef DNN_CACHE_PRIMITIVES
-					fwd->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_MEAN, memMean }, { DNNL_ARG_VARIANCE, memVariance }, { DNNL_ARG_SCALE_SHIFT, memScaleShift }, { DNNL_ARG_DST, dstMem } });
+					fwd->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_MEAN, memMean }, { DNNL_ARG_VARIANCE, memVariance }, { DNNL_ARG_SCALE, memScale }, { DNNL_ARG_SHIFT, memShift }, { DNNL_ARG_DST, dstMem } });
 #else
-					dnnl::batch_normalization_forward(*fwdDesc).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_MEAN, memMean }, { DNNL_ARG_VARIANCE, memVariance }, { DNNL_ARG_SCALE_SHIFT, memScaleShift }, { DNNL_ARG_DST, dstMem } });
+					dnnl::batch_normalization_forward(*fwdDesc).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_MEAN, memMean }, { DNNL_ARG_VARIANCE, memVariance }, { DNNL_ARG_SCALE, memScale }, { DNNL_ARG_SHIFT, memShift }, { DNNL_ARG_DST, dstMem } });
 #endif
 				}
 				else
@@ -234,14 +235,15 @@ namespace dnn
 				{
 					for (auto c = 0ull; c < C; c++)
 					{
-						scaleShift[c] = Weights[c];
-						scaleShift[PaddedC + c] = Biases[c];
+						scale[c] = Weights[c];
+						shift[c] = Biases[c];
 					}
-					auto memScaleShift = dnnl::memory(*WeightsMemDesc, Device.engine, scaleShift.data());
+					auto memScale = dnnl::memory(*WeightsMemDesc, Device.engine, scale.data());
+					auto memShift = dnnl::memory(*WeightsMemDesc, Device.engine, shift.data());
 #ifdef DNN_CACHE_PRIMITIVES
-					fwd->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_MEAN, memMean }, { DNNL_ARG_VARIANCE, memVariance }, { DNNL_ARG_SCALE_SHIFT, memScaleShift }, { DNNL_ARG_DST, dstMem }, { DNNL_ARG_WORKSPACE, *workspaceMemory } });
+					fwd->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_MEAN, memMean }, { DNNL_ARG_VARIANCE, memVariance }, { DNNL_ARG_SCALE, memScale }, { DNNL_ARG_SHIFT, memShift }, { DNNL_ARG_DST, dstMem }, { DNNL_ARG_WORKSPACE, *workspaceMemory } });
 #else
-					dnnl::batch_normalization_forward(*fwdDesc).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_MEAN, memMean }, { DNNL_ARG_VARIANCE, memVariance }, { DNNL_ARG_SCALE_SHIFT, memScaleShift }, { DNNL_ARG_DST, dstMem }, { DNNL_ARG_WORKSPACE, *workspaceMemory } });
+					dnnl::batch_normalization_forward(*fwdDesc).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_MEAN, memMean }, { DNNL_ARG_VARIANCE, memVariance }, { DNNL_ARG_SCALE, memScale }, { DNNL_ARG_SHIFT, memShift }, { DNNL_ARG_DST, dstMem }, { DNNL_ARG_WORKSPACE, *workspaceMemory } });
 #endif
 				}
 				else
@@ -292,21 +294,26 @@ namespace dnn
 
 			if (Scaling)
 			{
-				for (auto c = 0ull; c < 2 * PaddedC; c++)
-					diffScaleShift[c] = Float(0);
+				for (auto c = 0ull; c < PaddedC; c++)
+				{
+					diffScale[c] = Float(0);
+					diffShift[c] = Float(0);
+				}
 
-				auto scaleShiftMemory = dnnl::memory(*WeightsMemDesc, Device.engine, scaleShift.data());
-				auto diffScaleShiftMemory = dnnl::memory(*WeightsMemDesc, Device.engine, diffScaleShift.data());
+				auto scaleMemory = dnnl::memory(*WeightsMemDesc, Device.engine, scale.data());
+				auto shiftMemory = dnnl::memory(*WeightsMemDesc, Device.engine, shift.data());
+				auto diffScaleMemory = dnnl::memory(*WeightsMemDesc, Device.engine, diffScale.data());
+				auto diffShiftMemory = dnnl::memory(*WeightsMemDesc, Device.engine, diffShift.data());
 #ifdef DNN_CACHE_PRIMITIVES
-				bwd->execute(Device.stream, std::unordered_map<int, dnnl::memory> { {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DIFF_DST, InplaceBwd ? diffSrcMem : dnnl::memory(*DiffDstMemDesc, Device.engine, NeuronsD1.data()) }, { DNNL_ARG_MEAN, memMean }, { DNNL_ARG_VARIANCE, memVariance }, { DNNL_ARG_SCALE_SHIFT, scaleShiftMemory }, { DNNL_ARG_WORKSPACE, *workspaceMemory }, { DNNL_ARG_DIFF_SRC, diffSrcMem }, { DNNL_ARG_DIFF_SCALE_SHIFT, diffScaleShiftMemory } });
+				bwd->execute(Device.stream, std::unordered_map<int, dnnl::memory> { {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DIFF_DST, InplaceBwd ? diffSrcMem : dnnl::memory(*DiffDstMemDesc, Device.engine, NeuronsD1.data()) }, { DNNL_ARG_MEAN, memMean }, { DNNL_ARG_VARIANCE, memVariance }, { DNNL_ARG_SCALE, scaleMemory }, { DNNL_ARG_SHIFT, shiftMemory }, { DNNL_ARG_WORKSPACE, *workspaceMemory }, { DNNL_ARG_DIFF_SRC, diffSrcMem }, { DNNL_ARG_DIFF_SCALE, diffScaleMemory }, { DNNL_ARG_DIFF_SHIFT, diffShiftMemory } });
 #else
-				dnnl::batch_normalization_backward(*bwdDesc).execute(Device.stream, std::unordered_map<int, dnnl::memory> { {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DIFF_DST, InplaceBwd ? diffSrcMem : dnnl::memory(*DiffDstMemDesc, Device.engine, NeuronsD1.data()) }, { DNNL_ARG_MEAN, memMean }, { DNNL_ARG_VARIANCE, memVariance }, { DNNL_ARG_SCALE_SHIFT, scaleShiftMemory }, { DNNL_ARG_WORKSPACE, *workspaceMemory }, { DNNL_ARG_DIFF_SRC, diffSrcMem }, { DNNL_ARG_DIFF_SCALE_SHIFT, diffScaleShiftMemory } });
+				dnnl::batch_normalization_backward(*bwdDesc).execute(Device.stream, std::unordered_map<int, dnnl::memory> { {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DIFF_DST, InplaceBwd ? diffSrcMem : dnnl::memory(*DiffDstMemDesc, Device.engine, NeuronsD1.data()) }, { DNNL_ARG_MEAN, memMean }, { DNNL_ARG_VARIANCE, memVariance }, { DNNL_ARG_SCALE, scaleMemory }, { DNNL_ARG_SHIFT, shiftMemory }, { DNNL_ARG_WORKSPACE, *workspaceMemory }, { DNNL_ARG_DIFF_SRC, diffSrcMem }, { DNNL_ARG_DIFF_SCALE, diffScaleMemory }, { DNNL_ARG_DIFF_SHIFT, diffShiftMemory } });
 #endif
 
 				for (auto c = 0ull; c < C; c++)
 				{
-					WeightsD1[c] += diffScaleShift[c];
-					BiasesD1[c] += diffScaleShift[PaddedC + c];
+					WeightsD1[c] += diffScale[c];
+					BiasesD1[c] += diffShift[c];
 				}
 			}
 			else
@@ -399,8 +406,8 @@ namespace dnn
 			{
 				for (auto c = 0ull; c < C; c++)
 				{
-					Weights[c] = scaleShift[c];
-					Biases[c] = scaleShift[C + c];
+					Weights[c] = scale[c];
+					Biases[c] = shift[c];
 				}
 			}
 			
@@ -418,8 +425,8 @@ namespace dnn
 			{
 				for (auto c = 0ull; c < C; c++)
 				{
-					scaleShift[c] = Weights[c];
-					scaleShift[C + c] = Biases[c];
+					scale[c] = Weights[c];
+					shift[c] = Biases[c];
 				}
 			}
 		}

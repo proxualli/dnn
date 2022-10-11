@@ -78,8 +78,8 @@ namespace dnn
 				DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, ChosenFormat));
 			}
 
-			fwdDesc = std::make_unique<dnnl::shuffle_forward::primitive_desc>(dnnl::shuffle_forward::primitive_desc(Device.engine, dnnl::prop_kind::forward_training, *DstMemDesc, 1, int(GroupSize)));
-			bwdDesc = std::make_unique<dnnl::shuffle_backward::primitive_desc>(dnnl::shuffle_backward::primitive_desc(Device.engine, *DiffDstMemDesc, 1, int(GroupSize), *fwdDesc));
+			fwdDesc = std::make_unique<dnnl::shuffle_forward::primitive_desc>(dnnl::shuffle_forward::primitive_desc(Device.engine, dnnl::prop_kind::forward_training, *InputLayer->DstMemDesc, *DstMemDesc, 1, int(GroupSize)));
+			bwdDesc = std::make_unique<dnnl::shuffle_backward::primitive_desc>(dnnl::shuffle_backward::primitive_desc(Device.engine, *InputLayer->DiffDstMemDesc, *DiffDstMemDesc, 1, int(GroupSize), *fwdDesc));
 #ifdef DNN_CACHE_PRIMITIVES
 			fwd = std::make_unique<dnnl::shuffle_forward>(dnnl::shuffle_forward(*fwdDesc));
 			bwd = std::make_unique<dnnl::shuffle_backward>(dnnl::shuffle_backward(*bwdDesc));

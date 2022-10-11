@@ -95,8 +95,8 @@ namespace dnn
 				DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, ChosenFormat));
 			}
 			
-			fwdDesc = std::make_unique<dnnl::lrn_forward::primitive_desc>(dnnl::lrn_forward::primitive_desc(Device.engine, dnnl::prop_kind::forward, Algorithm, *InputLayer->DstMemDesc, LocalSize, Alpha, Beta, K));
-			bwdDesc = std::make_unique<dnnl::lrn_backward::primitive_desc>(dnnl::lrn_backward::primitive_desc(Device.engine, Algorithm, *DiffDstMemDesc, *DstMemDesc, LocalSize, Alpha, Beta, K, *fwdDesc));
+			fwdDesc = std::make_unique<dnnl::lrn_forward::primitive_desc>(dnnl::lrn_forward::primitive_desc(Device.engine, dnnl::prop_kind::forward, Algorithm, *InputLayer->DstMemDesc, *DstMemDesc, LocalSize, Alpha, Beta, K));
+			bwdDesc = std::make_unique<dnnl::lrn_backward::primitive_desc>(dnnl::lrn_backward::primitive_desc(Device.engine, Algorithm, *InputLayer->DiffDstMemDesc, *DiffDstMemDesc, *InputLayer->DstMemDesc, LocalSize, Alpha, Beta, K, *fwdDesc));
 			workspaceMemory = std::make_unique<dnnl::memory>(dnnl::memory(fwdDesc->workspace_desc(), Device.engine));
 			bwdAddDesc = std::make_unique<dnnl::binary::primitive_desc>(dnnl::binary::primitive_desc(Device.engine, dnnl::algorithm::binary_add, *InputLayer->DiffDstMemDesc, *InputLayer->DiffDstMemDesc, *InputLayer->DiffDstMemDesc));
 						
