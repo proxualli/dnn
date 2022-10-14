@@ -88,8 +88,8 @@ namespace dnn
 			
 			auto memDesc = dnnl::memory::desc(dnnl::memory::dims({ 1, dnnl::memory::dim(C), 1, 1 }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::any);
 
-			fwdDescPRelu = std::make_unique<dnnl::prelu_forward::primitive_desc>(dnnl::prelu_forward::primitive_desc(Device.engine, dnnl::prop_kind::forward, *DstMemDesc, memDesc));
-			bwdDescPRelu = std::make_unique<dnnl::prelu_backward::primitive_desc>(dnnl::prelu_backward::primitive_desc(Device.engine, *DstMemDesc, memDesc, *DiffDstMemDesc, memDesc, *fwdDescPRelu));
+			fwdDescPRelu = std::make_unique<dnnl::prelu_forward::primitive_desc>(dnnl::prelu_forward::primitive_desc(Device.engine, dnnl::prop_kind::forward,*InputLayer->DstMemDesc, memDesc, *DstMemDesc));
+			bwdDescPRelu = std::make_unique<dnnl::prelu_backward::primitive_desc>(dnnl::prelu_backward::primitive_desc(Device.engine, *InputLayer->DstMemDesc, memDesc , *InputLayer->DiffDstMemDesc, memDesc, *DiffDstMemDesc, *fwdDescPRelu));
 
 			if (*WeightsMemDesc != fwdDescPRelu->weights_desc())
 			{
