@@ -739,7 +739,7 @@ namespace dnn
 			case Optimizers::AmsBoundW:
 			{
 				if (HasWeights)
-					for (auto i = 0ull; i < Weights.size(); i++)
+					for (auto i = 0ull; i < WeightCount; i++)
 					{
 						if (std::isnan(WeightsPar1[i]) || std::isinf(WeightsPar1[i]))
 						{
@@ -777,7 +777,7 @@ namespace dnn
 			case Optimizers::SGDW:
 			{
 				if (HasWeights)
-					for (auto i = 0ull; i < Weights.size(); i++)
+					for (auto i = 0ull; i < WeightCount; i++)
 					{
 						if (std::isnan(WeightsPar1[i]) || std::isinf(WeightsPar1[i]))
 						{
@@ -1236,7 +1236,7 @@ namespace dnn
 
 			if (!amsbound)
 				PRAGMA_OMP_SIMD()
-				for (auto i = 0ull; i < Weights.size(); i++)
+				for (auto i = 0ull; i < WeightCount; i++)
 				{
 					WeightsPar1[i] = (beta1 * WeightsPar1[i]) + (oneMinusBeta1 * WeightsD1[i] * batchRecip);
 					WeightsPar2[i] = (beta2 * WeightsPar2[i]) + (oneMinusBeta2 * Square<Float>(WeightsD1[i] * batchRecip));
@@ -1244,7 +1244,7 @@ namespace dnn
 				}
 			else
 				PRAGMA_OMP_SIMD()
-				for (auto i = 0ull; i < Weights.size(); i++)
+				for (auto i = 0ull; i < WeightCount; i++)
 				{
 					WeightsPar1[i] = (beta1 * WeightsPar1[i]) + (oneMinusBeta1 * WeightsD1[i] * batchRecip);
 					WeightsPar2[i] = (beta2 * WeightsPar2[i]) + (oneMinusBeta2 * Square<Float>(WeightsD1[i] * batchRecip));
@@ -1303,7 +1303,7 @@ namespace dnn
 
 			if (!amsbound)
 				PRAGMA_OMP_SIMD()
-				for (auto i = 0ull; i < Weights.size(); i++)
+				for (auto i = 0ull; i < WeightCount; i++)
 				{
 					WeightsD1[i] += weightDecay * Weights[i];
 					WeightsPar1[i] = (beta1 * WeightsPar1[i]) + (oneMinusBeta1 * WeightsD1[i] * batchRecip);
@@ -1312,7 +1312,7 @@ namespace dnn
 				}
 			else
 				PRAGMA_OMP_SIMD()
-				for (auto i = 0ull; i < Weights.size(); i++)
+				for (auto i = 0ull; i < WeightCount; i++)
 				{
 					WeightsD1[i] += weightDecay * Weights[i];
 					WeightsPar1[i] = (beta1 * WeightsPar1[i]) + (oneMinusBeta1 * WeightsD1[i] * batchRecip);
@@ -1362,7 +1362,7 @@ namespace dnn
 			const auto batchRecip = Float(1) / rate.BatchSize;
 
 			PRAGMA_OMP_SIMD()
-			for (auto i = 0ull; i < Weights.size(); i++)
+			for (auto i = 0ull; i < WeightCount; i++)
 			{
 				WeightsPar1[i] = (momentum * WeightsPar1[i]) + (oneMinMomentum * Square<Float>(WeightsD1[i] * batchRecip));
 				const auto update = lr * (std::sqrt(WeightsPar2[i] + eps) / std::sqrt(WeightsPar1[i] + eps)) * WeightsD1[i] * batchRecip;
@@ -1391,7 +1391,7 @@ namespace dnn
 			const auto batchRecip = Float(1) / rate.BatchSize;
 
 			PRAGMA_OMP_SIMD()
-			for (auto i = 0ull; i < Weights.size(); i++)
+			for (auto i = 0ull; i < WeightCount; i++)
 			{
 				WeightsPar1[i] += Square<Float>(WeightsD1[i] * batchRecip);
 				Weights[i] -= lr * WeightsD1[i] / (std::sqrt(WeightsPar1[i]) + eps);
@@ -1424,7 +1424,7 @@ namespace dnn
 			const auto oneMinusB2 = Float(1) - B2;
 
 			PRAGMA_OMP_SIMD()
-			for (auto i = 0ull; i < Weights.size(); i++)
+			for (auto i = 0ull; i < WeightCount; i++)
 			{
 				WeightsPar1[i] = (beta1 * WeightsPar1[i]) + (oneMinusBeta1 * WeightsD1[i]);
 				WeightsPar2[i] = (beta2 * WeightsPar2[i]) + (oneMinusBeta2 * Square<Float>(WeightsD1[i] * batchRecip));
@@ -1458,7 +1458,7 @@ namespace dnn
 			const auto eps = rate.Eps;
 									
 			VecFloat weights, weightsD1, par1, par2;
-			for (auto i = 0ull; i < Weights.size(); i += VectorSize)
+			for (auto i = 0ull; i < WeightCount; i += VectorSize)
 			{
 				par1.load_a(&WeightsPar1[i]);
 				par1 = (beta1 * par1) + (oneMinusBeta1 * weightsD1.load_a(&WeightsD1[i]));
@@ -1501,7 +1501,7 @@ namespace dnn
 			const auto oneMinusB2 = Float(1) - B2;
 
 			PRAGMA_OMP_SIMD()
-			for (auto i = 0ull; i < Weights.size(); i++)
+			for (auto i = 0ull; i < WeightCount; i++)
 			{
 				WeightsPar1[i] = (beta1 * WeightsPar1[i]) + (oneMinusBeta1 * WeightsD1[i] * batchRecip);
 				WeightsPar2[i] = (beta2 * WeightsPar2[i]) + (oneMinusBeta2 * Square<Float>(WeightsD1[i] * batchRecip));
@@ -1534,7 +1534,7 @@ namespace dnn
 			const auto batchRecip = Float(1) / rate.BatchSize * lr;
 			
 			PRAGMA_OMP_SIMD()
-			for (auto i = 0ull; i < Weights.size(); i++)
+			for (auto i = 0ull; i < WeightCount; i++)
 			{
 				const auto V = momentum * WeightsPar1[i] - (WeightsD1[i] * batchRecip + Weights[i] * l2Penalty);
 				Weights[i] += -momentum * WeightsPar1[i] + momentumPlusOne * V;
@@ -1564,7 +1564,7 @@ namespace dnn
 			const auto batchRecip = Float(1) / rate.BatchSize;
 
 			PRAGMA_OMP_SIMD()
-			for (auto i = 0ull; i < Weights.size(); i++)
+			for (auto i = 0ull; i < WeightCount; i++)
 			{
 				WeightsPar1[i] = (momentum * WeightsPar1[i]) + (oneMinusMomentum * Square<Float>(WeightsD1[i] * batchRecip));
 				Weights[i] -= lr * WeightsD1[i] / std::sqrt(WeightsPar1[i] + eps);
@@ -1588,7 +1588,7 @@ namespace dnn
 			const auto l2Penalty = rate.MaximumRate * WeightsLRM * rate.L2Penalty * WeightsWDM;
 
 			PRAGMA_OMP_SIMD()
-			for (auto i = 0ull; i < Weights.size(); i++)
+			for (auto i = 0ull; i < WeightCount; i++)
 				Weights[i] -= (lr * WeightsD1[i]) - (l2Penalty * Weights[i]);
 
 			if (HasBias)
@@ -1607,7 +1607,7 @@ namespace dnn
 			const auto l2Penalty = rate.MaximumRate * WeightsLRM * rate.L2Penalty * WeightsWDM;
 
 			PRAGMA_OMP_SIMD()
-			for (auto i = 0ull; i < Weights.size(); i++)
+			for (auto i = 0ull; i < WeightCount; i++)
 			{
 				WeightsPar1[i] = (momentum * WeightsPar1[i]) - (lr * WeightsD1[i]) - (l2Penalty * Weights[i]);
 				Weights[i] += WeightsPar1[i];
@@ -1632,7 +1632,7 @@ namespace dnn
 			const auto l2Penalty = rate.L2Penalty * WeightsWDM;
 
 			PRAGMA_OMP_SIMD()
-			for (auto i = 0ull; i < Weights.size(); i++)
+			for (auto i = 0ull; i < WeightCount; i++)
 			{
 				WeightsPar1[i] = (momentum * WeightsPar1[i]) - (lr * WeightsD1[i]);
 				Weights[i] += WeightsPar1[i] - (l2Penalty * Weights[i]);
