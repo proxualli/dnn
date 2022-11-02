@@ -189,7 +189,15 @@ namespace
 				break;
 			case 4:
 				if (md.get_inner_nblks() == 0)
-					return dnnl::memory::format_tag::abcd;
+				{
+					if (md.get_strides()[1] == 1)
+						return dnnl::memory::format_tag::acdb;
+					else
+						if (md.get_strides()[3] == 1)
+							return dnnl::memory::format_tag::abcd;
+
+					throw std::invalid_argument("Unsupported format in GetDataFmt function");
+				}
 				else
 				{
 					if (md.get_inner_nblks() == 1 && md.get_inner_idxs()[0] == 1)
