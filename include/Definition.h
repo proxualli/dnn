@@ -312,6 +312,7 @@ namespace dnn
 						case Activations::Linear:
 						case Activations::Swish:
 						case Activations::HardLogistic:
+						case Activations::HardSwish:
 							break;
 
 						case Activations::Mish:
@@ -319,7 +320,6 @@ namespace dnn
 						case Activations::Exp:
 						case Activations::Gelu:
 						case Activations::GeluErf:
-						case Activations::HardSwish:
 						case Activations::Log:
 						case Activations::Logistic:
 						case Activations::LogLogistic:
