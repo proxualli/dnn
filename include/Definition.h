@@ -2351,6 +2351,10 @@ namespace dnn
 					labelTrue = Float(1);
 					labelFalse = Float(0);
 					break;
+				case Activations::HardSwish:
+					alpha = Float(3);
+					beta = Float(1) / Float(6);
+					break;
 				case Activations::Log:
 					labelTrue = Float(1);
 					labelFalse = Float(0);
