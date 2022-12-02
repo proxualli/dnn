@@ -143,11 +143,11 @@ namespace dnn
 			const auto strideH = W * VectorSize;
 			const auto plain = IsPlainFormat();
 			const auto size = plain ? CDHW() : PaddedCDHW();
+			
 
 			if (!training)
 			{
 				const auto threads = GetThreads(batchSize * size, Float(0.25));
-
 				if (plain) // nchw
 				{
 					const auto partialHW = GetVectorPart(HW());

@@ -121,10 +121,6 @@ namespace dnn
 				const auto threads = elements < 2097152ull ? 2ull : elements < 8338608ull ? 4ull : 8ull;
 				const auto strideHW = HW() * VectorSize;
 
-				/*auto thrds = threads;
-				while (batchSize % thrds != 0)
-					thrds--;*/
-
 #ifdef DNN_STOCHASTIC
 				if (batchSize == 1)
 				{
@@ -246,11 +242,7 @@ namespace dnn
 			//const auto threads = GetThreads(batchSize * (plain ? CDHW() : PaddedCDHW()));
 			const auto elements = batchSize * (plain ? CDHW() : PaddedCDHW());
 			const auto threads = elements < 2097152ull ? 2ull : elements < 8338608ull ? 4ull : 8ull;
-
-			/*auto thrds = threads;
-			while (batchSize % thrds != 0)
-				thrds--;*/
-
+			
 #ifdef DNN_STOCHASTIC
 			if (batchSize == 1)
 			{

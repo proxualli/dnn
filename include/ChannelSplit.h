@@ -148,10 +148,6 @@ namespace dnn
 			else
 			{
 #endif
-				/*auto thrds = threads;
-				while (batchSize % thrds != 0)
-					thrds--;*/
-
 				if (training)
 				{
 					if (!plain)
@@ -268,10 +264,6 @@ namespace dnn
 			else
 			{
 #endif
-				/*auto thrds = threads;
-				while (batchSize % thrds != 0)
-					thrds--;*/
-
 				if (!plain)
 					for_i(batchSize, threads, [=](UInt n)
 					{
