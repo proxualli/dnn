@@ -121,11 +121,11 @@ namespace
 		const auto MAXIMUM_THRESHOLD =    187538608ull;
 
 		const auto MAXIMUM = omp_get_max_threads();
-		const auto ULTRALIGHT = MAXIMUM >= 32 ?  3ull : MAXIMUM >= 24 ?  2ull :  2ull;
-		const auto LIGHT      = MAXIMUM >= 32 ?  6ull : MAXIMUM >= 24 ?  4ull :  4ull;
-		const auto MEDIUM     = MAXIMUM >= 32 ? 12ull : MAXIMUM >= 24 ?  8ull :  8ull;
-		const auto HEAVY      = MAXIMUM >= 32 ? 16ull : MAXIMUM >= 24 ? 12ull : 10ull;
-		const auto ULTRAHEAVY = MAXIMUM >= 32 ? 24ull : MAXIMUM >= 24 ? 16ull : 12ull;
+		const auto ULTRALIGHT = MAXIMUM >= 32 ?  2ull : MAXIMUM >= 24 ?  2ull :  2ull;
+		const auto LIGHT      = MAXIMUM >= 32 ?  4ull : MAXIMUM >= 24 ?  4ull :  4ull;
+		const auto MEDIUM     = MAXIMUM >= 32 ? 8ull : MAXIMUM >= 24 ?  8ull :  8ull;
+		const auto HEAVY      = MAXIMUM >= 32 ? 8ull : MAXIMUM >= 24 ? 8ull : 8ull;
+		const auto ULTRAHEAVY = MAXIMUM >= 32 ? 16ull : MAXIMUM >= 24 ? 16ull : 16ull;
 
 		return
 			elements < static_cast<UInt>(weight * Float(ULTRALIGHT_THRESHOLD)) ? ULTRALIGHT :

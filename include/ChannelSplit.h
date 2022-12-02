@@ -75,7 +75,9 @@ namespace dnn
 		void ForwardProp(const UInt batchSize, const bool training) final override
 		{
 			const auto plain = IsPlainFormat();
-			const auto threads = GetThreads(batchSize * (plain ? CDHW() : PaddedCDHW()));
+			//const auto threads = GetThreads(batchSize * (plain ? CDHW() : PaddedCDHW()));
+			const auto elements = batchSize * (plain ? CDHW() : PaddedCDHW());
+			const auto threads = elements < 2097152ull ? 2ull : elements < 8338608ull ? 4ull : 8ull;
 			const auto groupC = (Group - 1) * C;
 			const auto strideHW = HW() * VectorSize;
 			
@@ -146,6 +148,10 @@ namespace dnn
 			else
 			{
 #endif
+				/*auto thrds = threads;
+				while (batchSize % thrds != 0)
+					thrds--;*/
+
 				if (training)
 				{
 					if (!plain)
@@ -225,7 +231,9 @@ namespace dnn
 #endif // DNN_LEAN
 
 			const auto plain = IsPlainFormat();
-			const auto threads = GetThreads(batchSize * (plain ? CDHW() : PaddedCDHW()));
+			//const auto threads = GetThreads(batchSize * (plain ? CDHW() : PaddedCDHW()));
+			const auto elements = batchSize * (plain ? CDHW() : PaddedCDHW());
+			const auto threads = elements < 2097152ull ? 2ull : elements < 8338608ull ? 4ull : 8ull;
 			const auto groupC = (Group - 1) * C;
 			const auto strideHW = HW() * VectorSize;
 
@@ -260,6 +268,10 @@ namespace dnn
 			else
 			{
 #endif
+				/*auto thrds = threads;
+				while (batchSize % thrds != 0)
+					thrds--;*/
+
 				if (!plain)
 					for_i(batchSize, threads, [=](UInt n)
 					{

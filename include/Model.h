@@ -2230,12 +2230,13 @@ namespace dnn
 				for (auto c = 0u; c < imgByte.C(); c++)
 				{
 					const auto mean = MeanStdNormalization ? DataProv->Mean[c] : Image<Byte>::GetChannelMean(imgByte, c);
-					const auto stddevRecip = Float(1) / (MeanStdNormalization ? DataProv->StdDev[c] : Image<Byte>::GetChannelStdDev(imgByte, c));
+					const auto stddev = MeanStdNormalization ? DataProv->StdDev[c] : Image<Byte>::GetChannelStdDev(imgByte, c);
+					//const auto stddevRecip = Float(1) / stddev;
 
 					for (auto d = 0u; d < imgByte.D(); d++)
 						for (auto h = 0u; h < imgByte.H(); h++)
 							for (auto w = 0u; w < imgByte.W(); w++)
-								Layers[0]->Neurons[batchIndex * imgByte.Size() + (c * imgByte.ChannelSize()) + (d * imgByte.Area()) + (h * imgByte.W()) + w] = (imgByte(c, d, h, w) - mean) * stddevRecip;
+								Layers[0]->Neurons[batchIndex * imgByte.Size() + (c * imgByte.ChannelSize()) + (d * imgByte.Area()) + (h * imgByte.W()) + w] = (imgByte(c, d, h, w) - mean) / stddev;
 				}
 			});
 
@@ -2269,12 +2270,13 @@ namespace dnn
 				for (auto c = 0u; c < imgByte.C(); c++)
 				{
 					const auto mean = MeanStdNormalization ? DataProv->Mean[c] : Image<Byte>::GetChannelMean(imgByte, c);
-					const auto stddevRecip = Float(1) / (MeanStdNormalization ? DataProv->StdDev[c] : Image<Byte>::GetChannelStdDev(imgByte, c));
+					const auto stddev = MeanStdNormalization ? DataProv->StdDev[c] : Image<Byte>::GetChannelStdDev(imgByte, c);
+					//const auto stddevRecip = Float(1) / stddev;
 
 					for (auto d = 0u; d < imgByte.D(); d++)
 						for (auto h = 0u; h < imgByte.H(); h++)
 							for (auto w = 0u; w < imgByte.W(); w++)
-								Layers[0]->Neurons[batchIndex * imgByte.Size() + (c * imgByte.ChannelSize()) + (d * imgByte.Area()) + (h * imgByte.W()) + w] = (imgByte(c, d, h, w) - mean) * stddevRecip;
+								Layers[0]->Neurons[batchIndex * imgByte.Size() + (c * imgByte.ChannelSize()) + (d * imgByte.Area()) + (h * imgByte.W()) + w] = (imgByte(c, d, h, w) - mean) / stddev;
 				}
 			});
 
