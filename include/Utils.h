@@ -134,6 +134,8 @@ namespace
 			elements < static_cast<UInt>(weight * Float(HEAVY_THRESHOLD)) ? HEAVY :
 			elements < static_cast<UInt>(weight * Float(MAXIMUM_THRESHOLD)) ? ULTRAHEAVY : MAXIMUM;
 	}
+	// weight > 1   more threads   
+	// weight < 1   less threads
 
 	struct LabelInfo
 	{

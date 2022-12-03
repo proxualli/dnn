@@ -109,9 +109,10 @@ namespace dnn
 #endif // DNN_LEAN
 
 			const auto plain = IsPlainFormat();
-			//const auto threads = GetThreads(batchSize * (plain ? CDHW() : PaddedCDHW()), 2.0f);
 			const auto elements = batchSize * (plain ? CDHW() : PaddedCDHW());
-			const auto threads = elements < 2097152ull ? 2ull : elements < 8338608ull ? 4ull : 8ull;
+			const auto threads = GetThreads(elements, Float(0.2));
+			//const auto threads = elements < 2097152ull ? 2ull : elements < 8338608ull ? 4ull : 8ull;
+
 			const auto strideHW = HW() * VectorSize;
 
 #ifdef DNN_STOCHASTIC

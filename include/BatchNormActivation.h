@@ -107,11 +107,11 @@ namespace dnn
 		{		
 			const auto strideH = W * VectorSize;
 			const auto plain = IsPlainFormat();
-			const auto size = plain ? CDHW() : PaddedCDHW();
-			
+			const auto elements = batchSize * (plain ? CDHW() : PaddedCDHW());
+						
 			if (!training)
 			{
-				const auto threads = GetThreads(batchSize * size, Float(0.25));
+				const auto threads = GetThreads(elements, Float(0.1));
 
 				if (plain) // nchw
 				{
@@ -162,7 +162,8 @@ namespace dnn
 			}
 			else
 			{
-				const auto threads = GetThreads(batchSize * size, Float(0.1));
+				const auto threads = GetThreads(elements, Float(0.1));
+
 #ifndef DNN_LEAN
 				const auto vecZero = VecFloat(0);
 #endif
@@ -330,8 +331,8 @@ namespace dnn
 
 			const auto strideH = W * VectorSize;
 			const auto plain = IsPlainFormat();
-			const auto size = plain ? CDHW() : PaddedCDHW();
-			const auto threads = GetThreads(batchSize * size, Float(0.1));
+			const auto elements = batchSize * (plain ? CDHW() : PaddedCDHW());
+			const auto threads = GetThreads(elements, Float(0.1));
 
 			if (plain)
 			{
