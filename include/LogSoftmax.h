@@ -95,7 +95,7 @@ namespace dnn
 		void ForwardProp(const UInt batchSize, const bool training) final override
 		{
 			const auto plain = IsPlainFormat();
-			const auto elements = plain ? batchSize * CDHW() : batchSize * PaddedCDHW();
+			const auto elements = batchSize * (plain ? CDHW() : PaddedCDHW());
 			const auto threads = GetThreads(elements);
 			const auto strideHW = HW() * VectorSize;
 			const auto vecZero = VecFloat(0);
@@ -130,7 +130,7 @@ namespace dnn
 #endif // DNN_LEAN
 
 			const auto plain = IsPlainFormat();
-			const auto elements = plain ? batchSize * CDHW() : batchSize * PaddedCDHW();
+			const auto elements = batchSize * (plain ? CDHW() : PaddedCDHW());
 			const auto threads = GetThreads(elements);
 			const auto strideHW = HW() * VectorSize;
 

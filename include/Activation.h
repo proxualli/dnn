@@ -362,6 +362,7 @@ namespace dnn
 			const auto plain = IsPlainFormat();
 			const auto elements = plain ? batchSize * CDHW() : batchSize * PaddedCDHW();
 			const auto threads = GetThreads(elements);
+
 			const auto strideHW = HW() * VectorSize;
 			const auto vecZero = VecFloat(0);
 

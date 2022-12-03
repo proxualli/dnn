@@ -111,7 +111,7 @@ namespace dnn
 						
 			if (!training)
 			{
-				const auto threads = GetThreads(elements, Float(0.1));
+				const auto threads = GetThreads(elements, Float(0.25));
 
 				if (plain) // nchw
 				{
