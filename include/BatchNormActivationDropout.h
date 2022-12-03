@@ -200,7 +200,7 @@ namespace dnn
 			}
 			else
 			{
-				const auto threads = GetThreads(batchSize * size, Float(0.1));
+				const auto threads = GetThreads(elements, Float(0.1));
 #ifndef DNN_LEAN
 				const auto vecZero = VecFloat(0);
 #endif
