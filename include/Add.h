@@ -142,7 +142,7 @@ namespace dnn
 #ifdef DNN_STOCHASTIC
 				const auto threads = 1ull;
 #else
-				const auto threads = GetThreads(batchSize * size);
+				const auto threads = GetThreads(batchSize * size, Float(0.25));
 #endif
 				const auto part = GetVectorPart(size);
 				const auto vecZero = VecFloat(0);
@@ -366,7 +366,7 @@ namespace dnn
 			else
 			{
 #endif
-				const auto threads = GetThreads(batchSize * size);
+				const auto threads = GetThreads(batchSize * size, Float(0.25));
 
 				switch (Inputs.size())
 				{
