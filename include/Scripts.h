@@ -518,10 +518,10 @@ namespace scripts
                 "Inputs=" + inputs + nwl + nwl;
         }
 
-        static std::string ChannelMultiply(std::string inputs, std::string group = "", std::string prefix = "CM")
+        static std::string Multiply(std::string inputs, std::string group = "", std::string prefix = "CM")
         {
             return "[" + group + prefix + "]" + nwl +
-                "Type=ChannelMultiply" + nwl +
+                "Type=Multiply" + nwl +
                 "Inputs=" + inputs + nwl + nwl;
         }
 
@@ -597,7 +597,7 @@ namespace scripts
                     BatchNormActivation(1, group + std::string("C1"), to_string(activation == scripts::Activations::FRelu ? scripts::Activations::HardSwish : activation), group) +
                     Convolution(2, group + std::string("B1"), hiddenDim, 1, 1, 1, 1, 0, 0, true, group) +
                     BatchNormActivation(2, group + std::string("C2"), to_string(scripts::Activations::HardLogistic), group) +
-                    ChannelMultiply(In("B", C) + std::string(",") + group + std::string("B2"), group) +
+                    Multiply(In("B", C) + std::string(",") + group + std::string("B2"), group) +
 
                     Convolution(C + 1, group + std::string("CM"), DIV8(outputChannels), 1, 1, 1, 1, 0, 0) +
                     BatchNorm(C + 1, In("C", C + 1)));
@@ -641,7 +641,7 @@ namespace scripts
                     BatchNormActivation(1, group + std::string("C1"), to_string(activation == scripts::Activations::FRelu ? scripts::Activations::HardSwish : activation), group) +
                     Convolution(2, group + std::string("B1"), hiddenDim, 1, 1, 1, 1, 0, 0, true, group) +
                     BatchNormActivation(2, group + std::string("C2"), to_string(scripts::Activations::HardLogistic), group) +
-                    ChannelMultiply(In("B", C + 1) + std::string(",") + group + std::string("B2"), group) +
+                    Multiply(In("B", C + 1) + std::string(",") + group + std::string("B2"), group) +
 
                     Convolution(C + 2, group + std::string("CM"), DIV8(outputChannels), 1, 1, 1, 1, 0, 0) +
                     BatchNorm(C + 2, In("C", C + 2)));
@@ -692,7 +692,7 @@ namespace scripts
                     BatchNormActivation(1, group + std::string("C1"), to_string(activation == scripts::Activations::FRelu ? scripts::Activations::HardSwish : activation), group) +
                     Convolution(2, group + std::string("B1"), channels, 1, 1, 1, 1, 0, 0, true, group) +
                     BatchNormActivation(2, group + std::string("C2"), to_string(scripts::Activations::HardLogistic), group) +
-                    ChannelMultiply(In("B", C + 3) + std::string(",") + group + std::string("B2"), group) +
+                    Multiply(In("B", C + 3) + std::string(",") + group + std::string("B2"), group) +
                     Concat(A + 1, In("LCS", A) + std::string(",") + group + std::string("CM")) :
                     Concat(A + 1, In("LCS", A) + std::string(",") + In("B", C + 3));
 
@@ -933,7 +933,7 @@ namespace scripts
                             BatchNormActivation(1, group + "C1", to_string(p.Activation == Activations::FRelu ? Activations::HardSwish : p.Activation), group) +
                             Convolution(2, group + "B1", DIV8(6 * W), 1, 1, 1, 1, 0, 0, false, group) +
                             BatchNormActivation(2, group + "C2", "HardLogistic", group) +
-                            ChannelMultiply(In("B", C + 1) + "," + group + "B2", group) +
+                            Multiply(In("B", C + 1) + "," + group + "B2", group) +
                             Convolution(C + 2, group + "CM", DIV8(W), 1, 1, 1, 1, 0, 0) :
                             Convolution(C + 2, In("B", C + 1), DIV8(W), 1, 1, 1, 1, 0, 0);
 
@@ -960,7 +960,7 @@ namespace scripts
                             BatchNormActivation(1, group + "C1", to_string(p.Activation == Activations::FRelu ? Activations::HardSwish : p.Activation), group) +
                             Convolution(2, group + "B1", DIV8(6 * W), 1, 1, 1, 1, 0, 0, true, group) +
                             BatchNormActivation(2, group + "C2", "HardLogistic", group) +
-                            ChannelMultiply(In("B", C + 1) + "," + group + "B2", group) +
+                            Multiply(In("B", C + 1) + "," + group + "B2", group) +
                             Convolution(C + 2, group + "CM", DIV8(W), 1, 1, 1, 1, 0, 0) :
                             Convolution(C + 2, In("B", C + 1), DIV8(W), 1, 1, 1, 1, 0, 0);
 

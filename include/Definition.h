@@ -430,22 +430,20 @@ namespace dnn
 						case LayerTypes::Max:
 						case LayerTypes::Min:
 						case LayerTypes::Multiply:
-						case LayerTypes::ChannelMultiply:
 						case LayerTypes::Divide:
 						case LayerTypes::Average:
 						{
-							if (inputs.size() < 2)
+							if (inputs.size() == 2)
 							{
-								msg = CheckMsg(line, col, "Layer " + name + " has not enough inputs.");
+								msg = CheckMsg(line, col, "Layer " + name + " has no two inputs.");
 								goto FAIL;
 							}
 
-							for (auto i = 1ull; i < inputs.size(); i++)
-								if (inputs[i]->C != inputs[0]->C)
-								{
-									msg = CheckMsg(line, col, "Layer " + name + " has uneven channels in the input " + inputs[i]->Name + ", must have " + std::to_string(inputs[0]->C) + " channels.");
-									goto FAIL;
-								}
+							if (inputs[0]->C != inputs[1]->C)
+							{
+								msg = CheckMsg(line, col, "Layer " + name + " has uneven channels in the input " + inputs[1]->Name + ", must have " + std::to_string(inputs[0]->C) + " channels.");
+								goto FAIL;
+							}
 						}
 						break;
 							
@@ -549,9 +547,6 @@ namespace dnn
 						case LayerTypes::BatchNormTanhExpDropout:
 							model->Layers.push_back(std::make_unique<BatchNormActivationDropout<TanhExp, LayerTypes::BatchNormTanhExpDropout>>(model->Device, model->Format, name, inputs, dropout, dropout != model->Dropout, scaling, momentum, eps, biases));
 							model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsFillerMode, weightsGain, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesFillerMode, biasesGain, biasesScale, biasesLRM, biasesWDM);
-							break;
-						case LayerTypes::ChannelMultiply:
-							model->Layers.push_back(std::make_unique<ChannelMultiply>(model->Device, model->Format, name, inputs));
 							break;
 						case LayerTypes::ChannelShuffle:
 							model->Layers.push_back(std::make_unique<ChannelShuffle>(model->Device, model->Format, name, inputs, groups));
