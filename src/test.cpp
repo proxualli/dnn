@@ -30,6 +30,7 @@ DNN_API void DNNGetLayerInputs(const UInt layerIndex, std::vector<UInt>* inputs)
 DNN_API void DNNGetLayerInfo(const UInt layerIndex, dnn::LayerInfo* info);
 DNN_API void DNNSetNewEpochDelegate(void(*newEpoch)(UInt, UInt, UInt, UInt, Float, Float, Float, bool, bool, Float, Float, bool, Float, Float, UInt, Float, UInt, Float, Float, Float, UInt, UInt, UInt, Float, Float, Float, Float, Float, Float, UInt, Float, Float, Float, UInt));
 DNN_API void DNNModelDispose();
+DNN_API void DNNDataproviderDispose();
 DNN_API bool DNNBatchNormalizationUsed();
 DNN_API void DNNResetWeights();
 DNN_API void DNNResetLayerWeights(const UInt layerIndex);
@@ -39,7 +40,6 @@ DNN_API void DNNClearTrainingStrategies();
 DNN_API void DNNSetUseTrainingStrategy(const bool enable);
 DNN_API void DNNAddTrainingStrategy(const dnn::TrainingStrategy& strategy);
 DNN_API bool DNNLoadDataset();
-DNN_API void DNNDataproviderDispose();
 DNN_API void DNNTraining();
 DNN_API void DNNStop();
 DNN_API void DNNPause();
@@ -71,7 +71,7 @@ DNN_API dnn::Optimizers GetOptimizer();
 
 void NewEpoch(UInt CurrentCycle, UInt CurrentEpoch, UInt TotalEpochs, UInt Optimizer, Float Beta2, Float Gamma, Float Eps, bool HorizontalFlip, bool VerticalFlip, Float InputDropout, Float Cutout, bool CutMix, Float AutoAugment, Float ColorCast, UInt ColorAngle, Float Distortion, UInt Interpolation, Float Scaling, Float Rotation, Float MaximumRate, UInt BatchSize, UInt Height, UInt Width, Float Momentum, Float L2Penalty, Float Dropout, Float AvgTrainLoss, Float TrainErrorPercentage, Float TrainAccuracy, UInt TrainErrors, Float AvgTestLoss, Float TestErrorPercentage, Float TestAccuracy, UInt TestErrors)
 {
-    std::cout << std::string("Cycle: ") << std::to_string(CurrentCycle) << std::string("  Epoch: ") << std::to_string(CurrentEpoch) << std::string("  Test Accuracy: ") << FloatToStringFixed(TestAccuracy, 2) << std::string("%                                                                           ") << std::endl;
+    std::cout << std::string("Cycle: ") << std::to_string(CurrentCycle) << std::string("  Epoch: ") << std::to_string(CurrentEpoch) << std::string("  Train Accuracy: ") << FloatToStringFixed(TrainAccuracy, 2) << std::string("  Test Accuracy: ") << FloatToStringFixed(TestAccuracy, 2) << std::string("%                                                                           ") << std::endl;
     std::cout.flush();
 
     DNN_UNREF_PAR(TotalEpochs);
@@ -120,7 +120,7 @@ void GetTrainingProgress(int seconds = 5, UInt trainingSamples = 50000, UInt tes
     while (info->State == States::Idle);
 
     int barWidth = 40;
-    float progress = 0.0;
+    float progress = 0.0f;
   
     while (info->State != States::Completed)
     {
@@ -176,7 +176,7 @@ int main(int argc, char* argv[])
 
     scripts::ScriptParameters p;
 
-    p.Script = scripts::Scripts::shufflenetv2;
+    p.Script = scripts::Scripts::mobilenetv3;
     p.Dataset = scripts::Datasets::cifar10;
     p.C = 3;
     p.H = 32;
@@ -186,7 +186,7 @@ int main(int argc, char* argv[])
     p.MirrorPad = false;
     p.Groups = 3;
     p.Iterations = 4;
-    p.Width = 12;
+    p.Width = 4;
     p.Activation = scripts::Activations::HardSwish;
     p.Dropout = Float(0);
     p.Bottleneck = false;
@@ -215,12 +215,12 @@ int main(int argc, char* argv[])
     rate.BatchSize = 128;
     rate.Height = 32;
     rate.Width = 32;
-    rate.PadH = 4;
-    rate.PadW = 4;
+    rate.PadH = 8;
+    rate.PadW = 8;
     rate.Cycles = 1;
     rate.Epochs = 200;
     rate.EpochMultiplier = 1;
-    rate.MaximumRate = 0.05;
+    rate.MaximumRate = 0.05f;
     rate.MinimumRate = 0.0001f;
     rate.FinalRate = 0.1f;
     rate.Gamma = 0.003f;
@@ -247,7 +247,7 @@ int main(int argc, char* argv[])
             auto info = new ModelInfo();
             DNNGetModelInfo(info);
 
-            std::cout << std::string("Training ") << info->Name << std::string(" on ") << std::string(magic_enum::enum_name<Datasets>(info->Dataset)) << std::string(" with ") +  std::string(magic_enum::enum_name<Optimizers>(optimizer)) + std::string(" optimizer") << std::endl << std::endl;
+            std::cout << std::string("Training ") << info->Name << std::string(" on ") << std::string(magic_enum::enum_name<Datasets>(info->Dataset)) << (std::string(" with ") + std::string(magic_enum::enum_name<Optimizers>(optimizer)) + std::string(" optimizer")) << std::endl << std::endl;
             std::cout.flush();
 
             DNNSetNewEpochDelegate(&NewEpoch);
@@ -260,6 +260,7 @@ int main(int argc, char* argv[])
             delete info;
                    
             DNNStop();
+            DNNModelDispose();
         }
         else
             std::cout << std::endl << std::string("Could not load dataset") << std::endl;
