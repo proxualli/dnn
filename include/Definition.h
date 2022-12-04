@@ -433,7 +433,7 @@ namespace dnn
 						case LayerTypes::Divide:
 						case LayerTypes::Average:
 						{
-							if (inputs.size() == 2)
+							if (inputs.size() != 2)
 							{
 								msg = CheckMsg(line, col, "Layer " + name + " has no two inputs.");
 								goto FAIL;
