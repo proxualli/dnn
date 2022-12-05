@@ -1292,12 +1292,32 @@ namespace dnn
 				{
 					if (isSkipConnection && layer->Name == endLayer)
 					{
+						auto survivalProb = Float(1);
+
 						for (auto inputLayer = 0ull; inputLayer < layer->Inputs.size(); inputLayer++)
 						{
-							if (!IsSkippable(*layer.get()))
-								dynamic_cast<Add*>(layer.get())->SurvivalProbability[inputLayer] = fixed ? Float(1) / (Float(1) - dropRate) : Float(1) / (Float(1) - (dropRate * Float(skipConnection) / Float(totalSkipConnections)));
+							if (IsSkippable(*layer->Inputs[inputLayer]))
+								survivalProb = fixed ? Float(1) / (Float(1) - dropRate) : Float(1) / (Float(1) - (dropRate * Float(skipConnection) / Float(totalSkipConnections)));
 							else
-								dynamic_cast<Add*>(layer.get())->SurvivalProbability[inputLayer] = Float(1);
+								survivalProb = Float(1);
+							
+							switch (layer->LayerType)
+							{
+							case LayerTypes::Add:
+								dynamic_cast<Add*>(layer.get())->SurvivalProbability[inputLayer] = survivalProb;
+								break;
+							case LayerTypes::Substract:
+								dynamic_cast<Substract*>(layer.get())->SurvivalProbability[inputLayer] = survivalProb;
+								break;
+							case LayerTypes::Multiply:
+								dynamic_cast<Multiply*>(layer.get())->SurvivalProbability[inputLayer] = survivalProb;
+								break;
+							case LayerTypes::Divide:
+								dynamic_cast<Divide*>(layer.get())->SurvivalProbability[inputLayer] = survivalProb;
+								break;
+							default:
+								break;
+							}
 						}
 					}
 					
