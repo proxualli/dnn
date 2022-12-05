@@ -1296,7 +1296,7 @@ namespace dnn
 
 						for (auto inputLayer = 0ull; inputLayer < layer->Inputs.size(); inputLayer++)
 						{
-							if (IsSkippable(*layer->Inputs[inputLayer]))
+							if (!IsSkippable(*layer->Inputs[inputLayer]))
 								survivalProb = fixed ? Float(1) / (Float(1) - dropRate) : Float(1) / (Float(1) - (dropRate * Float(skipConnection) / Float(totalSkipConnections)));
 							else
 								survivalProb = Float(1);
