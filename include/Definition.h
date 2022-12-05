@@ -449,9 +449,9 @@ namespace dnn
 							
 						case LayerTypes::Concat:
 						{
-							if (inputs.size() < 2)
+							if (inputs.size() != 2)
 							{
-								msg = CheckMsg(line, col, "Layer " + name + " has not enough inputs.");
+								msg = CheckMsg(line, col, "Layer " + name + " has no two inputs.");
 								goto FAIL;
 							}
 						}

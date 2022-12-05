@@ -1261,15 +1261,19 @@ namespace dnn
 					layer->SharesInput = layer->SharesInputOriginal;
 				}
 		}
+		const auto IsSkippable(const Layer& layer)
+		{
+			return layer.LayerType == LayerTypes::Add || layer.LayerType == LayerTypes::Substract || layer.LayerType == LayerTypes::Multiply || layer.LayerType == LayerTypes::Substract;
+		}
 
-		auto GetTotalSkipConnections() const
+		auto GetTotalSkipConnections()
 		{
 			auto totalSkipConnections = 0ull;
 		
 			for (const auto& layer : Layers)
-				if (layer->LayerType == LayerTypes::Add)
+				if (IsSkippable(*layer.get()))
 					for (const auto& l : layer->Outputs)
-						if (l->LayerType == LayerTypes::Add)
+						if (IsSkippable(*l))
 							totalSkipConnections++;
 
 			return totalSkipConnections;
@@ -1284,13 +1288,13 @@ namespace dnn
 			auto skipConnection = 0ull;
 			for (auto& layer : Layers)
 			{
-				if (layer->LayerType == LayerTypes::Add)
+				if (IsSkippable(*layer.get()))
 				{
 					if (isSkipConnection && layer->Name == endLayer)
 					{
 						for (auto inputLayer = 0ull; inputLayer < layer->Inputs.size(); inputLayer++)
 						{
-							if (layer->Inputs[inputLayer]->LayerType != LayerTypes::Add)
+							if (!IsSkippable(*layer.get()))
 								dynamic_cast<Add*>(layer.get())->SurvivalProbability[inputLayer] = fixed ? Float(1) / (Float(1) - dropRate) : Float(1) / (Float(1) - (dropRate * Float(skipConnection) / Float(totalSkipConnections)));
 							else
 								dynamic_cast<Add*>(layer.get())->SurvivalProbability[inputLayer] = Float(1);
@@ -1300,7 +1304,7 @@ namespace dnn
 					isSkipConnection = false;
 					for (const auto& outputLayer : layer->Outputs)
 					{
-						if (outputLayer->LayerType == LayerTypes::Add)
+						if (IsSkippable(*outputLayer))
 						{
 							isSkipConnection = true;
 							endLayer = outputLayer->Name;
