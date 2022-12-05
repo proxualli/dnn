@@ -6,6 +6,7 @@ namespace dnn
 	class Multiply final : public Layer
 	{
 	private:
+		std::vector<Float> scales;
 		std::unordered_map<int, dnnl::memory> fwdArgs;
 		std::unique_ptr<dnnl::binary::primitive_desc> fwdDesc;
 #ifdef DNN_CACHE_PRIMITIVES
@@ -26,15 +27,19 @@ namespace dnn
 
 	public:
 		const Byte first, second;
+		FloatVector SurvivalProbability;
 
 		Multiply(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs) :
 			Layer(device, format, name, LayerTypes::Multiply, 0, 0, inputs[GetFirst(inputs)]->C, inputs[GetFirst(inputs)]->D, inputs[GetFirst(inputs)]->H, inputs[GetFirst(inputs)]->W, 0, 0, 0, inputs),
 			first(GetFirst(inputs)),
-			second(GetSecond(inputs))
+			second(GetSecond(inputs)),
+			SurvivalProbability(FloatVector(2, Float(1)))
 		{
 			assert(Inputs.size() == 2);
 			assert(Inputs[0]->C == Inputs[1]->C);
 			assert(Inputs[0]->D == Inputs[1]->D);
+
+			scales = std::vector<Float>(2, Float(1));
 		}
 
 		void UpdateResolution() final override
