@@ -1263,7 +1263,7 @@ namespace dnn
 		}
 		const auto IsSkippable(const Layer& layer)
 		{
-			return layer.LayerType == LayerTypes::Add || layer.LayerType == LayerTypes::Substract; // || layer.LayerType == LayerTypes::Multiply || layer.LayerType == LayerTypes::Substract;
+			return layer.LayerType == LayerTypes::Add || layer.LayerType == LayerTypes::Substract; // || layer.LayerType == LayerTypes::Multiply || layer.LayerType == LayerTypes::Divide;
 		}
 
 		auto GetTotalSkipConnections()
