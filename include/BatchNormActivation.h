@@ -175,32 +175,60 @@ namespace dnn
 					{
 						auto vecMean = VecFloat(0);
 						auto mean = Float(0);
+						auto vecCC = VecFloat(0);
+						auto cc = Float(0);
 						for (auto n = 0ull; n < batchSize; n++)
 						{
 							const auto start = c * HW() + (n * CDHW());
 							const auto part = start + partialHW;
 							for (auto hw = start; hw < part; hw += VectorSize)
-								vecMean += VecFloat().load_a(&InputLayer->Neurons[hw]);
+							{
+								auto y = VecFloat().load_a(&InputLayer->Neurons[hw]) - vecCC;
+								auto t = vecMean + y;
+								auto z = t - vecMean;
+								vecCC = z - y;
+								vecMean = t;
+							}
 							const auto end = start + HW();
 							PRAGMA_OMP_SIMD()
 							for (auto hw = part; hw < end; hw++)
-								mean += InputLayer->Neurons[hw];
+							{
+								auto y = InputLayer->Neurons[hw] - cc;
+								volatile auto t = mean + y;
+								volatile auto z = t - mean;
+								cc = z - y;
+								mean = t;
+							}
 						}
 						mean += horizontal_add(vecMean);
 						mean /= Float(batchSize * HW());
 
 						auto vecVariance = VecFloat(0);
 						auto variance = Float(0);
+						vecCC = VecFloat(0);
+						cc = Float(0);
 						for (auto n = 0ull; n < batchSize; n++)
 						{
 							const auto start = c * HW() + (n * CDHW());
 							const auto part = start + partialHW;
 							for (auto hw = start; hw < part; hw += VectorSize)
-								vecVariance += square(VecFloat().load_a(&InputLayer->Neurons[hw]) - mean);
+							{
+								auto y = square(VecFloat().load_a(&InputLayer->Neurons[hw]) - mean) - vecCC;
+								auto t = vecVariance + y;
+								auto z = t - vecVariance;
+								vecCC = z - y;
+								vecVariance = t;
+							}
 							const auto end = start + HW();
 							PRAGMA_OMP_SIMD()
 							for (auto hw = part; hw < end; hw++)
-								variance += Square<Float>(InputLayer->Neurons[hw] - mean);
+							{
+								auto y = Square<Float>(InputLayer->Neurons[hw] - mean) - cc;
+								volatile auto t = variance + y;
+								volatile auto z = t - variance;
+								cc = z - y;
+								variance = t;
+							}
 						}
 						variance += horizontal_add(vecVariance);
 						const auto unbiasedVariance = variance / Float(batchSize * HW() - 1);
@@ -253,6 +281,7 @@ namespace dnn
 						const auto channelOffset = c * VectorSize;
 						const auto mapOffset = channelOffset * HW();
 
+						auto vecCC = VecFloat(0);
 						auto mean = VecFloat(0);
 						for (auto n = 0ull; n < batchSize; n++)
 						{
@@ -261,12 +290,21 @@ namespace dnn
 							{
 								const auto offsetH = offsetC + h * strideH;
 								for (auto w = offsetH; w < offsetH + strideH; w += VectorSize)
-									mean += VecFloat().load_a(&InputLayer->Neurons[w]);
+								{
+									// mean += VecFloat().load_a(&InputLayer->Neurons[w]);
+								    // Use Kahan summation (https://en.wikipedia.org/wiki/Kahan_summation_algorithm)
+									auto y = VecFloat().load_a(&InputLayer->Neurons[w]) - vecCC;
+									auto t = mean + y;
+									auto z = t - mean;
+									vecCC = z - y;
+									mean = t;
+								}
 							}
 						}
 						mean /= Float(batchSize * HW());
 						mean.store_a(&Mean[channelOffset]);
 
+						vecCC = VecFloat(0);
 						auto variance = VecFloat(0);
 						for (auto n = 0ull; n < batchSize; n++)
 						{
@@ -275,7 +313,15 @@ namespace dnn
 							{
 								const auto offsetH = offsetC + h * strideH;
 								for (auto w = offsetH; w < offsetH + strideH; w += VectorSize)
-									variance += square(VecFloat().load_a(&InputLayer->Neurons[w]) - mean);
+								{
+									// variance += square(VecFloat().load_a(&InputLayer->Neurons[w]) - mean);
+									// Use Kahan summation (https://en.wikipedia.org/wiki/Kahan_summation_algorithm)
+									auto y = square(VecFloat().load_a(&InputLayer->Neurons[w]) - mean) - vecCC;
+									auto t = variance + y;
+									auto z = t - variance;
+									vecCC = z - y;
+									variance = t;
+								}
 							}
 						}
 						const auto unbiasedVariance = variance / Float(batchSize * HW() - 1);
@@ -475,7 +521,7 @@ namespace dnn
 					auto diffGamma = VecFloat(0);
 					auto diffBeta = VecFloat(0);
 					auto diffSrc = VecFloat(0);
-
+					auto vecCC = VecFloat(0);
 					if (InplaceBwd)
 						for (auto n = 0ull; n < batchSize; ++n)
 						{
@@ -489,7 +535,14 @@ namespace dnn
 									diffSrc = Activation::dfVec(mul_add(VecFloat().load_a(&InputLayerFwd->Neurons[w]) - mean, weightedInvStdDev, biases)) * VecFloat().load_a(&InputLayer->NeuronsD1[w]);
 
 									diffGamma = mul_add(VecFloat().load_a(&InputLayerFwd->Neurons[w]) - mean, diffSrc, diffGamma);
-									diffBeta += diffSrc;
+									
+									// diffBeta += diffSrc;
+									// Use Kahan summation (https://en.wikipedia.org/wiki/Kahan_summation_algorithm)
+									auto y = diffSrc - vecCC;
+									auto t = diffBeta + y;
+									auto z = t - diffBeta;
+									vecCC = z - y;
+									diffBeta = t;
 								}
 							}
 						}
@@ -506,7 +559,14 @@ namespace dnn
 									diffSrc = Activation::dfVec(mul_add(VecFloat().load_a(&InputLayerFwd->Neurons[w]) - mean, weightedInvStdDev, biases)) * VecFloat().load_a(&NeuronsD1[w]);
 
 									diffGamma = mul_add(VecFloat().load_a(&InputLayerFwd->Neurons[w]) - mean, diffSrc, diffGamma);
-									diffBeta += diffSrc;
+
+									// diffBeta += diffSrc;
+									// Use Kahan summation (https://en.wikipedia.org/wiki/Kahan_summation_algorithm)
+									auto y = diffSrc - vecCC;
+									auto t = diffBeta + y;
+									auto z = t - diffBeta;
+									vecCC = z - y;
+									diffBeta = t;
 								}
 							}
 						}

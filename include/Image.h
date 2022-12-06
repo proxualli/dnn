@@ -114,11 +114,19 @@ namespace dnn
 		static Float GetChannelMean(const Image& image, const unsigned c) NOEXCEPT
 		{
 			auto mean = Float(0);
+			auto cc = Float(0);
 
 			for (auto d = 0u; d < image.D(); d++)
 				for (auto h = 0u; h < image.H(); h++)
 					for (auto w = 0u; w < image.W(); w++)
-						mean += image(c, d, h, w);
+					{
+						// Use Kahan summation (https://en.wikipedia.org/wiki/Kahan_summation_algorithm)
+						auto y = image(c, d, h, w) - cc;
+						volatile auto t = mean + y;
+						volatile auto z = t - mean;
+						cc = z - y;
+						mean = t;
+					}
 
 			return mean /= image.ChannelSize();
 		}
@@ -128,11 +136,19 @@ namespace dnn
 			const auto mean = GetChannelMean(image, c);
 
 			auto variance = Float(0);
+			auto cc = Float(0);
 
 			for (auto d = 0u; d < image.D(); d++)
 				for (auto h = 0u; h < image.H(); h++)
 					for (auto w = 0u; w < image.W(); w++)
-						variance += Square<Float>(image(c, d, h, w) - mean);
+					{
+						// Use Kahan summation (https://en.wikipedia.org/wiki/Kahan_summation_algorithm)
+						auto y = Square<Float>(image(c, d, h, w) - mean) - cc;
+						volatile auto t = variance + y;
+						volatile auto z = t - variance;
+						cc = z - y;
+						variance = t;
+					}
 
 			return variance /= image.ChannelSize();
 		}
