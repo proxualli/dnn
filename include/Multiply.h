@@ -124,7 +124,7 @@ namespace dnn
 
 			const auto plain = IsPlainFormat();
 			const auto elements = batchSize * (plain ? CDHW() : PaddedCDHW());
-			const auto threads = GetThreads(elements, Float(0.25));
+			const auto threads = GetThreads(elements, Float(0.2));
 			
 			if (EqualDimensions(Inputs))
 			{
