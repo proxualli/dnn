@@ -1263,7 +1263,7 @@ namespace dnn
 		}
 		const auto IsSkippable(const Layer& layer)
 		{
-			return layer.LayerType == LayerTypes::Add || layer.LayerType == LayerTypes::Substract || layer.LayerType == LayerTypes::Multiply || layer.LayerType == LayerTypes::Substract;
+			return layer.LayerType == LayerTypes::Add || layer.LayerType == LayerTypes::Substract; // || layer.LayerType == LayerTypes::Multiply || layer.LayerType == LayerTypes::Substract;
 		}
 
 		auto GetTotalSkipConnections()
@@ -1309,12 +1309,12 @@ namespace dnn
 							case LayerTypes::Substract:
 								dynamic_cast<Substract*>(layer.get())->SurvivalProbability[inputLayer] = survivalProb;
 								break;
-							case LayerTypes::Multiply:
+							/*case LayerTypes::Multiply:
 								dynamic_cast<Multiply*>(layer.get())->SurvivalProbability[inputLayer] = survivalProb;
 								break;
 							case LayerTypes::Divide:
 								dynamic_cast<Divide*>(layer.get())->SurvivalProbability[inputLayer] = survivalProb;
-								break;
+								break;*/
 							default:
 								break;
 							}
