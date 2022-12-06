@@ -126,7 +126,7 @@ namespace dnn
 								PRAGMA_OMP_SIMD()
 								for (auto cdhw = start; cdhw < end; cdhw++)
 								{
-									Neurons[cdhw] = InputsOriginal[0]->Neurons[cdhw] + InputsOriginal[1]->Neurons[cdhw];
+									Neurons[cdhw] = Inputs[0]->Neurons[cdhw] + Inputs[1]->Neurons[cdhw];
 									NeuronsD1[cdhw] = 0;
 								}
 							});
@@ -142,7 +142,7 @@ namespace dnn
 								PRAGMA_OMP_SIMD()
 								for (auto cdhw = start; cdhw < end; cdhw++)
 								{
-									Neurons[cdhw] = (InputsOriginal[0]->Neurons[cdhw] * scales0)  + (InputsOriginal[1]->Neurons[cdhw] * scales1);
+									Neurons[cdhw] = (Inputs[0]->Neurons[cdhw] * scales0)  + (Inputs[1]->Neurons[cdhw] * scales1);
 									NeuronsD1[cdhw] = 0;
 								}
 							});
@@ -161,7 +161,7 @@ namespace dnn
 									PRAGMA_OMP_SIMD()
 									for (auto hw = 0ull; hw < HW(); hw++)
 									{
-										Neurons[hw + outputOffset] = InputsOriginal[first]->Neurons[hw + outputOffset] + InputsOriginal[second]->Neurons[channelOffset];
+										Neurons[hw + outputOffset] = Inputs[first]->Neurons[hw + outputOffset] + Inputs[second]->Neurons[channelOffset];
 										NeuronsD1[hw + outputOffset] = 0;
 									}
 								}
@@ -181,7 +181,7 @@ namespace dnn
 									PRAGMA_OMP_SIMD()
 									for (auto hw = 0ull; hw < HW(); hw++)
 									{
-										Neurons[hw + outputOffset] = ((InputsOriginal[first]->Neurons[hw + outputOffset] * scales0) + (InputsOriginal[second]->Neurons[channelOffset] * scales1));
+										Neurons[hw + outputOffset] = ((Inputs[first]->Neurons[hw + outputOffset] * scales0) + (Inputs[second]->Neurons[channelOffset] * scales1));
 										NeuronsD1[hw + outputOffset] = 0;
 									}
 								}
@@ -200,12 +200,12 @@ namespace dnn
 								const auto start = n * size;
 								for (auto cdhw = start; cdhw < start + part; cdhw += VectorSize)
 								{
-									(VecFloat().load_a(&InputsOriginal[0]->Neurons[cdhw]) + VecFloat().load_a(&InputsOriginal[1]->Neurons[cdhw])).store_a(&Neurons[cdhw]);
+									(VecFloat().load_a(&Inputs[0]->Neurons[cdhw]) + VecFloat().load_a(&Inputs[1]->Neurons[cdhw])).store_a(&Neurons[cdhw]);
 									vecZero.store_nt(&NeuronsD1[cdhw]);
 								}
 								for (auto cdhw = start + part; cdhw < start + size; cdhw++)
 								{
-									Neurons[cdhw] = InputsOriginal[0]->Neurons[cdhw] + InputsOriginal[1]->Neurons[cdhw];
+									Neurons[cdhw] = Inputs[0]->Neurons[cdhw] + Inputs[1]->Neurons[cdhw];
 									NeuronsD1[cdhw] = 0;
 								}
 							});
@@ -221,14 +221,14 @@ namespace dnn
 								VecFloat In0, In1;
 								for (auto cdhw = start; cdhw < start + part; cdhw += VectorSize)
 								{
-									In0.load_a(&InputsOriginal[0]->Neurons[cdhw]);
-									In1.load_a(&InputsOriginal[1]->Neurons[cdhw]);
+									In0.load_a(&Inputs[0]->Neurons[cdhw]);
+									In1.load_a(&Inputs[1]->Neurons[cdhw]);
 									((In0 * scales0) + (In1 * scales1)).store_a(&Neurons[cdhw]);
 									vecZero.store_nt(&NeuronsD1[cdhw]);
 								}
 								for (auto cdhw = start + part; cdhw < start + size; cdhw++)
 								{
-									Neurons[cdhw] = (InputsOriginal[0]->Neurons[cdhw] * scales0) + (InputsOriginal[1]->Neurons[cdhw] * scales1);
+									Neurons[cdhw] = (Inputs[0]->Neurons[cdhw] * scales0) + (Inputs[1]->Neurons[cdhw] * scales1);
 									NeuronsD1[cdhw] = 0;
 								}
 							});
@@ -246,7 +246,7 @@ namespace dnn
 									const auto channelOffset = n * PaddedC + c;
 									for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
 									{
-										(VecFloat().load_a(&InputsOriginal[first]->Neurons[hw + outputOffset]) + VecFloat().load_a(&InputsOriginal[second]->Neurons[channelOffset])).store_a(&Neurons[hw + outputOffset]);
+										(VecFloat().load_a(&Inputs[first]->Neurons[hw + outputOffset]) + VecFloat().load_a(&Inputs[second]->Neurons[channelOffset])).store_a(&Neurons[hw + outputOffset]);
 										vecZero.store_nt(&NeuronsD1[hw + outputOffset]);
 									}
 								}
@@ -265,7 +265,7 @@ namespace dnn
 									const auto channelOffset = n * PaddedC + c;
 									for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
 									{
-										((VecFloat().load_a(&InputsOriginal[first]->Neurons[hw + outputOffset]) * scales0) + (VecFloat().load_a(&InputsOriginal[second]->Neurons[channelOffset]) * scales1)).store_a(&Neurons[hw + outputOffset]);
+										((VecFloat().load_a(&Inputs[first]->Neurons[hw + outputOffset]) * scales0) + (VecFloat().load_a(&Inputs[second]->Neurons[channelOffset]) * scales1)).store_a(&Neurons[hw + outputOffset]);
 										vecZero.store_nt(&NeuronsD1[hw + outputOffset]);
 									}
 								}
