@@ -212,7 +212,7 @@ namespace dnn
 							for (auto hw = 0ull; hw < HW(); hw++)
 							{
 								Inputs[first]->NeuronsD1[hw + outputOffset] += NeuronsD1[hw + outputOffset] * InputsOriginal[second]->Neurons[c];
-								Inputs[second]->NeuronsD1[c] += NeuronsD1[hw + outputOffset] * Inputs[first]->InputsOriginal[hw + outputOffset];
+								Inputs[second]->NeuronsD1[c] += NeuronsD1[hw + outputOffset] * InputsOriginal[first]->Neurons[hw + outputOffset];
 							}
 						}
 					}
