@@ -1261,12 +1261,12 @@ namespace dnn
 					layer->SharesInput = layer->SharesInputOriginal;
 				}
 		}
-		const auto IsSkippable(const Layer& layer)
+		const auto IsSkippable(const Layer& layer) const
 		{
 			return layer.LayerType == LayerTypes::Add || layer.LayerType == LayerTypes::Substract; // || layer.LayerType == LayerTypes::Multiply || layer.LayerType == LayerTypes::Divide;
 		}
 
-		auto GetTotalSkipConnections()
+		const auto GetTotalSkipConnections() const
 		{
 			auto totalSkipConnections = 0ull;
 		
