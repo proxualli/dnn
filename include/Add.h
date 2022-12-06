@@ -43,8 +43,8 @@ namespace dnn
 
 		void UpdateResolution() final override
 		{
-			H = InputsOriginal[first]->H;
-			W = InputsOriginal[first]->W;
+			H = Inputs[first]->H;
+			W = Inputs[first]->W;
 		}
 
 		std::string GetDescription() const final override
@@ -101,15 +101,15 @@ namespace dnn
 		void ForwardProp(const UInt batchSize, const bool training) final override
 		{
 			const auto fullDepth = SurvivalProbability[0] == Float(1) && SurvivalProbability[1] == Float(1);
-			scales[0] = fullDepth ? Float(1) : (InputsOriginal[0]->Skip ? Float(0) : Float(1));
-			scales[1] = fullDepth ? Float(1) : (InputsOriginal[1]->Skip ? Float(0) : Float(1));
+			scales[0] = fullDepth ? Float(1) : (Inputs[0]->Skip ? Float(0) : Float(1));
+			scales[1] = fullDepth ? Float(1) : (Inputs[1]->Skip ? Float(0) : Float(1));
 					
 			if (training)
 			{
 				const auto plain = IsPlainFormat();
 				const auto size = plain ? CDHW() : PaddedCDHW();
 				const auto part = GetVectorPart(size);
-				const auto threads = GetThreads(batchSize * size, Float(0.25));
+				const auto threads = GetThreads(batchSize * size);
 				const auto vecZero = VecFloat(0);
 				const auto strideHW = HW() * VectorSize;
 
@@ -328,7 +328,7 @@ namespace dnn
 			else
 			{
 #endif
-				const auto threads = GetThreads(batchSize * size, Float(0.25));
+				const auto threads = GetThreads(batchSize * size);
 
 				if (EqualDimensions(Inputs))
 				{

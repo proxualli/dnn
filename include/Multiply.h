@@ -44,8 +44,8 @@ namespace dnn
 
 		void UpdateResolution() final override
 		{
-			H = InputsOriginal[first]->H;
-			W = InputsOriginal[first]->W;
+			H = Inputs[first]->H;
+			W = Inputs[first]->W;
 		}
 
 		std::string GetDescription() const final override
@@ -124,7 +124,7 @@ namespace dnn
 
 			const auto plain = IsPlainFormat();
 			const auto elements = batchSize * (plain ? CDHW() : PaddedCDHW());
-			const auto threads = GetThreads(elements, Float(0.2));
+			const auto threads = GetThreads(elements);
 			
 			if (EqualDimensions(Inputs))
 			{
