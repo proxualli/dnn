@@ -235,7 +235,7 @@ namespace dnn
 		dnnl::memory::format_tag ChosenFormat;
 		std::mt19937 RandomEngine;
 
-		auto IsInplaceBwd(const LayerTypes layerType, const std::vector<Layer*>& inputs)
+		const auto IsInplaceBwd(const LayerTypes layerType, const std::vector<Layer*>& inputs) const
 		{
 			if (UseInplace && (layerType == LayerTypes::Activation || layerType == LayerTypes::LayerNorm || std::string(magic_enum::enum_name<LayerTypes>(layerType)).find("BatchNorm", 0) != std::string::npos) && (inputs.size() == 1) && (inputs[0]->LayerType == LayerTypes::Convolution || inputs[0]->LayerType == LayerTypes::DepthwiseConvolution || inputs[0]->LayerType == LayerTypes::ConvolutionTranspose))
 				return true;
@@ -243,7 +243,7 @@ namespace dnn
 				return false;
 		}
 
-		auto GetInputsBwd(const LayerTypes layerType, const std::vector<Layer*>& inputs)
+		auto GetInputsBwd(const LayerTypes layerType, const std::vector<Layer*>& inputs) const
 		{
 			if (IsInplaceBwd(layerType, inputs))
 				return std::vector<Layer*>(inputs);
@@ -348,8 +348,8 @@ namespace dnn
 			PadD(padD),
 			PadH(padH),
 			PadW(padW),
-			Inputs(std::vector<Layer*>(inputs)),				// Inputs is switched between non-inplace (forward) and inplace (backprop) during training 
-			InputsFwd(std::vector<Layer*>(inputs)),				// InputsFwd = the non-inplace inputs 
+			Inputs(std::vector<Layer*>(inputs)),		// Inputs is switched between non-inplace (forward) and inplace (backprop) during training 
+			InputsFwd(std::vector<Layer*>(inputs)),		// InputsFwd = the non-inplace inputs 
 			InputsBwd(GetInputsBwd(layerType, inputs)),	// InputsBwd = the inplace inputs for backward prop
 			InputLayer(inputs.size() > 0 ? inputs[0] : nullptr),
 			InputLayerFwd(inputs.size() > 0 ? inputs[0] : nullptr),
