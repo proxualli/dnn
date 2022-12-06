@@ -250,13 +250,11 @@ namespace dnn
 			else
 			{
 				auto inputsInplace = std::vector<Layer*>();
-
+				
 				if (inputs.size() > 0)
-				{
 					for (auto input : inputs)
 						inputsInplace.push_back(input->InplaceBwd ? input->InputLayerFwd : input);
-				}
-
+				
 				return inputsInplace;
 			}
 		}

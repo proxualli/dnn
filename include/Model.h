@@ -1246,20 +1246,23 @@ namespace dnn
 
 		void SwitchInplaceBwd(const bool enable)
 		{
-			if (enable)
-				for (auto& layer : Layers)
-				{
-					layer->Inputs = std::vector<Layer*>(layer->InputsBwd);
-					layer->InputLayer = layer->InputLayerBwd;
-					layer->SharesInput = layer->SharesInputInplace;
-				}
-			else
-				for (auto& layer : Layers)
-				{
-					layer->Inputs = std::vector<Layer*>(layer->InputsFwd);
-					layer->InputLayer = layer->InputLayerFwd;
-					layer->SharesInput = layer->SharesInputOriginal;
-				}
+			if constexpr (UseInplace)
+			{
+				if (enable)
+					for (auto& layer : Layers)
+					{
+						layer->Inputs = std::vector<Layer*>(layer->InputsBwd);
+						layer->InputLayer = layer->InputLayerBwd;
+						layer->SharesInput = layer->SharesInputInplace;
+					}
+				else
+					for (auto& layer : Layers)
+					{
+						layer->Inputs = std::vector<Layer*>(layer->InputsFwd);
+						layer->InputLayer = layer->InputLayerFwd;
+						layer->SharesInput = layer->SharesInputOriginal;
+					}
+			}
 		}
 		const auto IsSkippable(const Layer& layer) const
 		{
@@ -1609,8 +1612,7 @@ namespace dnn
 								// Backward
 								bpropTimeCount = std::chrono::duration<Float>(Float(0));
 								updateTimeCount = std::chrono::duration<Float>(Float(0));
-								if (UseInplace)
-									SwitchInplaceBwd(true);
+								SwitchInplaceBwd(true);
 								for (auto i = Layers.size() - 1; i >= FirstUnlockedLayer.load(); --i)
 								{
 									if (Layers[i]->HasWeights)
@@ -1637,8 +1639,7 @@ namespace dnn
 									}
 									bpropTimeCount += Layers[i]->bpropTime;
 								}
-								if (UseInplace)
-									SwitchInplaceBwd(false);
+								SwitchInplaceBwd(false);
 								bpropTime = bpropTimeCount;
 								updateTime = updateTimeCount;
 
@@ -1679,8 +1680,7 @@ namespace dnn
 								// Backward
 								bpropTimeCount = std::chrono::duration<Float>(Float(0));
 								updateTimeCount = std::chrono::duration<Float>(Float(0));
-								if constexpr (UseInplace)
-									SwitchInplaceBwd(true);
+								SwitchInplaceBwd(true);
 								for (auto i = Layers.size() - 1; i >= FirstUnlockedLayer.load(); --i)
 								{
 									if (Layers[i]->HasWeights)
@@ -1707,8 +1707,7 @@ namespace dnn
 									}
 									bpropTimeCount += Layers[i]->bpropTime;
 								}
-								if constexpr (UseInplace)
-									SwitchInplaceBwd(false);
+								SwitchInplaceBwd(false);
 								bpropTime = bpropTimeCount;
 								updateTime = updateTimeCount;
 
@@ -1874,8 +1873,7 @@ namespace dnn
 
 				if (CheckTaskState())
 				{
-					if constexpr (UseInplace)
-						SwitchInplaceBwd(false);
+					SwitchInplaceBwd(false);
 
 					for (auto cost : CostLayers)
 						cost->Reset();
