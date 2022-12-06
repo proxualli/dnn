@@ -431,8 +431,8 @@ namespace dnn
 				TestingSamplesCount = 10000;
 				TrainingLabels = std::vector<std::vector<UInt>>(TrainingSamplesCount, std::vector<UInt>(Hierarchies, 0));
 				TestingLabels = std::vector<std::vector<UInt>>(TestingSamplesCount, std::vector<UInt>(Hierarchies, 0));
-				Mean = std::vector<Float>({ Float(125.3), Float(123.0), Float(113.9) });
-				StdDev = std::vector<Float>({ Float(63.0), Float(62.1), Float(66.7) });
+				Mean = std::vector<Float>({ Float(125.79831808), Float(123.43251712), Float(114.31199744) });
+				StdDev = std::vector<Float>({ Float(63.24027648), Float(62.3321728), Float(66.96644608) });
 				TrainingSamples = std::vector<cimg_library::CImg<Byte>>(TrainingSamplesCount);
 				TestingSamples = std::vector<cimg_library::CImg<Byte>>(TestingSamplesCount);
 				auto pathTrainPatterns = std::vector<std::string>();
