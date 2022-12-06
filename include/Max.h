@@ -149,16 +149,16 @@ namespace dnn
 				VecFloat In0, In1, D1;
 				for (auto cdhw = 0ull; cdhw < part; cdhw+=VectorSize)
 				{
-					In0.load_a(&InputsOriginal[0]->Neurons[cdhw]);
-					In1.load_a(&InputsOriginal[1]->Neurons[cdhw]);
+					In0.load_a(&InputsFwd[0]->Neurons[cdhw]);
+					In1.load_a(&InputsFwd[1]->Neurons[cdhw]);
 					D1.load_a(&NeuronsD1[cdhw]);
 					if_add(In0 >= In1, VecFloat().load_a(&Inputs[0]->NeuronsD1[cdhw]), D1).store_a(&Inputs[0]->NeuronsD1[cdhw]);
 					if_add(In0 < In1, VecFloat().load_a(&Inputs[1]->NeuronsD1[cdhw]), D1).store_a(&Inputs[1]->NeuronsD1[cdhw]);
 				}
 				for (auto cdhw = part; cdhw < size; cdhw++)
 				{
-					Inputs[0]->NeuronsD1[cdhw] += InputsOriginal[0]->Neurons[cdhw] >= InputsOriginal[1]->Neurons[cdhw] ? NeuronsD1[cdhw] : 0;
-					Inputs[1]->NeuronsD1[cdhw] += InputsOriginal[0]->Neurons[cdhw] >= InputsOriginal[1]->Neurons[cdhw] ? 0 : NeuronsD1[cdhw];
+					Inputs[0]->NeuronsD1[cdhw] += InputsFwd[0]->Neurons[cdhw] >= InputsFwd[1]->Neurons[cdhw] ? NeuronsD1[cdhw] : 0;
+					Inputs[1]->NeuronsD1[cdhw] += InputsFwd[0]->Neurons[cdhw] >= InputsFwd[1]->Neurons[cdhw] ? 0 : NeuronsD1[cdhw];
 				}
 			}
 			else
@@ -172,8 +172,8 @@ namespace dnn
 					VecFloat In0, In1, D1;
 					for (auto cdhw = start; cdhw < end; cdhw+=VectorSize)
 					{
-						In0.load_a(&InputsOriginal[0]->Neurons[cdhw]);
-						In1.load_a(&InputsOriginal[1]->Neurons[cdhw]);
+						In0.load_a(&InputsFwd[0]->Neurons[cdhw]);
+						In1.load_a(&InputsFwd[1]->Neurons[cdhw]);
 						D1.load_a(&NeuronsD1[cdhw]);
 
 						if_add(In0 >= In1, VecFloat().load_a(&Inputs[0]->NeuronsD1[cdhw]), D1).store_a(&Inputs[0]->NeuronsD1[cdhw]);
@@ -181,8 +181,8 @@ namespace dnn
 					}
 					for (auto cdhw = end; cdhw < start + size; cdhw++)
 					{
-						Inputs[0]->NeuronsD1[cdhw] += InputsOriginal[0]->Neurons[cdhw] >= InputsOriginal[1]->Neurons[cdhw] ? NeuronsD1[cdhw] : 0;
-						Inputs[1]->NeuronsD1[cdhw] += InputsOriginal[0]->Neurons[cdhw] >= InputsOriginal[1]->Neurons[cdhw] ? 0 : NeuronsD1[cdhw];
+						Inputs[0]->NeuronsD1[cdhw] += InputsFwd[0]->Neurons[cdhw] >= InputsFwd[1]->Neurons[cdhw] ? NeuronsD1[cdhw] : 0;
+						Inputs[1]->NeuronsD1[cdhw] += InputsFwd[0]->Neurons[cdhw] >= InputsFwd[1]->Neurons[cdhw] ? 0 : NeuronsD1[cdhw];
 					}
 				});
 #ifdef DNN_STOCHASTIC

@@ -1249,15 +1249,15 @@ namespace dnn
 			if (enable)
 				for (auto& layer : Layers)
 				{
-					layer->Inputs = std::vector<Layer*>(layer->InputsInplaceBwd);
-					layer->InputLayer = layer->InputLayerInplaceBwd;
+					layer->Inputs = std::vector<Layer*>(layer->InputsBwd);
+					layer->InputLayer = layer->InputLayerBwd;
 					layer->SharesInput = layer->SharesInputInplace;
 				}
 			else
 				for (auto& layer : Layers)
 				{
-					layer->Inputs = std::vector<Layer*>(layer->InputsOriginal);
-					layer->InputLayer = layer->InputLayerOriginal;
+					layer->Inputs = std::vector<Layer*>(layer->InputsFwd);
+					layer->InputLayer = layer->InputLayerFwd;
 					layer->SharesInput = layer->SharesInputOriginal;
 				}
 		}
@@ -1368,7 +1368,7 @@ namespace dnn
 
 			for (auto& layer : Layers)
 				if (layer->Name != parentLayer->Name)
-					for (auto input : inplace ? layer->InputsInplaceBwd : layer->InputsOriginal)
+					for (auto input : inplace ? layer->InputsBwd : layer->InputsFwd)
 						if (input->Name == parentLayer->Name)
 							outputs.push_back(layer.get());
 
@@ -1398,7 +1398,7 @@ namespace dnn
 						if (l->Name == layer->Name)
 							continue;
 
-						for (auto input : l->InputsOriginal)
+						for (auto input : l->InputsFwd)
 						{
 							if (input->Name == layer->Name)
 							{
@@ -1432,7 +1432,7 @@ namespace dnn
 						if (l->Name == layer->Name)
 							continue;
 
-						for (auto input : l->InputsInplaceBwd)
+						for (auto input : l->InputsBwd)
 						{
 							if (input->Name == layer->Name)
 							{

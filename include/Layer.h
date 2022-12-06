@@ -243,7 +243,7 @@ namespace dnn
 				return false;
 		}
 
-		auto GetInplaceInputsBwd(const LayerTypes layerType, const std::vector<Layer*>& inputs)
+		auto GetInputsBwd(const LayerTypes layerType, const std::vector<Layer*>& inputs)
 		{
 			if (IsInplaceBwd(layerType, inputs))
 				return std::vector<Layer*>(inputs);
@@ -254,7 +254,7 @@ namespace dnn
 				if (inputs.size() > 0)
 				{
 					for (auto input : inputs)
-						inputsInplace.push_back(input->InplaceBwd ? input->InputLayerOriginal : input);
+						inputsInplace.push_back(input->InplaceBwd ? input->InputLayerFwd : input);
 				}
 
 				return inputsInplace;
@@ -277,11 +277,11 @@ namespace dnn
 		const bool HasPadding;
 		std::vector<Layer*> Inputs;
 		std::vector<Layer*> Outputs;
-		const std::vector<Layer*> InputsOriginal;
-		const std::vector<Layer*> InputsInplaceBwd;
+		const std::vector<Layer*> InputsFwd;
+		const std::vector<Layer*> InputsBwd;
 		Layer* InputLayer;
-		Layer* InputLayerInplaceBwd;
-		Layer* InputLayerOriginal;
+		Layer* InputLayerBwd;
+		Layer* InputLayerFwd;
 		bool LayerBeforeCost;
 		bool SharesInput;
 		bool SharesInputOriginal;
@@ -348,12 +348,12 @@ namespace dnn
 			PadD(padD),
 			PadH(padH),
 			PadW(padW),
-			Inputs(std::vector<Layer*>(inputs)),						// Inputs is switched between non-inplace (forward) and inplace (backprop) during training 
-			InputsOriginal(std::vector<Layer*>(inputs)),				// InputsOriginal = the non-inplace inputs 
-			InputsInplaceBwd(GetInplaceInputsBwd(layerType, inputs)),	// InputsInplaceBwd = the inplace inputs backward prop
+			Inputs(std::vector<Layer*>(inputs)),				// Inputs is switched between non-inplace (forward) and inplace (backprop) during training 
+			InputsFwd(std::vector<Layer*>(inputs)),				// InputsFwd = the non-inplace inputs 
+			InputsBwd(GetInputsBwd(layerType, inputs)),	// InputsBwd = the inplace inputs for backward prop
 			InputLayer(inputs.size() > 0 ? inputs[0] : nullptr),
-			InputLayerOriginal(inputs.size() > 0 ? inputs[0] : nullptr),
-			InputLayerInplaceBwd(GetInplaceInputsBwd(layerType, inputs).size() > 0 ? GetInplaceInputsBwd(layerType, inputs)[0] : nullptr),
+			InputLayerFwd(inputs.size() > 0 ? inputs[0] : nullptr),
+			InputLayerBwd(GetInputsBwd(layerType, inputs).size() > 0 ? GetInputsBwd(layerType, inputs)[0] : nullptr),
 			InplaceBwd(IsInplaceBwd(layerType, inputs)),
 			Enabled(enabled),
 			Skip(false),
