@@ -192,22 +192,22 @@ namespace dnn
 							if (fullDepth)
 							{
 								PRAGMA_OMP_SIMD()
-									for (auto cdhw = 0ull; cdhw < CDHW(); cdhw++)
-									{
-										Neurons[cdhw] = Inputs[0]->Neurons[cdhw] / Inputs[1]->Neurons[cdhw];
-										NeuronsD1[cdhw] = 0;
-									}
+								for (auto cdhw = 0ull; cdhw < CDHW(); cdhw++)
+								{
+									Neurons[cdhw] = Inputs[0]->Neurons[cdhw] / Inputs[1]->Neurons[cdhw];
+									NeuronsD1[cdhw] = 0;
+								}
 							}
 							else
 							{
 								const auto scales0 = scales[0];
 								const auto scales1 = scales[1];
 								PRAGMA_OMP_SIMD()
-									for (auto cdhw = 0ull; cdhw < CDHW(); cdhw++)
-									{
-										Neurons[cdhw] = (Inputs[0]->Neurons[cdhw] * scales0) / (Inputs[1]->Neurons[cdhw] * scales1);
-										NeuronsD1[cdhw] = 0;
-									}
+								for (auto cdhw = 0ull; cdhw < CDHW(); cdhw++)
+								{
+									Neurons[cdhw] = (Inputs[0]->Neurons[cdhw] * scales0) / (Inputs[1]->Neurons[cdhw] * scales1);
+									NeuronsD1[cdhw] = 0;
+								}
 							}
 						}
 						else
@@ -218,11 +218,11 @@ namespace dnn
 								{
 									const auto outputOffset = c * HW();
 									PRAGMA_OMP_SIMD()
-										for (auto hw = 0ull; hw < HW(); hw++)
-										{
-											Neurons[hw + outputOffset] = Inputs[first]->Neurons[hw + outputOffset] / Inputs[second]->Neurons[c];
-											NeuronsD1[hw + outputOffset] = 0;
-										}
+									for (auto hw = 0ull; hw < HW(); hw++)
+									{
+										Neurons[hw + outputOffset] = Inputs[first]->Neurons[hw + outputOffset] / Inputs[second]->Neurons[c];
+										NeuronsD1[hw + outputOffset] = 0;
+									}
 								}
 							}
 							else
@@ -233,11 +233,11 @@ namespace dnn
 								{
 									const auto outputOffset = c * HW();
 									PRAGMA_OMP_SIMD()
-										for (auto hw = 0ull; hw < HW(); hw++)
-										{
-											Neurons[hw + outputOffset] = (Inputs[first]->Neurons[hw + outputOffset] * scales0) / (Inputs[second]->Neurons[c] * scales1);
-											NeuronsD1[hw + outputOffset] = 0;
-										}
+									for (auto hw = 0ull; hw < HW(); hw++)
+									{
+										Neurons[hw + outputOffset] = (Inputs[first]->Neurons[hw + outputOffset] * scales0) / (Inputs[second]->Neurons[c] * scales1);
+										NeuronsD1[hw + outputOffset] = 0;
+									}
 								}
 							}
 						}
@@ -553,6 +553,7 @@ namespace dnn
 							{
 								const auto outputOffset = n * CDHW() + c * HW();
 								const auto channelOffset = n * C + c;
+								PRAGMA_OMP_SIMD()
 								for (auto hw = 0ull; hw < HW(); hw++)
 								{
 									Inputs[first]->NeuronsD1[hw + outputOffset] += NeuronsD1[hw + outputOffset] / InputsFwd[second]->Neurons[channelOffset];
