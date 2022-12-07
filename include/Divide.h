@@ -43,8 +43,8 @@ namespace dnn
 
 		void UpdateResolution() final override
 		{
-			H = InputsFwd[first]->H;
-			W = InputsFwd[first]->W;
+			H = Inputs[first]->H;
+			W = Inputs[first]->W;
 		}
 
 		std::string GetDescription() const final override
