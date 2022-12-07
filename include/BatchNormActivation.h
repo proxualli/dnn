@@ -521,6 +521,7 @@ namespace dnn
 					auto diffGamma = VecFloat(0);
 					auto diffBeta = VecFloat(0);
 					auto diffSrc = VecFloat(0);
+					auto vecC = VecFloat(0);
 					auto vecCC = VecFloat(0);
 					if (InplaceBwd)
 						for (auto n = 0ull; n < batchSize; ++n)
@@ -534,15 +535,21 @@ namespace dnn
 								{
 									diffSrc = Activation::dfVec(mul_add(VecFloat().load_a(&InputLayerFwd->Neurons[w]) - mean, weightedInvStdDev, biases)) * VecFloat().load_a(&InputLayer->NeuronsD1[w]);
 
-									diffGamma = mul_add(VecFloat().load_a(&InputLayerFwd->Neurons[w]) - mean, diffSrc, diffGamma);
-									
+									// diffGamma = mul_add(VecFloat().load_a(&InputLayerFwd->Neurons[w]) - mean, diffSrc, diffGamma);
+									// Use Kahan summation (https://en.wikipedia.org/wiki/Kahan_summation_algorithm)
+									auto y = (diffSrc * (VecFloat().load_a(&InputLayerFwd->Neurons[w]) - mean)) - vecC;
+									auto t = diffGamma + y;
+									auto z = t - diffGamma;
+									vecC = z - y;
+									diffGamma = t;
+
 									// diffBeta += diffSrc;
 									// Use Kahan summation (https://en.wikipedia.org/wiki/Kahan_summation_algorithm)
-									auto y = diffSrc - vecCC;
-									auto t = diffBeta + y;
-									auto z = t - diffBeta;
-									vecCC = z - y;
-									diffBeta = t;
+									auto yy = diffSrc - vecCC;
+									auto tt = diffBeta + yy;
+									auto zz = tt - diffBeta;
+									vecCC = zz - yy;
+									diffBeta = tt;
 								}
 							}
 						}
@@ -558,15 +565,21 @@ namespace dnn
 								{
 									diffSrc = Activation::dfVec(mul_add(VecFloat().load_a(&InputLayerFwd->Neurons[w]) - mean, weightedInvStdDev, biases)) * VecFloat().load_a(&NeuronsD1[w]);
 
-									diffGamma = mul_add(VecFloat().load_a(&InputLayerFwd->Neurons[w]) - mean, diffSrc, diffGamma);
+									// diffGamma = mul_add(VecFloat().load_a(&InputLayerFwd->Neurons[w]) - mean, diffSrc, diffGamma);
+									// Use Kahan summation (https://en.wikipedia.org/wiki/Kahan_summation_algorithm)
+									auto y = (diffSrc * (VecFloat().load_a(&InputLayerFwd->Neurons[w]) - mean)) - vecC;
+									auto t = diffGamma + y;
+									auto z = t - diffGamma;
+									vecC = z - y;
+									diffGamma = t;
 
 									// diffBeta += diffSrc;
 									// Use Kahan summation (https://en.wikipedia.org/wiki/Kahan_summation_algorithm)
-									auto y = diffSrc - vecCC;
-									auto t = diffBeta + y;
-									auto z = t - diffBeta;
-									vecCC = z - y;
-									diffBeta = t;
+									auto yy = diffSrc - vecCC;
+									auto tt = diffBeta + yy;
+									auto zz = tt - diffBeta;
+									vecCC = zz - yy;
+									diffBeta = tt;
 								}
 							}
 						}

@@ -160,6 +160,9 @@ namespace
 	constexpr auto VectorSize = 4ull;
 	constexpr auto BlockedFmt = dnnl::memory::format_tag::nChw4c;
 #endif
+	
+	
+
 	constexpr auto GetVectorPart(const UInt& elements) NOEXCEPT { return (elements / VectorSize) * VectorSize; }
 	constexpr auto DivUp(const UInt& c) NOEXCEPT { return (((c - 1) / VectorSize) + 1) * VectorSize; }
 	auto IsPlainDataFmt(const dnnl::memory::desc& md) NOEXCEPT { return md.get_format_kind() == dnnl::memory::format_kind::blocked && md.get_inner_nblks() == 0; }
@@ -495,6 +498,27 @@ namespace
 	constexpr auto inline GetColorFromRange(const T& range, const T& minimum, const T& value) NOEXCEPT { return Saturate<T>(T(255) - ((value - minimum) * range)); }
 	template<typename T>
 	constexpr auto inline GetColorRange(const T& min, const T& max) NOEXCEPT { return (min == max) ? T(0) : T(255) / ((std::signbit(min) && std::signbit(max)) ? -(min + max) : (max - min)); }
+	
+	constexpr auto Fast2Sum(Float& sum, const Float& a, const Float& b)
+	{
+		sum = a + b;
+		
+		volatile auto z = sum - a;
+		volatile auto t = b - z;
+		
+		return t;
+	}
+
+	auto Fast2SumVec(VecFloat& sum, const VecFloat& a, const VecFloat& b)
+	{
+		sum = a + b;
+		
+		auto z = sum - a;
+		auto t = b - z;
+	
+		return t;
+	}
+
 
 #if defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW32__)
 	const auto nwl = std::string("\r\n");
