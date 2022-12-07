@@ -499,26 +499,21 @@ namespace
 	template<typename T>
 	constexpr auto inline GetColorRange(const T& min, const T& max) NOEXCEPT { return (min == max) ? T(0) : T(255) / ((std::signbit(min) && std::signbit(max)) ? -(min + max) : (max - min)); }
 	
-	/*constexpr auto Fast2Sum(Float& sum, const Float& a, const Float& b)
+	void KahanSum(Float& sum, Float& c, const Float& i)
 	{
-		sum = a + b;
-		
-		volatile auto z = sum - a;
-		volatile auto t = b - z;
-		
-		return t;
+		volatile auto y = i - c;
+		volatile auto t = sum + y;
+		c = (t - sum) - y;
+		sum = t;
 	}
 
-	auto Fast2SumVec(VecFloat& sum, const VecFloat& a, const VecFloat& b)
+	void KahanSumVec(VecFloat& sum, VecFloat& c, const VecFloat& i)
 	{
-		sum = a + b;
-		
-		auto z = sum - a;
-		auto t = b - z;
-	
-		return t;
-	}*/
-
+		auto y = i - c;
+		auto t = sum + y;
+		c = (t - sum) - y;
+		sum = t;
+	}
 
 #if defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW32__)
 	const auto nwl = std::string("\r\n");

@@ -119,14 +119,7 @@ namespace dnn
 			for (auto d = 0u; d < image.D(); d++)
 				for (auto h = 0u; h < image.H(); h++)
 					for (auto w = 0u; w < image.W(); w++)
-					{
-						// Use Kahan summation (https://en.wikipedia.org/wiki/Kahan_summation_algorithm)
-						auto y = image(c, d, h, w) - cc;
-						volatile auto t = mean + y;
-						volatile auto z = t - mean;
-						cc = z - y;
-						mean = t;
-					}
+						KahanSum(mean, cc, image(c, d, h, w));
 
 			return mean /= image.ChannelSize();
 		}
@@ -141,14 +134,7 @@ namespace dnn
 			for (auto d = 0u; d < image.D(); d++)
 				for (auto h = 0u; h < image.H(); h++)
 					for (auto w = 0u; w < image.W(); w++)
-					{
-						// Use Kahan summation (https://en.wikipedia.org/wiki/Kahan_summation_algorithm)
-						auto y = Square<Float>(image(c, d, h, w) - mean) - cc;
-						volatile auto t = variance + y;
-						volatile auto z = t - variance;
-						cc = z - y;
-						variance = t;
-					}
+						KahanSum(variance, cc, Square<Float>(image(c, d, h, w) - mean));
 
 			return variance /= image.ChannelSize();
 		}
