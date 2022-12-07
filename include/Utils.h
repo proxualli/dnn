@@ -501,16 +501,16 @@ namespace
 	
 	void KahanSum(Float& sum, Float& c, const Float& i)
 	{
-		volatile auto y = i - c;
-		volatile auto t = sum + y;
+		const volatile auto y = i - c;
+		const volatile auto t = sum + y;
 		c = (t - sum) - y;
 		sum = t;
 	}
 
-	void KahanSumVec(VecFloat& sum, VecFloat& c, const VecFloat& i)
+	inline void KahanSumVec(VecFloat& sum, VecFloat& c, const VecFloat& i)
 	{
-		auto y = i - c;
-		auto t = sum + y;
+		const auto y = i - c;
+		const auto t = sum + y;
 		c = (t - sum) - y;
 		sum = t;
 	}

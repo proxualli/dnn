@@ -109,7 +109,7 @@ namespace dnn
 				const auto plain = IsPlainFormat();
 				const auto size = plain ? CDHW() : PaddedCDHW();
 				const auto part = GetVectorPart(size);
-				const auto threads = GetThreads(batchSize * size, Float(0.25));
+				const auto threads = GetThreads(batchSize * size, Float(0.2));
 				const auto vecZero = VecFloat(0);
 				const auto strideHW = HW() * VectorSize;
 
@@ -129,7 +129,7 @@ namespace dnn
 									Neurons[cdhw] = Inputs[0]->Neurons[cdhw] - Inputs[1]->Neurons[cdhw];
 									NeuronsD1[cdhw] = 0;
 								}
-								});
+							});
 						}
 						else
 						{
@@ -145,7 +145,7 @@ namespace dnn
 									Neurons[cdhw] = (Inputs[0]->Neurons[cdhw] * scales0) - (Inputs[1]->Neurons[cdhw] * scales1);
 									NeuronsD1[cdhw] = 0;
 								}
-								});
+							});
 						}
 					}
 					else
