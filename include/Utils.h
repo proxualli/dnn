@@ -499,7 +499,7 @@ namespace
 	template<typename T>
 	constexpr auto inline GetColorRange(const T& min, const T& max) NOEXCEPT { return (min == max) ? T(0) : T(255) / ((std::signbit(min) && std::signbit(max)) ? -(min + max) : (max - min)); }
 	
-	constexpr auto Fast2Sum(Float& sum, const Float& a, const Float& b)
+	/*constexpr auto Fast2Sum(Float& sum, const Float& a, const Float& b)
 	{
 		sum = a + b;
 		
@@ -517,7 +517,7 @@ namespace
 		auto t = b - z;
 	
 		return t;
-	}
+	}*/
 
 
 #if defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW32__)
