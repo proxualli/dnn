@@ -110,7 +110,7 @@ namespace dnn
 				const auto plain = IsPlainFormat();
 				const auto size = plain ? CDHW() : PaddedCDHW();
 				const auto part = GetVectorPart(size);
-				const auto threads = batchSize == 1 ? 1ull : GetThreads(batchSize * size, Float(0.25));
+				const auto threads = batchSize == 1 ? 1ull : GetThreads(batchSize * size, Float(1));
 				const auto vecZero = VecFloat(0);
 				const auto strideHW = HW() * VectorSize;
 
@@ -430,7 +430,7 @@ namespace dnn
 
 			const auto plain = IsPlainFormat();
 			const auto elements = batchSize * (plain ? CDHW() : PaddedCDHW());
-			const auto threads = batchSize == 1 ? 1ull : GetThreads(elements, Float(0.25));
+			const auto threads = batchSize == 1 ? 1ull : GetThreads(elements, Float(1));
 			
 			if (EqualDimensions(Inputs))
 			{
@@ -515,6 +515,7 @@ namespace dnn
 						for (auto c = 0ull; c < C; c++)
 						{
 							const auto outputOffset = c * HW();
+							PRAGMA_OMP_SIMD()
 							for (auto hw = 0ull; hw < HW(); hw++)
 							{
 								Inputs[first]->NeuronsD1[hw + outputOffset] += NeuronsD1[hw + outputOffset] * InputsFwd[second]->Neurons[c];
@@ -552,6 +553,7 @@ namespace dnn
 							{
 								const auto outputOffset = n * CDHW() + c * HW();
 								const auto channelOffset = n * C + c;
+								PRAGMA_OMP_SIMD()
 								for (auto hw = 0ull; hw < HW(); hw++)
 								{
 									Inputs[first]->NeuronsD1[hw + outputOffset] += NeuronsD1[hw + outputOffset] * InputsFwd[second]->Neurons[channelOffset];

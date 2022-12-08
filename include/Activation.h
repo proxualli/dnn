@@ -641,8 +641,11 @@ namespace dnn
 								for (auto c = 0ull; c < PaddedC; c += VectorSize)
 									(TanhExp::dfVec(VecFloat().load_a(&InputLayerFwd->Neurons[c])), VecFloat().load_a(&InputLayer->NeuronsD1[c])).store_a(&InputLayer->NeuronsD1[c]);
 							else
+							{
+								PRAGMA_OMP_SIMD()
 								for (auto c = 0ull; c < C; c++)
 									InputLayer->NeuronsD1[c] = TanhExp::df(InputLayerFwd->Neurons[c]) * InputLayer->NeuronsD1[c];
+							}
 						}
 						else
 						{
@@ -650,9 +653,11 @@ namespace dnn
 								for (auto c = 0ull; c < PaddedC; c += VectorSize)
 									mul_add(TanhExp::dfVec(VecFloat().load_a(&InputLayerFwd->Neurons[c])), VecFloat().load_a(&NeuronsD1[c]), VecFloat().load_a(&InputLayer->NeuronsD1[c])).store_a(&InputLayer->NeuronsD1[c]);
 							else
+							{
+								PRAGMA_OMP_SIMD()
 								for (auto c = 0ull; c < C; c++)
 									InputLayer->NeuronsD1[c] += TanhExp::df(InputLayerFwd->Neurons[c]) * NeuronsD1[c];
-						}
+							}
 					}
 					else
 					{
@@ -670,6 +675,7 @@ namespace dnn
 								for_i(batchSize, threads, [=](UInt n)
 								{
 									const auto offset = n * C;
+									PRAGMA_OMP_SIMD()
 									for (auto c = offset; c < offset + C; c++)
 										InputLayer->NeuronsD1[c] = TanhExp::df(InputLayerFwd->Neurons[c]) * InputLayer->NeuronsD1[c];
 								});
@@ -687,6 +693,7 @@ namespace dnn
 								for_i(batchSize, threads, [=](UInt n)
 								{
 									const auto offset = n * C;
+									PRAGMA_OMP_SIMD()
 									for (auto c = offset; c < offset + C; c++)
 										InputLayer->NeuronsD1[c] += TanhExp::df(InputLayerFwd->Neurons[c]) * NeuronsD1[c];
 								});
@@ -710,12 +717,15 @@ namespace dnn
 										(TanhExp::dfVec(VecFloat().load_a(&InputLayerFwd->Neurons[hw])), VecFloat().load_a(&InputLayer->NeuronsD1[hw])).store_a(&InputLayer->NeuronsD1[hw]);
 								}
 							else
+							{
 								for (auto c = 0ull; c < C; c++)
 								{
 									const auto offset = c * HW();
+									PRAGMA_OMP_SIMD()
 									for (auto hw = offset; hw < offset + HW(); hw++)
 										InputLayer->NeuronsD1[hw] = TanhExp::df(InputLayerFwd->Neurons[hw]) * InputLayer->NeuronsD1[hw];
 								}
+							}
 						}
 						else
 						{
@@ -727,12 +737,15 @@ namespace dnn
 										mul_add(TanhExp::dfVec(VecFloat().load_a(&InputLayerFwd->Neurons[hw])), VecFloat().load_a(&NeuronsD1[hw]), VecFloat().load_a(&InputLayer->NeuronsD1[hw])).store_a(&InputLayer->NeuronsD1[hw]);
 								}
 							else
+							{
 								for (auto c = 0ull; c < C; c++)
 								{
 									const auto offset = c * HW();
+									PRAGMA_OMP_SIMD()
 									for (auto hw = offset; hw < offset + HW(); hw++)
 										InputLayer->NeuronsD1[hw] += TanhExp::df(InputLayerFwd->Neurons[hw]) * NeuronsD1[hw];
 								}
+							}
 						}
 					}
 					else
@@ -756,6 +769,7 @@ namespace dnn
 									for (auto c = 0ull; c < C; c++)
 									{
 										const auto offset = n * CDHW() + c * HW();
+										PRAGMA_OMP_SIMD()
 										for (auto hw = offset; hw < offset + HW(); hw++)
 											InputLayer->NeuronsD1[hw] = TanhExp::df(InputLayerFwd->Neurons[hw]) * InputLayer->NeuronsD1[hw];
 									}
@@ -779,6 +793,7 @@ namespace dnn
 									for (auto c = 0ull; c < C; c++)
 									{
 										const auto offset = n * CDHW() + c * HW();
+										PRAGMA_OMP_SIMD()
 										for (auto hw = offset; hw < offset + HW(); hw++)
 											InputLayer->NeuronsD1[hw] += TanhExp::df(InputLayerFwd->Neurons[hw]) * NeuronsD1[hw];
 									}

@@ -147,7 +147,7 @@ namespace dnn
 
 			if (!training)
 			{
-				const auto threads = GetThreads(elements, Float(0.25));
+				const auto threads = GetThreads(elements, Float(0.2));
 
 				if (plain) // nchw
 				{
@@ -219,12 +219,12 @@ namespace dnn
 							for (auto hw = start; hw < part; hw += VectorSize)
 								vecMean += VecFloat().load_a(&InputLayer->Neurons[hw]);
 							const auto end = start + HW();
-							PRAGMA_OMP_SIMD()
 							for (auto hw = part; hw < end; hw++)
 								mean += InputLayer->Neurons[hw];
 						}
 						mean += horizontal_add(vecMean);
 						mean /= Float(batchSize * HW());
+						Mean[c] = mean;
 
 						auto vecVariance = VecFloat(0);
 						auto variance = Float(0);
@@ -235,13 +235,14 @@ namespace dnn
 							for (auto hw = start; hw < part; hw += VectorSize)
 								vecVariance += square(VecFloat().load_a(&InputLayer->Neurons[hw]) - mean);
 							const auto end = start + HW();
-							PRAGMA_OMP_SIMD()
 							for (auto hw = part; hw < end; hw++)
 								variance += Square<Float>(InputLayer->Neurons[hw] - mean);
 						}
 						variance += horizontal_add(vecVariance);
-						const auto unbiasedVariance = variance / Float(batchSize * HW() - 1);
+						const auto unbiasedVariance = std::max(0.f, variance / Float(batchSize * HW() - 1));
 						variance /= Float(batchSize * HW());
+						variance = std::max(0.f, variance);
+						Variance[c] = variance;
 
 						RunningMean[c] = RunningMean[c] * Momentum + OneMinusMomentum * mean;
 						RunningVariance[c] = RunningVariance[c] * Momentum + OneMinusMomentum * unbiasedVariance;
@@ -367,8 +368,9 @@ namespace dnn
 									variance += square(VecFloat().load_a(&InputLayer->Neurons[w]) - mean);
 							}
 						}
-						const auto unbiasedVariance = variance / Float(batchSize * HW() - 1);
+						const auto unbiasedVariance = max(0.f, variance / Float(batchSize * HW() - 1));
 						variance /= Float(batchSize * HW());
+						variance = max(0.f, variance);
 						variance.store_a(&Variance[channelOffset]);
 
 						mul_add(VecFloat().load_a(&RunningMean[channelOffset]), Momentum, OneMinusMomentum * mean).store_a(&RunningMean[channelOffset]);

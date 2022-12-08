@@ -117,7 +117,7 @@ namespace dnn
 #else
 				const auto plain = IsPlainFormat();
 				const auto elements = batchSize * (plain ? CDHW() : PaddedCDHW());
-				const auto threads = GetThreads(elements, Float(0.2));
+				const auto threads = GetThreads(elements, Float(0.1));
 				
 				const auto strideHW = HW() * VectorSize;
 
@@ -156,6 +156,7 @@ namespace dnn
 							{
 								inputIndex = (c - channelOffset) * HW();
 								outputIndex = c * HW();
+								PRAGMA_OMP_SIMD()
 								for (auto hw = 0ull; hw < HW(); hw++)
 								{
 									Neurons[outputIndex + hw] = Inputs[inputLayer]->Neurons[inputIndex + hw];
@@ -207,6 +208,7 @@ namespace dnn
 								{
 									inputIndex = ((c - channelOffset) * HW()) + inputSampleOffset;
 									outputIndex = (c * HW()) + outputSampleOffset;
+									PRAGMA_OMP_SIMD()
 									for (auto hw = 0ull; hw < HW(); hw++) 
 									{
 										Neurons[outputIndex + hw] = Inputs[inputLayer]->Neurons[inputIndex + hw];
@@ -240,7 +242,7 @@ namespace dnn
 
 			const auto plain = IsPlainFormat();
 			const auto elements = batchSize * (plain ? CDHW() : PaddedCDHW());
-			const auto threads = GetThreads(elements, Float(0.2));
+			const auto threads = GetThreads(elements, Float(0.1));
 						
 #ifdef DNN_STOCHASTIC
 			if (batchSize == 1)
@@ -278,6 +280,7 @@ namespace dnn
 						{
 							inputIndex = ((c - channelOffset) * HW());
 							outputIndex = (c * HW());
+							PRAGMA_OMP_SIMD()
 							for (auto hw = 0ull; hw < HW(); hw++)
 								Inputs[inputLayer]->NeuronsD1[inputIndex + hw] += NeuronsD1[outputIndex + hw];
 						}
@@ -329,6 +332,7 @@ namespace dnn
 							{
 								inputIndex = ((c - channelOffset) * HW()) + inputSampleOffset;
 								outputIndex = (c * HW()) + outputSampleOffset;
+								PRAGMA_OMP_SIMD()
 								for (auto hw = 0ull; hw < HW(); hw++)
 									Inputs[inputLayer]->NeuronsD1[inputIndex + hw] += NeuronsD1[outputIndex + hw];
 							}

@@ -134,8 +134,8 @@ namespace
 			elements < static_cast<UInt>(weight * Float(HEAVY_THRESHOLD)) ? HEAVY :
 			elements < static_cast<UInt>(weight * Float(MAXIMUM_THRESHOLD)) ? ULTRAHEAVY : MAXIMUM;
 	}
-	// weight > 1   more threads   
-	// weight < 1   less threads
+	// weight > 1   less threads   
+	// weight < 1   more threads
 
 	struct LabelInfo
 	{
@@ -499,19 +499,19 @@ namespace
 	template<typename T>
 	constexpr auto inline GetColorRange(const T& min, const T& max) NOEXCEPT { return (min == max) ? T(0) : T(255) / ((std::signbit(min) && std::signbit(max)) ? -(min + max) : (max - min)); }
 	
-	inline static void KahanSum(Float& sum, Float& c, const Float& i) NOEXCEPT
+	inline void KahanSum(const Float& value, Float& sum, Float& correction) NOEXCEPT
 	{
-		const volatile auto y = i - c;
-		const volatile auto t = sum + y;
-		c = (t - sum) - y;
+		const auto y = value - correction;
+		const auto t = sum + y;
+		correction = (t - sum) - y;
 		sum = t;
 	}
 
-	inline static void KahanSumVec(VecFloat& sum, VecFloat& c, const VecFloat& i) NOEXCEPT
+	inline void KahanSumVec(const VecFloat& value, VecFloat& sum, VecFloat& correction) NOEXCEPT
 	{
-		const auto y = i - c;
+		const auto y = value - correction;
 		const auto t = sum + y;
-		c = (t - sum) - y;
+		correction = (t - sum) - y;
 		sum = t;
 	}
 
