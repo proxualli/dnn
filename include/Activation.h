@@ -361,7 +361,7 @@ namespace dnn
 		{
 			const auto plain = IsPlainFormat();
 			const auto elements = plain ? batchSize * CDHW() : batchSize * PaddedCDHW();
-			const auto threads = GetThreads(elements);
+			const auto threads = batchSize == 1 ? 1ull : GetThreads(elements, Float(0.25));
 
 			const auto strideHW = HW() * VectorSize;
 			const auto vecZero = VecFloat(0);
@@ -623,7 +623,7 @@ namespace dnn
 
 			const auto plain = IsPlainFormat();
 			const auto elements = plain ? batchSize * CDHW() : batchSize * PaddedCDHW();
-			const auto threads = GetThreads(elements);
+			const auto threads = batchSize == 1 ? 1ull : GetThreads(elements, Float(0.25));
 			const auto strideHW = HW() * VectorSize;
 
 			switch (ActivationFunction)

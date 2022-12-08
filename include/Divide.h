@@ -491,7 +491,6 @@ namespace dnn
 			else
 			{
 #endif
-
 				if (EqualDimensions(Inputs))
 				{
 					if (!plain)

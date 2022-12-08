@@ -147,7 +147,7 @@ namespace dnn
 
 			if (!training)
 			{
-				const auto threads = GetThreads(elements, Float(0.25));
+				const auto threads = batchSize == 1 ? 1ull : GetThreads(elements, Float(0.25));
 
 				if (plain) // nchw
 				{
@@ -200,7 +200,7 @@ namespace dnn
 			}
 			else
 			{
-				const auto threads = GetThreads(elements, Float(0.1));
+				const auto threads = batchSize == 1 ? 1ull : GetThreads(elements, Float(0.1));
 #ifndef DNN_LEAN
 				const auto vecZero = VecFloat(0);
 #endif
@@ -462,7 +462,7 @@ namespace dnn
 			const auto enabled = Enabled;
 			const auto plain = IsPlainFormat();
 			const auto elements = batchSize * (plain ? CDHW() : PaddedCDHW());
-			const auto threads = GetThreads(elements, Float(0.1));
+			const auto threads = batchSize == 1 ? 1ull : GetThreads(elements, Float(0.1));
 
 			if (plain)
 			{
