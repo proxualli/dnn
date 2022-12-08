@@ -499,7 +499,7 @@ namespace
 	template<typename T>
 	constexpr auto inline GetColorRange(const T& min, const T& max) NOEXCEPT { return (min == max) ? T(0) : T(255) / ((std::signbit(min) && std::signbit(max)) ? -(min + max) : (max - min)); }
 	
-	void KahanSum(Float& sum, Float& c, const Float& i)
+	inline static void KahanSum(Float& sum, Float& c, const Float& i) NOEXCEPT
 	{
 		const volatile auto y = i - c;
 		const volatile auto t = sum + y;
@@ -507,7 +507,7 @@ namespace
 		sum = t;
 	}
 
-	inline void KahanSumVec(VecFloat& sum, VecFloat& c, const VecFloat& i)
+	inline static void KahanSumVec(VecFloat& sum, VecFloat& c, const VecFloat& i) NOEXCEPT
 	{
 		const auto y = i - c;
 		const auto t = sum + y;
