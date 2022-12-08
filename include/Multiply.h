@@ -110,7 +110,7 @@ namespace dnn
 				const auto plain = IsPlainFormat();
 				const auto size = plain ? CDHW() : PaddedCDHW();
 				const auto part = GetVectorPart(size);
-				const auto threads = GetThreads(batchSize * size, Float(0.25));
+				const auto threads = batchSize == 1 ? 1ull : GetThreads(batchSize * size, Float(0.25));
 				const auto vecZero = VecFloat(0);
 				const auto strideHW = HW() * VectorSize;
 
@@ -430,7 +430,7 @@ namespace dnn
 
 			const auto plain = IsPlainFormat();
 			const auto elements = batchSize * (plain ? CDHW() : PaddedCDHW());
-			const auto threads = GetThreads(elements, Float(0.25));
+			const auto threads = batchSize == 1 ? 1ull : GetThreads(elements, Float(0.25));
 			
 			if (EqualDimensions(Inputs))
 			{
