@@ -511,8 +511,8 @@ namespace dnn
 
 					if (Scaling)
 					{
-						(VecFloat().load_a(&WeightsD1[channelOffset]) += diffGamma).store_a(&WeightsD1[channelOffset]);
-						(VecFloat().load_a(&BiasesD1[channelOffset]) += diffBeta).store_a(&BiasesD1[channelOffset]);
+						(VecFloat().load_a(&WeightsD1[channelOffset]) + diffGamma).store_a(&WeightsD1[channelOffset]);
+						(VecFloat().load_a(&BiasesD1[channelOffset]) + diffBeta).store_a(&BiasesD1[channelOffset]);
 					}
 
 					diffGamma *= invStdDev / Float(batchSize * HW());
