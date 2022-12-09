@@ -639,7 +639,7 @@ namespace
 		return x + m;
 	}
 
-	// from Stack Overflow https://stackoverflow.com/questions/15165202/random-number-generator-with-beta-distribution
+	/* https://stackoverflow.com/questions/15165202/random-number-generator-with-beta-distribution */
 	template <typename RealType = double>
 	class beta_distribution
 	{
@@ -839,7 +839,7 @@ namespace
 		return retval;
 	}
 
-	// From Stack Overflow https://stackoverflow.com/questions/216823/whats-the-best-way-to-trim-stdstring
+	/* https://stackoverflow.com/questions/216823/whats-the-best-way-to-trim-stdstring */
 	auto Trim(std::string text)
 	{
 		text.erase(text.begin(), std::find_if(text.begin(), text.end(), [](int ch) { return !std::isspace(ch); }));
@@ -847,7 +847,7 @@ namespace
 		return text;
 	}
 
-	// from Stack Overflow https://stackoverflow.com/questions/6089231/getting-std-ifstream-to-handle-lf-cr-and-crlf
+	/* https://stackoverflow.com/questions/6089231/getting-std-ifstream-to-handle-lf-cr-and-crlf */
 	auto& SafeGetline(std::istream& is, std::string& line)
 	{
 		line.clear();
