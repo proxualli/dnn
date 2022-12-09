@@ -261,7 +261,7 @@ namespace dnn
 			}
 
 			auto memWeights = dnnl::memory(*WeightsMemDesc, Device.engine, Weights.data());
-			auto& weightsMem = reorderBwdWeights ? dnnl::memory(bwdDataDesc->weights_desc(), Device.engine) : memWeights;
+			auto weightsMem = reorderBwdWeights ? dnnl::memory(bwdDataDesc->weights_desc(), Device.engine) : memWeights;
 			if (reorderBwdWeights)
 			{
 				dnnl::reorder(memWeights, weightsMem).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_FROM, memWeights}, { DNNL_ARG_TO, weightsMem } });

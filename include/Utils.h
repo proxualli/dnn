@@ -118,7 +118,7 @@ namespace
 		const auto LIGHT_THRESHOLD =        8338608ull;
 		const auto MEDIUM_THRESHOLD =      68338608ull;
 		const auto HEAVY_THRESHOLD =      120338608ull;
-		const auto MAXIMUM_THRESHOLD =    187538608ull;;
+		const auto MAXIMUM_THRESHOLD =    187538608ull;
 
 		const auto MAXIMUM = omp_get_max_threads();
 		const auto ULTRALIGHT = MAXIMUM >= 32 ?  2ull : MAXIMUM >= 24 ?  2ull :  2ull;

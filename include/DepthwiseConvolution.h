@@ -212,7 +212,7 @@ namespace dnn
 			}
 
 			auto memSrc = dnnl::memory(*InputLayerFwd->DstMemDesc, Device.engine, InputLayerFwd->Neurons.data());
-			auto& srcMem = reorderBwdSrc ? dnnl::memory(bwdWeightsDesc->src_desc(), Device.engine) : memSrc;
+			auto srcMem = reorderBwdSrc ? dnnl::memory(bwdWeightsDesc->src_desc(), Device.engine) : memSrc;
 			if (reorderBwdSrc)
 			{
 				dnnl::reorder(memSrc, srcMem).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_FROM, memSrc}, { DNNL_ARG_TO, srcMem } });
