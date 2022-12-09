@@ -119,7 +119,7 @@ namespace dnn
 			for (auto d = 0u; d < image.D(); d++)
 				for (auto h = 0u; h < image.H(); h++)
 					for (auto w = 0u; w < image.W(); w++)
-						KahanSum(image(c, d, h, w), mean, correction);
+						KahanSum<Float>(image(c, d, h, w), mean, correction);
 
 			return mean /= image.ChannelSize();
 		}
@@ -134,7 +134,7 @@ namespace dnn
 			for (auto d = 0u; d < image.D(); d++)
 				for (auto h = 0u; h < image.H(); h++)
 					for (auto w = 0u; w < image.W(); w++)
-						KahanSum(Square<Float>(image(c, d, h, w) - mean), variance, correction);
+						KahanSum<Float>(Square<Float>(image(c, d, h, w) - mean), variance, correction);
 
 			return variance /= image.ChannelSize();
 		}

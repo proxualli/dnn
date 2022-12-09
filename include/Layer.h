@@ -259,6 +259,21 @@ namespace dnn
 			}
 		}
 
+		const auto EqualDimensions(const std::vector<Layer*>& inputs) const
+		{
+			return ((inputs[0]->H == inputs[1]->H) && (inputs[0]->W == inputs[1]->W));
+		}
+
+		const auto GetFirst(const std::vector<Layer*>& inputs) const
+		{
+			return EqualDimensions(inputs) ? Byte(0) : ((inputs[0]->H == 1 && inputs[0]->W == 1) ? Byte(1) : Byte(0));
+		}
+
+		const auto GetSecond(const std::vector<Layer*>& inputs) const
+		{
+			return EqualDimensions(inputs) ? Byte(1) : ((inputs[0]->H == 1 && inputs[0]->W == 1) ? Byte(0) : Byte(1));
+		}
+
 	public:
 		const std::string Name;
 		const LayerTypes LayerType;
