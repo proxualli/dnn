@@ -159,7 +159,7 @@ namespace dnn
 		void ForwardProp(const UInt batchSize, const bool training) final override
 		{
 			auto memSrc = dnnl::memory(*InputLayer->DstMemDesc, Device.engine, InputLayer->Neurons.data());
-			auto srcMem = reorderFwdSrc ? dnnl::memory(fwdDesc->src_desc(), Device.engine) : memSrc;
+			auto& srcMem = reorderFwdSrc ? dnnl::memory(fwdDesc->src_desc(), Device.engine) : memSrc;
 			if (reorderFwdSrc)
 			{
 				dnnl::reorder(memSrc, srcMem).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_FROM, memSrc}, { DNNL_ARG_TO, srcMem } });
@@ -199,7 +199,7 @@ namespace dnn
 #endif // DNN_LEAN
 
 			auto diffDstMem = dnnl::memory(*DiffDstMemDesc, Device.engine, NeuronsD1.data());
-			auto diffDst = reorderBwdDiffDst ? dnnl::memory(bwdWeightsDesc->diff_dst_desc(), Device.engine) : diffDstMem;
+			auto& diffDst = reorderBwdDiffDst ? dnnl::memory(bwdWeightsDesc->diff_dst_desc(), Device.engine) : diffDstMem;
 			if (reorderBwdDiffDst)
 			{
 				dnnl::reorder(diffDstMem, diffDst).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_FROM, diffDstMem}, { DNNL_ARG_TO, diffDst } });
@@ -207,7 +207,7 @@ namespace dnn
 			}
 
 			auto memSrc = dnnl::memory(*InputLayerFwd->DstMemDesc, Device.engine, InputLayerFwd->Neurons.data());
-			auto srcMem = reorderBwdSrc ? dnnl::memory(bwdWeightsDesc->src_desc(), Device.engine) : memSrc;
+			auto& srcMem = reorderBwdSrc ? dnnl::memory(bwdWeightsDesc->src_desc(), Device.engine) : memSrc;
 			if (reorderBwdSrc)
 			{
 				dnnl::reorder(memSrc, srcMem).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_FROM, memSrc}, { DNNL_ARG_TO, srcMem } });
@@ -215,7 +215,7 @@ namespace dnn
 			}
 
 			auto memDiffWeights = dnnl::memory(*WeightsMemDesc, Device.engine, WeightsD1.data());
-			auto diffWeightsMem = reorderBwdDiffWeights ? dnnl::memory(bwdWeightsDesc->diff_weights_desc(), Device.engine) : memDiffWeights;
+			auto& diffWeightsMem = reorderBwdDiffWeights ? dnnl::memory(bwdWeightsDesc->diff_weights_desc(), Device.engine) : memDiffWeights;
 
 #ifdef DNN_CACHE_PRIMITIVES
 			HasBias ?

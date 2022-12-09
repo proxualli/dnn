@@ -174,7 +174,7 @@ namespace dnn
 				}
 
 				auto memSrc = dnnl::memory(*InputLayer->DstMemDesc, Device.engine, InputLayer->Neurons.data());
-				const auto &srcMem = reorderFwdSrc ? dnnl::memory(fwdDesc->src_desc(), Device.engine) : memSrc;
+				auto& srcMem = reorderFwdSrc ? dnnl::memory(fwdDesc->src_desc(), Device.engine) : memSrc;
 				if (reorderFwdSrc)
 				{
 					dnnl::reorder(memSrc, srcMem).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_FROM, memSrc}, { DNNL_ARG_TO, srcMem } });
@@ -183,7 +183,7 @@ namespace dnn
 
 				auto memMean = dnnl::memory(fwdDesc->mean_desc(), Device.engine, Mean.data());
 				auto memVariance = dnnl::memory(fwdDesc->variance_desc(), Device.engine, Variance.data());
-				auto dstMem = reorderFwdSrc ? dnnl::memory(fwdDesc->dst_desc(), Device.engine) : dnnl::memory(fwdDesc->dst_desc(), Device.engine, Neurons.data());
+				auto& dstMem = reorderFwdSrc ? dnnl::memory(fwdDesc->dst_desc(), Device.engine) : dnnl::memory(fwdDesc->dst_desc(), Device.engine, Neurons.data());
 				
 				if (Scaling)
 				{
@@ -209,7 +209,7 @@ namespace dnn
 							
 				if (reorderFwdSrc)
 				{
-					auto memDst = reorderFwdSrc ? dnnl::memory(*DstMemDesc, Device.engine, Neurons.data()) : dstMem;
+					auto& memDst = reorderFwdSrc ? dnnl::memory(*DstMemDesc, Device.engine, Neurons.data()) : dstMem;
 					dnnl::reorder(dstMem, memDst).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_FROM, dstMem}, { DNNL_ARG_TO, memDst } });
 					Device.stream.wait();
 				}
@@ -223,7 +223,7 @@ namespace dnn
 				}
 
 				auto memSrc = dnnl::memory(*InputLayer->DstMemDesc, Device.engine, InputLayer->Neurons.data());
-				auto srcMem = reorderFwdSrc ? dnnl::memory(fwdDesc->src_desc(), Device.engine) : memSrc;
+				auto& srcMem = reorderFwdSrc ? dnnl::memory(fwdDesc->src_desc(), Device.engine) : memSrc;
 				if (reorderFwdSrc)
 				{
 					dnnl::reorder(memSrc, srcMem).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_FROM, memSrc}, { DNNL_ARG_TO, srcMem } });
@@ -232,7 +232,7 @@ namespace dnn
 
 				auto memMean = dnnl::memory(fwdDesc->mean_desc(), Device.engine, Mean.data());
 				auto memVariance = dnnl::memory(fwdDesc->variance_desc(), Device.engine, Variance.data());
-				auto dstMem = reorderFwdSrc ? dnnl::memory(fwdDesc->dst_desc(), Device.engine) : dnnl::memory(fwdDesc->dst_desc(), Device.engine, Neurons.data());
+				auto& dstMem = reorderFwdSrc ? dnnl::memory(fwdDesc->dst_desc(), Device.engine) : dnnl::memory(fwdDesc->dst_desc(), Device.engine, Neurons.data());
 								
 				if (Scaling)
 				{
@@ -259,7 +259,7 @@ namespace dnn
 
 				if (reorderFwdSrc)
 				{
-					auto memDst = reorderFwdSrc ? dnnl::memory(*DstMemDesc, Device.engine, Neurons.data()) : dstMem;
+					auto& memDst = reorderFwdSrc ? dnnl::memory(*DstMemDesc, Device.engine, Neurons.data()) : dstMem;
 					dnnl::reorder(dstMem, memDst).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_FROM, dstMem}, { DNNL_ARG_TO, memDst } });
 					Device.stream.wait();
 				}
