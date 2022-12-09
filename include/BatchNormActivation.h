@@ -272,7 +272,6 @@ namespace dnn
 									{
 										KahanSumVec(VecFloat().load_a(&InputLayer->Neurons[w]), mean, correction0);
 										KahanSumVec(square(VecFloat().load_a(&InputLayer->Neurons[w])), variance, correction1);
-										
 									}
 								}
 							}
@@ -510,7 +509,7 @@ namespace dnn
 									diffSrc = Activation::dfVec(mul_add(VecFloat().load_a(&InputLayerFwd->Neurons[w]) - mean, weightedInvStdDev, biases)) * VecFloat().load_a(&InputLayer->NeuronsD1[w]);
 
 									// diffGamma = mul_add(VecFloat().load_a(&InputLayerFwd->Neurons[w]) - mean, diffSrc, diffGamma);
-									KahanSumVec(diffSrc* (VecFloat().load_a(&InputLayerFwd->Neurons[w]) - mean), diffGamma, correction0);
+									KahanSumVec(diffSrc * (VecFloat().load_a(&InputLayerFwd->Neurons[w]) - mean), diffGamma, correction0);
 
 									// diffBeta += diffSrc;
 									KahanSumVec(diffSrc, diffBeta, correction1);
@@ -530,7 +529,7 @@ namespace dnn
 									diffSrc = Activation::dfVec(mul_add(VecFloat().load_a(&InputLayerFwd->Neurons[w]) - mean, weightedInvStdDev, biases)) * VecFloat().load_a(&NeuronsD1[w]);
 
 									// diffGamma = mul_add(VecFloat().load_a(&InputLayerFwd->Neurons[w]) - mean, diffSrc, diffGamma);
-									KahanSumVec(diffSrc* (VecFloat().load_a(&InputLayerFwd->Neurons[w]) - mean), diffGamma, correction0);
+									KahanSumVec(diffSrc * (VecFloat().load_a(&InputLayerFwd->Neurons[w]) - mean), diffGamma, correction0);
 
 									// diffBeta += diffSrc;
 									KahanSumVec(diffSrc, diffBeta, correction1);

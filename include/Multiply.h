@@ -126,12 +126,16 @@ namespace dnn
 								for (auto cdhw = 0ull; cdhw < part; cdhw += VectorSize)
 								{
 									(VecFloat().load_a(&Inputs[0]->Neurons[cdhw]) * VecFloat().load_a(&Inputs[1]->Neurons[cdhw])).store_a(&Neurons[cdhw]);
+#ifndef DNN_LEAN
 									vecZero.store_nt(&NeuronsD1[cdhw]);
+#endif
 								}
 								for (auto cdhw = part; cdhw < size; cdhw++)
 								{
 									Neurons[cdhw] = Inputs[0]->Neurons[cdhw] * Inputs[1]->Neurons[cdhw];
+#ifndef DNN_LEAN
 									NeuronsD1[cdhw] = 0;
+#endif
 								}
 							}
 							else
@@ -145,12 +149,16 @@ namespace dnn
 									In0.load_a(&Inputs[0]->Neurons[cdhw]);
 									In1.load_a(&Inputs[1]->Neurons[cdhw]);
 									((In0 * scales0) * (In1 * scales1)).store_a(&Neurons[cdhw]);
+#ifndef DNN_LEAN
 									vecZero.store_nt(&NeuronsD1[cdhw]);
+#endif
 								}
 								for (auto cdhw = part; cdhw < size; cdhw++)
 								{
 									Neurons[cdhw] = (Inputs[0]->Neurons[cdhw] * scales0) * (Inputs[1]->Neurons[cdhw] * scales1);
+#ifndef DNN_LEAN
 									NeuronsD1[cdhw] = 0;
+#endif
 								}
 							}
 						}
@@ -165,7 +173,9 @@ namespace dnn
 									for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
 									{
 										(VecFloat().load_a(&Inputs[first]->Neurons[hw + outputOffset]) * VecFloat().load_a(&Inputs[second]->Neurons[c])).store_a(&Neurons[hw + outputOffset]);
+#ifndef DNN_LEAN
 										vecZero.store_nt(&NeuronsD1[hw + outputOffset]);
+#endif
 									}
 								}
 								
@@ -181,7 +191,9 @@ namespace dnn
 									for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
 									{
 										((VecFloat().load_a(&Inputs[first]->Neurons[hw + outputOffset]) * scales0) * (VecFloat().load_a(&Inputs[second]->Neurons[c]) * scales1)).store_a(&Neurons[hw + outputOffset]);
+#ifndef DNN_LEAN
 										vecZero.store_nt(&NeuronsD1[hw + outputOffset]);
+#endif
 									}
 								}
 							}
@@ -197,7 +209,9 @@ namespace dnn
 								for (auto cdhw = 0ull; cdhw < CDHW(); cdhw++)
 								{
 									Neurons[cdhw] = Inputs[0]->Neurons[cdhw] * Inputs[1]->Neurons[cdhw];
+#ifndef DNN_LEAN
 									NeuronsD1[cdhw] = 0;
+#endif
 								}
 							}
 							else
@@ -208,7 +222,9 @@ namespace dnn
 								for (auto cdhw = 0ull; cdhw < CDHW(); cdhw++)
 								{
 									Neurons[cdhw] = (Inputs[0]->Neurons[cdhw] * scales0) * (Inputs[1]->Neurons[cdhw] * scales1);
+#ifndef DNN_LEAN
 									NeuronsD1[cdhw] = 0;
+#endif
 								}
 							}
 						}
@@ -223,7 +239,9 @@ namespace dnn
 									for (auto hw = 0ull; hw < HW(); hw++)
 									{
 										Neurons[hw + outputOffset] = Inputs[first]->Neurons[hw + outputOffset] * Inputs[second]->Neurons[c];
+#ifndef DNN_LEAN
 										NeuronsD1[hw + outputOffset] = 0;
+#endif
 									}
 								}
 							}
@@ -238,7 +256,9 @@ namespace dnn
 									for (auto hw = 0ull; hw < HW(); hw++)
 									{
 										Neurons[hw + outputOffset] = ((Inputs[first]->Neurons[hw + outputOffset] * scales0) * (Inputs[second]->Neurons[c] * scales1));
+#ifndef DNN_LEAN
 										NeuronsD1[hw + outputOffset] = 0;
+#endif
 									}
 								}
 							}
@@ -260,12 +280,16 @@ namespace dnn
 									for (auto cdhw = start; cdhw < start + part; cdhw += VectorSize)
 									{
 										(VecFloat().load_a(&Inputs[0]->Neurons[cdhw]) * VecFloat().load_a(&Inputs[1]->Neurons[cdhw])).store_a(&Neurons[cdhw]);
+#ifndef DNN_LEAN
 										vecZero.store_nt(&NeuronsD1[cdhw]);
+#endif
 									}
 									for (auto cdhw = start + part; cdhw < start + size; cdhw++)
 									{
 										Neurons[cdhw] = Inputs[0]->Neurons[cdhw] * Inputs[1]->Neurons[cdhw];
+#ifndef DNN_LEAN
 										NeuronsD1[cdhw] = 0;
+#endif
 									}
 								});
 							}
@@ -283,12 +307,16 @@ namespace dnn
 										In0.load_a(&Inputs[0]->Neurons[cdhw]);
 										In1.load_a(&Inputs[1]->Neurons[cdhw]);
 										((In0 * scales0) * (In1 * scales1)).store_a(&Neurons[cdhw]);
+#ifndef DNN_LEAN
 										vecZero.store_nt(&NeuronsD1[cdhw]);
+#endif
 									}
 									for (auto cdhw = start + part; cdhw < start + size; cdhw++)
 									{
 										Neurons[cdhw] = (Inputs[0]->Neurons[cdhw] * scales0) * (Inputs[1]->Neurons[cdhw] * scales1);
+#ifndef DNN_LEAN
 										NeuronsD1[cdhw] = 0;
+#endif
 									}
 								});
 							}
@@ -306,7 +334,9 @@ namespace dnn
 										for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
 										{
 											(VecFloat().load_a(&Inputs[first]->Neurons[hw + outputOffset]) * VecFloat().load_a(&Inputs[second]->Neurons[channelOffset])).store_a(&Neurons[hw + outputOffset]);
+#ifndef DNN_LEAN
 											vecZero.store_nt(&NeuronsD1[hw + outputOffset]);
+#endif
 										}
 									}
 								});
@@ -325,7 +355,9 @@ namespace dnn
 										for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
 										{
 											((VecFloat().load_a(&Inputs[first]->Neurons[hw + outputOffset]) * scales0) * (VecFloat().load_a(&Inputs[second]->Neurons[channelOffset]) * scales1)).store_a(&Neurons[hw + outputOffset]);
+#ifndef DNN_LEAN
 											vecZero.store_nt(&NeuronsD1[hw + outputOffset]);
+#endif
 										}
 									}
 								});
@@ -346,7 +378,9 @@ namespace dnn
 									for (auto cdhw = start; cdhw < end; cdhw++)
 									{
 										Neurons[cdhw] = Inputs[0]->Neurons[cdhw] * Inputs[1]->Neurons[cdhw];
+#ifndef DNN_LEAN
 										NeuronsD1[cdhw] = 0;
+#endif
 									}
 								});
 							}
@@ -362,7 +396,9 @@ namespace dnn
 									for (auto cdhw = start; cdhw < end; cdhw++)
 									{
 										Neurons[cdhw] = (Inputs[0]->Neurons[cdhw] * scales0) * (Inputs[1]->Neurons[cdhw] * scales1);
+#ifndef DNN_LEAN
 										NeuronsD1[cdhw] = 0;
+#endif
 									}
 								});
 							}
@@ -381,7 +417,9 @@ namespace dnn
 										for (auto hw = 0ull; hw < HW(); hw++)
 										{
 											Neurons[hw + outputOffset] = Inputs[first]->Neurons[hw + outputOffset] * Inputs[second]->Neurons[channelOffset];
+#ifndef DNN_LEAN
 											NeuronsD1[hw + outputOffset] = 0;
+#endif
 										}
 									}
 								});
@@ -400,7 +438,9 @@ namespace dnn
 										for (auto hw = 0ull; hw < HW(); hw++)
 										{
 											Neurons[hw + outputOffset] = ((Inputs[first]->Neurons[hw + outputOffset] * scales0) * (Inputs[second]->Neurons[channelOffset] * scales1));
+#ifndef DNN_LEAN
 											NeuronsD1[hw + outputOffset] = 0;
+#endif
 										}
 									}
 								});
