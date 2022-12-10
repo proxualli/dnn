@@ -116,7 +116,9 @@ namespace dnn
 								for (auto cdhw = start; cdhw < end; cdhw++)
 								{
 									Neurons[cdhw] = Inputs[0]->Neurons[cdhw] + Inputs[1]->Neurons[cdhw];
+#ifndef DNN_LEAN
 									NeuronsD1[cdhw] = 0;
+#endif
 								}
 							});
 						}
