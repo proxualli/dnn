@@ -251,8 +251,7 @@ namespace dnn
 						{
 							D1.load_a(&NeuronsD1[hw + outputOffset]);
 							inputD1.load_a(&InputLayer->NeuronsD1[hw + inputOffset]);
-							inputD1 += D1;
-							inputD1.store_a(&InputLayer->NeuronsD1[hw + inputOffset]);
+							(inputD1 + D1).store_a(&InputLayer->NeuronsD1[hw + inputOffset]);
 						}
 					}
 				}
@@ -281,8 +280,7 @@ namespace dnn
 							{
 								D1.load_a(&NeuronsD1[hw + outputOffset]);
 								inputD1.load_a(&InputLayer->NeuronsD1[hw + inputOffset]);
-								inputD1 += D1;
-								inputD1.store_a(&InputLayer->NeuronsD1[hw + inputOffset]);
+								(inputD1 + D1).store_a(&InputLayer->NeuronsD1[hw + inputOffset]);
 							}
 						}
 					});

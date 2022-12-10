@@ -93,8 +93,8 @@ namespace dnn
 			fwdDesc = std::make_unique<dnnl::concat::primitive_desc>(dnnl::concat::primitive_desc(Device.engine , *DstMemDesc, 1, srcsMemsDesc));
 
 			fwdArgs = std::unordered_map<int, dnnl::memory>{ { DNNL_ARG_DST, dnnl::memory(*DstMemDesc, Device.engine, Neurons.data()) } };
-			for (auto i = 0ull; i < Inputs.size(); i++)
-				fwdArgs.insert({ DNNL_ARG_MULTIPLE_SRC + int(i), dnnl::memory(srcsMemsDesc[i], Device.engine, Inputs[i]->Neurons.data()) });
+			for (auto i = 0ull; i < InputsFwd.size(); i++)
+				fwdArgs.insert({ DNNL_ARG_MULTIPLE_SRC + int(i), dnnl::memory(srcsMemsDesc[i], Device.engine, Inputs[i]->Neurons.data())});
 
 #ifdef DNN_CACHE_PRIMITIVES
 			fwd = std::make_unique<dnnl::concat>(dnnl::concat(*fwdDesc));
@@ -140,7 +140,9 @@ namespace dnn
 								{
 									In.load_a(&Inputs[inputLayer]->Neurons[w + inputIndex]);
 									In.store_a(&Neurons[w + outputIndex]);
+#ifndef DNN_LEAN
 									vecZero.store_nt(&NeuronsD1[w + outputIndex]);
+#endif
 								}
 							}
 							channelOffset += Inputs[inputLayer]->PaddedC;
@@ -160,7 +162,9 @@ namespace dnn
 								for (auto hw = 0ull; hw < HW(); hw++)
 								{
 									Neurons[outputIndex + hw] = Inputs[inputLayer]->Neurons[inputIndex + hw];
+#ifndef DNN_LEAN
 									NeuronsD1[outputIndex + hw] = Float(0);
+#endif
 								}
 							}
 							channelOffset += Inputs[inputLayer]->C;
@@ -189,7 +193,9 @@ namespace dnn
 									{
 										In.load_a(&Inputs[inputLayer]->Neurons[w + inputIndex]);
 										In.store_a(&Neurons[w + outputIndex]);
+#ifndef DNN_LEAN
 										vecZero.store_nt(&NeuronsD1[w + outputIndex]);
+#endif
 									}
 								}
 								channelOffset += Inputs[inputLayer]->PaddedC;
@@ -212,7 +218,9 @@ namespace dnn
 									for (auto hw = 0ull; hw < HW(); hw++) 
 									{
 										Neurons[outputIndex + hw] = Inputs[inputLayer]->Neurons[inputIndex + hw];
+#ifndef DNN_LEAN
 										NeuronsD1[outputIndex + hw] = Float(0);
+#endif
 									}
 								}
 								channelOffset += Inputs[inputLayer]->C;
@@ -263,8 +271,7 @@ namespace dnn
 							{
 								inputD1.load_a(&Inputs[inputLayer]->NeuronsD1[w + inputIndex]);
 								D1.load_a(&NeuronsD1[w + outputIndex]);
-								inputD1 += D1;
-								inputD1.store_a(&InputLayer->NeuronsD1[w + inputIndex]);
+								(inputD1 + D1).store_a(&Inputs[inputLayer]->NeuronsD1[w + inputIndex]);
 							}
 						}									
 						channelOffset += Inputs[inputLayer]->PaddedC;
@@ -311,8 +318,7 @@ namespace dnn
 								{
 									inputD1.load_a(&Inputs[inputLayer]->NeuronsD1[w + inputIndex]);
 									D1.load_a(&NeuronsD1[w + outputIndex]);
-									inputD1 += D1;
-									inputD1.store_a(&Inputs[inputLayer]->NeuronsD1[w + inputIndex]);
+									(inputD1 + D1).store_a(&Inputs[inputLayer]->NeuronsD1[w + inputIndex]);
 								}
 							}
 							channelOffset += Inputs[inputLayer]->PaddedC;
