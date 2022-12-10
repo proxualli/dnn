@@ -1168,19 +1168,22 @@ namespace dnn
 			}
 		}
 
-		void ResetGradients()
+		inline void ResetGradients()
 		{
 			std::fill(WeightsD1.begin(), WeightsD1.end(), Float(0));
 			if (HasBias)
 				std::fill_n(BiasesD1.begin(), BiasCount, Float(0));
 		}
 
-		void UpdateWeights(const TrainingRate& rate, const Optimizers optimizer, const bool disableLocking)
+		inline void UpdateWeights(const TrainingRate& rate, const Optimizers optimizer, const bool disableLocking)
 		{
 			if (HasWeights && (disableLocking || (!disableLocking && !LockUpdate.load())))
 			{
 				switch (optimizer)
 				{
+				case Optimizers::NAG:
+					NAG(rate);
+					break;
 				case Optimizers::AdaBound:
 					AdaBound(rate);
 					break;
@@ -1207,9 +1210,6 @@ namespace dnn
 					break;
 				case Optimizers::AmsBoundW:
 					AdaBoundW(rate, true);
-					break;
-				case Optimizers::NAG:
-					NAG(rate);
 					break;
 				case Optimizers::RMSProp:
 					RMSProp(rate);

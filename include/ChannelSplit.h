@@ -231,8 +231,7 @@ namespace dnn
 #endif // DNN_LEAN
 
 			const auto plain = IsPlainFormat();
-			const auto elements = batchSize * (plain ? CDHW() : PaddedCDHW());
-			const auto threads = GetThreads(elements, Float(0.1));
+			const auto threads = GetThreads(batchSize * (plain ? CDHW() : PaddedCDHW()), Float(0.2));
 			
 			const auto groupC = (Group - 1) * C;
 			const auto strideHW = HW() * VectorSize;
@@ -251,7 +250,8 @@ namespace dnn
 						{
 							D1.load_a(&NeuronsD1[hw + outputOffset]);
 							inputD1.load_a(&InputLayer->NeuronsD1[hw + inputOffset]);
-							(inputD1 + D1).store_a(&InputLayer->NeuronsD1[hw + inputOffset]);
+							inputD1 += D1;
+							inputD1.store_a(&InputLayer->NeuronsD1[hw + inputOffset]);
 						}
 					}
 				}
@@ -280,7 +280,8 @@ namespace dnn
 							{
 								D1.load_a(&NeuronsD1[hw + outputOffset]);
 								inputD1.load_a(&InputLayer->NeuronsD1[hw + inputOffset]);
-								(inputD1 + D1).store_a(&InputLayer->NeuronsD1[hw + inputOffset]);
+								inputD1 += D1;
+								inputD1.store_a(&InputLayer->NeuronsD1[hw + inputOffset]);
 							}
 						}
 					});

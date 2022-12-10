@@ -116,8 +116,7 @@ namespace dnn
 				Device.stream.wait();
 #else
 				const auto plain = IsPlainFormat();
-				const auto elements = batchSize * (plain ? CDHW() : PaddedCDHW());
-				const auto threads = GetThreads(elements, Float(0.1));
+				const auto threads = GetThreads(batchSize * (plain ? CDHW() : PaddedCDHW()), Float(0.2));
 				
 				const auto strideHW = HW() * VectorSize;
 
@@ -249,8 +248,7 @@ namespace dnn
 #endif // DNN_LEAN
 
 			const auto plain = IsPlainFormat();
-			const auto elements = batchSize * (plain ? CDHW() : PaddedCDHW());
-			const auto threads = GetThreads(elements, Float(0.1));
+			const auto threads = GetThreads(batchSize * (plain ? CDHW() : PaddedCDHW()), Float(0.2));
 						
 #ifdef DNN_STOCHASTIC
 			if (batchSize == 1)
@@ -271,7 +269,8 @@ namespace dnn
 							{
 								inputD1.load_a(&Inputs[inputLayer]->NeuronsD1[w + inputIndex]);
 								D1.load_a(&NeuronsD1[w + outputIndex]);
-								(inputD1 + D1).store_a(&Inputs[inputLayer]->NeuronsD1[w + inputIndex]);
+								inputD1 += D1;
+								inputD1.store_a(&Inputs[inputLayer]->NeuronsD1[w + inputIndex]);
 							}
 						}									
 						channelOffset += Inputs[inputLayer]->PaddedC;
@@ -318,7 +317,8 @@ namespace dnn
 								{
 									inputD1.load_a(&Inputs[inputLayer]->NeuronsD1[w + inputIndex]);
 									D1.load_a(&NeuronsD1[w + outputIndex]);
-									(inputD1 + D1).store_a(&Inputs[inputLayer]->NeuronsD1[w + inputIndex]);
+									inputD1 += D1;
+									inputD1.store_a(&Inputs[inputLayer]->NeuronsD1[w + inputIndex]);
 								}
 							}
 							channelOffset += Inputs[inputLayer]->PaddedC;
