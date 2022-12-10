@@ -369,7 +369,7 @@ namespace dnn
 							for (auto hw = start; hw < part; hw += VectorSize)
 							{
 								inputNeurons.load_a(&InputLayerFwd->Neurons[hw]);
-								inputNeurons -= mean;
+								inputNeurons -= Mean[c];
 								diffSrc = Activation::dfVec(inputNeurons * weightedInvStdDev + biases) * VecFloat().load_a(&layerD1[hw]);
 								KahanSum<VecFloat>(diffSrc * inputNeurons, diffGamma, correction0);
 								KahanSum<VecFloat>(diffSrc, diffBeta, correction1);
