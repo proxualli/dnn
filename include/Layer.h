@@ -269,7 +269,7 @@ namespace dnn
 			return EqualDimensions(inputs) ? Byte(0) : ((inputs[0]->H == 1 && inputs[0]->W == 1) ? Byte(1) : Byte(0));
 		}
 
-		auto GetSecond(const std::vector<Layer*>& inputs)
+		auto GetSecond(const std::vector<Layer*>& inputs) const
 		{
 			return EqualDimensions(inputs) ? Byte(1) : ((inputs[0]->H == 1 && inputs[0]->W == 1) ? Byte(0) : Byte(1));
 		}
