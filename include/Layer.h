@@ -617,8 +617,6 @@ namespace dnn
 						{
 							NeuronsStats.Mean = sum / ncdhw;
 							sum = Float(0);
-							
-							PRAGMA_OMP_SIMD()
 							for (auto i = 0ull; i < ncdhw; i++)
 								sum += Square<Float>(Neurons[i] - NeuronsStats.Mean);
 							
