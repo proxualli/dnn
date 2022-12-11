@@ -864,7 +864,7 @@ namespace dnn
 						{
 							PRAGMA_OMP_SIMD()
 								for (auto c = 0ull; c < C; c++)
-									InputLayer->NeuronsD1[c] += Activation::df(InputNeurons[c]) * InputLayer->NeuronsD1[c];
+									InputLayer->NeuronsD1[c] = Activation::df(InputNeurons[c]) * InputLayer->NeuronsD1[c];
 						}
 					}
 					else
@@ -991,7 +991,7 @@ namespace dnn
 									const auto offset = n * CDHW() + c * HW();
 									PRAGMA_OMP_SIMD()
 									for (auto hw = offset; hw < offset + HW(); hw++)
-										InputLayer->NeuronsD1[hw] = Activation::df(InputNeurons[hw]) * InputLayer->NeuronsD1[hw];
+										InputLayer->NeuronsD1[hw] *= Activation::df(InputNeurons[hw]);
 								}
 							});
 					}
@@ -1015,7 +1015,7 @@ namespace dnn
 									const auto offset = n * CDHW() + c * HW();
 									PRAGMA_OMP_SIMD()
 									for (auto hw = offset; hw < offset + HW(); hw++)
-										NeuronsD1[hw] = Activation::df(InputNeurons[hw]) * NeuronsD1[hw];
+										NeuronsD1[hw] *= Activation::df(InputNeurons[hw]);
 								}
 							});
 					}
