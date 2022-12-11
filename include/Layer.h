@@ -235,7 +235,7 @@ namespace dnn
 		dnnl::memory::format_tag ChosenFormat;
 		std::mt19937 RandomEngine;
 
-		auto IsInplaceBwd(const LayerTypes layerType, const std::vector<Layer*>& inputs)
+		auto IsInplaceBwd(const LayerTypes layerType, const std::vector<Layer*>& inputs) const
 		{
 			if (UseInplace && (layerType == LayerTypes::Activation || layerType == LayerTypes::LayerNorm || std::string(magic_enum::enum_name<LayerTypes>(layerType)).find("BatchNorm", 0) != std::string::npos) && (inputs.size() == 1) && (inputs[0]->LayerType == LayerTypes::Convolution || inputs[0]->LayerType == LayerTypes::DepthwiseConvolution || inputs[0]->LayerType == LayerTypes::ConvolutionTranspose))
 				return true;
@@ -243,7 +243,7 @@ namespace dnn
 				return false;
 		}
 
-		auto GetInputsBwd(const LayerTypes layerType, const std::vector<Layer*>& inputs)
+		auto GetInputsBwd(const LayerTypes layerType, const std::vector<Layer*>& inputs) const
 		{
 			if (IsInplaceBwd(layerType, inputs))
 				return std::vector<Layer*>(inputs);
@@ -259,12 +259,12 @@ namespace dnn
 			}
 		}
 
-		auto EqualDimensions(const std::vector<Layer*>& inputs)
+		auto EqualDimensions(const std::vector<Layer*>& inputs) const
 		{
 			return ((inputs[0]->H == inputs[1]->H) && (inputs[0]->W == inputs[1]->W));
 		}
 
-		auto GetFirst(const std::vector<Layer*>& inputs)
+		auto GetFirst(const std::vector<Layer*>& inputs) const
 		{
 			return EqualDimensions(inputs) ? Byte(0) : ((inputs[0]->H == 1 && inputs[0]->W == 1) ? Byte(1) : Byte(0));
 		}
