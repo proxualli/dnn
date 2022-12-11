@@ -107,7 +107,7 @@ namespace
 #define DNN_SIMD_ALIGN DNN_ALIGN(64)
 
 	constexpr auto UseInplace = false;
-	constexpr auto Reference = false;
+	constexpr auto Reference = true;
 
 	typedef float Float;
 	typedef std::size_t UInt;
@@ -485,7 +485,7 @@ namespace
 	typedef AlignedArray<Byte, 64ull> ByteArray;
 	typedef std::vector<Float, AlignedAllocator<Float, 64ull>> FloatVector;
 	//constexpr bool IS_LITTLE_ENDIAN = std::endian::native == std::endian::little;
-	constexpr auto NEURONS_LIMIT = Float(5000);	// limit for all the neurons and derivative [-NEURONS_LIMIT,NEURONS_LIMIT]
+	constexpr auto NEURONS_LIMIT = Float(5000);	// limit for all the neurons and derivatives [-NEURONS_LIMIT,NEURONS_LIMIT]
 	constexpr auto WEIGHTS_LIMIT = Float(500);	// limit for all the weights and biases [-WEIGHTS_LIMIT,WEIGHTS_LIMIT]
 	
 	template<typename T>
