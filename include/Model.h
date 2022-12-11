@@ -1264,12 +1264,12 @@ namespace dnn
 					}
 			}
 		}
-		const auto IsSkippable(const Layer& layer) const
+		auto IsSkippable(const Layer& layer)
 		{
 			return layer.LayerType == LayerTypes::Add || layer.LayerType == LayerTypes::Substract; // || layer.LayerType == LayerTypes::Multiply || layer.LayerType == LayerTypes::Divide;
 		}
 
-		const auto GetTotalSkipConnections() const
+		auto GetTotalSkipConnections()
 		{
 			auto totalSkipConnections = 0ull;
 		
