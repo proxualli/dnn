@@ -13,7 +13,7 @@ namespace dnn
 		std::unique_ptr<dnnl::concat> fwd;
 #endif
 
-		auto InputChannels(const std::vector<Layer*>& inputs)
+		auto InputChannels(const std::vector<Layer*>& inputs) const
 		{
 			auto channels = 0ull;
 			for (auto layer : inputs)

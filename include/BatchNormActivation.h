@@ -104,10 +104,23 @@ namespace dnn
 
 		void SetBatchSize(const UInt batchSize) final override
 		{
-			if constexpr (Reference)
-				InputNeurons.resize(batchSize, PaddedC, H, W, dnnl::memory::data_type::f32, BlockedFmt, Device.engine);
+			while (RefreshingStats.load())
+			{
+				std::this_thread::sleep_for(std::chrono::milliseconds(200));
+				std::this_thread::yield();
+			}
 
-			Layer::SetBatchSize(batchSize);
+			Neurons.resize(batchSize, C, H, W, dnnl::memory::data_type::f32, BlockedFmt, Device.engine);
+			if constexpr (Reference)
+				InputNeurons.resize(batchSize, C, H, W, dnnl::memory::data_type::f32, BlockedFmt, Device.engine);
+#ifndef DNN_LEAN
+			if (!InplaceBwd)
+				NeuronsD1.resize(batchSize, C, H, W, dnnl::memory::data_type::f32, BlockedFmt, Device.engine);
+#else
+			ReleaseGradient();
+#endif // DNN_LEAN
+
+			InitializeDescriptors(batchSize);
 		}
 
 		void InitializeDescriptors(const UInt batchSize) final override

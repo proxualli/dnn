@@ -501,7 +501,7 @@ namespace
 	
 	/* https://en.wikipedia.org/wiki/Kahan_summation_algorithm */
 	template<typename T>
-	inline void KahanSum(const T& value, T& sum, T& correction) NOEXCEPT
+	inline static void KahanSum(const T& value, T& sum, T& correction) NOEXCEPT
 	{
 		const auto y = value - correction;
 		const auto t = sum + y;

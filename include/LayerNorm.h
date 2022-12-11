@@ -70,7 +70,7 @@ namespace dnn
 
 			auto mean = Float(0);
 			auto variance = Float(0);
-			PRAGMA_OMP_SIMD()
+			
 			for (auto e = 0ull; e < Mean.size(); e++)
 			{
 				mean += Mean[e];
