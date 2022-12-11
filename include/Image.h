@@ -1,8 +1,10 @@
 #pragma once
 #include "Utils.h"
 
+#ifdef cimg_use_jpeg
 #include "jpeglib.h"
 #include "jerror.h"
+#endif
 
 #undef cimg_display
 #define cimg_display 0

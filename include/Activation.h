@@ -45,10 +45,10 @@ namespace dnn
 
 	struct HardSwish
 	{
-		inline static Float f(const Float& x) NOEXCEPT { return x * Relu6::f(x + Float(3)) * Float(1.0 / 6.0); }
-		inline static Float df(const Float& x) NOEXCEPT { return x < Float(-3) ? Float(0) : x > Float(3) ? Float(1) : (Float(1.0 / 3.0) * x + Float(0.5)); }
-		inline static VecFloat fVec(const VecFloat& x) NOEXCEPT { return x * Relu6::fVec(x + VecFloat(3)) * VecFloat(Float(1.0 / 6.0)); }
-		inline static VecFloat dfVec(const VecFloat& x) NOEXCEPT { return select(x < VecFloat(-3), VecFloat(0), select(x > VecFloat(3), VecFloat(1), (VecFloat(Float(1.0 / 3.0)) * x + VecFloat(Float(0.5))))); }
+		inline static Float f(const Float& x, const Float& alpha = Float(3), const Float& beta = Float(1) / Float(6)) NOEXCEPT{return x * Relu6::f(x + alpha) * beta;}
+		inline static Float df(const Float& x, const Float& alpha = Float(3), const Float& beta = Float(1) / Float(6)) NOEXCEPT { return x < -alpha ? Float(0) : x > alpha ? Float(1) : ((Float(2) * beta * x) + (alpha * beta)); }
+		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(Float(3)), const VecFloat& beta = VecFloat(Float(1) / Float(6))) NOEXCEPT { return x * Relu6::fVec(x + alpha) * beta; }
+		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(Float(3)), const VecFloat& beta = VecFloat(Float(1) / Float(6))) NOEXCEPT { return select(x < -alpha, VecFloat(Float(0)), select(x > alpha, VecFloat(Float(1)), ((VecFloat(Float(2)) * beta * x) + (alpha * beta)))); }
 	};
 
 	struct Identity

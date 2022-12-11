@@ -106,7 +106,8 @@ namespace
 #endif
 #define DNN_SIMD_ALIGN DNN_ALIGN(64)
 
-	constexpr auto UseInplace = true;
+	constexpr auto UseInplace = false;
+	constexpr auto Reference = true;
 
 	typedef float Float;
 	typedef std::size_t UInt;
@@ -160,8 +161,6 @@ namespace
 	constexpr auto VectorSize = 4ull;
 	constexpr auto BlockedFmt = dnnl::memory::format_tag::nChw4c;
 #endif
-	
-	
 
 	constexpr auto GetVectorPart(const UInt& elements) NOEXCEPT { return (elements / VectorSize) * VectorSize; }
 	constexpr auto DivUp(const UInt& c) NOEXCEPT { return (((c - 1) / VectorSize) + 1) * VectorSize; }
