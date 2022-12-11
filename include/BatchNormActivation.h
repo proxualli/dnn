@@ -104,10 +104,10 @@ namespace dnn
 
 		void SetBatchSize(const UInt batchSize) final override
 		{
-			Layer::SetBatchSize(batchSize);
-
 			if constexpr (Reference)
-				InputNeurons.resize(batchSize, C, H, W, dnnl::memory::data_type::f32, BlockedFmt, Device.engine);
+				InputNeurons.resize(batchSize, PaddedC, H, W, dnnl::memory::data_type::f32, BlockedFmt, Device.engine);
+
+			Layer::SetBatchSize(batchSize);
 		}
 
 		void InitializeDescriptors(const UInt batchSize) final override
@@ -859,7 +859,7 @@ namespace dnn
 					{
 						if (!plain)
 							for (auto c = 0ull; c < PaddedC; c += VectorSize)
-								(Activation::dfVec(VecFloat().load_a(&InputNeurons[c])), VecFloat().load_a(&InputLayer->NeuronsD1[c])).store_a(&InputLayer->NeuronsD1[c]);
+								(Activation::dfVec(VecFloat().load_a(&InputNeurons[c])) * VecFloat().load_a(&InputLayer->NeuronsD1[c])).store_a(&InputLayer->NeuronsD1[c]);
 						else
 						{
 							PRAGMA_OMP_SIMD()
@@ -895,7 +895,6 @@ namespace dnn
 							for_i(batchSize, threads, [=](UInt n)
 							{
 								const auto offset = n * C;
-								PRAGMA_OMP_SIMD()
 								for (auto c = offset; c < offset + C; c++)
 									InputLayer->NeuronsD1[c] = Activation::df(InputNeurons[c]) * InputLayer->NeuronsD1[c];
 							});
@@ -961,7 +960,6 @@ namespace dnn
 							for (auto c = 0ull; c < C; c++)
 							{
 								const auto offset = c * HW();
-								PRAGMA_OMP_SIMD()
 								for (auto hw = offset; hw < offset + HW(); hw++)
 									NeuronsD1[hw] = Activation::df(InputNeurons[hw]) * NeuronsD1[hw];
 							}
@@ -989,7 +987,6 @@ namespace dnn
 								for (auto c = 0ull; c < C; c++)
 								{
 									const auto offset = n * CDHW() + c * HW();
-									PRAGMA_OMP_SIMD()
 									for (auto hw = offset; hw < offset + HW(); hw++)
 										InputLayer->NeuronsD1[hw] *= Activation::df(InputNeurons[hw]);
 								}
@@ -1023,7 +1020,6 @@ namespace dnn
 				}
 #endif
 			}
-
 
 			auto memSrc = dnnl::memory(*InputLayerFwd->DstMemDesc, Device.engine, InputLayerFwd->Neurons.data());
 			auto srcMem = reorderBwdSrc ? dnnl::memory(bwdDesc->src_desc(), Device.engine) : memSrc;
