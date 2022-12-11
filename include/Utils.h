@@ -107,7 +107,7 @@ namespace
 #define DNN_SIMD_ALIGN DNN_ALIGN(64)
 
 	constexpr auto UseInplace = false;
-	constexpr auto Reference = true;
+	constexpr auto Reference = false;
 
 	typedef float Float;
 	typedef std::size_t UInt;
@@ -115,6 +115,9 @@ namespace
 
 	auto GetThreads(const UInt elements, const Float weight = 1) NOEXCEPT
 	{
+		// weight > 1   less threads   
+		// weight < 1   more threads
+
 		const auto ULTRALIGHT_THRESHOLD =   2097152ull;	// minimum threshold for ULTRALIGHT load
 		const auto LIGHT_THRESHOLD =        8338608ull;
 		const auto MEDIUM_THRESHOLD =      68338608ull;
@@ -135,9 +138,7 @@ namespace
 			elements < static_cast<UInt>(weight * Float(HEAVY_THRESHOLD)) ? HEAVY :
 			elements < static_cast<UInt>(weight * Float(MAXIMUM_THRESHOLD)) ? ULTRAHEAVY : MAXIMUM;
 	}
-	// weight > 1   less threads   
-	// weight < 1   more threads
-
+	
 	struct LabelInfo
 	{
 		UInt LabelA;

@@ -859,30 +859,48 @@ namespace dnn
 					{
 						if (!plain)
 							for (auto c = 0ull; c < PaddedC; c += VectorSize)
-								(Activation::dfVec(VecFloat().load_a(&InputLayerFwd->Neurons[c])), VecFloat().load_a(&InputLayer->NeuronsD1[c])).store_a(&InputLayer->NeuronsD1[c]);
+								(Activation::dfVec(VecFloat().load_a(&InputNeurons[c])), VecFloat().load_a(&InputLayer->NeuronsD1[c])).store_a(&InputLayer->NeuronsD1[c]);
 						else
 						{
 							PRAGMA_OMP_SIMD()
 								for (auto c = 0ull; c < C; c++)
-									InputLayer->NeuronsD1[c] += Activation::df(InputLayerFwd->Neurons[c]) * InputLayer->NeuronsD1[c];
+									InputLayer->NeuronsD1[c] += Activation::df(InputNeurons[c]) * InputLayer->NeuronsD1[c];
 						}
 					}
 					else
 					{
 						if (!plain)
 							for (auto c = 0ull; c < PaddedC; c += VectorSize)
-								mul_add(Activation::dfVec(VecFloat().load_a(&InputLayerFwd->Neurons[c])), VecFloat().load_a(&NeuronsD1[c]), VecFloat().load_a(&InputLayer->NeuronsD1[c])).store_a(&InputLayer->NeuronsD1[c]);
+								(Activation::dfVec(VecFloat().load_a(&InputNeurons[c])) * VecFloat().load_a(&NeuronsD1[c])).store_a(NeuronsD1[c]);
 						else
 						{
 							PRAGMA_OMP_SIMD()
-								for (auto c = 0ull; c < C; c++)
-									InputLayer->NeuronsD1[c] += Activation::df(InputLayerFwd->Neurons[c]) * NeuronsD1[c];
+							for (auto c = 0ull; c < C; c++)
+								NeuronsD1[c] = Activation::df(InputNeurons[c]) * NeuronsD1[c];
 						}
 					}
 				else
 				{
 #endif
 					if (InplaceBwd)
+					{
+						if (!plain)
+							for_i(batchSize, threads, [=](UInt n)
+							{
+								const auto offset = n * PaddedC;
+								for (auto c = offset; c < offset + PaddedC; c += VectorSize)
+									(Activation::dfVec(VecFloat().load_a(&InputNeurons[c])) * VecFloat().load_a(&InputLayer->NeuronsD1[c])).store_a(&InputLayer->NeuronsD1[c]);
+							});
+						else
+							for_i(batchSize, threads, [=](UInt n)
+							{
+								const auto offset = n * C;
+								PRAGMA_OMP_SIMD()
+								for (auto c = offset; c < offset + C; c++)
+									InputLayer->NeuronsD1[c] = Activation::df(InputNeurons[c]) * InputLayer->NeuronsD1[c];
+							});
+					}
+					else
 					{
 						if (!plain)
 							for_i(batchSize, threads, [=](UInt n)
@@ -898,24 +916,6 @@ namespace dnn
 								PRAGMA_OMP_SIMD()
 								for (auto c = offset; c < offset + C; c++)
 									NeuronsD1[c] = Activation::df(InputNeurons[c]) * NeuronsD1[c];
-							});
-					}
-					else
-					{
-						if (!plain)
-							for_i(batchSize, threads, [=](UInt n)
-							{
-								const auto offset = n * PaddedC;
-								for (auto c = offset; c < offset + PaddedC; c += VectorSize)
-									mul_add(Activation::dfVec(VecFloat().load_a(&InputNeurons[c])), VecFloat().load_a(&NeuronsD1[c]), VecFloat().load_a(&NeuronsD1[c])).store_a(&NeuronsD1[c]);
-							});
-						else
-							for_i(batchSize, threads, [=](UInt n)
-							{
-								const auto offset = n * C;
-								PRAGMA_OMP_SIMD()
-								for (auto c = offset; c < offset + C; c++)
-									NeuronsD1[c] += Activation::df(InputNeurons[c]) * NeuronsD1[c];
 							});
 					}
 #ifdef DNN_STOCHASTIC
@@ -954,7 +954,7 @@ namespace dnn
 							{
 								const auto offset = c * HW();
 								for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
-									mul_add(Activation::dfVec(VecFloat().load_a(&InputNeurons[hw])), VecFloat().load_a(&NeuronsD1[hw]), VecFloat().load_a(&NeuronsD1[hw])).store_a(&NeuronsD1[hw]);
+									(Activation::dfVec(VecFloat().load_a(&InputNeurons[hw])) * VecFloat().load_a(&NeuronsD1[hw])).store_a(&NeuronsD1[hw]);
 							}
 						else
 						{
@@ -963,7 +963,7 @@ namespace dnn
 								const auto offset = c * HW();
 								PRAGMA_OMP_SIMD()
 								for (auto hw = offset; hw < offset + HW(); hw++)
-									NeuronsD1[hw] += Activation::df(InputNeurons[hw]) * NeuronsD1[hw];
+									NeuronsD1[hw] = Activation::df(InputNeurons[hw]) * NeuronsD1[hw];
 							}
 						}
 					}
@@ -1004,7 +1004,7 @@ namespace dnn
 								{
 									const auto offset = n * PaddedCDHW() + c * HW();
 									for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
-										mul_add(Activation::dfVec(VecFloat().load_a(&InputNeurons[hw])), VecFloat().load_a(&NeuronsD1[hw]), VecFloat().load_a(&NeuronsD1[hw])).store_a(&NeuronsD1[hw]);
+										(Activation::dfVec(VecFloat().load_a(&InputNeurons[hw])) * VecFloat().load_a(&NeuronsD1[hw])).store_a(&NeuronsD1[hw]);
 								}
 							});
 						else
@@ -1015,7 +1015,7 @@ namespace dnn
 									const auto offset = n * CDHW() + c * HW();
 									PRAGMA_OMP_SIMD()
 									for (auto hw = offset; hw < offset + HW(); hw++)
-										NeuronsD1[hw] += Activation::df(InputNeurons[hw]) * NeuronsD1[hw];
+										NeuronsD1[hw] = Activation::df(InputNeurons[hw]) * NeuronsD1[hw];
 								}
 							});
 					}
