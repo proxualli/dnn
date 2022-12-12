@@ -107,7 +107,7 @@ namespace
 #define DNN_SIMD_ALIGN DNN_ALIGN(64)
 
 	constexpr auto UseInplace = false;
-	constexpr auto Reference = true;
+	constexpr auto Reference = false;
 
 	typedef float Float;
 	typedef std::size_t UInt;
@@ -501,7 +501,7 @@ namespace
 	
 	/* https://en.wikipedia.org/wiki/Kahan_summation_algorithm */
 	template<typename T>
-	inline static void KahanSum(const T& value, T& sum, T& correction) NOEXCEPT
+	inline void KahanSum(const T& value, T& sum, T& correction) NOEXCEPT
 	{
 		const auto y = value - correction;
 		const auto t = sum + y;

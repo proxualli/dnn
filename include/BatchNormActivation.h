@@ -104,23 +104,10 @@ namespace dnn
 
 		void SetBatchSize(const UInt batchSize) final override
 		{
-			while (RefreshingStats.load())
-			{
-				std::this_thread::sleep_for(std::chrono::milliseconds(200));
-				std::this_thread::yield();
-			}
+			Layer::SetBatchSize(batchSize);
 
-			Neurons.resize(batchSize, C, H, W, dnnl::memory::data_type::f32, BlockedFmt, Device.engine);
-			if constexpr (Reference)
+			if (Reference)
 				InputNeurons.resize(batchSize, C, H, W, dnnl::memory::data_type::f32, BlockedFmt, Device.engine);
-#ifndef DNN_LEAN
-			if (!InplaceBwd)
-				NeuronsD1.resize(batchSize, C, H, W, dnnl::memory::data_type::f32, BlockedFmt, Device.engine);
-#else
-			ReleaseGradient();
-#endif // DNN_LEAN
-
-			InitializeDescriptors(batchSize);
 		}
 
 		void InitializeDescriptors(const UInt batchSize) final override
@@ -189,7 +176,7 @@ namespace dnn
 
 		void ForwardProp(const UInt batchSize, const bool training) final override
 		{				
-			if constexpr (Reference)
+			if (Reference)
 				ForwardPropRef(batchSize, training);
 			else
 			{
@@ -417,7 +404,7 @@ namespace dnn
 
 		void BackwardProp(const UInt batchSize) final override
 		{
-			if constexpr (Reference)
+			if (Reference)
 				BackwardPropRef(batchSize);
 			else
 			{
