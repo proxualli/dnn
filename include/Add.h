@@ -409,6 +409,7 @@ namespace dnn
 								const auto end = start + size;
 								const auto scale0 = scales[0];
 								const auto scale1 = scales[1];
+								PRAGMA_OMP_SIMD()
 								for (auto cdhw = start; cdhw < end; cdhw++)
 								{
 									Inputs[0]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * scale0;

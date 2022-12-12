@@ -673,6 +673,7 @@ namespace dnn
 								for_i(batchSize, threads, [=](UInt n)
 								{
 									const auto offset = n * C;
+									PRAGMA_OMP_SIMD()
 									for (auto c = offset; c < offset + C; c++)
 										InputLayer->NeuronsD1[c] = TanhExp::df(InputLayerFwd->Neurons[c]) * InputLayer->NeuronsD1[c];
 								});
