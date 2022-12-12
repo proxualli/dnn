@@ -581,8 +581,7 @@ namespace dnn
 							{
 								const auto outputOffset = n * CDHW() + c * HW();
 								const auto channelOffset = n * C + c;
-								PRAGMA_OMP_SIMD()
-								for (auto hw = 0ull; hw < HW(); hw++)
+									for (auto hw = 0ull; hw < HW(); hw++)
 								{
 									Inputs[first]->NeuronsD1[hw + outputOffset] += NeuronsD1[hw + outputOffset] / InputsFwd[second]->Neurons[channelOffset];
 									Inputs[second]->NeuronsD1[channelOffset] += NeuronsD1[hw + outputOffset] * InputsFwd[first]->Neurons[hw + outputOffset] / Square<Float>(InputsFwd[second]->Neurons[channelOffset]);

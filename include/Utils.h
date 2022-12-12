@@ -508,7 +508,7 @@ namespace
 		correction = (t - sum) - y;
 		sum = t;
 	}
-
+	
 #if defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW32__)
 	const auto nwl = std::string("\r\n");
 #elif defined(__APPLE__)
@@ -569,7 +569,7 @@ namespace
 	}
 #endif
 
-	inline static auto BernoulliVecFloat(const Float prob = Float(0.5)) noexcept
+	inline auto BernoulliVecFloat(const Float prob = Float(0.5)) noexcept
 	{
 		static thread_local auto generator = Ranvec1(3, Seed<int>(), static_cast<int>(std::hash<std::thread::id>()(std::this_thread::get_id())));
 #if defined(DNN_AVX512BW) || defined(DNN_AVX512)
