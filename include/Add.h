@@ -130,6 +130,7 @@ namespace dnn
 								const auto end = start + CDHW();
 								const auto scales0 = scales[0];
 								const auto scales1 = scales[1];
+								PRAGMA_OMP_SIMD()
 								for (auto cdhw = start; cdhw < end; cdhw++)
 								{
 									Neurons[cdhw] = (Inputs[0]->Neurons[cdhw] * scales0)  + (Inputs[1]->Neurons[cdhw] * scales1);
@@ -172,6 +173,7 @@ namespace dnn
 								{
 									const auto outputOffset = n * CDHW() + c * HW();
 									const auto channelOffset = n * C + c;
+									PRAGMA_OMP_SIMD()
 									for (auto hw = 0ull; hw < HW(); hw++)
 									{
 										Neurons[hw + outputOffset] = ((Inputs[first]->Neurons[hw + outputOffset] * scales0) + (Inputs[second]->Neurons[channelOffset] * scales1));
@@ -316,6 +318,7 @@ namespace dnn
 				{
 					if (plain)
 					{
+						PRAGMA_OMP_SIMD()
 						for (auto cdhw = 0ull; cdhw < size; cdhw++)
 						{
 							Inputs[0]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * scale0;
@@ -406,6 +409,7 @@ namespace dnn
 								const auto end = start + size;
 								const auto scale0 = scales[0];
 								const auto scale1 = scales[1];
+								PRAGMA_OMP_SIMD()
 								for (auto cdhw = start; cdhw < end; cdhw++)
 								{
 									Inputs[0]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * scale0;
@@ -491,6 +495,7 @@ namespace dnn
 								{
 									const auto outputOffset = n * CDHW() + c * HW();
 									const auto channelOffset = n * C + c;
+									PRAGMA_OMP_SIMD()
 									for (auto hw = 0ull; hw < HW(); hw++)
 									{
 										Inputs[first]->NeuronsD1[hw + outputOffset] += NeuronsD1[hw + outputOffset] * scale0;
