@@ -787,21 +787,37 @@ namespace dnn
 					}
 				}
 				else
-					for_i(batchSize, threads, [=](UInt n)
+				{
+					if (!InplaceBwd)
 					{
-						for (auto c = 0ull; c < C; c++)
+						for_i(batchSize, threads, [=](UInt n)
 						{
-							const auto offset = n * CDHW() + c * HW();
-							for (auto hw = offset; hw < offset + HW(); hw++)
+							for (auto c = 0ull; c < C; c++)
 							{
-								Neurons[hw] = Activation::f(InputNeurons[hw]);
+								const auto offset = n * CDHW() + c * HW();
+								for (auto hw = offset; hw < offset + HW(); hw++)
+								{
+									Neurons[hw] = Activation::f(InputNeurons[hw]);
 #ifndef DNN_LEAN
-								if (!InplaceBwd)
 									NeuronsD1[hw] = Float(0);
 #endif // DNN_LEAN
+								}
 							}
-						}
-					});
+						});
+					}
+					else
+					{
+						for_i(batchSize, threads, [=](UInt n)
+						{
+							for (auto c = 0ull; c < C; c++)
+							{
+								const auto offset = n * CDHW() + c * HW();
+								for (auto hw = offset; hw < offset + HW(); hw++)
+									Neurons[hw] = Activation::f(InputNeurons[hw]);
+							}
+						});
+					}
+				}
 			}
 			else
 			{
@@ -912,7 +928,6 @@ namespace dnn
 							for_i(batchSize, threads, [=](UInt n)
 							{
 								const auto offset = n * C;
-								PRAGMA_OMP_SIMD()
 								for (auto c = offset; c < offset + C; c++)
 									NeuronsD1[c] = Activation::df(InputNeurons[c]) * NeuronsD1[c];
 							});

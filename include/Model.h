@@ -547,7 +547,7 @@ namespace dnn
 		{
 			std::streamsize weightsSize = 0;
 
-			for (auto& layer : Layers)
+			for (const auto& layer : Layers)
 				weightsSize += layer->GetWeightsSize(persistOptimizer, optimizer);
 
 			return weightsSize;
@@ -557,7 +557,7 @@ namespace dnn
 		{
 			UInt neuronsSize = 0;
 
-			for (auto& layer : Layers)
+			for (const auto& layer : Layers)
 				neuronsSize += layer->GetNeuronsSize(batchSize);
 
 			return neuronsSize;
