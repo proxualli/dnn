@@ -1767,7 +1767,7 @@ namespace dnn
 			}
 			else if (strLine.rfind("Alpha=") == 0)
 			{
-				if (layerType != LayerTypes::Input && layerType != LayerTypes::PRelu && layerType != LayerTypes::Activation && layerType != LayerTypes::LocalResponseNorm)
+				if (!isNormalizationLayer && layerType != LayerTypes::Input && layerType != LayerTypes::PRelu && layerType != LayerTypes::Activation && layerType != LayerTypes::LocalResponseNorm)
 				{
 					msg = CheckMsg(line, col, "Alpha cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
 					goto FAIL;
@@ -1796,7 +1796,7 @@ namespace dnn
 			}
 			else if (strLine.rfind("Beta=") == 0)
 			{
-				if (layerType != LayerTypes::Input && layerType != LayerTypes::Activation && layerType != LayerTypes::LocalResponseNorm)
+				if (!isNormalizationLayer && layerType != LayerTypes::Input && layerType != LayerTypes::Activation && layerType != LayerTypes::LocalResponseNorm)
 				{
 					msg = CheckMsg(line, col, "Beta cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
 					goto FAIL;
