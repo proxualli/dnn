@@ -16,7 +16,7 @@ namespace dnn
 		auto InputChannels(const std::vector<Layer*>& inputs) const
 		{
 			auto channels = 0ull;
-			for (auto layer : inputs)
+			for (const auto& layer : inputs)
 				channels += layer->C;
 
 			return channels;
