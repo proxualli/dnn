@@ -7,7 +7,8 @@ namespace dnn
 	class BatchNormActivation final : public Layer
 	{
 	private:
-		dnnl::normalization_flags flags;
+		/*dnnl::normalization_flags flags;
+		bool inference;
 		std::unique_ptr<dnnl::batch_normalization_forward::primitive_desc> fwdDesc;
 		std::unique_ptr<dnnl::batch_normalization_backward::primitive_desc> bwdDesc;
 		std::unique_ptr<dnnl::binary::primitive_desc> bwdAddDesc;
@@ -20,10 +21,10 @@ namespace dnn
 		FloatVector shift;
 		FloatVector diffScale;
 		FloatVector diffShift;
-		bool inference;
+		
 		bool reorderFwdSrc;
 		bool reorderBwdSrc;
-		bool reorderBwdDiffSrc;
+		bool reorderBwdDiffSrc;*/
 
 	public:
 		const Float Eps;
@@ -54,7 +55,7 @@ namespace dnn
 		{
 			assert(Inputs.size() == 1);
 
-			if (Scaling)
+			/*if (Scaling)
 			{
 				scale = FloatVector(PaddedC, Float(1));
 				shift = FloatVector(PaddedC, Float(0));
@@ -64,6 +65,9 @@ namespace dnn
 
 			WeightsMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::x));
 			PersistWeightsMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::x));
+			*/
+			WeightsMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ 2, dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::nc));
+			PersistWeightsMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ 2, dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::nc));
 		}
 	
 		void UpdateResolution() final override
@@ -106,13 +110,13 @@ namespace dnn
 			return 1; 
 		}
 
-		void SetBatchSize(const UInt batchSize) final override
-		{
-			Layer::SetBatchSize(batchSize);
+		//void SetBatchSize(const UInt batchSize) final override
+		//{
+		//	Layer::SetBatchSize(batchSize);
 
-			//if (Reference)
-			//	InputNeurons.resize(batchSize, C, H, W, dnnl::memory::data_type::f32, BlockedFmt, Device.engine);
-		}
+		//	//if (Reference)
+		//	//	InputNeurons.resize(batchSize, C, H, W, dnnl::memory::data_type::f32, BlockedFmt, Device.engine);
+		//}
 
 		void InitializeDescriptors(const UInt batchSize) final override
 		{
@@ -137,10 +141,10 @@ namespace dnn
 				DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, ChosenFormat));
 				DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, ChosenFormat));
 
-				if (inference)
+				/*if (inference)
 					flags = Scaling ? dnnl::normalization_flags::use_global_stats | dnnl::normalization_flags::use_scale | dnnl::normalization_flags::use_shift : dnnl::normalization_flags::use_global_stats;
 				else
-					flags = Scaling ? dnnl::normalization_flags::use_scale | dnnl::normalization_flags::use_shift : static_cast<dnnl::normalization_flags>(0U);
+					flags = Scaling ? dnnl::normalization_flags::use_scale | dnnl::normalization_flags::use_shift : static_cast<dnnl::normalization_flags>(0U);*/
 
 				/*dnnl::post_ops batchnorm_ops;
 				const auto alpha = 3.f;
@@ -149,7 +153,7 @@ namespace dnn
 				dnnl::primitive_attr batchnorm_attr;
 				batchnorm_attr.set_post_ops(batchnorm_ops);*/
 
-				fwdDesc = std::make_unique<dnnl::batch_normalization_forward::primitive_desc>(dnnl::batch_normalization_forward::primitive_desc(Device.engine, inference ? dnnl::prop_kind::forward_inference : dnnl::prop_kind::forward_training, *InputLayer->DstMemDesc, *DstMemDesc, Eps, flags));
+				/*fwdDesc = std::make_unique<dnnl::batch_normalization_forward::primitive_desc>(dnnl::batch_normalization_forward::primitive_desc(Device.engine, inference ? dnnl::prop_kind::forward_inference : dnnl::prop_kind::forward_training, *InputLayer->DstMemDesc, *DstMemDesc, Eps, flags));
 
 				reorderFwdSrc = fwdDesc->src_desc() != *InputLayer->DstMemDesc;
 
@@ -169,7 +173,7 @@ namespace dnn
 					bwd = std::make_unique<dnnl::batch_normalization_backward>(dnnl::batch_normalization_backward(*bwdDesc));
 					bwdAdd = std::make_unique<dnnl::binary>(dnnl::binary(*bwdAddDesc));
 #endif
-				}
+				}*/
 			}
 		}
 
@@ -1140,14 +1144,14 @@ namespace dnn
 			Weights.resize(PaddedC); std::fill(Weights.begin(), Weights.end(), Float(1));
 			Biases.resize(PaddedC); std::fill(Biases.begin(), Biases.end(), Float(0));
 
-			if (Scaling)
+			/*if (Scaling)
 			{
 				for (auto c = 0ull; c < PaddedC; c++)
 				{
 					scale[c] = Weights[c];
 					shift[c] = Biases[c];
 				}
-			}
+			}*/
 
 			RunningMean.resize(PaddedC); std::fill(RunningMean.begin(), RunningMean.end(), Float(0));
 			RunningVariance.resize(PaddedC); std::fill(RunningVariance.begin(), RunningVariance.end(), Float(1));
@@ -1167,14 +1171,14 @@ namespace dnn
 			os.write(reinterpret_cast<const char*>(RunningMean.data()), std::streamsize(C * sizeof(Float)));
 			os.write(reinterpret_cast<const char*>(RunningVariance.data()), std::streamsize(C * sizeof(Float)));
 
-			if (Scaling)
+			/*if (Scaling)
 			{
 				for (auto c = 0ull; c < C; c++)
 				{
 					Weights[c] = scale[c];
 					Biases[c] = shift[c];
 				}
-			}
+			}*/
 
 			Layer::Save(os, persistOptimizer, optimizer);
 		}
@@ -1186,14 +1190,14 @@ namespace dnn
 
 			Layer::Load(is, persistOptimizer, optimizer);
 
-			if (Scaling)
+			/*if (Scaling)
 			{
 				for (auto c = 0ull; c < C; c++)
 				{
 					scale[c] = Weights[c];
 					shift[c] = Biases[c];
 				}
-			}
+			}*/
 		}
 
 		std::streamsize GetWeightsSize(const bool persistOptimizer = false, const Optimizers optimizer = Optimizers::SGD) const override
