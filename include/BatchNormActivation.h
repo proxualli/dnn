@@ -36,7 +36,7 @@ namespace dnn
 		FloatVector Variance;
 		FloatVector RunningVariance;
 		FloatVector InvStdDev;
-		FloatArray InputNeurons;
+		//FloatArray InputNeurons;
 
 		BatchNormActivation<Activation,T>(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const bool scaling = true, const Float alpha = Float(0), const Float beta = Float(0), const Float momentum = Float(0.99), const Float eps = Float(1e-04), const bool hasBias = true) :
 			Layer(device, format, name, T, inputs[0]->C, inputs[0]->C, inputs[0]->C, inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs, hasBias, scaling),
@@ -49,8 +49,8 @@ namespace dnn
 			RunningMean(FloatVector(PaddedC, Float(0))),
 			Variance(FloatVector(PaddedC, Float(1))),
 			RunningVariance(FloatVector(PaddedC, Float(1))),
-			InvStdDev(FloatVector(PaddedC)),
-			InputNeurons(FloatArray())
+			InvStdDev(FloatVector(PaddedC))
+			//InputNeurons(FloatArray())
 		{
 			assert(Inputs.size() == 1);
 
@@ -110,8 +110,8 @@ namespace dnn
 		{
 			Layer::SetBatchSize(batchSize);
 
-			if (Reference)
-				InputNeurons.resize(batchSize, C, H, W, dnnl::memory::data_type::f32, BlockedFmt, Device.engine);
+			//if (Reference)
+			//	InputNeurons.resize(batchSize, C, H, W, dnnl::memory::data_type::f32, BlockedFmt, Device.engine);
 		}
 
 		void InitializeDescriptors(const UInt batchSize) final override
@@ -180,9 +180,9 @@ namespace dnn
 
 		void ForwardProp(const UInt batchSize, const bool training) final override
 		{				
-			if constexpr (Reference)
+			/*if constexpr (Reference)
 				ForwardPropRef(batchSize, training);
-			else
+			else*/
 			{
 				const auto strideH = W * VectorSize;
 				const auto plain = IsPlainFormat();
@@ -406,9 +406,9 @@ namespace dnn
 
 		void BackwardProp(const UInt batchSize) final override
 		{
-			if constexpr (Reference)
+			/*if constexpr (Reference)
 				BackwardPropRef(batchSize);
-			else
+			else*/
 			{
 #ifdef DNN_LEAN
 				ZeroGradient(batchSize);
@@ -560,10 +560,10 @@ namespace dnn
 							auto correction0 = VecFloat(0);
 							auto correction1 = VecFloat(0);
 
-							for (auto n = 0ull; n < batchSize; ++n)
+							for (auto n = 0ull; n < batchSize; n++)
 							{
 								const auto offsetC = n * PaddedCDHW() + mapOffset;
-								for (auto h = 0ull; h < H; ++h)
+								for (auto h = 0ull; h < H; h++)
 								{
 									const auto offsetH = offsetC + h * strideH;
 									for (auto w = offsetH; w < offsetH + strideH; w += VectorSize)
@@ -635,7 +635,7 @@ namespace dnn
 #endif // DNN_LEAN	
 			}
 		}
-
+		/*
 		void ForwardPropRef (const UInt batchSize, const bool training)
 		{
 			const auto plain = IsPlainFormat();
@@ -1100,7 +1100,7 @@ namespace dnn
 			ReleaseGradient();
 #endif // DNN_LEAN		
 		}
-
+		*/
 		ByteArray GetImage(const Byte fillColor) final override
 		{
 			if (Scaling)
