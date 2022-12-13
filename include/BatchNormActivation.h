@@ -52,7 +52,7 @@ namespace dnn
 			RunningVariance(FloatVector(PaddedC, Float(1))),
 			InvStdDev(FloatVector(PaddedC)),
 			InputNeurons(FloatArray()),
-			inference(false),
+			inference(false)
 		{
 			assert(Inputs.size() == 1);
 
@@ -66,9 +66,6 @@ namespace dnn
 
 			WeightsMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::x));
 			PersistWeightsMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::x));
-			
-			//WeightsMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ 2, dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::nc));
-			//PersistWeightsMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ 2, dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::nc));
 		}
 	
 		void UpdateResolution() final override
