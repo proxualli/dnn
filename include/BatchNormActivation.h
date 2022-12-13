@@ -175,9 +175,9 @@ namespace dnn
 
 		void ForwardProp(const UInt batchSize, const bool training) final override
 		{				
-			/*if constexpr (Reference)
+			if constexpr (Reference)
 				ForwardPropRef(batchSize, training);
-			else*/
+			else
 			{
 				const auto strideH = W * VectorSize;
 				const auto plain = IsPlainFormat();
@@ -401,9 +401,9 @@ namespace dnn
 
 		void BackwardProp(const UInt batchSize) final override
 		{
-			/*if constexpr (Reference)
+			if constexpr (Reference)
 				BackwardPropRef(batchSize);
-			else*/
+			else
 			{
 #ifdef DNN_LEAN
 				ZeroGradient(batchSize);
@@ -630,7 +630,7 @@ namespace dnn
 #endif // DNN_LEAN	
 			}
 		}
-		/*
+		
 		void ForwardPropRef (const UInt batchSize, const bool training)
 		{
 			const auto plain = IsPlainFormat();
@@ -1095,7 +1095,7 @@ namespace dnn
 			ReleaseGradient();
 #endif // DNN_LEAN		
 		}
-		*/
+		
 		ByteArray GetImage(const Byte fillColor) final override
 		{
 			if (Scaling)
@@ -1135,14 +1135,14 @@ namespace dnn
 			Weights.resize(PaddedC); std::fill(Weights.begin(), Weights.end(), Float(1));
 			Biases.resize(PaddedC); std::fill(Biases.begin(), Biases.end(), Float(0));
 
-			/*if (Scaling)
+			if (Scaling)
 			{
 				for (auto c = 0ull; c < PaddedC; c++)
 				{
 					scale[c] = Weights[c];
 					shift[c] = Biases[c];
 				}
-			}*/
+			}
 
 			RunningMean.resize(PaddedC); std::fill(RunningMean.begin(), RunningMean.end(), Float(0));
 			RunningVariance.resize(PaddedC); std::fill(RunningVariance.begin(), RunningVariance.end(), Float(1));
@@ -1162,14 +1162,14 @@ namespace dnn
 			os.write(reinterpret_cast<const char*>(RunningMean.data()), std::streamsize(C * sizeof(Float)));
 			os.write(reinterpret_cast<const char*>(RunningVariance.data()), std::streamsize(C * sizeof(Float)));
 
-			/*if (Scaling)
+			if (Scaling)
 			{
 				for (auto c = 0ull; c < C; c++)
 				{
 					Weights[c] = scale[c];
 					Biases[c] = shift[c];
 				}
-			}*/
+			}
 
 			Layer::Save(os, persistOptimizer, optimizer);
 		}
@@ -1181,14 +1181,14 @@ namespace dnn
 
 			Layer::Load(is, persistOptimizer, optimizer);
 
-			/*if (Scaling)
+			if (Scaling)
 			{
 				for (auto c = 0ull; c < C; c++)
 				{
 					scale[c] = Weights[c];
 					shift[c] = Biases[c];
 				}
-			}*/
+			}
 		}
 
 		std::streamsize GetWeightsSize(const bool persistOptimizer = false, const Optimizers optimizer = Optimizers::SGD) const override
