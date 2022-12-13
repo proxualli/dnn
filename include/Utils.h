@@ -106,7 +106,7 @@ namespace
 #endif
 #define DNN_SIMD_ALIGN DNN_ALIGN(64)
 
-	constexpr auto UseInplace = true;
+	constexpr auto UseInplace = false;
 	//constexpr auto Reference = false;
 
 	typedef float Float;
