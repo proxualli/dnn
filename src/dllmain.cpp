@@ -524,7 +524,11 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, LayerInfo* info)
 		{
 			auto bn = dynamic_cast<BatchNormActivation<Mish, LayerTypes::BatchNormMish>*>(model->Layers[layerIndex].get());
 			if (bn)
+			{
 				info->Scaling = bn->Scaling;
+				info->Alpha = bn->Alpha;
+				info->Beta = bn->Beta;
+			}
 		}
 		break;
 
@@ -535,6 +539,8 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, LayerInfo* info)
 			{
 				info->Scaling = bn->Scaling;
 				info->Dropout = Float(1) - bn->Keep;
+				info->Alpha = bn->Alpha;
+				info->Beta = bn->Beta;
 			}
 		}
 		break;
@@ -543,7 +549,11 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, LayerInfo* info)
 		{
 			auto bn = dynamic_cast<BatchNormActivation<HardLogistic, LayerTypes::BatchNormHardLogistic>*>(model->Layers[layerIndex].get());
 			if (bn)
+			{
 				info->Scaling = bn->Scaling;
+				info->Alpha = bn->Alpha;
+				info->Beta = bn->Beta;
+			}
 		}
 		break;
 
@@ -551,7 +561,11 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, LayerInfo* info)
 		{
 			auto bn = dynamic_cast<BatchNormActivation<HardSwish, LayerTypes::BatchNormHardSwish>*>(model->Layers[layerIndex].get());
 			if (bn)
+			{
 				info->Scaling = bn->Scaling;
+				info->Alpha = bn->Alpha;
+				info->Beta = bn->Beta;
+			}
 		}
 		break;
 
@@ -562,6 +576,8 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, LayerInfo* info)
 			{
 				info->Scaling = bn->Scaling;
 				info->Dropout = Float(1) - bn->Keep;
+				info->Alpha = bn->Alpha;
+				info->Beta = bn->Beta;
 			}
 		}
 		break;
@@ -600,6 +616,8 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, LayerInfo* info)
 			{
 				info->Scaling = bn->Scaling;
 				info->Dropout = Float(1) - bn->Keep;
+				info->Alpha = bn->Alpha;
+				info->Beta = bn->Beta;
 			}
 		}
 		break;
@@ -608,7 +626,11 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, LayerInfo* info)
 		{
 			auto bn = dynamic_cast<BatchNormActivation<TanhExp, LayerTypes::BatchNormTanhExp>*>(model->Layers[layerIndex].get());
 			if (bn)
+			{
 				info->Scaling = bn->Scaling;
+				info->Alpha = bn->Alpha;
+				info->Beta = bn->Beta;
+			}
 		}
 		break;
 
@@ -619,6 +641,8 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, LayerInfo* info)
 			{
 				info->Scaling = bn->Scaling;
 				info->Dropout = Float(1) - bn->Keep;
+				info->Alpha = bn->Alpha;
+				info->Beta = bn->Beta;
 			}
 		}
 		break;
