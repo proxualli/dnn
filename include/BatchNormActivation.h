@@ -139,31 +139,34 @@ namespace dnn
 				DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, ChosenFormat));
 				DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, ChosenFormat));
 
-				if (inference)
-					flags = Scaling ? dnnl::normalization_flags::use_global_stats | dnnl::normalization_flags::use_scale | dnnl::normalization_flags::use_shift : dnnl::normalization_flags::use_global_stats;
-				else
-					flags = Scaling ? dnnl::normalization_flags::use_scale | dnnl::normalization_flags::use_shift : static_cast<dnnl::normalization_flags>(0U);
-
-				fwdDesc = std::make_unique<dnnl::batch_normalization_forward::primitive_desc>(dnnl::batch_normalization_forward::primitive_desc(Device.engine, inference ? dnnl::prop_kind::forward_inference : dnnl::prop_kind::forward_training, *InputLayer->DstMemDesc, *DstMemDesc, Eps, flags));
-
-				reorderFwdSrc = fwdDesc->src_desc() != *InputLayer->DstMemDesc;
-
-#ifdef DNN_CACHE_PRIMITIVES
-				fwd = std::make_unique<dnnl::batch_normalization_forward>(dnnl::batch_normalization_forward(*fwdDesc));
-#endif
-				if (!inference)
+				if constexpr (Reference)
 				{
-					bwdDesc = std::make_unique<dnnl::batch_normalization_backward::primitive_desc>(dnnl::batch_normalization_backward::primitive_desc(Device.engine, Scaling ? dnnl::prop_kind::backward : dnnl::prop_kind::backward_data, *InputLayer->DiffDstMemDesc, *DiffDstMemDesc, *DstMemDesc, Eps, flags, *fwdDesc));
+					if (inference)
+						flags = Scaling ? dnnl::normalization_flags::use_global_stats | dnnl::normalization_flags::use_scale | dnnl::normalization_flags::use_shift : dnnl::normalization_flags::use_global_stats;
+					else
+						flags = Scaling ? dnnl::normalization_flags::use_scale | dnnl::normalization_flags::use_shift : static_cast<dnnl::normalization_flags>(0U);
 
-					reorderBwdSrc = bwdDesc->src_desc() != *InputLayer->DstMemDesc;
-					reorderBwdDiffSrc = bwdDesc->diff_src_desc() != *InputLayer->DiffDstMemDesc;
+					fwdDesc = std::make_unique<dnnl::batch_normalization_forward::primitive_desc>(dnnl::batch_normalization_forward::primitive_desc(Device.engine, inference ? dnnl::prop_kind::forward_inference : dnnl::prop_kind::forward_training, *InputLayer->DstMemDesc, *DstMemDesc, Eps, flags));
 
-					bwdAddDesc = std::make_unique<dnnl::binary::primitive_desc>(dnnl::binary::primitive_desc(Device.engine, dnnl::algorithm::binary_add, *InputLayer->DiffDstMemDesc, *InputLayer->DiffDstMemDesc, *InputLayer->DiffDstMemDesc));
+					reorderFwdSrc = fwdDesc->src_desc() != *InputLayer->DstMemDesc;
 
 #ifdef DNN_CACHE_PRIMITIVES
-					bwd = std::make_unique<dnnl::batch_normalization_backward>(dnnl::batch_normalization_backward(*bwdDesc));
-					bwdAdd = std::make_unique<dnnl::binary>(dnnl::binary(*bwdAddDesc));
+					fwd = std::make_unique<dnnl::batch_normalization_forward>(dnnl::batch_normalization_forward(*fwdDesc));
 #endif
+					if (!inference)
+					{
+						bwdDesc = std::make_unique<dnnl::batch_normalization_backward::primitive_desc>(dnnl::batch_normalization_backward::primitive_desc(Device.engine, Scaling ? dnnl::prop_kind::backward : dnnl::prop_kind::backward_data, *InputLayer->DiffDstMemDesc, *DiffDstMemDesc, *DstMemDesc, Eps, flags, *fwdDesc));
+
+						reorderBwdSrc = bwdDesc->src_desc() != *InputLayer->DstMemDesc;
+						reorderBwdDiffSrc = bwdDesc->diff_src_desc() != *InputLayer->DiffDstMemDesc;
+
+						bwdAddDesc = std::make_unique<dnnl::binary::primitive_desc>(dnnl::binary::primitive_desc(Device.engine, dnnl::algorithm::binary_add, *InputLayer->DiffDstMemDesc, *InputLayer->DiffDstMemDesc, *InputLayer->DiffDstMemDesc));
+
+#ifdef DNN_CACHE_PRIMITIVES
+						bwd = std::make_unique<dnnl::batch_normalization_backward>(dnnl::batch_normalization_backward(*bwdDesc));
+						bwdAdd = std::make_unique<dnnl::binary>(dnnl::binary(*bwdAddDesc));
+#endif
+					}
 				}
 			}
 		}
