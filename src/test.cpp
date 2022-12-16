@@ -215,8 +215,8 @@ int main(int argc, char* argv[])
     rate.BatchSize = 128;
     rate.Height = 32;
     rate.Width = 32;
-    rate.PadH = 8;
-    rate.PadW = 8;
+    rate.PadH = 4;
+    rate.PadW = 4;
     rate.Cycles = 1;
     rate.Epochs = 200;
     rate.EpochMultiplier = 1;
