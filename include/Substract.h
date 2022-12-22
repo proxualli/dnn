@@ -320,8 +320,8 @@ namespace dnn
 						PRAGMA_OMP_SIMD()
 						for (auto cdhw = 0ull; cdhw < size; cdhw++)
 						{
-							Inputs[0]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * scale0;
-							Inputs[1]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * scale1;
+							Inputs[0]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * scales0;
+							Inputs[1]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * scales1;
 						}
 					}
 					else
@@ -363,6 +363,7 @@ namespace dnn
 					}
 					else
 					{
+						const auto strideHW = HW() * VectorSize;
 						VecFloat D1;
 						for (auto c = 0ull; c < PaddedC; c += VectorSize)
 						{

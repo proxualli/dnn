@@ -859,7 +859,7 @@ namespace dnn
 #else
 			DNN_UNREF_PAR(batchSize);
 #endif // DNN_LEAN
-					
+
 			const auto plain = IsPlainFormat();
 			const auto elements = batchSize * (plain ? CDHW() : PaddedCDHW());
 			const auto threads = GetThreads(elements, Float(0.1));
@@ -873,8 +873,10 @@ namespace dnn
 					if (InplaceBwd)
 					{
 						if (!plain)
+						{
 							for (auto c = 0ull; c < PaddedC; c += VectorSize)
-								(Activation::dfVec(VecFloat().load_a(&InputNeurons[c])) * VecFloat().load_a(&InputLayer->NeuronsD1[c]), Alpha, Beta).store_a(&InputLayer->NeuronsD1[c]);
+								(Activation::dfVec(VecFloat().load_a(&InputNeurons[c]), Alpha, Beta) * VecFloat().load_a(&InputLayer->NeuronsD1[c])).store_a(&InputLayer->NeuronsD1[c]);
+						}
 						else
 						{
 							for (auto c = 0ull; c < C; c++)
@@ -884,14 +886,17 @@ namespace dnn
 					else
 					{
 						if (!plain)
+						{
 							for (auto c = 0ull; c < PaddedC; c += VectorSize)
-								(Activation::dfVec(VecFloat().load_a(&InputNeurons[c]), Alpha, Beta) * VecFloat().load_a(&NeuronsD1[c])).store_a(NeuronsD1[c]);
+								(Activation::dfVec(VecFloat().load_a(&InputNeurons[c]), Alpha, Beta) * VecFloat().load_a(&NeuronsD1[c])).store_a(&NeuronsD1[c]);
+						}
 						else
 						{
 							for (auto c = 0ull; c < C; c++)
 								NeuronsD1[c] = Activation::df(InputNeurons[c], Alpha, Beta) * NeuronsD1[c];
 						}
 					}
+				}
 				else
 				{
 #endif
