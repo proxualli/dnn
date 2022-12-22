@@ -636,8 +636,10 @@ namespace dnn
 						if (InplaceBwd)
 						{
 							if (!plain)
+							{
 								for (auto c = 0ull; c < PaddedC; c += VectorSize)
 									(TanhExp::dfVec(VecFloat().load_a(&InputLayerFwd->Neurons[c])), VecFloat().load_a(&InputLayer->NeuronsD1[c])).store_a(&InputLayer->NeuronsD1[c]);
+							}
 							else
 							{
 								for (auto c = 0ull; c < C; c++)
@@ -647,13 +649,16 @@ namespace dnn
 						else
 						{
 							if (!plain)
+							{
 								for (auto c = 0ull; c < PaddedC; c += VectorSize)
 									mul_add(TanhExp::dfVec(VecFloat().load_a(&InputLayerFwd->Neurons[c])), VecFloat().load_a(&NeuronsD1[c]), VecFloat().load_a(&InputLayer->NeuronsD1[c])).store_a(&InputLayer->NeuronsD1[c]);
+							}
 							else
 							{
 								for (auto c = 0ull; c < C; c++)
 									InputLayer->NeuronsD1[c] += TanhExp::df(InputLayerFwd->Neurons[c]) * NeuronsD1[c];
 							}
+						}
 					}
 					else
 					{

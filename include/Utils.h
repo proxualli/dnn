@@ -106,7 +106,7 @@ namespace
 #endif
 #define DNN_SIMD_ALIGN DNN_ALIGN(64)
 
-	constexpr auto UseInplace = true;
+	constexpr auto UseInplace = false;
 	constexpr auto Reference = true;
 
 	typedef float Float;
@@ -591,47 +591,40 @@ namespace
 		static thread_local auto generator = std::mt19937(Seed<unsigned>());
 		return static_cast<T>(std::bernoulli_distribution(static_cast<double>(p))(generator));
 	}
-	
-	template<typename T>
-	inline auto Bernoulli(std::mt19937& generator, const Float p = Float(0.5)) NOEXCEPT
-	{
-#ifndef NDEBUG
-		if (p < 0 || p > 1)
-			throw std::invalid_argument("Parameter out of range in Bernoulli function");
-#endif
-		return static_cast<T>(std::bernoulli_distribution(static_cast<double>(p))(generator));
-	}
 
 	template<typename T>
-	inline auto UniformInt(std::mt19937& generator, const T min, const T max) NOEXCEPT
+	inline auto UniformInt(const T min, const T max) NOEXCEPT
 	{
 		static_assert(std::is_integral<T>::value, "Only integral type supported in UniformInt function");
 #ifndef NDEBUG
 		if (min > max)
 			throw std::invalid_argument("Parameter out of range in UniformInt function");
 #endif
+		static thread_local auto generator = std::mt19937(Seed<unsigned>());
 		return std::uniform_int_distribution<T>(min, max)(generator);
 	}
 
 	template<typename T>
-	inline auto UniformReal(std::mt19937& generator, const T min, const T max) NOEXCEPT
+	inline auto UniformReal(const T min, const T max) NOEXCEPT
 	{
 		static_assert(std::is_floating_point<T>::value, "Only Floating point type supported in UniformReal function");
 #ifndef NDEBUG
 		if (min > max)
 			throw std::invalid_argument("Parameter out of range in UniformReal function");
 #endif
+		static thread_local auto generator = std::mt19937(Seed<unsigned>());
 		return std::uniform_real_distribution<T>(min, max)(generator);
 	}
 
 	template<typename T>
-	auto TruncatedNormal(std::mt19937& generator, const T m, const T s, const T limit) NOEXCEPT
+	auto TruncatedNormal(const T m, const T s, const T limit) NOEXCEPT
 	{
 		static_assert(std::is_floating_point<T>::value, "Only Floating point type supported in TruncatedNormal function");
 #ifndef NDEBUG
 		if (limit < s)
 	     throw std::invalid_argument("limit out of range in TruncatedNormal function");
 #endif
+		static thread_local auto generator = std::mt19937(Seed<unsigned>());
 		T x;
 		do { x = std::normal_distribution<T>(T(0), s)(generator); }
 		while (std::abs(x) > limit); // reject if beyond limit
@@ -729,9 +722,10 @@ namespace
 	};
 
 	template<typename T>
-	inline auto BetaDistribution(std::mt19937& generator, const T a, const T b) NOEXCEPT
+	inline auto BetaDistribution(const T a, const T b) NOEXCEPT
 	{
 		static_assert(std::is_floating_point<T>::value, "Only Floating point type supported in BetaDistribution function");
+		static thread_local auto generator = std::mt19937(Seed<unsigned>());
 
 		return beta_distribution<T>(a, b)(generator);
 	}

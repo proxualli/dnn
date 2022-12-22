@@ -104,6 +104,7 @@ namespace dnn
 						}
 					}
 					else
+					{
 						for (auto c = 0ull; c < C; c++)
 						{
 							const auto inputOffset = (c + groupC) * HW();
@@ -113,10 +114,11 @@ namespace dnn
 							{
 								Neurons[hw + outputOffset] = InputLayer->Neurons[hw + inputOffset];
 #ifndef DNN_LEAN
- 								NeuronsD1[hw + outputOffset] = Float(0);
+								NeuronsD1[hw + outputOffset] = Float(0);
 #endif // DNN_LEAN
 							}
 						}
+					}
 				}
 				else
 				{
@@ -136,6 +138,7 @@ namespace dnn
 						}
 					}
 					else
+					{
 						for (auto c = 0ull; c < C; c++)
 						{
 							const auto inputOffset = (c + groupC) * HW();
@@ -144,6 +147,7 @@ namespace dnn
 							for (auto hw = 0ull; hw < HW(); hw++)
 								Neurons[hw + outputOffset] = InputLayer->Neurons[hw + inputOffset];
 						}
+					}
 				}				
 			}
 			else

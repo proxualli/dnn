@@ -159,11 +159,11 @@ namespace dnn
 			return img;
 		}
 
-		static Image AutoAugment(const Image& image, const UInt padD, const UInt padH, const UInt padW, const std::vector<Float>& mean, const bool mirrorPad, std::mt19937& generator) NOEXCEPT
+		static Image AutoAugment(const Image& image, const UInt padD, const UInt padH, const UInt padW, const std::vector<Float>& mean, const bool mirrorPad) NOEXCEPT
 		{
 			Image img(image);
 
-			const auto operation = UniformInt<UInt>(generator, 0, 24);
+			const auto operation = UniformInt<UInt>(0, 24);
 
 			switch (operation)
 			{
@@ -178,12 +178,12 @@ namespace dnn
 			{
 			case 0:
 			{
-				if (Bernoulli<bool>(generator, Float(0.1)))
+				if (Bernoulli<bool>(Float(0.1)))
 					Image::Invert(img);
 
-				if (Bernoulli<bool>(generator, Float(0.2)))
+				if (Bernoulli<bool>(Float(0.2)))
 				{
-					if (Bernoulli<bool>(generator, Float(0.5)))
+					if (Bernoulli<bool>(Float(0.5)))
 						Image::Contrast(img, FloatLevel(6));
 					else
 						Image::Contrast(img, FloatLevel(4));
@@ -193,17 +193,17 @@ namespace dnn
 
 			case 1:
 			{
-				if (Bernoulli<bool>(generator, Float(0.7)))
+				if (Bernoulli<bool>(Float(0.7)))
 				{
-					if (Bernoulli<bool>(generator, Float(0.5)))
+					if (Bernoulli<bool>(Float(0.5)))
 						Image::Rotate(img, FloatLevel(2, 0, 20), Interpolations::Cubic, mean);
 					else
 						Image::Rotate(img, -FloatLevel(2, 0, 20), Interpolations::Cubic, mean);
 				}
 
-				if (Bernoulli<bool>(generator, Float(0.3)))
+				if (Bernoulli<bool>(Float(0.3)))
 				{
-					if (Bernoulli<bool>(generator, Float(0.5)))
+					if (Bernoulli<bool>(Float(0.5)))
 						Image::Translate(img, 0, IntLevel(7), mean);
 					else
 						Image::Translate(img, 0, -IntLevel(7), mean);
@@ -213,17 +213,17 @@ namespace dnn
 
 			case 2:
 			{
-				if (Bernoulli<bool>(generator, Float(0.8)))
+				if (Bernoulli<bool>(Float(0.8)))
 				{
-					if (Bernoulli<bool>(generator, Float(0.5)))
+					if (Bernoulli<bool>(Float(0.5)))
 						Image::Sharpness(img, FloatLevel(2));
 					else
 						Image::Sharpness(img, FloatLevel(8));
 				}
 
-				if (Bernoulli<bool>(generator, Float(0.9)))
+				if (Bernoulli<bool>(Float(0.9)))
 				{
-					if (Bernoulli<bool>(generator, Float(0.5)))
+					if (Bernoulli<bool>(Float(0.5)))
 						Image::Sharpness(img, FloatLevel(3));
 					else
 						Image::Sharpness(img, FloatLevel(7));
@@ -233,17 +233,17 @@ namespace dnn
 
 			case 3:
 			{
-				if (Bernoulli<bool>(generator, Float(0.5)))
+				if (Bernoulli<bool>(Float(0.5)))
 				{
-					if (Bernoulli<bool>(generator, Float(0.5)))
+					if (Bernoulli<bool>(Float(0.5)))
 						Image::Rotate(img, FloatLevel(6, 0, 20), Interpolations::Cubic, mean);
 					else
 						Image::Rotate(img, -FloatLevel(6, 0, 20), Interpolations::Cubic, mean);
 				}
 
-				if (Bernoulli<bool>(generator, Float(0.7)))
+				if (Bernoulli<bool>(Float(0.7)))
 				{
-					if (Bernoulli<bool>(generator, Float(0.5)))
+					if (Bernoulli<bool>(Float(0.5)))
 						Image::Translate(img, IntLevel(7), 0, mean);
 					else
 						Image::Translate(img, -IntLevel(7), 0, mean);
@@ -253,27 +253,27 @@ namespace dnn
 
 			case 4:
 			{
-				if (Bernoulli<bool>(generator, Float(0.5)))
+				if (Bernoulli<bool>(Float(0.5)))
 					Image::AutoContrast(img);
 
-				if (Bernoulli<bool>(generator, Float(0.9)))
+				if (Bernoulli<bool>(Float(0.9)))
 					Image::Equalize(img);
 			}
 			break;
 
 			case 5:
 			{
-				if (Bernoulli<bool>(generator, Float(0.2)))
+				if (Bernoulli<bool>(Float(0.2)))
 				{
-					if (Bernoulli<bool>(generator, Float(0.5)))
+					if (Bernoulli<bool>(Float(0.5)))
 						Image::Rotate(img, FloatLevel(4, 0, 20), Interpolations::Cubic, mean);
 					else
 						Image::Rotate(img, -FloatLevel(4, 0, 20), Interpolations::Cubic, mean);
 				}
 
-				if (Bernoulli<bool>(generator, Float(0.3)))
+				if (Bernoulli<bool>(Float(0.3)))
 				{
-					if (Bernoulli<bool>(generator, Float(0.5)))
+					if (Bernoulli<bool>(Float(0.5)))
 						Image::Posterize(img, 32);
 					else
 						Image::Posterize(img, 64);
@@ -283,17 +283,17 @@ namespace dnn
 
 			case 6:
 			{
-				if (Bernoulli<bool>(generator, Float(0.4)))
+				if (Bernoulli<bool>(Float(0.4)))
 				{
-					if (Bernoulli<bool>(generator, Float(0.5)))
+					if (Bernoulli<bool>(Float(0.5)))
 						Image::Color(img, FloatLevel(3));
 					else
 						Image::Color(img, FloatLevel(7));
 				}
 
-				if (Bernoulli<bool>(generator, Float(0.6)))
+				if (Bernoulli<bool>(Float(0.6)))
 				{
-					if (Bernoulli<bool>(generator, Float(0.5)))
+					if (Bernoulli<bool>(Float(0.5)))
 						Image::Brightness(img, FloatLevel(7));
 					else
 						Image::Brightness(img, FloatLevel(3));
@@ -303,17 +303,17 @@ namespace dnn
 
 			case 7:
 			{
-				if (Bernoulli<bool>(generator, Float(0.3)))
+				if (Bernoulli<bool>(Float(0.3)))
 				{
-					if (Bernoulli<bool>(generator, Float(0.5)))
+					if (Bernoulli<bool>(Float(0.5)))
 						Image::Sharpness(img, FloatLevel(9));
 					else
 						Image::Sharpness(img, FloatLevel(1));
 				}
 
-				if (Bernoulli<bool>(generator, Float(0.7)))
+				if (Bernoulli<bool>(Float(0.7)))
 				{
-					if (Bernoulli<bool>(generator, Float(0.5)))
+					if (Bernoulli<bool>(Float(0.5)))
 						Image::Brightness(img, FloatLevel(8));
 					else
 						Image::Brightness(img, FloatLevel(2));
@@ -323,27 +323,27 @@ namespace dnn
 
 			case 8:
 			{
-				if (Bernoulli<bool>(generator, Float(0.6)))
+				if (Bernoulli<bool>(Float(0.6)))
 					Image::Equalize(img);
 
-				if (Bernoulli<bool>(generator, Float(0.5)))
+				if (Bernoulli<bool>(Float(0.5)))
 					Image::Equalize(img);
 			}
 			break;
 
 			case 9:
 			{
-				if (Bernoulli<bool>(generator, Float(0.6)))
+				if (Bernoulli<bool>(Float(0.6)))
 				{
-					if (Bernoulli<bool>(generator, Float(0.5)))
+					if (Bernoulli<bool>(Float(0.5)))
 						Image::Contrast(img, FloatLevel(7));
 					else
 						Image::Contrast(img, FloatLevel(3));
 				}
 
-				if (Bernoulli<bool>(generator, Float(0.6)))
+				if (Bernoulli<bool>(Float(0.6)))
 				{
-					if (Bernoulli<bool>(generator, Float(0.5)))
+					if (Bernoulli<bool>(Float(0.5)))
 						Image::Sharpness(img, FloatLevel(6));
 					else
 						Image::Sharpness(img, FloatLevel(4));
@@ -353,17 +353,17 @@ namespace dnn
 
 			case 10:
 			{
-				if (Bernoulli<bool>(generator, Float(0.7)))
+				if (Bernoulli<bool>(Float(0.7)))
 				{
-					if (Bernoulli<bool>(generator, Float(0.5)))
+					if (Bernoulli<bool>(Float(0.5)))
 						Image::Color(img, FloatLevel(7));
 					else
 						Image::Color(img, FloatLevel(3));
 				}
 
-				if (Bernoulli<bool>(generator, Float(0.5)))
+				if (Bernoulli<bool>(Float(0.5)))
 				{
-					if (Bernoulli<bool>(generator, Float(0.5)))
+					if (Bernoulli<bool>(Float(0.5)))
 						Image::Translate(img, 0, IntLevel(8), mean);
 					else
 						Image::Translate(img, 0, -IntLevel(8), mean);
@@ -373,42 +373,42 @@ namespace dnn
 
 			case 11:
 			{
-				if (Bernoulli<bool>(generator, Float(0.3)))
+				if (Bernoulli<bool>(Float(0.3)))
 					Image::Equalize(img);
 
-				if (Bernoulli<bool>(generator, Float(0.4)))
+				if (Bernoulli<bool>(Float(0.4)))
 					Image::AutoContrast(img);
 			}
 			break;
 
 			case 12:
 			{
-				if (Bernoulli<bool>(generator, Float(0.4)))
+				if (Bernoulli<bool>(Float(0.4)))
 				{
-					if (Bernoulli<bool>(generator, Float(0.5)))
+					if (Bernoulli<bool>(Float(0.5)))
 						Image::Translate(img, IntLevel(3), 0, mean);
 					else
 						Image::Translate(img, -IntLevel(3), 0, mean);
 				}
 
-				if (Bernoulli<bool>(generator, Float(0.2)))
+				if (Bernoulli<bool>(Float(0.2)))
 					Image::Sharpness(img, FloatLevel(6));
 			}
 			break;
 
 			case 13:
 			{
-				if (Bernoulli<bool>(generator, Float(0.9)))
+				if (Bernoulli<bool>(Float(0.9)))
 				{
-					if (Bernoulli<bool>(generator, Float(0.5)))
+					if (Bernoulli<bool>(Float(0.5)))
 						Image::Brightness(img, FloatLevel(6));
 					else
 						Image::Brightness(img, FloatLevel(4));
 				}
 
-				if (Bernoulli<bool>(generator, Float(0.2)))
+				if (Bernoulli<bool>(Float(0.2)))
 				{
-					if (Bernoulli<bool>(generator, Float(0.5)))
+					if (Bernoulli<bool>(Float(0.5)))
 						Image::Color(img, FloatLevel(8));
 					else
 						Image::Color(img, FloatLevel(2));
@@ -418,9 +418,9 @@ namespace dnn
 
 			case 14:
 			{
-				if (Bernoulli<bool>(generator, Float(0.5)))
+				if (Bernoulli<bool>(Float(0.5)))
 				{
-					if (Bernoulli<bool>(generator, Float(0.5)))
+					if (Bernoulli<bool>(Float(0.5)))
 						Image::Solarize(img, IntLevel(2, 0, 256));
 					else
 						Image::Solarize(img, IntLevel(8, 0, 256));
@@ -430,81 +430,81 @@ namespace dnn
 
 			case 15:
 			{
-				if (Bernoulli<bool>(generator, Float(0.2)))
+				if (Bernoulli<bool>(Float(0.2)))
 					Image::Equalize(img);
 
-				if (Bernoulli<bool>(generator, Float(0.6)))
+				if (Bernoulli<bool>(Float(0.6)))
 					Image::AutoContrast(img);
 			}
 			break;
 
 			case 16:
 			{
-				if (Bernoulli<bool>(generator, Float(0.2)))
+				if (Bernoulli<bool>(Float(0.2)))
 					Image::Equalize(img);
-				if (Bernoulli<bool>(generator, Float(0.6)))
+				if (Bernoulli<bool>(Float(0.6)))
 					Image::Equalize(img);
 			}
 			break;
 
 			case 17:
 			{
-				if (Bernoulli<bool>(generator, Float(0.9)))
+				if (Bernoulli<bool>(Float(0.9)))
 				{
-					if (Bernoulli<bool>(generator, Float(0.5)))
+					if (Bernoulli<bool>(Float(0.5)))
 						Image::Color(img, FloatLevel(8));
 					else
 						Image::Color(img, FloatLevel(2));
 				}
 
-				if (Bernoulli<bool>(generator, Float(0.6)))
+				if (Bernoulli<bool>(Float(0.6)))
 					Image::Equalize(img);
 			}
 			break;
 
 			case 18:
 			{
-				if (Bernoulli<bool>(generator, Float(0.8)))
+				if (Bernoulli<bool>(Float(0.8)))
 					Image::AutoContrast(img);
 
-				if (Bernoulli<bool>(generator, Float(0.2)))
+				if (Bernoulli<bool>(Float(0.2)))
 					Image::Solarize(img, IntLevel(8, 0, 256));
 			}
 			break;
 
 			case 19:
 			{
-				if (Bernoulli<bool>(generator, Float(0.1)))
+				if (Bernoulli<bool>(Float(0.1)))
 					Image::Brightness(img, FloatLevel(3));
 
-				if (Bernoulli<bool>(generator, Float(0.7)))
+				if (Bernoulli<bool>(Float(0.7)))
 					Image::Color(img, FloatLevel(4));
 			}
 			break;
 
 			case 20:
 			{
-				if (Bernoulli<bool>(generator, Float(0.4)))
+				if (Bernoulli<bool>(Float(0.4)))
 					Image::Solarize(img, IntLevel(5, 0, 256));
 
-				if (Bernoulli<bool>(generator, Float(0.9)))
+				if (Bernoulli<bool>(Float(0.9)))
 					Image::AutoContrast(img);
 			}
 			break;
 
 			case 21:
 			{
-				if (Bernoulli<bool>(generator, Float(0.9)))
+				if (Bernoulli<bool>(Float(0.9)))
 				{
-					if (Bernoulli<bool>(generator, Float(0.5)))
+					if (Bernoulli<bool>(Float(0.5)))
 						Image::Translate(img, IntLevel(7), 0, mean);
 					else
 						Image::Translate(img, -IntLevel(7), 0, mean);
 				}
 
-				if (Bernoulli<bool>(generator, Float(0.7)))
+				if (Bernoulli<bool>(Float(0.7)))
 				{
-					if (Bernoulli<bool>(generator, Float(0.5)))
+					if (Bernoulli<bool>(Float(0.5)))
 						Image::Translate(img, IntLevel(7), 0, mean);
 					else
 						Image::Translate(img, -IntLevel(7), 0, mean);
@@ -514,35 +514,35 @@ namespace dnn
 
 			case 22:
 			{
-				if (Bernoulli<bool>(generator, Float(0.9)))
+				if (Bernoulli<bool>(Float(0.9)))
 					Image::AutoContrast(img);
 
-				if (Bernoulli<bool>(generator, Float(0.8)))
+				if (Bernoulli<bool>(Float(0.8)))
 					Image::Solarize(img, IntLevel(3, 0, 256));
 			}
 			break;
 
 			case 23:
 			{
-				if (Bernoulli<bool>(generator, Float(0.8)))
+				if (Bernoulli<bool>(Float(0.8)))
 					Image::Equalize(img);
 
-				if (Bernoulli<bool>(generator, Float(0.1)))
+				if (Bernoulli<bool>(Float(0.1)))
 					Image::Invert(img);
 			}
 			break;
 
 			case 24:
 			{
-				if (Bernoulli<bool>(generator, Float(0.7)))
+				if (Bernoulli<bool>(Float(0.7)))
 				{
-					if (Bernoulli<bool>(generator, Float(0.5)))
+					if (Bernoulli<bool>(Float(0.5)))
 						Image::Translate(img, IntLevel(8), 0, mean);
 					else
 						Image::Translate(img, -IntLevel(8), 0, mean);
 				}
 
-				if (Bernoulli<bool>(generator, Float(0.9)))
+				if (Bernoulli<bool>(Float(0.9)))
 					Image::AutoContrast(img);
 			}
 			break;
@@ -620,13 +620,13 @@ namespace dnn
 #endif
 		}
 
-		static void ColorCast(Image& image, const UInt angle, std::mt19937& generator) NOEXCEPT
+		static void ColorCast(Image& image, const UInt angle) NOEXCEPT
 		{
 			auto srcImage = ImageToCImgFloat(image);
 
 			srcImage.RGBtoHSL();
 
-			const auto shift = Float(Bernoulli<bool>(generator, Float(0.5)) ? static_cast<int>(UniformInt<UInt>(generator, 0, 2 * angle)) - static_cast<int>(angle) : 0);
+			const auto shift = Float(Bernoulli<bool>(Float(0.5)) ? static_cast<int>(UniformInt<UInt>(0, 2 * angle)) - static_cast<int>(angle) : 0);
 
 #ifdef DNN_IMAGEDEPTH
 			cimg_forXYZ(srcImage, w, h, d) { srcImage(w, h, d, 0) = cimg_library::cimg::cut(srcImage(w, h, d, 0) + shift, 0, 360); }
@@ -764,23 +764,23 @@ namespace dnn
 			return img;
 		}
 
-		static Image Distorted(Image& image, const Float scale, const Float angle, const Interpolations interpolation, const std::vector<Float>& mean, std::mt19937& generator) NOEXCEPT
+		static Image Distorted(Image& image, const Float scale, const Float angle, const Interpolations interpolation, const std::vector<Float>& mean) NOEXCEPT
 		{
-			const auto zoom = scale / Float(100) * UniformReal<Float>(generator, Float(-1), Float(1));
+			const auto zoom = scale / Float(100) * UniformReal<Float>(Float(-1), Float(1));
 			const auto height = static_cast<unsigned>(static_cast<int>(image.H()) + static_cast<int>(std::round(static_cast<int>(image.H()) * zoom)));
 			const auto width = static_cast<unsigned>(static_cast<int>(image.W()) + static_cast<int>(std::round(static_cast<int>(image.W()) * zoom)));
 			
 			Image::Resize(image, image.D(), height, width, interpolation);
 
-			return Image::Rotate(image, angle * UniformReal<Float>(generator, Float(-1), Float(1)), interpolation, mean);
+			return Image::Rotate(image, angle * UniformReal<Float>(Float(-1), Float(1)), interpolation, mean);
 		}
 
-		static void Dropout(Image& image, const Float dropout, const std::vector<Float>& mean, std::mt19937& generator) NOEXCEPT
+		static void Dropout(Image& image, const Float dropout, const std::vector<Float>& mean) NOEXCEPT
 		{
 			for (auto d = 0u; d < image.D(); d++)
 				for (auto h = 0u; h < image.H(); h++)
 					for (auto w = 0u; w < image.W(); w++)
-						if (Bernoulli<bool>(generator, dropout))
+						if (Bernoulli<bool>(dropout))
 							for (auto c = 0u; c < image.C(); c++)
 							{
 								if constexpr (std::is_floating_point_v<T>)
@@ -948,7 +948,7 @@ namespace dnn
 #endif
 		}
 		
-		static Image RandomCrop(const Image& image, const UInt depth, const UInt height, const UInt width, const std::vector<Float>& mean, std::mt19937& generator) NOEXCEPT
+		static Image RandomCrop(const Image& image, const UInt depth, const UInt height, const UInt width, const std::vector<Float>& mean) NOEXCEPT
 		{
 			Image img(image.C(), static_cast<unsigned>(depth), static_cast<unsigned>(height), static_cast<unsigned>(width));
 
@@ -968,13 +968,13 @@ namespace dnn
 			const auto minH = std::min(img.H(), image.H());
 			const auto minW = std::min(img.W(), image.W());
 			
-			const auto srcDdelta = img.D() < image.D() ? UniformInt<unsigned>(generator, 0, image.D() - img.D()) : 0u;
-			const auto srcHdelta = img.H() < image.H() ? UniformInt<unsigned>(generator, 0, image.H() - img.H()) : 0u;
-			const auto srcWdelta = img.W() < image.W() ? UniformInt<unsigned>(generator, 0, image.W() - img.W()) : 0u;
+			const auto srcDdelta = img.D() < image.D() ? UniformInt<unsigned>(0, image.D() - img.D()) : 0u;
+			const auto srcHdelta = img.H() < image.H() ? UniformInt<unsigned>(0, image.H() - img.H()) : 0u;
+			const auto srcWdelta = img.W() < image.W() ? UniformInt<unsigned>(0, image.W() - img.W()) : 0u;
 			
-			const auto dstDdelta = img.D() > image.D() ? UniformInt<unsigned>(generator, 0, img.D() - image.D()) : 0u;
-			const auto dstHdelta = img.H() > image.H() ? UniformInt<unsigned>(generator, 0, img.H() - image.H()) : 0u;
-			const auto dstWdelta = img.W() > image.W() ? UniformInt<unsigned>(generator, 0, img.W() - image.W()) : 0u;
+			const auto dstDdelta = img.D() > image.D() ? UniformInt<unsigned>(0, img.D() - image.D()) : 0u;
+			const auto dstHdelta = img.H() > image.H() ? UniformInt<unsigned>(0, img.H() - image.H()) : 0u;
+			const auto dstWdelta = img.W() > image.W() ? UniformInt<unsigned>(0, img.W() - image.W()) : 0u;
 
 			for (auto c = 0u; c < img.C(); c++)
 				for (auto d = 0u; d < minD; d++)
@@ -985,12 +985,12 @@ namespace dnn
 			return img;
 		}
 
-		static void RandomCutout(Image& image, const std::vector<Float>& mean, std::mt19937& generator) NOEXCEPT
+		static void RandomCutout(Image& image, const std::vector<Float>& mean) NOEXCEPT
 		{
-			const auto centerH = UniformInt<unsigned>(generator, 0, image.H());
-			const auto centerW = UniformInt<unsigned>(generator, 0, image.W());
-			const auto rangeH = UniformInt<unsigned>(generator, image.H() / 8, image.H() / 4);
-			const auto rangeW = UniformInt<unsigned>(generator, image.W() / 8, image.W() / 4);
+			const auto centerH = UniformInt<unsigned>(0, image.H());
+			const auto centerW = UniformInt<unsigned>(0, image.W());
+			const auto rangeH = UniformInt<unsigned>(image.H() / 8, image.H() / 4);
+			const auto rangeW = UniformInt<unsigned>(image.W() / 8, image.W() / 4);
 			const auto startH = static_cast<long>(centerH) - static_cast<long>(rangeH) > 0l ? centerH - rangeH : 0u;
 			const auto startW = static_cast<long>(centerW) - static_cast<long>(rangeW) > 0l ? centerW - rangeW : 0u;
 			const auto enheight = centerH + rangeH < image.H() ? centerH + rangeH : image.H();
@@ -1008,13 +1008,13 @@ namespace dnn
 			}
 		}
 
-		static void RandomCutMix(Image& image, const Image& imageMix, double* lambda, std::mt19937& generator) NOEXCEPT
+		static void RandomCutMix(Image& image, const Image& imageMix, double* lambda) NOEXCEPT
 		{
 			const auto cutRate = std::sqrt(1.0 - *lambda);
 			const auto cutH = static_cast<int>(static_cast<double>(image.H()) * cutRate);
 			const auto cutW = static_cast<int>(static_cast<double>(image.W()) * cutRate);
-			const auto cy = UniformInt<int>(generator, 0, static_cast<int>(image.H()));
-			const auto cx = UniformInt<int>(generator, 0, static_cast<int>(image.W()));
+			const auto cy = UniformInt<int>(0, static_cast<int>(image.H()));
+			const auto cx = UniformInt<int>(0, static_cast<int>(image.W()));
 			const auto bby1 = Clamp<int>(cy - cutH / 2, 0, static_cast<int>(image.H()));
 			const auto bby2 = Clamp<int>(cy + cutH / 2, 0, static_cast<int>(image.H()));
 			const auto bbx1 = Clamp<int>(cx - cutW / 2, 0, static_cast<int>(image.W()));
