@@ -115,7 +115,7 @@ namespace
 	
 	static const auto MAX_THREADS = omp_get_max_threads();
 
-	auto GetThreads(const UInt elements, const Float weight = 1) NOEXCEPT
+	auto GetThreads(const UInt elements, const Float weight = Float(1)) NOEXCEPT
 	{
 		const auto load = static_cast<UInt>(Float(elements) * weight);
 

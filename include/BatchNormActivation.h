@@ -1203,5 +1203,13 @@ namespace dnn
 		{
 			return (2 * C * sizeof(Float)) + Layer::GetWeightsSize(persistOptimizer, optimizer);
 		}
+		
+		UInt GetNeuronsSize(const UInt batchSize) const override
+		{
+			if constexpr (Reference)
+				return Layer::GetNeuronsSize(batchSize) + (batchSize * PaddedCDHW());
+			else
+				return Layer::GetNeuronsSize(batchSize);
+		}
 	};
 }

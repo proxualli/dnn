@@ -221,5 +221,10 @@ namespace dnn
 			ReleaseGradient();
 #endif // DNN_LEAN
 		}
+
+		UInt GetNeuronsSize(const UInt batchSize) const override
+		{
+			return Layer::GetNeuronsSize(batchSize) + (batchSize * PaddedCDHW());
+		}
 	};
 }
