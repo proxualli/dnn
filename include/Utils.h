@@ -112,31 +112,31 @@ namespace
 	typedef float Float;
 	typedef std::size_t UInt;
 	typedef unsigned char Byte;
+	
+	static const auto MAX_THREADS = omp_get_max_threads();
 
 	auto GetThreads(const UInt elements, const Float weight = 1) NOEXCEPT
 	{
-		// weight > 1   less threads   
-		// weight < 1   more threads
+		const auto load = static_cast<UInt>(Float(elements) * weight);
 
-		const auto ULTRALIGHT_THRESHOLD =   2097152ull;	// minimum threshold for ULTRALIGHT load
-		const auto LIGHT_THRESHOLD =        8338608ull;
-		const auto MEDIUM_THRESHOLD =      68338608ull;
-		const auto HEAVY_THRESHOLD =      120338608ull;
-		const auto MAXIMUM_THRESHOLD =    187538608ull;
-
-		const auto MAXIMUM = omp_get_max_threads();
-		const auto ULTRALIGHT = MAXIMUM >= 32 ?  2ull : MAXIMUM >= 24 ?  2ull :  2ull;
-		const auto LIGHT      = MAXIMUM >= 32 ?  4ull : MAXIMUM >= 24 ?  4ull :  4ull;
-		const auto MEDIUM     = MAXIMUM >= 32 ? 8ull : MAXIMUM >= 24 ?  8ull :  8ull;
-		const auto HEAVY      = MAXIMUM >= 32 ? 16ull : MAXIMUM >= 24 ? 12ll : 12ull;
-		const auto ULTRAHEAVY = MAXIMUM >= 32 ? 24ull : MAXIMUM >= 24 ? 24ull : 16ull;
+		constexpr auto ULTRALIGHT_THRESHOLD =   2097152ull;	// minimum threshold for ULTRALIGHT load
+		constexpr auto LIGHT_THRESHOLD =        8338608ull;
+		constexpr auto MEDIUM_THRESHOLD =      68338608ull;
+		constexpr auto HEAVY_THRESHOLD =      120338608ull;
+		constexpr auto MAXIMUM_THRESHOLD =    187538608ull;
+		
+		const auto ULTRALIGHT = MAX_THREADS >= 32ull ?  2ull : MAX_THREADS >= 24ull ?  2ull :  2ull;
+		const auto LIGHT      = MAX_THREADS >= 32ull ?  4ull : MAX_THREADS >= 24ull ?  4ull :  4ull;
+		const auto MEDIUM     = MAX_THREADS >= 32ull ?  8ull : MAX_THREADS >= 24ull ?  8ull :  8ull;
+		const auto HEAVY      = MAX_THREADS >= 32ull ? 16ull : MAX_THREADS >= 24ull ?  12ll : 12ull;
+		const auto ULTRAHEAVY = MAX_THREADS >= 32ull ? 24ull : MAX_THREADS >= 24ull ? 24ull : 16ull;
 
 		return
-			elements < static_cast<UInt>(weight * Float(ULTRALIGHT_THRESHOLD)) ? ULTRALIGHT :
-			elements < static_cast<UInt>(weight * Float(LIGHT_THRESHOLD)) ? LIGHT :
-			elements < static_cast<UInt>(weight * Float(MEDIUM_THRESHOLD)) ? MEDIUM :
-			elements < static_cast<UInt>(weight * Float(HEAVY_THRESHOLD)) ? HEAVY :
-			elements < static_cast<UInt>(weight * Float(MAXIMUM_THRESHOLD)) ? ULTRAHEAVY : MAXIMUM;
+			load < ULTRALIGHT_THRESHOLD ? ULTRALIGHT :
+			load < LIGHT_THRESHOLD ?           LIGHT :
+			load < MEDIUM_THRESHOLD ?         MEDIUM :
+			load < HEAVY_THRESHOLD ?           HEAVY :
+			load < MAXIMUM_THRESHOLD ?    ULTRAHEAVY : MAX_THREADS;
 	}
 	
 	struct LabelInfo
@@ -164,7 +164,7 @@ namespace
 #endif
 
 	constexpr auto GetVectorPart(const UInt& elements) NOEXCEPT { return (elements / VectorSize) * VectorSize; }
-	constexpr auto DivUp(const UInt& c) NOEXCEPT { return (((c - 1) / VectorSize) + 1) * VectorSize; }
+	constexpr auto DivUp(const UInt& c) NOEXCEPT { if (c == 0ull) return 0ull; else return (((c - 1) / VectorSize) + 1) * VectorSize; }
 	auto IsPlainDataFmt(const dnnl::memory::desc& md) NOEXCEPT { return md.get_format_kind() == dnnl::memory::format_kind::blocked && md.get_inner_nblks() == 0; }
 	auto IsBlockedDataFmt(const dnnl::memory::desc& md) NOEXCEPT { return md.get_format_kind() == dnnl::memory::format_kind::blocked && md.get_inner_nblks() == 1 && md.get_inner_idxs()[0] == 1 && (md.get_inner_blks()[0] == 4 || md.get_inner_blks()[0] == 8 || md.get_inner_blks()[0] == 16); }
 	constexpr auto PlainFmt = dnnl::memory::format_tag::nchw; // equals dnnl::memory::format_tag::abcd

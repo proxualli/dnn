@@ -116,7 +116,7 @@ namespace dnn
 				Device.stream.wait();
 #else
 				const auto plain = IsPlainFormat();
-				const auto threads = GetThreads(batchSize * (plain ? CDHW() : PaddedCDHW()), Float(0.1));
+				const auto threads = GetThreads(batchSize * (plain ? CDHW() : PaddedCDHW()), Float(10));
 				
 				const auto strideHW = HW() * VectorSize;
 
@@ -248,7 +248,7 @@ namespace dnn
 #endif // DNN_LEAN
 
 			const auto plain = IsPlainFormat();
-			const auto threads = GetThreads(batchSize * (plain ? CDHW() : PaddedCDHW()), Float(0.1));
+			const auto threads = GetThreads(batchSize * (plain ? CDHW() : PaddedCDHW()), Float(10));
 						
 #ifdef DNN_STOCHASTIC
 			if (batchSize == 1)

@@ -23,6 +23,7 @@ namespace dnn
 		UInt C;
 		std::vector<Float> Mean;
 		std::vector<Float> StdDev;
+		UInt ShuffleCount;
 		UInt TrainingSamplesCount;
 		UInt TestingSamplesCount;
 		UInt Hierarchies;
@@ -42,7 +43,8 @@ namespace dnn
 			Dataset(Datasets::cifar10),
 			C(3),
 			Mean(std::vector<Float>({ Float(0) })),
-			StdDev(std::vector<Float>({ Float(0) }))
+			StdDev(std::vector<Float>({ Float(0) })),
+			ShuffleCount(96ull)
 		{
 			std::filesystem::create_directories(DatasetsDirectory);
 

@@ -188,7 +188,7 @@ namespace dnn
 
 				if (!training)
 				{
-					const auto threads = GetThreads(elements, Float(0.2));
+					const auto threads = GetThreads(elements, Float(5));
 
 					if (plain) // nchw
 					{
@@ -239,7 +239,7 @@ namespace dnn
 				}
 				else
 				{
-					const auto threads = GetThreads(elements, Float(0.1));
+					const auto threads = GetThreads(elements, Float(10));
 
 #ifndef DNN_LEAN
 					const auto vecZero = VecFloat(0);
@@ -415,7 +415,7 @@ namespace dnn
 				const auto strideH = W * VectorSize;
 				const auto plain = IsPlainFormat();
 				const auto elements = batchSize * (plain ? CDHW() : PaddedCDHW());
-				const auto threads = GetThreads(elements, Float(0.1));
+				const auto threads = GetThreads(elements, Float(10));
 
 				if (plain)
 				{
@@ -637,7 +637,7 @@ namespace dnn
 		void ForwardPropRef (const UInt batchSize, const bool training)
 		{
 			const auto plain = IsPlainFormat();
-			const auto threads = GetThreads(batchSize * (plain ? CDHW() : PaddedCDHW()), Float(0.1));
+			const auto threads = GetThreads(batchSize * (plain ? CDHW() : PaddedCDHW()), Float(10));
 			const auto strideHW = HW() * VectorSize;
 
 			if (!training)
@@ -862,7 +862,7 @@ namespace dnn
 
 			const auto plain = IsPlainFormat();
 			const auto elements = batchSize * (plain ? CDHW() : PaddedCDHW());
-			const auto threads = GetThreads(elements, Float(0.1));
+			const auto threads = GetThreads(elements, Float(10));
 			const auto strideHW = HW() * VectorSize;
 
 			if (InputLayer->DstMemDesc->get_ndims() == 2)

@@ -360,7 +360,7 @@ namespace dnn
 		void ForwardProp(const UInt batchSize, const bool training) final override
 		{
 			const auto plain = IsPlainFormat();
-			const auto threads = batchSize == 1 ? 1ull : GetThreads(batchSize * (plain ? CDHW() : PaddedCDHW()), Float(0.1));
+			const auto threads = batchSize == 1 ? 1ull : GetThreads(batchSize * (plain ? CDHW() : PaddedCDHW()), Float(10));
 
 			const auto strideHW = HW() * VectorSize;
 			const auto vecZero = VecFloat(0);
@@ -621,7 +621,7 @@ namespace dnn
 #endif // DNN_LEAN
 
 			const auto plain = IsPlainFormat();
-			const auto threads = batchSize == 1 ? 1ull : GetThreads(batchSize * (plain ? CDHW() : PaddedCDHW()), Float(0.1));
+			const auto threads = batchSize == 1 ? 1ull : GetThreads(batchSize * (plain ? CDHW() : PaddedCDHW()), Float(10));
 			const auto strideHW = HW() * VectorSize;
 
 			switch (ActivationFunction)

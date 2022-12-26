@@ -114,6 +114,20 @@ extern "C" DNN_API bool DNNLoadDataset()
 	return false;
 }
 
+extern "C" DNN_API bool DNNSetShuffleCount(const UInt count)
+{
+	if (dataprovider)
+	{
+		if (count > 0ull)
+		{
+			dataprovider->ShuffleCount = count;
+			return true;
+		}
+	}
+
+	return false;
+}
+
 extern "C" DNN_API void DNNDataproviderDispose()
 {
 	if (dataprovider)

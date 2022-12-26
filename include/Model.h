@@ -323,7 +323,7 @@ namespace dnn
 	class Model
 	{
 	private:
-		std::future<void> task;
+		std::future<void> Task;
 		std::vector<UInt> RandomTrainingSamples;
 		std::vector<bool> TrainingSamplesHFlip;
 		std::vector<bool> TrainingSamplesVFlip;
@@ -1051,12 +1051,12 @@ namespace dnn
 
 		void TrainingAsync()
 		{
-			task = std::async(std::launch::async, [=] { Training(); });
+			Task = std::async(std::launch::async, [=] { Training(); });
 		}
 
 		void TestingAsync()
 		{
-			task = std::async(std::launch::async, [=] { Testing(); });
+			Task = std::async(std::launch::async, [=] { Testing(); });
 		}
 
 		void StopTask()
@@ -1065,10 +1065,10 @@ namespace dnn
 			{
 				TaskState.store(TaskStates::Stopped);
 
-				if (task.valid())
+				if (Task.valid())
 					try
 				    {
-					    task.get();
+					    Task.get();
 				    }
 				    catch (const std::future_error& e)
 				    {
@@ -1573,7 +1573,7 @@ namespace dnn
 					{
 						State.store(States::Training);
 
-						const auto shuffleCount = UniformInt<UInt>(16, 32);
+						const auto shuffleCount = UniformInt<UInt>(DataProv->ShuffleCount / 2ull, DataProv->ShuffleCount);
 						for (auto shuffle = 0ull; shuffle < shuffleCount; shuffle++)
 							std::shuffle(std::begin(RandomTrainingSamples), std::end(RandomTrainingSamples), std::mt19937(Seed<unsigned>()));
 
@@ -1614,7 +1614,7 @@ namespace dnn
 								SwitchInplaceBwd(true);
 								for (auto i = Layers.size() - 1; i >= FirstUnlockedLayer.load(); --i)
 								{
-									if (Layers[i]->HasWeights)
+									if (Layers[i]->HasWeights && TaskState.load() == TaskStates::Running)
 									{
 										timePoint = timer.now();
 										if (!Layers[i]->Skip)
@@ -1632,7 +1632,7 @@ namespace dnn
 									else
 									{
 										timePoint = timer.now();
-										if (!Layers[i]->Skip)
+										if (!Layers[i]->Skip && TaskState.load() == TaskStates::Running)
 											Layers[i]->BackwardProp(1);
 										Layers[i]->bpropTime = timer.now() - timePoint;
 									}
@@ -1665,7 +1665,7 @@ namespace dnn
 
 								for (auto i = 1ull; i < Layers.size(); i++)
 								{
-									if (!Layers[i]->Skip)
+									if (!Layers[i]->Skip && TaskState.load() == TaskStates::Running)
 									{
 										timePoint = timer.now();
 										Layers[i]->ForwardProp(BatchSize, true);
@@ -1686,7 +1686,7 @@ namespace dnn
 								SwitchInplaceBwd(true);
 								for (auto i = Layers.size() - 1; i >= FirstUnlockedLayer.load(); --i)
 								{
-									if (Layers[i]->HasWeights)
+									if (Layers[i]->HasWeights && TaskState.load() == TaskStates::Running)
 									{										
 										if (!Layers[i]->Skip)
 										{
@@ -1711,7 +1711,7 @@ namespace dnn
 									}
 									else
 									{
-										if (!Layers[i]->Skip)
+										if (!Layers[i]->Skip && TaskState.load() == TaskStates::Running)
 										{
 											timePoint = timer.now();
 											Layers[i]->BackwardProp(BatchSize);
@@ -2199,7 +2199,7 @@ namespace dnn
 			const auto resize = DataProv->TrainingSamples[0]._depth != D || DataProv->TrainingSamples[0]._height != H || DataProv->TrainingSamples[0]._width != W;
 			
 			const auto elements = batchSize * C * D * H * W;
-			const auto threads = GetThreads(elements, Float(0.1));
+			const auto threads = GetThreads(elements, Float(10));
 
 			for_i(batchSize, threads, [=, &SampleLabels](const UInt batchIndex)
 			{
@@ -2281,7 +2281,7 @@ namespace dnn
 			const auto resize = DataProv->TestingSamples[0]._depth != D || DataProv->TestingSamples[0]._height != H || DataProv->TestingSamples[0]._width != W;
 
 			const auto elements = batchSize * C * D * H * W;
-			const auto threads = GetThreads(elements, 0.1f);
+			const auto threads = GetThreads(elements, Float(10));
 
 			for_i(batchSize, threads, [=, &SampleLabels](const UInt batchIndex)
 			{
@@ -2321,7 +2321,7 @@ namespace dnn
 			const auto resize = DataProv->TestingSamples[0]._depth != D || DataProv->TestingSamples[0]._height != H || DataProv->TestingSamples[0]._width != W;
 
 			const auto elements = batchSize * C * D * H * W;
-			const auto threads = GetThreads(elements, Float(1));
+			const auto threads = GetThreads(elements, Float(10));
 
 			for_i(batchSize, threads, [=, &SampleLabels](const UInt batchIndex)
 			{
@@ -2390,7 +2390,7 @@ namespace dnn
 
 			for (auto i = Layers.size() - 1; i > 0ull; --i)
 			{
-				if (Layers[i]->HasWeights)
+				if (Layers[i]->HasWeights && TaskState.load() == TaskStates::Running)
 				{
 					Layers[i]->ResetGradients();
 					Layers[i]->BackwardProp(batchSize);
