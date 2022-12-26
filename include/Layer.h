@@ -591,7 +591,8 @@ namespace dnn
 								vecSum += square(neurons - NeuronsStats.Mean);
 							}
 							sum = horizontal_add(vecSum);
-						
+							sum = std::max(0.f, sum);
+
 							if (!std::isnan(sum) && !std::isinf(sum))
 								NeuronsStats.StdDev = std::sqrt(sum / ncdhw);
 							else
@@ -621,7 +622,10 @@ namespace dnn
 								sum += Square<Float>(Neurons[i] - NeuronsStats.Mean);
 							
 							if (!std::isnan(sum) && !std::isinf(sum))
+							{
+								sum = std::max(0.f, sum);
 								NeuronsStats.StdDev = std::sqrt(sum / ncdhw);
+							}
 							else
 								NeuronsStats.StdDev = Float(0);
 						}
@@ -656,7 +660,10 @@ namespace dnn
 							sum += Square<Float>(Weights[i] - WeightsStats.Mean);
 
 						if (!std::isnan(sum) && !std::isinf(sum))
+						{
+							sum = std::max(0.f, sum);
 							WeightsStats.StdDev = std::sqrt(sum / Weights.size());
+						}
 						else
 							WeightsStats.StdDev = Float(0);
 					}
@@ -688,7 +695,10 @@ namespace dnn
 								sum += Square<Float>(Biases[i] - BiasesStats.Mean);
 
 							if (!std::isnan(sum) && !std::isinf(sum))
+							{
+								sum = std::max(0.f, sum);
 								BiasesStats.StdDev = std::sqrt(sum / BiasCount);
+							}
 							else
 								BiasesStats.StdDev = Float(0);
 						}
