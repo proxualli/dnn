@@ -329,9 +329,9 @@ namespace
 						dataPtr[i] = value;
 			}
 		}
-		inline T* data() noexcept { return dataPtr; }
-		inline const T* data() const noexcept { return dataPtr; }
-		inline size_type size() const noexcept { return nelems; }
+		inline auto data() noexcept { return dataPtr; }
+		inline const auto data() const noexcept { return dataPtr; }
+		inline auto size() const noexcept { return nelems; }
 		void resize(size_type elements, const T value = T()) NOEXCEPT
 		{ 
 			if (elements == nelems)
@@ -363,7 +363,7 @@ namespace
 		}
 		inline T& operator[] (size_type i) NOEXCEPT { return dataPtr[i]; }
 		inline const T& operator[] (size_type i) const NOEXCEPT { return dataPtr[i]; }
-		inline bool empty() const noexcept { return nelems == 0; }
+		inline auto empty() const noexcept { return nelems == 0; }
 	};
 
 	template <typename T> class AlignedMemory
@@ -416,10 +416,10 @@ namespace
 				}
 			}
 		}
-		inline T* data() noexcept { return dataPtr; }
-		inline const T* data() const noexcept { return dataPtr; }
-		inline size_type size() const noexcept { return nelems; }
-		dnnl::memory::desc desc() { return description; }
+		inline auto data() noexcept { return dataPtr; }
+		inline const auto data() const noexcept { return dataPtr; }
+		inline auto size() const noexcept { return nelems; }
+		auto desc() { return description; }
 		void resizeMem(const dnnl::memory::desc& md, const dnnl::engine& engine, const T value = T()) NOEXCEPT
 		{
 			if (md)
@@ -472,7 +472,7 @@ namespace
 		}
 		inline T& operator[] (size_type i) NOEXCEPT { return dataPtr[i]; }
 		inline const T& operator[] (size_type i) const NOEXCEPT { return dataPtr[i]; }
-		inline bool empty() const noexcept { return nelems == 0; }
+		inline auto empty() const noexcept { return nelems == 0; }
 	};
 
 	typedef AlignedMemory<Float> FloatArray;
