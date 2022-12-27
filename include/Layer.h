@@ -597,16 +597,19 @@ namespace dnn
 							}			
 
 							mean += horizontal_add(vecMean) / elements;
-							variance += horizontal_add(vecVariance) / elements - Square<Float>(mean);
+							variance += horizontal_add(vecVariance) / elements;
 						});
+						mean /= batchSize;
+						variance /= batchSize;
+
 
 						if ((NeuronsStats.Min < -NEURONS_LIMIT) || (NeuronsStats.Max > NEURONS_LIMIT))
 							goto FAIL;
 						
 						if (!std::isnan(mean) && !std::isinf(mean) && !std::isnan(variance) && !std::isinf(variance))
 						{
-							NeuronsStats.Mean = mean / batchSize;
-							NeuronsStats.StdDev = std::sqrt(std::max(0.f, variance / batchSize));
+							NeuronsStats.Mean = mean;
+							NeuronsStats.StdDev = std::sqrt(std::max(0.f, variance - Square<Float>(mean)));
 						}
 						else
 							goto FAIL;
