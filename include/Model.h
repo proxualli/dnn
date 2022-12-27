@@ -1667,9 +1667,12 @@ namespace dnn
 								{
 									if (!Layers[i]->Skip && TaskState.load() == TaskStates::Running)
 									{
+										do {} while (Layers[i]->RefreshingStats.load());
+										Layers[i]->Fwd.store(true);
 										timePoint = timer.now();
 										Layers[i]->ForwardProp(BatchSize, true);
 										Layers[i]->fpropTime = timer.now() - timePoint;
+										Layers[i]->Fwd.store(false);
 									}
 									else
 										Layers[i]->fpropTime = std::chrono::duration<Float>(Float(0));
@@ -1686,42 +1689,39 @@ namespace dnn
 								SwitchInplaceBwd(true);
 								for (auto i = Layers.size() - 1; i >= FirstUnlockedLayer.load(); --i)
 								{
-									if (Layers[i]->HasWeights && TaskState.load() == TaskStates::Running)
-									{										
-										if (!Layers[i]->Skip)
-										{
-											timePoint = timer.now();
-											Layers[i]->ResetGradients();
-											Layers[i]->BackwardProp(BatchSize);
-											Layers[i]->bpropTime = timer.now() - timePoint;
-										}
-										else
-											Layers[i]->bpropTime = std::chrono::duration<Float>(Float(0));
-										
-										if (!Layers[i]->Skip)
-										{
-											timePoint = timer.now();
-											Layers[i]->UpdateWeights(CurrentTrainingRate, Optimizer, DisableLocking);
-											Layers[i]->updateTime = timer.now() - timePoint;
-										}
-										else
-											Layers[i]->updateTime = std::chrono::duration<Float>(Float(0));
-										
-										updateTimeCount += Layers[i]->updateTime;
-									}
-									else
+									if (TaskState.load() == TaskStates::Running)
 									{
-										if (!Layers[i]->Skip && TaskState.load() == TaskStates::Running)
+										Layers[i]->bpropTime = std::chrono::duration<Float>(Float(0));
+										Layers[i]->updateTime = std::chrono::duration<Float>(Float(0));
+
+										if (!Layers[i]->Skip)
 										{
+											do {} while (Layers[i]->RefreshingStats.load());
+											Layers[i]->Bwd.store(true);
 											timePoint = timer.now();
-											Layers[i]->BackwardProp(BatchSize);
-											Layers[i]->bpropTime = timer.now() - timePoint;
-										}
-										else
-											Layers[i]->bpropTime = std::chrono::duration<Float>(Float(0));
+
+											if (Layers[i]->HasWeights)
+											{
+												Layers[i]->ResetGradients();
+												Layers[i]->BackwardProp(BatchSize);
+												Layers[i]->bpropTime = timer.now() - timePoint;
+
+												timePoint = timer.now();
+												Layers[i]->UpdateWeights(CurrentTrainingRate, Optimizer, DisableLocking);
+												Layers[i]->updateTime = timer.now() - timePoint;
+									     
+												updateTimeCount += Layers[i]->updateTime;
+											}
+											else
+											{
+												Layers[i]->BackwardProp(BatchSize);
+												Layers[i]->bpropTime = timer.now() - timePoint;
+											}
+
+											bpropTimeCount += Layers[i]->bpropTime;
+											Layers[i]->Bwd.store(false);
+										}										
 									}
-									
-									bpropTimeCount += Layers[i]->bpropTime;
 								}
 								SwitchInplaceBwd(false);
 								bpropTime = bpropTimeCount;

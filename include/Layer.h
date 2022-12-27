@@ -335,6 +335,8 @@ namespace dnn
 		Stats NeuronsStats;
 		Stats WeightsStats;
 		Stats BiasesStats;
+		std::atomic<bool> Fwd;
+		std::atomic<bool> Bwd;
 		std::atomic<bool> LockUpdate;
 		std::atomic<bool> RefreshingStats;
 		std::chrono::duration<Float> fpropTime;
@@ -408,6 +410,8 @@ namespace dnn
 			SharesInput(false),
 			SharesInputOriginal(false),
 			SharesInputInplace(false),
+			Fwd(false),
+			Bwd(false),
 			NeuronsStats(Stats()),
 			WeightsStats(Stats()),
 			BiasesStats(Stats()),
@@ -548,22 +552,21 @@ namespace dnn
 		virtual void ForwardProp(const UInt batchSize, const bool training) = 0;
 
 		virtual void BackwardProp(const UInt batchSize) = 0;
-
+		
 		bool RefreshStatistics(const UInt batchSize)
 		{
-			const auto plain = IsPlainFormat();
-			const auto elements = plain ? CDHW() : PaddedCDHW();
-			
 			if (!RefreshingStats.load())
 			{
 				RefreshingStats.store(true);
 				
+				do {} while (Fwd.load());
+
 				if (!Neurons.empty())
 				{
-					const auto ncdhw = batchSize * CDHW();
-
-					NeuronsStats.Min = std::numeric_limits<Float>::max();
-					NeuronsStats.Max = std::numeric_limits<Float>::lowest();
+					const auto plain = IsPlainFormat();
+					const auto elements = plain ? CDHW() : PaddedCDHW();
+					
+					auto stats = Stats(0, 0, std::numeric_limits<Float>::max(), std::numeric_limits<Float>::lowest());
 					
 					if (elements % VectorSize == 0ull)
 					{
@@ -584,8 +587,8 @@ namespace dnn
 							for (auto i = 0ull; i < elements; i += VectorSize)
 							{
 								neurons.load_a(&Neurons[i + n * batchSize]);
-								NeuronsStats.Min = std::min(NeuronsStats.Min, horizontal_min(neurons));
-								NeuronsStats.Max = std::max(NeuronsStats.Max, horizontal_max(neurons));
+								stats.Min = std::min(stats.Min, horizontal_min(neurons));
+								stats.Max = std::max(stats.Max, horizontal_max(neurons));
 								KahanSum<VecFloat>(neurons, vecMean, vecCorrectionMean);
 								KahanSum<VecFloat>(square(neurons), vecVariance, vecCorrectionVariance);
 							}			
@@ -605,19 +608,20 @@ namespace dnn
 						variance /= batchSize;
 						variance -= Square<Float>(mean);
 
-						if ((NeuronsStats.Min < -NEURONS_LIMIT) || (NeuronsStats.Max > NEURONS_LIMIT))
+						if ((stats.Min < -NEURONS_LIMIT) || (stats.Max > NEURONS_LIMIT))
 							goto FAIL;
 						
 						if (!std::isnan(mean) && !std::isinf(mean) && !std::isnan(variance) && !std::isinf(variance))
 						{
-							NeuronsStats.Mean = mean;
-							NeuronsStats.StdDev = std::sqrt(std::max(Float(0), variance));
+							stats.Mean = mean;
+							stats.StdDev = std::sqrt(std::max(Float(0), variance));
 						}
 						else
 							goto FAIL;
 					}
 					else
 					{
+						const auto ncdhw = batchSize * CDHW();
 						auto mean = Float(0);
 						auto variance = Float(0);
 						auto correctionMean = Float(0);
@@ -625,13 +629,13 @@ namespace dnn
 
 						for (auto i = 0ull; i < ncdhw; i++)
 						{
-							NeuronsStats.Min = std::min(NeuronsStats.Min, Neurons[i]);
-							NeuronsStats.Max = std::max(NeuronsStats.Max, Neurons[i]);
+							stats.Min = std::min(stats.Min, Neurons[i]);
+							stats.Max = std::max(stats.Max, Neurons[i]);
 							KahanSum<Float>(Neurons[i], mean, correctionMean);
 							KahanSum<Float>(Square<Float>(Neurons[i]), variance, correctionVariance);
 						}
 
-						if ((NeuronsStats.Min < -NEURONS_LIMIT) || (NeuronsStats.Max > NEURONS_LIMIT))
+						if ((stats.Min < -NEURONS_LIMIT) || (stats.Max > NEURONS_LIMIT))
 							goto FAIL;
 
 						mean /= ncdhw;
@@ -640,18 +644,21 @@ namespace dnn
 
 						if (!std::isnan(mean) && !std::isinf(mean) && !std::isnan(variance) && !std::isinf(variance))
 						{
-							NeuronsStats.Mean = mean;
-							NeuronsStats.StdDev = std::sqrt(std::max(0.f, variance));
+							stats.Mean = mean;
+							stats.StdDev = std::sqrt(std::max(0.f, variance));
 						}
 						else
 							goto FAIL;
 					}
+
+					NeuronsStats = stats;
 				}
 
 				if (HasWeights)
 				{
-					WeightsStats.Min = std::numeric_limits<Float>::max();
-					WeightsStats.Max = std::numeric_limits<Float>::lowest();
+					do {} while (Bwd.load());
+
+					auto stats = Stats(0, 0, std::numeric_limits<Float>::max(), std::numeric_limits<Float>::lowest());
 					
 					auto mean = Float(0);
 					auto variance = Float(0);
@@ -665,13 +672,13 @@ namespace dnn
 						for (auto i = 0ull; i < WeightCount; i += VectorSize)
 						{
 							weights.load_a(&Weights[i]);
-							WeightsStats.Min = std::min(WeightsStats.Min, horizontal_min(weights));
-							WeightsStats.Max = std::max(WeightsStats.Max, horizontal_max(weights));
+							stats.Min = std::min(stats.Min, horizontal_min(weights));
+							stats.Max = std::max(stats.Max, horizontal_max(weights));
 							vecMean += weights;
 							vecVariance += square(weights);
 						}
 
-						if ((WeightsStats.Min < -WEIGHTS_LIMIT) || (WeightsStats.Max > WEIGHTS_LIMIT))
+						if ((stats.Min < -WEIGHTS_LIMIT) || (stats.Max > WEIGHTS_LIMIT))
 							goto FAIL;
 
 						mean = horizontal_add(vecMean) / WeightCount;
@@ -679,8 +686,8 @@ namespace dnn
 
 						if (!std::isnan(mean) && !std::isinf(mean) && !std::isnan(variance) && !std::isinf(variance))
 						{
-							WeightsStats.Mean = mean;
-							WeightsStats.StdDev = std::sqrt(std::max(0.f, variance));
+							stats.Mean = mean;
+							stats.StdDev = std::sqrt(std::max(0.f, variance));
 						}
 						else
 							goto FAIL;
@@ -689,13 +696,13 @@ namespace dnn
 					{
 						for (auto i = 0ull; i < WeightCount; i++)
 						{
-							WeightsStats.Min = std::min(WeightsStats.Min, Weights[i]);
-							WeightsStats.Max = std::max(WeightsStats.Max, Weights[i]);
+							stats.Min = std::min(stats.Min, Weights[i]);
+							stats.Max = std::max(stats.Max, Weights[i]);
 							mean += Weights[i];
 							variance += Square<Float>(Weights[i]);
 						}
 
-						if ((WeightsStats.Min < -WEIGHTS_LIMIT) || (WeightsStats.Max > WEIGHTS_LIMIT))
+						if ((stats.Min < -WEIGHTS_LIMIT) || (stats.Max > WEIGHTS_LIMIT))
 							goto FAIL;
 
 						mean /= WeightCount;
@@ -704,13 +711,13 @@ namespace dnn
 
 						if (!std::isnan(mean) && !std::isinf(mean) && !std::isnan(variance) && !std::isinf(variance))
 						{
-							WeightsStats.Mean = mean;
-							WeightsStats.StdDev = std::sqrt(std::max(0.f, variance));
+							stats.Mean = mean;
+							stats.StdDev = std::sqrt(std::max(0.f, variance));
 						}
 						else
 							goto FAIL;
 					}
-
+					WeightsStats = stats;
 
 					if (HasBias)
 					{
