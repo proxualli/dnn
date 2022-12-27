@@ -557,7 +557,6 @@ namespace dnn
 			if (!RefreshingStats.load())
 			{
 				RefreshingStats.store(true);
-								
 				
 				if (!Neurons.empty())
 				{

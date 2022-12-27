@@ -495,7 +495,7 @@ namespace
 	
 	/* https://en.wikipedia.org/wiki/Kahan_summation_algorithm */
 	template<typename T>
-	inline void KahanSum(const T& value, T& sum, T& correction) NOEXCEPT
+	void KahanSum(const T& value, T& sum, T& correction) NOEXCEPT
 	{
 		const auto y = value - correction;
 		const auto t = sum + y;
@@ -515,7 +515,7 @@ namespace
 	
 #ifdef DNN_FAST_SEED
 	template<typename T>
-	inline T Seed() NOEXCEPT
+	T Seed() NOEXCEPT
 	{
 		return static_cast<T>(__rdtsc());
 	}
@@ -538,7 +538,7 @@ namespace
 	
 	static int PhysicalSeedType = -1;
 	template<typename T>
-	inline T Seed() NOEXCEPT
+	T Seed() NOEXCEPT
 	{
 		if (PhysicalSeedType < 0)
 			PhysicalSeedType = GetPhysicalSeedType();
@@ -563,7 +563,7 @@ namespace
 	}
 #endif
 
-	inline auto BernoulliVecFloat(const Float prob = Float(0.5)) noexcept
+	auto BernoulliVecFloat(const Float prob = Float(0.5)) noexcept
 	{
 		static thread_local auto generator = Ranvec1(3, Seed<int>(), static_cast<int>(std::hash<std::thread::id>()(std::this_thread::get_id())));
 #if defined(DNN_AVX512BW) || defined(DNN_AVX512)
@@ -576,7 +576,7 @@ namespace
 	}
 
 	template<typename T>
-	inline auto Bernoulli(const Float p = Float(0.5)) NOEXCEPT
+	auto Bernoulli(const Float p = Float(0.5)) NOEXCEPT
 	{
 #ifndef NDEBUG
 		if (p < 0 || p > 1)
@@ -587,7 +587,7 @@ namespace
 	}
 
 	template<typename T>
-	inline auto UniformInt(const T min, const T max) NOEXCEPT
+	auto UniformInt(const T min, const T max) NOEXCEPT
 	{
 		static_assert(std::is_integral<T>::value, "Only integral type supported in UniformInt function");
 #ifndef NDEBUG
@@ -599,7 +599,7 @@ namespace
 	}
 
 	template<typename T>
-	inline auto UniformReal(const T min, const T max) NOEXCEPT
+	auto UniformReal(const T min, const T max) NOEXCEPT
 	{
 		static_assert(std::is_floating_point<T>::value, "Only Floating point type supported in UniformReal function");
 #ifndef NDEBUG
@@ -716,7 +716,7 @@ namespace
 	};
 
 	template<typename T>
-	inline auto BetaDistribution(const T a, const T b) NOEXCEPT
+	auto BetaDistribution(const T a, const T b) NOEXCEPT
 	{
 		static_assert(std::is_floating_point<T>::value, "Only Floating point type supported in BetaDistribution function");
 		static thread_local auto generator = std::mt19937(Seed<unsigned>());
