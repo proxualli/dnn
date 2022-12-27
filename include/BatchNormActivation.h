@@ -254,15 +254,17 @@ namespace dnn
 
 						for_i(C, threads, [=](UInt c)
 						{
-							auto vecMean = VecFloat(0);
 							auto mean = Float(0);
-							auto vecVariance = VecFloat(0);
 							auto variance = Float(0);
+							auto vecMean = VecFloat(0);
+							auto vecVariance = VecFloat(0);
+							
 							{
 								auto correction0 = VecFloat(0);
 								auto correction1 = VecFloat(0);
 								auto correction0Float = Float(0);
 								auto correction1Float = Float(0);
+
 								for (auto n = 0ull; n < batchSize; n++)
 								{
 									const auto start = c * HW() + (n * CDHW());
@@ -280,11 +282,13 @@ namespace dnn
 									}
 								}
 							}
-							mean += horizontal_add(vecMean);
-							mean /= Float(batchSize * HW());
+							
+							mean = horizontal_add(vecMean) / Float(batchSize * HW());
 							Mean[c] = mean;
-							variance += horizontal_add(vecVariance);
+
+							variance = horizontal_add(vecVariance);
 							const auto unbiasedVariance = std::max(0.f, variance / Float(batchSize * HW() - 1));
+							
 							variance /= Float(batchSize * HW());
 							variance = std::max(0.f, variance);
 							Variance[c] = variance;
@@ -646,7 +650,7 @@ namespace dnn
 		void ForwardPropRef (const UInt batchSize, const bool training)
 		{
 			const auto plain = IsPlainFormat();
-			const auto maxThreads = GetThreads(batchSize * (plain ? CDHW() : PaddedCDHW()), Float(10));
+			const auto maxThreads = GetThreads(batchSize * (plain ? CDHW() : PaddedCDHW()), Float(5));
 			const auto threads = std::min(maxThreads, batchSize);
 			const auto strideHW = HW() * VectorSize;
 
@@ -872,7 +876,7 @@ namespace dnn
 
 			const auto plain = IsPlainFormat();
 			const auto elements = batchSize * (plain ? CDHW() : PaddedCDHW());
-			const auto threads = std::min(GetThreads(elements, Float(10)), batchSize);
+			const auto threads = std::min(GetThreads(elements, Float(5)), batchSize);
 			const auto strideHW = HW() * VectorSize;
 
 			if (InputLayer->DstMemDesc->get_ndims() == 2)

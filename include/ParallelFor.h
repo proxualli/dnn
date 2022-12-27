@@ -164,25 +164,31 @@ namespace dnn
 	template <typename Func>
 	inline void for_i(const size_t range, const size_t threads, const Func& f)
 	{
-#ifdef DNN_OMP
-		PRAGMA_OMP_PARALLEL_THREADS(static_cast<int>(threads))
+		if (threads > 1)
 		{
-			PRAGMA_OMP_FOR_SCHEDULE_STATIC(1)
+#ifdef DNN_OMP
+			PRAGMA_OMP_PARALLEL_THREADS(static_cast<int>(threads))
+			{
+				PRAGMA_OMP_FOR_SCHEDULE_STATIC(1)
 #if defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER)
-			for (auto i = 0ll; i < static_cast<long long>(range); i++)
-				f(i);
+					for (auto i = 0ll; i < static_cast<long long>(range); i++)
+						f(i);
 #else
-			for (auto i = 0ull; i < range; i++)
-				f(i);
+					for (auto i = 0ull; i < range; i++)
+						f(i);
+#endif
+			}
+#else
+			DNN_UNREF_PAR(threads);
+			for_(0ull, range, [&](const blocked_range& r)
+				{
+					for (auto i = r.begin(); i < r.end(); i++)
+					f(i);
+				});
 #endif
 		}
-#else
-		DNN_UNREF_PAR(threads);
-		for_(0ull, range, [&](const blocked_range& r)
-		{
-			for (auto i = r.begin(); i < r.end(); i++)
+		else
+			for (auto i = 0ull; i < range; i++)
 				f(i);
-		});
-#endif
 	}
 }
