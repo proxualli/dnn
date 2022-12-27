@@ -193,7 +193,7 @@ namespace dnn
 					if (plain) // nchw
 					{
 						const auto partialHW = GetVectorPart(HW());
-						const auto threads = maxTreads > C ? C : maxTreads;
+						const auto threads = std::min<UInt>(maxTreads, C);
 
 						for_i(C, threads, [=](UInt c)
 						{
@@ -214,7 +214,7 @@ namespace dnn
 					}
 					else
 					{
-						const auto threads = maxTreads > PaddedC / VectorSize ? PaddedC / VectorSize : maxTreads;
+						const auto threads = std::min<UInt>(maxTreads, PaddedC / VectorSize);
 
 						for_i(PaddedC / VectorSize, threads, [=](UInt c)
 						{
@@ -250,7 +250,7 @@ namespace dnn
 					if (plain)
 					{
 						const auto partialHW = GetVectorPart(HW());
-						const auto threads = maxTreads > C ? C : maxTreads;
+						const auto threads = std::min<UInt>(maxTreads, C);
 
 						for_i(C, threads, [=](UInt c)
 						{
@@ -335,7 +335,7 @@ namespace dnn
 					}
 					else
 					{
-						const auto threads = maxTreads > PaddedC / VectorSize ? PaddedC / VectorSize : maxTreads;
+						const auto threads = std::min<UInt>(maxTreads, PaddedC / VectorSize);
 
 						for_i(PaddedC / VectorSize, threads, [=](UInt c)
 						{
@@ -430,7 +430,7 @@ namespace dnn
 				if (plain)
 				{
 					const auto partialHW = GetVectorPart(HW());
-					const auto threads = std::min(maxThreads, C);
+					const auto threads = std::min<UInt>(maxThreads, C);
 
 					for_i(C, threads, [=](UInt c)
 					{
@@ -549,7 +549,7 @@ namespace dnn
 				}
 				else
 				{
-					const auto threads = std::min(maxThreads, PaddedC / VectorSize);
+					const auto threads = std::min<UInt>(maxThreads, PaddedC / VectorSize);
 
 					for_i(PaddedC / VectorSize, threads, [=](UInt c)
 					{
