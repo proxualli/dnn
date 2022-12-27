@@ -295,7 +295,7 @@ namespace
 		size_type nelems = 0;
 
 	public:
-		inline void release() NOEXCEPT
+		void release() NOEXCEPT
 		{
 			if (arrPtr)
 				arrPtr.reset();
@@ -304,10 +304,7 @@ namespace
 			arrPtr = nullptr;
 			dataPtr = nullptr;
 		}
-		AlignedArray() NOEXCEPT
-		{
-			AlignedArray::release();
-		}
+		AlignedArray() NOEXCEPT	{ }
 		AlignedArray(const size_type elements, const T value = T()) NOEXCEPT
 		{
 			AlignedArray::release();
@@ -335,7 +332,7 @@ namespace
 		inline T* data() noexcept { return dataPtr; }
 		inline const T* data() const noexcept { return dataPtr; }
 		inline size_type size() const noexcept { return nelems; }
-		inline void resize(size_type elements, const T value = T()) NOEXCEPT
+		void resize(size_type elements, const T value = T()) NOEXCEPT
 		{ 
 			if (elements == nelems)
 				return;
@@ -475,7 +472,7 @@ namespace
 		}
 		inline T& operator[] (size_type i) NOEXCEPT { return dataPtr[i]; }
 		inline const T& operator[] (size_type i) const NOEXCEPT { return dataPtr[i]; }
-		bool empty() const noexcept { return nelems == 0; }
+		inline bool empty() const noexcept { return nelems == 0; }
 	};
 
 	typedef AlignedMemory<Float> FloatArray;
@@ -523,7 +520,7 @@ namespace
 		return static_cast<T>(__rdtsc());
 	}
 #else
-	int GetPhysicalSeedType() NOEXCEPT
+	inline int GetPhysicalSeedType() NOEXCEPT
 	{
 		int abcd[4];						// return values from cpuid instruction
 		
