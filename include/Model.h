@@ -1984,21 +1984,23 @@ namespace dnn
 			{
 				auto generator = std::mt19937(Seed<unsigned>());
 				auto idx = UniformInt<UInt>(0ull, BatchSize-1ull);
+				const auto offset = idx * Layers[0]->CDHW();
+
 				if (State.load() == States::Training && idx + SampleIndex < DataProv->TrainingSamplesCount)
 				{
 					*label = DataProv->TrainingLabels[RandomTrainingSamples[idx + SampleIndex]];
-					const auto offset = idx * Layers[0]->CDHW();
+					
 					for (auto i = 0ull; i < Layers[0]->CDHW(); i++)
 						(*snapshot)[i] = Layers[0]->Neurons[i + offset];
 
 					return true;
 				}
-				else if (State.load() == States::Testing && SampleIndex < DataProv->TestingSamplesCount)
+				else if (State.load() == States::Testing && idx + SampleIndex < DataProv->TestingSamplesCount)
 				{
-					*label = DataProv->TestingLabels[SampleIndex];
-
+					*label = DataProv->TestingLabels[idx + SampleIndex];
+					
 					for (auto i = 0ull; i < Layers[0]->CDHW(); i++)
-						(*snapshot)[i] = Layers[0]->Neurons[i];
+						(*snapshot)[i] = Layers[0]->Neurons[i + offset];
 
 					return true;
 				}
