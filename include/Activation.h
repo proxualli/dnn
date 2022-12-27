@@ -5,154 +5,154 @@ namespace dnn
 {
 	struct Abs
 	{
-		inline static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return std::abs(x); }
-		inline static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return x > Float(0) ? Float(1) : x < Float(0) ? Float(-1) : Float(0); }
-		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return abs(x); }
-		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return select(x > VecFloat(0), VecFloat(1), select(x < VecFloat(0), VecFloat(-1), VecFloat(0))); }
+		FORCE_INLINE static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return std::abs(x); }
+		FORCE_INLINE static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return x > Float(0) ? Float(1) : x < Float(0) ? Float(-1) : Float(0); }
+		FORCE_INLINE static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return abs(x); }
+		FORCE_INLINE static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return select(x > VecFloat(0), VecFloat(1), select(x < VecFloat(0), VecFloat(-1), VecFloat(0))); }
 	};
 
 	struct ASinh
 	{
-		inline static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return std::asinh(x); }
-		inline static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return Float(1) / std::cosh(x); }
-		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return asinh(x); }
-		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return VecFloat(1) / cosh(x); }
+		FORCE_INLINE static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return std::asinh(x); }
+		FORCE_INLINE static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return Float(1) / std::cosh(x); }
+		FORCE_INLINE static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return asinh(x); }
+		FORCE_INLINE static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return VecFloat(1) / cosh(x); }
 	};
 
 	struct Elu 
 	{
-		inline static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return x > Float(0) ? x : alpha * (std::exp(x) - Float(1)); }
-		inline static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return x > Float(0) ? Float(1) : alpha * std::exp(x); }
-		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return select(x > VecFloat(0), x, alpha * (exp(x) - VecFloat(1))); }
-		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return select(x > VecFloat(0), VecFloat(1), alpha * exp(x)); }
+		FORCE_INLINE static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return x > Float(0) ? x : alpha * (std::exp(x) - Float(1)); }
+		FORCE_INLINE static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return x > Float(0) ? Float(1) : alpha * std::exp(x); }
+		FORCE_INLINE static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return select(x > VecFloat(0), x, alpha * (exp(x) - VecFloat(1))); }
+		FORCE_INLINE static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return select(x > VecFloat(0), VecFloat(1), alpha * exp(x)); }
 	};
 
 	struct HardLogistic
 	{
-		inline static Float f(const Float& x, const Float& alpha = Float(0.2), const Float& beta = Float(0.5)) NOEXCEPT { return std::min(Float(1), std::max(Float(0), x * alpha + beta)); }
-		inline static Float df(const Float& x, const Float& alpha = Float(0.2), const Float& beta = Float(0.5)) NOEXCEPT { return std::abs(x) > (beta / alpha) ? Float(0) : alpha; }
-		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(Float(0.2)), const VecFloat& beta = VecFloat(0.5)) NOEXCEPT { return min(VecFloat(1), max(VecFloat(0), x * alpha + beta)); }
-		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(Float(0.2)), const VecFloat& beta = VecFloat(0.5)) NOEXCEPT { return select(abs(x) > (beta / alpha), VecFloat(0), alpha); }
+		FORCE_INLINE static Float f(const Float& x, const Float& alpha = Float(0.2), const Float& beta = Float(0.5)) NOEXCEPT { return std::min(Float(1), std::max(Float(0), x * alpha + beta)); }
+		FORCE_INLINE static Float df(const Float& x, const Float& alpha = Float(0.2), const Float& beta = Float(0.5)) NOEXCEPT { return std::abs(x) > (beta / alpha) ? Float(0) : alpha; }
+		FORCE_INLINE static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(Float(0.2)), const VecFloat& beta = VecFloat(0.5)) NOEXCEPT { return min(VecFloat(1), max(VecFloat(0), x * alpha + beta)); }
+		FORCE_INLINE static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(Float(0.2)), const VecFloat& beta = VecFloat(0.5)) NOEXCEPT { return select(abs(x) > (beta / alpha), VecFloat(0), alpha); }
 	};
 
 	struct Relu6
 	{
-		inline static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return std::min(std::max(x, Float(0)), Float(6)); }
-		inline static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return x < Float(0) || x > Float(6) ? Float(0) : Float(1); }
-		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return min(max(x, VecFloat(0)), VecFloat(6)); }
-		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return select(x < VecFloat(0) | x > VecFloat(6), VecFloat(0), VecFloat(1)); }
+		FORCE_INLINE static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return std::min(std::max(x, Float(0)), Float(6)); }
+		FORCE_INLINE static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return x < Float(0) || x > Float(6) ? Float(0) : Float(1); }
+		FORCE_INLINE static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return min(max(x, VecFloat(0)), VecFloat(6)); }
+		FORCE_INLINE static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return select(x < VecFloat(0) | x > VecFloat(6), VecFloat(0), VecFloat(1)); }
 	};
 
 	struct HardSwish
 	{
-		inline static Float f(const Float& x, const Float& alpha = Float(3), const Float& beta = Float(1) / Float(6)) NOEXCEPT{return x * Relu6::f(x + alpha) * beta;}
-		inline static Float df(const Float& x, const Float& alpha = Float(3), const Float& beta = Float(1) / Float(6)) NOEXCEPT { return x < -alpha ? Float(0) : x > alpha ? Float(1) : ((Float(2) * beta * x) + (alpha * beta)); }
-		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(Float(3)), const VecFloat& beta = VecFloat(Float(1) / Float(6))) NOEXCEPT { return x * Relu6::fVec(x + alpha) * beta; }
-		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(Float(3)), const VecFloat& beta = VecFloat(Float(1) / Float(6))) NOEXCEPT { return select(x < -alpha, VecFloat(Float(0)), select(x > alpha, VecFloat(Float(1)), ((VecFloat(Float(2)) * beta * x) + (alpha * beta)))); }
+		FORCE_INLINE static Float f(const Float& x, const Float& alpha = Float(3), const Float& beta = Float(1) / Float(6)) NOEXCEPT{return x * Relu6::f(x + alpha) * beta;}
+		FORCE_INLINE static Float df(const Float& x, const Float& alpha = Float(3), const Float& beta = Float(1) / Float(6)) NOEXCEPT { return x < -alpha ? Float(0) : x > alpha ? Float(1) : ((Float(2) * beta * x) + (alpha * beta)); }
+		FORCE_INLINE static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(Float(3)), const VecFloat& beta = VecFloat(Float(1) / Float(6))) NOEXCEPT { return x * Relu6::fVec(x + alpha) * beta; }
+		FORCE_INLINE static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(Float(3)), const VecFloat& beta = VecFloat(Float(1) / Float(6))) NOEXCEPT { return select(x < -alpha, VecFloat(Float(0)), select(x > alpha, VecFloat(Float(1)), ((VecFloat(Float(2)) * beta * x) + (alpha * beta)))); }
 	};
 
 	struct Identity
 	{
-		inline static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return x; }
-		inline static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return Float(1); }
-		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return x; }
-		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return VecFloat(1); }
+		FORCE_INLINE static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return x; }
+		FORCE_INLINE static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return Float(1); }
+		FORCE_INLINE static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return x; }
+		FORCE_INLINE static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return VecFloat(1); }
 	};
 
 	struct Log
 	{
-		inline static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return std::log(x); }
-		inline static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return Float(1) / x; }
-		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return log(x); }
-		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return VecFloat(1) / x; }
+		FORCE_INLINE static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return std::log(x); }
+		FORCE_INLINE static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return Float(1) / x; }
+		FORCE_INLINE static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return log(x); }
+		FORCE_INLINE static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return VecFloat(1) / x; }
 	};
 
 	struct Logistic
 	{
-		inline static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return (Float(1) / (Float(1) + std::exp(-x))); }
-		inline static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { const auto y = Logistic::f(x); return ( y * (Float(1) - y)); }
-		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return (VecFloat(1) / (VecFloat(1) + exp(-x))); }
-		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { const auto y = Logistic::fVec(x); return y * (VecFloat(1) - y); }
+		FORCE_INLINE static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return (Float(1) / (Float(1) + std::exp(-x))); }
+		FORCE_INLINE static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { const auto y = Logistic::f(x); return ( y * (Float(1) - y)); }
+		FORCE_INLINE static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return (VecFloat(1) / (VecFloat(1) + exp(-x))); }
+		FORCE_INLINE static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { const auto y = Logistic::fVec(x); return y * (VecFloat(1) - y); }
 	};
 
 	struct SoftRelu
 	{
-		inline static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return std::log(Float(1) + std::exp(x)); }
-		inline static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return Float(1) / (Float(1) + std::exp(-x)); }
-		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return log(VecFloat(1) + exp(x)); }
-		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return VecFloat(1) / (VecFloat(1) + exp(-x)); }
+		FORCE_INLINE static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return std::log(Float(1) + std::exp(x)); }
+		FORCE_INLINE static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return Float(1) / (Float(1) + std::exp(-x)); }
+		FORCE_INLINE static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return log(VecFloat(1) + exp(x)); }
+		FORCE_INLINE static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return VecFloat(1) / (VecFloat(1) + exp(-x)); }
 	};
 
 	struct LogLogistic
 	{
-		inline static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return -SoftRelu::f(-x); }
-		inline static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return Float(1) / (std::exp(x) + Float(1)); }
-		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return -SoftRelu::fVec(-x); }
-		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return VecFloat(1) / (exp(x) + VecFloat(1)); }
+		FORCE_INLINE static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return -SoftRelu::f(-x); }
+		FORCE_INLINE static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return Float(1) / (std::exp(x) + Float(1)); }
+		FORCE_INLINE static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return -SoftRelu::fVec(-x); }
+		FORCE_INLINE static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return VecFloat(1) / (exp(x) + VecFloat(1)); }
 	};
 
 	struct Relu // alpha >= 0
 	{
-		inline static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return x > Float(0) ? x : x * alpha; }
-		inline static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return x > Float(0) ? Float(1) : alpha; }
-		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return select(x > VecFloat(0), x, x * alpha); }
-		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return select(x > VecFloat(0), VecFloat(1), alpha); }
+		FORCE_INLINE static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return x > Float(0) ? x : x * alpha; }
+		FORCE_INLINE static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return x > Float(0) ? Float(1) : alpha; }
+		FORCE_INLINE static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return select(x > VecFloat(0), x, x * alpha); }
+		FORCE_INLINE static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return select(x > VecFloat(0), VecFloat(1), alpha); }
 	};
 
 	struct Selu
 	{
-		inline static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return Float(1.0507009873554804934193349852946) * (x > Float(0) ? x : Float(1.6732632423543772848170429916717) * (std::exp(x) - Float(1))); }
-		inline static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return x > Float(0) ? Float(1.0507009873554804934193349852946) : Float(1.7580993408473768599402175208123) * std::exp(x); }
-		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return VecFloat(Float(1.0507009873554804934193349852946)) * select(x > VecFloat(0), x, VecFloat(Float(1.6732632423543772848170429916717)) * (exp(x) - VecFloat(1))); }
-		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return select(x > VecFloat(0), VecFloat(Float(1.0507009873554804934193349852946)), VecFloat(Float(1.7580993408473768599402175208123)) * exp(x)); }
+		FORCE_INLINE static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return Float(1.0507009873554804934193349852946) * (x > Float(0) ? x : Float(1.6732632423543772848170429916717) * (std::exp(x) - Float(1))); }
+		FORCE_INLINE static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return x > Float(0) ? Float(1.0507009873554804934193349852946) : Float(1.7580993408473768599402175208123) * std::exp(x); }
+		FORCE_INLINE static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return VecFloat(Float(1.0507009873554804934193349852946)) * select(x > VecFloat(0), x, VecFloat(Float(1.6732632423543772848170429916717)) * (exp(x) - VecFloat(1))); }
+		FORCE_INLINE static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return select(x > VecFloat(0), VecFloat(Float(1.0507009873554804934193349852946)), VecFloat(Float(1.7580993408473768599402175208123)) * exp(x)); }
 	};
 
 	struct SoftPlus
 	{
-		inline static Float f(const Float& x, const Float& alpha = Float(20), const Float& beta = Float(1)) NOEXCEPT { const auto y = beta * x; return y > alpha ? x : std::log1p(std::exp(y)) / beta; }
-		inline static Float df(const Float& x, const Float& alpha = Float(20), const Float& beta = Float(1)) NOEXCEPT { const auto y = beta * x;  const auto tmpExp = std::exp(y); return y > alpha ? x : x * (tmpExp - Float(1)) / tmpExp; }
-		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(20), const VecFloat& beta = VecFloat(1)) NOEXCEPT { const auto y = beta * x; return select(y > alpha, x, log1p(exp(y)) / beta); }
-		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(20), const VecFloat& beta = VecFloat(1)) NOEXCEPT { const auto y = beta * x; const auto tmpExp = exp(y); return select(y > alpha, x, x * (tmpExp - VecFloat(1)) / tmpExp); }
+		FORCE_INLINE static Float f(const Float& x, const Float& alpha = Float(20), const Float& beta = Float(1)) NOEXCEPT { const auto y = beta * x; return y > alpha ? x : std::log1p(std::exp(y)) / beta; }
+		FORCE_INLINE static Float df(const Float& x, const Float& alpha = Float(20), const Float& beta = Float(1)) NOEXCEPT { const auto y = beta * x;  const auto tmpExp = std::exp(y); return y > alpha ? x : x * (tmpExp - Float(1)) / tmpExp; }
+		FORCE_INLINE static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(20), const VecFloat& beta = VecFloat(1)) NOEXCEPT { const auto y = beta * x; return select(y > alpha, x, log1p(exp(y)) / beta); }
+		FORCE_INLINE static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(20), const VecFloat& beta = VecFloat(1)) NOEXCEPT { const auto y = beta * x; const auto tmpExp = exp(y); return select(y > alpha, x, x * (tmpExp - VecFloat(1)) / tmpExp); }
 	};
 	
 	struct SoftSign
 	{
-		inline static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return x / (Float(1) + std::abs(x)); }
-		inline static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return Float(1) / Square<Float>(Float(1) + std::abs(x)); }
-		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return x / (VecFloat(1) + abs(x)); }
-		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return VecFloat(1) / square(VecFloat(1) + abs(x)); }
+		FORCE_INLINE static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return x / (Float(1) + std::abs(x)); }
+		FORCE_INLINE static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return Float(1) / Square<Float>(Float(1) + std::abs(x)); }
+		FORCE_INLINE static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return x / (VecFloat(1) + abs(x)); }
+		FORCE_INLINE static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return VecFloat(1) / square(VecFloat(1) + abs(x)); }
 	};
 
 	struct Swish
 	{
-		inline static Float f(const Float& x, const Float& alpha = Float(1), const Float& beta = Float(0)) NOEXCEPT { return x / (std::exp(-alpha * x) + Float(1)); }
-		inline static Float df(const Float& x, const Float& alpha = Float(1), const Float& beta = Float(0)) NOEXCEPT { return (Float(1) / (std::exp(-alpha * x) + Float(1))) * (Float(1) + alpha * x * (Float(1) - (Float(1) / (std::exp(-alpha * x) + Float(1))))); }
-		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(1), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return x / (exp(-alpha * x) + VecFloat(1)); }
-		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(1), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return (VecFloat(1) / (exp(-alpha * x) + VecFloat(1))) * (VecFloat(1) + alpha * x * (VecFloat(1) - (VecFloat(1) / (exp(-alpha * x) + VecFloat(1))))); }
+		FORCE_INLINE static Float f(const Float& x, const Float& alpha = Float(1), const Float& beta = Float(0)) NOEXCEPT { return x / (std::exp(-alpha * x) + Float(1)); }
+		FORCE_INLINE static Float df(const Float& x, const Float& alpha = Float(1), const Float& beta = Float(0)) NOEXCEPT { return (Float(1) / (std::exp(-alpha * x) + Float(1))) * (Float(1) + alpha * x * (Float(1) - (Float(1) / (std::exp(-alpha * x) + Float(1))))); }
+		FORCE_INLINE static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(1), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return x / (exp(-alpha * x) + VecFloat(1)); }
+		FORCE_INLINE static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(1), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return (VecFloat(1) / (exp(-alpha * x) + VecFloat(1))) * (VecFloat(1) + alpha * x * (VecFloat(1) - (VecFloat(1) / (exp(-alpha * x) + VecFloat(1))))); }
 	};
 
 	struct Tanh
 	{
-		inline static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return std::tanh(x); }
-		inline static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return Float(1) - Square<Float>(std::tanh(x)); }
-		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return tanh(x); }
-		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return (VecFloat(1) - square(tanh(x))); }
+		FORCE_INLINE static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return std::tanh(x); }
+		FORCE_INLINE static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return Float(1) - Square<Float>(std::tanh(x)); }
+		FORCE_INLINE static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return tanh(x); }
+		FORCE_INLINE static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return (VecFloat(1) - square(tanh(x))); }
 	};
 	 
 	struct TanhExp
 	{
-		inline static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return x * std::tanh(std::exp(x)); }
-		inline static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { const auto y = std::exp(x);  const auto z = std::tanh(y); return z - (x * y * (Square<Float>(z) - Float(1))); }
-		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return x * tanh(exp(x)); }
-		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { const auto y = exp(x); const auto z = tanh(y); return z - (x * y * (square(z) - VecFloat(1))); }
+		FORCE_INLINE static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return x * std::tanh(std::exp(x)); }
+		FORCE_INLINE static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { const auto y = std::exp(x);  const auto z = std::tanh(y); return z - (x * y * (Square<Float>(z) - Float(1))); }
+		FORCE_INLINE static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return x * tanh(exp(x)); }
+		FORCE_INLINE static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { const auto y = exp(x); const auto z = tanh(y); return z - (x * y * (square(z) - VecFloat(1))); }
 	};
 
 	struct Mish
 	{
-		inline static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return x * std::tanh(std::log1p(std::exp(x))); }
-		inline static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { const auto tmpExp = std::exp(x); const auto tmpSoftplus = std::log1p(tmpExp); const auto tmpSech = Float(1) / std::cosh(tmpSoftplus); return std::tanh(tmpSoftplus) + x * tmpExp * Square<Float>(tmpSech) / (tmpExp + Float(1)); }
-		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return x * tanh(log1p(exp(x))); }
-		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { const auto tmpExp = exp(x); const auto tmpSoftplus = log1p(tmpExp); const auto tmpSech = VecFloat(1) / cosh(tmpSoftplus); return tanh(tmpSoftplus) + x * tmpExp * square(tmpSech) / (tmpExp + VecFloat(1)); }
+		FORCE_INLINE static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return x * std::tanh(std::log1p(std::exp(x))); }
+		FORCE_INLINE static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { const auto tmpExp = std::exp(x); const auto tmpSoftplus = std::log1p(tmpExp); const auto tmpSech = Float(1) / std::cosh(tmpSoftplus); return std::tanh(tmpSoftplus) + x * tmpExp * Square<Float>(tmpSech) / (tmpExp + Float(1)); }
+		FORCE_INLINE static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return x * tanh(log1p(exp(x))); }
+		FORCE_INLINE static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { const auto tmpExp = exp(x); const auto tmpSoftplus = log1p(tmpExp); const auto tmpSech = VecFloat(1) / cosh(tmpSoftplus); return tanh(tmpSoftplus) + x * tmpExp * square(tmpSech) / (tmpExp + VecFloat(1)); }
 	};
 	
 	enum class Activations

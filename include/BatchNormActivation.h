@@ -430,7 +430,7 @@ namespace dnn
 				if (plain)
 				{
 					const auto partialHW = GetVectorPart(HW());
-					const auto threads = std::min(maxTreads, C);
+					const auto threads = std::min(maxThreads, C);
 
 					for_i(C, threads, [=](UInt c)
 					{
@@ -549,7 +549,7 @@ namespace dnn
 				}
 				else
 				{
-					const auto threads = std::min(maxTreads, PaddedC / VectorSize);
+					const auto threads = std::min(maxThreads, PaddedC / VectorSize);
 
 					for_i(PaddedC / VectorSize, threads, [=](UInt c)
 					{
@@ -876,7 +876,8 @@ namespace dnn
 
 			const auto plain = IsPlainFormat();
 			const auto elements = batchSize * (plain ? CDHW() : PaddedCDHW());
-			const auto threads = std::min(GetThreads(elements, Float(5)), batchSize);
+			const auto maxThreads = GetThreads(elements, Float(5))
+			const auto threads = std::min(maxThreads, batchSize);
 			const auto strideHW = HW() * VectorSize;
 
 			if (InputLayer->DstMemDesc->get_ndims() == 2)

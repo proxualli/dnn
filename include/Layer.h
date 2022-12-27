@@ -558,8 +558,7 @@ namespace dnn
 			{
 				RefreshingStats.store(true);
 
-				auto mean = Float(0);
-				auto variance = Float(0);
+				
 				auto correctionMean = Float(0);
 				auto correctionVariance = Float(0);
 				
@@ -574,6 +573,9 @@ namespace dnn
 					{
 						const auto maxThreads = GetThreads(batchSize * elements, Float(2.5));
 						const auto threads = std::min(maxThreads, batchSize);
+
+						auto mean = Float(0);
+						auto variance = Float(0);
 
 						for_i(batchSize, threads, [&](UInt n)
 						{ 
@@ -594,8 +596,8 @@ namespace dnn
 								KahanSum<VecFloat>(square(neurons), vecVariance, vecCorrectionVariance);
 							}			
 
-							mean = horizontal_add(vecMean) / elements;
-							variance = horizontal_add(vecVariance) / elements - Square<Float>(mean);
+							mean += horizontal_add(vecMean) / elements;
+							variance += horizontal_add(vecVariance) / elements - Square<Float>(mean);
 						});
 
 						if ((NeuronsStats.Min < -NEURONS_LIMIT) || (NeuronsStats.Max > NEURONS_LIMIT))
@@ -611,6 +613,9 @@ namespace dnn
 					}
 					else
 					{
+						auto mean = Float(0);
+						auto variance = Float(0);
+
 						for (auto i = 0ull; i < ncdhw; i++)
 						{
 							NeuronsStats.Min = std::min(NeuronsStats.Min, Neurons[i]);
@@ -641,8 +646,8 @@ namespace dnn
 					WeightsStats.Min = std::numeric_limits<Float>::max();
 					WeightsStats.Max = std::numeric_limits<Float>::lowest();
 					
-					mean = Float(0);
-					variance = Float(0);
+					auto mean = Float(0);
+					auto variance = Float(0);
 					
 					if (WeightCount % VectorSize == 0)
 					{
