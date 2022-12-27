@@ -571,7 +571,7 @@ namespace dnn
 					
 					if (elements % VectorSize == 0ull)
 					{
-						const auto maxThreads = GetThreads(batchSize * elements, Float(2.5));
+						const auto maxThreads = GetThreads(batchSize * elements, Float(10));
 						const auto threads = std::min<UInt>(maxThreads, batchSize);
 
 						auto mean = Float(0);

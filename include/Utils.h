@@ -106,20 +106,6 @@ namespace
 #endif
 #define DNN_SIMD_ALIGN DNN_ALIGN(64)
 
-#if defined(__clang__)
-#define FORCE_INLINE inline __attribute__((always_inline))
-
-#elif defined(__GNUC__)
-#define FORCE_INLINE inline
-
-#elif defined(_MSC_VER)
-#pragma warning(error: 4714)
-#define FORCE_INLINE __forceinline
-
-#else
-#error Unsupported compiler
-#endif
-
 	constexpr auto UseInplace = false;
 	constexpr auto Reference = true;
 
@@ -433,9 +419,9 @@ namespace
 				}
 			}
 		}
-		FORCE_INLINE T* data() noexcept { return dataPtr; }
-		FORCE_INLINE const T* data() const noexcept { return dataPtr; }
-		size_type size() const noexcept { return nelems; }
+		inline T* data() noexcept { return dataPtr; }
+		inline const T* data() const noexcept { return dataPtr; }
+		inline size_type size() const noexcept { return nelems; }
 		dnnl::memory::desc desc() { return description; }
 		void resizeMem(const dnnl::memory::desc& md, const dnnl::engine& engine, const T value = T()) NOEXCEPT
 		{
@@ -487,8 +473,8 @@ namespace
 		{
 			AlignedMemory::resizeMem(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(n), dnnl::memory::dim(c), dnnl::memory::dim(d), dnnl::memory::dim(h), dnnl::memory::dim(w) }), dtype, format), engine, value);
 		}
-		FORCE_INLINE T& operator[] (size_type i) NOEXCEPT { return dataPtr[i]; }
-		FORCE_INLINE const T& operator[] (size_type i) const NOEXCEPT { return dataPtr[i]; }
+		inline T& operator[] (size_type i) NOEXCEPT { return dataPtr[i]; }
+		inline const T& operator[] (size_type i) const NOEXCEPT { return dataPtr[i]; }
 		bool empty() const noexcept { return nelems == 0; }
 	};
 
@@ -512,7 +498,7 @@ namespace
 	
 	/* https://en.wikipedia.org/wiki/Kahan_summation_algorithm */
 	template<typename T>
-	FORCE_INLINE void KahanSum(const T& value, T& sum, T& correction) NOEXCEPT
+	inline void KahanSum(const T& value, T& sum, T& correction) NOEXCEPT
 	{
 		const auto y = value - correction;
 		const auto t = sum + y;
@@ -580,7 +566,7 @@ namespace
 	}
 #endif
 
-	FORCE_INLINE auto BernoulliVecFloat(const Float prob = Float(0.5)) noexcept
+	inline auto BernoulliVecFloat(const Float prob = Float(0.5)) noexcept
 	{
 		static thread_local auto generator = Ranvec1(3, Seed<int>(), static_cast<int>(std::hash<std::thread::id>()(std::this_thread::get_id())));
 #if defined(DNN_AVX512BW) || defined(DNN_AVX512)
