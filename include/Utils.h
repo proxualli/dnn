@@ -520,7 +520,7 @@ namespace
 		return static_cast<T>(__rdtsc());
 	}
 #else
-	inline int GetPhysicalSeedType() NOEXCEPT
+	int GetPhysicalSeedType() NOEXCEPT
 	{
 		int abcd[4];						// return values from cpuid instruction
 		
@@ -536,7 +536,7 @@ namespace
 		return 0;
 	}
 	
-	int PhysicalSeedType = -1;
+	static int PhysicalSeedType = -1;
 	template<typename T>
 	inline T Seed() NOEXCEPT
 	{
