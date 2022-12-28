@@ -857,29 +857,24 @@ extern "C" DNN_API void DNNRefreshStatistics(const UInt layerIndex, StatsInfo* i
 	if (model && layerIndex < model->Layers.size())
 	{
 		while (model->BatchSizeChanging.load() || model->ResettingWeights.load())
-			std::this_thread::sleep_for(std::chrono::milliseconds(250));
+			std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
-		auto statsOK = false;
-		if (!model->BatchSizeChanging.load() && !model->ResettingWeights.load())
-			statsOK = model->Layers[layerIndex]->RefreshStatistics(model->BatchSize);
-
-		if (!statsOK)
-		{
+		if (!model->Layers[layerIndex]->RefreshStatistics(model->BatchSize))
 			model->StopTask();
-			return;
+		else
+		{
+			info->Description = model->Layers[layerIndex]->GetDescription();
+			info->NeuronsStats = model->Layers[layerIndex]->NeuronsStats;
+			info->WeightsStats = model->Layers[layerIndex]->WeightsStats;
+			info->BiasesStats = model->Layers[layerIndex]->BiasesStats;
+			info->FPropLayerTime = Float(std::chrono::duration_cast<std::chrono::microseconds>(model->Layers[layerIndex]->fpropTime).count()) / 1000;
+			info->BPropLayerTime = Float(std::chrono::duration_cast<std::chrono::microseconds>(model->Layers[layerIndex]->bpropTime).count()) / 1000;
+			info->UpdateLayerTime = Float(std::chrono::duration_cast<std::chrono::microseconds>(model->Layers[layerIndex]->updateTime).count()) / 1000;
+			info->FPropTime = Float(std::chrono::duration_cast<std::chrono::microseconds>(model->fpropTime).count()) / 1000;
+			info->BPropTime = Float(std::chrono::duration_cast<std::chrono::microseconds>(model->bpropTime).count()) / 1000;
+			info->UpdateTime = Float(std::chrono::duration_cast<std::chrono::microseconds>(model->updateTime).count()) / 1000;
+			info->Locked = model->Layers[layerIndex]->Lockable() ? model->Layers[layerIndex]->LockUpdate.load() : false;
 		}
-
-		info->Description = model->Layers[layerIndex]->GetDescription();
-		info->NeuronsStats = model->Layers[layerIndex]->NeuronsStats;
-		info->WeightsStats = model->Layers[layerIndex]->WeightsStats;
-		info->BiasesStats = model->Layers[layerIndex]->BiasesStats;
-		info->FPropLayerTime = Float(std::chrono::duration_cast<std::chrono::microseconds>(model->Layers[layerIndex]->fpropTime).count()) / 1000;
-		info->BPropLayerTime = Float(std::chrono::duration_cast<std::chrono::microseconds>(model->Layers[layerIndex]->bpropTime).count()) / 1000;
-		info->UpdateLayerTime = Float(std::chrono::duration_cast<std::chrono::microseconds>(model->Layers[layerIndex]->updateTime).count()) / 1000;
-		info->FPropTime = Float(std::chrono::duration_cast<std::chrono::microseconds>(model->fpropTime).count()) / 1000;
-		info->BPropTime = Float(std::chrono::duration_cast<std::chrono::microseconds>(model->bpropTime).count()) / 1000;
-		info->UpdateTime = Float(std::chrono::duration_cast<std::chrono::microseconds>(model->updateTime).count()) / 1000;
-		info->Locked = model->Layers[layerIndex]->Lockable() ? model->Layers[layerIndex]->LockUpdate.load() : false;
 	}
 }
 
