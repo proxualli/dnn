@@ -30,6 +30,7 @@
 #define PRAGMA_OMP_PARALLEL_FOR_COLLAPSE(n) PRAGMA_MACRO(omp parallel for collapse(n))
 #define PRAGMA_OMP_PARALLEL_THREADS(n) PRAGMA_MACRO(omp parallel num_threads(n))
 #define PRAGMA_OMP_FOR_SCHEDULE_STATIC(n) PRAGMA_MACRO(omp for schedule(static,n))
+#define PRAGMA_OMP_FOR_SCHEDULE_DYNAMIC(n) PRAGMA_MACRO(omp for schedule(dynamic,n))
 #define OMP_GET_THREAD_NUM() omp_get_thread_num()
 #define OMP_GET_NUM_THREADS() omp_get_num_threads()
 #else
@@ -37,6 +38,7 @@
 #define PRAGMA_OMP_PARALLEL_FOR_COLLAPSE(n)
 #define PRAGMA_OMP_PARALLEL_THREADS(n)
 #define PRAGMA_OMP_FOR_SCHEDULE_STATIC(n)
+#define PRAGMA_OMP_FOR_SCHEDULE_DYNAMIC(n)
 #define OMP_GET_THREAD_NUM() 0
 #define OMP_GET_NUM_THREADS() 1
 #endif
@@ -171,20 +173,75 @@ namespace dnn
 			{
 				PRAGMA_OMP_FOR_SCHEDULE_STATIC(1)
 #if defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER)
-					for (auto i = 0ll; i < static_cast<long long>(range); i++)
-						f(i);
+				for (auto i = 0ll; i < static_cast<long long>(range); i++)
+					f(i);
 #else
-					for (auto i = 0ull; i < range; i++)
-						f(i);
+				for (auto i = 0ull; i < range; i++)
+					f(i);
 #endif
 			}
 #else
 			DNN_UNREF_PAR(threads);
 			for_(0ull, range, [&](const blocked_range& r)
-				{
-					for (auto i = r.begin(); i < r.end(); i++)
+			{
+				for (auto i = r.begin(); i < r.end(); i++)
+				f(i);
+			});
+#endif
+		}
+		else
+			for (auto i = 0ull; i < range; i++)
+				f(i);
+	}
+
+	template <typename Func>
+	inline void for_i_dynamic(const size_t range, const Func& f)
+	{
+#ifdef DNN_OMP
+		PRAGMA_OMP_PARALLEL_THREADS(omp_get_max_threads())
+		{
+			PRAGMA_OMP_FOR_SCHEDULE_DYNAMIC(1)
+#if defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER)
+			for (auto i = 0ll; i < static_cast<long long>(range); i++)
+				f(i);
+#else
+			for (auto i = 0ull; i < range; i++)
+				f(i);
+#endif
+		}
+#else
+		for_(0ull, range, [&](const blocked_range& r)
+		{
+			for (auto i = r.begin(); i < r.end(); i++)
+				f(i);
+		});
+#endif
+	}
+
+	template <typename Func>
+	inline void for_i_dynamic(const size_t range, const size_t threads, const Func& f)
+	{
+		if (threads > 1)
+		{
+#ifdef DNN_OMP
+			PRAGMA_OMP_PARALLEL_THREADS(static_cast<int>(threads))
+			{
+				PRAGMA_OMP_FOR_SCHEDULE_DYNAMIC(1)
+#if defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER)
+				for (auto i = 0ll; i < static_cast<long long>(range); i++)
 					f(i);
-				});
+#else
+				for (auto i = 0ull; i < range; i++)
+					f(i);
+#endif
+			}
+#else
+			DNN_UNREF_PAR(threads);
+			for_(0ull, range, [&](const blocked_range& r)
+			{
+				for (auto i = r.begin(); i < r.end(); i++)
+					f(i);
+			});
 #endif
 		}
 		else

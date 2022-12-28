@@ -660,7 +660,7 @@ namespace dnn
 				else
 					return false;
 
-                for_i(200ull, [=](UInt item)
+				for_i_dynamic(200ull, [=](UInt item)
 				{
 					auto bitsppx = 0u;
 					const auto offset = item * 500;
@@ -704,7 +704,7 @@ namespace dnn
 				else
 					return false;
 
-				for_i(TestingSamplesCount, [=](UInt i)
+				for_i_dynamic(TestingSamplesCount, [=](UInt i)
 				{
 					const auto fileName = (DatasetsDirectory / std::string(magic_enum::enum_name<Datasets>(dataset))  / "val" / "images" / ("val_" + std::to_string(i) + ".JPEG")).string();
 					//const auto fileName = (DatasetsDirectory() / std::string(magic_enum::enum_name<Datasets>(dataset))  / "test" / "images" / ("test_" + std::to_string(i) + ".JPEG")).string();
