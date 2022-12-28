@@ -559,8 +559,8 @@ namespace dnn
 			{
 				RefreshingStats.store(true);
 				
-				do {} while (Fwd.load());
-
+				while (Fwd.load() || Bwd.load()) { std::this_thread::yield(); }
+			
 				if (!Neurons.empty())
 				{
 					const auto plain = IsPlainFormat();
@@ -656,8 +656,6 @@ namespace dnn
 
 				if (HasWeights)
 				{
-					do {} while (Bwd.load());
-
 					auto stats = Stats(0, 0, std::numeric_limits<Float>::max(), std::numeric_limits<Float>::lowest());
 					
 					auto mean = Float(0);

@@ -1656,9 +1656,12 @@ namespace dnn
 									StochasticDepth(totalSkipConnections, DepthDrop, FixedDepthDrop);
 
 								// Forward
+								while (Layers[0]->RefreshingStats.load()) {	std::this_thread::yield(); }
+								Layers[0]->Fwd.store(true);
 								timePointGlobal = timer.now();
 								auto SampleLabels = TrainBatch(SampleIndex, BatchSize);
 								Layers[0]->fpropTime = timer.now() - timePointGlobal;
+								Layers[0]->Fwd.store(false);
 
 								for (auto cost : CostLayers)
 									cost->SetSampleLabels(SampleLabels);
@@ -1667,7 +1670,7 @@ namespace dnn
 								{
 									if (!Layers[i]->Skip && TaskState.load() == TaskStates::Running)
 									{
-										do {} while (Layers[i]->RefreshingStats.load());
+										while (Layers[i]->RefreshingStats.load()) { std::this_thread::yield(); }
 										Layers[i]->Fwd.store(true);
 										timePoint = timer.now();
 										Layers[i]->ForwardProp(BatchSize, true);
@@ -1696,7 +1699,7 @@ namespace dnn
 
 										if (!Layers[i]->Skip)
 										{
-											do {} while (Layers[i]->RefreshingStats.load());
+											while (Layers[i]->RefreshingStats.load()) { std::this_thread::yield(); }
 											Layers[i]->Bwd.store(true);
 											timePoint = timer.now();
 
@@ -1771,18 +1774,24 @@ namespace dnn
 							{
 								timePointGlobal = timer.now();
 
+								while (Layers[0]->RefreshingStats.load()) { std::this_thread::yield(); }
+								Layers[0]->Fwd.store(true);
 								timePoint = timer.now();
 								auto SampleLabels = TestBatch(SampleIndex, BatchSize);
 								Layers[0]->fpropTime = timer.now() - timePoint;
+								Layers[0]->Fwd.store(false);
 
 								for (auto cost : CostLayers)
 									cost->SetSampleLabels(SampleLabels);
 
 								for (auto i = 1ull; i < Layers.size(); i++)
 								{
+									while (Layers[i]->RefreshingStats.load()) { std::this_thread::yield(); }
+									Layers[i]->Fwd.store(true);
 									timePoint = timer.now();
 									Layers[i]->ForwardProp(BatchSize, false);
 									Layers[i]->fpropTime = timer.now() - timePoint;
+									Layers[i]->Fwd.store(false);
 								}
 
 								fpropTime = timer.now() - timePointGlobal;
@@ -1922,17 +1931,23 @@ namespace dnn
 						{
 							timePointGlobal = timer.now();
 
+							while (Layers[0]->RefreshingStats.load()) { std::this_thread::yield(); }
+							Layers[0]->Fwd.store(true);
 							auto SampleLabels = TestAugmentedBatch(SampleIndex, BatchSize);
 							Layers[0]->fpropTime = timer.now() - timePointGlobal;
+							Layers[0]->Fwd.store(false);
 
 							for (auto cost : CostLayers)
 								cost->SetSampleLabels(SampleLabels);
 
 							for (auto i = 1ull; i < Layers.size(); i++)
 							{
+								while (Layers[i]->RefreshingStats.load()) { std::this_thread::yield(); }
+								Layers[i]->Fwd.store(true);
 								timePoint = timer.now();
 								Layers[i]->ForwardProp(BatchSize, false);
 								Layers[i]->fpropTime = timer.now() - timePoint;
+								Layers[i]->Fwd.store(false);
 							}
 
 							overflow = SampleIndex >= TestOverflowCount;
@@ -1980,26 +1995,26 @@ namespace dnn
 
 		bool GetInputSnapShot(std::vector<Float>* snapshot, std::vector<UInt>* label)
 		{
-			if (!Layers[0]->Neurons.empty() && !BatchSizeChanging.load() && !ResettingWeights.load())
+			if (!Layers[0]->Neurons.empty() && !BatchSizeChanging.load() && !ResettingWeights.load() && !Layers[0]->Fwd.load())
 			{
-				auto generator = std::mt19937(Seed<unsigned>());
-				auto idx = UniformInt<UInt>(0ull, BatchSize-1ull);
-				const auto offset = idx * Layers[0]->CDHW();
+				const auto idx = UniformInt<UInt>(0ull, BatchSize - 1ull) + SampleIndex;
+				const auto size = Layers[0]->CDHW();
+				const auto offset = (idx - SampleIndex) * size;
 
-				if (State.load() == States::Training && idx + SampleIndex < DataProv->TrainingSamplesCount)
+				if (State.load() == States::Training && idx < DataProv->TrainingSamplesCount)
 				{
-					*label = DataProv->TrainingLabels[RandomTrainingSamples[idx + SampleIndex]];
+					*label = DataProv->TrainingLabels[RandomTrainingSamples[idx]];
 					
-					for (auto i = 0ull; i < Layers[0]->CDHW(); i++)
+					for (auto i = 0ull; i < size; i++)
 						(*snapshot)[i] = Layers[0]->Neurons[i + offset];
 
 					return true;
 				}
-				else if (State.load() == States::Testing && idx + SampleIndex < DataProv->TestingSamplesCount)
+				else if (State.load() == States::Testing && idx < DataProv->TestingSamplesCount)
 				{
-					*label = DataProv->TestingLabels[idx + SampleIndex];
+					*label = DataProv->TestingLabels[idx];
 					
-					for (auto i = 0ull; i < Layers[0]->CDHW(); i++)
+					for (auto i = 0ull; i < size; i++)
 						(*snapshot)[i] = Layers[0]->Neurons[i + offset];
 
 					return true;
