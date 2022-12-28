@@ -409,6 +409,7 @@ namespace
 								dataPtr[i] = value;
 					}
 					else
+						PRAGMA_OMP_SIMD()
 						for (auto i = 0ull; i < nelems; i++)
 							dataPtr[i] = value;
 
@@ -446,6 +447,7 @@ namespace
 									dataPtr[i] = value;
 						}
 						else
+							PRAGMA_OMP_SIMD()
 							for (auto i = 0ull; i < nelems; i++)
 								dataPtr[i] = value;
 
