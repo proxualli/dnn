@@ -249,7 +249,7 @@ namespace dnn
 
 			const auto plain = IsPlainFormat();
 			const auto threads = GetThreads(batchSize * (plain ? CDHW() : PaddedCDHW()), Float(10));
-						
+				
 #ifdef DNN_STOCHASTIC
 			if (batchSize == 1)
 			{

@@ -99,6 +99,7 @@ namespace dnn
 				const auto size = plain ? CDHW() : PaddedCDHW();
 				const auto part = GetVectorPart(size);
 				const auto threads = batchSize == 1 ? 1ull : GetThreads(batchSize * size, Float(10));
+				
 				const auto vecZero = VecFloat(0);
 				const auto strideHW = HW() * VectorSize;
 

@@ -662,7 +662,6 @@ namespace dnn
 
 				for_i_dynamic(200ull, [=](UInt item)
 				{
-					auto bitsppx = 0u;
 					const auto offset = item * 500;
 					for (UInt i = 0; i < 500; i++)
 					{
@@ -970,6 +969,6 @@ namespace dnn
 			else
 				return img;
 		}
-	};
 #endif
+	};
 }

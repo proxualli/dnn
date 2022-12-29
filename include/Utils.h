@@ -99,15 +99,15 @@ using namespace dnn;
 
 namespace
 {
-#ifdef _MSC_VER
-#define DNN_ALIGN(alignment) __declspec(align(alignment))
-#else
-#define DNN_ALIGN(alignment) __attribute__((__aligned__(alignment)))
-#endif
-#define DNN_SIMD_ALIGN DNN_ALIGN(64)
+//#ifdef _MSC_VER
+//#define DNN_ALIGN(alignment) __declspec(align(alignment))
+//#else
+//#define DNN_ALIGN(alignment) __attribute__((__aligned__(alignment)))
+//#endif
+//#define DNN_SIMD_ALIGN DNN_ALIGN(64)
 
-	constexpr auto UseInplace = false;
-	constexpr auto Reference = true;
+	constexpr auto UseInplace = true;
+	constexpr auto Reference = false;
 
 	typedef float Float;
 	typedef std::size_t UInt;
@@ -128,8 +128,8 @@ namespace
 		const auto ULTRALIGHT = MAX_THREADS >= 32ull ?  2ull : MAX_THREADS >= 24ull ?  2ull :  2ull;
 		const auto LIGHT      = MAX_THREADS >= 32ull ?  4ull : MAX_THREADS >= 24ull ?  4ull :  4ull;
 		const auto MEDIUM     = MAX_THREADS >= 32ull ?  8ull : MAX_THREADS >= 24ull ?  8ull :  8ull;
-		const auto HEAVY      = MAX_THREADS >= 32ull ? 16ull : MAX_THREADS >= 24ull ?  12ll : 12ull;
-		const auto ULTRAHEAVY = MAX_THREADS >= 32ull ? 24ull : MAX_THREADS >= 24ull ? 24ull : 16ull;
+		const auto HEAVY      = MAX_THREADS >= 32ull ? 16ull : MAX_THREADS >= 24ull ?  16ll : 16ull;
+		const auto ULTRAHEAVY = MAX_THREADS >= 32ull ? 32ull : MAX_THREADS >= 24ull ? 24ull : 16ull;
 
 		return
 			load < ULTRALIGHT_THRESHOLD ? ULTRALIGHT :
@@ -166,7 +166,7 @@ namespace
 	constexpr auto GetVectorPart(const UInt& elements) NOEXCEPT { return (elements / VectorSize) * VectorSize; }
 	constexpr auto DivUp(const UInt& c) NOEXCEPT { if (c == 0ull) return 0ull; else return (((c - 1) / VectorSize) + 1) * VectorSize; }
 	auto IsPlainDataFmt(const dnnl::memory::desc& md) NOEXCEPT { return md.get_format_kind() == dnnl::memory::format_kind::blocked && md.get_inner_nblks() == 0; }
-	auto IsBlockedDataFmt(const dnnl::memory::desc& md) NOEXCEPT { return md.get_format_kind() == dnnl::memory::format_kind::blocked && md.get_inner_nblks() == 1 && md.get_inner_idxs()[0] == 1 && (md.get_inner_blks()[0] == 4 || md.get_inner_blks()[0] == 8 || md.get_inner_blks()[0] == 16); }
+	//auto IsBlockedDataFmt(const dnnl::memory::desc& md) NOEXCEPT { return md.get_format_kind() == dnnl::memory::format_kind::blocked && md.get_inner_nblks() == 1 && md.get_inner_idxs()[0] == 1 && (md.get_inner_blks()[0] == 4 || md.get_inner_blks()[0] == 8 || md.get_inner_blks()[0] == 16); }
 	constexpr auto PlainFmt = dnnl::memory::format_tag::nchw; // equals dnnl::memory::format_tag::abcd
 	auto GetDataFmt(const dnnl::memory::desc& md)
 	{
@@ -238,7 +238,7 @@ namespace
 	}
 
 	template<typename T>
-	void InitArray(T* destination, const std::size_t elements, const int initValue = 0) NOEXCEPT
+	static void InitArray(T* destination, const std::size_t elements, const int initValue = 0) NOEXCEPT
 	{
 		if (elements < 1048576ull)
 			::memset(destination, initValue, elements * sizeof(T));
@@ -409,7 +409,6 @@ namespace
 								dataPtr[i] = value;
 					}
 					else
-						PRAGMA_OMP_SIMD()
 						for (auto i = 0ull; i < nelems; i++)
 							dataPtr[i] = value;
 
@@ -447,7 +446,6 @@ namespace
 									dataPtr[i] = value;
 						}
 						else
-							PRAGMA_OMP_SIMD()
 							for (auto i = 0ull; i < nelems; i++)
 								dataPtr[i] = value;
 
@@ -497,7 +495,7 @@ namespace
 	
 	/* https://en.wikipedia.org/wiki/Kahan_summation_algorithm */
 	template<typename T>
-	void KahanSum(const T& value, T& sum, T& correction) NOEXCEPT
+	inline static void KahanSum(const T& value, T& sum, T& correction) NOEXCEPT
 	{
 		const auto y = value - correction;
 		const auto t = sum + y;
@@ -517,55 +515,55 @@ namespace
 	
 #ifdef DNN_FAST_SEED
 	template<typename T>
-	T Seed() NOEXCEPT
+	static T Seed() NOEXCEPT
 	{
 		return static_cast<T>(__rdtsc());
 	}
 #else
-	int GetPhysicalSeedType() NOEXCEPT
-	{
-		int abcd[4];						// return values from cpuid instruction
-		
-		cpuid(abcd, 7);						// call cpuid function 7
-		if (abcd[1] & (1 << 18)) 
-			return 3; // ebx bit 18: RDSEED available
-		cpuid(abcd, 1);						// call cpuid function 1
-		if (abcd[2] & (1 << 30)) 
-			return 2; // ecx bit 30: RDRAND available
-		if (abcd[3] & (1 << 4)) 
-			return 1; // edx bit  4: RDTSC available
+	//static int GetPhysicalSeedType() NOEXCEPT
+	//{
+	//	int abcd[4];						// return values from cpuid instruction
+	//	
+	//	cpuid(abcd, 7);						// call cpuid function 7
+	//	if (abcd[1] & (1 << 18)) 
+	//		return 3; // ebx bit 18: RDSEED available
+	//	cpuid(abcd, 1);						// call cpuid function 1
+	//	if (abcd[2] & (1 << 30)) 
+	//		return 2; // ecx bit 30: RDRAND available
+	//	if (abcd[3] & (1 << 4)) 
+	//		return 1; // edx bit  4: RDTSC available
 
-		return 0;
-	}
-	
-	static int PhysicalSeedType = -1;
+	//	return 0;
+	//}
+	//
+	//static int PhysicalSeedType = -1;
 	template<typename T>
-	T Seed() NOEXCEPT
+	static T Seed() NOEXCEPT
 	{
-		if (PhysicalSeedType < 0)
-			PhysicalSeedType = GetPhysicalSeedType();
+		//if (PhysicalSeedType < 0)
+		//	PhysicalSeedType = physicalSeedType();
+		//
+		//uint32_t ran = 0;					// random number
+		//switch (PhysicalSeedType) 
+		//{
+		//case 1:								// use RDTSC instruction
+		//	ran = static_cast<uint32_t>(__rdtsc());
+		//	break;
+		//case 2:								// use RDRAND instruction
+		//	while (_rdrand32_step(&ran) == 0)
+		//	{ }
+		//	break;
+		//case 3:								// use RDSEED instruction */
+		//	while (_rdseed32_step(&ran) == 0)
+		//	{ }
+		//	break;
+		//}
 		
-		uint32_t ran = 0;					// random number
-		switch (PhysicalSeedType) 
-		{
-		case 1:								// use RDTSC instruction
-			ran = static_cast<uint32_t>(__rdtsc());
-			break;
-		case 2:								// use RDRAND instruction
-			while (_rdrand32_step(&ran) == 0)
-			{ }
-			break;
-		case 3:								// use RDSEED instruction */
-			while (_rdseed32_step(&ran) == 0)
-			{ }
-			break;
-		}
-		
-		return static_cast<T>(ran);			// return random number
+		return static_cast<T>(physicalSeed());			// return random number
 	}
 #endif
 
-	auto BernoulliVecFloat(const Float prob = Float(0.5)) noexcept
+	static auto BernoulliVecFloat(const Float prob = Float(0.5)) noexcept
 	{
 		static thread_local auto generator = Ranvec1(3, Seed<int>(), static_cast<int>(std::hash<std::thread::id>()(std::this_thread::get_id())));
 #if defined(DNN_AVX512BW) || defined(DNN_AVX512)
@@ -578,7 +576,7 @@ namespace
 	}
 
 	template<typename T>
-	auto Bernoulli(const Float p = Float(0.5)) NOEXCEPT
+	static auto Bernoulli(const Float p = Float(0.5)) NOEXCEPT
 	{
 #ifndef NDEBUG
 		if (p < 0 || p > 1)
@@ -589,7 +587,7 @@ namespace
 	}
 
 	template<typename T>
-	auto UniformInt(const T min, const T max) NOEXCEPT
+	static auto UniformInt(const T min, const T max) NOEXCEPT
 	{
 		static_assert(std::is_integral<T>::value, "Only integral type supported in UniformInt function");
 #ifndef NDEBUG
@@ -601,7 +599,7 @@ namespace
 	}
 
 	template<typename T>
-	auto UniformReal(const T min, const T max) NOEXCEPT
+	static auto UniformReal(const T min, const T max) NOEXCEPT
 	{
 		static_assert(std::is_floating_point<T>::value, "Only Floating point type supported in UniformReal function");
 #ifndef NDEBUG
@@ -613,7 +611,7 @@ namespace
 	}
 
 	template<typename T>
-	auto TruncatedNormal(const T m, const T s, const T limit) NOEXCEPT
+	static auto TruncatedNormal(const T m, const T s, const T limit) NOEXCEPT
 	{
 		static_assert(std::is_floating_point<T>::value, "Only Floating point type supported in TruncatedNormal function");
 #ifndef NDEBUG

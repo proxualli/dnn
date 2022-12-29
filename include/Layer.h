@@ -25,7 +25,7 @@ namespace dnn
 
 	struct TrainingRate
 	{
-		Optimizers Optimizer;
+		dnn::Optimizers Optimizer;
 		Float Momentum;
 		Float Beta2;
 		Float L2Penalty;
@@ -59,7 +59,7 @@ namespace dnn
 		Float Rotation;
 	
 		TrainingRate() :
-			Optimizer(Optimizers::NAG),
+			Optimizer(dnn::Optimizers::NAG),
 			Momentum(Float(0.9)),
 			Beta2(Float(0.999)),
 			L2Penalty(Float(0.0005)),
@@ -94,7 +94,7 @@ namespace dnn
 		{
 		}
 
-		TrainingRate(const Optimizers optimizer, const Float momentum, const Float beta2, const Float l2Penalty, const Float dropout, const Float eps, const UInt batchSize, const UInt height, const UInt width, const UInt padH, const UInt padW, const UInt cycles, const UInt epochs, const UInt epochMultiplier, const Float maximumRate, const Float minimumRate, const Float finalRate, const Float gamma, const UInt decayAfterEpochs, const Float decayFactor, const bool horizontalFlip, const bool verticalFlip, const Float inputDropout, const Float cutout, const bool cutMix, const Float autoAugment, const Float colorCast, const UInt colorAngle, const Float distortion, const Interpolations interpolation, const Float scaling, const Float rotation) :
+		TrainingRate(const dnn::Optimizers optimizer, const Float momentum, const Float beta2, const Float l2Penalty, const Float dropout, const Float eps, const UInt batchSize, const UInt height, const UInt width, const UInt padH, const UInt padW, const UInt cycles, const UInt epochs, const UInt epochMultiplier, const Float maximumRate, const Float minimumRate, const Float finalRate, const Float gamma, const UInt decayAfterEpochs, const Float decayFactor, const bool horizontalFlip, const bool verticalFlip, const Float inputDropout, const Float cutout, const bool cutMix, const Float autoAugment, const Float colorCast, const UInt colorAngle, const Float distortion, const Interpolations interpolation, const Float scaling, const Float rotation) :
 			Optimizer(optimizer),
 			Momentum(momentum),
 			Beta2(beta2),
@@ -1298,7 +1298,7 @@ namespace dnn
 			const auto finalRate = rate.FinalRate * rate.MaximumRate * WeightsLRM;
 			const auto lowerBound = finalRate * (Float(1) - (Float(1) / (Gamma + rate.Gamma)));
 			const auto upperBound = finalRate * (Float(1) + (Float(1) / Gamma));
-			const auto weightDecay = rate.L2Penalty * WeightsWDM;
+			//const auto weightDecay = rate.L2Penalty * WeightsWDM;
 			const auto step_size = rate.MaximumRate * WeightsLRM * std::sqrt(oneMinusB2) / oneMinusB1;
 
 			if (!amsbound)
@@ -1323,7 +1323,7 @@ namespace dnn
 				const auto finalRate = rate.FinalRate * rate.MaximumRate * BiasesLRM;
 				const auto lowerBound = finalRate * (Float(1) - (Float(1) / (Gamma + rate.Gamma)));
 				const auto upperBound = finalRate * (Float(1) + (Float(1) / Gamma));
-				const auto weightDecay = rate.L2Penalty * BiasesWDM;
+				//const auto weightDecay = rate.L2Penalty * BiasesWDM;
 				const auto step_size = rate.MaximumRate * BiasesLRM * std::sqrt(oneMinusB2) / oneMinusB1;
 
 				if (!amsbound)

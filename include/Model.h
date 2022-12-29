@@ -1862,12 +1862,10 @@ namespace dnn
 				TaskState.store(TaskStates::Running);
 				State.store(States::Idle);
 
-				auto generator = std::mt19937(Seed<unsigned>());
-
 				auto timer = std::chrono::high_resolution_clock();
 				auto timePoint = timer.now();
 				auto timePointGlobal = timer.now();
-				auto elapsedTime = std::chrono::duration<Float>(Float(0));
+				//auto elapsedTime = std::chrono::duration<Float>(Float(0));
 
 				CurrentTrainingRate = TrainingRates[0];
 				Rate = CurrentTrainingRate.MaximumRate;
@@ -2300,7 +2298,7 @@ namespace dnn
 			const auto elements = batchSize * C * D * H * W;
 			const auto threads = GetThreads(elements, Float(10));
 
-			for_i(batchSize, threads, [=, &SampleLabels](const UInt batchIndex)
+			for_i_dynamic(batchSize, threads, [=, &SampleLabels](const UInt batchIndex)
 			{
 				const auto sampleIndex = ((index + batchIndex) >= DataProv->TestingSamplesCount) ? batchIndex : index + batchIndex;
 

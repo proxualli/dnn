@@ -457,7 +457,6 @@ namespace dnn
 
 			const auto plain = IsPlainFormat();
 			const auto size = plain ? CDHW() : PaddedCDHW();
-			const auto part = GetVectorPart(size);
 			const auto threads = batchSize == 1 ? 1ull : GetThreads(batchSize * size, Float(4));
 
 #ifdef DNN_STOCHASTIC

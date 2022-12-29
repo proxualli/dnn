@@ -363,8 +363,7 @@ namespace dnn
 			const auto threads = batchSize == 1 ? 1ull : GetThreads(batchSize * (plain ? CDHW() : PaddedCDHW()), Float(10));
 
 			const auto strideHW = HW() * VectorSize;
-			const auto vecZero = VecFloat(0);
-
+			
 			switch (ActivationFunction)
 			{
 			case Activations::TanhExp:
@@ -378,13 +377,12 @@ namespace dnn
 						{
 							if (!plain)
 							{
-								const auto vecZero = VecFloat(0);
 								for (auto c = 0ull; c < PaddedC; c += VectorSize)
 								{
 									TanhExp::fVec(VecFloat().load_a(&InputLayer->Neurons[c])).store_a(&Neurons[c]);
 #ifndef DNN_LEAN
 									if (!InplaceBwd)
-										vecZero.store_nt(&NeuronsD1[c]);
+										VecFloat(0).store_nt(&NeuronsD1[c]);
 #endif // DNN_LEAN
 								}
 							}
@@ -416,14 +414,13 @@ namespace dnn
 							if (!plain)
 								for_i(batchSize, threads, [=](UInt n)
 								{
-									const auto vecZero = VecFloat(0);
 									const auto offset = n * PaddedC;
 									for (auto c = offset; c < offset + PaddedC; c += VectorSize)
 									{
 										TanhExp::fVec(VecFloat().load_a(&InputLayer->Neurons[c])).store_a(&Neurons[c]);
 #ifndef DNN_LEAN
 										if (!InplaceBwd)
-											vecZero.store_nt(&NeuronsD1[c]);
+											VecFloat(0).store_nt(&NeuronsD1[c]);
 #endif // DNN_LEAN
 									}
 								});
@@ -446,7 +443,6 @@ namespace dnn
 							if (!plain)
 								for_i(batchSize, threads, [=](UInt n)
 								{
-									const auto vecZero = VecFloat(0);
 									const auto offset = n * PaddedC;
 									for (auto c = offset; c < offset + PaddedC; c += VectorSize)
 										TanhExp::fVec(VecFloat().load_a(&InputLayer->Neurons[c])).store_a(&Neurons[c]);
@@ -479,7 +475,7 @@ namespace dnn
 										TanhExp::fVec(VecFloat().load_a(&InputLayer->Neurons[hw + offset])).store_a(&Neurons[hw + offset]);
 #ifndef DNN_LEAN
 										if (!InplaceBwd)
-											vecZero.store_nt(&NeuronsD1[hw + offset]);
+											VecFloat(0).store_nt(&NeuronsD1[hw + offset]);
 #endif // DNN_LEAN
 									}
 								}
@@ -523,7 +519,6 @@ namespace dnn
 							if (!plain)
 								for_i(batchSize, threads, [=](UInt n)
 								{
-									const auto vecZero = VecFloat(0);
 									for (auto c = 0ull; c < PaddedC; c += VectorSize)
 									{
 										const auto offset = n * PaddedCDHW() + c * HW();
@@ -532,7 +527,7 @@ namespace dnn
 											TanhExp::fVec(VecFloat().load_a(&InputLayer->Neurons[hw + offset])).store_a(&Neurons[hw + offset]);
 #ifndef DNN_LEAN
 											if (!InplaceBwd)
-												vecZero.store_nt(&NeuronsD1[hw + offset]);
+												VecFloat(0).store_nt(&NeuronsD1[hw + offset]);
 #endif // DNN_LEAN
 										}
 									}

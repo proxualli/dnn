@@ -626,8 +626,8 @@ namespace dnn
 
 			srcImage.RGBtoHSL();
 
-			const auto shift = Float(Bernoulli<bool>(Float(0.5)) ? static_cast<int>(UniformInt<UInt>(0, 2 * angle)) - static_cast<int>(angle) : 0);
-
+			const auto shift = Float(Bernoulli<bool>(Float(0.5)) ? static_cast<int>(UniformInt<UInt>(0ull, 2ull * angle)) - static_cast<int>(angle) : 0ull);
+			
 #ifdef DNN_IMAGEDEPTH
 			cimg_forXYZ(srcImage, w, h, d) { srcImage(w, h, d, 0) = cimg_library::cimg::cut(srcImage(w, h, d, 0) + shift, 0, 360); }
 
@@ -772,7 +772,7 @@ namespace dnn
 			
 			Image::Resize(image, image.D(), height, width, interpolation);
 
-			return Image::Rotate(image, angle * UniformReal<Float>(Float(-1), Float(1)), interpolation, mean);
+			return Image::Crop(Image::Rotate(image, angle * UniformReal<Float>(Float(-1), Float(1)), interpolation, mean), Positions::Center, image.D(), image.H(), image.W(), mean);
 		}
 
 		static void Dropout(Image& image, const Float dropout, const std::vector<Float>& mean) NOEXCEPT
@@ -968,13 +968,13 @@ namespace dnn
 			const auto minH = std::min(img.H(), image.H());
 			const auto minW = std::min(img.W(), image.W());
 			
-			const auto srcDdelta = img.D() < image.D() ? UniformInt<unsigned>(0, image.D() - img.D()) : 0u;
-			const auto srcHdelta = img.H() < image.H() ? UniformInt<unsigned>(0, image.H() - img.H()) : 0u;
-			const auto srcWdelta = img.W() < image.W() ? UniformInt<unsigned>(0, image.W() - img.W()) : 0u;
+			const auto srcDdelta = img.D() < image.D() ? UniformInt<UInt>(0, image.D() - img.D()) : 0u;
+			const auto srcHdelta = img.H() < image.H() ? UniformInt<UInt>(0, image.H() - img.H()) : 0u;
+			const auto srcWdelta = img.W() < image.W() ? UniformInt<UInt>(0, image.W() - img.W()) : 0u;
 			
-			const auto dstDdelta = img.D() > image.D() ? UniformInt<unsigned>(0, img.D() - image.D()) : 0u;
-			const auto dstHdelta = img.H() > image.H() ? UniformInt<unsigned>(0, img.H() - image.H()) : 0u;
-			const auto dstWdelta = img.W() > image.W() ? UniformInt<unsigned>(0, img.W() - image.W()) : 0u;
+			const auto dstDdelta = img.D() > image.D() ? UniformInt<UInt>(0, img.D() - image.D()) : 0u;
+			const auto dstHdelta = img.H() > image.H() ? UniformInt<UInt>(0, img.H() - image.H()) : 0u;
+			const auto dstWdelta = img.W() > image.W() ? UniformInt<UInt>(0, img.W() - image.W()) : 0u;
 
 			for (auto c = 0u; c < img.C(); c++)
 				for (auto d = 0u; d < minD; d++)
@@ -987,10 +987,10 @@ namespace dnn
 
 		static void RandomCutout(Image& image, const std::vector<Float>& mean) NOEXCEPT
 		{
-			const auto centerH = UniformInt<unsigned>(0, image.H());
-			const auto centerW = UniformInt<unsigned>(0, image.W());
-			const auto rangeH = UniformInt<unsigned>(image.H() / 8, image.H() / 4);
-			const auto rangeW = UniformInt<unsigned>(image.W() / 8, image.W() / 4);
+			const auto centerH = UniformInt<UInt>(0, image.H());
+			const auto centerW = UniformInt<UInt>(0, image.W());
+			const auto rangeH = UniformInt<UInt>(image.H() / 8, image.H() / 4);
+			const auto rangeW = UniformInt<UInt>(image.W() / 8, image.W() / 4);
 			const auto startH = static_cast<long>(centerH) - static_cast<long>(rangeH) > 0l ? centerH - rangeH : 0u;
 			const auto startW = static_cast<long>(centerW) - static_cast<long>(rangeW) > 0l ? centerW - rangeW : 0u;
 			const auto enheight = centerH + rangeH < image.H() ? centerH + rangeH : image.H();
@@ -1020,11 +1020,18 @@ namespace dnn
 			const auto bbx1 = Clamp<int>(cx - cutW / 2, 0, static_cast<int>(image.W()));
 			const auto bbx2 = Clamp<int>(cx + cutW / 2, 0, static_cast<int>(image.W()));
 
+#ifdef DNN_IMAGEDEPTH
 			for (auto c = 0u; c < image.C(); c++)
 				for (auto d = 0u; d < image.D(); d++)
 					for (auto h = bby1; h < bby2; h++)
 						for (auto w = bbx1; w < bbx2; w++)
 							image(c, d, h, w) = imageMix(c, d, h, w);
+#else
+			for (auto c = 0u; c < image.C(); c++)
+				for (auto h = bby1; h < bby2; h++)
+					for (auto w = bbx1; w < bbx2; w++)
+						image(c, 0u, h, w) = imageMix(c, 0u, h, w);
+#endif
 
 			*lambda = 1.0 - (static_cast<double>((bbx2 - bbx1) * (bby2 - bby1)) / static_cast<double>(image.H() * image.W()));
 		}
@@ -1152,7 +1159,7 @@ namespace dnn
 
 		static void VerticalMirror(Image& image) NOEXCEPT
 		{
-			T top; const auto d = 0u;
+			T top;
 			for (auto c = 0u; c < image.C(); c++)
 				for (auto d = 0u; d < image.D(); d++)
 					for (auto w = 0u; w < image.W(); w++)

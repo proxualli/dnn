@@ -165,12 +165,6 @@ namespace dnn
 
 		void ForwardProp(const UInt batchSize, const bool training) final override
 		{
-			const auto plain = IsPlainFormat();
-			const auto elements = plain ? batchSize * CDHW() : batchSize * PaddedCDHW();
-			const auto threads = GetThreads(elements);
-			const auto strideHW = HW() * VectorSize;
-			const auto vecZero = VecFloat(0);
-
 			auto memSrc = dnnl::memory(*InputLayer->DstMemDesc, Device.engine, InputLayer->Neurons.data());
 			auto srcMem = reorderFwdSrc ? dnnl::memory(fwdDescPRelu->src_desc(), Device.engine) : memSrc;
 			if (reorderFwdSrc)

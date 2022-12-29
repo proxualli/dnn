@@ -76,7 +76,6 @@ namespace dnn
 		{
 			const auto plain = IsPlainFormat();
 			const auto threads = GetThreads(batchSize * (plain ? CDHW() : PaddedCDHW()), Float(10));
-						
 			const auto groupC = (Group - 1) * C;
 			const auto strideHW = HW() * VectorSize;
 			

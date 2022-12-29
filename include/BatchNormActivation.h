@@ -652,6 +652,7 @@ namespace dnn
 			const auto plain = IsPlainFormat();
 			const auto maxThreads = GetThreads(batchSize * (plain ? CDHW() : PaddedCDHW()), Float(5));
 			const auto threads = std::min<UInt>(maxThreads, batchSize);
+
 			const auto strideHW = HW() * VectorSize;
 
 			if (!training)
