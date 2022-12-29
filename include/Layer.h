@@ -557,10 +557,10 @@ namespace dnn
 		{
 			if (!RefreshingStats.load())
 			{
+				while (Fwd.load() || Bwd.load()) { std::this_thread::yield(); }
+
 				RefreshingStats.store(true);
 				
-				while (Fwd.load() || Bwd.load()) { std::this_thread::yield(); }
-			
 				if (!Neurons.empty())
 				{
 					const auto plain = IsPlainFormat();
@@ -568,7 +568,7 @@ namespace dnn
 					
 					auto stats = Stats(0, 0, std::numeric_limits<Float>::max(), std::numeric_limits<Float>::lowest());
 					
-					if ((elements % VectorSize == 0ull) && ((elements * batchSize) < 1048576ull))
+					if ((elements % VectorSize == 0ull) && ((elements * batchSize) > 548576ull))
 					{
 						const auto maxThreads = GetThreads(batchSize * elements, Float(4));
 						const auto threads = std::min<UInt>(maxThreads, batchSize);
