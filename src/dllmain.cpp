@@ -857,7 +857,7 @@ extern "C" DNN_API void DNNRefreshStatistics(const UInt layerIndex, StatsInfo* i
 	if (model && layerIndex < model->Layers.size())
 	{
 		while (model->BatchSizeChanging.load() || model->ResettingWeights.load())
-			std::this_thread::sleep_for(std::chrono::milliseconds(50));
+			std::this_thread::sleep_for(std::chrono::milliseconds(250));
 
 		if (!model->Layers[layerIndex]->RefreshStatistics(model->BatchSize))
 			model->StopTask();

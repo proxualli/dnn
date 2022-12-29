@@ -466,8 +466,8 @@ namespace dnn
 			if (LayerType != LayerTypes::Input)
 			{
 				description.append(nwl + std::string(" Inputs:") + tab);
-				for (auto i = 0ull; i < Inputs.size(); i++)
-					description.append((i == 0 ? std::string("") : std::string(",")) + Inputs[i]->Name);
+				for (auto i = 0ull; i < InputsFwd.size(); i++)
+					description.append((i == 0 ? std::string("") : std::string(",")) + InputsFwd[i]->Name);
 			}
 
 			description.append(nwl + std::string(" Features:") + tab + std::to_string(C) + std::string("x") + std::to_string(H) + std::string("x") + std::to_string(W));
