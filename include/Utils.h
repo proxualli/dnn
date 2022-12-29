@@ -99,7 +99,7 @@ using namespace dnn;
 
 namespace
 {
-	constexpr auto UseInplace = true;
+	constexpr auto UseInplace = false;
 	constexpr auto Reference = false;
 
 	typedef float Float;

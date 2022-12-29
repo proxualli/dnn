@@ -99,8 +99,7 @@ namespace dnn
 				const auto size = plain ? CDHW() : PaddedCDHW();
 				const auto part = GetVectorPart(size);
 				const auto threads = batchSize == 1 ? 1ull : GetThreads(batchSize * size, Float(10));
-				
-				const auto vecZero = VecFloat(0);
+
 				const auto strideHW = HW() * VectorSize;
 
 #ifdef DNN_STOCHASTIC
@@ -139,7 +138,7 @@ namespace dnn
 									In1.load_a(&Inputs[1]->Neurons[cdhw]);
 									((In0 * scales0) * (In1 * scales1)).store_a(&Neurons[cdhw]);
 #ifndef DNN_LEAN
-									vecZero.store_nt(&NeuronsD1[cdhw]);
+									VecFloat(0).store_nt(&NeuronsD1[cdhw]);
 #endif
 								}
 								for (auto cdhw = part; cdhw < size; cdhw++)
@@ -163,7 +162,7 @@ namespace dnn
 									{
 										(VecFloat().load_a(&Inputs[first]->Neurons[hw + outputOffset]) * VecFloat().load_a(&Inputs[second]->Neurons[c])).store_a(&Neurons[hw + outputOffset]);
 #ifndef DNN_LEAN
-										vecZero.store_nt(&NeuronsD1[hw + outputOffset]);
+										VecFloat(0).store_nt(&NeuronsD1[hw + outputOffset]);
 #endif
 									}
 								}
@@ -181,7 +180,7 @@ namespace dnn
 									{
 										((VecFloat().load_a(&Inputs[first]->Neurons[hw + outputOffset]) * scales0) * (VecFloat().load_a(&Inputs[second]->Neurons[c]) * scales1)).store_a(&Neurons[hw + outputOffset]);
 #ifndef DNN_LEAN
-										vecZero.store_nt(&NeuronsD1[hw + outputOffset]);
+										VecFloat(0).store_nt(&NeuronsD1[hw + outputOffset]);
 #endif
 									}
 								}
@@ -270,7 +269,7 @@ namespace dnn
 									{
 										(VecFloat().load_a(&Inputs[0]->Neurons[cdhw]) * VecFloat().load_a(&Inputs[1]->Neurons[cdhw])).store_a(&Neurons[cdhw]);
 #ifndef DNN_LEAN
-										vecZero.store_nt(&NeuronsD1[cdhw]);
+										VecFloat(0).store_nt(&NeuronsD1[cdhw]);
 #endif
 									}
 									for (auto cdhw = start + part; cdhw < start + size; cdhw++)
@@ -297,7 +296,7 @@ namespace dnn
 										In1.load_a(&Inputs[1]->Neurons[cdhw]);
 										((In0 * scales0) * (In1 * scales1)).store_a(&Neurons[cdhw]);
 #ifndef DNN_LEAN
-										vecZero.store_nt(&NeuronsD1[cdhw]);
+										VecFloat(0).store_nt(&NeuronsD1[cdhw]);
 #endif
 									}
 									for (auto cdhw = start + part; cdhw < start + size; cdhw++)
@@ -324,7 +323,7 @@ namespace dnn
 										{
 											(VecFloat().load_a(&Inputs[first]->Neurons[hw + outputOffset]) * VecFloat().load_a(&Inputs[second]->Neurons[channelOffset])).store_a(&Neurons[hw + outputOffset]);
 #ifndef DNN_LEAN
-											vecZero.store_nt(&NeuronsD1[hw + outputOffset]);
+											VecFloat(0).store_nt(&NeuronsD1[hw + outputOffset]);
 #endif
 										}
 									}
@@ -345,7 +344,7 @@ namespace dnn
 										{
 											((VecFloat().load_a(&Inputs[first]->Neurons[hw + outputOffset]) * scales0) * (VecFloat().load_a(&Inputs[second]->Neurons[channelOffset]) * scales1)).store_a(&Neurons[hw + outputOffset]);
 #ifndef DNN_LEAN
-											vecZero.store_nt(&NeuronsD1[hw + outputOffset]);
+											VecFloat(0).store_nt(&NeuronsD1[hw + outputOffset]);
 #endif
 										}
 									}
