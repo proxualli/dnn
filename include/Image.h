@@ -1159,13 +1159,12 @@ namespace dnn
 
 		static void VerticalMirror(Image& image) NOEXCEPT
 		{
-			T top;
 			for (auto c = 0u; c < image.C(); c++)
 				for (auto d = 0u; d < image.D(); d++)
 					for (auto w = 0u; w < image.W(); w++)
 						for (auto h = 0u; h < image.H(); h++)
 						{
-							top = image(c, d, h, w);
+							const T top = image(c, d, h, w);
 							image(c, d, h, w) = image(c, d, image.H() - 1 - h, w);
 							image(c, d, image.H() - 1 - h, w) = top;
 						}

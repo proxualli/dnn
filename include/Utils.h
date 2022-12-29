@@ -99,13 +99,6 @@ using namespace dnn;
 
 namespace
 {
-//#ifdef _MSC_VER
-//#define DNN_ALIGN(alignment) __declspec(align(alignment))
-//#else
-//#define DNN_ALIGN(alignment) __attribute__((__aligned__(alignment)))
-//#endif
-//#define DNN_SIMD_ALIGN DNN_ALIGN(64)
-
 	constexpr auto UseInplace = true;
 	constexpr auto Reference = false;
 
@@ -114,7 +107,6 @@ namespace
 	typedef unsigned char Byte;
 	
 	static const auto MAX_THREADS = omp_get_max_threads();
-
 	auto GetThreads(const UInt elements, const Float weight = Float(1)) NOEXCEPT
 	{
 		const auto load = static_cast<UInt>(Float(elements) * weight);
@@ -520,46 +512,10 @@ namespace
 		return static_cast<T>(__rdtsc());
 	}
 #else
-	//static int GetPhysicalSeedType() NOEXCEPT
-	//{
-	//	int abcd[4];						// return values from cpuid instruction
-	//	
-	//	cpuid(abcd, 7);						// call cpuid function 7
-	//	if (abcd[1] & (1 << 18)) 
-	//		return 3; // ebx bit 18: RDSEED available
-	//	cpuid(abcd, 1);						// call cpuid function 1
-	//	if (abcd[2] & (1 << 30)) 
-	//		return 2; // ecx bit 30: RDRAND available
-	//	if (abcd[3] & (1 << 4)) 
-	//		return 1; // edx bit  4: RDTSC available
-
-	//	return 0;
-	//}
-	//
-	//static int PhysicalSeedType = -1;
 	template<typename T>
 	static T Seed() NOEXCEPT
 	{
-		//if (PhysicalSeedType < 0)
-		//	PhysicalSeedType = physicalSeedType();
-		//
-		//uint32_t ran = 0;					// random number
-		//switch (PhysicalSeedType) 
-		//{
-		//case 1:								// use RDTSC instruction
-		//	ran = static_cast<uint32_t>(__rdtsc());
-		//	break;
-		//case 2:								// use RDRAND instruction
-		//	while (_rdrand32_step(&ran) == 0)
-		//	{ }
-		//	break;
-		//case 3:								// use RDSEED instruction */
-		//	while (_rdseed32_step(&ran) == 0)
-		//	{ }
-		//	break;
-		//}
-		
-		return static_cast<T>(physicalSeed());			// return random number
+		return static_cast<T>(physicalSeed());
 	}
 #endif
 
