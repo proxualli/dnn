@@ -48,7 +48,10 @@ namespace dnn
 			InvStdDev(FloatVector(PaddedC)),
 			InputNeurons(FloatArray()),
 			flags(static_cast<dnnl::normalization_flags>(0U)),
-			inference(false)
+			inference(false),
+			reorderFwdSrc(false),
+			reorderBwdSrc(false),
+			reorderBwdDiffSrc(false)
 		{
 			assert(Inputs.size() == 1);
 
