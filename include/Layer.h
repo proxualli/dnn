@@ -603,7 +603,8 @@ namespace dnn
 						for (auto n = 0ull; n < batchSize; n++)
 						{
 							stats.Min = std::min(vMin[n], stats.Min);
-							stats.Max = std::max(vMax[n], stats.Min);
+							stats.Max = std::max(vMax[n], stats.Max);
+
 							mean += vMean[n];
 							variance += vVariance[n];
 						}
