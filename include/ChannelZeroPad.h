@@ -138,7 +138,6 @@ namespace dnn
 				{
 					if (!plain)
 					{
-						const auto vecZero = VecFloat(0);
 						VecFloat In;
 						UInt inputOffset;
 						for (auto c = 0ull; c < InputLayer->PaddedC; c += VectorSize)
@@ -149,7 +148,7 @@ namespace dnn
 								In.load_a(&InputLayer->Neurons[w + inputOffset]);
 								In.store_a(&Neurons[w + inputOffset]);
 #ifndef DNN_LEAN
-								vecZero.store_nt(&NeuronsD1[w + inputOffset]);
+								VecFloat(0).store_nt(&NeuronsD1[w + inputOffset]);
 #endif // DNN_LEAN
 							}
 							
@@ -159,9 +158,9 @@ namespace dnn
 							inputOffset = c * HW();
 							for (auto w = 0ull; w < strideH; w += VectorSize)
 							{
-								vecZero.store_a(&Neurons[w + inputOffset]);
+								VecFloat(0).store_a(&Neurons[w + inputOffset]);
 #ifndef DNN_LEAN
-								vecZero.store_nt(&NeuronsD1[w + inputOffset]);
+								VecFloat(0).store_nt(&NeuronsD1[w + inputOffset]);
 #endif // DNN_LEAN
 							}
 						}
@@ -188,7 +187,6 @@ namespace dnn
 					if (!plain)
 						for_i(batchSize, threads, [=](UInt n)
 						{
-							const auto vecZero = VecFloat(0);
 							VecFloat In;
 							UInt inputOffset, outputOffset;
 							for (auto c = 0ull; c < InputLayer->PaddedC; c += VectorSize)
@@ -200,7 +198,7 @@ namespace dnn
 									In.load_a(&InputLayer->Neurons[w + inputOffset]);
 									In.store_a(&Neurons[w + outputOffset]);
 #ifndef DNN_LEAN
-									vecZero.store_nt(&NeuronsD1[w + outputOffset]);
+									VecFloat(0).store_nt(&NeuronsD1[w + outputOffset]);
 #endif // DNN_LEAN
 								}
 							}
@@ -209,9 +207,9 @@ namespace dnn
 								outputOffset = n * PaddedCDHW() + c * HW();
 								for (auto w = 0ull; w < strideH; w += VectorSize)
 								{
-									vecZero.store_a(&Neurons[w + outputOffset]);
+									VecFloat(0).store_a(&Neurons[w + outputOffset]);
 #ifndef DNN_LEAN								
-									vecZero.store_nt(&NeuronsD1[w + outputOffset]);
+									VecFloat(0).store_nt(&NeuronsD1[w + outputOffset]);
 #endif // DNN_LEAN
 								}
 							}

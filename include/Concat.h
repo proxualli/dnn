@@ -125,7 +125,6 @@ namespace dnn
 				{
 					if (!plain)
 					{
-						const auto vecZero = VecFloat(0);
 						VecFloat In;
 						auto channelOffset = 0ull;
 						UInt inputIndex, outputIndex;
@@ -140,7 +139,7 @@ namespace dnn
 									In.load_a(&Inputs[inputLayer]->Neurons[w + inputIndex]);
 									In.store_a(&Neurons[w + outputIndex]);
 #ifndef DNN_LEAN
-									vecZero.store_nt(&NeuronsD1[w + outputIndex]);
+									VecFloat(0).store_nt(&NeuronsD1[w + outputIndex]);
 #endif
 								}
 							}
@@ -179,7 +178,6 @@ namespace dnn
 							const auto outputSampleOffset = n * PaddedCDHW();
 							auto channelOffset = 0ull;
 							UInt inputIndex, outputIndex;
-							const auto vecZero = VecFloat(0);
 							VecFloat In;
 							for (auto inputLayer = 0ull; inputLayer < Inputs.size(); inputLayer++)
 							{
@@ -193,7 +191,7 @@ namespace dnn
 										In.load_a(&Inputs[inputLayer]->Neurons[w + inputIndex]);
 										In.store_a(&Neurons[w + outputIndex]);
 #ifndef DNN_LEAN
-										vecZero.store_nt(&NeuronsD1[w + outputIndex]);
+										VecFloat(0).store_nt(&NeuronsD1[w + outputIndex]);
 #endif
 									}
 								}

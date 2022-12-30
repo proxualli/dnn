@@ -86,7 +86,6 @@ namespace dnn
 				{
 					if (!plain)
 					{
-						const auto vecZero = VecFloat(0);
 						VecFloat In;		
 						for (auto c = 0ull; c < PaddedC; c += VectorSize)
 						{
@@ -97,7 +96,7 @@ namespace dnn
 								In.load_a(&InputLayer->Neurons[hw + inputOffset]);
 								In.store_a(&Neurons[hw + outputOffset]);
 #ifndef DNN_LEAN
-								vecZero.store_nt(&NeuronsD1[hw + outputOffset]);
+								VecFloat(0).store_nt(&NeuronsD1[hw + outputOffset]);
 #endif // DNN_LEAN
 							}
 						}
@@ -123,7 +122,6 @@ namespace dnn
 				{
 					if (!plain)
 					{
-						const auto vecZero = VecFloat(0);
 						VecFloat In;
 						for (auto c = 0ull; c < PaddedC; c += VectorSize)
 						{
@@ -168,7 +166,7 @@ namespace dnn
 									In.load_a(&InputLayer->Neurons[hw + inputOffset]);
 									In.store_a(&Neurons[hw + outputOffset]);
 #ifndef DNN_LEAN
-									vecZero.store_nt(&NeuronsD1[hw + outputOffset]);
+									VecFloat(0).store_nt(&NeuronsD1[hw + outputOffset]);
 #endif // DNN_LEAN
 								}
 							}
