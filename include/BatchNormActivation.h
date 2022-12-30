@@ -461,7 +461,6 @@ namespace dnn
 
 						diffGammaFloat += horizontal_add(diffGamma);
 						diffGammaFloat *= InvStdDev[c];
-
 						diffBetaFloat += horizontal_add(diffBeta);
 
 						if (Scaling)

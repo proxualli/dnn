@@ -115,7 +115,7 @@ namespace dnn
 								{
 									(VecFloat().load_a(&Inputs[0]->Neurons[cdhw]) * VecFloat().load_a(&Inputs[1]->Neurons[cdhw])).store_a(&Neurons[cdhw]);
 #ifndef DNN_LEAN
-									vecZero.store_nt(&NeuronsD1[cdhw]);
+									VecFloat(0).store_nt(&NeuronsD1[cdhw]);
 #endif
 								}
 								for (auto cdhw = part; cdhw < size; cdhw++)
