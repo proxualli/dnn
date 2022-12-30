@@ -7,8 +7,6 @@ namespace dnn
 	class BatchNormActivation final : public Layer
 	{
 	private:
-		dnnl::normalization_flags flags;
-		bool inference;
 		std::unique_ptr<dnnl::batch_normalization_forward::primitive_desc> fwdDesc;
 		std::unique_ptr<dnnl::batch_normalization_backward::primitive_desc> bwdDesc;
 		std::unique_ptr<dnnl::binary::primitive_desc> bwdAddDesc;
@@ -17,6 +15,8 @@ namespace dnn
 		std::unique_ptr<dnnl::batch_normalization_backward> bwd;
 		std::unique_ptr<dnnl::binary> bwdAdd;
 #endif
+		dnnl::normalization_flags flags;
+		bool inference;
 		bool reorderFwdSrc;
 		bool reorderBwdSrc;
 		bool reorderBwdDiffSrc;
@@ -47,6 +47,7 @@ namespace dnn
 			RunningVariance(FloatVector(PaddedC, Float(1))),
 			InvStdDev(FloatVector(PaddedC)),
 			InputNeurons(FloatArray()),
+			flags(static_cast<dnnl::normalization_flags>(0U)),
 			inference(false)
 		{
 			assert(Inputs.size() == 1);
@@ -129,9 +130,13 @@ namespace dnn
 				if constexpr (Reference)
 				{
 					if (inference)
-						flags = Scaling ? dnnl::normalization_flags::use_global_stats | dnnl::normalization_flags::use_scale | dnnl::normalization_flags::use_shift : dnnl::normalization_flags::use_global_stats;
+						flags = Scaling ?
+							dnnl::normalization_flags::use_global_stats | dnnl::normalization_flags::use_scale | dnnl::normalization_flags::use_shift
+							: dnnl::normalization_flags::use_global_stats;
 					else
-						flags = Scaling ? dnnl::normalization_flags::use_scale | dnnl::normalization_flags::use_shift : static_cast<dnnl::normalization_flags>(0U);
+						flags = Scaling ?
+							dnnl::normalization_flags::use_scale | dnnl::normalization_flags::use_shift
+							: static_cast<dnnl::normalization_flags>(0U);
 
 					fwdDesc = std::make_unique<dnnl::batch_normalization_forward::primitive_desc>(dnnl::batch_normalization_forward::primitive_desc(Device.engine, inference ? dnnl::prop_kind::forward_inference : dnnl::prop_kind::forward_training, *InputLayer->DstMemDesc, *DstMemDesc, Eps, flags));
 
