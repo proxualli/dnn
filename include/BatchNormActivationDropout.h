@@ -205,9 +205,7 @@ namespace dnn
 			else
 			{
 				const auto threads = GetThreads(elements, Float(10));
-#ifndef DNN_LEAN
-				const auto vecZero = VecFloat(0);
-#endif
+
 				if (plain)
 				{
 					const auto partialHW = GetVectorPart(HW());
@@ -287,7 +285,7 @@ namespace dnn
 										mask.store_a(&NeuronsActive[hw]);
 										(mask * Scale * Activation::fVec(((VecFloat().load_a(&InputLayer->Neurons[hw]) - mean) * weightedInvStdDev + biases), Alpha, Beta)).store_a(&Neurons[hw]);
 #ifndef DNN_LEAN
-										vecZero.store_nt(&NeuronsD1[hw]);
+										VecFloat(0).store_nt(&NeuronsD1[hw]);
 #endif
 									}
 									const auto end = start + HW();
@@ -325,7 +323,7 @@ namespace dnn
 									{	
 										(Scale * Activation::fVec(((VecFloat().load_a(&InputLayer->Neurons[hw]) - mean) * weightedInvStdDev + biases), Alpha, Beta)).store_a(&Neurons[hw]);
 #ifndef DNN_LEAN
-										vecZero.store_nt(&NeuronsD1[hw]);
+										VecFloat(0).store_nt(&NeuronsD1[hw]);
 #endif
 									}
 									const auto end = start + HW();
@@ -417,7 +415,7 @@ namespace dnn
 											mask.store_a(&NeuronsActive[w]);
 											(mask * Scale * Activation::fVec(mul_add(VecFloat().load_a(&InputLayer->Neurons[w]) - mean, weightedInvStdDev, biases), Alpha, Beta)).store_a(&Neurons[w]);
 #ifndef DNN_LEAN
-											vecZero.store_nt(&NeuronsD1[w]);
+											VecFloat(0).store_nt(&NeuronsD1[w]);
 #endif
 										}
 									}
@@ -447,7 +445,7 @@ namespace dnn
 										{
 											(Scale * Activation::fVec(mul_add(VecFloat().load_a(&InputLayer->Neurons[w]) - mean, weightedInvStdDev, biases), Alpha, Beta)).store_a(&Neurons[w]);
 #ifndef DNN_LEAN
-											vecZero.store_nt(&NeuronsD1[w]);
+											VecFloat(0).store_nt(&NeuronsD1[w]);
 #endif
 										}
 									}

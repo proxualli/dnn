@@ -231,9 +231,6 @@ namespace dnn
 				{
 					const auto maxTreads = GetThreads(elements, Float(10));
 
-#ifndef DNN_LEAN
-					const auto vecZero = VecFloat(0);
-#endif
 					if (plain)
 					{
 						const auto partialHW = GetVectorPart(HW());
@@ -307,7 +304,7 @@ namespace dnn
 									{
 										Activation::fVec(((VecFloat().load_a(&InputLayer->Neurons[hw]) - mean) * weightedInvStdDev + biases)).store_a(&Neurons[hw]);
 #ifndef DNN_LEAN
-										vecZero.store_nt(&NeuronsD1[hw]);
+										VecFloat(0).store_nt(&NeuronsD1[hw]);
 #endif
 									}
 									for (auto hw = part; hw < start + HW(); hw++)
@@ -363,9 +360,7 @@ namespace dnn
 
 							const auto weightedInvStdDev = Scaling ? invStdDev * VecFloat().load_a(&Weights[channelOffset]) : invStdDev;
 							const auto biases = Scaling && HasBias ? VecFloat().load_a(&Biases[channelOffset]) : VecFloat(0);
-							//VecFloat().load_a(&Weights[channelOffset]).store_a(&scale[channelOffset]);
-							//biases.store_a(&shift[channelOffset]);
-
+							
 							if (InplaceBwd)
 								for (auto n = 0ull; n < batchSize; n++)
 								{
@@ -388,7 +383,7 @@ namespace dnn
 										{
 											Activation::fVec(mul_add(VecFloat().load_a(&InputLayer->Neurons[w]) - mean, weightedInvStdDev, biases), Alpha, Beta).store_a(&Neurons[w]);
 #ifndef DNN_LEAN
-											vecZero.store_nt(&NeuronsD1[w]);
+											VecFloat(0).store_nt(&NeuronsD1[w]);
 #endif
 										}
 									}
