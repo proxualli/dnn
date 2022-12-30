@@ -568,16 +568,17 @@ namespace dnn
 					
 					auto stats = Stats(0, 0, std::numeric_limits<Float>::max(), std::numeric_limits<Float>::lowest());
 					
-					if ((elements % VectorSize == 0ull) && ((elements * batchSize) > 548576ull))
+					if ((elements % VectorSize == 0ull) && ((batchSize * elements) > 548576ull))
 					{
-						const auto maxThreads = GetThreads(batchSize * elements, Float(4));
+						const auto maxThreads = GetThreads(batchSize * elements, Float(5));
 						const auto threads = std::min<UInt>(maxThreads, batchSize);
-
+												
+						auto vMin = FloatVector(batchSize, std::numeric_limits<Float>::max());
+						auto vMax = FloatVector(batchSize, std::numeric_limits<Float>::lowest());
 						auto vMean = FloatVector(batchSize, Float(0));
 						auto vVariance = FloatVector(batchSize, Float(0));
-	
 						for_i(batchSize, threads, [&](UInt n)
-						{ 
+						{
 							auto vecMean = VecFloat(0);
 							auto vecVariance = VecFloat(0);
 							auto vecCorrectionMean = VecFloat(0);
@@ -587,11 +588,11 @@ namespace dnn
 							for (auto i = 0ull; i < elements; i += VectorSize)
 							{
 								neurons.load_a(&Neurons[i + n * batchSize]);
-								stats.Min = std::min(stats.Min, horizontal_min(neurons));
-								stats.Max = std::max(stats.Max, horizontal_max(neurons));
+								vMin[n] = std::min(vMin[n], horizontal_min(neurons));
+								vMax[n] = std::max(vMax[n], horizontal_max(neurons));
 								KahanSum<VecFloat>(neurons, vecMean, vecCorrectionMean);
 								KahanSum<VecFloat>(square(neurons), vecVariance, vecCorrectionVariance);
-							}			
+							}
 
 							vMean[n] = horizontal_add(vecMean) / elements;
 							vVariance[n] = horizontal_add(vecVariance) / elements;
@@ -601,6 +602,8 @@ namespace dnn
 						auto variance = Float(0);
 						for (auto n = 0ull; n < batchSize; n++)
 						{
+							stats.Min = std::min(vMin[n], stats.Min);
+							stats.Max = std::max(vMax[n], stats.Min);
 							mean += vMean[n];
 							variance += vVariance[n];
 						}
