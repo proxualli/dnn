@@ -857,11 +857,9 @@ extern "C" DNN_API void DNNRefreshStatistics(const UInt layerIndex, StatsInfo* i
 	if (model && layerIndex < model->Layers.size())
 	{
 		while (model->BatchSizeChanging.load() || model->ResettingWeights.load())
-			std::this_thread::sleep_for(std::chrono::milliseconds(250));
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-		if (!model->Layers[layerIndex]->RefreshStatistics(model->BatchSize))
-			model->StopTask();
-		else
+		if (model->Layers[layerIndex]->RefreshStatistics(model->BatchSize))
 		{
 			info->Description = model->Layers[layerIndex]->GetDescription();
 			info->NeuronsStats = model->Layers[layerIndex]->NeuronsStats;
@@ -875,6 +873,8 @@ extern "C" DNN_API void DNNRefreshStatistics(const UInt layerIndex, StatsInfo* i
 			info->UpdateTime = Float(std::chrono::duration_cast<std::chrono::microseconds>(model->updateTime).count()) / 1000;
 			info->Locked = model->Layers[layerIndex]->Lockable() ? model->Layers[layerIndex]->LockUpdate.load() : false;
 		}
+		else
+			model->StopTask();
 	}
 }
 

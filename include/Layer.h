@@ -570,7 +570,7 @@ namespace dnn
 					
 					if ((elements % VectorSize == 0ull) && ((batchSize * elements) > 548576ull))
 					{
-						const auto maxThreads = GetThreads(batchSize * elements, Float(5));
+						const auto maxThreads = GetThreads(batchSize * elements, Float(2));
 						const auto threads = std::min<UInt>(maxThreads, batchSize);
 												
 						auto vMin = FloatVector(batchSize, std::numeric_limits<Float>::max());

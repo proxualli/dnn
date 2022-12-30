@@ -968,13 +968,13 @@ namespace dnn
 			const auto minH = std::min(img.H(), image.H());
 			const auto minW = std::min(img.W(), image.W());
 			
-			const auto srcDdelta = img.D() < image.D() ? UniformInt<UInt>(0, image.D() - img.D()) : 0u;
-			const auto srcHdelta = img.H() < image.H() ? UniformInt<UInt>(0, image.H() - img.H()) : 0u;
-			const auto srcWdelta = img.W() < image.W() ? UniformInt<UInt>(0, image.W() - img.W()) : 0u;
+			const auto srcDdelta = img.D() < image.D() ? UniformInt<unsigned>(0, image.D() - img.D()) : 0u;
+			const auto srcHdelta = img.H() < image.H() ? UniformInt<unsigned>(0, image.H() - img.H()) : 0u;
+			const auto srcWdelta = img.W() < image.W() ? UniformInt<unsigned>(0, image.W() - img.W()) : 0u;
 			
-			const auto dstDdelta = img.D() > image.D() ? UniformInt<UInt>(0, img.D() - image.D()) : 0u;
-			const auto dstHdelta = img.H() > image.H() ? UniformInt<UInt>(0, img.H() - image.H()) : 0u;
-			const auto dstWdelta = img.W() > image.W() ? UniformInt<UInt>(0, img.W() - image.W()) : 0u;
+			const auto dstDdelta = img.D() > image.D() ? UniformInt<unsigned>(0, img.D() - image.D()) : 0u;
+			const auto dstHdelta = img.H() > image.H() ? UniformInt<unsigned>(0, img.H() - image.H()) : 0u;
+			const auto dstWdelta = img.W() > image.W() ? UniformInt<unsigned>(0, img.W() - image.W()) : 0u;
 
 			for (auto c = 0u; c < img.C(); c++)
 				for (auto d = 0u; d < minD; d++)
@@ -987,10 +987,10 @@ namespace dnn
 
 		static void RandomCutout(Image& image, const std::vector<Float>& mean) NOEXCEPT
 		{
-			const auto centerH = UniformInt<UInt>(0, image.H());
-			const auto centerW = UniformInt<UInt>(0, image.W());
-			const auto rangeH = UniformInt<UInt>(image.H() / 8, image.H() / 4);
-			const auto rangeW = UniformInt<UInt>(image.W() / 8, image.W() / 4);
+			const auto centerH = UniformInt<unsigned>(0, image.H());
+			const auto centerW = UniformInt<unsigned>(0, image.W());
+			const auto rangeH = UniformInt<unsigned>(image.H() / 8, image.H() / 4);
+			const auto rangeW = UniformInt<unsigned>(image.W() / 8, image.W() / 4);
 			const auto startH = static_cast<long>(centerH) - static_cast<long>(rangeH) > 0l ? centerH - rangeH : 0u;
 			const auto startW = static_cast<long>(centerW) - static_cast<long>(rangeW) > 0l ? centerW - rangeW : 0u;
 			const auto enheight = centerH + rangeH < image.H() ? centerH + rangeH : image.H();
