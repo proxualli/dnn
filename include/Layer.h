@@ -554,7 +554,8 @@ namespace dnn
 		{
 			if (!RefreshingStats.load())
 			{
-				while (Fwd.load() || Bwd.load()) { std::this_thread::yield(); }
+				while (Fwd.load() || Bwd.load())
+					std::this_thread::yield();
 
 				RefreshingStats.store(true);
 				

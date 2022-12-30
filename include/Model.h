@@ -1041,7 +1041,10 @@ namespace dnn
 		bool CheckTaskState() const
 		{
 			while (TaskState.load() == TaskStates::Paused) 
-				std::this_thread::yield();	
+			{ 
+				std::this_thread::sleep_for(std::chrono::milliseconds(250));
+				std::this_thread::yield(); 
+			}
 			
 			return TaskState.load() == TaskStates::Running;
 		}

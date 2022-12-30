@@ -13,9 +13,6 @@ namespace dnn
 		std::unique_ptr<dnnl::softmax_forward> fwdLogSoftmax;
 		std::unique_ptr<dnnl::softmax_backward> bwdLogSoftmax;
 		std::unique_ptr<dnnl::binary> bwdAdd;
-		std::unique_ptr<dnnl::memory::desc> InputLayerDstMemDesc;
-		std::unique_ptr<dnnl::memory::desc> InputLayerDiffDstMemDesc;
-
 #endif
 		bool reorderFwdSrc;
 		bool reorderBwdDiffSrc;
@@ -52,6 +49,9 @@ namespace dnn
 
 		void InitializeDescriptors(const UInt batchSize) final override
 		{
+			std::unique_ptr<dnnl::memory::desc> InputLayerDstMemDesc;
+			std::unique_ptr<dnnl::memory::desc> InputLayerDiffDstMemDesc;
+
 			if (InputLayer->DstMemDesc->get_ndims() == 2)
 			{
 				ChosenFormat = dnnl::memory::format_tag::nc;
