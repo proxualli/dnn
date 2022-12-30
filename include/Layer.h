@@ -555,7 +555,10 @@ namespace dnn
 			if (!RefreshingStats.load())
 			{
 				while (Fwd.load() || Bwd.load())
+				{
+					std::this_thread::sleep_for(std::chrono::milliseconds(50));
 					std::this_thread::yield();
+				}
 
 				RefreshingStats.store(true);
 				
@@ -624,6 +627,7 @@ namespace dnn
 					else
 					{
 						const auto ncdhw = batchSize * CDHW();
+
 						auto mean = Float(0);
 						auto variance = Float(0);
 						auto correctionMean = Float(0);

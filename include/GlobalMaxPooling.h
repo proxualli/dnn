@@ -6,19 +6,19 @@ namespace dnn
 	class GlobalMaxPooling final : public Layer
 	{
 	private:
-		dnnl::memory::dims kernel;
-		dnnl::memory::dims stride;
-		const dnnl::memory::dims padding;
-		const dnnl::memory::dims dilation;
-		std::unique_ptr<dnnl::memory> workspaceMemory;
 		std::unique_ptr<dnnl::pooling_forward::primitive_desc> fwdDesc;
 		std::unique_ptr<dnnl::pooling_backward::primitive_desc> bwdDesc;
 		std::unique_ptr<dnnl::binary::primitive_desc> bwdAddDesc;
+		std::unique_ptr<dnnl::memory> workspaceMemory;
 #ifdef DNN_CACHE_PRIMITIVES
 		std::unique_ptr<dnnl::pooling_forward> fwd;
 		std::unique_ptr<dnnl::pooling_backward> bwd;
 		std::unique_ptr<dnnl::binary> bwdAdd;
 #endif
+		dnnl::memory::dims kernel;
+		dnnl::memory::dims stride;
+		const dnnl::memory::dims padding;
+		const dnnl::memory::dims dilation;
 		bool reorderFwdSrc;
 		bool reorderBwdDiffSrc;
 
@@ -26,7 +26,7 @@ namespace dnn
 		UInt KernelH;
 		UInt KernelW;
 		Float Scale;
-
+		
 		GlobalMaxPooling(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs) :
 			Layer(device, format, name, LayerTypes::GlobalMaxPooling, 0, 0, inputs[0]->C, 1, 1, 1, 0, 0, 0, inputs),
 			KernelH(inputs[0]->H),
@@ -46,9 +46,9 @@ namespace dnn
 		{
 			KernelH = InputLayer->H;
 			KernelW = InputLayer->W;
-			Scale = Float(1) / InputLayer->H * InputLayer->W;
-			kernel = dnnl::memory::dims({ dnnl::memory::dim(InputLayer->H), dnnl::memory::dim(InputLayer->W) });
-			stride = dnnl::memory::dims({ dnnl::memory::dim(InputLayer->H) , dnnl::memory::dim(InputLayer->W) });
+			Scale = Float(1) / KernelH * KernelW;
+			kernel = dnnl::memory::dims({ dnnl::memory::dim(KernelH), dnnl::memory::dim(KernelW) });
+			stride = dnnl::memory::dims({ dnnl::memory::dim(KernelH), dnnl::memory::dim(KernelW) });
 		}
 
 		std::string GetDescription() const final override
