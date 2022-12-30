@@ -22,11 +22,11 @@ namespace dnn
 		bool reorderBwdDiffSrc;
 
 	public:
+		const Float Alpha;
+		const Float Beta;
 		const Float Eps;
 		const Float Momentum;
 		const Float OneMinusMomentum;
-		const Float Alpha;
-		const Float Beta;
 		FloatVector Mean;
 		FloatVector RunningMean;
 		FloatVector Variance;
