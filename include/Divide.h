@@ -5,7 +5,7 @@ namespace dnn
 {
 	class Divide final : public Layer
 	{
-	public:
+	private:
 		std::vector<Float> scales;
 		std::unordered_map<int, dnnl::memory> fwdArgs;
 		std::unique_ptr<dnnl::binary::primitive_desc> fwdDesc;
@@ -98,6 +98,7 @@ namespace dnn
 				const auto size = plain ? CDHW() : PaddedCDHW();
 				const auto part = GetVectorPart(size);
 				const auto threads = batchSize == 1 ? 1ull : GetThreads(batchSize * size, Float(4));
+
 				const auto strideHW = HW() * VectorSize;
 
 #ifdef DNN_STOCHASTIC
