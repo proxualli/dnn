@@ -49,8 +49,8 @@ if(WIN32 OR MSVC)
   add_compile_options(
     "$<$<COMPILE_LANGUAGE:CXX>:${flags}>"
     "$<$<COMPILE_LANGUAGE:C>:${flags}>")
-  set(debug_flags /openmp:experimental /W4 /Od)
-  set(release_flags /openmp:experimental /W3 /O2 /Ob2 /Oi /Ot /GL /GF /Gy /fp:fast)
+  set(debug_flags /openmp:llvm  /favor:AMD64 /fp:contract /W4 /Od)
+  set(release_flags /openmp:llvm  /favor:AMD64 /fp:contract /W3 /O2 /Ob2 /Oi /Ot /GL /GF /Gy /fp:fast)
 else()
   set(flags -mrdseed -mrdrnd -mfma -mavx2 -march=native -fopenmp)
   if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
@@ -270,9 +270,9 @@ ENDIF()
 add_library(${PROJECT_NAME} ${libdnn_sources})
 DNN_TARGET_ENABLE_CXX17(${PROJECT_NAME})
 if(BUILD_SHARED_LIBS)
-  target_compile_definitions(${PROJECT_NAME} PRIVATE DNN_EXPORTS DNN_DLL DNN_CACHE_PRIMITIVES DNN_AVX2 DNN_OMP cimg_use_cpp11 cimg_use_jpeg cimg_use_png cimg_use_zlib)
+  target_compile_definitions(${PROJECT_NAME} PRIVATE DNN_EXPORTS DNN_DLL DNN_CACHE_PRIMITIVES DNN_AVX2 DNN_OMP cimg_use_openmp cimg_use_cpp11 cimg_use_jpeg cimg_use_png cimg_use_zlib)
 else()
-  target_compile_definitions(${PROJECT_NAME} PRIVATE DNN_EXPORTS DNN_CACHE_PRIMITIVES DNN_AVX2 DNN_OMP cimg_use_cpp11 cimg_use_jpeg cimg_use_png cimg_use_zlib)
+  target_compile_definitions(${PROJECT_NAME} PRIVATE DNN_EXPORTS DNN_CACHE_PRIMITIVES DNN_AVX2 DNN_OMP cimg_use_openmp cimg_use_cpp11 cimg_use_jpeg cimg_use_png cimg_use_zlib)
 endif()
 target_include_directories(${PROJECT_NAME}
     PUBLIC
@@ -284,9 +284,9 @@ target_include_directories(${PROJECT_NAME}
 add_executable(test ${libdnn_test})
 DNN_TARGET_ENABLE_CXX17(test)
 if(BUILD_SHARED_LIBS)
-  target_compile_definitions(test PRIVATE DNN_EXPORTS DNN_DLL DNN_CACHE_PRIMITIVES DNN_AVX2 DNN_OMP cimg_use_cpp11 cimg_use_jpeg cimg_use_png cimg_use_zlib)
+  target_compile_definitions(test PRIVATE DNN_EXPORTS DNN_DLL DNN_CACHE_PRIMITIVES DNN_AVX2 DNN_OMP cimg_use_openmp cimg_use_cpp11 cimg_use_jpeg cimg_use_png cimg_use_zlib)
 else()
-  target_compile_definitions(test PRIVATE DNN_EXPORTS DNN_CACHE_PRIMITIVES DNN_AVX2 DNN_OMP cimg_use_cpp11 cimg_use_jpeg cimg_use_png cimg_use_zlib)
+  target_compile_definitions(test PRIVATE DNN_EXPORTS DNN_CACHE_PRIMITIVES DNN_AVX2 DNN_OMP cimg_use_openmp cimg_use_cpp11 cimg_use_jpeg cimg_use_png cimg_use_zlib)
 endif()
 target_include_directories(test 
     PUBLIC
