@@ -44,7 +44,7 @@ option(BUILD_SHARED_LIBS "Build shared library" OFF)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 if(WIN32 OR MSVC)
-  set(BUILD_SHARED_LIBS ON)
+  set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
   set(flags /arch:AVX2)
   set(linkflags "")
   add_compile_options(
