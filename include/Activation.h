@@ -625,7 +625,7 @@ namespace dnn
 			break;
 
 			case Activations::SoftPlus:
-{
+			{
 				if (InputLayer->DstMemDesc->get_ndims() == 2)
 				{
 #ifdef DNN_STOCHASTIC
