@@ -569,9 +569,9 @@ namespace dnn
 					
 					auto stats = Stats(0, 0, std::numeric_limits<Float>::max(), std::numeric_limits<Float>::lowest());
 					
-					if ((elements % VectorSize == 0ull) && ((batchSize * elements) > 548576ull))
+					if (elements % VectorSize == 0ull && (batchSize * elements) > 548576ull)
 					{
-						const auto threads = std::min<UInt>(GetThreads(batchSize * elements, Float(5)), batchSize);
+						const auto threads = std::min<UInt>(GetThreads(batchSize * elements, Float(2.5)), batchSize);
 												
 						auto vMin = FloatVector(batchSize, std::numeric_limits<Float>::max());
 						auto vMax = FloatVector(batchSize, std::numeric_limits<Float>::lowest());
@@ -632,7 +632,6 @@ namespace dnn
 						auto variance = Float(0);
 						auto correctionMean = Float(0);
 						auto correctionVariance = Float(0);
-
 						for (auto i = 0ull; i < ncdhw; i++)
 						{
 							stats.Min = std::min(stats.Min, Neurons[i]);

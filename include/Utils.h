@@ -111,7 +111,7 @@ namespace
 	{
 		const auto load = static_cast<UInt>(Float(elements) * weight);
 
-		constexpr auto ULTRALIGHT_THRESHOLD =   2097152ull;	// minimum threshold for ULTRALIGHT load
+		constexpr auto ULTRALIGHT_THRESHOLD =   2097152ull;
 		constexpr auto LIGHT_THRESHOLD =        8338608ull;
 		constexpr auto MEDIUM_THRESHOLD =      68338608ull;
 		constexpr auto HEAVY_THRESHOLD =      120338608ull;
