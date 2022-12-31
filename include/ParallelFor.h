@@ -1,5 +1,5 @@
 #pragma once
-#ifdef DNN_OMP
+#if DNNL_CPU_RUNTIME == DNNL_RUNTIME_OMP
 #include <omp.h>
 #else
 #include <cassert>
@@ -72,7 +72,7 @@
 
 namespace dnn
 {
-#ifndef DNN_OMP
+#ifndef DNNL_CPU_RUNTIME == DNNL_RUNTIME_OMP
 	struct blocked_range 
 	{
 		typedef size_t const_iterator;
@@ -142,7 +142,7 @@ namespace dnn
 	template <typename Func>
 	inline void for_i(const size_t range, const Func& f)
 	{
-#ifdef DNN_OMP
+#if DNNL_CPU_RUNTIME == DNNL_RUNTIME_OMP
 		PRAGMA_OMP_PARALLEL_THREADS(omp_get_max_threads())
 		{
 			PRAGMA_OMP_FOR_SCHEDULE_STATIC(1)
@@ -168,7 +168,7 @@ namespace dnn
 	{
 		if (threads > 1)
 		{
-#ifdef DNN_OMP
+#if DNNL_CPU_RUNTIME == DNNL_RUNTIME_OMP
 			PRAGMA_OMP_PARALLEL_THREADS(static_cast<int>(threads))
 			{
 				PRAGMA_OMP_FOR_SCHEDULE_STATIC(1)
@@ -197,7 +197,7 @@ namespace dnn
 	template <typename Func>
 	inline void for_i_dynamic(const size_t range, const Func& f)
 	{
-#ifdef DNN_OMP
+#if DNNL_CPU_RUNTIME == DNNL_RUNTIME_OMP
 		PRAGMA_OMP_PARALLEL_THREADS(omp_get_max_threads())
 		{
 			PRAGMA_OMP_FOR_SCHEDULE_DYNAMIC(1)
@@ -223,7 +223,7 @@ namespace dnn
 	{
 		if (threads > 1)
 		{
-#ifdef DNN_OMP
+#if DNNL_CPU_RUNTIME == DNNL_RUNTIME_OMP
 			PRAGMA_OMP_PARALLEL_THREADS(static_cast<int>(threads))
 			{
 				PRAGMA_OMP_FOR_SCHEDULE_DYNAMIC(1)
