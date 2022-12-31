@@ -118,6 +118,8 @@ namespace dnn
 
 			bwdDataDesc = std::make_unique<dnnl::deconvolution_backward_data::primitive_desc>(dnnl::deconvolution_backward_data::primitive_desc(Device.engine, dnnl::algorithm::convolution_auto, memDesc[0], memDesc[2], memDesc[1], strides, dilates, padding, padding, *fwdDesc));
 
+			bwdAddDesc = std::make_unique<dnnl::binary::primitive_desc>(dnnl::binary::primitive_desc(Device.engine, dnnl::algorithm::binary_add, *InputLayer->DiffDstMemDesc, *InputLayer->DiffDstMemDesc, *InputLayer->DiffDstMemDesc));
+
 			if (*WeightsMemDesc != fwdDesc->weights_desc())
 			{
 				auto weights = FloatVector(fwdDesc->weights_desc().get_size() / sizeof(Float));
@@ -138,8 +140,6 @@ namespace dnn
 				ChosenFormat = GetDataFmt(*DstMemDesc);
 			else
 				ChosenFormat = PlainFmt;
-
-			bwdAddDesc = std::make_unique<dnnl::binary::primitive_desc>(dnnl::binary::primitive_desc(Device.engine, dnnl::algorithm::binary_add, *InputLayer->DiffDstMemDesc, *InputLayer->DiffDstMemDesc, *InputLayer->DiffDstMemDesc));
 			
 			reorderFwdSrc = fwdDesc->src_desc() != *InputLayer->DstMemDesc;
 			reorderBwdSrc = bwdWeightsDesc->src_desc() != *InputLayer->DstMemDesc;
