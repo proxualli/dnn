@@ -6,9 +6,6 @@ namespace dnn
 	class Convolution final : public Layer
 	{
 	private:
-		const dnnl::memory::dims strides;
-		const dnnl::memory::dims dilates;
-		const dnnl::memory::dims padding;
 		std::unique_ptr<dnnl::convolution_forward::primitive_desc> fwdDesc;
 		std::unique_ptr<dnnl::convolution_backward_weights::primitive_desc> bwdWeightsDesc;
 		std::unique_ptr<dnnl::convolution_backward_data::primitive_desc> bwdDataDesc;
@@ -19,13 +16,16 @@ namespace dnn
 		std::unique_ptr<dnnl::convolution_backward_data> bwdData;
 		std::unique_ptr<dnnl::binary> bwdAdd;
 #endif
+		const dnnl::memory::dims strides;
+		const dnnl::memory::dims dilates;
+		const dnnl::memory::dims padding;
 		bool reorderFwdSrc;
 		bool reorderBwdSrc;
 		bool reorderBwdDiffSrc;
 		bool reorderBwdDiffDst;
-		bool reorderBwdDiffWeights;
 		bool reorderBwdWeights;
-
+		bool reorderBwdDiffWeights;
+		
 	public:
 		const UInt Groups;
 		const UInt KernelH;
@@ -54,9 +54,9 @@ namespace dnn
 			reorderFwdSrc(false),
 			reorderBwdSrc(false),
 			reorderBwdDiffSrc(false),
+			reorderBwdDiffDst(false),
 			reorderBwdWeights(false),
-			reorderBwdDiffWeights(false),
-			reorderBwdDiffDst(false)
+			reorderBwdDiffWeights(false)
 		{
 			assert(Inputs.size() == 1);
 

@@ -6,9 +6,6 @@ namespace dnn
 	class PartialDepthwiseConvolution final : public Layer
 	{
 	private:
-		const dnnl::memory::dims strides;
-		const dnnl::memory::dims dilates;
-		const dnnl::memory::dims padding;
 		std::unique_ptr<dnnl::convolution_forward::primitive_desc> fwdDesc;
 		std::unique_ptr<dnnl::convolution_backward_weights::primitive_desc> bwdWeightsDesc;
 		std::unique_ptr<dnnl::convolution_backward_data::primitive_desc> bwdDataDesc;
@@ -17,14 +14,17 @@ namespace dnn
 		std::unique_ptr<dnnl::convolution_backward_weights> bwdWeights;
 		std::unique_ptr<dnnl::convolution_backward_data> bwdData;
 #endif
-		dnnl::memory::desc partSrc;
-		dnnl::memory::desc partDiffSrc;
+		const dnnl::memory::dims strides;
+		const dnnl::memory::dims dilates;
+		const dnnl::memory::dims padding;
 		bool reorderFwdSrc;
 		bool reorderBwdSrc;
 		bool reorderBwdDiffSrc;
 		bool reorderBwdDiffDst;
+		bool reorderBwdWeights;
 		bool reorderBwdDiffWeights;
-		bool reorderBwdWeights;	
+		dnnl::memory::desc partSrc;
+		dnnl::memory::desc partDiffSrc;
 
 	public:
 		const UInt Group;
@@ -58,9 +58,9 @@ namespace dnn
 			reorderFwdSrc(false),
 			reorderBwdSrc(false),
 			reorderBwdDiffSrc(false),
+			reorderBwdDiffDst(false),
 			reorderBwdWeights(false),
-			reorderBwdDiffWeights(false),
-			reorderBwdDiffDst(false)
+			reorderBwdDiffWeights(false)
 		{
 			assert(Inputs.size() == 1);
 			assert(Multiplier > 0);
