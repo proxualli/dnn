@@ -304,7 +304,6 @@ namespace dnn
 
 					if (layerType == LayerTypes::Activation)
 					{
-
 						switch(activationFunction)
 						{
 						case Activations::BoundedRelu:
@@ -475,21 +474,6 @@ namespace dnn
 						case LayerTypes::Input:
 							break;
 						case LayerTypes::Activation:
-							switch (activationFunction)
-							{
-							case Activations::BoundedRelu:
-								if (alpha == 0)
-									alpha = 6;
-								break;
-							case Activations::Elu:
-							case Activations::Linear:
-							case Activations::Swish:
-								if (alpha == 0)
-									alpha = 1;
-								break;
-							default:
-								break;
-							}
 							model->Layers.push_back(std::make_unique<Activation>(model->Device, model->Format, name, activationFunction, inputs, alpha, beta));
 							break;
 						case LayerTypes::Add:
@@ -687,6 +671,9 @@ namespace dnn
 					acrossChannels = false;
 					localSize = 5;
 					k = Float(1);
+					labelTrue = Float(0.9);
+					labelFalse = Float(0.1);
+					
 				}
 			}
 			else if (strLine.find("Dataset=") == 0)
@@ -2329,42 +2316,15 @@ namespace dnn
 
 				switch (activationFunction)
 				{
-				case Activations::BoundedRelu:
-					alpha = Float(6);
-					break;
-				case Activations::Clip:
-				case Activations::Linear:
-					alpha = Float(1);
-					beta = Float(0);
-					break;
-				case Activations::Elu:
-				case Activations::Swish:
-					alpha = Float(1);
-					break;
 				case Activations::HardLogistic:
-					alpha = Float(0.2);
-					beta = Float(0.5);
-					labelTrue = Float(1);
-					labelFalse = Float(0);
-					break;
-				case Activations::HardSwish:
-					alpha = Float(3);
-					beta = Float(1) / Float(6);
-					break;
 				case Activations::Log:
+				case Activations::Logistic:
+				case Activations::LogLogistic:
 					labelTrue = Float(1);
 					labelFalse = Float(0);
-					break;
-				case Activations::Pow:
-					alpha = Float(1);
-					beta = Float(1);
-					break;
-				case Activations::Relu:
-					alpha = Float(0);
 					break;
 				default:
-					alpha = Float(0);
-					beta = Float(0);
+					break;
 				}
 			}
 			else if (strLine.rfind("Channels=") == 0)
