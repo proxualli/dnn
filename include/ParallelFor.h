@@ -72,7 +72,7 @@
 
 namespace dnn
 {
-#ifndef DNNL_CPU_RUNTIME == DNNL_RUNTIME_OMP
+#if DNNL_CPU_RUNTIME != DNNL_RUNTIME_OMP
 	struct blocked_range 
 	{
 		typedef size_t const_iterator;
