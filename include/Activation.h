@@ -220,6 +220,90 @@ namespace dnn
 		bool reorderBwdSrc;
 		bool reorderBwdDiffSrc;
 		
+		auto GetAlpha(const Activations activation, const Float alpha, const Float beta) const
+		{ 
+			switch (activation)
+			{			
+			case Activations::Abs:
+			case Activations::ASinh:
+			case Activations::Clip:
+			case Activations::ClipV2:
+			case Activations::Exp:
+			case Activations::Gelu:
+			case Activations::GeluErf:
+			case Activations::Log:
+			case Activations::Logistic:
+			case Activations::Mish:
+			case Activations::Pow:
+			case Activations::Relu:
+			case Activations::Round:
+			case Activations::SoftPlus:
+			case Activations::SoftRelu:
+			case Activations::SoftSign:
+			case Activations::Sqrt:
+			case Activations::Square:
+			case Activations::Tanh:
+			case Activations::TanhExp:
+				break;
+
+			case Activations::BoundedRelu:
+				return Float(0);
+			case Activations::Elu:
+			case Activations::Linear:
+			case Activations::Swish:
+				return alpha == Float(0) ? Float(1) : alpha;
+			case Activations::HardLogistic:
+				return alpha == Float(0) ? Float(0.2) : alpha;
+			case Activations::HardSwish:
+				return alpha == Float(0) ? Float(3) : alpha;			
+			case Activations::LogLogistic:
+				return Float(-1);
+			}
+
+			return alpha;
+		}
+
+		auto GetBeta(const Activations activation, const Float alpha, const Float beta) const
+		{
+			switch (activation)
+			{
+			case Activations::Abs:
+			case Activations::ASinh:
+			case Activations::Clip:
+			case Activations::ClipV2:
+			case Activations::Elu:
+			case Activations::Exp:
+			case Activations::Gelu:
+			case Activations::GeluErf:
+			case Activations::Linear:
+			case Activations::Log:
+			case Activations::LogLogistic:
+			case Activations::Logistic:
+			case Activations::Mish:
+			case Activations::Pow:
+			case Activations::Relu:
+			case Activations::Round:
+			case Activations::SoftPlus:
+			case Activations::SoftRelu:
+			case Activations::SoftSign:
+			case Activations::Sqrt:
+			case Activations::Square:
+			case Activations::Swish:
+			case Activations::Tanh:
+			case Activations::TanhExp:
+				break;
+
+			case Activations::BoundedRelu:
+				return alpha == Float(0) ? Float(6) : alpha;
+			case Activations::HardLogistic:
+				return beta == Float(0) ? Float(0.5) : beta;
+			case Activations::HardSwish:
+				return beta == Float(0) ? Float(1) / Float(6) : beta;
+			}
+
+			return beta;
+		}
+
 	public:
 		const Activations ActivationFunction;
 		const Float Alpha;
@@ -228,8 +312,8 @@ namespace dnn
 		Activation(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const Activations activation, const std::vector<Layer*>& inputs, const Float alpha = Float(0), const Float beta = Float(0)) :
 			Layer(device, format, name, LayerTypes::Activation, 0, 0, inputs[0]->C, inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs, false),
 			ActivationFunction(activation),
-			Alpha(alpha),
-			Beta(beta),
+			Alpha(GetAlpha(activation, alpha, beta)),
+			Beta(GetBeta(activation, alpha, beta)),
 			algorithm(dnnl::algorithm::eltwise_linear),
 			reorderFwdSrc(false),
 			reorderBwdSrc(false),
@@ -267,9 +351,6 @@ namespace dnn
 
 		void InitializeDescriptors(const UInt batchSize) final override
 		{
-			auto alpha = Alpha;
-			auto beta = Beta;
-
 			switch (ActivationFunction)
 			{
 				case Activations::ASinh:
@@ -281,20 +362,17 @@ namespace dnn
 				case Activations::Abs:
 					algorithm = dnnl::algorithm::eltwise_abs;
 					break;
+				case Activations::BoundedRelu:
+					algorithm = dnnl::algorithm::eltwise_clip;
+					break;
 				case Activations::Clip:
 					algorithm = dnnl::algorithm::eltwise_clip;
 					break;
 				case Activations::ClipV2:
 					algorithm = dnnl::algorithm::eltwise_clip_v2;
 					break;
-				case Activations::BoundedRelu:
-					algorithm = dnnl::algorithm::eltwise_clip;
-					alpha = Float(0);
-					beta = (Alpha == Float(0)) ? Float(6) : Alpha;
-					break;
 				case Activations::Elu:
 					algorithm = dnnl::algorithm::eltwise_elu;
-					alpha = (Alpha == Float(0)) ? Float(1) : Alpha;
 					break;
 				case Activations::Exp:
 					algorithm = dnnl::algorithm::eltwise_exp;
@@ -307,23 +385,12 @@ namespace dnn
 					break;
 				case Activations::HardLogistic:
 					algorithm = dnnl::algorithm::eltwise_hardsigmoid;
-					if (Alpha == Float(0) && Beta == Float(0))
-					{
-						alpha = Float(0.2);
-						beta = Float(0.5);
-					}
 					break;
 				case Activations::HardSwish:
 					algorithm = dnnl::algorithm::eltwise_hardswish;
-					if (Alpha == Float(0) && Beta == Float(0))
-					{
-						alpha = Float(3);
-						beta = Float(1) / Float(6);
-					}
 					break;
 				case Activations::Linear:
 					algorithm = dnnl::algorithm::eltwise_linear;
-					alpha = (Alpha == Float(0)) ? Float(1) : Alpha;
 					break;
 				case Activations::Log:
 					algorithm = dnnl::algorithm::eltwise_log;
@@ -333,7 +400,6 @@ namespace dnn
 					break;
 				case Activations::LogLogistic:
 					algorithm = dnnl::algorithm::eltwise_soft_relu;
-					alpha = Float(-1);
 					break;
 				case Activations::Mish:
 					algorithm = dnnl::algorithm::eltwise_mish;
@@ -358,7 +424,6 @@ namespace dnn
 					break;
 				case Activations::Swish:
 					algorithm = dnnl::algorithm::eltwise_swish;
-					alpha = (Alpha == Float(0)) ? Float(1) : Alpha;
 					break;
 				case Activations::Tanh:
 					algorithm = dnnl::algorithm::eltwise_tanh;
@@ -383,8 +448,8 @@ namespace dnn
 				DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, ChosenFormat));
 			}
 
-			fwdDesc = std::make_unique<dnnl::eltwise_forward::primitive_desc>(dnnl::eltwise_forward::primitive_desc(Device.engine, dnnl::prop_kind::forward, algorithm, *InputLayer->DstMemDesc, *DstMemDesc, alpha, beta));
-			bwdDesc = std::make_unique<dnnl::eltwise_backward::primitive_desc>(dnnl::eltwise_backward::primitive_desc(Device.engine, algorithm, *InputLayer->DiffDstMemDesc, *DiffDstMemDesc, *DstMemDesc, alpha, beta, *fwdDesc));
+			fwdDesc = std::make_unique<dnnl::eltwise_forward::primitive_desc>(dnnl::eltwise_forward::primitive_desc(Device.engine, dnnl::prop_kind::forward, algorithm, *InputLayer->DstMemDesc, *DstMemDesc, Alpha, Beta));
+			bwdDesc = std::make_unique<dnnl::eltwise_backward::primitive_desc>(dnnl::eltwise_backward::primitive_desc(Device.engine, algorithm, *InputLayer->DiffDstMemDesc, *DiffDstMemDesc, *DstMemDesc, Alpha, Beta, *fwdDesc));
 			bwdAddDesc = std::make_unique<dnnl::binary::primitive_desc>(dnnl::binary::primitive_desc(Device.engine, dnnl::algorithm::binary_add, *InputLayer->DiffDstMemDesc, *InputLayer->DiffDstMemDesc, *InputLayer->DiffDstMemDesc));
 
 			reorderFwdSrc = fwdDesc->src_desc() != *InputLayer->DstMemDesc;

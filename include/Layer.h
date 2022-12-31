@@ -215,7 +215,11 @@ namespace dnn
 		Float Min;
 		Float Max;
 
-		Stats() : Mean(0), StdDev(0), Min(0), Max(0)
+		Stats() : 
+			Mean(0),
+			StdDev(0),
+			Min(0),
+			Max(0)
 		{
 		}
 
@@ -533,7 +537,10 @@ namespace dnn
 		virtual void SetBatchSize(const UInt batchSize)
 		{
 			while (RefreshingStats.load())
+			{
+				std::this_thread::sleep_for(std::chrono::milliseconds(10));
 				std::this_thread::yield();
+			}
 			
 			Neurons.resize(batchSize, C, H, W, dnnl::memory::data_type::f32, BlockedFmt, Device.engine);
 #ifndef DNN_LEAN
@@ -556,7 +563,7 @@ namespace dnn
 			{
 				while (Fwd.load() || Bwd.load())
 				{
-					std::this_thread::sleep_for(std::chrono::milliseconds(50));
+					std::this_thread::sleep_for(std::chrono::milliseconds(10));
 					std::this_thread::yield();
 				}
 
@@ -571,7 +578,7 @@ namespace dnn
 					
 					if (elements % VectorSize == 0ull && (batchSize * elements) > 548576ull)
 					{
-						const auto threads = std::min<UInt>(GetThreads(batchSize * elements, Float(2.5)), batchSize);
+						const auto threads = std::min<UInt>(GetThreads(batchSize * elements, Float(5)), batchSize);
 												
 						auto vMin = FloatVector(batchSize, std::numeric_limits<Float>::max());
 						auto vMax = FloatVector(batchSize, std::numeric_limits<Float>::lowest());

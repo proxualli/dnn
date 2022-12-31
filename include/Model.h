@@ -601,7 +601,7 @@ namespace dnn
 
 			while (BatchSizeChanging.load() || ResettingWeights.load())
 			{
-				std::this_thread::sleep_for(std::chrono::milliseconds(200));
+				std::this_thread::sleep_for(std::chrono::milliseconds(50));
 				std::this_thread::yield();
 			}
 
@@ -1042,7 +1042,7 @@ namespace dnn
 		{
 			while (TaskState.load() == TaskStates::Paused) 
 			{ 
-				std::this_thread::sleep_for(std::chrono::milliseconds(250));
+				std::this_thread::sleep_for(std::chrono::milliseconds(100));
 				std::this_thread::yield(); 
 			}
 			
@@ -1264,6 +1264,7 @@ namespace dnn
 					}
 			}
 		}
+
 		auto IsSkippable(const Layer& layer) const
 		{
 			return layer.LayerType == LayerTypes::Add || layer.LayerType == LayerTypes::Substract; // || layer.LayerType == LayerTypes::Multiply || layer.LayerType == LayerTypes::Divide;
