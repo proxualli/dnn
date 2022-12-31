@@ -309,20 +309,21 @@ namespace dnn
 						{
 						case Activations::BoundedRelu:
 						case Activations::Elu:
-						case Activations::Linear:
-						case Activations::Swish:
 						case Activations::HardLogistic:
 						case Activations::HardSwish:
+						case Activations::Linear:
+						case Activations::Swish:
 							break;
 
-						case Activations::Mish:
 						case Activations::Abs:
+						case Activations::ASinh:
 						case Activations::Exp:
 						case Activations::Gelu:
 						case Activations::GeluErf:
 						case Activations::Log:
 						case Activations::Logistic:
 						case Activations::LogLogistic:
+						case Activations::Mish:
 						case Activations::Pow:
 						case Activations::Round:
 						case Activations::SoftRelu:

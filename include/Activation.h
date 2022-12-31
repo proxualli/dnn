@@ -3,12 +3,42 @@
 
 namespace dnn
 {
+	enum class Activations
+	{
+		Abs = 0,
+		ASinh = 1,
+		BoundedRelu = 2,
+		Clip = 3,
+		ClipV2 = 4,			//
+		Elu = 5,			//
+		Exp = 6,			//
+		Gelu = 7,
+		GeluErf = 8,
+		HardLogistic = 9,
+		HardSwish = 10,
+		Linear = 11,
+		Log = 12,
+		Logistic = 13,		//
+		LogLogistic = 14,
+		Mish = 15,
+		Pow = 16,
+		Relu = 17,			//
+		Round = 18,
+		SoftRelu = 19,
+		Sqrt = 20,			//
+		Square = 21,
+		Swish = 22,
+		Tanh = 23,			//
+		TanhExp = 24
+	};
+
 	struct Abs
 	{
 		inline static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return std::abs(x); }
 		inline static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return x > Float(0) ? Float(1) : x < Float(0) ? Float(-1) : Float(0); }
 		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return abs(x); }
 		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return select(x > VecFloat(0), VecFloat(1), select(x < VecFloat(0), VecFloat(-1), VecFloat(0))); }
+		inline static Activations Enum() NOEXCEPT { return Activations::Abs; }
 	};
 
 	struct ASinh
@@ -17,6 +47,7 @@ namespace dnn
 		inline static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return Float(1) / std::cosh(x); }
 		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return asinh(x); }
 		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return VecFloat(1) / cosh(x); }
+		inline static Activations Enum() NOEXCEPT { return Activations::ASinh; }
 	};
 
 	struct Elu 
@@ -25,6 +56,7 @@ namespace dnn
 		inline static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return x > Float(0) ? Float(1) : alpha * std::exp(x); }
 		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return select(x > VecFloat(0), x, alpha * (exp(x) - VecFloat(1))); }
 		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return select(x > VecFloat(0), VecFloat(1), alpha * exp(x)); }
+		inline static Activations Enum() NOEXCEPT { return Activations::Elu; }
 	};
 
 	struct HardLogistic
@@ -33,6 +65,7 @@ namespace dnn
 		inline static Float df(const Float& x, const Float& alpha = Float(0.2), const Float& beta = Float(0.5)) NOEXCEPT { return std::abs(x) > (beta / alpha) ? Float(0) : alpha; }
 		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(Float(0.2)), const VecFloat& beta = VecFloat(0.5)) NOEXCEPT { return min(VecFloat(1), max(VecFloat(0), x * alpha + beta)); }
 		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(Float(0.2)), const VecFloat& beta = VecFloat(0.5)) NOEXCEPT { return select(abs(x) > (beta / alpha), VecFloat(0), alpha); }
+		inline static Activations Enum() NOEXCEPT { return Activations::HardLogistic; }
 	};
 
 	struct Relu6
@@ -49,14 +82,16 @@ namespace dnn
 		inline static Float df(const Float& x, const Float& alpha = Float(3), const Float& beta = Float(1) / Float(6)) NOEXCEPT { return x < -alpha ? Float(0) : x > alpha ? Float(1) : ((Float(2) * beta * x) + (alpha * beta)); }
 		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(Float(3)), const VecFloat& beta = VecFloat(Float(1) / Float(6))) NOEXCEPT { return x * Relu6::fVec(x + alpha) * beta; }
 		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(Float(3)), const VecFloat& beta = VecFloat(Float(1) / Float(6))) NOEXCEPT { return select(x < -alpha, VecFloat(Float(0)), select(x > alpha, VecFloat(Float(1)), ((VecFloat(Float(2)) * beta * x) + (alpha * beta)))); }
+		inline static Activations Enum() NOEXCEPT { return Activations::HardSwish; }
 	};
 
-	struct Identity
+	struct Linear
 	{
 		inline static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return x; }
 		inline static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return Float(1); }
 		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return x; }
 		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return VecFloat(1); }
+		inline static Activations Enum() NOEXCEPT { return Activations::Linear; }
 	};
 
 	struct Log
@@ -65,6 +100,7 @@ namespace dnn
 		inline static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return Float(1) / x; }
 		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return log(x); }
 		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return VecFloat(1) / x; }
+		inline static Activations Enum() NOEXCEPT { return Activations::Log; }
 	};
 
 	struct Logistic
@@ -73,6 +109,7 @@ namespace dnn
 		inline static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { const auto y = Logistic::f(x); return ( y * (Float(1) - y)); }
 		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return (VecFloat(1) / (VecFloat(1) + exp(-x))); }
 		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { const auto y = Logistic::fVec(x); return y * (VecFloat(1) - y); }
+		inline static Activations Enum() NOEXCEPT { return Activations::Logistic; }
 	};
 
 	struct SoftRelu
@@ -81,6 +118,7 @@ namespace dnn
 		inline static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return Float(1) / (Float(1) + std::exp(-x)); }
 		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return log(VecFloat(1) + exp(x)); }
 		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return VecFloat(1) / (VecFloat(1) + exp(-x)); }
+		inline static Activations Enum() NOEXCEPT { return Activations::SoftRelu; }
 	};
 
 	struct LogLogistic
@@ -89,6 +127,7 @@ namespace dnn
 		inline static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return Float(1) / (std::exp(x) + Float(1)); }
 		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return -SoftRelu::fVec(-x); }
 		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return VecFloat(1) / (exp(x) + VecFloat(1)); }
+		inline static Activations Enum() NOEXCEPT { return Activations::LogLogistic; }
 	};
 
 	struct Relu // alpha >= 0
@@ -97,6 +136,7 @@ namespace dnn
 		inline static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return x > Float(0) ? Float(1) : alpha; }
 		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return select(x > VecFloat(0), x, x * alpha); }
 		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return select(x > VecFloat(0), VecFloat(1), alpha); }
+		inline static Activations Enum() NOEXCEPT { return Activations::Relu; }
 	};
 
 	struct Selu
@@ -129,6 +169,7 @@ namespace dnn
 		inline static Float df(const Float& x, const Float& alpha = Float(1), const Float& beta = Float(0)) NOEXCEPT { return (Float(1) / (std::exp(-alpha * x) + Float(1))) * (Float(1) + alpha * x * (Float(1) - (Float(1) / (std::exp(-alpha * x) + Float(1))))); }
 		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(1), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return x / (exp(-alpha * x) + VecFloat(1)); }
 		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(1), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return (VecFloat(1) / (exp(-alpha * x) + VecFloat(1))) * (VecFloat(1) + alpha * x * (VecFloat(1) - (VecFloat(1) / (exp(-alpha * x) + VecFloat(1))))); }
+		inline static Activations Enum() NOEXCEPT { return Activations::Swish; }
 	};
 
 	struct Tanh
@@ -137,6 +178,7 @@ namespace dnn
 		inline static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return Float(1) - Square<Float>(std::tanh(x)); }
 		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return tanh(x); }
 		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return (VecFloat(1) - square(tanh(x))); }
+		inline static Activations Enum() NOEXCEPT { return Activations::Tanh; }
 	};
 	 
 	struct TanhExp
@@ -145,6 +187,7 @@ namespace dnn
 		inline static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { const auto y = std::exp(x);  const auto z = std::tanh(y); return z - (x * y * (Square<Float>(z) - Float(1))); }
 		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return x * tanh(exp(x)); }
 		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { const auto y = exp(x); const auto z = tanh(y); return z - (x * y * (square(z) - VecFloat(1))); }
+		inline static Activations Enum() NOEXCEPT { return Activations::TanhExp; }
 	};
 
 	struct Mish
@@ -153,35 +196,9 @@ namespace dnn
 		inline static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { const auto tmpExp = std::exp(x); const auto tmpSoftplus = std::log1p(tmpExp); const auto tmpSech = Float(1) / std::cosh(tmpSoftplus); return std::tanh(tmpSoftplus) + x * tmpExp * Square<Float>(tmpSech) / (tmpExp + Float(1)); }
 		inline static VecFloat fVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { return x * tanh(log1p(exp(x))); }
 		inline static VecFloat dfVec(const VecFloat& x, const VecFloat& alpha = VecFloat(0), const VecFloat& beta = VecFloat(0)) NOEXCEPT { const auto tmpExp = exp(x); const auto tmpSoftplus = log1p(tmpExp); const auto tmpSech = VecFloat(1) / cosh(tmpSoftplus); return tanh(tmpSoftplus) + x * tmpExp * square(tmpSech) / (tmpExp + VecFloat(1)); }
+		inline static Activations Enum() NOEXCEPT { return Activations::Mish; }
 	};
-	
-	enum class Activations
-	{
-		Abs = 0,
-		BoundedRelu = 1,
-		Clip = 2,
-		ClipV2 = 3,			//
-		Elu = 4,			//
-		Exp = 5,			//
-		Gelu = 6,
-		GeluErf = 7,
-		HardLogistic = 8,
-		HardSwish = 9,
-		Linear = 10,
-		Log = 11,
-		Logistic = 12,		//
-		LogLogistic = 13,
-		Mish = 14,
-		Pow = 15,
-		Relu = 16,			//
-		Round = 17,
-		SoftRelu = 18,
-		Sqrt = 19,			//
-		Square = 20,
-		Swish = 21,
-		Tanh = 22,			//
-		TanhExp = 23
-	};
+		
 
 	class Activation final : public Layer
 	{
@@ -270,6 +287,7 @@ namespace dnn
 #endif
 			switch (ActivationFunction)
 			{
+				case Activations::ASinh:
 				case Activations::TanhExp:
 				    break;
 
@@ -366,9 +384,226 @@ namespace dnn
 			
 			switch (ActivationFunction)
 			{
-			case Activations::TanhExp:
+			case Activations::ASinh:
 			{
 				if (InputLayer->DstMemDesc->get_ndims () == 2)
+				{
+#ifdef DNN_STOCHASTIC
+					if (batchSize == 1)
+					{
+						if (training)
+						{
+							if (!plain)
+							{
+								for (auto c = 0ull; c < PaddedC; c += VectorSize)
+								{
+									ASinh::fVec(VecFloat().load_a(&InputLayer->Neurons[c])).store_a(&Neurons[c]);
+#ifndef DNN_LEAN
+									if (!InplaceBwd)
+										VecFloat(0).store_nt(&NeuronsD1[c]);
+#endif // DNN_LEAN
+								}
+							}
+							else
+								for (auto c = 0ull; c < C; c++)
+								{
+									Neurons[c] = ASinh::f(InputLayer->Neurons[c]);
+#ifndef DNN_LEAN
+									if (!InplaceBwd)
+										NeuronsD1[c] = Float(0);
+#endif // DNN_LEAN
+								}
+						}
+						else
+						{
+							if (!plain)
+								for (auto c = 0ull; c < PaddedC; c += VectorSize)
+									ASinh::fVec(VecFloat().load_a(&InputLayer->Neurons[c])).store_a(&Neurons[c]);
+							else
+								for (auto c = 0ull; c < C; c++)
+									Neurons[c] = ASinh::f(InputLayer->Neurons[c]);
+						}
+					}
+					else
+					{
+#endif
+						if (training)
+						{
+							if (!plain)
+								for_i(batchSize, threads, [=](UInt n)
+								{
+									const auto offset = n * PaddedC;
+									for (auto c = offset; c < offset + PaddedC; c += VectorSize)
+									{
+										ASinh::fVec(VecFloat().load_a(&InputLayer->Neurons[c])).store_a(&Neurons[c]);
+#ifndef DNN_LEAN
+										if (!InplaceBwd)
+											VecFloat(0).store_nt(&NeuronsD1[c]);
+#endif // DNN_LEAN
+									}
+								});
+							else
+								for_i(batchSize, threads, [=](UInt n)
+								{
+									const auto offset = n * C;
+									for (auto c = offset; c < offset + C; c++)
+									{
+										Neurons[c] = ASinh::f(InputLayer->Neurons[c]);
+#ifndef DNN_LEAN
+										if (!InplaceBwd)
+											NeuronsD1[c] = Float(0);
+#endif // DNN_LEAN
+									}
+								});
+						}
+						else
+						{
+							if (!plain)
+								for_i(batchSize, threads, [=](UInt n)
+								{
+									const auto offset = n * PaddedC;
+									for (auto c = offset; c < offset + PaddedC; c += VectorSize)
+										ASinh::fVec(VecFloat().load_a(&InputLayer->Neurons[c])).store_a(&Neurons[c]);
+								});
+							else
+								for_i(batchSize, threads, [=](UInt n)
+								{
+									const auto offset = n * C;
+									for (auto c = offset; c < offset + C; c++)
+										Neurons[c] = ASinh::f(InputLayer->Neurons[c]);
+								});
+						}
+#ifdef DNN_STOCHASTIC
+					}
+#endif
+				}
+				else
+				{
+#ifdef DNN_STOCHASTIC
+					if (batchSize == 1)
+					{
+						if (training)
+						{
+							if (!plain)
+								for (auto c = 0ull; c < PaddedC; c += VectorSize)
+								{
+									const auto offset = c * HW();
+									for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
+									{
+										ASinh::fVec(VecFloat().load_a(&InputLayer->Neurons[hw + offset])).store_a(&Neurons[hw + offset]);
+#ifndef DNN_LEAN
+										if (!InplaceBwd)
+											VecFloat(0).store_nt(&NeuronsD1[hw + offset]);
+#endif // DNN_LEAN
+									}
+								}
+							else
+								for (auto c = 0ull; c < C; c++)
+								{
+									const auto offset = c * HW();
+									for (auto hw = 0ull; hw < HW(); hw++)
+									{
+										Neurons[hw + offset] = ASinh::f(InputLayer->Neurons[hw + offset]);
+#ifndef DNN_LEAN
+										if (!InplaceBwd)
+											NeuronsD1[hw + offset] = Float(0);
+#endif // DNN_LEAN
+									}
+								}
+						}
+						else
+						{
+							if (!plain)
+								for (auto c = 0ull; c < PaddedC; c += VectorSize)
+								{
+									const auto offset = c * HW();
+									for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
+										ASinh::fVec(VecFloat().load_a(&InputLayer->Neurons[hw + offset])).store_a(&Neurons[hw + offset]);
+								}
+							else
+								for (auto c = 0ull; c < C; c++)
+								{
+									const auto offset = c * HW();
+									for (auto hw = 0ull; hw < HW(); hw++)
+										Neurons[hw + offset] = ASinh::f(InputLayer->Neurons[hw + offset]);
+								}
+						}
+					}
+					else
+					{
+#endif
+						if (training)
+						{
+							if (!plain)
+								for_i(batchSize, threads, [=](UInt n)
+								{
+									for (auto c = 0ull; c < PaddedC; c += VectorSize)
+									{
+										const auto offset = n * PaddedCDHW() + c * HW();
+										for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
+										{
+											ASinh::fVec(VecFloat().load_a(&InputLayer->Neurons[hw + offset])).store_a(&Neurons[hw + offset]);
+#ifndef DNN_LEAN
+											if (!InplaceBwd)
+												VecFloat(0).store_nt(&NeuronsD1[hw + offset]);
+#endif // DNN_LEAN
+										}
+									}
+								});
+							else
+								for_i(batchSize, threads, [=](UInt n)
+								{
+									for (auto c = 0ull; c < C; c++)
+									{
+										const auto offset = n * CDHW() + c * HW();
+										for (auto hw = 0ull; hw < HW(); hw++)
+										{
+											Neurons[hw + offset] = ASinh::f(InputLayer->Neurons[hw + offset]);
+#ifndef DNN_LEAN
+											if (!InplaceBwd)
+												NeuronsD1[hw + offset] = Float(0);
+#endif // DNN_LEAN
+										}
+									}
+								});
+						}
+						else
+						{
+							if (!plain)
+							{
+								for_i(batchSize, threads, [=](UInt n)
+								{
+									for (auto c = 0ull; c < PaddedC; c += VectorSize)
+									{
+										const auto offset = n * PaddedCDHW() + c * HW();
+										for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
+											ASinh::fVec(VecFloat().load_a(&InputLayer->Neurons[hw + offset])).store_a(&Neurons[hw + offset]);
+									}
+								});
+							}
+							else
+							{
+								for_i(batchSize, threads, [=](UInt n)
+								{
+									for (auto c = 0ull; c < C; c++)
+									{
+										const auto offset = n * CDHW() + c * HW();
+										for (auto hw = 0ull; hw < HW(); hw++)
+											Neurons[hw + offset] = ASinh::f(InputLayer->Neurons[hw + offset]);
+									}
+								});
+							}
+						}
+					}
+#ifdef DNN_STOCHASTIC
+				}
+#endif
+			}
+			break;
+
+			case Activations::TanhExp:
+			{
+				if (InputLayer->DstMemDesc->get_ndims() == 2)
 				{
 #ifdef DNN_STOCHASTIC
 					if (batchSize == 1)
@@ -420,7 +655,7 @@ namespace dnn
 										TanhExp::fVec(VecFloat().load_a(&InputLayer->Neurons[c])).store_a(&Neurons[c]);
 #ifndef DNN_LEAN
 										if (!InplaceBwd)
-											VecFloat(0).store_nt(&NeuronsD1[c]);
+										VecFloat(0).store_nt(&NeuronsD1[c]);
 #endif // DNN_LEAN
 									}
 								});
@@ -621,6 +856,182 @@ namespace dnn
 
 			switch (ActivationFunction)
 			{
+			case Activations::ASinh:
+			{
+				if (InputLayer->DstMemDesc->get_ndims() == 2)
+				{
+#ifdef DNN_STOCHASTIC
+					if (batchSize == 1)
+					{
+						if (InplaceBwd)
+						{
+							if (!plain)
+							{
+								for (auto c = 0ull; c < PaddedC; c += VectorSize)
+									(ASinh::dfVec(VecFloat().load_a(&InputLayerFwd->Neurons[c])), VecFloat().load_a(&InputLayer->NeuronsD1[c])).store_a(&InputLayer->NeuronsD1[c]);
+							}
+							else
+							{
+								for (auto c = 0ull; c < C; c++)
+									InputLayer->NeuronsD1[c] = ASinh::df(InputLayerFwd->Neurons[c]) * InputLayer->NeuronsD1[c];
+							}
+						}
+						else
+						{
+							if (!plain)
+							{
+								for (auto c = 0ull; c < PaddedC; c += VectorSize)
+									mul_add(ASinh::dfVec(VecFloat().load_a(&InputLayerFwd->Neurons[c])), VecFloat().load_a(&NeuronsD1[c]), VecFloat().load_a(&InputLayer->NeuronsD1[c])).store_a(&InputLayer->NeuronsD1[c]);
+							}
+							else
+							{
+								for (auto c = 0ull; c < C; c++)
+									InputLayer->NeuronsD1[c] += ASinh::df(InputLayerFwd->Neurons[c]) * NeuronsD1[c];
+							}
+						}
+					}
+					else
+					{
+#endif
+						if (InplaceBwd)
+						{
+							if (!plain)
+								for_i(batchSize, threads, [=](UInt n)
+								{
+									const auto offset = n * PaddedC;
+									for (auto c = offset; c < offset + PaddedC; c += VectorSize)
+										(ASinh::dfVec(VecFloat().load_a(&InputLayerFwd->Neurons[c])), VecFloat().load_a(&InputLayer->NeuronsD1[c])).store_a(&InputLayer->NeuronsD1[c]);
+								});
+							else
+								for_i(batchSize, threads, [=](UInt n)
+								{
+									const auto offset = n * C;
+									for (auto c = offset; c < offset + C; c++)
+										InputLayer->NeuronsD1[c] = ASinh::df(InputLayerFwd->Neurons[c]) * InputLayer->NeuronsD1[c];
+								});
+						}
+						else
+						{
+							if (!plain)
+								for_i(batchSize, threads, [=](UInt n)
+								{
+									const auto offset = n * PaddedC;
+									for (auto c = offset; c < offset + PaddedC; c += VectorSize)
+										mul_add(ASinh::dfVec(VecFloat().load_a(&InputLayerFwd->Neurons[c])), VecFloat().load_a(&NeuronsD1[c]), VecFloat().load_a(&InputLayer->NeuronsD1[c])).store_a(&InputLayer->NeuronsD1[c]);
+								});
+							else
+								for_i(batchSize, threads, [=](UInt n)
+								{
+									const auto offset = n * C;
+									for (auto c = offset; c < offset + C; c++)
+										InputLayer->NeuronsD1[c] += ASinh::df(InputLayerFwd->Neurons[c]) * NeuronsD1[c];
+								});
+						}
+#ifdef DNN_STOCHASTIC
+					}
+#endif
+				}
+				else
+				{
+#ifdef DNN_STOCHASTIC
+					if (batchSize == 1)
+					{
+						if (InplaceBwd)
+						{
+							if (!plain)
+								for (auto c = 0ull; c < PaddedC; c += VectorSize)
+								{
+									const auto offset = c * HW();
+									for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
+										(ASinh::dfVec(VecFloat().load_a(&InputLayerFwd->Neurons[hw])), VecFloat().load_a(&InputLayer->NeuronsD1[hw])).store_a(&InputLayer->NeuronsD1[hw]);
+								}
+							else
+							{
+								for (auto c = 0ull; c < C; c++)
+								{
+									const auto offset = c * HW();
+									for (auto hw = offset; hw < offset + HW(); hw++)
+										InputLayer->NeuronsD1[hw] = ASinh::df(InputLayerFwd->Neurons[hw]) * InputLayer->NeuronsD1[hw];
+								}
+							}
+						}
+						else
+						{
+							if (!plain)
+								for (auto c = 0ull; c < PaddedC; c += VectorSize)
+								{
+									const auto offset = c * HW();
+									for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
+										mul_add(ASinh::dfVec(VecFloat().load_a(&InputLayerFwd->Neurons[hw])), VecFloat().load_a(&NeuronsD1[hw]), VecFloat().load_a(&InputLayer->NeuronsD1[hw])).store_a(&InputLayer->NeuronsD1[hw]);
+								}
+							else
+							{
+								for (auto c = 0ull; c < C; c++)
+								{
+									const auto offset = c * HW();
+									for (auto hw = offset; hw < offset + HW(); hw++)
+										InputLayer->NeuronsD1[hw] += ASinh::df(InputLayerFwd->Neurons[hw]) * NeuronsD1[hw];
+								}
+							}
+						}
+					}
+					else
+					{
+#endif
+						if (InplaceBwd)
+						{
+							if (!plain)
+								for_i(batchSize, threads, [=](UInt n)
+								{
+									for (auto c = 0ull; c < PaddedC; c += VectorSize)
+									{
+										const auto offset = n * PaddedCDHW() + c * HW();
+										for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
+											(ASinh::dfVec(VecFloat().load_a(&InputLayerFwd->Neurons[hw])), VecFloat().load_a(&InputLayer->NeuronsD1[hw])).store_a(&InputLayer->NeuronsD1[hw]);
+									}
+								});
+							else
+								for_i(batchSize, threads, [=](UInt n)
+								{
+									for (auto c = 0ull; c < C; c++)
+									{
+										const auto offset = n * CDHW() + c * HW();
+										for (auto hw = offset; hw < offset + HW(); hw++)
+											InputLayer->NeuronsD1[hw] = ASinh::df(InputLayerFwd->Neurons[hw]) * InputLayer->NeuronsD1[hw];
+									}
+								});
+						}
+						else
+						{
+							if (!plain)
+								for_i(batchSize, threads, [=](UInt n)
+								{
+									for (auto c = 0ull; c < PaddedC; c += VectorSize)
+									{
+										const auto offset = n * PaddedCDHW() + c * HW();
+										for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
+											mul_add(ASinh::dfVec(VecFloat().load_a(&InputLayerFwd->Neurons[hw])), VecFloat().load_a(&NeuronsD1[hw]), VecFloat().load_a(&InputLayer->NeuronsD1[hw])).store_a(&InputLayer->NeuronsD1[hw]);
+									}
+								});
+							else
+								for_i(batchSize, threads, [=](UInt n)
+								{
+									for (auto c = 0ull; c < C; c++)
+									{
+										const auto offset = n * CDHW() + c * HW();
+										for (auto hw = offset; hw < offset + HW(); hw++)
+											InputLayer->NeuronsD1[hw] += ASinh::df(InputLayerFwd->Neurons[hw]) * NeuronsD1[hw];
+									}
+								});
+						}
+#ifdef DNN_STOCHASTIC
+					}
+#endif
+				}
+			}
+			break;
+
+
 			case Activations::TanhExp:
 			{
 				if (InputLayer->DstMemDesc->get_ndims() == 2)
