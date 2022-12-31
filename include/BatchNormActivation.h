@@ -744,7 +744,6 @@ namespace dnn
 					{
 						for_i(batchSize, threads, [=](UInt n)
 						{
-							const auto vecZero = VecFloat(0);
 							VecFloat neurons;
 							for (auto c = 0ull; c < PaddedC; c += VectorSize)
 							{
@@ -754,7 +753,7 @@ namespace dnn
 									neurons.load_a(&InputNeurons[hw]);
 									Activation::fVec(neurons, Alpha, Beta).store_a(&Neurons[hw]);
 #ifndef DNN_LEAN
-									vecZero.store_nt(&NeuronsD1[hw]);
+									VecFloat(0).store_nt(&NeuronsD1[hw]);
 #endif // DNN_LEAN
 								}
 							}
@@ -764,7 +763,6 @@ namespace dnn
 					{
 						for_i(batchSize, threads, [=](UInt n)
 						{
-							const auto vecZero = VecFloat(0);
 							VecFloat neurons;
 							for (auto c = 0ull; c < PaddedC; c += VectorSize)
 							{
