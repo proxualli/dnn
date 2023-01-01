@@ -2231,7 +2231,7 @@ namespace dnn
 		virtual UInt GetNeuronsSize(const UInt batchSize) const
 		{
 #ifndef DNN_LEAN
-			return batchSize * PaddedCDHW() * sizeof(Float) * (InplaceBwd ? 1 : 2);
+			return batchSize * PaddedCDHW() * sizeof(Float) * (InplaceBwd ? 1ull : 2ull);
 #else
 			return batchSize * PaddedCDHW() * sizeof(Float);
 #endif // DNN_LEAN
