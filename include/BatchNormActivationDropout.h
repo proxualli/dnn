@@ -7,6 +7,90 @@ namespace dnn
 	template <typename Activation = HardSwish, typename dnn::LayerTypes T = LayerTypes::BatchNormHardSwishDropout>
 	class BatchNormActivationDropout final : public Layer
 	{
+	private:
+		auto GetAlpha(const Activations activation, const Float alpha, const Float beta) const
+		{
+			switch (activation)
+			{
+			case Activations::Abs:
+			case Activations::ASinh:
+			case Activations::BoundedRelu:
+			case Activations::Clip:
+			case Activations::ClipV2:
+			case Activations::Exp:
+			case Activations::Gelu:
+			case Activations::GeluErf:
+			case Activations::Log:
+			case Activations::Logistic:
+			case Activations::LogLogistic:
+			case Activations::Mish:
+			case Activations::Pow:
+			case Activations::Relu:
+			case Activations::Round:
+			case Activations::SoftRelu:
+			case Activations::SoftSign:
+			case Activations::Sqrt:
+			case Activations::Square:
+			case Activations::Tanh:
+			case Activations::TanhExp:
+				break;
+
+			case Activations::Elu:
+			case Activations::Linear:
+			case Activations::Swish:
+				return alpha == Float(0) ? Float(1) : alpha;
+			case Activations::SoftPlus:
+				return alpha == Float(0) ? Float(20) : alpha;
+			case Activations::HardLogistic:
+				return alpha == Float(0) ? Float(0.2) : alpha;
+			case Activations::HardSwish:
+				return alpha == Float(0) ? Float(3) : alpha;
+			}
+
+			return alpha;
+		}
+
+		auto GetBeta(const Activations activation, const Float alpha, const Float beta) const
+		{
+			switch (activation)
+			{
+			case Activations::Abs:
+			case Activations::ASinh:
+			case Activations::BoundedRelu:
+			case Activations::Clip:
+			case Activations::ClipV2:
+			case Activations::Elu:
+			case Activations::Exp:
+			case Activations::Gelu:
+			case Activations::GeluErf:
+			case Activations::Linear:
+			case Activations::Log:
+			case Activations::LogLogistic:
+			case Activations::Logistic:
+			case Activations::Mish:
+			case Activations::Pow:
+			case Activations::Relu:
+			case Activations::Round:
+			case Activations::SoftRelu:
+			case Activations::SoftSign:
+			case Activations::Sqrt:
+			case Activations::Square:
+			case Activations::Swish:
+			case Activations::Tanh:
+			case Activations::TanhExp:
+				break;
+
+			case Activations::HardLogistic:
+				return beta == Float(0) ? Float(0.5) : beta;
+			case Activations::HardSwish:
+				return beta == Float(0) ? Float(6) : beta;
+			case Activations::SoftPlus:
+				return beta == Float(0) ? Float(1) : beta;
+			}
+
+			return beta;
+		}
+
 	public:
 		const bool LocalValue;
 		const Float Eps;
@@ -26,8 +110,8 @@ namespace dnn
 		BatchNormActivationDropout<Activation, T>(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const Float dropout = Float(0.5), const bool localValue = false, const bool scaling = true, const Float alpha = Float(0), const Float beta = Float(0), const Float momentum = Float(0.99), const Float eps = Float(1e-04), const bool hasBias = true) :
 			Layer(device, format, name, T, inputs[0]->C, inputs[0]->C, inputs[0]->C, inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs, hasBias, scaling, dropout > 0),
 			LocalValue(localValue),
-			Alpha(alpha),
-			Beta(beta),
+			Alpha(GetAlpha(Activation::Enum(), alpha, beta)),
+			Beta(GetBeta(Activation::Enum(), alpha, beta)),
 			Eps(eps),
 			Momentum(momentum),
 			OneMinusMomentum(Float(1) - momentum),
@@ -68,8 +152,11 @@ namespace dnn
 
 		std::string GetDescription() const final override
 		{
-			auto description = GetDescriptionHeader() + GetWeightsDescription(Scaling);
+			auto description = GetDescriptionHeader();
 
+			description.append(nwl + std::string(" Alpha:") + dtab + FloatToString(Alpha));
+			description.append(nwl + std::string(" Beta:") + dtab + FloatToString(Beta));
+			description += GetWeightsDescription(Scaling);
 			description.append(nwl + std::string(" Momentum:") + tab + FloatToString(Momentum));
 			description.append(nwl + std::string(" Eps:") + dtab + FloatToStringScientific(Eps));
 

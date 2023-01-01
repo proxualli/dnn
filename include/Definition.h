@@ -490,15 +490,15 @@ namespace dnn
 							model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsFillerMode, weightsGain, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesFillerMode, biasesGain, biasesScale, biasesLRM, biasesWDM);
 							break;
 						case LayerTypes::BatchNormHardLogistic:
-							model->Layers.push_back(std::make_unique<BatchNormActivation<HardLogistic, LayerTypes::BatchNormHardLogistic>>(model->Device, model->Format, name, inputs, scaling, Float(0.2), Float(0.5), momentum, eps, biases));
+							model->Layers.push_back(std::make_unique<BatchNormActivation<HardLogistic, LayerTypes::BatchNormHardLogistic>>(model->Device, model->Format, name, inputs, scaling, alpha, beta, momentum, eps, biases));
 							model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsFillerMode, weightsGain, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesFillerMode, biasesGain, biasesScale, biasesLRM, biasesWDM);
 							break;
 						case LayerTypes::BatchNormHardSwish:
-							model->Layers.push_back(std::make_unique<BatchNormActivation<HardSwish, LayerTypes::BatchNormHardSwish>>(model->Device, model->Format, name, inputs, scaling, Float(3), Float(1) / Float(6), momentum, eps, biases));
+							model->Layers.push_back(std::make_unique<BatchNormActivation<HardSwish, LayerTypes::BatchNormHardSwish>>(model->Device, model->Format, name, inputs, scaling, alpha, beta, momentum, eps, biases));
 							model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsFillerMode, weightsGain, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesFillerMode, biasesGain, biasesScale, biasesLRM, biasesWDM);
 							break;
 						case LayerTypes::BatchNormHardSwishDropout:
-							model->Layers.push_back(std::make_unique<BatchNormActivationDropout<HardSwish, LayerTypes::BatchNormHardSwishDropout>>(model->Device, model->Format, name, inputs, dropout, dropout != model->Dropout, scaling, Float(3), Float(1) / Float(6), momentum, eps, biases));
+							model->Layers.push_back(std::make_unique<BatchNormActivationDropout<HardSwish, LayerTypes::BatchNormHardSwishDropout>>(model->Device, model->Format, name, inputs, dropout, dropout != model->Dropout, scaling, alpha, beta, momentum, eps, biases));
 							model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsFillerMode, weightsGain, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesFillerMode, biasesGain, biasesScale, biasesLRM, biasesWDM);
 							break;
 						case LayerTypes::BatchNormMish:

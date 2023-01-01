@@ -65,25 +65,17 @@ namespace dnn
 	{
 		inline static Float f(const Float& x, const Float& alpha = Float(0.2), const Float& beta = Float(0.5)) NOEXCEPT { return std::min(Float(1), std::max(Float(0), x * alpha + beta)); }
 		inline static Float df(const Float& x, const Float& alpha = Float(0.2), const Float& beta = Float(0.5)) NOEXCEPT { return std::abs(x) > (beta / alpha) ? Float(0) : alpha; }
-		inline static VecFloat fVec(const VecFloat& x, const Float& alpha = Float(0.2), const Float& beta = Float(0.5)) NOEXCEPT { return min(VecFloat(1), max(VecFloat(0), x * alpha + beta)); }
-		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(0.2), const Float& beta = Float(0.5)) NOEXCEPT { return select(abs(x) > (beta / alpha), VecFloat(0), alpha); }
+		inline static VecFloat fVec(const VecFloat& x, const Float& alpha = Float(0.2), const Float& beta = Float(0.5)) NOEXCEPT { return min(VecFloat(1), max(VecFloat(0), mul_add(x, alpha ,beta))); }
+		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(0.2), const Float& beta = Float(0.5)) NOEXCEPT { return select(abs(x) > (beta / alpha), VecFloat(Float(0)), alpha); }
 		inline static Activations Enum() NOEXCEPT { return Activations::HardLogistic; }
-	};
-
-	struct Relu6
-	{
-		inline static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return std::min(std::max(x, Float(0)), Float(6)); }
-		inline static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return x < Float(0) || x > Float(6) ? Float(0) : Float(1); }
-		inline static VecFloat fVec(const VecFloat& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return min(max(x, VecFloat(0)), VecFloat(6)); }
-		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return select(x < VecFloat(0) | x > VecFloat(6), VecFloat(0), VecFloat(1)); }
 	};
 
 	struct HardSwish
 	{
-		inline static Float f(const Float& x, const Float& alpha = Float(3), const Float& beta = Float(1) / Float(6)) NOEXCEPT{return x * Relu6::f(x + alpha) * beta;}
-		inline static Float df(const Float& x, const Float& alpha = Float(3), const Float& beta = Float(1) / Float(6)) NOEXCEPT { return x < -alpha ? Float(0) : x > alpha ? Float(1) : ((Float(2) * beta * x) + (alpha * beta)); }
-		inline static VecFloat fVec(const VecFloat& x, const Float& alpha = Float(3), const Float& beta = Float(1) / Float(6)) NOEXCEPT { return x * Relu6::fVec(x + alpha) * beta; }
-		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(3), const Float& beta = Float(1) / Float(6)) NOEXCEPT { return select(x < -alpha, VecFloat(Float(0)), select(x > alpha, VecFloat(Float(1)), ((VecFloat(Float(2)) * beta * x) + (alpha * beta)))); }
+		inline static Float f(const Float& x, const Float& alpha = Float(3), const Float& beta = Float(6)) NOEXCEPT{return x * std::min(std::max(x + alpha, Float(0)), Float(beta)) / beta;}
+		inline static Float df(const Float& x, const Float& alpha = Float(3), const Float& beta = Float(6)) NOEXCEPT { return x < -alpha ? Float(0) : x > alpha ? Float(1) : ((Float(2) / beta * x) + (alpha / beta)); }
+		inline static VecFloat fVec(const VecFloat& x, const Float& alpha = Float(3), const Float& beta = Float(6)) NOEXCEPT { return x * min(max(x + alpha, VecFloat(0)), VecFloat(beta)) / beta; }
+		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(3), const Float& beta = Float(6)) NOEXCEPT { return select(x < -alpha, VecFloat(0), select(x > alpha, VecFloat(1), ((VecFloat(2) / beta * x) + (alpha / beta)))); }
 		inline static Activations Enum() NOEXCEPT { return Activations::HardSwish; }
 	};
 
@@ -113,7 +105,7 @@ namespace dnn
 		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { const auto y = Logistic::fVec(x); return y * (VecFloat(1) - y); }
 		inline static Activations Enum() NOEXCEPT { return Activations::Logistic; }
 	};
-
+	
 	struct SoftRelu
 	{
 		inline static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return std::log(Float(1) + std::exp(x)); }
@@ -132,6 +124,15 @@ namespace dnn
 		inline static Activations Enum() NOEXCEPT { return Activations::LogLogistic; }
 	};
 
+	struct Mish
+	{
+		inline static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return x * std::tanh(std::log1p(std::exp(x))); }
+		inline static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { const auto tmpExp = std::exp(x); const auto tmpSoftplus = std::log1p(tmpExp); const auto tmpSech = Float(1) / std::cosh(tmpSoftplus); return std::tanh(tmpSoftplus) + x * tmpExp * Square<Float>(tmpSech) / (tmpExp + Float(1)); }
+		inline static VecFloat fVec(const VecFloat& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return x * tanh(log1p(exp(x))); }
+		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { const auto tmpExp = exp(x); const auto tmpSoftplus = log1p(tmpExp); const auto tmpSech = VecFloat(1) / cosh(tmpSoftplus); return tanh(tmpSoftplus) + x * tmpExp * square(tmpSech) / (tmpExp + VecFloat(1)); }
+		inline static Activations Enum() NOEXCEPT { return Activations::Mish; }
+	};
+
 	struct Relu // alpha >= 0
 	{
 		inline static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return x > Float(0) ? x : x * alpha; }
@@ -140,7 +141,7 @@ namespace dnn
 		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return select(x > VecFloat(0), VecFloat(1), alpha); }
 		inline static Activations Enum() NOEXCEPT { return Activations::Relu; }
 	};
-
+	
 	struct Selu
 	{
 		inline static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return Float(1.0507009873554804934193349852946) * (x > Float(0) ? x : Float(1.6732632423543772848170429916717) * (std::exp(x) - Float(1))); }
@@ -193,15 +194,7 @@ namespace dnn
 		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { const auto y = exp(x); const auto z = tanh(y); return z - (x * y * (square(z) - VecFloat(1))); }
 		inline static Activations Enum() NOEXCEPT { return Activations::TanhExp; }
 	};
-
-	struct Mish
-	{
-		inline static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return x * std::tanh(std::log1p(std::exp(x))); }
-		inline static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { const auto tmpExp = std::exp(x); const auto tmpSoftplus = std::log1p(tmpExp); const auto tmpSech = Float(1) / std::cosh(tmpSoftplus); return std::tanh(tmpSoftplus) + x * tmpExp * Square<Float>(tmpSech) / (tmpExp + Float(1)); }
-		inline static VecFloat fVec(const VecFloat& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return x * tanh(log1p(exp(x))); }
-		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { const auto tmpExp = exp(x); const auto tmpSoftplus = log1p(tmpExp); const auto tmpSech = VecFloat(1) / cosh(tmpSoftplus); return tanh(tmpSoftplus) + x * tmpExp * square(tmpSech) / (tmpExp + VecFloat(1)); }
-		inline static Activations Enum() NOEXCEPT { return Activations::Mish; }
-	};
+	
 
 	class Activation final : public Layer
 	{
@@ -248,10 +241,10 @@ namespace dnn
 				return Float(0);
 			case Activations::Elu:
 			case Activations::Linear:
-			case Activations::SoftPlus:
-				return alpha == Float(0) ? Float(20) : alpha;
 			case Activations::Swish:
 				return alpha == Float(0) ? Float(1) : alpha;
+			case Activations::SoftPlus:
+				return alpha == Float(0) ? Float(20) : alpha;
 			case Activations::HardLogistic:
 				return alpha == Float(0) ? Float(0.2) : alpha;
 			case Activations::HardSwish:
@@ -297,7 +290,7 @@ namespace dnn
 			case Activations::HardLogistic:
 				return beta == Float(0) ? Float(0.5) : beta;
 			case Activations::HardSwish:
-				return beta == Float(0) ? Float(1) / Float(6) : beta;
+				return beta == Float(0) ?Float(6) : beta;
 			case Activations::SoftPlus:
 				return beta == Float(0) ? Float(1) : beta;
 			}
