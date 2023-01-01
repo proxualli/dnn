@@ -65,8 +65,8 @@ namespace dnn
 	{
 		inline static Float f(const Float& x, const Float& alpha = Float(0.2), const Float& beta = Float(0.5)) NOEXCEPT { return std::min(Float(1), std::max(Float(0), x * alpha + beta)); }
 		inline static Float df(const Float& x, const Float& alpha = Float(0.2), const Float& beta = Float(0.5)) NOEXCEPT { return std::abs(x) > (beta / alpha) ? Float(0) : alpha; }
-		inline static VecFloat fVec(const VecFloat& x, const Float& alpha = Float(0.2), const Float& beta = Float(0.5)) NOEXCEPT { return min(VecFloat(1), max(VecFloat(0), mul_add(x, alpha ,beta))); }
-		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(0.2), const Float& beta = Float(0.5)) NOEXCEPT { return select(abs(x) > (beta / alpha), VecFloat(Float(0)), alpha); }
+		inline static VecFloat fVec(const VecFloat& x, const Float& alpha = Float(0.2), const Float& beta = Float(0.5)) NOEXCEPT { return min(Float(1), max(Float(0), mul_add(x, alpha, beta))); }
+		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(0.2), const Float& beta = Float(0.5)) NOEXCEPT { return select(abs(x) > (beta / alpha), Float(0), alpha); }
 		inline static Activations Enum() NOEXCEPT { return Activations::HardLogistic; }
 	};
 
@@ -74,8 +74,8 @@ namespace dnn
 	{
 		inline static Float f(const Float& x, const Float& alpha = Float(3), const Float& beta = Float(6)) NOEXCEPT{return x * std::min(std::max(x + alpha, Float(0)), Float(beta)) / beta;}
 		inline static Float df(const Float& x, const Float& alpha = Float(3), const Float& beta = Float(6)) NOEXCEPT { return x < -alpha ? Float(0) : x > alpha ? Float(1) : ((Float(2) / beta * x) + (alpha / beta)); }
-		inline static VecFloat fVec(const VecFloat& x, const Float& alpha = Float(3), const Float& beta = Float(6)) NOEXCEPT { return x * min(max(x + alpha, VecFloat(0)), VecFloat(beta)) / beta; }
-		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(3), const Float& beta = Float(6)) NOEXCEPT { return select(x < -alpha, VecFloat(0), select(x > alpha, VecFloat(1), ((VecFloat(2) / beta * x) + (alpha / beta)))); }
+		inline static VecFloat fVec(const VecFloat& x, const Float& alpha = Float(3), const Float& beta = Float(6)) NOEXCEPT { return x * min(max(x + alpha, Float(0)), Float(beta)) / beta; }
+		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(3), const Float& beta = Float(6)) NOEXCEPT { return select(x < -alpha, Float(0), select(x > alpha, Float(1), (((Float(2) / beta) * x) + (alpha / beta)))); }
 		inline static Activations Enum() NOEXCEPT { return Activations::HardSwish; }
 	};
 
