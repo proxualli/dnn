@@ -64,7 +64,7 @@ namespace dnn
 			else
 			{
 				if (Format == dnnl::memory::format_tag::any)
-					ChosenFormat = LayerBeforeCost || IsPlainDataFmt(*InputLayer->DstMemDesc) ? PlainFmt : GetDataFmt(*InputLayer->DstMemDesc);
+					ChosenFormat = (LayerBeforeCost || IsPlainDataFmt(*InputLayer->DstMemDesc)) ? PlainFmt : GetDataFmt(*InputLayer->DstMemDesc);
 				else
 					ChosenFormat = PlainFmt;
 
@@ -74,7 +74,7 @@ namespace dnn
 				InputLayerDiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(InputLayer->C), dnnl::memory::dim(InputLayer->H), dnnl::memory::dim(InputLayer->W) }), dnnl::memory::data_type::f32, ChosenFormat));
 			}
 
-			const auto axis = (H == 1 && W == 1) ? 1 : 3;
+			const auto axis = (H == 1ull && W == 1ull) ? 1 : 3;
 			fwdDesc = std::make_unique<dnnl::softmax_forward::primitive_desc>(dnnl::softmax_forward::primitive_desc(Device.engine, dnnl::prop_kind::forward, dnnl::algorithm::softmax_log, *InputLayerDstMemDesc, *DstMemDesc, axis));
 			bwdDesc = std::make_unique<dnnl::softmax_backward::primitive_desc>(dnnl::softmax_backward::primitive_desc(Device.engine, dnnl::algorithm::softmax_log, *InputLayerDiffDstMemDesc, *DiffDstMemDesc, *DstMemDesc, axis, *fwdDesc));
 			bwdAddDesc = std::make_unique<dnnl::binary::primitive_desc>(dnnl::binary::primitive_desc(Device.engine, dnnl::algorithm::binary_add, *InputLayer->DiffDstMemDesc, *InputLayer->DiffDstMemDesc, *InputLayer->DiffDstMemDesc));

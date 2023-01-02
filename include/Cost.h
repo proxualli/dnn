@@ -18,8 +18,7 @@ namespace dnn
 	private:
 		std::vector<LabelInfo> sampleLabel;
 		std::vector<std::vector<LabelInfo>> sampleLabels;
-		bool isLogSoftmax;
-
+		
 	public:
 		const Costs CostFunction;
 		const UInt GroupIndex;
@@ -28,6 +27,7 @@ namespace dnn
 		const Float LabelFalse;
 		const Float Weight;
 		const Float Eps;
+		const bool IsLogSoftmax;
 		UInt TrainErrors;
 		Float TrainLoss;
 		Float AvgTrainLoss;
@@ -47,7 +47,7 @@ namespace dnn
 			LabelFalse(labelFalse),
 			Weight(weight),
 			Eps(eps),
-			isLogSoftmax(false)
+			IsLogSoftmax(inputs.size() == 1 && inputs[0]->LayerType == LayerTypes::LogSoftmax)
 		{
 			assert(Inputs.size() == 1);
 
@@ -96,7 +96,6 @@ namespace dnn
 			ChosenFormat = dnnl::memory::format_tag::ab;
 			DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C)}), dnnl::memory::data_type::f32, ChosenFormat));
 			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, ChosenFormat));
-			isLogSoftmax = InputLayer->LayerType == LayerTypes::LogSoftmax;
 		}
 
 		void SetSampleLabel(const std::vector<LabelInfo>& label)
@@ -168,7 +167,7 @@ namespace dnn
 
 			case Costs::CategoricalCrossEntropy:
 			{
-				if (isLogSoftmax)
+				if (IsLogSoftmax)
 				{
 #ifdef DNN_STOCHASTIC
 					if (batchSize == 1)
@@ -409,7 +408,7 @@ namespace dnn
 
 			case Costs::CategoricalCrossEntropy:
 			{
-				if (isLogSoftmax)
+				if (IsLogSoftmax)
 				{
 #ifdef DNN_STOCHASTIC
 					if (batchSize == 1)

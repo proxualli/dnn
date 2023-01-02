@@ -37,8 +37,8 @@ namespace dnn
 
 		void UpdateResolution() final override
 		{
-			H = static_cast<UInt>(InputLayer->H * double(FactorH));
-			W = static_cast<UInt>(InputLayer->W * double(FactorW));
+			H = static_cast<UInt>(std::trunc(double(InputLayer->H) * double(FactorH)));
+			W = static_cast<UInt>(std::trunc(double(InputLayer->W) * double(FactorW)));
 		}
 
 		std::string GetDescription() const final override

@@ -764,17 +764,6 @@ namespace dnn
 			return img;
 		}
 
-		static Image Distorted(Image& image, const Float scale, const Float angle, const Interpolations interpolation, const std::vector<Float>& mean) NOEXCEPT
-		{
-			const auto zoom = scale / Float(100) * UniformReal<Float>(Float(-1), Float(1));
-			const auto height = static_cast<unsigned>(static_cast<int>(image.H()) + static_cast<int>(std::round(static_cast<int>(image.H()) * zoom)));
-			const auto width = static_cast<unsigned>(static_cast<int>(image.W()) + static_cast<int>(std::round(static_cast<int>(image.W()) * zoom)));
-			
-			Image::Resize(image, image.D(), height, width, interpolation);
-
-			return Image::Crop(Image::Rotate(image, angle * UniformReal<Float>(Float(-1), Float(1)), interpolation, mean), Positions::Center, image.D(), image.H(), image.W(), mean);
-		}
-
 		static void Dropout(Image& image, const Float dropout, const std::vector<Float>& mean) NOEXCEPT
 		{
 			for (auto d = 0u; d < image.D(); d++)
@@ -1071,7 +1060,18 @@ namespace dnn
 
 			return Crop(img, Positions::Center, image.D(), image.H(), image.W(), mean);
 		}
-			
+
+		static Image Distorted(Image& image, const Float scale, const Float angle, const Interpolations interpolation, const std::vector<Float>& mean) NOEXCEPT
+		{
+			const auto zoom = scale / Float(100) * UniformReal<Float>(Float(-1), Float(1));
+			const auto height = static_cast<unsigned>(static_cast<int>(image.H()) + static_cast<int>(std::round(static_cast<int>(image.H()) * zoom)));
+			const auto width = static_cast<unsigned>(static_cast<int>(image.W()) + static_cast<int>(std::round(static_cast<int>(image.W()) * zoom)));
+
+			Resize(image, image.D(), height, width, interpolation);
+
+			return Rotate(image, angle * UniformReal<Float>(Float(-1), Float(1)), interpolation, mean);
+		}
+
 		// magnitude = 0   // blurred image
 		// magnitude = 1   // original
 		// range 0.1 --> 1.9
