@@ -6,11 +6,6 @@ namespace dnn
 	class AvgPooling final : public Layer
 	{
 	private:
-		const dnnl::memory::dims kernel;
-		const dnnl::memory::dims stride;
-		const dnnl::memory::dims dilates;
-		const dnnl::memory::dims padding;
-
 		std::unique_ptr<dnnl::pooling_forward::primitive_desc> fwdDesc;
 		std::unique_ptr<dnnl::pooling_backward::primitive_desc> bwdDesc;
 		std::unique_ptr<dnnl::binary::primitive_desc> bwdAddDesc;
@@ -19,6 +14,10 @@ namespace dnn
 		std::unique_ptr<dnnl::pooling_backward> bwd;
 		std::unique_ptr<dnnl::binary> bwdAdd;
 #endif
+		const dnnl::memory::dims kernel;
+		const dnnl::memory::dims stride;
+		const dnnl::memory::dims dilates;
+		const dnnl::memory::dims padding;
 		bool reorderFwdSrc;
 		bool reorderBwdDiffSrc;
 

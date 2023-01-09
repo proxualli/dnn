@@ -313,6 +313,7 @@ extern "C" DNN_API void DNNGetLayerWeights(const UInt layerIndex, std::vector<Fl
 {
 	if (model && layerIndex < model->Layers.size() && model->Layers[layerIndex]->HasWeights)
 	{
+		PRAGMA_OMP_SIMD()
 		for (auto i = 0ull; i < model->Layers[layerIndex]->WeightCount; i++)
 			(*weights)[i] = model->Layers[layerIndex]->Weights[i];
 	
@@ -530,7 +531,9 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, LayerInfo* info)
 		{
 			auto bn = dynamic_cast<BatchNorm*>(model->Layers[layerIndex].get());
 			if (bn)
+			{
 				info->Scaling = bn->Scaling;
+			}
 		}
 		break;
 

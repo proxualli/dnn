@@ -325,7 +325,9 @@ namespace dnn
 						case Activations::Mish:
 						case Activations::Pow:
 						case Activations::Round:
+						case Activations::SoftPlus:
 						case Activations::SoftRelu:
+						case Activations::SoftSign:
 						case Activations::Sqrt:
 						case Activations::Square:
 						case Activations::Tanh:

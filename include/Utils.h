@@ -99,7 +99,7 @@ using namespace dnn;
 
 namespace
 {
-	constexpr auto UseInplace = true;
+	constexpr auto UseInplace = false;
 	constexpr auto Reference = false;
 
 	typedef float Float;
@@ -117,9 +117,9 @@ namespace
 		constexpr auto HEAVY_THRESHOLD =      120338608ull;
 		constexpr auto MAXIMUM_THRESHOLD =    187538608ull;
 		
-		const auto ULTRALIGHT = MAX_THREADS >= 32ull ?  2ull : MAX_THREADS >= 24ull ?  2ull : MAX_THREADS >= 16ull ?  2ull : 2ull;
-		const auto LIGHT      = MAX_THREADS >= 32ull ?  4ull : MAX_THREADS >= 24ull ?  4ull : MAX_THREADS >= 16ull ?  4ull : MAX_THREADS >= 12ull ?  4ull : MAX_THREADS >= 8ull ? 4ull : MAX_THREADS >= 6ull ? 4ull : 2ull;
-		const auto MEDIUM     = MAX_THREADS >= 32ull ?  8ull : MAX_THREADS >= 24ull ?  8ull : MAX_THREADS >= 16ull ?  8ull : MAX_THREADS >= 12ull ?  8ull : MAX_THREADS >= 8ull ? 8ull : MAX_THREADS >= 6ull ? 6ull : MAX_THREADS >= 4ull ? 4ull : 2ull;
+		const auto ULTRALIGHT = 2ull;
+		const auto LIGHT      = MAX_THREADS >=  6ull ?  4ull : 2ull;
+		const auto MEDIUM     = MAX_THREADS >=  8ull ?  8ull : MAX_THREADS >=  6ull ?  6ull : MAX_THREADS >=  4ull ?  4ull : 2ull;
 		const auto HEAVY      = MAX_THREADS >= 32ull ? 16ull : MAX_THREADS >= 24ull ?  16ll : MAX_THREADS >= 16ull ? 16ull : MAX_THREADS >= 12ull ? 12ull : MAX_THREADS >= 8ull ? 8ull : MAX_THREADS >= 6ull ? 6ull : MAX_THREADS >= 4ull ? 4ull : 2ull;
 		const auto ULTRAHEAVY = MAX_THREADS >= 32ull ? 32ull : MAX_THREADS >= 24ull ? 24ull : MAX_THREADS >= 16ull ? 16ull : MAX_THREADS >= 12ull ? 12ull : MAX_THREADS >= 8ull ? 8ull : MAX_THREADS >= 6ull ? 6ull : MAX_THREADS >= 4ull ? 4ull : 2ull;
 
