@@ -685,6 +685,8 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, LayerInfo* info)
 				info->KernelW = pool->KernelW;
 				info->StrideH = pool->StrideH;
 				info->StrideW = pool->StrideW;
+				info->DilationH = pool->DilationH;
+				info->DilationW = pool->DilationW;
 			}
 		}
 		break;
@@ -698,6 +700,8 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, LayerInfo* info)
 				info->KernelW = pool->KernelW;
 				info->StrideH = pool->StrideH;
 				info->StrideW = pool->StrideW;
+				info->DilationH = pool->DilationH;
+				info->DilationW = pool->DilationW;
 			}
 		}
 		break;
