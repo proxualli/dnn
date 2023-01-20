@@ -99,7 +99,7 @@ using namespace dnn;
 
 namespace
 {
-	constexpr auto UseKahan = true;
+	constexpr auto UseKahanSum = true;
 	constexpr auto UseInplace = false;
 	constexpr auto Reference = false;
 	constexpr auto SingleNormalizationPass = false;
@@ -491,7 +491,7 @@ namespace
 	template<typename T>
 	inline static void KahanSum(const T& value, T& sum, T& correction) NOEXCEPT
 	{
-		if constexpr (UseKahan)
+		if constexpr (UseKahanSum)
 		{
 			const auto y = value - correction;
 			const auto t = sum + y;
