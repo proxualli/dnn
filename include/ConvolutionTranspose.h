@@ -16,9 +16,6 @@ namespace dnn
 		std::unique_ptr<dnnl::deconvolution_backward_data> bwdData;
 		std::unique_ptr<dnnl::binary> bwdAdd;
 #endif
-		const dnnl::memory::dims strides;
-		const dnnl::memory::dims dilates;
-		const dnnl::memory::dims padding;
 		bool reorderFwdSrc;
 		bool reorderBwdSrc;
 		bool reorderBwdDiffSrc;
@@ -35,6 +32,9 @@ namespace dnn
 		const UInt DilationW;
 		const UInt DilationKernelH;
 		const UInt DilationKernelW;
+		const dnnl::memory::dims Strides;
+		const dnnl::memory::dims Dilates;
+		const dnnl::memory::dims Padding;
 
 		ConvolutionTranspose(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const UInt c, const UInt kernelH, const UInt kernelW, const UInt strideH, const UInt strideW, const UInt dilationH, const UInt dilationW, const UInt padH, const UInt padW, const bool hasBias) :
 			Layer(device, format, name, LayerTypes::ConvolutionTranspose, inputs[0]->C * c * kernelH * kernelW, c, c, inputs[0]->D, strideH * ((inputs[0]->H - 1) + (1 + (kernelH - 1) * dilationH) - (padH * 2)), strideW * ((inputs[0]->W - 1) + (1 + (kernelW - 1) * dilationW) - (padW * 2)), 0, padH, padW, inputs, hasBias),
@@ -46,8 +46,8 @@ namespace dnn
 			DilationW(dilationW),
 			DilationKernelH(1 + (kernelH - 1) * dilationH),
 			DilationKernelW(1 + (kernelW - 1) * dilationW),
-			strides(dnnl::memory::dims({ dnnl::memory::dim(strideH) , dnnl::memory::dim(strideW) })),
-			padding(dnnl::memory::dims({ dnnl::memory::dim(padH), dnnl::memory::dim(padW) })),
+			Strides(dnnl::memory::dims({ dnnl::memory::dim(strideH) , dnnl::memory::dim(strideW) })),
+			Padding(dnnl::memory::dims({ dnnl::memory::dim(padH), dnnl::memory::dim(padW) })),
 			reorderFwdSrc(false),
 			reorderBwdSrc(false),
 			reorderBwdDiffSrc(false),
@@ -63,8 +63,8 @@ namespace dnn
 
 		void UpdateResolution() final override
 		{
-			H = StrideH * ((InputLayer->H - 1) + DilationKernelH - (padding[0] * 2));
-			W = StrideW * ((InputLayer->W - 1) + DilationKernelW - (padding[1] * 2));
+			H = StrideH * ((InputLayer->H - 1) + DilationKernelH - (Padding[0] * 2));
+			W = StrideW * ((InputLayer->W - 1) + DilationKernelW - (Padding[1] * 2));
 		}
 
 		std::string GetDescription() const final override
@@ -109,14 +109,14 @@ namespace dnn
 				dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::any) });
 
 			fwdDesc = std::make_unique<dnnl::deconvolution_forward::primitive_desc>(HasBias ? 
-				dnnl::deconvolution_forward::primitive_desc(Device.engine, dnnl::prop_kind::forward, dnnl::algorithm::convolution_auto, memDesc[0], memDesc[2], memDesc[3], memDesc[1], strides, dilates, padding, padding) :
-				dnnl::deconvolution_forward::primitive_desc(Device.engine, dnnl::prop_kind::forward, dnnl::algorithm::convolution_auto, memDesc[0], memDesc[2], memDesc[1], strides, dilates, padding, padding));
+				dnnl::deconvolution_forward::primitive_desc(Device.engine, dnnl::prop_kind::forward, dnnl::algorithm::convolution_auto, memDesc[0], memDesc[2], memDesc[3], memDesc[1], Strides, Dilates, Padding, Padding) :
+				dnnl::deconvolution_forward::primitive_desc(Device.engine, dnnl::prop_kind::forward, dnnl::algorithm::convolution_auto, memDesc[0], memDesc[2], memDesc[1], Strides, Dilates, Padding, Padding));
 
 			bwdWeightsDesc = std::make_unique<dnnl::deconvolution_backward_weights::primitive_desc>(HasBias ? 
-				dnnl::deconvolution_backward_weights::primitive_desc(Device.engine,	dnnl::algorithm::convolution_auto, memDesc[0], memDesc[2], memDesc[3], memDesc[1], strides, dilates, padding, padding, *fwdDesc) :
-				dnnl::deconvolution_backward_weights::primitive_desc(Device.engine, dnnl::algorithm::convolution_auto, memDesc[0], memDesc[2], memDesc[1], strides, dilates, padding, padding, *fwdDesc));
+				dnnl::deconvolution_backward_weights::primitive_desc(Device.engine,	dnnl::algorithm::convolution_auto, memDesc[0], memDesc[2], memDesc[3], memDesc[1], Strides, Dilates, Padding, Padding, *fwdDesc) :
+				dnnl::deconvolution_backward_weights::primitive_desc(Device.engine, dnnl::algorithm::convolution_auto, memDesc[0], memDesc[2], memDesc[1], Strides, Dilates, Padding, Padding, *fwdDesc));
 
-			bwdDataDesc = std::make_unique<dnnl::deconvolution_backward_data::primitive_desc>(dnnl::deconvolution_backward_data::primitive_desc(Device.engine, dnnl::algorithm::convolution_auto, memDesc[0], memDesc[2], memDesc[1], strides, dilates, padding, padding, *fwdDesc));
+			bwdDataDesc = std::make_unique<dnnl::deconvolution_backward_data::primitive_desc>(dnnl::deconvolution_backward_data::primitive_desc(Device.engine, dnnl::algorithm::convolution_auto, memDesc[0], memDesc[2], memDesc[1], Strides, Dilates, Padding, Padding, *fwdDesc));
 
 			bwdAddDesc = std::make_unique<dnnl::binary::primitive_desc>(dnnl::binary::primitive_desc(Device.engine, dnnl::algorithm::binary_add, *InputLayer->DiffDstMemDesc, *InputLayer->DiffDstMemDesc, *InputLayer->DiffDstMemDesc));
 

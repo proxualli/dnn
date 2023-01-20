@@ -52,6 +52,15 @@ namespace dnn
 		inline static Activations Enum() NOEXCEPT { return Activations::ASinh; }
 	};
 
+	struct BoundedRelu // alpha >= 0
+	{
+		inline static Float f(const Float& x, const Float& alpha = Float(6), const Float& beta = Float(0)) NOEXCEPT { return std::max(Float(0), std::min(alpha, x)); }
+		inline static Float df(const Float& x, const Float& alpha = Float(6), const Float& beta = Float(0)) NOEXCEPT { return x > Float(0) && x <= alpha ? Float(1) : Float(0); }
+		inline static VecFloat fVec(const VecFloat& x, const Float& alpha = Float(6), const Float& beta = Float(0)) NOEXCEPT { return max(Float(0), min(alpha, x)); }
+		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(6), const Float& beta = Float(0)) NOEXCEPT { return select(x > Float(0), select(x <= alpha, Float(1), Float(0)), Float(0)); }
+		inline static Activations Enum() NOEXCEPT { return Activations::BoundedRelu; }
+	};
+
 	struct Elu 
 	{
 		inline static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return x > Float(0) ? x : alpha * (std::exp(x) - Float(1)); }
@@ -236,9 +245,8 @@ namespace dnn
 			case Activations::Tanh:
 			case Activations::TanhExp:
 				break;
-
 			case Activations::BoundedRelu:
-				return Float(0);
+				return alpha == Float(0) ? Float(6) : alpha;
 			case Activations::Elu:
 			case Activations::Linear:
 			case Activations::Swish:
@@ -262,6 +270,7 @@ namespace dnn
 			{
 			case Activations::Abs:
 			case Activations::ASinh:
+			case Activations::BoundedRelu:
 			case Activations::Clip:
 			case Activations::ClipV2:
 			case Activations::Elu:
@@ -284,9 +293,6 @@ namespace dnn
 			case Activations::Tanh:
 			case Activations::TanhExp:
 				break;
-
-			case Activations::BoundedRelu:
-				return alpha == Float(0) ? Float(6) : alpha;
 			case Activations::HardLogistic:
 				return beta == Float(0) ? Float(0.5) : beta;
 			case Activations::HardSwish:
@@ -345,6 +351,9 @@ namespace dnn
 
 		void InitializeDescriptors(const UInt batchSize) final override
 		{
+			auto alpha = Alpha;
+			auto beta = Beta;
+
 			switch (ActivationFunction)
 			{
 				case Activations::ASinh:
@@ -358,6 +367,8 @@ namespace dnn
 					break;
 				case Activations::BoundedRelu:
 					algorithm = dnnl::algorithm::eltwise_clip;
+					beta = alpha;
+					alpha = Float(0);
 					break;
 				case Activations::Clip:
 					algorithm = dnnl::algorithm::eltwise_clip;
@@ -442,8 +453,9 @@ namespace dnn
 				DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, ChosenFormat));
 			}
 
-			fwdDesc = std::make_unique<dnnl::eltwise_forward::primitive_desc>(dnnl::eltwise_forward::primitive_desc(Device.engine, dnnl::prop_kind::forward, algorithm, *InputLayer->DstMemDesc, *DstMemDesc, Alpha, Beta));
-			bwdDesc = std::make_unique<dnnl::eltwise_backward::primitive_desc>(dnnl::eltwise_backward::primitive_desc(Device.engine, algorithm, *InputLayer->DiffDstMemDesc, *DiffDstMemDesc, *DstMemDesc, Alpha, Beta, *fwdDesc));
+			fwdDesc = std::make_unique<dnnl::eltwise_forward::primitive_desc>(dnnl::eltwise_forward::primitive_desc(Device.engine, dnnl::prop_kind::forward, algorithm, *InputLayer->DstMemDesc, *DstMemDesc, alpha, beta));
+			bwdDesc = std::make_unique<dnnl::eltwise_backward::primitive_desc>(dnnl::eltwise_backward::primitive_desc(Device.engine, algorithm, *InputLayer->DiffDstMemDesc, *DiffDstMemDesc, *DstMemDesc, alpha, beta, *fwdDesc));
+
 			bwdAddDesc = std::make_unique<dnnl::binary::primitive_desc>(dnnl::binary::primitive_desc(Device.engine, dnnl::algorithm::binary_add, *InputLayer->DiffDstMemDesc, *InputLayer->DiffDstMemDesc, *InputLayer->DiffDstMemDesc));
 
 			reorderFwdSrc = fwdDesc->src_desc() != *InputLayer->DstMemDesc;

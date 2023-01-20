@@ -1734,6 +1734,26 @@ namespace dnn
 			return n * PaddedCDHW + (c / VectorSize) * HW * VectorSize + h * W * VectorSize + w * VectorSize + (c % VectorSize);
 		}*/
 		
+		virtual void LoadNeurons(std::istream& is)
+		{
+			is.read(reinterpret_cast<char*>(Neurons.data()), std::streamsize(Neurons.size() * sizeof(Float)));
+		}
+
+		virtual void LoadNeuronsD1(std::istream& is)
+		{
+			is.read(reinterpret_cast<char*>(NeuronsD1.data()), std::streamsize(NeuronsD1.size() * sizeof(Float)));
+		}
+
+		virtual void SaveNeurons(std::ostream& os)
+		{
+			os.write(reinterpret_cast<const char*>(Neurons.data()), std::streamsize(Neurons.size() * sizeof(Float)));
+		}
+
+		virtual void SaveNeuronsD1(std::ostream& os)
+		{
+			os.write(reinterpret_cast<const char*>(NeuronsD1.data()), std::streamsize(NeuronsD1.size() * sizeof(Float)));
+		}
+
 		virtual void Save(std::ostream& os, const bool persistOptimizer = false, const Optimizers optimizer = Optimizers::SGD)
 		{
 			if (HasWeights)

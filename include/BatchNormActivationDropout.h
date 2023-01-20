@@ -14,7 +14,6 @@ namespace dnn
 			{
 			case Activations::Abs:
 			case Activations::ASinh:
-			case Activations::BoundedRelu:
 			case Activations::Clip:
 			case Activations::ClipV2:
 			case Activations::Exp:
@@ -34,7 +33,8 @@ namespace dnn
 			case Activations::Tanh:
 			case Activations::TanhExp:
 				break;
-
+			case Activations::BoundedRelu:
+				return alpha == Float(0) ? Float(6) : alpha;
 			case Activations::Elu:
 			case Activations::Linear:
 			case Activations::Swish:
@@ -56,7 +56,6 @@ namespace dnn
 			{
 			case Activations::Abs:
 			case Activations::ASinh:
-			case Activations::BoundedRelu:
 			case Activations::Clip:
 			case Activations::ClipV2:
 			case Activations::Elu:
@@ -79,7 +78,8 @@ namespace dnn
 			case Activations::Tanh:
 			case Activations::TanhExp:
 				break;
-
+			case Activations::BoundedRelu:
+				return Float(0);
 			case Activations::HardLogistic:
 				return beta == Float(0) ? Float(0.5) : beta;
 			case Activations::HardSwish:

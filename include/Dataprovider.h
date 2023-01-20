@@ -21,6 +21,9 @@ namespace dnn
 		std::filesystem::path DatasetsDirectory;
 		Datasets Dataset;
 		UInt C;
+		UInt D;
+		UInt H;
+		UInt W;
 		std::vector<Float> Mean;
 		std::vector<Float> StdDev;
 		UInt ShuffleCount;
@@ -29,8 +32,8 @@ namespace dnn
 		UInt Hierarchies;
 		std::vector<UInt> ClassCount;
 		std::vector<std::string> ClassNames;
-		std::vector<cimg_library::CImg<Byte>> TrainingSamples;
-		std::vector<cimg_library::CImg<Byte>> TestingSamples;
+		std::vector<Image<Byte>> TrainingSamples;
+		std::vector<Image<Byte>> TestingSamples;
 		std::vector<std::vector<UInt>> TrainingLabels;
 		std::vector<std::vector<UInt>> TestingLabels;
 
@@ -44,7 +47,7 @@ namespace dnn
 			C(3),
 			Mean(std::vector<Float>({ Float(0) })),
 			StdDev(std::vector<Float>({ Float(0) })),
-			ShuffleCount(96ull)
+			ShuffleCount(64ull)
 		{
 			std::filesystem::create_directories(DatasetsDirectory);
 
@@ -390,6 +393,58 @@ namespace dnn
 #endif
 		}
 
+		std::vector<Float> GetMean(const UInt C, const UInt D, const UInt H, const UInt W)
+		{
+			auto mean = std::vector<double>(C, double(0));
+			auto correction = std::vector<double>(C, double(0));
+			
+			for_i(C, [&](UInt c)
+			{
+				for (auto i = 0ull; i < TrainingSamplesCount; i++)
+					for (auto d = 0u; d < D; d++)
+						for (auto h = 0u; h < H; h++)
+							for (auto w = 0u; w < W; w++)
+								KahanSum<double>(double(TrainingSamples[i](static_cast<unsigned int>(c), d, h, w)), mean[c], correction[c]);
+
+				mean[c] /= TrainingSamplesCount * D * H * W;
+			});
+
+			auto result = std::vector<Float>();
+			for (auto c = 0ull; c < C; c++)
+				result.push_back(Float(mean[c]));
+
+			return result;
+		}
+		
+		std::vector<Float> GetStdDev(const std::vector<Float>& mean, const UInt C, const UInt D, const UInt H, const UInt W)
+		{
+			auto stddev = std::vector<double>(C, double(0));
+			auto correction = std::vector<double>(C, double(0));
+
+			auto eps = double(1);
+			while (double(1) + eps != double(1))
+				eps /= double(2);
+			
+			for_i(C, [&](UInt c)
+			{
+				for (auto i = 0ull; i < TrainingSamplesCount; i++)
+					for (auto d = 0u; d < D; d++)
+						for (auto h = 0u; h < H; h++)
+							for (auto w = 0u; w < W; w++)
+								KahanSum<double>(Square<double>(double(TrainingSamples[i](static_cast<unsigned int>(c), d, h, w)) - mean[c]), stddev[c], correction[c]);
+				
+				stddev[c] /= TrainingSamplesCount * D * H * W;
+				stddev[c] = std::max(double(0), stddev[c]);
+				stddev[c] = std::sqrt(stddev[c] + eps);
+			});
+			
+			auto result = std::vector<Float>();
+			for (auto c = 0ull; c < C; c++)
+				result.push_back(Float(stddev[c]));
+
+			return result;
+		}
+
 		bool LoadDataset(const Datasets dataset)
 		{
 			if (!DatasetAvailable(dataset))
@@ -400,27 +455,51 @@ namespace dnn
 					return false;
 			}
 
-			TrainingSamples = std::vector<cimg_library::CImg<Byte>>();
-			TestingSamples = std::vector<cimg_library::CImg<Byte>>();
+			TrainingSamples = std::vector<Image<Byte>>();
+			TestingSamples = std::vector<Image<Byte>>();
 
 			switch (dataset)
 			{
 			case Datasets::fashionmnist:
 				C = 1;
+				D = 1;
+				H = 28;
+				W = 28;
 				Mean = std::vector<Float>({ Float(72.940247) });
 				StdDev = std::vector<Float>({ Float(90.021133) });
 				break;
-
 			case Datasets::mnist:
 				C = 1;
+				D = 1;
+				H = 28;
+				W = 28;
 				Mean = std::vector<Float>({ Float(33.318443) });
 				StdDev = std::vector<Float>({ Float(78.567261) });
 				break;
 			case Datasets::cifar10:
+				C = 3;
+				D = 1;
+				H = 32;
+				W = 32;
+				Mean = std::vector<Float>({ Float(125.79831808), Float(123.43251712), Float(114.31199744) });
+				StdDev = std::vector<Float>({ Float(63.24027648), Float(62.3321728), Float(66.96644608) });
+				break;
 			case Datasets::cifar100:
-			case Datasets::tinyimagenet:
 			    C = 3;
+				D = 1;
+				H = 32;
+				W = 32;
+				Mean = std::vector<Float>({ Float(129.3), Float(124.1), Float(112.4) });
+				StdDev = std::vector<Float>({ Float(68.2),  Float(65.4),  Float(70.4) });
 			    break;
+			case Datasets::tinyimagenet:
+				C = 3;
+				D = 1;
+				H = 64;
+				W = 64;
+				Mean = std::vector<Float>({ Float(117.56279), Float(109.588692), Float(96.981331) });
+				StdDev = std::vector<Float>({ Float(69.272858), Float(67.387779), Float(70.635902) });
+				break;
 			}
 
 			switch (dataset)
@@ -433,10 +512,8 @@ namespace dnn
 				TestingSamplesCount = 10000;
 				TrainingLabels = std::vector<std::vector<UInt>>(TrainingSamplesCount, std::vector<UInt>(Hierarchies, 0));
 				TestingLabels = std::vector<std::vector<UInt>>(TestingSamplesCount, std::vector<UInt>(Hierarchies, 0));
-				Mean = std::vector<Float>({ Float(125.79831808), Float(123.43251712), Float(114.31199744) });
-				StdDev = std::vector<Float>({ Float(63.24027648), Float(62.3321728), Float(66.96644608) });
-				TrainingSamples = std::vector<cimg_library::CImg<Byte>>(TrainingSamplesCount);
-				TestingSamples = std::vector<cimg_library::CImg<Byte>>(TestingSamplesCount);
+				TrainingSamples = std::vector<Image<Byte>>(TrainingSamplesCount);
+				TestingSamples = std::vector<Image<Byte>>(TestingSamplesCount);
 				auto pathTrainPatterns = std::vector<std::string>();
 				pathTrainPatterns.push_back((DatasetsDirectory / std::string(magic_enum::enum_name<Datasets>(dataset)) / "data_batch_1.bin").string());
 				pathTrainPatterns.push_back((DatasetsDirectory / std::string(magic_enum::enum_name<Datasets>(dataset)) / "data_batch_2.bin").string());
@@ -455,14 +532,13 @@ namespace dnn
 						auto TrainPatterns = new Byte[30730000];
 						infile.read(reinterpret_cast<char*>(TrainPatterns), 30730000);
 						infile.close();
-
 						const auto offset = batch * 10000;
 						for (UInt index = 0; index < 10000; index++)
 						{
-							TrainingSamples[index + offset] = cimg_library::CImg<Byte>(&TrainPatterns[3073 * index + 1], 32, 32, 1, 3);
+							TrainingSamples[index + offset] = Image(cimg_library::CImg<Byte>(&TrainPatterns[3073 * index + 1], 32, 32, 1, 3));
 							TrainingLabels[index + offset][0] = TrainPatterns[3073 * index];
+							
 						}
-
 						delete[] TrainPatterns;
 					}
 					else
@@ -481,7 +557,7 @@ namespace dnn
 
 					for (UInt index = 0; index < TestingSamplesCount; index++)
 					{
-						TestingSamples[index] = cimg_library::CImg<Byte>(&TestPatterns[3073 * index + 1], 32, 32, 1, 3);
+						TestingSamples[index] = Image(cimg_library::CImg<Byte>(&TestPatterns[3073 * index + 1], 32, 32, 1, 3));
 						TestingLabels[index][0] = TestPatterns[3073 * index];
 					}
 
@@ -500,10 +576,8 @@ namespace dnn
 				TestingSamplesCount = 10000;
 				TrainingLabels = std::vector<std::vector<UInt>>(TrainingSamplesCount, std::vector<UInt>(Hierarchies));
 				TestingLabels = std::vector<std::vector<UInt>>(TestingSamplesCount, std::vector<UInt>(Hierarchies));
-				Mean = std::vector<Float>({ Float(129.3), Float(124.1), Float(112.4) });
-				StdDev = std::vector<Float>({ Float(68.2),  Float(65.4),  Float(70.4) });
-				TrainingSamples = std::vector<cimg_library::CImg<Byte>>(TrainingSamplesCount);
-				TestingSamples = std::vector<cimg_library::CImg<Byte>>(TestingSamplesCount);
+				TrainingSamples = std::vector<Image<Byte>>(TrainingSamplesCount);
+				TestingSamples = std::vector<Image<Byte>>(TestingSamplesCount);
 				const auto pathTrainPatterns = (DatasetsDirectory / std::string(magic_enum::enum_name<Datasets>(dataset)) / "train.bin").string();
 				const auto pathTestPatterns = (DatasetsDirectory / std::string(magic_enum::enum_name<Datasets>(dataset)) / "test.bin").string();
 
@@ -516,7 +590,7 @@ namespace dnn
 
 					for (UInt index = 0; index < 50000; index++)
 					{
-						TrainingSamples[index] = cimg_library::CImg<Byte>(&TrainPatterns[3074 * index + 2], 32, 32, 1, 3);
+						TrainingSamples[index] = Image(cimg_library::CImg<Byte>(&TrainPatterns[3074 * index + 2], 32, 32, 1, 3));
 						TrainingLabels[index][0] = TrainPatterns[3074 * index];
 						TrainingLabels[index][1] = TrainPatterns[3074 * index + 1];
 					}
@@ -535,7 +609,7 @@ namespace dnn
 
 					for (UInt index = 0; index < TestingSamplesCount; index++)
 					{
-						TestingSamples[index] = cimg_library::CImg<Byte>(&TestPatterns[3074 * index + 2], 32, 32, 1, 3);
+						TestingSamples[index] = Image(cimg_library::CImg<Byte>(&TestPatterns[3074 * index + 2], 32, 32, 1, 3));
 						TestingLabels[index][0] = TestPatterns[3074 * index];
 						TestingLabels[index][1] = TestPatterns[3074 * index + 1];
 					}
@@ -579,7 +653,7 @@ namespace dnn
 
 						for (UInt i = 0; i < TrainingSamplesCount; i++)
 						{
-							TrainingSamples.push_back(cimg_library::CImg<Byte>(&fileBuf[i * 784], 28, 28, 1, 1));
+							TrainingSamples.push_back(Image(cimg_library::CImg<Byte>(&fileBuf[i * 784], 28, 28, 1, 1)));
 							TrainingLabels[i][0] = static_cast<UInt>(fileBufLabels[i]);
 						}
 
@@ -614,7 +688,7 @@ namespace dnn
 
 						for (UInt i = 0; i < TestingSamplesCount; i++)
 						{
-							TestingSamples.push_back(cimg_library::CImg<Byte>(&fileBuf[i * 784], 28, 28, 1, 1));
+							TestingSamples.push_back(Image(cimg_library::CImg<Byte>(&fileBuf[i * 784], 28, 28, 1, 1)));
 							TestingLabels[i][0] = static_cast<UInt>(fileBufLabels[i]);
 						}
 
@@ -641,10 +715,8 @@ namespace dnn
 				TestingSamplesCount = 10000;
 				TrainingLabels = std::vector<std::vector<UInt>>(TrainingSamplesCount, std::vector<UInt>(Hierarchies, 0));
 				TestingLabels = std::vector<std::vector<UInt>>(TestingSamplesCount, std::vector<UInt>(Hierarchies, 0));
-				Mean = std::vector<Float>({ Float(117.56279), Float(109.588692), Float(96.981331) });
-				StdDev = std::vector<Float>({ Float(69.272858), Float(67.387779), Float(70.635902) });
-				TrainingSamples = std::vector<cimg_library::CImg<Byte>>(TrainingSamplesCount);
-				TestingSamples = std::vector<cimg_library::CImg<Byte>>(TestingSamplesCount);
+				TrainingSamples = std::vector<Image<Byte>>(TrainingSamplesCount);
+				TestingSamples = std::vector<Image<Byte>>(TestingSamplesCount);
 				auto labels = std::vector<std::string>(TestingSamplesCount);
 				auto labels_idx = std::vector<UInt>(TestingSamplesCount);
 				ClassNames = std::vector<std::string>();
@@ -668,7 +740,7 @@ namespace dnn
 						const auto pos = i + offset;
 						const auto fileName = (DatasetsDirectory / std::string(magic_enum::enum_name<Datasets>(dataset))  / "train" / ClassNames[item] / "images" / (ClassNames[item] + "_" + std::to_string(i) + ".JPEG")).string();
 #ifdef cimg_use_jpeg
-						TrainingSamples[pos] = LoadJPEG(fileName, true);
+						TrainingSamples[pos] = Image(LoadJPEG(fileName, true));
 #endif
 						TrainingLabels[pos][0] = item;
 					}
@@ -708,7 +780,7 @@ namespace dnn
 					const auto fileName = (DatasetsDirectory / std::string(magic_enum::enum_name<Datasets>(dataset))  / "val" / "images" / ("val_" + std::to_string(i) + ".JPEG")).string();
 					//const auto fileName = (DatasetsDirectory() / std::string(magic_enum::enum_name<Datasets>(dataset))  / "test" / "images" / ("test_" + std::to_string(i) + ".JPEG")).string();
 #ifdef cimg_use_jpeg
-					TestingSamples[i] = LoadJPEG(fileName, true);
+					TestingSamples[i] = Image(LoadJPEG(fileName, true));
 #endif
 					TestingLabels[i][0] = labels_idx[i];
 				});
@@ -716,6 +788,8 @@ namespace dnn
 			break;
 			}
 
+			Mean = GetMean(C, D, H, W);
+			StdDev = GetStdDev(Mean, C, D, H, W);
 			Dataset = dataset;
 
 			return true;

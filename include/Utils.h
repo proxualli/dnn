@@ -99,7 +99,7 @@ using namespace dnn;
 
 namespace
 {
-	constexpr auto UseInplace = true;
+	constexpr auto UseInplace = false;
 	constexpr auto Reference = false;
 
 	typedef float Float;
@@ -493,6 +493,7 @@ namespace
 		const auto t = sum + y;
 		correction = (t - sum) - y;
 		sum = t;
+		//sum += value;
 	}
 	
 #if defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW32__)
@@ -519,15 +520,15 @@ namespace
 	}
 #endif
 
-	static auto BernoulliVecFloat(const Float prob = Float(0.5)) noexcept
+	static auto BernoulliVecFloat(const Float p = Float(0.5)) noexcept
 	{
 		static thread_local auto generator = Ranvec1(3, Seed<int>(), static_cast<int>(std::hash<std::thread::id>()(std::this_thread::get_id())));
 #if defined(DNN_AVX512BW) || defined(DNN_AVX512)
-		return select(generator.random16f() < prob, VecFloat(1), VecFloat(0));
+		return select(generator.random16f() < p, Float(1), Float(0));
 #elif defined(DNN_AVX2) || defined(DNN_AVX)
-		return select(generator.random8f() < prob, VecFloat(1), VecFloat(0));
+		return select(generator.random8f() < p, Float(1), Float(0));
 #elif defined(DNN_SSE42) || defined(DNN_SSE41)
-		return select(generator.random4f() < prob, VecFloat(1), VecFloat(0));
+		return select(generator.random4f() < p, Float(1), Float(0));
 #endif
 	}
 

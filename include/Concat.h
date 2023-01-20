@@ -6,9 +6,9 @@ namespace dnn
 	class Concat final : public Layer
 	{
 	private:
-		std::vector<dnnl::memory::desc> srcsMemsDesc;
-		std::unordered_map<int, dnnl::memory> fwdArgs;
 		std::unique_ptr<dnnl::concat::primitive_desc> fwdDesc;
+		std::unordered_map<int, dnnl::memory> fwdArgs;
+		std::vector<dnnl::memory::desc> srcsMemsDesc;
 #ifdef DNN_CACHE_PRIMITIVES
 		std::unique_ptr<dnnl::concat> fwd;
 #endif

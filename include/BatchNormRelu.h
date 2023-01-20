@@ -6,7 +6,6 @@ namespace dnn
 	class BatchNormRelu final : public Layer
 	{
 	private:
-		dnnl::normalization_flags flags;
 		std::unique_ptr<dnnl::batch_normalization_forward::primitive_desc> fwdDesc;
 		std::unique_ptr<dnnl::batch_normalization_backward::primitive_desc> bwdDesc;
 		std::unique_ptr<dnnl::binary::primitive_desc> bwdAddDesc;
@@ -16,6 +15,7 @@ namespace dnn
 		std::unique_ptr<dnnl::batch_normalization_backward> bwd;
 		std::unique_ptr<dnnl::binary> bwdAdd;
 #endif
+		dnnl::normalization_flags flags;
 		bool inference;
 		bool reorderFwdSrc;
 		bool reorderBwdSrc;

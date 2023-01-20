@@ -91,7 +91,7 @@ namespace dnn
 
 			fwdDesc = std::make_unique<dnnl::pooling_forward::primitive_desc>(dnnl::pooling_forward::primitive_desc(Device.engine, dnnl::prop_kind::forward_training, dnnl::algorithm::pooling_avg_exclude_padding, *InputLayer->DstMemDesc, *DstMemDesc, Strides, Kernel, Dilation, Padding, Padding));
 			bwdDesc = std::make_unique<dnnl::pooling_backward::primitive_desc>(dnnl::pooling_backward::primitive_desc(Device.engine, dnnl::algorithm::pooling_avg_exclude_padding, *InputLayer->DiffDstMemDesc, *DiffDstMemDesc, Strides, Kernel, Dilation, Padding, Padding, *fwdDesc));
-			
+
 			reorderFwdSrc = fwdDesc->src_desc() != *InputLayer->DstMemDesc;
 			reorderBwdDiffSrc = bwdDesc->diff_src_desc() != *InputLayer->DiffDstMemDesc;
 

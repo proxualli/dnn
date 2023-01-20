@@ -113,37 +113,39 @@ namespace dnn
 			return Data[w + (h * Data._width) + (d * Data._height * Data._width) + (c * Data._depth * Data._height * Data._width)];
 		}
 		
-		static Float GetChannelMean(const Image& image, const unsigned c) NOEXCEPT
+		Float GetChannelMean(const unsigned c) NOEXCEPT
 		{
 			auto mean = Float(0);
 			auto correction = Float(0);
 
-			for (auto d = 0u; d < image.D(); d++)
-				for (auto h = 0u; h < image.H(); h++)
-					for (auto w = 0u; w < image.W(); w++)
-						KahanSum<Float>(image(c, d, h, w), mean, correction);
+			for (auto d = 0u; d < D(); d++)
+				for (auto h = 0u; h < H(); h++)
+					for (auto w = 0u; w < W(); w++)
+						KahanSum<Float>(Float((c, d, h, w)), mean, correction);
 
-			return mean /= image.ChannelSize();
+			return mean /= ChannelSize();
 		}
 
-		static Float GetChannelVariance(const Image& image, const unsigned c) NOEXCEPT
+		Float GetChannelVariance(const unsigned c) NOEXCEPT
 		{
-			const auto mean = GetChannelMean(image, c);
+			const auto mean = GetChannelMean(c);
 
 			auto variance = Float(0);
 			auto correction = Float(0);
 
-			for (auto d = 0u; d < image.D(); d++)
-				for (auto h = 0u; h < image.H(); h++)
-					for (auto w = 0u; w < image.W(); w++)
-						KahanSum<Float>(Square<Float>(image(c, d, h, w) - mean), variance, correction);
+			for (auto d = 0u; d < D(); d++)
+				for (auto h = 0u; h < H(); h++)
+					for (auto w = 0u; w < W(); w++)
+						KahanSum<Float>(Square<Float>(Float((c, d, h, w)) - mean), variance, correction);
 
-			return variance /= image.ChannelSize();
+			variance /= ChannelSize();
+
+			return std::max(Float(0), variance);
 		}
 
-		static Float GetChannelStdDev(const Image& image, const unsigned c) NOEXCEPT
+		Float GetChannelStdDev(const unsigned c) NOEXCEPT
 		{
-			return std::max(std::sqrt(GetChannelVariance(image, c)), Float(1) / std::sqrt(Float(image.ChannelSize())));
+			return std::max(std::sqrt(GetChannelVariance(c)), Float(1) / std::sqrt(Float(ChannelSize())));
 		}
 
 		inline static cimg_library::CImg<Float> ImageToCImgFloat(const Image& image) NOEXCEPT

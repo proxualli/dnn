@@ -6,12 +6,12 @@ namespace dnn
 	class Add final : public Layer
 	{
 	private:
-		std::vector<Float> scales;
 		std::unordered_map<int, dnnl::memory> fwdArgs;
 		std::unique_ptr<dnnl::binary::primitive_desc> fwdDesc;
 #ifdef DNN_CACHE_PRIMITIVES
 		std::unique_ptr<dnnl::binary> fwd;
 #endif
+		std::vector<Float> scales;
 
 	public:
 		const Byte first, second;

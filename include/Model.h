@@ -458,7 +458,7 @@ namespace dnn
 			BatchNormScaling(true),					// Scaling
 			BatchNormMomentum(Float(0.995)),		// Momentum
 			BatchNormEps(Float(1e-04)),				// Eps
-			DepthDrop(Float(0.0)),					// DepthDrop  (Stochastic Depth paper: https://www.arxiv-vanity.com/papers/1603.09382/)
+			DepthDrop(Float(0.0)),					// DepthDrop			(Stochastic Depth: https://www.arxiv-vanity.com/papers/1603.09382/)
 			FixedDepthDrop(false),					// FixedDepthDrop
 			Dropout(Float(0)),						// Dropout
 			WeightsFiller(Fillers::HeNormal),		// WeightsFiller
@@ -1052,6 +1052,7 @@ namespace dnn
 		void TrainingAsync()
 		{
 			Task = std::async(std::launch::async, [=] { Training(); });
+			//Task = std::async(std::launch::async, [=] { CheckValid(); });
 		}
 
 		void TestingAsync()
@@ -1856,6 +1857,177 @@ namespace dnn
 			}
 		}
 
+		void CheckValid()
+		{
+			if (TaskState == TaskStates::Stopped && !BatchSizeChanging.load() && !ResettingWeights.load())
+			{
+				TaskState.store(TaskStates::Running);
+				State.store(States::Idle);
+				const auto totalSkipConnections = GetTotalSkipConnections();
+
+				auto timer = std::chrono::high_resolution_clock();
+				auto timePoint = timer.now();
+				auto timePointGlobal = timer.now();
+				auto bpropTimeCount = std::chrono::duration<Float>(Float(0));
+				auto updateTimeCount = std::chrono::duration<Float>(Float(0));
+				auto elapsedTime = std::chrono::duration<Float>(Float(0));
+
+				TotalEpochs = 0;
+				for (const auto& rate : TrainingRates)
+					TotalEpochs += rate.Epochs;
+				TotalEpochs += GoToEpoch - 1;
+
+				auto useCycli = false;
+				for (const auto& rate : TrainingRates)
+					if (rate.Cycles != 1)
+						useCycli = true;
+
+				CurrentEpoch = GoToEpoch - 1;
+				CurrentTrainingRate = TrainingRates[0];
+				Rate = CurrentTrainingRate.MaximumRate;
+				CurrentCycle = CurrentTrainingRate.Cycles;
+
+				if (!ChangeResolution(CurrentTrainingRate.BatchSize, CurrentTrainingRate.Height, CurrentTrainingRate.Width, CurrentTrainingRate.PadH, CurrentTrainingRate.PadW))
+					return;
+
+				if (Dropout != CurrentTrainingRate.Dropout)
+					ChangeDropout(CurrentTrainingRate.Dropout, BatchSize);
+
+				auto learningRateEpochs = CurrentTrainingRate.Epochs;
+				auto learningRateIndex = 0ull;
+
+				RandomTrainingSamples = std::vector<UInt>(DataProv->TrainingSamplesCount);
+				for (auto i = 0ull; i < DataProv->TrainingSamplesCount; i++)
+					RandomTrainingSamples[i] = i;
+
+				TrainingSamplesHFlip = std::vector<bool>();
+				TrainingSamplesVFlip = std::vector<bool>();
+				TestingSamplesHFlip = std::vector<bool>();
+				TestingSamplesVFlip = std::vector<bool>();
+
+				for (auto index = 0ull; index < DataProv->TrainingSamplesCount; index++)
+				{
+					TrainingSamplesHFlip.push_back(false);
+					TrainingSamplesVFlip.push_back(false);
+				}
+				for (auto index = 0ull; index < DataProv->TestingSamplesCount; index++)
+				{
+					TestingSamplesHFlip.push_back(false);
+					TestingSamplesVFlip.push_back(false);
+				}
+
+				SetOptimizer(CurrentTrainingRate.Optimizer);
+				if (!PersistOptimizer)
+					for (auto& layer : Layers)
+						layer->ResetOptimizer(Optimizer);
+				else
+					for (auto& layer : Layers)
+						layer->CheckOptimizer(Optimizer);
+
+				FirstUnlockedLayer.store(Layers.size() - 2);
+				for (auto i = 0ull; i < Layers.size(); i++)
+					if (Layers[i]->Lockable() && !Layers[i]->LockUpdate.load())
+					{
+						FirstUnlockedLayer.store(i);
+						break;
+					}
+
+				State.store(States::Training);
+
+				if (CheckTaskState())
+				{
+					if constexpr (UseInplace)
+						SwitchInplaceBwd(false);
+
+					for (auto cost : CostLayers)
+						cost->Reset();
+
+
+					auto overflow = false;
+					SampleIndex = 0;
+
+					timePointGlobal = timer.now();
+
+					auto SampleLabels = TrainCheckBatch(SampleIndex, BatchSize);
+					std::filesystem::path path = std::filesystem::path("C:\\Users\\dhaen\\");
+
+					auto os = std::ofstream((path / "testB.bin").string(), std::ios::out | std::ios::binary | std::ios::trunc);
+					auto oss = std::ofstream((path / "testB.txt").string(), std::ios::out | std::ios::trunc);
+
+					size_t point = 0;
+					if (!os.bad() && os.is_open())
+					{
+						//Layers[0]->SaveNeurons(os);
+						//oss <<  std::to_string(point) + " Input\n";
+						//point += Layers[0]->Neurons.size();
+
+						Layers[0]->fpropTime = timer.now() - timePointGlobal;
+
+						//point += Layers[0]->Neurons.size();
+
+						for (auto cost : CostLayers)
+							cost->SetSampleLabels(SampleLabels);
+
+						for (auto i = 1ull; i < Layers.size(); i++)
+						{
+							timePoint = timer.now();
+							Layers[i]->ForwardProp(BatchSize, true);
+							//Layers[i]->SaveNeurons(os);
+							//oss << std::to_string(point) + " " + Layers[i]->Name + "\n";
+							//point += Layers[i]->Neurons.size();
+							Layers[i]->fpropTime = timer.now() - timePoint;
+						}
+						fpropTime = timer.now() - timePointGlobal;
+						overflow = SampleIndex >= TrainOverflowCount;
+						CostFunctionBatch(State.load(), BatchSize, overflow, TrainSkipCount);
+						RecognizedBatch(State.load(), BatchSize, overflow, TrainSkipCount, SampleLabels);
+
+						for (auto i = Layers.size() - 1; i >= FirstUnlockedLayer.load(); --i)
+						{
+							Layers[i]->BackwardProp(BatchSize);
+							Layers[i]->SaveNeuronsD1(os);
+							//oss << std::to_string(point) + " " + Layers[i]->Name + "\n";
+							//point += Layers[i]->NeuronsD1.size();
+						}
+
+						os.flush();
+						os.close();
+
+						oss.flush();
+						oss.close();
+					}
+
+					SampleSpeed = BatchSize / (Float(std::chrono::duration_cast<std::chrono::microseconds>(fpropTime).count()) / 1000000);
+
+					for (auto cost : CostLayers)
+					{
+						cost->AvgTestLoss = cost->TrainLoss / DataProv->TrainingSamplesCount;
+						cost->TestErrorPercentage = cost->TrainErrors / Float(DataProv->TrainingSamplesCount / 100);
+					}
+				}
+
+				TestLoss = CostLayers[CostIndex]->TestLoss;
+				AvgTestLoss = CostLayers[CostIndex]->AvgTestLoss;
+				TestErrors = CostLayers[CostIndex]->TestErrors;
+				TestErrorPercentage = CostLayers[CostIndex]->TestErrorPercentage;
+				Accuracy = Float(100) - TestErrorPercentage;
+
+				/*
+				auto fileName = std::string("C:\\test.txt");
+				auto ofs = std::ofstream(fileName);
+				if (!ofs.bad())
+				{
+					for (auto i = 0ull; i < 10000ull; i++)
+						ofs << labels[i] << std::endl;
+					ofs.flush();
+					ofs.close();
+				}
+				*/
+
+				State.store(States::Completed);;
+			}
+		}
+
 		void Testing()
 		{
 			if (TaskState == TaskStates::Stopped && !BatchSizeChanging.load() && !ResettingWeights.load())
@@ -2057,7 +2229,7 @@ namespace dnn
 		std::vector<LabelInfo> TrainSample(const UInt index)
 		{
 			const auto rndIndex = RandomTrainingSamples[index];
-			auto imgByte = Image<Byte>(DataProv->TrainingSamples[rndIndex]);
+			auto imgByte = DataProv->TrainingSamples[rndIndex];
 
 			const auto rndIndexMix = (index + 1 >= DataProv->TrainingSamplesCount) ? RandomTrainingSamples[1] : RandomTrainingSamples[index + 1];
 			auto imgByteMix = Image<Byte>(DataProv->TrainingSamples[rndIndexMix]);
@@ -2116,8 +2288,8 @@ namespace dnn
 
 			for (auto c = 0u; c < imgByte.C(); c++)
 			{
-				const auto mean = MeanStdNormalization ? DataProv->Mean[c] : Image<Byte>::GetChannelMean(imgByte, c);
-				const auto stddev = MeanStdNormalization ? DataProv->StdDev[c] : Image<Byte>::GetChannelStdDev(imgByte, c);
+				const auto mean = MeanStdNormalization ? DataProv->Mean[c] : imgByte.GetChannelMean(c);
+				const auto stddev = MeanStdNormalization ? DataProv->StdDev[c] : imgByte.GetChannelStdDev(c);
 
 				for (auto d = 0u; d < imgByte.D(); d++)
 					for (auto h = 0u; h < imgByte.H(); h++)
@@ -2133,7 +2305,7 @@ namespace dnn
 			auto label = DataProv->TestingLabels[index];
 			auto SampleLabel = GetLabelInfo(label);
 
-			auto imgByte = Image<Byte>(DataProv->TestingSamples[index]);
+			auto imgByte = DataProv->TestingSamples[index];
 
 			if (imgByte.D() != D || imgByte.H() != H || imgByte.W() != W)
 				Image<Byte>::Resize(imgByte, D, H, W, Interpolations(CurrentTrainingRate.Interpolation));
@@ -2145,8 +2317,8 @@ namespace dnn
 
 			for (auto c = 0u; c < imgByte.C(); c++)
 			{
-				const auto mean = MeanStdNormalization ? DataProv->Mean[c] : Image<Byte>::GetChannelMean(imgByte, c);
-				const auto stddev = MeanStdNormalization ? DataProv->StdDev[c] : Image<Byte>::GetChannelStdDev(imgByte, c);
+				const auto mean = MeanStdNormalization ? DataProv->Mean[c] : imgByte.GetChannelMean(c);
+				const auto stddev = MeanStdNormalization ? DataProv->StdDev[c] : imgByte.GetChannelStdDev(c);
 
 				for (auto d = 0u; d < imgByte.D(); d++)
 					for (auto h = 0u; h < imgByte.H(); h++)
@@ -2162,7 +2334,7 @@ namespace dnn
 			auto label = DataProv->TestingLabels[index];
 			auto SampleLabel = GetLabelInfo(label);
 
-			auto imgByte = Image<Byte>(DataProv->TestingSamples[index]);
+			auto imgByte = DataProv->TestingSamples[index];
 
 			if (DataProv->C == 3 && Bernoulli<bool>(CurrentTrainingRate.ColorCast))
 				Image<Byte>::ColorCast(imgByte, CurrentTrainingRate.ColorAngle);
@@ -2195,8 +2367,8 @@ namespace dnn
 
 			for (auto c = 0u; c < imgByte.C(); c++)
 			{
-				const auto mean = MeanStdNormalization ? DataProv->Mean[c] : Image<Byte>::GetChannelMean(imgByte, c);
-				const auto stddev = MeanStdNormalization ? DataProv->StdDev[c] : Image<Byte>::GetChannelStdDev(imgByte, c);
+				const auto mean = MeanStdNormalization ? DataProv->Mean[c] : imgByte.GetChannelMean(c);
+				const auto stddev = MeanStdNormalization ? DataProv->StdDev[c] : imgByte.GetChannelStdDev(c);
 
 				for (auto d = 0u; d < imgByte.D(); d++)
 					for (auto h = 0u; h < imgByte.H(); h++)
@@ -2208,11 +2380,52 @@ namespace dnn
 		}
 #endif
 
+		std::vector<std::vector<LabelInfo>> TrainCheckBatch(const UInt index, const UInt batchSize)
+		{
+			const auto hierarchies = DataProv->Hierarchies;
+			auto SampleLabels = std::vector<std::vector<LabelInfo>>(batchSize, std::vector<LabelInfo>(hierarchies));
+			const auto resize = DataProv->TrainingSamples[0].D() != D || DataProv->TrainingSamples[0].H() != H || DataProv->TrainingSamples[0].W() != W;
+
+			const auto elements = batchSize * C * D * H * W;
+			const auto threads = GetThreads(elements, Float(10));
+
+			for_i(batchSize, threads, [=, &SampleLabels](const UInt batchIndex)
+			{
+				const auto sampleIndex = ((index + batchIndex) >= DataProv->TrainingSamplesCount) ? batchIndex : index + batchIndex;
+
+				auto labels = DataProv->TrainingLabels[sampleIndex];
+				SampleLabels[batchIndex] = GetLabelInfo(labels);
+
+				auto imgByte = DataProv->TrainingSamples[sampleIndex];
+
+				if (resize)
+					Image<Byte>::Resize(imgByte, D, H, W, Interpolations(CurrentTrainingRate.Interpolation));
+
+				imgByte = Image<Byte>::Padding(imgByte, PadD, PadH, PadW, DataProv->Mean, MirrorPad);
+
+				imgByte = Image<Byte>::Crop(imgByte, Positions::Center, D, H, W, DataProv->Mean);
+
+				for (auto c = 0u; c < imgByte.C(); c++)
+				{
+					const auto mean = MeanStdNormalization ? DataProv->Mean[c] : imgByte.GetChannelMean(c);
+					const auto stddev = MeanStdNormalization ? DataProv->StdDev[c] : imgByte.GetChannelStdDev(c);
+					const auto stddevRecip = Float(1) / stddev;
+
+					for (auto d = 0u; d < imgByte.D(); d++)
+						for (auto h = 0u; h < imgByte.H(); h++)
+							for (auto w = 0u; w < imgByte.W(); w++)
+								Layers[0]->Neurons[batchIndex * imgByte.Size() + (c * imgByte.ChannelSize()) + (d * imgByte.Area()) + (h * imgByte.W()) + w] = (imgByte(c, d, h, w) - mean) * stddevRecip;
+				}
+			});
+
+			return SampleLabels;
+		}
+
 		std::vector<std::vector<LabelInfo>> TrainBatch(const UInt index, const UInt batchSize)
 		{
 			const auto hierarchies = DataProv->Hierarchies;
 			auto SampleLabels = std::vector<std::vector<LabelInfo>>(batchSize, std::vector<LabelInfo>(hierarchies));
-			const auto resize = DataProv->TrainingSamples[0]._depth != D || DataProv->TrainingSamples[0]._height != H || DataProv->TrainingSamples[0]._width != W;
+			const auto resize = DataProv->TrainingSamples[0].D() != D || DataProv->TrainingSamples[0].H() != H || DataProv->TrainingSamples[0].W() != W;
 			
 			const auto elements = batchSize * C * D * H * W;
 			const auto threads = GetThreads(elements, Float(10));
@@ -2220,10 +2433,10 @@ namespace dnn
 			for_i_dynamic(batchSize, threads, [=, &SampleLabels](const UInt batchIndex)
 			{
 				const auto randomIndex = (index + batchIndex >= DataProv->TrainingSamplesCount) ? RandomTrainingSamples[batchIndex] : RandomTrainingSamples[index + batchIndex];
-				auto imgByte = Image<Byte>(DataProv->TrainingSamples[randomIndex]);
+				auto imgByte = DataProv->TrainingSamples[randomIndex];
 
 				const auto randomIndexMix = (index + batchSize - (batchIndex + 1) >= DataProv->TrainingSamplesCount) ? RandomTrainingSamples[batchSize - (batchIndex + 1)] : RandomTrainingSamples[index + batchSize - (batchIndex + 1)];
-				auto imgByteMix = Image<Byte>(DataProv->TrainingSamples[randomIndexMix]);
+				auto imgByteMix = DataProv->TrainingSamples[randomIndexMix];
 
 				auto labels = DataProv->TrainingLabels[randomIndex];
 				auto mixLabels = DataProv->TrainingLabels[randomIndexMix];
@@ -2277,8 +2490,8 @@ namespace dnn
 				
 				for (auto c = 0u; c < imgByte.C(); c++)
 				{
-					const auto mean = MeanStdNormalization ? DataProv->Mean[c] : Image<Byte>::GetChannelMean(imgByte, c);
-					const auto stddev = MeanStdNormalization ? DataProv->StdDev[c] : Image<Byte>::GetChannelStdDev(imgByte, c);
+					const auto mean = MeanStdNormalization ? DataProv->Mean[c] : imgByte.GetChannelMean(c);
+					const auto stddev = MeanStdNormalization ? DataProv->StdDev[c] : imgByte.GetChannelStdDev(c);
 					const auto stddevRecip = Float(1) / stddev;
 
 					for (auto d = 0u; d < imgByte.D(); d++)
@@ -2294,7 +2507,7 @@ namespace dnn
 		std::vector<std::vector<LabelInfo>> TestBatch(const UInt index, const UInt batchSize)
 		{
 			auto SampleLabels = std::vector<std::vector<LabelInfo>>(batchSize, std::vector<LabelInfo>(DataProv->Hierarchies));
-			const auto resize = DataProv->TestingSamples[0]._depth != D || DataProv->TestingSamples[0]._height != H || DataProv->TestingSamples[0]._width != W;
+			const auto resize = DataProv->TestingSamples[0].D() != D || DataProv->TestingSamples[0].H() != H || DataProv->TestingSamples[0].W() != W;
 
 			const auto elements = batchSize * C * D * H * W;
 			const auto threads = GetThreads(elements, Float(10));
@@ -2306,7 +2519,7 @@ namespace dnn
 				auto labels = DataProv->TestingLabels[sampleIndex];
 				SampleLabels[batchIndex] = GetLabelInfo(labels);
 
-				auto imgByte = Image<Byte>(DataProv->TestingSamples[sampleIndex]);
+				auto imgByte = DataProv->TestingSamples[sampleIndex];
 
 				if (resize)
 					Image<Byte>::Resize(imgByte, D, H, W, Interpolations(CurrentTrainingRate.Interpolation));
@@ -2317,8 +2530,8 @@ namespace dnn
 
 				for (auto c = 0u; c < imgByte.C(); c++)
 				{
-					const auto mean = MeanStdNormalization ? DataProv->Mean[c] : Image<Byte>::GetChannelMean(imgByte, c);
-					const auto stddev = MeanStdNormalization ? DataProv->StdDev[c] : Image<Byte>::GetChannelStdDev(imgByte, c);
+					const auto mean = MeanStdNormalization ? DataProv->Mean[c] : imgByte.GetChannelMean(c);
+					const auto stddev = MeanStdNormalization ? DataProv->StdDev[c] : imgByte.GetChannelStdDev(c);
 					const auto stddevRecip = Float(1) / stddev;
 
 					for (auto d = 0u; d < imgByte.D(); d++)
@@ -2334,7 +2547,7 @@ namespace dnn
 		std::vector<std::vector<LabelInfo>> TestAugmentedBatch(const UInt index, const UInt batchSize)
 		{
 			auto SampleLabels = std::vector<std::vector<LabelInfo>>(batchSize, std::vector<LabelInfo>(DataProv->Hierarchies));
-			const auto resize = DataProv->TestingSamples[0]._depth != D || DataProv->TestingSamples[0]._height != H || DataProv->TestingSamples[0]._width != W;
+			const auto resize = DataProv->TestingSamples[0].D() != D || DataProv->TestingSamples[0].H() != H || DataProv->TestingSamples[0].W() != W;
 
 			const auto elements = batchSize * C * D * H * W;
 			const auto threads = GetThreads(elements, Float(10));
@@ -2346,7 +2559,7 @@ namespace dnn
 				auto labels = DataProv->TestingLabels[sampleIndex];
 				SampleLabels[batchIndex] = GetLabelInfo(labels);
 
-				auto imgByte = Image<Byte>(DataProv->TestingSamples[sampleIndex]);
+				auto imgByte = DataProv->TestingSamples[sampleIndex];
 
 				if (DataProv->C == 3 && Bernoulli<bool>(CurrentTrainingRate.ColorCast))
 					Image<Byte>::ColorCast(imgByte, CurrentTrainingRate.ColorAngle);
@@ -2379,8 +2592,8 @@ namespace dnn
 
 				for (auto c = 0u; c < imgByte.C(); c++)
 				{
-					const auto mean = MeanStdNormalization ? DataProv->Mean[c] : Image<Byte>::GetChannelMean(imgByte, c);
-					const auto stddev = MeanStdNormalization ? DataProv->StdDev[c] : Image<Byte>::GetChannelStdDev(imgByte, c);
+					const auto mean = MeanStdNormalization ? DataProv->Mean[c] : imgByte.GetChannelMean(c);
+					const auto stddev = MeanStdNormalization ? DataProv->StdDev[c] : imgByte.GetChannelStdDev(c);
 					const auto stddevRecip = Float(1) / stddev;
 
 					for (auto d = 0u; d < imgByte.D(); d++)
