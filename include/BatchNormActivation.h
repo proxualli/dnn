@@ -481,7 +481,7 @@ namespace dnn
 								mean /= Float(batchSize * HW());
 								mean.store_a(&Mean[channelOffset]);
 
-								unbiasedVariance = max(VecFloat, (variance / Float(batchSize * HW() - 1)) - square(mean));
+								unbiasedVariance = max(VecFloat(0), (variance / Float(batchSize * HW() - 1)) - square(mean));
 								variance /= Float(batchSize * HW());
 								variance -= square(mean);
 							}
