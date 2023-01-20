@@ -101,6 +101,7 @@ namespace
 {
 	constexpr auto UseInplace = false;
 	constexpr auto Reference = false;
+	constexpr auto SingleNormalizationPass = false;
 
 	typedef float Float;
 	typedef std::size_t UInt;
