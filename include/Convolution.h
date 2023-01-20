@@ -148,14 +148,6 @@ namespace dnn
 			
 			bwdAddDesc = std::make_unique<dnnl::binary::primitive_desc>(dnnl::binary::primitive_desc(Device.engine, dnnl::algorithm::binary_add, *InputLayer->DiffDstMemDesc, *InputLayer->DiffDstMemDesc, *InputLayer->DiffDstMemDesc));
 
-			DstMemDesc = std::make_unique<dnnl::memory::desc>(fwdDesc->dst_desc());
-			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(fwdDesc->dst_desc());
-
-			if (Format == dnnl::memory::format_tag::any)
-				ChosenFormat = GetDataFmt(*DstMemDesc);
-			else
-				ChosenFormat = PlainFmt;
-
 			if (*WeightsMemDesc != fwdDesc->weights_desc())
 			{
 				auto memWeights = dnnl::memory(*WeightsMemDesc, Device.engine, Weights.data());
@@ -169,6 +161,11 @@ namespace dnn
 				Weights = weights;
 				WeightsMemDesc = std::make_unique<dnnl::memory::desc>(fwdDesc->weights_desc());
 			}
+
+			DstMemDesc = std::make_unique<dnnl::memory::desc>(fwdDesc->dst_desc());
+			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(fwdDesc->dst_desc());
+
+			ChosenFormat = GetDataFmt(*DstMemDesc);
 
 			reorderFwdSrc = fwdDesc->src_desc() != *InputLayer->DstMemDesc;
 			reorderBwdSrc = bwdWeightsDesc->src_desc() != *InputLayer->DstMemDesc;

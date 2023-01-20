@@ -2384,7 +2384,7 @@ namespace dnn
 		{
 			const auto hierarchies = DataProv->Hierarchies;
 			auto SampleLabels = std::vector<std::vector<LabelInfo>>(batchSize, std::vector<LabelInfo>(hierarchies));
-			const auto resize = DataProv->TrainingSamples[0].D() != D || DataProv->TrainingSamples[0].H() != H || DataProv->TrainingSamples[0].W() != W;
+			const auto resize = DataProv->D != D || DataProv->H != H || DataProv->W != W;
 
 			const auto elements = batchSize * C * D * H * W;
 			const auto threads = GetThreads(elements, Float(10));
@@ -2425,7 +2425,7 @@ namespace dnn
 		{
 			const auto hierarchies = DataProv->Hierarchies;
 			auto SampleLabels = std::vector<std::vector<LabelInfo>>(batchSize, std::vector<LabelInfo>(hierarchies));
-			const auto resize = DataProv->TrainingSamples[0].D() != D || DataProv->TrainingSamples[0].H() != H || DataProv->TrainingSamples[0].W() != W;
+			const auto resize = DataProv->D != D || DataProv->H != H || DataProv->W != W;
 			
 			const auto elements = batchSize * C * D * H * W;
 			const auto threads = GetThreads(elements, Float(10));
@@ -2507,7 +2507,7 @@ namespace dnn
 		std::vector<std::vector<LabelInfo>> TestBatch(const UInt index, const UInt batchSize)
 		{
 			auto SampleLabels = std::vector<std::vector<LabelInfo>>(batchSize, std::vector<LabelInfo>(DataProv->Hierarchies));
-			const auto resize = DataProv->TestingSamples[0].D() != D || DataProv->TestingSamples[0].H() != H || DataProv->TestingSamples[0].W() != W;
+			const auto resize = DataProv->D != D || DataProv->H != H || DataProv->W != W;
 
 			const auto elements = batchSize * C * D * H * W;
 			const auto threads = GetThreads(elements, Float(10));
@@ -2547,7 +2547,7 @@ namespace dnn
 		std::vector<std::vector<LabelInfo>> TestAugmentedBatch(const UInt index, const UInt batchSize)
 		{
 			auto SampleLabels = std::vector<std::vector<LabelInfo>>(batchSize, std::vector<LabelInfo>(DataProv->Hierarchies));
-			const auto resize = DataProv->TestingSamples[0].D() != D || DataProv->TestingSamples[0].H() != H || DataProv->TestingSamples[0].W() != W;
+			const auto resize = DataProv->D != D || DataProv->H != H || DataProv->W != W;
 
 			const auto elements = batchSize * C * D * H * W;
 			const auto threads = GetThreads(elements, Float(10));

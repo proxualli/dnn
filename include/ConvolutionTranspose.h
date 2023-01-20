@@ -136,11 +136,8 @@ namespace dnn
 			DstMemDesc = std::make_unique<dnnl::memory::desc>(fwdDesc->dst_desc());
 			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(fwdDesc->dst_desc());
 
-			if (Format == dnnl::memory::format_tag::any)
-				ChosenFormat = GetDataFmt(*DstMemDesc);
-			else
-				ChosenFormat = PlainFmt;
-			
+			ChosenFormat = GetDataFmt(*DstMemDesc);
+						
 			reorderFwdSrc = fwdDesc->src_desc() != *InputLayer->DstMemDesc;
 			reorderBwdSrc = bwdWeightsDesc->src_desc() != *InputLayer->DstMemDesc;
 			reorderBwdDiffDst = bwdWeightsDesc->diff_dst_desc() != *DiffDstMemDesc;
