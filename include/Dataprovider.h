@@ -40,14 +40,18 @@ namespace dnn
 		Dataprovider(const std::string& directory) :
 			StorageDirectory(std::filesystem::path(directory)),
 			DatasetsDirectory(StorageDirectory / "datasets"),
-			TrainingSamplesCount(0),
-			TestingSamplesCount(0),
-			Hierarchies(0),
 			Dataset(Datasets::cifar10),
 			C(3),
-			Mean(std::vector<Float>({ Float(0) })),
-			StdDev(std::vector<Float>({ Float(0) })),
-			ShuffleCount(64ull)
+			D(1),
+			H(32),
+			W(32),
+			Mean(std::vector<Float>({ Float(125.79831808), Float(123.43251712), Float(114.31199744) })),
+			StdDev(std::vector<Float>({ Float(63.24027648), Float(62.3321728), Float(66.96644608) })),
+			ShuffleCount(64ull),
+			TrainingSamplesCount(50000),
+			TestingSamplesCount(10000),
+			Hierarchies(1),
+			ClassCount(std::vector<UInt>({ 10 }))
 		{
 			std::filesystem::create_directories(DatasetsDirectory);
 

@@ -123,7 +123,9 @@ namespace dnn
 					for (auto w = 0u; w < W(); w++)
 						KahanSum<Float>(Float((c, d, h, w)), mean, correction);
 
-			return mean /= ChannelSize();
+			mean /= Float(ChannelSize());
+
+			return mean;
 		}
 
 		Float GetChannelVariance(const unsigned c) NOEXCEPT
@@ -138,9 +140,10 @@ namespace dnn
 					for (auto w = 0u; w < W(); w++)
 						KahanSum<Float>(Square<Float>(Float((c, d, h, w)) - mean), variance, correction);
 
-			variance /= ChannelSize();
+			variance /= Float(ChannelSize());
+			variance = std::max(Float(0), variance);
 
-			return std::max(Float(0), variance);
+			return variance;
 		}
 
 		Float GetChannelStdDev(const unsigned c) NOEXCEPT

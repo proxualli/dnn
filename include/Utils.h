@@ -499,9 +499,7 @@ namespace
 			sum = t;
 		}
 		else
-		{
 			sum += value;
-		}
 	}
 	
 #if defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW32__)
