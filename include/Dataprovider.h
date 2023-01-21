@@ -582,7 +582,7 @@ namespace dnn
 				const auto pathTestPatterns = (DatasetsDirectory / std::string(magic_enum::enum_name<Datasets>(dataset)) / "test_batch.bin").string();
 
 				auto ok = true;
-				for_i(5, [=, &ok](UInt batch)
+				for_i(5, 5, [=, &ok](UInt batch)
 				{
 					auto infile = std::ifstream(pathTrainPatterns[batch], std::ios::binary | std::ios::in);
 
