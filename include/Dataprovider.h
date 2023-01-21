@@ -456,6 +456,7 @@ namespace dnn
 				stddev[c] /= double(N * D * H * W);
 				stddev[c] = std::max(double(0), stddev[c]);
 				stddev[c] = std::sqrt(stddev[c] + eps);
+				stddev[c] = std::max(std::sqrt(stddev[c]), double(1) / std::sqrt(double(N * D * H * W)));
 			});
 			
 			auto result = std::vector<Float>();
