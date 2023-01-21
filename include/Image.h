@@ -121,7 +121,7 @@ namespace dnn
 			for (auto d = 0u; d < D(); d++)
 				for (auto h = 0u; h < H(); h++)
 					for (auto w = 0u; w < W(); w++)
-						KahanSum<Float>(Float((c, d, h, w)), mean, correction);
+						KahanSum<Float>(Float(operator()(c, d, h, w)), mean, correction);
 
 			mean /= Float(ChannelSize());
 
@@ -138,7 +138,7 @@ namespace dnn
 			for (auto d = 0u; d < D(); d++)
 				for (auto h = 0u; h < H(); h++)
 					for (auto w = 0u; w < W(); w++)
-						KahanSum<Float>(Square<Float>(Float((c, d, h, w)) - mean), variance, correction);
+						KahanSum<Float>(Square<Float>(Float(operator()(c, d, h, w)) - mean), variance, correction);
 
 			variance /= Float(ChannelSize());
 			variance = std::max(Float(0), variance);
