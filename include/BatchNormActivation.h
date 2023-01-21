@@ -592,43 +592,36 @@ namespace dnn
 						auto diffGammaFloat = Float(0);
 						auto diffBetaFloat = Float(0);
 						auto diffSrcFloat = Float(0);
-
 						auto diffGamma = VecFloat(0);
 						auto diffBeta = VecFloat(0);
 						auto diffSrc = VecFloat(0);
-
 						auto inputNeurons = VecFloat(0);
-
 						const FloatArray& layerD1 = InplaceBwd ? InputLayer->NeuronsD1 : NeuronsD1;
+						auto correction0Float = Float(0);
+						auto correction1Float = Float(0);
+						auto correction0 = VecFloat(0);
+						auto correction1 = VecFloat(0);
 
+						for (auto n = 0ull; n < batchSize; n++)
 						{
-							auto correction0Float = Float(0);
-							auto correction1Float = Float(0);
-
-							auto correction0 = VecFloat(0);
-							auto correction1 = VecFloat(0);
-
-							for (auto n = 0ull; n < batchSize; n++)
+							const auto start = c * HW() + (n * CDHW());
+							const auto part = start + partialHW;
+							for (auto hw = start; hw < part; hw += VectorSize)
 							{
-								const auto start = c * HW() + (n * CDHW());
-								const auto part = start + partialHW;
-								for (auto hw = start; hw < part; hw += VectorSize)
-								{
-									inputNeurons.load_a(&InputLayerFwd->Neurons[hw]);
-									inputNeurons -= Mean[c];
-									diffSrc = Activation::dfVec(inputNeurons * weightedInvStdDev + biases, Alpha, Beta) * VecFloat().load_a(&layerD1[hw]);
-									KahanSum<VecFloat>(diffSrc * inputNeurons, diffGamma, correction0);
-									KahanSum<VecFloat>(diffSrc, diffBeta, correction1);
-								}
-								for (auto hw = part; hw < start + HW(); hw++)
-								{
-									diffSrcFloat = Activation::df(((InputLayerFwd->Neurons[hw] - Mean[c]) * weightedInvStdDev) + biases, Alpha, Beta) * layerD1[hw];
-									KahanSum<Float>(diffSrcFloat * (InputLayerFwd->Neurons[hw] - Mean[c]), diffGammaFloat, correction0Float);
-									KahanSum<Float>(diffSrcFloat, diffBetaFloat, correction1Float);
-								}
+								inputNeurons.load_a(&InputLayerFwd->Neurons[hw]);
+								inputNeurons -= Mean[c];
+								diffSrc = Activation::dfVec(inputNeurons * weightedInvStdDev + biases, Alpha, Beta) * VecFloat().load_a(&layerD1[hw]);
+								KahanSum<VecFloat>(diffSrc * inputNeurons, diffGamma, correction0);
+								KahanSum<VecFloat>(diffSrc, diffBeta, correction1);
 							}
-						}		
-
+							for (auto hw = part; hw < start + HW(); hw++)
+							{
+								diffSrcFloat = Activation::df(((InputLayerFwd->Neurons[hw] - Mean[c]) * weightedInvStdDev) + biases, Alpha, Beta) * layerD1[hw];
+								KahanSum<Float>(diffSrcFloat * (InputLayerFwd->Neurons[hw] - Mean[c]), diffGammaFloat, correction0Float);
+								KahanSum<Float>(diffSrcFloat, diffBetaFloat, correction1Float);
+							}
+						}
+								
 						diffGammaFloat += horizontal_add(diffGamma);
 						diffGammaFloat *= InvStdDev[c];
 						diffBetaFloat += horizontal_add(diffBeta);
@@ -711,36 +704,32 @@ namespace dnn
 						const auto invStdDev = VecFloat().load_a(&InvStdDev[channelOffset]);
 						const auto weightedInvStdDev = Scaling ? invStdDev * VecFloat().load_a(&Weights[channelOffset]) : invStdDev;
 						const auto biases = Scaling && HasBias ? VecFloat().load_a(&Biases[channelOffset]) : VecFloat(0);
-
 						auto diffGamma = VecFloat(0);
 						auto diffBeta = VecFloat(0);
 						auto diffSrc = VecFloat(0);
 						auto inputNeurons = VecFloat(0);
 						const FloatArray& layerD1 = InplaceBwd ? InputLayer->NeuronsD1 : NeuronsD1;
-					
-						{
-							auto correction0 = VecFloat(0);
-							auto correction1 = VecFloat(0);
+						auto correction0 = VecFloat(0);
+						auto correction1 = VecFloat(0);
 
-							for (auto n = 0ull; n < batchSize; n++)
+						for (auto n = 0ull; n < batchSize; n++)
+						{
+							const auto offsetC = n * PaddedCDHW() + mapOffset;
+							for (auto h = 0ull; h < H; h++)
 							{
-								const auto offsetC = n * PaddedCDHW() + mapOffset;
-								for (auto h = 0ull; h < H; h++)
+								const auto offsetH = offsetC + h * strideH;
+								for (auto w = offsetH; w < offsetH + strideH; w += VectorSize)
 								{
-									const auto offsetH = offsetC + h * strideH;
-									for (auto w = offsetH; w < offsetH + strideH; w += VectorSize)
-									{
-										diffSrc.load_a(&layerD1[w]);
-										inputNeurons.load_a(&InputLayerFwd->Neurons[w]);
-										inputNeurons -= mean;
-										diffSrc *= Activation::dfVec(mul_add(inputNeurons, weightedInvStdDev, biases), Alpha, Beta);
-										KahanSum<VecFloat>(diffSrc * inputNeurons, diffGamma, correction0);
-										KahanSum<VecFloat>(diffSrc, diffBeta, correction1);
-									}
+									diffSrc.load_a(&layerD1[w]);
+									inputNeurons.load_a(&InputLayerFwd->Neurons[w]);
+									inputNeurons -= mean;
+									diffSrc *= Activation::dfVec(mul_add(inputNeurons, weightedInvStdDev, biases), Alpha, Beta);
+									KahanSum<VecFloat>(diffSrc * inputNeurons, diffGamma, correction0);
+									KahanSum<VecFloat>(diffSrc, diffBeta, correction1);
 								}
 							}
 						}
-
+						
 						diffGamma *= invStdDev;
 
 						if (Scaling)
