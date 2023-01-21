@@ -311,7 +311,7 @@ namespace dnn
 						auto correction0Float = Float(0);
 						auto correction1Float = Float(0);
 
-						if constexpr (SingleNormalizationPass)
+						if constexpr (SingleMeanVariancePass)
 						{
 							for (auto n = 0ull; n < batchSize; n++)
 							{
@@ -481,7 +481,7 @@ namespace dnn
 						auto variance = VecFloat(0);
 						auto unbiasedVariance = VecFloat(0);
 
-						if constexpr (SingleNormalizationPass)
+						if constexpr (SingleMeanVariancePass)
 						{
 							auto correction0 = VecFloat(0);
 							auto correction1 = VecFloat(0);

@@ -99,10 +99,10 @@ using namespace dnn;
 
 namespace
 {
-	constexpr auto UseKahanSum = true;
-	constexpr auto UseInplace = false;
+	constexpr auto Kahan = true;
+	constexpr auto Inplace = false;
 	constexpr auto Reference = false;
-	constexpr auto SingleNormalizationPass = false;
+	constexpr auto SingleMeanVariancePass = false;
 
 	typedef float Float;
 	typedef std::size_t UInt;
@@ -491,7 +491,7 @@ namespace
 	template<typename T>
 	inline static void KahanSum(const T& value, T& sum, T& correction) NOEXCEPT
 	{
-		if constexpr (UseKahanSum)
+		if constexpr (Kahan)
 		{
 			const auto y = value - correction;
 			const auto t = sum + y;

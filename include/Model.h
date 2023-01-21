@@ -1247,7 +1247,7 @@ namespace dnn
 
 		void SwitchInplaceBwd(const bool enable)
 		{
-			if constexpr (UseInplace)
+			if constexpr (Inplace)
 			{
 				if (enable)
 					for (auto& layer : Layers)
@@ -1936,7 +1936,7 @@ namespace dnn
 
 				if (CheckTaskState())
 				{
-					if constexpr (UseInplace)
+					if constexpr (Inplace)
 						SwitchInplaceBwd(false);
 
 					for (auto cost : CostLayers)
@@ -2614,7 +2614,7 @@ namespace dnn
 
 		void BackwardProp(const UInt batchSize)
 		{
-			if constexpr (UseInplace)
+			if constexpr (Inplace)
 				SwitchInplaceBwd(true);
 
 			for (auto i = Layers.size() - 1; i > 0ull; --i)
@@ -2630,7 +2630,7 @@ namespace dnn
 					Layers[i]->BackwardProp(batchSize);
 			}
 
-			if constexpr (UseInplace)
+			if constexpr (Inplace)
 				SwitchInplaceBwd(false);
 		}
 		
