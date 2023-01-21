@@ -246,8 +246,8 @@ namespace dnn
 
 					for_i(C, threads, [=](UInt c)
 					{
-						const auto invStdDev = Float(1) / std::sqrt(RunningVariance[c] + Eps);
-						const auto weightedInvStdDev = Scaling ? invStdDev * Weights[c] : invStdDev;
+						const auto stdDev = std::sqrt(RunningVariance[c] + Eps);
+						const auto weightedInvStdDev = Scaling ? (Weights[c] / stdDev) : (Float(1) / stdDev);
 						const auto biases = Scaling && HasBias ? Biases[c] : Float(0);
 
 						for (auto n = 0ull; n < batchSize; n++)
@@ -271,9 +271,9 @@ namespace dnn
 						const auto mapOffset = channelOffset * HW();
 
 						const auto runningMean = VecFloat().load_a(&RunningMean[channelOffset]);
-						const auto invStdDev = VecFloat(Float(1)) / sqrt(VecFloat().load_a(&RunningVariance[channelOffset]) + Eps);
+						const auto stdDev =sqrt(VecFloat().load_a(&RunningVariance[channelOffset]) + Eps);
 
-						const auto weightedInvStdDev = Scaling ? invStdDev * VecFloat().load_a(&Weights[channelOffset]) : invStdDev;
+						const auto weightedInvStdDev = Scaling ? (VecFloat().load_a(&Weights[channelOffset]) / stdDev): (VecFloat(1) / stdDev);
 						const auto biases = Scaling && HasBias ? VecFloat().load_a(&Biases[channelOffset]) : VecFloat(0);
 
 						for (auto n = 0ull; n < batchSize; n++)
@@ -375,13 +375,15 @@ namespace dnn
 							variance = std::max(Float(0), variance);
 							Variance[c] = variance;
 						}
-
+						
 						RunningMean[c] = RunningMean[c] * Momentum + OneMinusMomentum * mean;
 						RunningVariance[c] = RunningVariance[c] * Momentum + OneMinusMomentum * unbiasedVariance;
 
-						const auto invStdDev = Float(1) / std::sqrt(variance + Eps);
-						const auto weightedInvStdDev = Scaling ? invStdDev * Weights[c] : invStdDev;
+						const auto stdDev = std::sqrt(variance + Eps);
+						const auto weightedInvStdDev = Scaling ? (Weights[c] / stdDev) : (Float(1) / stdDev);
 						const auto biases = Scaling && HasBias ? Biases[c] : Float(0);
+
+						InvStdDev[c] = Float(1) / stdDev;
 
 						if (Enabled)
 						{
@@ -545,10 +547,10 @@ namespace dnn
 						mul_add(VecFloat().load_a(&RunningMean[channelOffset]), Momentum, OneMinusMomentum * mean).store_a(&RunningMean[channelOffset]);
 						mul_add(VecFloat().load_a(&RunningVariance[channelOffset]), Momentum, OneMinusMomentum * unbiasedVariance).store_a(&RunningVariance[channelOffset]);
 
-						const auto invStdDev = VecFloat(Float(1)) / sqrt(variance + Eps);
-						invStdDev.store_a(&InvStdDev[channelOffset]);
+						const auto stdDev = sqrt(variance + Eps);
+						(VecFloat(1) / stdDev).store_a(&InvStdDev[channelOffset]);
 
-						const auto weightedInvStdDev = Scaling ? invStdDev * VecFloat().load_a(&Weights[channelOffset]) : invStdDev;
+						const auto weightedInvStdDev = Scaling ? (VecFloat().load_a(&Weights[channelOffset]) / stdDev) : (VecFloat(1) / stdDev);
 						const auto biases = Scaling && HasBias ? VecFloat().load_a(&Biases[channelOffset]) : VecFloat(0);
 
 						if (Enabled)
