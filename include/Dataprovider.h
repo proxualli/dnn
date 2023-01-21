@@ -613,13 +613,11 @@ namespace dnn
 					auto TestPatterns = new Byte[30730000];
 					infile.read(reinterpret_cast<char*>(TestPatterns), 30730000);
 					infile.close();
-
 					for (UInt index = 0; index < TestingSamplesCount; index++)
 					{
 						TestingSamples[index] = Image(cimg_library::CImg<Byte>(&TestPatterns[3073 * index + 1], 32, 32, 1, 3));
 						TestingLabels[index][0] = TestPatterns[3073 * index];
 					}
-
 					delete[] TestPatterns;
 				}
 				else
@@ -638,14 +636,12 @@ namespace dnn
 					auto TrainPatterns = new Byte[153700000];
 					infile.read(reinterpret_cast<char*>(TrainPatterns), 153700000);
 					infile.close();
-
 					for (UInt index = 0; index < 50000; index++)
 					{
 						TrainingSamples[index] = Image(cimg_library::CImg<Byte>(&TrainPatterns[3074 * index + 2], 32, 32, 1, 3));
 						TrainingLabels[index][0] = TrainPatterns[3074 * index];
 						TrainingLabels[index][1] = TrainPatterns[3074 * index + 1];
 					}
-
 					delete[] TrainPatterns;
 				}
 				else
@@ -657,14 +653,12 @@ namespace dnn
 					auto TestPatterns = new Byte[30740000];
 					infile.read(reinterpret_cast<char*>(TestPatterns), 30740000);
 					infile.close();
-
 					for (UInt index = 0; index < TestingSamplesCount; index++)
 					{
 						TestingSamples[index] = Image(cimg_library::CImg<Byte>(&TestPatterns[3074 * index + 2], 32, 32, 1, 3));
 						TestingLabels[index][0] = TestPatterns[3074 * index];
 						TestingLabels[index][1] = TestPatterns[3074 * index + 1];
 					}
-
 					delete[] TestPatterns;
 				}
 				else
