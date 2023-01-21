@@ -23,13 +23,12 @@ namespace dnn
 			first(GetFirst(inputs)),
 			second(GetSecond(inputs)),
 			SurvivalProbability(FloatVector(2, Float(1))),
+			scales(std::vector<Float>(2, Float(1))),
 			scale(FloatVector(1, Float(0.5)))
 		{
 			assert(Inputs.size() == 2);
 			assert(Inputs[0]->C == Inputs[1]->C);
 			assert(Inputs[0]->D == Inputs[1]->D);
-
-			scales = std::vector<Float>(2, Float(1));
 		}
 
 		void UpdateResolution() final override

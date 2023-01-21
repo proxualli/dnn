@@ -792,8 +792,12 @@ namespace dnn
 			break;
 			}
 
-			Mean = GetMean(C, D, H, W);
-			StdDev = GetStdDev(Mean, C, D, H, W);
+			if constexpr (!DatasetDefaultMeanStdDev)
+			{
+				Mean = GetMean(C, D, H, W);
+				StdDev = GetStdDev(Mean, C, D, H, W);
+			}
+
 			Dataset = dataset;
 
 			return true;
