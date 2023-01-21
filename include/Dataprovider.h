@@ -5,6 +5,8 @@ namespace dnn
 {
 	using namespace image;
 
+	typedef std::vector<Image<Byte>, AlignedAllocator<dnn::Image<Byte>, 64ull>> ImageByteVector;
+
 	enum class Datasets
 	{
 		cifar10 = 0,
@@ -32,8 +34,8 @@ namespace dnn
 		UInt Hierarchies;
 		std::vector<UInt> ClassCount;
 		std::vector<std::string> ClassNames;
-		std::vector<Image<Byte>> TrainingSamples;
-		std::vector<Image<Byte>> TestingSamples;
+		ImageByteVector TrainingSamples;
+		ImageByteVector TestingSamples;
 		std::vector<std::vector<UInt>> TrainingLabels;
 		std::vector<std::vector<UInt>> TestingLabels;
 
@@ -397,20 +399,27 @@ namespace dnn
 #endif
 		}
 
-		std::vector<Float> GetMean(const UInt C, const UInt D, const UInt H, const UInt W)
+		std::vector<Float> GetMean(const UInt N, const UInt C, const UInt D, const UInt H, const UInt W)
 		{
 			auto mean = std::vector<double>(C, double(0));
 			auto correction = std::vector<double>(C, double(0));
 			
 			for_i(C, [&](UInt c)
 			{
-				for (auto i = 0ull; i < TrainingSamplesCount; i++)
+#ifdef DNN_IMAGEDEPTH
+				for (auto n = 0ull; n < N; n++)
 					for (auto d = 0u; d < D; d++)
 						for (auto h = 0u; h < H; h++)
 							for (auto w = 0u; w < W; w++)
-								KahanSum<double>(double(TrainingSamples[i](static_cast<unsigned int>(c), d, h, w)), mean[c], correction[c]);
+								KahanSum<double>(double(TrainingSamples[n](static_cast<unsigned int>(c), d, h, w)), mean[c], correction[c]);
+#else
+				for (auto n = 0ull; n < N; n++)
+					for (auto h = 0u; h < H; h++)
+						for (auto w = 0u; w < W; w++)
+							KahanSum<double>(double(TrainingSamples[n](static_cast<unsigned int>(c), 0, h, w)), mean[c], correction[c]);
+#endif
 
-				mean[c] /= double(TrainingSamplesCount * D * H * W);
+				mean[c] /= double(N * D * H * W);
 			});
 
 			auto result = std::vector<Float>();
@@ -420,7 +429,7 @@ namespace dnn
 			return result;
 		}
 		
-		std::vector<Float> GetStdDev(const std::vector<Float>& mean, const UInt C, const UInt D, const UInt H, const UInt W)
+		std::vector<Float> GetStdDev(const std::vector<Float>& mean, const UInt N, const UInt C, const UInt D, const UInt H, const UInt W)
 		{
 			auto stddev = std::vector<double>(C, double(0));
 			auto correction = std::vector<double>(C, double(0));
@@ -431,13 +440,20 @@ namespace dnn
 			
 			for_i(C, [&](UInt c)
 			{
-				for (auto i = 0ull; i < TrainingSamplesCount; i++)
+#ifdef DNN_IMAGEDEPTH
+				for (auto n = 0ull; n < N; n++)
 					for (auto d = 0u; d < D; d++)
 						for (auto h = 0u; h < H; h++)
 							for (auto w = 0u; w < W; w++)
-								KahanSum<double>(Square<double>(double(TrainingSamples[i](static_cast<unsigned int>(c), d, h, w)) - mean[c]), stddev[c], correction[c]);
+								KahanSum<double>(Square<double>(double(TrainingSamples[n](static_cast<unsigned int>(c), d, h, w)) - mean[c]), stddev[c], correction[c]);
+#else
+				for (auto n = 0ull; n < N; n++)
+					for (auto h = 0u; h < H; h++)
+						for (auto w = 0u; w < W; w++)
+							KahanSum<double>(Square<double>(double(TrainingSamples[n](static_cast<unsigned int>(c), 0, h, w)) - mean[c]), stddev[c], correction[c]);
+#endif
 				
-				stddev[c] /= double(TrainingSamplesCount * D * H * W);
+				stddev[c] /= double(N * D * H * W);
 				stddev[c] = std::max(double(0), stddev[c]);
 				stddev[c] = std::sqrt(stddev[c] + eps);
 			});
@@ -459,65 +475,98 @@ namespace dnn
 					return false;
 			}
 
-			TrainingSamples = std::vector<Image<Byte>>();
-			TestingSamples = std::vector<Image<Byte>>();
-
 			switch (dataset)
 			{
-			case Datasets::fashionmnist:
-				C = 1;
-				D = 1;
-				H = 28;
-				W = 28;
-				Mean = std::vector<Float>({ Float(72.940247) });
-				StdDev = std::vector<Float>({ Float(90.021133) });
-				break;
-			case Datasets::mnist:
-				C = 1;
-				D = 1;
-				H = 28;
-				W = 28;
-				Mean = std::vector<Float>({ Float(33.318443) });
-				StdDev = std::vector<Float>({ Float(78.567261) });
-				break;
 			case Datasets::cifar10:
 				C = 3;
 				D = 1;
 				H = 32;
 				W = 32;
+				ClassCount = std::vector<UInt>({ 10 });
+				Hierarchies = ClassCount.size();
+				TrainingSamplesCount = 50000;
+				TestingSamplesCount = 10000;
+				TrainingLabels = std::vector<std::vector<UInt>>(TrainingSamplesCount, std::vector<UInt>(Hierarchies));
+				TestingLabels = std::vector<std::vector<UInt>>(TestingSamplesCount, std::vector<UInt>(Hierarchies));
 				Mean = std::vector<Float>({ Float(125.79831808), Float(123.43251712), Float(114.31199744) });
 				StdDev = std::vector<Float>({ Float(63.24027648), Float(62.3321728), Float(66.96644608) });
+				TrainingSamples = ImageByteVector(TrainingSamplesCount);
+				TestingSamples = ImageByteVector(TestingSamplesCount);
 				break;
+
 			case Datasets::cifar100:
 			    C = 3;
 				D = 1;
 				H = 32;
 				W = 32;
+				ClassCount = std::vector<UInt>({ 20, 100 });
+				Hierarchies = ClassCount.size();
+				TrainingSamplesCount = 50000;
+				TestingSamplesCount = 10000;
+				TrainingLabels = std::vector<std::vector<UInt>>(TrainingSamplesCount, std::vector<UInt>(Hierarchies));
+				TestingLabels = std::vector<std::vector<UInt>>(TestingSamplesCount, std::vector<UInt>(Hierarchies));
 				Mean = std::vector<Float>({ Float(129.3), Float(124.1), Float(112.4) });
 				StdDev = std::vector<Float>({ Float(68.2),  Float(65.4),  Float(70.4) });
+				TrainingSamples = ImageByteVector(TrainingSamplesCount);
+				TestingSamples = ImageByteVector(TestingSamplesCount);
 			    break;
+
+			case Datasets::fashionmnist:
+				C = 1;
+				D = 1;
+				H = 28;
+				W = 28;
+				ClassCount = std::vector<UInt>({ 10 });
+				Hierarchies = ClassCount.size();
+				TrainingSamplesCount = 60000;
+				TestingSamplesCount = 10000;
+				TrainingLabels = std::vector<std::vector<UInt>>(TrainingSamplesCount, std::vector<UInt>(Hierarchies));
+				TestingLabels = std::vector<std::vector<UInt>>(TestingSamplesCount, std::vector<UInt>(Hierarchies));
+				Mean = std::vector<Float>({ Float(72.940247) });
+				StdDev = std::vector<Float>({ Float(90.021133) });
+				TrainingSamples = ImageByteVector();
+				TestingSamples = ImageByteVector();
+				break;
+
+			case Datasets::mnist:
+				C = 1;
+				D = 1;
+				H = 28;
+				W = 28;
+				ClassCount = std::vector<UInt>({ 10 });
+				Hierarchies = ClassCount.size();
+				TrainingSamplesCount = 60000;
+				TestingSamplesCount = 10000;
+				TrainingLabels = std::vector<std::vector<UInt>>(TrainingSamplesCount, std::vector<UInt>(Hierarchies));
+				TestingLabels = std::vector<std::vector<UInt>>(TestingSamplesCount, std::vector<UInt>(Hierarchies));
+				Mean = std::vector<Float>({ Float(33.318443) });
+				StdDev = std::vector<Float>({ Float(78.567261) });
+				TrainingSamples = ImageByteVector();
+				TestingSamples = ImageByteVector();
+				break;
+
 			case Datasets::tinyimagenet:
 				C = 3;
 				D = 1;
 				H = 64;
 				W = 64;
+				ClassCount = std::vector<UInt>({ 200 });
+				Hierarchies = ClassCount.size();
+				TrainingSamplesCount = 100000;
+				TestingSamplesCount = 10000;
+				TrainingLabels = std::vector<std::vector<UInt>>(TrainingSamplesCount, std::vector<UInt>(Hierarchies));
+				TestingLabels = std::vector<std::vector<UInt>>(TestingSamplesCount, std::vector<UInt>(Hierarchies));
 				Mean = std::vector<Float>({ Float(117.56279), Float(109.588692), Float(96.981331) });
 				StdDev = std::vector<Float>({ Float(69.272858), Float(67.387779), Float(70.635902) });
+				TrainingSamples = ImageByteVector(TrainingSamplesCount);
+				TestingSamples = ImageByteVector(TestingSamplesCount);
 				break;
 			}
 
 			switch (dataset)
 			{
 			case Datasets::cifar10:
-			{
-				ClassCount = std::vector<UInt>({ 10 });
-				Hierarchies = ClassCount.size();
-				TrainingSamplesCount = 50000;
-				TestingSamplesCount = 10000;
-				TrainingLabels = std::vector<std::vector<UInt>>(TrainingSamplesCount, std::vector<UInt>(Hierarchies, 0));
-				TestingLabels = std::vector<std::vector<UInt>>(TestingSamplesCount, std::vector<UInt>(Hierarchies, 0));
-				TrainingSamples = std::vector<Image<Byte>>(TrainingSamplesCount);
-				TestingSamples = std::vector<Image<Byte>>(TestingSamplesCount);
+			{				
 				auto pathTrainPatterns = std::vector<std::string>();
 				pathTrainPatterns.push_back((DatasetsDirectory / std::string(magic_enum::enum_name<Datasets>(dataset)) / "data_batch_1.bin").string());
 				pathTrainPatterns.push_back((DatasetsDirectory / std::string(magic_enum::enum_name<Datasets>(dataset)) / "data_batch_2.bin").string());
@@ -574,14 +623,6 @@ namespace dnn
 
 			case Datasets::cifar100:
 			{
-				ClassCount = std::vector<UInt>({ 20, 100 });
-				Hierarchies = ClassCount.size();
-				TrainingSamplesCount = 50000;
-				TestingSamplesCount = 10000;
-				TrainingLabels = std::vector<std::vector<UInt>>(TrainingSamplesCount, std::vector<UInt>(Hierarchies));
-				TestingLabels = std::vector<std::vector<UInt>>(TestingSamplesCount, std::vector<UInt>(Hierarchies));
-				TrainingSamples = std::vector<Image<Byte>>(TrainingSamplesCount);
-				TestingSamples = std::vector<Image<Byte>>(TestingSamplesCount);
 				const auto pathTrainPatterns = (DatasetsDirectory / std::string(magic_enum::enum_name<Datasets>(dataset)) / "train.bin").string();
 				const auto pathTestPatterns = (DatasetsDirectory / std::string(magic_enum::enum_name<Datasets>(dataset)) / "test.bin").string();
 
@@ -628,12 +669,6 @@ namespace dnn
 			case Datasets::fashionmnist:
 			case Datasets::mnist:
 			{
-				ClassCount = std::vector<UInt>({ 10 });
-				Hierarchies = ClassCount.size();
-				TrainingSamplesCount = 60000;
-				TestingSamplesCount = 10000;
-				TrainingLabels = std::vector<std::vector<UInt>>(TrainingSamplesCount, std::vector<UInt>(Hierarchies));
-				TestingLabels = std::vector<std::vector<UInt>>(TestingSamplesCount, std::vector<UInt>(Hierarchies));
 				const auto pathTrainPatterns = (DatasetsDirectory / std::string(magic_enum::enum_name<Datasets>(dataset)) / "train-images-idx3-ubyte").string();
 				const auto pathTrainLabels = (DatasetsDirectory / std::string(magic_enum::enum_name<Datasets>(dataset)) / "train-labels-idx1-ubyte").string();
 				const auto pathTestPatterns = (DatasetsDirectory / std::string(magic_enum::enum_name<Datasets>(dataset))  / "t10k-images-idx3-ubyte").string();
@@ -713,14 +748,6 @@ namespace dnn
 
 			case Datasets::tinyimagenet:
 			{
-				ClassCount = std::vector<UInt>({ 200 });
-				Hierarchies = ClassCount.size();
-				TrainingSamplesCount = 100000;
-				TestingSamplesCount = 10000;
-				TrainingLabels = std::vector<std::vector<UInt>>(TrainingSamplesCount, std::vector<UInt>(Hierarchies, 0));
-				TestingLabels = std::vector<std::vector<UInt>>(TestingSamplesCount, std::vector<UInt>(Hierarchies, 0));
-				TrainingSamples = std::vector<Image<Byte>>(TrainingSamplesCount);
-				TestingSamples = std::vector<Image<Byte>>(TestingSamplesCount);
 				auto labels = std::vector<std::string>(TestingSamplesCount);
 				auto labels_idx = std::vector<UInt>(TestingSamplesCount);
 				ClassNames = std::vector<std::string>();
@@ -792,10 +819,10 @@ namespace dnn
 			break;
 			}
 
-			if constexpr (!DatasetDefaultMeanStdDev)
+			if constexpr (!DefaultDatasetMeanStdDev)
 			{
-				Mean = GetMean(C, D, H, W);
-				StdDev = GetStdDev(Mean, C, D, H, W);
+				Mean = GetMean(TrainingSamplesCount, C, D, H, W);
+				StdDev = GetStdDev(Mean, TrainingSamplesCount, C, D, H, W);
 			}
 
 			Dataset = dataset;
