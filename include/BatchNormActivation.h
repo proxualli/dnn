@@ -302,7 +302,7 @@ namespace dnn
 							const auto mapOffset = channelOffset * HW();
 
 							const auto runningMean = VecFloat().load_a(&RunningMean[channelOffset]);
-							const auto invStddev = VecFloat(1)sqrt(VecFloat().load_a(&RunningVariance[channelOffset]) + Eps);
+							const auto invStddev = VecFloat(1) / sqrt(VecFloat().load_a(&RunningVariance[channelOffset]) + Eps);
 							const auto weightedInvStdDev = Scaling ? (VecFloat().load_a(&Weights[channelOffset]) * invStddev) : invStddev;
 							const auto biases = Scaling && HasBias ? VecFloat().load_a(&Biases[channelOffset]) : VecFloat(0);
 
