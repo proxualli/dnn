@@ -403,7 +403,7 @@ namespace dnn
 		{
 			auto mean = std::vector<double>(C);
 			
-			for_i(C, [&](UInt c)
+			for_i(C, C, [&](UInt c)
 			{
 				auto channelMean = double(0);
 				auto correction = double(0);
@@ -439,7 +439,7 @@ namespace dnn
 			while (double(1) + eps != double(1))
 				eps /= double(2);
 			
-			for_i(C, [&](UInt c)
+			for_i(C, C, [&](UInt c)
 			{
 				auto channelMean = double(mean[c]);
 				auto channelStdDev = double(0);
