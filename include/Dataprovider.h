@@ -401,25 +401,27 @@ namespace dnn
 
 		std::vector<Float> GetMean(const UInt N, const UInt C, const UInt D, const UInt H, const UInt W)
 		{
-			auto mean = std::vector<double>(C, double(0));
-			auto correction = std::vector<double>(C, double(0));
+			auto mean = std::vector<double>(C);
 			
 			for_i(C, [&](UInt c)
 			{
+				auto channelMean = double(0);
+				auto correction = double(0);
+
 #ifdef DNN_IMAGEDEPTH
 				for (auto n = 0ull; n < N; n++)
 					for (auto d = 0u; d < D; d++)
 						for (auto h = 0u; h < H; h++)
 							for (auto w = 0u; w < W; w++)
-								KahanSum<double>(double(TrainingSamples[n](static_cast<unsigned int>(c), d, h, w)), mean[c], correction[c]);
+								KahanSum<double>(double(TrainingSamples[n](static_cast<unsigned int>(c), d, h, w)), meanC, correction);
 #else
 				for (auto n = 0ull; n < N; n++)
 					for (auto h = 0u; h < H; h++)
 						for (auto w = 0u; w < W; w++)
-							KahanSum<double>(double(TrainingSamples[n](static_cast<unsigned int>(c), 0, h, w)), mean[c], correction[c]);
+							KahanSum<double>(double(TrainingSamples[n](static_cast<unsigned int>(c), 0, h, w)), channelMean, correction);
 #endif
 
-				mean[c] /= double(N * D * H * W);
+				mean[c] = channelMean / double(N * D * H * W);
 			});
 
 			auto result = std::vector<Float>();
@@ -431,32 +433,35 @@ namespace dnn
 		
 		std::vector<Float> GetStdDev(const std::vector<Float>& mean, const UInt N, const UInt C, const UInt D, const UInt H, const UInt W)
 		{
-			auto stddev = std::vector<double>(C, double(0));
-			auto correction = std::vector<double>(C, double(0));
-
+			auto stddev = std::vector<double>(C);
+			
 			auto eps = double(1);
 			while (double(1) + eps != double(1))
 				eps /= double(2);
 			
 			for_i(C, [&](UInt c)
 			{
+				auto channelMean = double(mean[c]);
+				auto channelStdDev = double(0);
+				auto correction = double(0);
+
 #ifdef DNN_IMAGEDEPTH
 				for (auto n = 0ull; n < N; n++)
 					for (auto d = 0u; d < D; d++)
 						for (auto h = 0u; h < H; h++)
 							for (auto w = 0u; w < W; w++)
-								KahanSum<double>(Square<double>(double(TrainingSamples[n](static_cast<unsigned int>(c), d, h, w)) - mean[c]), stddev[c], correction[c]);
+								KahanSum<double>(Square<double>(double(TrainingSamples[n](static_cast<unsigned int>(c), d, h, w)) - channelMean), channelStdDev, correction);
 #else
 				for (auto n = 0ull; n < N; n++)
 					for (auto h = 0u; h < H; h++)
 						for (auto w = 0u; w < W; w++)
-							KahanSum<double>(Square<double>(double(TrainingSamples[n](static_cast<unsigned int>(c), 0, h, w)) - mean[c]), stddev[c], correction[c]);
+							KahanSum<double>(Square<double>(double(TrainingSamples[n](static_cast<unsigned int>(c), 0, h, w)) - channelMean), channelStdDev, correction);
 #endif
 				
-				stddev[c] /= double(N * D * H * W);
-				stddev[c] = std::max(double(0), stddev[c]);
-				stddev[c] = std::sqrt(stddev[c] + eps);
-				stddev[c] = std::max(std::sqrt(stddev[c]), double(1) / std::sqrt(double(N * D * H * W)));
+				channelStdDev /= double(N * D * H * W);
+				channelStdDev = std::max(double(0), channelStdDev);
+				channelStdDev = std::sqrt(channelStdDev + eps);
+				stddev[c] = std::max(std::sqrt(channelStdDev), double(1) / std::sqrt(double(N * D * H * W)));
 			});
 			
 			auto result = std::vector<Float>();
