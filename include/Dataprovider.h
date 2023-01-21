@@ -410,7 +410,7 @@ namespace dnn
 							for (auto w = 0u; w < W; w++)
 								KahanSum<double>(double(TrainingSamples[i](static_cast<unsigned int>(c), d, h, w)), mean[c], correction[c]);
 
-				mean[c] /= TrainingSamplesCount * D * H * W;
+				mean[c] /= double(TrainingSamplesCount * D * H * W);
 			});
 
 			auto result = std::vector<Float>();
@@ -437,7 +437,7 @@ namespace dnn
 							for (auto w = 0u; w < W; w++)
 								KahanSum<double>(Square<double>(double(TrainingSamples[i](static_cast<unsigned int>(c), d, h, w)) - mean[c]), stddev[c], correction[c]);
 				
-				stddev[c] /= TrainingSamplesCount * D * H * W;
+				stddev[c] /= double(TrainingSamplesCount * D * H * W);
 				stddev[c] = std::max(double(0), stddev[c]);
 				stddev[c] = std::sqrt(stddev[c] + eps);
 			});
