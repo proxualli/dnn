@@ -525,31 +525,6 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, LayerInfo* info)
 		}
 		break;
 
-		case LayerTypes::BatchNormMish:
-		{
-			auto bn = dynamic_cast<BatchNormActivation<Mish, LayerTypes::BatchNormMish>*>(model->Layers[layerIndex].get());
-			if (bn)
-			{
-				info->Scaling = bn->Scaling;
-				info->Alpha = bn->Alpha;
-				info->Beta = bn->Beta;
-			}
-		}
-		break;
-
-		case LayerTypes::BatchNormMishDropout:
-		{
-			auto bn = dynamic_cast<BatchNormActivationDropout<Mish, LayerTypes::BatchNormMishDropout>*>(model->Layers[layerIndex].get());
-			if (bn)
-			{
-				info->Scaling = bn->Scaling;
-				info->Dropout = Float(1) - bn->Keep;
-				info->Alpha = bn->Alpha;
-				info->Beta = bn->Beta;
-			}
-		}
-		break;
-
 		case LayerTypes::BatchNormHardLogistic:
 		{
 			auto bn = dynamic_cast<BatchNormActivation<HardLogistic, LayerTypes::BatchNormHardLogistic>*>(model->Layers[layerIndex].get());
@@ -577,6 +552,31 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, LayerInfo* info)
 		case LayerTypes::BatchNormHardSwishDropout:
 		{
 			auto bn = dynamic_cast<BatchNormActivationDropout<HardSwish, LayerTypes::BatchNormHardSwishDropout>*>(model->Layers[layerIndex].get());
+			if (bn)
+			{
+				info->Scaling = bn->Scaling;
+				info->Dropout = Float(1) - bn->Keep;
+				info->Alpha = bn->Alpha;
+				info->Beta = bn->Beta;
+			}
+		}
+		break;
+
+		case LayerTypes::BatchNormMish:
+		{
+			auto bn = dynamic_cast<BatchNormActivation<Mish, LayerTypes::BatchNormMish>*>(model->Layers[layerIndex].get());
+			if (bn)
+			{
+				info->Scaling = bn->Scaling;
+				info->Alpha = bn->Alpha;
+				info->Beta = bn->Beta;
+			}
+		}
+		break;
+
+		case LayerTypes::BatchNormMishDropout:
+		{
+			auto bn = dynamic_cast<BatchNormActivationDropout<Mish, LayerTypes::BatchNormMishDropout>*>(model->Layers[layerIndex].get());
 			if (bn)
 			{
 				info->Scaling = bn->Scaling;
@@ -758,7 +758,6 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, LayerInfo* info)
 			}
 		}
 		break;
-
 
 		case LayerTypes::LayerNorm:
 		{
