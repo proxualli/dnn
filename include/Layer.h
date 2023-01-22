@@ -241,8 +241,15 @@ namespace dnn
 
 		auto IsInplaceBwd(const LayerTypes layerType, const std::vector<Layer*>& inputs) const
 		{
-			if (Inplace && (layerType == LayerTypes::Activation || layerType == LayerTypes::LayerNorm || std::string(magic_enum::enum_name<LayerTypes>(layerType)).find("BatchNorm", 0) != std::string::npos) && (inputs.size() == 1) && (inputs[0]->LayerType == LayerTypes::Convolution || inputs[0]->LayerType == LayerTypes::DepthwiseConvolution || inputs[0]->LayerType == LayerTypes::ConvolutionTranspose))
-				return true;
+			if constexpr (Inplace)
+			{
+				if ((layerType == LayerTypes::Activation || layerType == LayerTypes::LayerNorm || std::string(magic_enum::enum_name<LayerTypes>(layerType)).find("BatchNorm", 0) != std::string::npos) && 
+					(inputs.size() == 1) &&
+					(inputs[0]->LayerType == LayerTypes::Convolution || inputs[0]->LayerType == LayerTypes::DepthwiseConvolution || inputs[0]->LayerType == LayerTypes::ConvolutionTranspose))
+					return true;
+				else
+					return false;
+			}
 			else
 				return false;
 		}
@@ -265,7 +272,9 @@ namespace dnn
 
 		auto EqualDimensions(const std::vector<Layer*>& inputs) const
 		{
-			return ((inputs[0]->H == inputs[1]->H) && (inputs[0]->W == inputs[1]->W));
+			return 
+				(inputs[0]->H == inputs[1]->H) && 
+				(inputs[0]->W == inputs[1]->W);
 		}
 
 		auto GetFirst(const std::vector<Layer*>& inputs) const
@@ -427,10 +436,10 @@ namespace dnn
 
 		virtual ~Layer() = default;
 		
-		auto HW() const noexcept { return H * W; }
-		auto DHW() const noexcept { return D * HW(); }
-		auto CDHW() const noexcept { return C * DHW(); }
-		auto PaddedCDHW() const noexcept { return LayerType == LayerTypes::Input ? CDHW() : PaddedC * DHW(); }
+		inline auto HW() const noexcept { return H * W; }
+		inline auto DHW() const noexcept { return D * H * W; }
+		inline auto CDHW() const noexcept { return C * D * H * W; }
+		inline auto PaddedCDHW() const noexcept { return LayerType == LayerTypes::Input ? (C * D * H * W) : (PaddedC * D * H * W); }
 
 		virtual void UpdateResolution()	{ }
 
@@ -453,7 +462,11 @@ namespace dnn
 
 		bool IsPlainFormat() const 
 		{ 
-			return ChosenFormat == dnnl::memory::format_tag::ab || ChosenFormat == dnnl::memory::format_tag::abc || ChosenFormat == dnnl::memory::format_tag::abcd || ChosenFormat == dnnl::memory::format_tag::abcde; 
+			return 
+				ChosenFormat == dnnl::memory::format_tag::ab || 
+				ChosenFormat == dnnl::memory::format_tag::abc || 
+				ChosenFormat == dnnl::memory::format_tag::abcd || 
+				ChosenFormat == dnnl::memory::format_tag::abcde; 
 		}
 
 		bool IsBatchNorm() const 

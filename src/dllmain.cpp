@@ -10,6 +10,7 @@ std::unique_ptr<dnn::Dataprovider> dataprovider;
 #if defined DNN_LOG 
 FILE* stream;
 #endif
+
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
 {
 	switch (fdwReason)
@@ -269,11 +270,11 @@ extern "C" DNN_API void DNNGetImage(const UInt layerIndex, const Byte fillColor,
 		switch (model->Layers[layerIndex]->LayerType)
 		{
 			case LayerTypes::BatchNorm:
-			case LayerTypes::BatchNormMish:
-			case LayerTypes::BatchNormMishDropout:
 			case LayerTypes::BatchNormHardLogistic:
 			case LayerTypes::BatchNormHardSwish:
 			case LayerTypes::BatchNormHardSwishDropout:
+			case LayerTypes::BatchNormMish:
+			case LayerTypes::BatchNormMishDropout:
 			case LayerTypes::BatchNormRelu:
 			case LayerTypes::BatchNormReluDropout:
 			case LayerTypes::BatchNormSwish:
@@ -284,9 +285,9 @@ extern "C" DNN_API void DNNGetImage(const UInt layerIndex, const Byte fillColor,
 			case LayerTypes::ConvolutionTranspose:
 			case LayerTypes::Dense:
 			case LayerTypes::DepthwiseConvolution:
+			case LayerTypes::LayerNorm:
 			case LayerTypes::PartialDepthwiseConvolution:
 			case LayerTypes::PRelu:
-			case LayerTypes::LayerNorm:
 			{
 				auto img = model->Layers[layerIndex]->GetImage(fillColor);
 				std::memcpy(image, img.data(), img.size());
@@ -602,6 +603,8 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, LayerInfo* info)
 			{
 				info->Scaling = bn->Scaling;
 				info->Dropout = Float(1) - bn->Keep;
+				info->Alpha = bn->Alpha;
+				info->Beta = bn->Beta;
 			}
 		}
 		break;
@@ -658,11 +661,11 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, LayerInfo* info)
 
 		case LayerTypes::ChannelSplit:
 		{
-			auto channel = dynamic_cast<ChannelSplit*>(model->Layers[layerIndex].get());
-			if (channel)
+			auto split = dynamic_cast<ChannelSplit*>(model->Layers[layerIndex].get());
+			if (split)
 			{
-				info->Group = channel->Group;
-				info->Groups = channel->Groups;
+				info->Group = split->Group;
+				info->Groups = split->Groups;
 			}
 		}
 		break;
@@ -700,15 +703,15 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, LayerInfo* info)
 
 		case LayerTypes::Cost:
 		{
-			auto loss = dynamic_cast<Cost*>(model->Layers[layerIndex].get());
-			if (loss)
+			auto cost = dynamic_cast<Cost*>(model->Layers[layerIndex].get());
+			if (cost)
 			{
-				info->Cost = loss->CostFunction;
-				info->LabelTrue = loss->LabelTrue;
-				info->LabelFalse = loss->LabelFalse;
-				info->GroupIndex = loss->GroupIndex;
-				info->LabelIndex = loss->LabelIndex;
-				info->Weight = loss->Weight;
+				info->Cost = cost->CostFunction;
+				info->LabelTrue = cost->LabelTrue;
+				info->LabelFalse = cost->LabelFalse;
+				info->GroupIndex = cost->GroupIndex;
+				info->LabelIndex = cost->LabelIndex;
+				info->Weight = cost->Weight;
 			}
 		}
 		break;
@@ -731,9 +734,9 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, LayerInfo* info)
 
 		case LayerTypes::Dropout:
 		{
-			auto drop = dynamic_cast<dnn::Dropout*>(model->Layers[layerIndex].get());
-			if (drop)
-				info->Dropout = Float(1) - drop->Keep;
+			auto dropout = dynamic_cast<dnn::Dropout*>(model->Layers[layerIndex].get());
+			if (dropout)
+				info->Dropout = Float(1) - dropout->Keep;
 		}
 		break;
 
@@ -836,9 +839,9 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, LayerInfo* info)
 		
 		case LayerTypes::Shuffle:
 		{
-			auto channel = dynamic_cast<Shuffle*>(model->Layers[layerIndex].get());
-			if (channel)
-				info->Groups = channel->Groups;
+			auto shuffle = dynamic_cast<Shuffle*>(model->Layers[layerIndex].get());
+			if (shuffle)
+				info->Groups = shuffle->Groups;
 		}
 		break;
 

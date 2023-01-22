@@ -1657,10 +1657,10 @@ namespace dnn
 							auto overflow = false;
 							for (SampleIndex = 0; SampleIndex < AdjustedTrainingSamplesCount; SampleIndex += BatchSize)
 							{
+								// Forward
 								if (DepthDrop > 0)
 									StochasticDepth(totalSkipConnections, DepthDrop, FixedDepthDrop);
 
-								// Forward
 								while (Layers[0]->RefreshingStats.load()) {	std::this_thread::yield(); }
 								Layers[0]->Fwd.store(true);
 								timePointGlobal = timer.now();
