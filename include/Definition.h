@@ -535,9 +535,6 @@ namespace dnn
 							model->Layers.push_back(std::make_unique<BatchNormActivationDropout<TanhExp, LayerTypes::BatchNormTanhExpDropout>>(model->Device, model->Format, name, inputs, dropout, dropout != model->Dropout, scaling, alpha, beta, momentum, eps, biases));
 							model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsFillerMode, weightsGain, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesFillerMode, biasesGain, biasesScale, biasesLRM, biasesWDM);
 							break;
-						case LayerTypes::ChannelShuffle:
-							model->Layers.push_back(std::make_unique<ChannelShuffle>(model->Device, model->Format, name, inputs, groups));
-							break;
 						case LayerTypes::ChannelSplit:
 							model->Layers.push_back(std::make_unique<ChannelSplit>(model->Device, model->Format, name, inputs, group, groups));
 							break;
@@ -612,6 +609,9 @@ namespace dnn
 							break;
 						case LayerTypes::Resampling:
 							model->Layers.push_back(std::make_unique<Resampling>(model->Device, model->Format, name, inputs, algorithm, factorH, factorW));
+							break;
+						case LayerTypes::Shuffle:
+							model->Layers.push_back(std::make_unique<Shuffle>(model->Device, model->Format, name, inputs, groups));
 							break;
 						case LayerTypes::Softmax:
 							model->Layers.push_back(std::make_unique<Softmax>(model->Device, model->Format, name, inputs));
@@ -1973,7 +1973,7 @@ namespace dnn
 					goto FAIL;
 				}
 
-				if (layerType != LayerTypes::ChannelShuffle && layerType != LayerTypes::ChannelSplit && layerType != LayerTypes::Convolution && layerType != LayerTypes::PartialDepthwiseConvolution)
+				if (layerType != LayerTypes::Shuffle && layerType != LayerTypes::ChannelSplit && layerType != LayerTypes::Convolution && layerType != LayerTypes::PartialDepthwiseConvolution)
 				{
 					msg = CheckMsg(line, col, "Groups cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
 					goto FAIL;

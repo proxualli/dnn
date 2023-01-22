@@ -469,10 +469,10 @@ namespace scripts
                 "Group=" + std::to_string(part) + nwl + nwl;
         }
 
-        static std::string ChannelShuffle(UInt id, std::string inputs, UInt groups = 2, std::string group = "", std::string prefix = "CSH")
+        static std::string Shuffle(UInt id, std::string inputs, UInt groups = 2, std::string group = "", std::string prefix = "SH")
         {
             return "[" + group + prefix + std::to_string(id) + "]" + nwl +
-                "Type=ChannelShuffle" + nwl +
+                "Type=Shuffle" + nwl +
                 "Inputs=" + inputs + nwl +
                 "Groups=" + std::to_string(groups) + nwl + nwl;
         }
@@ -697,8 +697,8 @@ namespace scripts
                     Concat(A + 1, In("LCS", A) + std::string(",") + In("B", C + 3));
 
                 return
-                    ChannelShuffle(A, In("CC", A), shuffle) +
-                    ChannelSplit(A, In("CSH", A), 2, 1, "L") + ChannelSplit(A, In("CSH", A), 2, 2, "R") +
+                    Shuffle(A, In("CC", A), shuffle) +
+                    ChannelSplit(A, In("SH", A), 2, 1, "L") + ChannelSplit(A, In("SH", A), 2, 2, "R") +
                     Convolution(C, In("RCS", A), channels, 1, 1, 1, 1, 0, 0) +
                     BatchNormActivation(C + 1, In("C", C), activation) +
                     DepthwiseConvolution(C + 1, In("B", C + 1), 1, kernel, kernel, 1, 1, pad, pad) +
