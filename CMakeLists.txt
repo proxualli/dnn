@@ -123,7 +123,6 @@ set(libdnn_headers
   include/BatchNormActivation.h
   include/BatchNormActivationDropout.h
   include/BatchNormRelu.h
-  include/ChannelShuffle.h
   include/ChannelSplit.h
   include/ChannelZeroPad.h
   include/Concat.h
@@ -152,6 +151,7 @@ set(libdnn_headers
   include/PartialDepthwiseConvolution.h
   include/Resampling.h
   include/Scripts.h
+  include/Shuffle.h
   include/stdafx.h
   include/Substract.h
   include/Utils.h
