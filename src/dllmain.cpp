@@ -488,32 +488,6 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, LayerInfo* info)
 
 		switch (model->Layers[layerIndex]->LayerType)
 		{
-		case LayerTypes::Resampling:
-		{
-			auto resampling = dynamic_cast<Resampling*>(model->Layers[layerIndex].get());
-			if (resampling)
-			{
-				info->Algorithm = resampling->Algorithm;
-				info->fH = resampling->FactorH;
-				info->fW = resampling->FactorW;
-			}
-		}
-		break;
-
-		case LayerTypes::LocalResponseNorm:
-		{
-			auto lrn = dynamic_cast<LocalResponseNorm*>(model->Layers[layerIndex].get());
-			if (lrn)
-			{
-				info->AcrossChannels = lrn->AcrossChannels;
-				info->LocalSize = lrn->LocalSize;
-				info->Alpha = lrn->Alpha;
-				info->Beta = lrn->Beta;
-				info->K = lrn->K;
-			}
-		}
-		break;
-
 		case LayerTypes::Activation:
 		{
 			auto activation = dynamic_cast<Activation*>(model->Layers[layerIndex].get());
@@ -522,6 +496,21 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, LayerInfo* info)
 				info->Activation = activation->ActivationFunction;
 				info->Alpha = activation->Alpha;
 				info->Beta = activation->Beta;
+			}
+		}
+		break;
+
+		case LayerTypes::AvgPooling:
+		{
+			auto pool = dynamic_cast<AvgPooling*>(model->Layers[layerIndex].get());
+			if (pool)
+			{
+				info->KernelH = pool->KernelH;
+				info->KernelW = pool->KernelW;
+				info->StrideH = pool->StrideH;
+				info->StrideW = pool->StrideW;
+				info->DilationH = pool->DilationH;
+				info->DilationW = pool->DilationW;
 			}
 		}
 		break;
@@ -667,62 +656,13 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, LayerInfo* info)
 		}
 		break;
 
-		case LayerTypes::Dropout:
+		case LayerTypes::ChannelSplit:
 		{
-			auto drop = dynamic_cast<dnn::Dropout*>(model->Layers[layerIndex].get());
-			if (drop)
-				info->Dropout = Float(1) - drop->Keep;
-		}
-		break;
-
-		case LayerTypes::AvgPooling:
-		{
-			auto pool = dynamic_cast<AvgPooling*>(model->Layers[layerIndex].get());
-			if (pool)
+			auto channel = dynamic_cast<ChannelSplit*>(model->Layers[layerIndex].get());
+			if (channel)
 			{
-				info->KernelH = pool->KernelH;
-				info->KernelW = pool->KernelW;
-				info->StrideH = pool->StrideH;
-				info->StrideW = pool->StrideW;
-				info->DilationH = pool->DilationH;
-				info->DilationW = pool->DilationW;
-			}
-		}
-		break;
-
-		case LayerTypes::MaxPooling:
-		{
-			auto pool = dynamic_cast<MaxPooling*>(model->Layers[layerIndex].get());
-			if (pool)
-			{
-				info->KernelH = pool->KernelH;
-				info->KernelW = pool->KernelW;
-				info->StrideH = pool->StrideH;
-				info->StrideW = pool->StrideW;
-				info->DilationH = pool->DilationH;
-				info->DilationW = pool->DilationW;
-			}
-		}
-		break;
-
-		case LayerTypes::GlobalAvgPooling:
-		{
-			auto pool = dynamic_cast<GlobalAvgPooling*>(model->Layers[layerIndex].get());
-			if (pool)
-			{
-				info->KernelH = pool->KernelH;
-				info->KernelW = pool->KernelW;
-			}
-		}
-		break;
-
-		case LayerTypes::GlobalMaxPooling:
-		{
-			auto pool = dynamic_cast<GlobalMaxPooling*>(model->Layers[layerIndex].get());
-			if (pool)
-			{
-				info->KernelH = pool->KernelH;
-				info->KernelW = pool->KernelW;
+				info->Group = channel->Group;
+				info->Groups = channel->Groups;
 			}
 		}
 		break;
@@ -733,40 +673,6 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, LayerInfo* info)
 			if (conv)
 			{
 				info->Groups = conv->Groups;
-				info->KernelH = conv->KernelH;
-				info->KernelW = conv->KernelW;
-				info->StrideH = conv->StrideH;
-				info->StrideW = conv->StrideW;
-				info->DilationH = conv->DilationH;
-				info->DilationW = conv->DilationW;
-			}
-		}
-		break;
-
-		case LayerTypes::DepthwiseConvolution:
-		{
-			auto conv = dynamic_cast<DepthwiseConvolution*>(model->Layers[layerIndex].get());
-			if (conv)
-			{
-				info->Multiplier = conv->Multiplier;
-				info->KernelH = conv->KernelH;
-				info->KernelW = conv->KernelW;
-				info->StrideH = conv->StrideH;
-				info->StrideW = conv->StrideW;
-				info->DilationH = conv->DilationH;
-				info->DilationW = conv->DilationW;
-			}
-		}
-		break;
-
-		case LayerTypes::PartialDepthwiseConvolution:
-		{
-			auto conv = dynamic_cast<PartialDepthwiseConvolution*>(model->Layers[layerIndex].get());
-			if (conv)
-			{
-				info->Group = conv->Group;
-				info->Groups = conv->Groups;
-				info->Multiplier = conv->Multiplier;
 				info->KernelH = conv->KernelH;
 				info->KernelW = conv->KernelW;
 				info->StrideH = conv->StrideH;
@@ -792,25 +698,6 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, LayerInfo* info)
 		}
 		break;
 
-		case LayerTypes::ChannelShuffle:
-		{
-			auto channel = dynamic_cast<ChannelShuffle*>(model->Layers[layerIndex].get());
-			if (channel)
-				info->Groups = channel->Groups;
-		}
-		break;
-
-		case LayerTypes::ChannelSplit:
-		{
-			auto channel = dynamic_cast<ChannelSplit*>(model->Layers[layerIndex].get());
-			if (channel)
-			{
-				info->Group = channel->Group;
-				info->Groups = channel->Groups;
-			}
-		}
-		break;
-
 		case LayerTypes::Cost:
 		{
 			auto loss = dynamic_cast<Cost*>(model->Layers[layerIndex].get());
@@ -825,7 +712,54 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, LayerInfo* info)
 			}
 		}
 		break;
-		
+
+		case LayerTypes::DepthwiseConvolution:
+		{
+			auto conv = dynamic_cast<DepthwiseConvolution*>(model->Layers[layerIndex].get());
+			if (conv)
+			{
+				info->Multiplier = conv->Multiplier;
+				info->KernelH = conv->KernelH;
+				info->KernelW = conv->KernelW;
+				info->StrideH = conv->StrideH;
+				info->StrideW = conv->StrideW;
+				info->DilationH = conv->DilationH;
+				info->DilationW = conv->DilationW;
+			}
+		}
+		break;
+
+		case LayerTypes::Dropout:
+		{
+			auto drop = dynamic_cast<dnn::Dropout*>(model->Layers[layerIndex].get());
+			if (drop)
+				info->Dropout = Float(1) - drop->Keep;
+		}
+		break;
+
+		case LayerTypes::GlobalAvgPooling:
+		{
+			auto pool = dynamic_cast<GlobalAvgPooling*>(model->Layers[layerIndex].get());
+			if (pool)
+			{
+				info->KernelH = pool->KernelH;
+				info->KernelW = pool->KernelW;
+			}
+		}
+		break;
+
+		case LayerTypes::GlobalMaxPooling:
+		{
+			auto pool = dynamic_cast<GlobalMaxPooling*>(model->Layers[layerIndex].get());
+			if (pool)
+			{
+				info->KernelH = pool->KernelH;
+				info->KernelW = pool->KernelW;
+			}
+		}
+		break;
+
+
 		case LayerTypes::LayerNorm:
 		{
 			auto ln = dynamic_cast<LayerNorm*>(model->Layers[layerIndex].get());
@@ -834,11 +768,78 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, LayerInfo* info)
 		}
 		break;
 
+		case LayerTypes::LocalResponseNorm:
+		{
+			auto lrn = dynamic_cast<LocalResponseNorm*>(model->Layers[layerIndex].get());
+			if (lrn)
+			{
+				info->AcrossChannels = lrn->AcrossChannels;
+				info->LocalSize = lrn->LocalSize;
+				info->Alpha = lrn->Alpha;
+				info->Beta = lrn->Beta;
+				info->K = lrn->K;
+			}
+		}
+		break;
+
+		case LayerTypes::MaxPooling:
+		{
+			auto pool = dynamic_cast<MaxPooling*>(model->Layers[layerIndex].get());
+			if (pool)
+			{
+				info->KernelH = pool->KernelH;
+				info->KernelW = pool->KernelW;
+				info->StrideH = pool->StrideH;
+				info->StrideW = pool->StrideW;
+				info->DilationH = pool->DilationH;
+				info->DilationW = pool->DilationW;
+			}
+		}
+		break;
+
+		case LayerTypes::PartialDepthwiseConvolution:
+		{
+			auto conv = dynamic_cast<PartialDepthwiseConvolution*>(model->Layers[layerIndex].get());
+			if (conv)
+			{
+				info->Group = conv->Group;
+				info->Groups = conv->Groups;
+				info->Multiplier = conv->Multiplier;
+				info->KernelH = conv->KernelH;
+				info->KernelW = conv->KernelW;
+				info->StrideH = conv->StrideH;
+				info->StrideW = conv->StrideW;
+				info->DilationH = conv->DilationH;
+				info->DilationW = conv->DilationW;
+			}
+		}
+		break;
+
 		case LayerTypes::PRelu:
 		{
 			auto prelu = dynamic_cast<PRelu*>(model->Layers[layerIndex].get());
 			if (prelu)
 				info->Alpha = prelu->Alpha;
+		}
+		break;
+
+		case LayerTypes::Resampling:
+		{
+			auto resampling = dynamic_cast<Resampling*>(model->Layers[layerIndex].get());
+			if (resampling)
+			{
+				info->Algorithm = resampling->Algorithm;
+				info->fH = resampling->FactorH;
+				info->fW = resampling->FactorW;
+			}
+		}
+		break;
+		
+		case LayerTypes::Shuffle:
+		{
+			auto channel = dynamic_cast<Shuffle*>(model->Layers[layerIndex].get());
+			if (channel)
+				info->Groups = channel->Groups;
 		}
 		break;
 
