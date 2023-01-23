@@ -427,9 +427,9 @@ extern "C" DNN_API void DNNGetModelInfo(ModelInfo* info)
 		
 		switch (dataprovider->Dataset)
 		{
-		case Datasets::tinyimagenet:
 		case Datasets::cifar10:
 		case Datasets::cifar100:
+		case Datasets::tinyimagenet:
 			for (auto c = 0ull; c < 3ull; c++)
 			{
 				info->MeanTrainSet.push_back(dataprovider->Mean[c]);
