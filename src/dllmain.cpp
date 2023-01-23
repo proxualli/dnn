@@ -851,11 +851,13 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, LayerInfo* info)
 	}
 }
 
-extern "C" DNN_API void DNNGetResolution(UInt* N, UInt* H, UInt* W)
+extern "C" DNN_API void DNNGetResolution(UInt* N, UInt* C, UInt* D, UInt* H, UInt* W)
 {
 	if (model)
 	{
 		*N = model->BatchSize;
+		*C = model->C;
+		*D = model->D;
 		*H = model->H;
 		*W = model->W;
 	}
