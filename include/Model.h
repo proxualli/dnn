@@ -1960,7 +1960,7 @@ namespace dnn
 					size_t point = 0;
 					if (!os.bad() && os.is_open())
 					{
-						//Layers[0]->SaveNeurons(os);
+						Layers[0]->SaveNeurons(os);
 						//oss <<  std::to_string(point) + " Input\n";
 						//point += Layers[0]->Neurons.size();
 
@@ -1975,7 +1975,8 @@ namespace dnn
 						{
 							timePoint = timer.now();
 							Layers[i]->ForwardProp(BatchSize, true);
-							//Layers[i]->SaveNeurons(os);
+							if (i < 3ull)
+								Layers[i]->SaveNeurons(os);
 							//oss << std::to_string(point) + " " + Layers[i]->Name + "\n";
 							//point += Layers[i]->Neurons.size();
 							Layers[i]->fpropTime = timer.now() - timePoint;
@@ -1987,8 +1988,17 @@ namespace dnn
 
 						for (auto i = Layers.size() - 1; i >= FirstUnlockedLayer.load(); --i)
 						{
-							Layers[i]->BackwardProp(BatchSize);
-							Layers[i]->SaveNeuronsD1(os);
+							if (Layers[i]->HasWeights)
+							{
+								//Layers[i]->ResetGradients();
+								Layers[i]->BackwardProp(BatchSize);
+								//Layers[i]->UpdateWeights(CurrentTrainingRate, Optimizer, DisableLocking);
+								//Layers[i]->SaveGradients(os);
+							}
+							else
+								Layers[i]->BackwardProp(BatchSize);
+
+							//Layers[i]->SaveNeuronsD1(os);
 							//oss << std::to_string(point) + " " + Layers[i]->Name + "\n";
 							//point += Layers[i]->NeuronsD1.size();
 						}

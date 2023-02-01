@@ -44,7 +44,7 @@ namespace dnn
 			case Activations::HardLogistic:
 				return alpha == Float(0) ? Float(0.2) : alpha;
 			case Activations::HardSwish:
-				return alpha == Float(0) ? Float(3) : alpha;
+				return alpha == Float(0) ? (Float(1) / Float(6)) : alpha;
 			}
 
 			return alpha;
@@ -81,9 +81,8 @@ namespace dnn
 			case Activations::BoundedRelu:
 				return Float(0);
 			case Activations::HardLogistic:
-				return beta == Float(0) ? Float(0.5) : beta;
 			case Activations::HardSwish:
-				return beta == Float(0) ? Float(6) : beta;
+				return beta == Float(0) ? Float(0.5) : beta;
 			case Activations::SoftPlus:
 				return beta == Float(0) ? Float(1) : beta;
 			}

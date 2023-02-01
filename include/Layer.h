@@ -1767,6 +1767,16 @@ namespace dnn
 			os.write(reinterpret_cast<const char*>(NeuronsD1.data()), std::streamsize(NeuronsD1.size() * sizeof(Float)));
 		}
 
+		virtual void SaveGradients(std::ostream& os)
+		{
+			if (HasWeights)
+			{
+				os.write(reinterpret_cast<const char*>(WeightsD1.data()), std::streamsize(WeightCount * sizeof(Float)));
+				if (HasBias)
+					os.write(reinterpret_cast<const char*>(BiasesD1.data()), std::streamsize(BiasCount * sizeof(Float)));
+			}
+		}
+
 		virtual void Save(std::ostream& os, const bool persistOptimizer = false, const Optimizers optimizer = Optimizers::SGD)
 		{
 			if (HasWeights)

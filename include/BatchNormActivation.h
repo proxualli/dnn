@@ -57,7 +57,7 @@ namespace dnn
 			case Activations::HardLogistic:
 				return alpha == Float(0) ? Float(0.2) : alpha;
 			case Activations::HardSwish:
-				return alpha == Float(0) ? Float(3) : alpha;
+				return alpha == Float(0) ? (Float(1) / Float(6)) : alpha;
 			}
 
 			return alpha;
@@ -94,9 +94,8 @@ namespace dnn
 			case Activations::BoundedRelu:
 				return Float(0);
 			case Activations::HardLogistic:
-				return beta == Float(0) ? Float(0.5) : beta;
 			case Activations::HardSwish:
-				return beta == Float(0) ? Float(6) : beta;
+				return beta == Float(0) ? Float(0.5) : beta;
 			case Activations::SoftPlus:
 				return beta == Float(0) ? Float(1) : beta;
 			}
@@ -400,7 +399,7 @@ namespace dnn
 								}
 
 								variance += horizontal_add(vecVariance);
-								unbiasedVariance = std::max(0.f, variance / Float(batchSize * HW() - 1));
+								unbiasedVariance = std::max(Float(0), variance / Float(batchSize * HW() - 1));
 								variance /= Float(batchSize * HW());
 								variance = std::max(Float(0), variance);
 								Variance[c] = variance;
@@ -488,7 +487,6 @@ namespace dnn
 							}
 							else
 							{
-
 								auto correction0 = VecFloat(0);
 								for (auto n = 0ull; n < batchSize; n++)
 								{
@@ -526,7 +524,7 @@ namespace dnn
 							mul_add(VecFloat().load_a(&RunningMean[channelOffset]), Momentum, OneMinusMomentum * mean).store_a(&RunningMean[channelOffset]);
 							mul_add(VecFloat().load_a(&RunningVariance[channelOffset]), Momentum, OneMinusMomentum * unbiasedVariance).store_a(&RunningVariance[channelOffset]);
 
-							const auto invStddev = VecFloat(1) / sqrt(variance + Eps);
+							const auto invStddev = VecFloat(Float(1)) / sqrt(variance + Eps);
 							const auto weightedInvStdDev = Scaling ? (VecFloat().load_a(&Weights[channelOffset]) * invStddev) : invStddev;
 							const auto biases = Scaling && HasBias ? VecFloat().load_a(&Biases[channelOffset]) : VecFloat(0);
 
