@@ -219,7 +219,7 @@ IF(NOT DEFINED VECTORCLASS_SOURCE_DIR)
  ENDIF()
 
  IF(NOT DEFINED JPEG_SOURCE_DIR)
-  SET(JPEG_SOURCE_DIR "${DNN_DEPENDENCIES_SOURCE_DIR}/libjpeg-turbo" CACHE STRING "JPEG source directory")
+  MESSAGE(STATUS "Downloading jpeg to ${DNN_DEPENDENCIES_SOURCE_DIR}/libjpeg-turbo (define JPEG_SOURCE_DIR to avoid it)")
   CONFIGURE_FILE(cmake/DownloadJPEG.cmake "${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo-download/CMakeLists.txt")
   EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
     WORKING_DIRECTORY "${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo-download")
@@ -356,8 +356,8 @@ ExternalProject_Add(jpeg
 		      -DWITH_TURBOJPEG=0
                       -DENABLE_SHARED=OFF
                       -DENABLE_STATIC=ON
-                      -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/libjpeg-turbo
-                      -DCMAKE_INSTALL_LIBDIR=${CMAKE_BINARY_DIR}/bin
+                      -DCMAKE_INSTALL_PREFIX=${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo
+                      -DCMAKE_INSTALL_LIBDIR=${DNN_DEPENDENCIES_BINARY_DIR}/bin
                       -DCMAKE_POSITION_INDEPENDENT_CODE=ON
 	GIT_REPOSITORY https://github.com/libjpeg-turbo/libjpeg-turbo.git
 	GIT_TAG main
@@ -369,9 +369,9 @@ ExternalProject_Add(jpeg
 	TEST_COMMAND ""
 )
 if(WIN32)
-  set(JPEG_LIBNAME ${CMAKE_BINARY_DIR}/bin/jpeg-static.lib PARENT_SCOPE)
+  set(JPEG_LIBNAME ${DNN_DEPENDENCIES_BINARY_DIR}/bin/jpeg-static.lib PARENT_SCOPE)
 else(WIN32)
-  set(JPEG_LIBNAME ${CMAKE_BINARY_DIR}/bin/libjpeg.a PARENT_SCOPE)
+  set(JPEG_LIBNAME ${DNN_DEPENDENCIES_BINARY_DIR}/bin/libjpeg.a PARENT_SCOPE)
 endif(WIN32)
 # --- IF(NOT TARGET jpeg)
 # ---  ADD_SUBDIRECTORY(
@@ -379,9 +379,9 @@ endif(WIN32)
 # ---    "${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo")
 # ---ENDIF()
 if(BUILD_SHARED_LIBS)
-  TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC ${JPEG_LIBNAME})
+  TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC jpeg)
 else()
-  TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC ${JPEG_LIBNAME})
+  TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC jpeg-static)
 endif()
 
 # ---[ Configure oneDNN
