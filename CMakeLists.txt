@@ -353,6 +353,7 @@ endif()
 INCLUDE(ExternalProject)
 ExternalProject_Add(jpeg
 		    CMAKE_ARGS
+		      -DWITH_TURBOJPEG=0
                       -DENABLE_SHARED=OFF
                       -DENABLE_STATIC=ON
                       -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/libjpeg-turbo
