@@ -350,7 +350,16 @@ else()
 endif()
 
 # ---[ Configure JPEG
-include(cmake/DownloadJPEG.cmake)
+ExternalProject_Add(jpeg
+	GIT_REPOSITORY https://github.com/libjpeg-turbo/libjpeg-turbo.git
+	GIT_TAG main
+	SOURCE_DIR "${JPEG_SOURCE_DIR}"
+	BINARY_DIR "${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo"
+	CONFIGURE_COMMAND ""
+	BUILD_COMMAND ""
+	INSTALL_COMMAND ""
+	TEST_COMMAND ""
+)
 # --- IF(NOT TARGET jpeg)
 # ---  ADD_SUBDIRECTORY(
 # ---    "${JPEG_SOURCE_DIR}"
