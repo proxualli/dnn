@@ -368,11 +368,6 @@ ExternalProject_Add(jpeg
 	INSTALL_COMMAND ""
 	TEST_COMMAND ""
 )
-if(WIN32)
-  set(JPEG_LIBNAME ${DNN_DEPENDENCIES_BINARY_DIR}/bin/jpeg-static.lib PARENT_SCOPE)
-else(WIN32)
-  set(JPEG_LIBNAME ${DNN_DEPENDENCIES_BINARY_DIR}/bin/libjpeg.a PARENT_SCOPE)
-endif(WIN32)
 # --- IF(NOT TARGET jpeg)
 # ---  ADD_SUBDIRECTORY(
 # ---    "${JPEG_SOURCE_DIR}"
