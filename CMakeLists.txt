@@ -350,11 +350,12 @@ else()
 endif()
 
 # ---[ Configure JPEG
-IF(NOT TARGET jpeg)
-  ADD_SUBDIRECTORY(
-    "${JPEG_SOURCE_DIR}"
-    "${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo")
-ENDIF()
+include(cmake/DownloadJPEG.cmake)
+# --- IF(NOT TARGET jpeg)
+# ---  ADD_SUBDIRECTORY(
+# ---    "${JPEG_SOURCE_DIR}"
+# ---    "${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo")
+# ---ENDIF()
 if(BUILD_SHARED_LIBS)
   TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC jpeg)
 else()
