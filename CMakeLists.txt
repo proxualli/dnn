@@ -350,6 +350,7 @@ else()
 endif()
 
 # ---[ Configure JPEG
+INCLUDE(ExternalProject)
 ExternalProject_Add(jpeg
 	GIT_REPOSITORY https://github.com/libjpeg-turbo/libjpeg-turbo.git
 	GIT_TAG main
