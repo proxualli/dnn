@@ -21,15 +21,15 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Install Ninja
+    - name: Install ninja
       run: |
             sudo apt-get install -y ninja-build
             
-    - name: Install Nasm
+    - name: Install nasm
       run: |
             sudo apt-get install -y nasm
             
-    - name: Install OMP library
+    - name: Install omp
       run: |
             sudo apt-get install libomp-dev
             
