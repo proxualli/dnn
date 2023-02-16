@@ -227,7 +227,7 @@ IF(NOT DEFINED VECTORCLASS_SOURCE_DIR)
     WORKING_DIRECTORY "${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo")
   SET(JPEG_SOURCE_DIR "${DNN_DEPENDENCIES_SOURCE_DIR}/libjpeg-turbo" CACHE STRING "JPEG source directory")
   EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E copy "${DNN_DEPENDENCIES_SOURCE_DIR}/libjpeg-turbo/jconfig.h.in" "${DNN_DEPENDENCIES_SOURCE_DIR}/libjpeg-turbo/jconfig.h")
-  EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E copy "${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo/jconfig.h.in" "${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo/jconfig.h")
+  EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E copy "${DNN_DEPENDENCIES_SOURCE_DIR}/libjpeg-turbo/jconfig.h.in" "${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo/jconfig.h")
   # --- EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E copy "${JPEG_SOURCE_DIR}/jpeglib.h" "${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo/jpeglib.h")
  ENDIF()
 
@@ -372,7 +372,7 @@ ExternalProject_Add(jpeg
 	TEST_COMMAND ""
 )
 
-EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E copy "${DNN_DEPENDENCIES_SOURCE_DIR}/libjpeg-turbo/jconfig.h.in" "${DNN_DEPENDENCIES_SOURCE_DIR}/libjpeg-turbo/jconfig.h")
+EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E copy "${DNN_DEPENDENCIES_SOURCE_DIR}/libjpeg-turbo/jconfig.h.in" "${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo/jconfig.h")
 
 IF(BUILD_SHARED_LIBS)
   TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC jpeg.so)
