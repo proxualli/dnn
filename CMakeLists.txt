@@ -226,7 +226,7 @@ IF(NOT DEFINED VECTORCLASS_SOURCE_DIR)
   EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" --build .
     WORKING_DIRECTORY "${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo-download")
   SET(JPEG_SOURCE_DIR "${DNN_DEPENDENCIES_SOURCE_DIR}/libjpeg-turbo" CACHE STRING "JPEG source directory")
-  # --- EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E copy "${DNN_DEPENDENCIES_SOURCE_DIR}/libjpeg-turbo/jconfig.h.in" "${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo/jconfig.h")
+  EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E copy "${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo/jconfig.h.in" "${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo/jconfig.h")
   EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E copy "${DNN_DEPENDENCIES_SOURCE_DIR}/libjpeg-turbo/jconfig.h.in" "${DNN_DEPENDENCIES_SOURCE_DIR}/libjpeg-turbo/jconfig.h")
   # --- EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E copy "${JPEG_SOURCE_DIR}/jpeglib.h" "${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo/jpeglib.h")
  ENDIF()
