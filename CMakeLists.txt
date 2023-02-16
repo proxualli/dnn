@@ -349,7 +349,7 @@ else()
   TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC png_static)
 endif()
 
-configure_file(${JPEG_SOURCE_DIR}/jconfig.h.in)
+configure_file(${JPEG_SOURCE_DIR}/jconfig.h.in ${JPEG_SOURCE_DIR}/jconfig.h)
 # ---[ Configure JPEG
 INCLUDE(ExternalProject)
 ExternalProject_Add(jpeg
