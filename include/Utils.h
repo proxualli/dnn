@@ -100,8 +100,8 @@ using namespace dnn;
 namespace
 {
 	constexpr auto Kahan = true;
-	constexpr auto Inplace = true;
-	constexpr auto Reference = false;
+	constexpr auto Inplace = false;
+	constexpr auto Reference = true;
 	constexpr auto SingleMeanVariancePass = false;
 	constexpr auto DefaultDatasetMeanStdDev = false;
 
