@@ -350,6 +350,7 @@ else()
 endif()
 
 configure_file(${JPEG_SOURCE_DIR}/jconfig.h.in ${JPEG_SOURCE_DIR}/jconfig.h)
+configure_file(${DNN_DEPENDENCIES_BINARY_DIR}/jconfig.h.in ${DNN_DEPENDENCIES_BINARY_DIR}/jconfig.h)
 # ---[ Configure JPEG
 INCLUDE(ExternalProject)
 ExternalProject_Add(jpeg
