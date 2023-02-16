@@ -366,7 +366,7 @@ ExternalProject_Add(jpeg
 	GIT_TAG main
 	SOURCE_DIR "${JPEG_SOURCE_DIR}"
 	BINARY_DIR "${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo"
-	CONFIGURE_COMMAND "${CMAKE_COMMAND}" -E copy "${CMAKE_BINARY_DIR}/libjpeg-turbo/jconfig.h.in" "${CMAKE_BINARY_DIR}/libjpeg-turbo/jconfig.h"
+	CONFIGURE_COMMAND "${CMAKE_COMMAND}" -E copy "${CMAKE_SOURCE_DIR}/libjpeg-turbo/jconfig.h.in" "${CMAKE_SOURCE_DIR}/libjpeg-turbo/jconfig.h"
 	BUILD_COMMAND ""
 	INSTALL_COMMAND ""
 	TEST_COMMAND ""
