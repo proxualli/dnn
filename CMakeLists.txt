@@ -356,8 +356,8 @@ ExternalProject_Add(jpeg
 		      -DWITH_TURBOJPEG=0
                       -DENABLE_SHARED=OFF
                       -DENABLE_STATIC=ON
-                      -DCMAKE_INSTALL_PREFIX=${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo
-                      -DCMAKE_INSTALL_LIBDIR=${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo/bin
+                      -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/libjpeg-turbo
+                      -DCMAKE_INSTALL_LIBDIR=${CMAKE_BINARY_DIR}/bin
                       -DCMAKE_POSITION_INDEPENDENT_CODE=ON
 	GIT_REPOSITORY https://github.com/libjpeg-turbo/libjpeg-turbo.git
 	GIT_TAG main
@@ -370,13 +370,13 @@ ExternalProject_Add(jpeg
 )
 
 IF(WIN32)
-  set(JPEG_LIBNAME ${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo/bin/jpeg-static.lib CACHE STRING "")
-  set(JPEG12_LIBNAME ${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo/bin/jpeg12.lib CACHE STRING "")
-  set(JPEG16_LIBNAME ${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo/bin/jpeg16.lib CACHE STRING "")
+  set(JPEG_LIBNAME ${CMAKE_BINARY_DIR}/bin/jpeg-static.lib PARENT_SCOPE)
+  set(JPEG12_LIBNAME ${CMAKE_BINARY_DIR}/bin/jpeg12.lib PARENT_SCOPE)
+  set(JPEG16_LIBNAME ${CMAKE_BINARY_DIR}/bin/jpeg16.lib PARENT_SCOPE)
 ELSE()
-  set(JPEG_LIBNAME ${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo/bin/libjpeg.a CACHE STRING "")
-  set(JPEG12_LIBNAME ${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo/bin/libjpeg12.a CACHE STRING "")
-  set(JPEG16_LIBNAME ${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo/bin/libjpeg16.a CACHE STRING "")
+  set(JPEG_LIBNAME ${CMAKE_BINARY_DIR}/bin/libjpeg.a PARENT_SCOPE)
+  set(JPEG12_LIBNAME ${CMAKE_BINARY_DIR}/bin/libjpeg12.a PARENT_SCOPE)
+  set(JPEG16_LIBNAME ${CMAKE_BINARY_DIR}/bin/libjpeg16.a PARENT_SCOPE)
 ENDIF()
 
 IF(BUILD_SHARED_LIBS)
