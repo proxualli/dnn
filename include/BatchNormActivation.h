@@ -888,14 +888,12 @@ namespace dnn
 					{
 						for_i(batchSize, threads, [=](UInt n)
 						{
-							VecFloat neurons;
 							for (auto c = 0ull; c < PaddedC; c += VectorSize)
 							{
 								const auto offset = n * PaddedCDHW() + c * HW();
 								for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
 								{
-									neurons.load_a(&InputNeurons[hw]);
-									Activation::fVec(neurons, Alpha, Beta).store_a(&Neurons[hw]);
+									Activation::fVec(VecFloat().load_a(&Neurons[hw]), Alpha, Beta).store_a(&Neurons[hw]);
 #ifndef DNN_LEAN
 									VecFloat(0).store_nt(&NeuronsD1[hw]);
 #endif // DNN_LEAN
@@ -907,15 +905,11 @@ namespace dnn
 					{
 						for_i(batchSize, threads, [=](UInt n)
 						{
-							VecFloat neurons;
 							for (auto c = 0ull; c < PaddedC; c += VectorSize)
 							{
 								const auto offset = n * PaddedCDHW() + c * HW();
 								for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
-								{
-									neurons.load_a(&InputNeurons[hw]);
-									Activation::fVec(neurons, Alpha, Beta).store_a(&Neurons[hw]);
-								}
+									Activation::fVec(VecFloat().load_a(&Neurons[hw]), Alpha, Beta).store_a(&Neurons[hw]);
 							}
 						});
 					}
@@ -959,16 +953,11 @@ namespace dnn
 				{
 					for_i(batchSize, threads, [=](UInt n)
 					{
-						VecFloat neurons;
-
 						for (auto c = 0ull; c < PaddedC; c += VectorSize)
 						{
 							const auto offset = n * PaddedCDHW() + c * HW();
 							for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
-							{
-								neurons.load_a(&Neurons[hw]);
-								Activation::fVec(neurons, Alpha, Beta).store_a(&Neurons[hw]);
-							}
+								Activation::fVec(VecFloat().load_a(&Neurons[hw]), Alpha, Beta).store_a(&Neurons[hw]);
 						}
 					});
 				}
