@@ -349,6 +349,7 @@ else()
   TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC png_static)
 endif()
 
+configure_file(${JPEG_SOURCE_DIR}/jconfig.h.in)
 # ---[ Configure JPEG
 INCLUDE(ExternalProject)
 ExternalProject_Add(jpeg
@@ -369,18 +370,8 @@ ExternalProject_Add(jpeg
 	TEST_COMMAND ""
 )
 
-IF(WIN32)
-  set(JPEG_LIBNAME ${CMAKE_BINARY_DIR}/bin/jpeg-static.lib PARENT_SCOPE)
-  # --- set(JPEG12_LIBNAME ${CMAKE_BINARY_DIR}/bin/jpeg12.lib PARENT_SCOPE)
-  # --- set(JPEG16_LIBNAME ${CMAKE_BINARY_DIR}/bin/jpeg16.lib PARENT_SCOPE)
-ELSE()
-  set(JPEG_LIBNAME ${CMAKE_BINARY_DIR}/bin/libjpeg.a PARENT_SCOPE)
-  # --- set(JPEG12_LIBNAME ${CMAKE_BINARY_DIR}/bin/libjpeg12.a PARENT_SCOPE)
-  # --- set(JPEG16_LIBNAME ${CMAKE_BINARY_DIR}/bin/libjpeg16.a PARENT_SCOPE)
-ENDIF()
-
 IF(BUILD_SHARED_LIBS)
-  TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC ${JPEG_LIBNAME})
+  TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC jpeg.so)
 ELSE()
   TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC libjpeg.a)
 ENDIF()
