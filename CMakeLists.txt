@@ -303,8 +303,6 @@ include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/zlib)
 include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/zlib)
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/libpng)
 include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/libpng)
-include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/libjpeg-turbo)
-include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo)
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/oneDNN/include)
 include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/oneDNN/include)
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/oneDNN/src)
@@ -365,11 +363,14 @@ ExternalProject_Add(jpeg
 	GIT_TAG main
 	SOURCE_DIR "${JPEG_SOURCE_DIR}"
 	BINARY_DIR "${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo"
-	CONFIGURE_COMMAND "${CMAKE_COMMAND}" -E copy "${JPEG_SOURCE_DIR}/jconfig.h.in" "${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo/jconfig.h"
+	CONFIGURE_COMMAND "${CMAKE_COMMAND}" -E copy "${JPEG_SOURCE_DIR}/jconfig.h.in" "${JPEG_SOURCE_DIR}/jconfig.h"
 	BUILD_COMMAND ""
 	INSTALL_COMMAND ""
 	TEST_COMMAND ""
 )
+
+include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/libjpeg-turbo)
+include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo)
 
 IF(BUILD_SHARED_LIBS)
   TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC jpeg.so)
