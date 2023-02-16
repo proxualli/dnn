@@ -357,11 +357,11 @@ INCLUDE(ExternalProject)
 ExternalProject_Add(jpeg
 		    CMAKE_ARGS
 		      -DWITH_TURBOJPEG=0
-                      -DENABLE_SHARED=OFF
-                      -DENABLE_STATIC=ON
-                      -DCMAKE_INSTALL_PREFIX=${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo
-                      -DCMAKE_INSTALL_LIBDIR=${DNN_DEPENDENCIES_BINARY_DIR}/bin
-                      -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+		      -DENABLE_SHARED=OFF
+		      -DENABLE_STATIC=ON
+		      -DCMAKE_INSTALL_PREFIX=${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo
+		      -DCMAKE_INSTALL_LIBDIR=${DNN_DEPENDENCIES_BINARY_DIR}/bin
+		      -DCMAKE_POSITION_INDEPENDENT_CODE=ON
 	GIT_REPOSITORY https://github.com/libjpeg-turbo/libjpeg-turbo.git
 	GIT_TAG main
 	SOURCE_DIR "${JPEG_SOURCE_DIR}"
