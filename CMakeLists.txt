@@ -368,8 +368,8 @@ ExternalProject_Add(jpeg
 	BINARY_DIR "${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo"
 	CONFIGURE_COMMAND "${CMAKE_COMMAND}" -E copy "${DNN_DEPENDENCIES_SOURCE_DIR}/libjpeg-turbo/jconfig.h.in" "${DNN_DEPENDENCIES_SOURCE_DIR}/libjpeg-turbo/jconfig.h"
 	BUILD_COMMAND ""
-    	INSTALL_COMMAND ""
-	TEST_COMMAND ""
+	INSTALL_COMMAND ""
+        TEST_COMMAND ""
 )
 
 EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E copy "${DNN_DEPENDENCIES_SOURCE_DIR}/libjpeg-turbo/jconfig.h.in" "${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo/jconfig.h")
