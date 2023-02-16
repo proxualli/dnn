@@ -372,7 +372,7 @@ ExternalProject_Add(jpeg
 	TEST_COMMAND ""
 )
 
-EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E copy "${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo/jconfig.h.in" "${DNN_DEPENDENCIES_SOURCE_DIR}/libjpeg-turbo/jconfig.h")
+EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E copy "${DNN_DEPENDENCIES_SOURCE_DIR}/libjpeg-turbo/jconfig.h.in" "${DNN_DEPENDENCIES_SOURCE_DIR}/libjpeg-turbo/jconfig.h")
 
 IF(BUILD_SHARED_LIBS)
   TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC jpeg.so)
