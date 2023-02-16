@@ -1020,7 +1020,7 @@ namespace dnn
 								{
 									mask = BernoulliVecFloat(Keep);
 									mask.store_a(&NeuronsActive[hw]);
-									(mask * Scale * Activation::fVec(VecFloat().load_a(&Neurons[hw]), Alpha, Beta)).store_a(&Neurons[hw]);
+									(mask * Scale * Activation::fVec(VecFloat().load_a(&InputNeurons[hw]), Alpha, Beta)).store_a(&Neurons[hw]);
 #ifndef DNN_LEAN
 									VecFloat(0).store_nt(&NeuronsD1[hw]);
 #endif // DNN_LEAN
@@ -1040,7 +1040,7 @@ namespace dnn
 								{
 									mask = BernoulliVecFloat(Keep);
 									mask.store_a(&NeuronsActive[hw]);
-									(mask * Scale *	Activation::fVec(VecFloat().load_a(&Neurons[hw]), Alpha, Beta)).store_a(&Neurons[hw]);
+									(mask * Scale *	Activation::fVec(VecFloat().load_a(&InputNeurons[hw]), Alpha, Beta)).store_a(&Neurons[hw]);
 								}
 							}
 						});

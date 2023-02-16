@@ -893,7 +893,7 @@ namespace dnn
 								const auto offset = n * PaddedCDHW() + c * HW();
 								for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
 								{
-									Activation::fVec(VecFloat().load_a(&Neurons[hw]), Alpha, Beta).store_a(&Neurons[hw]);
+									Activation::fVec(VecFloat().load_a(&InputNeurons[hw]), Alpha, Beta).store_a(&Neurons[hw]);
 #ifndef DNN_LEAN
 									VecFloat(0).store_nt(&NeuronsD1[hw]);
 #endif // DNN_LEAN
@@ -909,7 +909,7 @@ namespace dnn
 							{
 								const auto offset = n * PaddedCDHW() + c * HW();
 								for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
-									Activation::fVec(VecFloat().load_a(&Neurons[hw]), Alpha, Beta).store_a(&Neurons[hw]);
+									Activation::fVec(VecFloat().load_a(&InputNeurons[hw]), Alpha, Beta).store_a(&Neurons[hw]);
 							}
 						});
 					}
