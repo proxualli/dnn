@@ -227,6 +227,7 @@ IF(NOT DEFINED VECTORCLASS_SOURCE_DIR)
     WORKING_DIRECTORY "${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo")
   SET(JPEG_SOURCE_DIR "${DNN_DEPENDENCIES_SOURCE_DIR}/libjpeg-turbo" CACHE STRING "JPEG source directory")
   EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E copy "${DNN_DEPENDENCIES_SOURCE_DIR}/libjpeg-turbo/jconfig.h.in" "${DNN_DEPENDENCIES_SOURCE_DIR}/libjpeg-turbo/jconfig.h")
+  EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E copy "${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo/jconfig.h.in" "${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo/jconfig.h")
   # --- EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E copy "${JPEG_SOURCE_DIR}/jpeglib.h" "${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo/jpeglib.h")
  ENDIF()
 
@@ -358,14 +359,14 @@ ExternalProject_Add(jpeg
 		      -DWITH_TURBOJPEG=0
                       -DENABLE_SHARED=OFF
                       -DENABLE_STATIC=ON
-                      -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/libjpeg-turbo
-                      -DCMAKE_INSTALL_LIBDIR=${CMAKE_BINARY_DIR}/bin
+                      -DCMAKE_INSTALL_PREFIX=${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo
+                      -DCMAKE_INSTALL_LIBDIR=${DNN_DEPENDENCIES_BINARY_DIR}/bin
                       -DCMAKE_POSITION_INDEPENDENT_CODE=ON
 	GIT_REPOSITORY https://github.com/libjpeg-turbo/libjpeg-turbo.git
 	GIT_TAG main
 	SOURCE_DIR "${JPEG_SOURCE_DIR}"
 	BINARY_DIR "${CMAKE_BINARY_DIR}/libjpeg-turbo"
-	CONFIGURE_COMMAND "${CMAKE_COMMAND}" -E copy "${CMAKE_BINARY_DIR}/libjpeg-turbo/jconfig.h.in" "${CMAKE_BINARY_DIR}/libjpeg-turbo/jconfig.h"
+	CONFIGURE_COMMAND "${CMAKE_COMMAND}" -E copy "${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo/jconfig.h.in" "${DNN_DEPENDENCIES_BINARY_DIR}/libjpeg-turbo/jconfig.h"
 	BUILD_COMMAND ""
 	INSTALL_COMMAND ""
 	TEST_COMMAND ""
