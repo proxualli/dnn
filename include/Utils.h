@@ -314,7 +314,7 @@ namespace
 
 				if constexpr (std::is_floating_point_v<T>)
 				{
-					if constexpr (value == T(0))
+					if (value == T(0))
 						InitArray<T>(dataPtr, nelems, 0);
 					else
 						PRAGMA_OMP_SIMD()
@@ -345,7 +345,7 @@ namespace
 					nelems = elements;
 					if constexpr (std::is_floating_point_v<T>)
 					{
-						if constexpr (value == T(0))
+						if (value == T(0))
 							InitArray<T>(dataPtr, nelems, 0);
 						else
 							PRAGMA_OMP_SIMD()
