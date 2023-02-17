@@ -99,11 +99,12 @@ using namespace dnn;
 
 namespace
 {
-	constexpr auto Kahan = true;
+	constexpr auto DefaultDatasetMeanStdDev = false;
 	constexpr auto Inplace = false;
+	constexpr auto Kahan = true;
 	constexpr auto Reference = true;
 	constexpr auto SingleMeanVariancePass = false;
-	constexpr auto DefaultDatasetMeanStdDev = false;
+	constexpr auto TestNorm = false;
 
 	typedef float Float;
 	typedef std::size_t UInt;

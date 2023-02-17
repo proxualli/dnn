@@ -272,7 +272,7 @@ namespace dnn
 		{
 			Layer::SetBatchSize(batchSize);
 
-			if (Reference)
+			if constexpr (Reference)
 				InputNeurons.resize(batchSize, C, H, W, dnnl::memory::data_type::f32, BlockedFmt, Device.engine);
 
 			if (Enabled)

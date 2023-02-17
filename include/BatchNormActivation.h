@@ -187,7 +187,7 @@ namespace dnn
 		{
 			Layer::SetBatchSize(batchSize);
 
-			if (Reference)
+			if constexpr (Reference || TestNorm)
 				InputNeurons.resize(batchSize, C, H, W, dnnl::memory::data_type::f32, BlockedFmt, Device.engine);
 		}
 
@@ -256,8 +256,8 @@ namespace dnn
 		}
 
 		void ForwardProp(const UInt batchSize, const bool training) final override
-		{				
-			if constexpr (Reference)
+		{			
+			if constexpr (Reference && !TestNorm)
 				ForwardPropRef(batchSize, training);
 			else
 			{
@@ -561,11 +561,30 @@ namespace dnn
 					}
 				}
 			}
+
+			if constexpr (TestNorm)
+			{
+				auto output = FloatArray();
+				output.resize(batchSize, C, H, W, dnnl::memory::data_type::f32, BlockedFmt, Device.engine);
+				for (auto i = 0ull; i < Neurons.size(); i++)
+					output[i] = Neurons[i];
+				
+				// check has exqual neurons
+				ForwardPropRef(batchSize, training);
+
+				const auto margin = Float(0.0005);
+
+				for (auto i = 0ull; i < Neurons.size(); i++)
+				{
+					if (((output[i] - margin) > Neurons[i]) || ((output[i] + margin) < Neurons[i]))
+						throw std::invalid_argument("not passed");
+				}
+			}
 		}
 
 		void BackwardProp(const UInt batchSize) final override
 		{
-			if constexpr (Reference)
+			if constexpr (Reference && !TestNorm)
 				BackwardPropRef(batchSize);
 			else
 			{
@@ -783,6 +802,25 @@ namespace dnn
 #ifdef DNN_LEAN
 				ReleaseGradient();
 #endif // DNN_LEAN	
+			}
+
+			if constexpr (TestNorm)
+			{
+				auto output = FloatArray();
+				output.resize(batchSize, C, H, W, dnnl::memory::data_type::f32, BlockedFmt, Device.engine);
+				for (auto i = 0ull; i < InputLayer->NeuronsD1.size(); i++)
+					output[i] = InputLayer->NeuronsD1[i];
+
+				// check has exqual neurons
+				BackwardPropRef(batchSize);
+
+				const auto margin = Float(0.0005);
+
+				for (auto i = 0ull; i < InputLayer->NeuronsD1.size(); i++)
+				{
+					if (((output[i] - margin) > InputLayer->NeuronsD1[i]) || ((output[i] + margin) < InputLayer->NeuronsD1[i]))
+						throw std::invalid_argument("not passed");
+				}
 			}
 		}
 		
