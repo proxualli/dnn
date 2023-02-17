@@ -569,7 +569,7 @@ namespace dnn
 				for (auto i = 0ull; i < Neurons.size(); i++)
 					output[i] = Neurons[i];
 				
-				// check has exqual neurons
+				// check has equal neurons
 				ForwardPropRef(batchSize, training);
 
 				const auto margin = Float(0.0005);
@@ -811,7 +811,7 @@ namespace dnn
 				for (auto i = 0ull; i < InputLayer->NeuronsD1.size(); i++)
 					output[i] = InputLayer->NeuronsD1[i];
 
-				// check has exqual neurons
+				// check has equal neurons
 				BackwardPropRef(batchSize);
 
 				const auto margin = Float(0.0005);
