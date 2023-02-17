@@ -104,8 +104,9 @@ namespace
 	constexpr auto Kahan = true;
 	constexpr auto Reference = true;
 	constexpr auto SingleMeanVariancePass = false;
+	constexpr auto TestActivations = false;
 	constexpr auto TestNorm = false;
-
+	
 	typedef float Float;
 	typedef std::size_t UInt;
 	typedef unsigned char Byte;
@@ -397,7 +398,7 @@ namespace
 
 					if constexpr (std::is_floating_point_v<T>)
 					{
-						if constexpr (value == T(0))
+						if (value == T(0))
 							InitArray<T>(dataPtr, nelems, 0);
 						else
 							PRAGMA_OMP_SIMD()
@@ -412,6 +413,7 @@ namespace
 				}
 			}
 		}
+		inline auto memory() noexcept { return arrPtr.get(); }
 		inline auto data() noexcept { return dataPtr; }
 		inline const auto data() const noexcept { return dataPtr; }
 		inline auto size() const noexcept { return nelems; }

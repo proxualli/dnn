@@ -1248,7 +1248,7 @@ namespace dnn
 					case Fillers::LeCunUniform:
 					{
 						auto fillerModes = magic_enum::enum_names<FillerModes>();
-						for (auto fillerMode : fillerModes)
+						for (auto& fillerMode : fillerModes)
 						{
 							if (value.rfind(std::string(fillerMode)) == 0 && magic_enum::enum_cast<FillerModes>(fillerMode).has_value())
 							{

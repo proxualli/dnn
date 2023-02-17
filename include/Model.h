@@ -543,6 +543,64 @@ namespace dnn
 
 		virtual ~Model() = default;
 		
+		void CheckActivations()
+		{
+			if constexpr (TestActivations)
+			{
+				dnnl::algorithm algorithm;
+
+				auto activations = magic_enum::enum_names<Activations>();
+				
+				for (auto& act : activations)
+				{
+					if (magic_enum::enum_cast<Activations>(act).has_value())
+					{
+						auto test = true;
+
+						typedef Float(*FloatFuncPtrType)(const Float&, const Float&, const Float&);
+						typedef VecFloat(*VecFloatFuncPtrType)(const VecFloat&, const Float&, const Float&);
+						FloatFuncPtrType f, df;
+						VecFloatFuncPtrType fVec, dfVec;
+						Float alpha, beta;
+						
+						auto activation = magic_enum::enum_cast<Activations>(act).value();
+						
+						switch (activation)
+						{
+						case Activations::HardSwish:
+							algorithm = dnnl::algorithm::eltwise_hardswish;
+							f = &HardSwish::f;
+							df = &HardSwish::df;
+							fVec = &HardSwish::fVec;
+							dfVec = &HardSwish::dfVec;
+							alpha = Float(1) / Float(6);
+							beta = Float(0.5);
+							break;
+
+						default:
+							// Skip test
+							test = false;
+							break;
+						}
+
+						if (test)
+						{
+							auto DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(128), dnnl::memory::dim(128), dnnl::memory::dim(128), dnnl::memory::dim(128) }), dnnl::memory::data_type::f32, PlainFmt));
+
+							auto fwdDesc = std::make_unique<dnnl::eltwise_forward::primitive_desc>(dnnl::eltwise_forward::primitive_desc(Device.engine, dnnl::prop_kind::forward, algorithm, *DstMemDesc, *DstMemDesc, alpha, beta));
+							auto bwdDesc = std::make_unique<dnnl::eltwise_backward::primitive_desc>(dnnl::eltwise_backward::primitive_desc(Device.engine, algorithm, *DstMemDesc, *DstMemDesc, *DstMemDesc, alpha, beta, *fwdDesc));
+#ifdef DNN_CACHE_PRIMITIVES
+							auto fwd = std::make_unique<dnnl::eltwise_forward>(dnnl::eltwise_forward(*fwdDesc));
+							auto bwd = std::make_unique<dnnl::eltwise_backward>(dnnl::eltwise_backward(*bwdDesc));
+#endif
+
+							auto input = FloatArray(*DstMemDesc, Device.engine);
+						}
+					}
+				}
+			}
+		}
+
 		auto GetWeightsSize(const bool persistOptimizer, const Optimizers optimizer) const
 		{
 			std::streamsize weightsSize = 0;
@@ -1465,6 +1523,8 @@ namespace dnn
 			{
 				TaskState.store(TaskStates::Running);
 				State.store(States::Idle);
+
+				CheckActivations();
 
 				const auto totalSkipConnections = GetTotalSkipConnections();
 
