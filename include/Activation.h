@@ -34,20 +34,6 @@ namespace dnn
 		TanhExp = 26
 	};
 
-	// Dummy struct for an activation function
-	struct Act 
-	{
-		typedef Float(*FloatFuncPtrType)(const Float&, const Float&, const Float&);
-		typedef VecFloat(*VecFloatFuncPtrType)(const VecFloat&, const Float&, const Float&);
-		
-		FloatFuncPtrType f, df;
-		VecFloatFuncPtrType fVec, dfVec;
-		Float alpha, beta;
-		Activations Enum;
-		dnnl::algorithm algorithm;
-		bool test;
-	};
-
 	struct Abs
 	{
 		inline static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return std::abs(x); }
@@ -218,6 +204,142 @@ namespace dnn
 		inline static Activations Enum() NOEXCEPT { return Activations::TanhExp; }
 	};
 	
+	// Dummy struct for an activation function
+	struct Act
+	{
+		typedef Float(*FloatFuncPtrType)(const Float&, const Float&, const Float&);
+		typedef VecFloat(*VecFloatFuncPtrType)(const VecFloat&, const Float&, const Float&);
+
+		FloatFuncPtrType f, df;
+		VecFloatFuncPtrType fVec, dfVec;
+		Float alpha, beta;
+		Activations Enum;
+		dnnl::algorithm algorithm;
+		bool test;
+	};
+
+	Act GetActivation(Activations activation)
+	{
+		Act act;
+
+		switch (activation)
+		{
+		case Activations::HardSigmoid:
+			act.f = &HardSigmoid::f;
+			act.df = &HardSigmoid::df;
+			act.fVec = &HardSigmoid::fVec;
+			act.dfVec = &HardSigmoid::dfVec;
+			act.alpha = Float(0.2);
+			act.beta = Float(0.5);
+			act.Enum = HardSigmoid::Enum();
+			act.algorithm = dnnl::algorithm::eltwise_hardsigmoid;
+			act.test = true;
+			break;
+
+		case Activations::HardSwish:
+			act.f = &HardSwish::f;
+			act.df = &HardSwish::df;
+			act.fVec = &HardSwish::fVec;
+			act.dfVec = &HardSwish::dfVec;
+			act.alpha = Float(1) / Float(6);
+			act.beta = Float(0.5);
+			act.Enum = HardSwish::Enum();
+			act.algorithm = dnnl::algorithm::eltwise_hardswish;
+			act.test = true;
+			break;
+
+		case Activations::Mish:
+			act.f = &Mish::f;
+			act.df = &Mish::df;
+			act.fVec = &Mish::fVec;
+			act.dfVec = &Mish::dfVec;
+			act.alpha = Float(0);
+			act.beta = Float(0);
+			act.Enum = Mish::Enum();
+			act.algorithm = dnnl::algorithm::eltwise_mish;
+			act.test = true;
+			break;
+
+		case Activations::Relu:
+			act.f = &Relu::f;
+			act.df = &Relu::df;
+			act.fVec = &Relu::fVec;
+			act.dfVec = &Relu::dfVec;
+			act.alpha = Float(1);
+			act.beta = Float(0);
+			act.Enum = Relu::Enum();
+			act.algorithm = dnnl::algorithm::eltwise_relu;
+			act.test = true;
+			break;
+
+		case Activations::Swish:
+			act.f = &Swish::f;
+			act.df = &Swish::df;
+			act.fVec = &Swish::fVec;
+			act.dfVec = &Swish::dfVec;
+			act.alpha = Float(1);
+			act.beta = Float(0);
+			act.Enum = Swish::Enum();
+			act.algorithm = dnnl::algorithm::eltwise_swish;
+			act.test = true;
+			break;
+
+		case Activations::ASinh:
+			act.f = &ASinh::f;
+			act.df = &ASinh::df;
+			act.fVec = &ASinh::fVec;
+			act.dfVec = &ASinh::dfVec;
+			act.alpha = Float(0);
+			act.beta = Float(0);
+			act.Enum = ASinh::Enum();
+			act.algorithm = dnnl::algorithm::eltwise_linear;
+			act.test = false;
+			break;
+
+		case Activations::SoftPlus:
+			act.f = &SoftPlus::f;
+			act.df = &SoftPlus::df;
+			act.fVec = &SoftPlus::fVec;
+			act.dfVec = &SoftPlus::dfVec;
+			act.alpha = Float(20);
+			act.beta = Float(1);
+			act.Enum = SoftPlus::Enum();
+			act.algorithm = dnnl::algorithm::eltwise_linear;
+			act.test = false;
+			break;
+
+		case Activations::SoftSign:
+			act.f = &SoftSign::f;
+			act.df = &SoftSign::df;
+			act.fVec = &SoftSign::fVec;
+			act.dfVec = &SoftSign::dfVec;
+			act.alpha = Float(0);
+			act.beta = Float(0);
+			act.Enum = SoftSign::Enum();
+			act.algorithm = dnnl::algorithm::eltwise_linear;
+			act.test = false;
+			break;
+
+		case Activations::TanhExp:
+			act.f = &TanhExp::f;
+			act.df = &TanhExp::df;
+			act.fVec = &TanhExp::fVec;
+			act.dfVec = &TanhExp::dfVec;
+			act.alpha = Float(0);
+			act.beta = Float(0);
+			act.Enum = TanhExp::Enum();
+			act.algorithm = dnnl::algorithm::eltwise_linear;
+			act.test = false;
+			break;
+
+		default:
+			// default skip activation check
+			act.test = false;
+			break;
+		}
+
+		return act;
+	}
 
 	class Activation final : public Layer
 	{
