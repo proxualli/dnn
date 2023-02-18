@@ -51,8 +51,6 @@
 #include "vectormath_trig.h"
 #include "add-on/random/ranvec1.h"
 
-#include <float.h> 
-
 #include <algorithm>
 #include <array>
 #include <atomic>
@@ -68,6 +66,7 @@
 #include <fstream>
 #include <iostream>
 #include <iomanip>
+#include <limits>
 #include <locale>
 #include <clocale>
 #include <memory>
@@ -107,7 +106,7 @@ namespace
 	constexpr auto Kahan = true;
 	constexpr auto Reference = true;
 	constexpr auto SingleMeanVariancePass = false;
-	constexpr auto TestActivations = false;
+	constexpr auto TestActivations = true;
 	constexpr auto TestBatchNormalization = false;
 	
 	typedef float Float;
@@ -855,7 +854,7 @@ namespace
 
 	inline static Float RelativeError(Float reference, Float actual)
 	{
-		return std::abs(reference - actual) / std::max(FLT_MIN, std::abs(reference));
+		return std::abs(reference - actual) / std::max(std::numeric_limits<Float>().min(), std::abs(reference));
 	}
 
 	inline static Float Median(FloatVector& array)
