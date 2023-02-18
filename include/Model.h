@@ -642,31 +642,35 @@ namespace dnn
 							{
 								const auto fwdRef = VecFloat().load_a(&outputFwdRef[i]);
 								const auto fwd = VecFloat().load_a(&outputFwd[i]);
-								const bool fwdRetBool = horizontal_max(((fwdRef - errorLimit) > fwd) | ((fwdRef + errorLimit) < fwd));
+								const auto fwdRet = ((fwdRef - errorLimit) > fwd) | ((fwdRef + errorLimit) < fwd);
+								const bool fwdErr = horizontal_max(fwdRet);
 
-								if (fwdRetBool)
+								if (fwdErr)
 								{
+									int index = horizontal_find_first(fwdRet);
 									msg.push_back(
 										std::string(activation) + std::string(" forward pass not passed") + nwl +
-										std::string("Input:") + tab + std::to_string(input[i]) + nwl +
-										std::string("Reference:") + tab + std::to_string(outputFwdRef[i]) + nwl +
-										std::string("Output:") + tab + std::to_string(outputFwd[i]) + nwl);
+										std::string("Input:") + tab + std::to_string(input[i + index]) + nwl +
+										std::string("Reference:") + tab + std::to_string(outputFwdRef[i + index]) + nwl +
+										std::string("Output:") + tab + std::to_string(outputFwd[i + index]) + nwl);
 								}
 
 								const auto bwdRef = VecFloat().load_a(&outputBwdRef[i]);
 								const auto bwd = VecFloat().load_a(&outputBwd[i]);
-								const bool bwdRetBool = horizontal_max(((bwdRef - errorLimit) > bwd) | ((bwdRef + errorLimit) < bwd));
+								const auto bwdRet = ((bwdRef - errorLimit) > bwd) | ((bwdRef + errorLimit) < bwd);
+								const bool bwdErr = horizontal_max(fwdRet);
 								
-								if (bwdRetBool)
+								if (bwdErr)
 								{
+									int index = horizontal_find_first(bwdRet);
 									msg.push_back(
 										std::string(activation) + std::string(" backward pass not passed") + nwl +
-										std::string("Input:") + tab + std::to_string(input[i]) + nwl +
-										std::string("Reference:") + tab + std::to_string(outputBwdRef[i]) + nwl +
-										std::string("Output:") + tab + std::to_string(outputBwd[i]) + nwl);
+										std::string("Input:") + tab + std::to_string(input[i + index]) + nwl +
+										std::string("Reference:") + tab + std::to_string(outputBwdRef[i + index]) + nwl +
+										std::string("Output:") + tab + std::to_string(outputBwd[i + index]) + nwl);
 								}
 
-								if (fwdRetBool || bwdRetBool)
+								if (fwdErr || bwdErr)
 								{
 									if (ret.load())
 										ret.store(false);
