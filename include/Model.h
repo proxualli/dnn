@@ -693,7 +693,7 @@ namespace dnn
 								std::string("Reference:") + tab + std::to_string(outputBwdRef[i]) + nwl +
 								std::string("Output:") + tab + std::to_string(outputBwd[i]));*/
 
-								if (fwdRetBool && bwdRetBool && (ret.load() == true))
+								if ((fwdRetBool || bwdRetBool) && (ret.load() == true))
 								{
 									ret.store(false);
 									break;
