@@ -334,6 +334,14 @@ namespace dnn
 
 		default:
 			// default skip activation check
+			act.f = &Linear::f;
+			act.df = &Linear::df;
+			act.fVec = &Linear::fVec;
+			act.dfVec = &Linear::dfVec;
+			act.alpha = Float(1);
+			act.beta = Float(0);
+			act.Enum = Linear::Enum();
+			act.algorithm = dnnl::algorithm::eltwise_linear;
 			act.test = false;
 			break;
 		}
