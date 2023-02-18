@@ -590,10 +590,12 @@ namespace dnn
 						{
 							assert(act.Enum == magic_enum::enum_cast<Activations>(activation).value());
 
+							const auto errorLimit = Float(0.0000025);
 							const auto N = dnnl::memory::dim(128);
 							const auto C = dnnl::memory::dim(128);
 							const auto H = dnnl::memory::dim(128);
 							const auto W = dnnl::memory::dim(128);
+							const auto size = UInt(N * C * H * W);
 
 							auto DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ N, C, H, W }), dnnl::memory::data_type::f32, PlainFmt));
 
@@ -602,8 +604,7 @@ namespace dnn
 #ifdef DNN_CACHE_PRIMITIVES
 							auto fwd = std::make_unique<dnnl::eltwise_forward>(dnnl::eltwise_forward(*fwdDesc));
 							auto bwd = std::make_unique<dnnl::eltwise_backward>(dnnl::eltwise_backward(*bwdDesc));
-#endif
-							const auto size = UInt(N * C * H * W);
+#endif							
 							auto input = FloatVector(size);
 							auto outputFwd = FloatVector(size);
 							auto outputBwd = FloatVector(size);
@@ -663,25 +664,24 @@ namespace dnn
 #endif
 							Device.stream.wait();
 
-							auto margin = Float(0.0000025);
 							for (auto i = 0ull; i < size; i++)
 							{
 								auto in = input[i];
-								if ((outputFwdRef[i] - margin) > outputFwd[i] || (outputFwdRef[i] + margin) < outputFwd[i])
+								if ((outputFwdRef[i] - errorLimit) > outputFwd[i] || (outputFwdRef[i] + errorLimit) < outputFwd[i])
 									throw std::invalid_argument(std::string("not passed forward:") + std::to_string(in));
-								if ((outputBwdRef[i] - margin) > outputBwd[i] || (outputBwdRef[i] + margin) < outputBwd[i])
+								if ((outputBwdRef[i] - errorLimit) > outputBwd[i] || (outputBwdRef[i] + errorLimit) < outputBwd[i])
 									throw std::invalid_argument(std::string("not passed backward:") + std::to_string(in));
 							}
 
 							/*const auto maxErrorFwd = std::inner_product(outputFwdRef.cbegin(), outputFwdRef.cend(), outputFwd.cbegin(), Float(0),[](Float x, Float y)->Float { return std::max<Float>(y, x); }, RelativeError);
 							const auto maxErrorBwd = std::inner_product(outputBwdRef.cbegin(), outputBwdRef.cend(), outputBwd.cbegin(), Float(0),[](Float x, Float y)->Float { return std::max<Float>(y, x); }, RelativeError);
 							
-							if (std::abs(maxErrorFwd) > margin || std::abs(maxErrorBwd) > margin)
+							if (std::abs(maxErrorFwd) > errorLimit || std::abs(maxErrorBwd) > errorLimit)
 								throw std::invalid_argument("not passed");*/
 							
 							/*
-							EXPECT_LT(maxErrorFwd, Float(0.0005)); 
-							EXPECT_LT(maxErrorBwd, Float(0.0005));
+							EXPECT_LT(maxErrorFwd, errorLimit); 
+							EXPECT_LT(maxErrorBwd, errorLimit);
 							*/
 						}
 					}
