@@ -574,8 +574,8 @@ namespace dnn
 
 							auto DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ N, C, H, W }), dnnl::memory::data_type::f32, PlainFmt));
 
-							auto fwdDesc = std::make_unique<dnnl::eltwise_forward::primitive_desc>(dnnl::eltwise_forward::primitive_desc(dev.engine, dnnl::prop_kind::forward, act.algorithm, *DstMemDesc, *DstMemDesc, act.alpha, act.beta));
-							auto bwdDesc = std::make_unique<dnnl::eltwise_backward::primitive_desc>(dnnl::eltwise_backward::primitive_desc(dev.engine, act.algorithm, *DstMemDesc, *DstMemDesc, *DstMemDesc, act.alpha, act.beta, *fwdDesc));
+							auto fwdDesc = std::make_unique<dnnl::eltwise_forward::primitive_desc>(dnnl::eltwise_forward::primitive_desc(dev.engine, dnnl::prop_kind::forward, act.algorithm, *DstMemDesc, *DstMemDesc, (act.Enum == Activations::BoundedRelu) ? act.beta : act.alpha, (act.Enum == Activations::BoundedRelu) ? act.alpha : act.beta));
+							auto bwdDesc = std::make_unique<dnnl::eltwise_backward::primitive_desc>(dnnl::eltwise_backward::primitive_desc(dev.engine, act.algorithm, *DstMemDesc, *DstMemDesc, *DstMemDesc, (act.Enum == Activations::BoundedRelu) ? act.beta : act.alpha, (act.Enum == Activations::BoundedRelu) ? act.alpha : act.beta, *fwdDesc));
 #ifdef DNN_CACHE_PRIMITIVES
 							auto fwd = std::make_unique<dnnl::eltwise_forward>(dnnl::eltwise_forward(*fwdDesc));
 							auto bwd = std::make_unique<dnnl::eltwise_backward>(dnnl::eltwise_backward(*bwdDesc));
