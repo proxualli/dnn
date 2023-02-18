@@ -567,6 +567,16 @@ namespace dnn
 						
 						switch (activation)
 						{
+						case Activations::HardLogistic:
+							algorithm = dnnl::algorithm::eltwise_hardsigmoid;
+							f = &HardLogistic::f;
+							df = &HardLogistic::df;
+							fVec = &HardLogistic::fVec;
+							dfVec = &HardLogistic::dfVec;
+							alpha = Float(0.2);
+							beta = Float(0.5);
+							break;
+
 						case Activations::HardSwish:
 							algorithm = dnnl::algorithm::eltwise_hardswish;
 							f = &HardSwish::f;
@@ -593,8 +603,83 @@ namespace dnn
 							auto fwd = std::make_unique<dnnl::eltwise_forward>(dnnl::eltwise_forward(*fwdDesc));
 							auto bwd = std::make_unique<dnnl::eltwise_backward>(dnnl::eltwise_backward(*bwdDesc));
 #endif
+							const auto size = 128ull * 128ull * 128ull * 128ull;
+							auto input = FloatVector(size);
+							auto outputFwd = FloatVector(size);
+							auto outputBwd = FloatVector(size);
 
-							auto input = FloatArray(*DstMemDesc, Device.engine);
+							for (auto i = 0ull; i < size; i++)
+								input[i] = UniformReal<Float>(Float(-2.6), Float(2.6));
+
+							input[0] = -beta / alpha;
+							input[1] = (Float(1) - beta) / alpha;
+							input[2] = -beta / alpha - Float(0.0001);
+							input[3] = (Float(1) - beta) / alpha - Float(0.0001);;
+							input[4] = -beta / alpha + Float(0.0001);;
+							input[5] = (Float(1) - beta) / alpha + Float(0.0001);;
+							input[6] = Float(0);
+							input[7] = Float(1);
+
+							input[size / 2 + 0] = -beta / alpha;
+							input[size / 2 + 1] = (Float(1) - beta) / alpha;
+							input[size / 2 + 2] = -beta / alpha - Float(0.0001);
+							input[size / 2 + 3] = (Float(1) - beta) / alpha - Float(0.0001);;
+							input[size / 2 + 4] = -beta / alpha + Float(0.0001);;
+							input[size / 2 + 5] = (Float(1) - beta) / alpha + Float(0.0001);;
+							input[size / 2 + 6] = Float(0);
+							input[size / 2 + 7] = Float(1);
+
+							for (auto i = 0ull; i < size / 2ull; i += VectorSize)
+							{
+								fVec(VecFloat().load(&input[i]), alpha, beta).store(&outputFwd[i]);
+								dfVec(VecFloat().load(&input[i]), alpha, beta).store(&outputBwd[i]);
+							}
+							for (auto i = size / 2ull; i < size; i++)
+							{
+								outputFwd[i] = f(input[i], alpha, beta);
+								outputBwd[i] = df(input[i], alpha, beta);
+							}
+
+							auto srcMem = dnnl::memory(*DstMemDesc, Device.engine, input.data());
+							
+							auto outputFwdRef = FloatVector(size);
+							auto dstMem = dnnl::memory(fwdDesc->dst_desc(), Device.engine, outputFwdRef.data());
+#ifdef DNN_CACHE_PRIMITIVES
+							fwd->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DST, dstMem } });
+#else
+							dnnl::eltwise_forward(*fwdDesc).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DST, dstMem } });
+#endif
+							Device.stream.wait();
+
+							auto outputBwdRef = FloatVector(size, Float(1));
+							auto diffSrcMem = dnnl::memory(bwdDesc->diff_src_desc(), Device.engine, outputBwdRef.data());
+#ifdef DNN_CACHE_PRIMITIVES
+							bwd->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DIFF_DST, diffSrcMem }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
+#else
+							dnnl::eltwise_backward(*bwdDesc).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DIFF_DST, diffSrcMem }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
+#endif
+							Device.stream.wait();
+
+							auto margin = Float(0.0000025);
+							for (auto i = 0ull; i < size; i++)
+							{
+								auto in = input[i];
+								if ((outputFwdRef[i] - margin) > outputFwd[i] || (outputFwdRef[i] + margin) < outputFwd[i])
+									throw std::invalid_argument(std::string("not passed:") + std::to_string(in));
+								if ((outputBwdRef[i] - margin) > outputBwd[i] || (outputBwdRef[i] + margin) < outputBwd[i])
+									throw std::invalid_argument(std::string("not passed") + std::to_string(in));
+							}
+
+							/*const auto maxErrorFwd = std::inner_product(outputFwdRef.cbegin(), outputFwdRef.cend(), outputFwd.cbegin(), Float(0),[](Float x, Float y)->Float { return std::max<Float>(y, x); }, RelativeError);
+							const auto maxErrorBwd = std::inner_product(outputBwdRef.cbegin(), outputBwdRef.cend(), outputBwd.cbegin(), Float(0),[](Float x, Float y)->Float { return std::max<Float>(y, x); }, RelativeError);
+							
+							if (std::abs(maxErrorFwd) > margin || std::abs(maxErrorBwd) > margin)
+								throw std::invalid_argument("not passed");*/
+							
+							/*
+							EXPECT_LT(maxErrorFwd, Float(0.0005)); 
+							EXPECT_LT(maxErrorBwd, Float(0.0005));
+							*/
 						}
 					}
 				}

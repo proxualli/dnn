@@ -234,6 +234,8 @@ namespace
 		return dnnl::memory::format_tag::undef;
 	}
 
+	
+
 	template<typename T>
 	static void InitArray(T* destination, const std::size_t elements, const int initValue = 0) NOEXCEPT
 	{
@@ -845,5 +847,16 @@ namespace
 		auto startIndex = static_cast<char*>((void*)buffer.data());
 		auto endIndex = startIndex + sizeof(buffer);
 		std::reverse(startIndex, endIndex);
+	}
+
+	inline static Float RelativeError(Float reference, Float actual)
+	{
+		return std::abs(reference - actual) / std::max(FLT_MIN, std::abs(reference));
+	}
+
+	inline static Float Median(FloatVector& array)
+	{
+		std::nth_element(array.begin(), array.begin() + array.size() / 2, array.end());
+		return array[array.size() / 2];
 	}
 }

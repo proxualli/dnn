@@ -108,9 +108,9 @@ namespace dnn
 	struct HardSwish
 	{
 		inline static Float f(const Float& x, const Float& alpha = (Float(1) / Float(6)), const Float& beta = Float(0.5)) NOEXCEPT { return x * std::max(Float(0), std::min(Float(1), x * alpha + beta)); }
-		inline static Float df(const Float& x, const Float& alpha = (Float(1) / Float(6)), const Float& beta = Float(0.5)) NOEXCEPT { return (x > (Float(1) - beta) / alpha ? Float(1) : (x > -beta / alpha && x < (Float(1) - beta) / alpha)) ? (Float(2) * x * alpha + beta) : Float(0); }
+		inline static Float df(const Float& x, const Float& alpha = (Float(1) / Float(6)), const Float& beta = Float(0.5)) NOEXCEPT { return ((x >= (Float(1) - beta) / alpha) ? Float(1) : (((x > -beta / alpha) && x < ((Float(1) - beta) / alpha))) ? (Float(2) * x * alpha + beta) : Float(0)); }
 		inline static VecFloat fVec(const VecFloat& x, const Float& alpha = (Float(1) / Float(6)), const Float& beta = Float(0.5)) NOEXCEPT { return x * max(Float(0), min(Float(1), x * alpha + beta)); }
-		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = (Float(1) / Float(6)), const Float& beta = Float(0.5)) NOEXCEPT { return select(x > (Float(1) - beta) / alpha, Float(1), select(x > - beta / alpha & x < (Float(1) - beta) / alpha, Float(2) * x * alpha + beta, Float(0))); }
+		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = (Float(1) / Float(6)), const Float& beta = Float(0.5)) NOEXCEPT { return select(x >= (Float(1) - beta) / alpha, Float(1), select(x > - beta / alpha & x < (Float(1) - beta) / alpha, Float(2) * x * alpha + beta, Float(0))); }
 		inline static Activations Enum() NOEXCEPT { return Activations::HardSwish; }
 	};
 
@@ -2125,9 +2125,9 @@ namespace dnn
 				auto diffSrcMem = reorderBwdDiffSrc ? dnnl::memory(bwdDesc->diff_src_desc(), Device.engine) : memDiffSrc;
 
 #ifdef DNN_CACHE_PRIMITIVES
-				bwd->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DIFF_DST, InplaceBwd ? diffSrcMem : dnnl::memory(*DiffDstMemDesc, Device.engine, NeuronsD1.data()) }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
+				bwd->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DIFF_DST, InplaceBwd ? diffSrcMem : diffDstMem }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
 #else
-				dnnl::eltwise_backward(*bwdDesc).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DIFF_DST, InplaceBwd ? diffSrcMem : dnnl::memory(*DiffDstMemDesc, Device.engine, NeuronsD1.data()) }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
+				dnnl::eltwise_backward(*bwdDesc).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DIFF_DST, InplaceBwd ? diffSrcMem : diffDstMem }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
 #endif
 				Device.stream.wait();
 
