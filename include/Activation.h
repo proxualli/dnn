@@ -34,12 +34,12 @@ namespace dnn
 		TanhExp = 26
 	};
 
-	// Dummy struct for activation function
+	// Dummy struct for an activation function
 	struct Act 
 	{
 		typedef Float(*FloatFuncPtrType)(const Float&, const Float&, const Float&);
 		typedef VecFloat(*VecFloatFuncPtrType)(const VecFloat&, const Float&, const Float&);
-				
+		
 		FloatFuncPtrType f, df;
 		VecFloatFuncPtrType fVec, dfVec;
 		Float alpha, beta;

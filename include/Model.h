@@ -603,8 +603,8 @@ namespace dnn
 							auto outputFwd = FloatVector(size);
 							auto outputBwd = FloatVector(size);
 
-							const auto minLimit = -act.beta / act.alpha;
-							const auto maxLimit = (Float(1) - act.beta) / act.alpha;
+							const auto minLimit = (act.alpha != Float(0)) ? (-act.beta / act.alpha) : Float(-1.5);
+							const auto maxLimit = (act.alpha != Float(0)) ? ((Float(1) - act.beta) / act.alpha) : Float(1.5);
 
 							for (auto i = 0ull; i < size; i++)
 								input[i] = UniformReal<Float>(minLimit - Float(1.5), maxLimit + Float(1.5));
