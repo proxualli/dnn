@@ -676,15 +676,15 @@ namespace dnn
 								bool bwdRetBool;
 								if constexpr (VectorSize == 4ull)
 								{
-									bwdRetBool = bwdRet[0] || bwdRet[1] || bwdRet[2] || bwdRet[3] || bwdRet[4];
+									bwdRetBool = bwdRet[0] || bwdRet[1] || bwdRet[2] || bwdRet[3];
 								}
 								else if constexpr (VectorSize == 8ull)
 								{
-									bwdRetBool = bwdRetBool = bwdRet[0] || bwdRet[1] || bwdRet[2] || bwdRet[3] || bwdRet[4] || bwdRet[5] || bwdRet[6] || bwdRet[7];
+									bwdRetBool = bwdRet[0] || bwdRet[1] || bwdRet[2] || bwdRet[3] || bwdRet[4] || bwdRet[5] || bwdRet[6] || bwdRet[7];
 								}
 								else if constexpr (VectorSize == 16ull)
 								{
-									bwdRetBool = bwdRetBool = bwdRet[0] || bwdRet[1] || bwdRet[2] || bwdRet[3] || bwdRet[4] || bwdRet[5] || bwdRet[6] || bwdRet[7] || bwdRet[8] || bwdRet[9] || bwdRet[10] || bwdRet[11] || bwdRet[12] || bwdRet[13] || bwdRet[14] || bwdRet[15];
+									bwdRetBool = bwdRet[0] || bwdRet[1] || bwdRet[2] || bwdRet[3] || bwdRet[4] || bwdRet[5] || bwdRet[6] || bwdRet[7] || bwdRet[8] || bwdRet[9] || bwdRet[10] || bwdRet[11] || bwdRet[12] || bwdRet[13] || bwdRet[14] || bwdRet[15];
 								}
 								
 								//if (bwdRetBool)
