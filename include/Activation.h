@@ -34,6 +34,19 @@ namespace dnn
 		TanhExp = 26
 	};
 
+	// Dummy struct for activation function
+	struct Act 
+	{
+		typedef Float(*FloatFuncPtrType)(const Float&, const Float&, const Float&);
+		typedef VecFloat(*VecFloatFuncPtrType)(const VecFloat&, const Float&, const Float&);
+				
+		FloatFuncPtrType f, df;
+		VecFloatFuncPtrType fVec, dfVec;
+		Float alpha, beta;
+		Activations Enum;
+		dnnl::algorithm algorithm;
+	};
+
 	struct Abs
 	{
 		inline static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return std::abs(x); }

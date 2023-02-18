@@ -547,58 +547,53 @@ namespace dnn
 		{
 			if constexpr (TestActivations)
 			{
-				dnnl::algorithm algorithm;
-
 				auto activations = magic_enum::enum_names<Activations>();
 				
-				for (auto& act : activations)
+				for (auto& activation : activations)
 				{
-					if (magic_enum::enum_cast<Activations>(act).has_value())
+					if (magic_enum::enum_cast<Activations>(activation).has_value())
 					{
 						auto test = true;
-
-						typedef Float(*FloatFuncPtrType)(const Float&, const Float&, const Float&);
-						typedef VecFloat(*VecFloatFuncPtrType)(const VecFloat&, const Float&, const Float&);
-						FloatFuncPtrType f, df;
-						VecFloatFuncPtrType fVec, dfVec;
-						Float alpha, beta;
-						
-						auto activation = magic_enum::enum_cast<Activations>(act).value();
-						
-						switch (activation)
+						Act act;
+												
+						switch (magic_enum::enum_cast<Activations>(activation).value())
 						{
 						case Activations::HardLogistic:
-							algorithm = dnnl::algorithm::eltwise_hardsigmoid;
-							f = &HardLogistic::f;
-							df = &HardLogistic::df;
-							fVec = &HardLogistic::fVec;
-							dfVec = &HardLogistic::dfVec;
-							alpha = Float(0.2);
-							beta = Float(0.5);
+							act.f = &HardLogistic::f;
+							act.df = &HardLogistic::df;
+							act.fVec = &HardLogistic::fVec;
+							act.dfVec = &HardLogistic::dfVec;
+							act.alpha = Float(0.2);
+							act.beta = Float(0.5);
+							act.Enum = HardLogistic::Enum();
+							act.algorithm = dnnl::algorithm::eltwise_hardsigmoid;
 							break;
 
 						case Activations::HardSwish:
-							algorithm = dnnl::algorithm::eltwise_hardswish;
-							f = &HardSwish::f;
-							df = &HardSwish::df;
-							fVec = &HardSwish::fVec;
-							dfVec = &HardSwish::dfVec;
-							alpha = Float(1) / Float(6);
-							beta = Float(0.5);
+							act.f = &HardSwish::f;
+							act.df = &HardSwish::df;
+							act.fVec = &HardSwish::fVec;
+							act.dfVec = &HardSwish::dfVec;
+							act.alpha = Float(1) / Float(6);
+							act.beta = Float(0.5);
+							act.Enum = HardSwish::Enum();
+							act.algorithm = dnnl::algorithm::eltwise_hardswish;
 							break;
 
 						default:
-							// Skip test
+							// default skip activation check
 							test = false;
 							break;
 						}
 
 						if (test)
 						{
+							assert(act.Enum == magic_enum::enum_cast<Activations>(activation).value());
+
 							auto DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(128), dnnl::memory::dim(128), dnnl::memory::dim(128), dnnl::memory::dim(128) }), dnnl::memory::data_type::f32, PlainFmt));
 
-							auto fwdDesc = std::make_unique<dnnl::eltwise_forward::primitive_desc>(dnnl::eltwise_forward::primitive_desc(Device.engine, dnnl::prop_kind::forward, algorithm, *DstMemDesc, *DstMemDesc, alpha, beta));
-							auto bwdDesc = std::make_unique<dnnl::eltwise_backward::primitive_desc>(dnnl::eltwise_backward::primitive_desc(Device.engine, algorithm, *DstMemDesc, *DstMemDesc, *DstMemDesc, alpha, beta, *fwdDesc));
+							auto fwdDesc = std::make_unique<dnnl::eltwise_forward::primitive_desc>(dnnl::eltwise_forward::primitive_desc(Device.engine, dnnl::prop_kind::forward, act.algorithm, *DstMemDesc, *DstMemDesc, act.alpha, act.beta));
+							auto bwdDesc = std::make_unique<dnnl::eltwise_backward::primitive_desc>(dnnl::eltwise_backward::primitive_desc(Device.engine, act.algorithm, *DstMemDesc, *DstMemDesc, *DstMemDesc, act.alpha, act.beta, *fwdDesc));
 #ifdef DNN_CACHE_PRIMITIVES
 							auto fwd = std::make_unique<dnnl::eltwise_forward>(dnnl::eltwise_forward(*fwdDesc));
 							auto bwd = std::make_unique<dnnl::eltwise_backward>(dnnl::eltwise_backward(*bwdDesc));
@@ -611,33 +606,33 @@ namespace dnn
 							for (auto i = 0ull; i < size; i++)
 								input[i] = UniformReal<Float>(Float(-2.6), Float(2.6));
 
-							input[0] = -beta / alpha;
-							input[1] = (Float(1) - beta) / alpha;
-							input[2] = -beta / alpha - Float(0.0001);
-							input[3] = (Float(1) - beta) / alpha - Float(0.0001);;
-							input[4] = -beta / alpha + Float(0.0001);;
-							input[5] = (Float(1) - beta) / alpha + Float(0.0001);;
+							input[0] = -act.beta / act.alpha;
+							input[1] = (Float(1) - act.beta) / act.alpha;
+							input[2] = -act.beta / act.alpha - Float(0.0001);
+							input[3] = (Float(1) - act.beta) / act.alpha - Float(0.0001);;
+							input[4] = -act.beta / act.alpha + Float(0.0001);;
+							input[5] = (Float(1) - act.beta) / act.alpha + Float(0.0001);;
 							input[6] = Float(0);
 							input[7] = Float(1);
 
-							input[size / 2 + 0] = -beta / alpha;
-							input[size / 2 + 1] = (Float(1) - beta) / alpha;
-							input[size / 2 + 2] = -beta / alpha - Float(0.0001);
-							input[size / 2 + 3] = (Float(1) - beta) / alpha - Float(0.0001);;
-							input[size / 2 + 4] = -beta / alpha + Float(0.0001);;
-							input[size / 2 + 5] = (Float(1) - beta) / alpha + Float(0.0001);;
+							input[size / 2 + 0] = -act.beta / act.alpha;
+							input[size / 2 + 1] = (Float(1) - act.beta) / act.alpha;
+							input[size / 2 + 2] = -act.beta / act.alpha - Float(0.0001);
+							input[size / 2 + 3] = (Float(1) - act.beta) / act.alpha - Float(0.0001);;
+							input[size / 2 + 4] = -act.beta / act.alpha + Float(0.0001);;
+							input[size / 2 + 5] = (Float(1) - act.beta) / act.alpha + Float(0.0001);;
 							input[size / 2 + 6] = Float(0);
 							input[size / 2 + 7] = Float(1);
 
 							for (auto i = 0ull; i < size / 2ull; i += VectorSize)
 							{
-								fVec(VecFloat().load(&input[i]), alpha, beta).store(&outputFwd[i]);
-								dfVec(VecFloat().load(&input[i]), alpha, beta).store(&outputBwd[i]);
+								act.fVec(VecFloat().load(&input[i]), act.alpha, act.beta).store(&outputFwd[i]);
+								act.dfVec(VecFloat().load(&input[i]), act.alpha, act.beta).store(&outputBwd[i]);
 							}
 							for (auto i = size / 2ull; i < size; i++)
 							{
-								outputFwd[i] = f(input[i], alpha, beta);
-								outputBwd[i] = df(input[i], alpha, beta);
+								outputFwd[i] = act.f(input[i], act.alpha, act.beta);
+								outputBwd[i] = act.df(input[i], act.alpha, act.beta);
 							}
 
 							auto srcMem = dnnl::memory(*DstMemDesc, Device.engine, input.data());
@@ -665,9 +660,9 @@ namespace dnn
 							{
 								auto in = input[i];
 								if ((outputFwdRef[i] - margin) > outputFwd[i] || (outputFwdRef[i] + margin) < outputFwd[i])
-									throw std::invalid_argument(std::string("not passed:") + std::to_string(in));
+									throw std::invalid_argument(std::string("not passed forward:") + std::to_string(in));
 								if ((outputBwdRef[i] - margin) > outputBwd[i] || (outputBwdRef[i] + margin) < outputBwd[i])
-									throw std::invalid_argument(std::string("not passed") + std::to_string(in));
+									throw std::invalid_argument(std::string("not passed backward:") + std::to_string(in));
 							}
 
 							/*const auto maxErrorFwd = std::inner_product(outputFwdRef.cbegin(), outputFwdRef.cend(), outputFwd.cbegin(), Float(0),[](Float x, Float y)->Float { return std::max<Float>(y, x); }, RelativeError);
