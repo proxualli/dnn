@@ -648,8 +648,20 @@ namespace dnn
 								const auto fwdMin = fwdRef - errorLimit > fwd;
 								const auto fwdMax = fwdRef + errorLimit < fwd;
 								const auto fwdRet = fwdMin | fwdMax;
-								const auto fwdRetBool = fwdRet[0] || fwdRet[1] || fwdRet[2] || fwdRet[3] || fwdRet[4] || fwdRet[5] || fwdRet[6] || fwdRet[7];
-								
+								bool fwdRetBool;
+								if constexpr (VectorSize == 4ull)
+								{
+									fwdRetBool = fwdRet[0] || fwdRet[1] || fwdRet[2] || fwdRet[3];
+								}
+								else if constexpr (VectorSize == 8ull)
+								{
+									fwdRetBool = fwdRet[0] || fwdRet[1] || fwdRet[2] || fwdRet[3] || fwdRet[4] || fwdRet[5] || fwdRet[6] || fwdRet[7];
+								}
+								else if constexpr (VectorSize == 16ull)
+								{
+									fwdRetBool = fwdRet[0] || fwdRet[1] || fwdRet[2] || fwdRet[3] || fwdRet[4] || fwdRet[5] || fwdRet[6] || fwdRet[7] || fwdRet[8] || fwdRet[9] || fwdRet[10] || fwdRet[11] || fwdRet[12] || fwdRet[13] || fwdRet[14] || fwdRet[15];
+								}
+
 								//if (fwdRetBool)
 								//	throw std::invalid_argument(std::string(activation) + std::string(" forward pass not passed"));
 								/*std::string("Input:") + tab + std::to_string(in) + nwl +
@@ -661,8 +673,20 @@ namespace dnn
 								const auto bwdMin = bwdRef - errorLimit > bwd;
 								const auto bwdMax = bwdRef + errorLimit < bwd;
 								const auto bwdRet = bwdMin | bwdMax;
-								const auto bwdRetBool = bwdRet[0] || bwdRet[1] || bwdRet[2] || bwdRet[3] || bwdRet[4] || bwdRet[5] || bwdRet[6] || bwdRet[7];
-
+								bool bwdRetBool;
+								if constexpr (VectorSize == 4ull)
+								{
+									bwdRetBool = bwdRet[0] || bwdRet[1] || bwdRet[2] || bwdRet[3] || bwdRet[4];
+								}
+								else if constexpr (VectorSize == 8ull)
+								{
+									bwdRetBool = bwdRetBool = bwdRet[0] || bwdRet[1] || bwdRet[2] || bwdRet[3] || bwdRet[4] || bwdRet[5] || bwdRet[6] || bwdRet[7];
+								}
+								else if constexpr (VectorSize == 16ull)
+								{
+									bwdRetBool = bwdRetBool = bwdRet[0] || bwdRet[1] || bwdRet[2] || bwdRet[3] || bwdRet[4] || bwdRet[5] || bwdRet[6] || bwdRet[7] || bwdRet[8] || bwdRet[9] || bwdRet[10] || bwdRet[11] || bwdRet[12] || bwdRet[13] || bwdRet[14] || bwdRet[15];
+								}
+								
 								//if (bwdRetBool)
 								//	throw std::invalid_argument(std::string(activation) + std::string(" backward pass not passed"));
 								/*std::string("Input:") + tab + std::to_string(in) + nwl +
