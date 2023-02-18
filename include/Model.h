@@ -555,7 +555,7 @@ namespace dnn
 				{ 
 					if (magic_enum::enum_cast<Activations>(activation).has_value())
 					{
-						auto act = GetActivation(magic_enum::enum_cast<Activations>(activation).value());
+						auto act = Activation::GetActivation(magic_enum::enum_cast<Activations>(activation).value());
 
 						if (act.test)
 						{
