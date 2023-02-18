@@ -603,24 +603,27 @@ namespace dnn
 							auto outputFwd = FloatVector(size);
 							auto outputBwd = FloatVector(size);
 
-							for (auto i = 0ull; i < size; i++)
-								input[i] = UniformReal<Float>(Float(-2.6), Float(2.6));
+							const auto minLimit = -act.beta / act.alpha;
+							const auto maxLimit = (Float(1) - act.beta) / act.alpha;
 
-							input[0] = -act.beta / act.alpha;
-							input[1] = (Float(1) - act.beta) / act.alpha;
-							input[2] = -act.beta / act.alpha - Float(0.0001);
-							input[3] = (Float(1) - act.beta) / act.alpha - Float(0.0001);;
-							input[4] = -act.beta / act.alpha + Float(0.0001);;
-							input[5] = (Float(1) - act.beta) / act.alpha + Float(0.0001);;
+							for (auto i = 0ull; i < size; i++)
+								input[i] = UniformReal<Float>(minLimit - Float(1.5), maxLimit + Float(1.5));
+
+							input[0] = minLimit;
+							input[1] = maxLimit;
+							input[2] = minLimit - Float(0.0001);
+							input[3] = maxLimit - Float(0.0001);
+							input[4] = minLimit + Float(0.0001);
+							input[5] = maxLimit + Float(0.0001);
 							input[6] = Float(0);
 							input[7] = Float(1);
 
-							input[size / 2 + 0] = -act.beta / act.alpha;
-							input[size / 2 + 1] = (Float(1) - act.beta) / act.alpha;
-							input[size / 2 + 2] = -act.beta / act.alpha - Float(0.0001);
-							input[size / 2 + 3] = (Float(1) - act.beta) / act.alpha - Float(0.0001);;
-							input[size / 2 + 4] = -act.beta / act.alpha + Float(0.0001);;
-							input[size / 2 + 5] = (Float(1) - act.beta) / act.alpha + Float(0.0001);;
+							input[size / 2 + 0] = minLimit;
+							input[size / 2 + 1] = maxLimit;
+							input[size / 2 + 2] = minLimit - Float(0.0001);
+							input[size / 2 + 3] = maxLimit - Float(0.0001);
+							input[size / 2 + 4] = minLimit + Float(0.0001);
+							input[size / 2 + 5] = maxLimit + Float(0.0001);
 							input[size / 2 + 6] = Float(0);
 							input[size / 2 + 7] = Float(1);
 
