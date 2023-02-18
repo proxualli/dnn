@@ -224,6 +224,30 @@ namespace dnn
 
 		switch (activation)
 		{
+		case Activations::ASinh:
+			act.f = &ASinh::f;
+			act.df = &ASinh::df;
+			act.fVec = &ASinh::fVec;
+			act.dfVec = &ASinh::dfVec;
+			act.alpha = Float(0);
+			act.beta = Float(0);
+			act.Enum = ASinh::Enum();
+			act.algorithm = dnnl::algorithm::eltwise_linear;
+			act.test = false;
+			break;
+
+		case Activations::BoundedRelu:
+			act.f = &BoundedRelu::f;
+			act.df = &BoundedRelu::df;
+			act.fVec = &BoundedRelu::fVec;
+			act.dfVec = &BoundedRelu::dfVec;
+			act.alpha = Float(6);
+			act.beta = Float(0);
+			act.Enum = BoundedRelu::Enum();
+			act.algorithm = dnnl::algorithm::eltwise_clip;;
+			act.test = false;
+			break;
+
 		case Activations::HardSigmoid:
 			act.f = &HardSigmoid::f;
 			act.df = &HardSigmoid::df;
@@ -272,30 +296,6 @@ namespace dnn
 			act.test = true;
 			break;
 
-		case Activations::Swish:
-			act.f = &Swish::f;
-			act.df = &Swish::df;
-			act.fVec = &Swish::fVec;
-			act.dfVec = &Swish::dfVec;
-			act.alpha = Float(1);
-			act.beta = Float(0);
-			act.Enum = Swish::Enum();
-			act.algorithm = dnnl::algorithm::eltwise_swish;
-			act.test = true;
-			break;
-
-		case Activations::ASinh:
-			act.f = &ASinh::f;
-			act.df = &ASinh::df;
-			act.fVec = &ASinh::fVec;
-			act.dfVec = &ASinh::dfVec;
-			act.alpha = Float(0);
-			act.beta = Float(0);
-			act.Enum = ASinh::Enum();
-			act.algorithm = dnnl::algorithm::eltwise_linear;
-			act.test = false;
-			break;
-
 		case Activations::SoftPlus:
 			act.f = &SoftPlus::f;
 			act.df = &SoftPlus::df;
@@ -318,6 +318,18 @@ namespace dnn
 			act.Enum = SoftSign::Enum();
 			act.algorithm = dnnl::algorithm::eltwise_linear;
 			act.test = false;
+			break;
+
+		case Activations::Swish:
+			act.f = &Swish::f;
+			act.df = &Swish::df;
+			act.fVec = &Swish::fVec;
+			act.dfVec = &Swish::dfVec;
+			act.alpha = Float(1);
+			act.beta = Float(0);
+			act.Enum = Swish::Enum();
+			act.algorithm = dnnl::algorithm::eltwise_swish;
+			act.test = true;
 			break;
 
 		case Activations::TanhExp:

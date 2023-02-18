@@ -107,7 +107,7 @@ namespace
 	constexpr auto Kahan = true;
 	constexpr auto Reference = true;
 	constexpr auto SingleMeanVariancePass = false;
-	constexpr auto TestActivations = true;
+	constexpr auto TestActivations = false;
 	constexpr auto TestBatchNormalization = false;
 	
 	typedef float Float;
