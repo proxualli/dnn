@@ -543,19 +543,19 @@ namespace dnn
 
 		virtual ~Model() = default;
 		
-		bool CheckActivations(const Float errorLimit = Float(0.0005))
+		bool CheckActivations(std::vector<std::string>& msg, const Float errorLimit = Float(0.0005))
 		{
+			msg = std::vector<std::string>();
 			std::atomic<bool> ret = true;
 			ret.store(true);
-
+			
 			if constexpr (TestActivations)
 			{
 				const auto eng = dnnl::engine(dnnl::engine::kind::cpu, 0);
 				auto stream = dnnl::stream(eng);
 
-				const auto activations = magic_enum::enum_names<Activations>();
-
-				std::for_each(std::execution::par, activations.cbegin(), activations.cend(), [&errorLimit, &ret, &eng, &stream](const std::string_view& activation)
+				auto activations = magic_enum::enum_names<Activations>();
+				std::for_each(std::execution::par, activations.begin(), activations.end(), [&msg, &errorLimit, &ret, &eng, &stream](const std::string_view& activation)
 				{ 
 					if (magic_enum::enum_cast<Activations>(activation).has_value())
 					{
@@ -642,59 +642,38 @@ namespace dnn
 							{
 								const auto fwdRef = VecFloat().load_a(&outputFwdRef[i]);
 								const auto fwd = VecFloat().load_a(&outputFwd[i]);
-								const auto fwdMin = (fwdRef - errorLimit) > fwd;
-								const auto fwdMax = (fwdRef + errorLimit) < fwd;
-								const bool fwdRetBool = horizontal_or(fwdMin | fwdMax);
+								const bool fwdRetBool = horizontal_max(((fwdRef - errorLimit) > fwd) | ((fwdRef + errorLimit) < fwd));
 
 								if (fwdRetBool)
 								{
-									if (ret.load())
-										ret.store(false);
-
-									break;
+									msg.push_back(
+										std::string(activation) + std::string(" forward pass not passed") + nwl +
+										std::string("Input:") + tab + std::to_string(input[i]) + nwl +
+										std::string("Reference:") + tab + std::to_string(outputFwdRef[i]) + nwl +
+										std::string("Output:") + tab + std::to_string(outputFwd[i]) + nwl);
 								}
 
 								const auto bwdRef = VecFloat().load_a(&outputBwdRef[i]);
 								const auto bwd = VecFloat().load_a(&outputBwd[i]);
-								const auto bwdMin = (bwdRef - errorLimit) > bwd;
-								const auto bwdMax = (bwdRef + errorLimit) < bwd;
-								const bool bwdRetBool = horizontal_or(bwdMin | bwdMax);
+								const bool bwdRetBool = horizontal_max(((bwdRef - errorLimit) > bwd) | ((bwdRef + errorLimit) < bwd));
 								
 								if (bwdRetBool)
+								{
+									msg.push_back(
+										std::string(activation) + std::string(" backward pass not passed") + nwl +
+										std::string("Input:") + tab + std::to_string(input[i]) + nwl +
+										std::string("Reference:") + tab + std::to_string(outputBwdRef[i]) + nwl +
+										std::string("Output:") + tab + std::to_string(outputBwd[i]) + nwl);
+								}
+
+								if (fwdRetBool || bwdRetBool)
 								{
 									if (ret.load())
 										ret.store(false);
 
 									break;
 								}
-
-								/*
-								const auto in = VecFloat().load(&input[i]);
-
-								if (fwdRetBool)
-									throw std::invalid_argument(std::string(activation) + std::string(" forward pass not passed"));
-								std::string("Input:") + tab + std::to_string(in) + nwl +
-								std::string("Reference:") + tab + std::to_string(outputFwdRef[i]) + nwl +
-								std::string("Output:") + tab + std::to_string(outputFwd[i]));
-
-								if (bwdRetBool)
-									throw std::invalid_argument(std::string(activation) + std::string(" backward pass not passed"));
-								std::string("Input:") + tab + std::to_string(in) + nwl +
-								std::string("Reference:") + tab + std::to_string(outputBwdRef[i]) + nwl +
-								std::string("Output:") + tab + std::to_string(outputBwd[i]));
-								*/
 							}
-
-							/*
-							const auto maxErrorFwd = std::inner_product(outputFwdRef.cbegin(), outputFwdRef.cend(), outputFwd.cbegin(), Float(0),[](Float x, Float y)->Float { return std::max<Float>(y, x); }, RelativeError);
-							const auto maxErrorBwd = std::inner_product(outputBwdRef.cbegin(), outputBwdRef.cend(), outputBwd.cbegin(), Float(0),[](Float x, Float y)->Float { return std::max<Float>(y, x); }, RelativeError);
-
-							if (std::abs(maxErrorFwd) > errorLimit || std::abs(maxErrorBwd) > errorLimit)
-								throw std::invalid_argument("not passed");
-															
-							EXPECT_LT(maxErrorFwd, errorLimit);
-							EXPECT_LT(maxErrorBwd, errorLimit);
-							*/
 						}
 					}
 				});
@@ -1626,10 +1605,10 @@ namespace dnn
 				TaskState.store(TaskStates::Running);
 				State.store(States::Idle);
 
-				if (!CheckActivations())
+				auto msg = std::vector<std::string>();
+				if (!CheckActivations(msg))
 				{
 					State.store(States::Completed);
-
 					return;
 				};
 
