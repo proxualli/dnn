@@ -590,7 +590,12 @@ namespace dnn
 						{
 							assert(act.Enum == magic_enum::enum_cast<Activations>(activation).value());
 
-							auto DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(128), dnnl::memory::dim(128), dnnl::memory::dim(128), dnnl::memory::dim(128) }), dnnl::memory::data_type::f32, PlainFmt));
+							const auto N = dnnl::memory::dim(128);
+							const auto C = dnnl::memory::dim(128);
+							const auto H = dnnl::memory::dim(128);
+							const auto W = dnnl::memory::dim(128);
+
+							auto DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ N, C, H, W }), dnnl::memory::data_type::f32, PlainFmt));
 
 							auto fwdDesc = std::make_unique<dnnl::eltwise_forward::primitive_desc>(dnnl::eltwise_forward::primitive_desc(Device.engine, dnnl::prop_kind::forward, act.algorithm, *DstMemDesc, *DstMemDesc, act.alpha, act.beta));
 							auto bwdDesc = std::make_unique<dnnl::eltwise_backward::primitive_desc>(dnnl::eltwise_backward::primitive_desc(Device.engine, act.algorithm, *DstMemDesc, *DstMemDesc, *DstMemDesc, act.alpha, act.beta, *fwdDesc));
@@ -598,7 +603,7 @@ namespace dnn
 							auto fwd = std::make_unique<dnnl::eltwise_forward>(dnnl::eltwise_forward(*fwdDesc));
 							auto bwd = std::make_unique<dnnl::eltwise_backward>(dnnl::eltwise_backward(*bwdDesc));
 #endif
-							const auto size = 128ull * 128ull * 128ull * 128ull;
+							const auto size = UInt(N * C * H * W);
 							auto input = FloatVector(size);
 							auto outputFwd = FloatVector(size);
 							auto outputBwd = FloatVector(size);
