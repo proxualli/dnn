@@ -107,7 +107,7 @@ namespace
 	constexpr auto Kahan = true;
 	constexpr auto Reference = true;
 	constexpr auto SingleMeanVariancePass = false;
-	constexpr auto TestActivations = false;
+	constexpr auto TestActivations = true;
 	constexpr auto TestBatchNormalization = false;
 	
 	typedef float Float;
@@ -535,9 +535,10 @@ namespace
 	}
 #endif
 
-	static auto BernoulliVecFloat(const Float p = Float(0.5)) noexcept
+	static auto BernoulliVecFloat(const Float p = Float(0.5)) NOEXCEPT
 	{
 		static thread_local auto generator = Ranvec1(3, Seed<int>(), static_cast<int>(std::hash<std::thread::id>()(std::this_thread::get_id())));
+
 #if defined(DNN_AVX512BW) || defined(DNN_AVX512)
 		return select(generator.random16f() < p, Float(1), Float(0));
 #elif defined(DNN_AVX2) || defined(DNN_AVX)

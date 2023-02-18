@@ -617,10 +617,12 @@ namespace dnn
 
 		bool CheckActivations()
 		{
+			std::atomic<bool> ret = true;
+
 			if constexpr (TestActivations)
 			{
 				auto activations = magic_enum::enum_names<Activations>();
-
+				
 				std::for_each(std::execution::par, activations.begin(), activations.end(), [&](const std::string_view& activation)
 				{ 
 					if (magic_enum::enum_cast<Activations>(activation).has_value())
@@ -635,11 +637,12 @@ namespace dnn
 							auto dev = dnn::Device(eng, dnnl::stream(eng));
 
 							const auto errorLimit = Float(0.000075);
-							const auto N = dnnl::memory::dim(64);
-							const auto C = dnnl::memory::dim(64);
+							const auto N = dnnl::memory::dim(128);
+							const auto C = dnnl::memory::dim(128);
 							const auto H = dnnl::memory::dim(64);
 							const auto W = dnnl::memory::dim(64);
 							const auto size = UInt(N * C * H * W);
+							const auto part = (size / 2ull) + (size / 4ull);
 
 							auto DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ N, C, H, W }), dnnl::memory::data_type::f32, PlainFmt));
 
@@ -668,21 +671,21 @@ namespace dnn
 							input[6] = Float(0);
 							input[7] = Float(1);
 
-							input[size / 2 + 0] = minLimit;
-							input[size / 2 + 1] = maxLimit;
-							input[size / 2 + 2] = minLimit - Float(0.0001);
-							input[size / 2 + 3] = maxLimit - Float(0.0001);
-							input[size / 2 + 4] = minLimit + Float(0.0001);
-							input[size / 2 + 5] = maxLimit + Float(0.0001);
-							input[size / 2 + 6] = Float(0);
-							input[size / 2 + 7] = Float(1);
+							input[part + 0] = minLimit;
+							input[part + 1] = maxLimit;
+							input[part + 2] = minLimit - Float(0.0001);
+							input[part + 3] = maxLimit - Float(0.0001);
+							input[part + 4] = minLimit + Float(0.0001);
+							input[part + 5] = maxLimit + Float(0.0001);
+							input[part + 6] = Float(0);
+							input[part + 7] = Float(1);
 
-							for (auto i = 0ull; i < size / 2ull; i += VectorSize)
+							for (auto i = 0ull; i < part; i += VectorSize)
 							{
 								act.fVec(VecFloat().load(&input[i]), act.alpha, act.beta).store(&outputFwd[i]);
 								act.dfVec(VecFloat().load(&input[i]), act.alpha, act.beta).store(&outputBwd[i]);
 							}
-							for (auto i = size / 2ull; i < size; i++)
+							for (auto i = part; i < size; i++)
 							{
 								outputFwd[i] = act.f(input[i], act.alpha, act.beta);
 								outputBwd[i] = act.df(input[i], act.alpha, act.beta);
@@ -738,8 +741,11 @@ namespace dnn
 								std::string("Reference:") + tab + std::to_string(outputBwdRef[i]) + nwl +
 								std::string("Output:") + tab + std::to_string(outputBwd[i]));*/
 
-								if (fwdRetBool && bwdRetBool)
-									return false;
+								if (fwdRetBool && bwdRetBool && (ret.load() == true))
+								{
+									ret.store(false);
+									break;
+								}
 							}
 
 							/*const auto maxErrorFwd = std::inner_product(outputFwdRef.cbegin(), outputFwdRef.cend(), outputFwd.cbegin(), Float(0),[](Float x, Float y)->Float { return std::max<Float>(y, x); }, RelativeError);
@@ -757,7 +763,7 @@ namespace dnn
 				});
 			}
 
-			return true;
+			return ret.load();
 		}
 
 		auto GetWeightsSize(const bool persistOptimizer, const Optimizers optimizer) const
