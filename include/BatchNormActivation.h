@@ -36,10 +36,7 @@ namespace dnn
 			case Activations::Logistic:
 			case Activations::LogLogistic:
 			case Activations::Mish:
-			case Activations::Pow:
-			case Activations::Relu:
 			case Activations::Round:
-			case Activations::SoftRelu:
 			case Activations::SoftSign:
 			case Activations::Sqrt:
 			case Activations::Square:
@@ -50,6 +47,9 @@ namespace dnn
 				return alpha == Float(0) ? Float(6) : alpha;
 			case Activations::Elu:
 			case Activations::Linear:
+			case Activations::Pow:
+			case Activations::Relu:
+			case Activations::SoftRelu:
 			case Activations::Swish:
 				return alpha == Float(0) ? Float(1) : alpha;
 			case Activations::SoftPlus:

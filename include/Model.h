@@ -580,6 +580,39 @@ namespace dnn
 							act.algorithm = dnnl::algorithm::eltwise_hardswish;
 							break;
 
+						case Activations::Mish:
+							act.f = &Mish::f;
+							act.df = &Mish::df;
+							act.fVec = &Mish::fVec;
+							act.dfVec = &Mish::dfVec;
+							act.alpha = Float(0);
+							act.beta = Float(0);
+							act.Enum = Mish::Enum();
+							act.algorithm = dnnl::algorithm::eltwise_mish;
+							break;
+
+						case Activations::Relu:
+							act.f = &Relu::f;
+							act.df = &Relu::df;
+							act.fVec = &Relu::fVec;
+							act.dfVec = &Relu::dfVec;
+							act.alpha = Float(1);
+							act.beta = Float(0);
+							act.Enum = Relu::Enum();
+							act.algorithm = dnnl::algorithm::eltwise_relu;
+							break;
+
+						case Activations::Swish:
+							act.f = &Swish::f;
+							act.df = &Swish::df;
+							act.fVec = &Swish::fVec;
+							act.dfVec = &Swish::dfVec;
+							act.alpha = Float(1);
+							act.beta = Float(0);
+							act.Enum = Swish::Enum();
+							act.algorithm = dnnl::algorithm::eltwise_swish;
+							break;
+						
 						default:
 							// default skip activation check
 							test = false;
@@ -668,9 +701,17 @@ namespace dnn
 							{
 								auto in = input[i];
 								if ((outputFwdRef[i] - errorLimit) > outputFwd[i] || (outputFwdRef[i] + errorLimit) < outputFwd[i])
-									throw std::invalid_argument(std::string("not passed forward:") + std::to_string(in));
+									throw std::invalid_argument(
+										std::string(activation) + std::string(" forward pass not passed") + nwl + 
+										std::string("Input:") + tab + std::to_string(in) + nwl +
+										std::string("Reference:") + tab + std::to_string(outputFwdRef[i]) + nwl +
+										std::string("Output:") + tab + std::to_string(outputFwd[i]));
 								if ((outputBwdRef[i] - errorLimit) > outputBwd[i] || (outputBwdRef[i] + errorLimit) < outputBwd[i])
-									throw std::invalid_argument(std::string("not passed backward:") + std::to_string(in));
+									throw std::invalid_argument(
+										std::string(activation) + std::string(" backward pass not passed") + nwl + 
+										std::string("Input:") + tab + std::to_string(in) + nwl + 
+										std::string("Reference:") + tab + std::to_string(outputBwdRef[i]) + nwl +
+										std::string("Output:") + tab + std::to_string(outputBwd[i]));
 							}
 
 							/*const auto maxErrorFwd = std::inner_product(outputFwdRef.cbegin(), outputFwdRef.cend(), outputFwd.cbegin(), Float(0),[](Float x, Float y)->Float { return std::max<Float>(y, x); }, RelativeError);
