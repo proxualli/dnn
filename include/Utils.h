@@ -51,6 +51,8 @@
 #include "vectormath_trig.h"
 #include "add-on/random/ranvec1.h"
 
+#include <float.h> 
+
 #include <algorithm>
 #include <array>
 #include <atomic>
@@ -105,7 +107,7 @@ namespace
 	constexpr auto Reference = true;
 	constexpr auto SingleMeanVariancePass = false;
 	constexpr auto TestActivations = false;
-	constexpr auto TestNorm = false;
+	constexpr auto TestBatchNormalization = false;
 	
 	typedef float Float;
 	typedef std::size_t UInt;

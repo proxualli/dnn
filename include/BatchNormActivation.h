@@ -187,7 +187,7 @@ namespace dnn
 		{
 			Layer::SetBatchSize(batchSize);
 
-			if constexpr (Reference || TestNorm)
+			if constexpr (Reference || TestBatchNormalization)
 				InputNeurons.resize(batchSize, C, H, W, dnnl::memory::data_type::f32, BlockedFmt, Device.engine);
 		}
 
@@ -257,7 +257,7 @@ namespace dnn
 
 		void ForwardProp(const UInt batchSize, const bool training) final override
 		{			
-			if constexpr (Reference && !TestNorm)
+			if constexpr (Reference && !TestBatchNormalization)
 				ForwardPropRef(batchSize, training);
 			else
 			{
@@ -562,7 +562,7 @@ namespace dnn
 				}
 			}
 
-			if constexpr (TestNorm)
+			if constexpr (TestBatchNormalization)
 			{
 				auto output = FloatArray();
 				output.resize(batchSize, C, H, W, dnnl::memory::data_type::f32, BlockedFmt, Device.engine);
@@ -584,7 +584,7 @@ namespace dnn
 
 		void BackwardProp(const UInt batchSize) final override
 		{
-			if constexpr (Reference && !TestNorm)
+			if constexpr (Reference && !TestBatchNormalization)
 				BackwardPropRef(batchSize);
 			else
 			{
@@ -804,7 +804,7 @@ namespace dnn
 #endif // DNN_LEAN	
 			}
 
-			if constexpr (TestNorm)
+			if constexpr (TestBatchNormalization)
 			{
 				auto output = FloatArray();
 				output.resize(batchSize, C, H, W, dnnl::memory::data_type::f32, BlockedFmt, Device.engine);
