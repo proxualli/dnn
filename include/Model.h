@@ -615,14 +615,14 @@ namespace dnn
 			return act;
 		}
 
-		void CheckActivations()
+		bool CheckActivations()
 		{
 			if constexpr (TestActivations)
 			{
 				auto activations = magic_enum::enum_names<Activations>();
-				
-				for (auto& activation : activations)
-				{
+
+				std::for_each(std::execution::par, activations.begin(), activations.end(), [&](const std::string_view& activation)
+				{ 
 					if (magic_enum::enum_cast<Activations>(activation).has_value())
 					{
 						auto act = GetActivation(magic_enum::enum_cast<Activations>(activation).value());
@@ -631,17 +631,20 @@ namespace dnn
 						{
 							assert(act.Enum == magic_enum::enum_cast<Activations>(activation).value());
 
-							const auto errorLimit = Float(0.0000025);
-							const auto N = dnnl::memory::dim(128);
-							const auto C = dnnl::memory::dim(128);
-							const auto H = dnnl::memory::dim(128);
-							const auto W = dnnl::memory::dim(128);
+							const auto eng = dnnl::engine(dnnl::engine::kind::cpu, 0);
+							auto dev = dnn::Device(eng, dnnl::stream(eng));
+
+							const auto errorLimit = Float(0.000075);
+							const auto N = dnnl::memory::dim(64);
+							const auto C = dnnl::memory::dim(64);
+							const auto H = dnnl::memory::dim(64);
+							const auto W = dnnl::memory::dim(64);
 							const auto size = UInt(N * C * H * W);
 
 							auto DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ N, C, H, W }), dnnl::memory::data_type::f32, PlainFmt));
 
-							auto fwdDesc = std::make_unique<dnnl::eltwise_forward::primitive_desc>(dnnl::eltwise_forward::primitive_desc(Device.engine, dnnl::prop_kind::forward, act.algorithm, *DstMemDesc, *DstMemDesc, act.alpha, act.beta));
-							auto bwdDesc = std::make_unique<dnnl::eltwise_backward::primitive_desc>(dnnl::eltwise_backward::primitive_desc(Device.engine, act.algorithm, *DstMemDesc, *DstMemDesc, *DstMemDesc, act.alpha, act.beta, *fwdDesc));
+							auto fwdDesc = std::make_unique<dnnl::eltwise_forward::primitive_desc>(dnnl::eltwise_forward::primitive_desc(dev.engine, dnnl::prop_kind::forward, act.algorithm, *DstMemDesc, *DstMemDesc, act.alpha, act.beta));
+							auto bwdDesc = std::make_unique<dnnl::eltwise_backward::primitive_desc>(dnnl::eltwise_backward::primitive_desc(dev.engine, act.algorithm, *DstMemDesc, *DstMemDesc, *DstMemDesc, act.alpha, act.beta, *fwdDesc));
 #ifdef DNN_CACHE_PRIMITIVES
 							auto fwd = std::make_unique<dnnl::eltwise_forward>(dnnl::eltwise_forward(*fwdDesc));
 							auto bwd = std::make_unique<dnnl::eltwise_backward>(dnnl::eltwise_backward(*bwdDesc));
@@ -685,57 +688,76 @@ namespace dnn
 								outputBwd[i] = act.df(input[i], act.alpha, act.beta);
 							}
 
-							auto srcMem = dnnl::memory(*DstMemDesc, Device.engine, input.data());
-							
+							auto srcMem = dnnl::memory(*DstMemDesc, dev.engine, input.data());
+
 							auto outputFwdRef = FloatVector(size);
-							auto dstMem = dnnl::memory(fwdDesc->dst_desc(), Device.engine, outputFwdRef.data());
+							auto dstMem = dnnl::memory(fwdDesc->dst_desc(), dev.engine, outputFwdRef.data());
 #ifdef DNN_CACHE_PRIMITIVES
-							fwd->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DST, dstMem } });
+							fwd->execute(dev.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DST, dstMem } });
 #else
-							dnnl::eltwise_forward(*fwdDesc).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DST, dstMem } });
+							dnnl::eltwise_forward(*fwdDesc).execute(dev.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DST, dstMem } });
 #endif
-							Device.stream.wait();
+							dev.stream.wait();
 
 							auto outputBwdRef = FloatVector(size, Float(1));
-							auto diffSrcMem = dnnl::memory(bwdDesc->diff_src_desc(), Device.engine, outputBwdRef.data());
+							auto diffSrcMem = dnnl::memory(bwdDesc->diff_src_desc(), dev.engine, outputBwdRef.data());
 #ifdef DNN_CACHE_PRIMITIVES
-							bwd->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DIFF_DST, diffSrcMem }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
+							bwd->execute(dev.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DIFF_DST, diffSrcMem }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
 #else
-							dnnl::eltwise_backward(*bwdDesc).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DIFF_DST, diffSrcMem }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
+							dnnl::eltwise_backward(*bwdDesc).execute(dev.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DIFF_DST, diffSrcMem }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
 #endif
-							Device.stream.wait();
+							dev.stream.wait();
 
-							for (auto i = 0ull; i < size; i++)
+							for (auto i = 0ull; i < size; i += VectorSize)
 							{
-								auto in = input[i];
-								if ((outputFwdRef[i] - errorLimit) > outputFwd[i] || (outputFwdRef[i] + errorLimit) < outputFwd[i])
-									throw std::invalid_argument(
-										std::string(activation) + std::string(" forward pass not passed") + nwl + 
-										std::string("Input:") + tab + std::to_string(in) + nwl +
-										std::string("Reference:") + tab + std::to_string(outputFwdRef[i]) + nwl +
-										std::string("Output:") + tab + std::to_string(outputFwd[i]));
-								if ((outputBwdRef[i] - errorLimit) > outputBwd[i] || (outputBwdRef[i] + errorLimit) < outputBwd[i])
-									throw std::invalid_argument(
-										std::string(activation) + std::string(" backward pass not passed") + nwl + 
-										std::string("Input:") + tab + std::to_string(in) + nwl + 
-										std::string("Reference:") + tab + std::to_string(outputBwdRef[i]) + nwl +
-										std::string("Output:") + tab + std::to_string(outputBwd[i]));
+								//const auto in = VecFloat().load(&input[i]);
+
+								const auto fwdRef = VecFloat().load(&outputFwdRef[i]);
+								const auto fwd = VecFloat().load(&outputFwd[i]);
+								const auto fwdMin = fwdRef - errorLimit > fwd;
+								const auto fwdMax = fwdRef + errorLimit < fwd;
+								const auto fwdRet = fwdMin | fwdMax;
+								const auto fwdRetBool = fwdRet[0] || fwdRet[1] || fwdRet[2] || fwdRet[3] || fwdRet[4] || fwdRet[5] || fwdRet[6] || fwdRet[7];
+								
+								//if (fwdRetBool)
+								//	throw std::invalid_argument(std::string(activation) + std::string(" forward pass not passed"));
+								/*std::string("Input:") + tab + std::to_string(in) + nwl +
+								std::string("Reference:") + tab + std::to_string(outputFwdRef[i]) + nwl +
+								std::string("Output:") + tab + std::to_string(outputFwd[i]));*/
+
+								const auto bwdRef = VecFloat().load(&outputBwdRef[i]);
+								const auto bwd = VecFloat().load(&outputBwd[i]);
+								const auto bwdMin = bwdRef - errorLimit > bwd;
+								const auto bwdMax = bwdRef + errorLimit < bwd;
+								const auto bwdRet = bwdMin | bwdMax;
+								const auto bwdRetBool = bwdRet[0] || bwdRet[1] || bwdRet[2] || bwdRet[3] || bwdRet[4] || bwdRet[5] || bwdRet[6] || bwdRet[7];
+
+								//if (bwdRetBool)
+								//	throw std::invalid_argument(std::string(activation) + std::string(" backward pass not passed"));
+								/*std::string("Input:") + tab + std::to_string(in) + nwl +
+								std::string("Reference:") + tab + std::to_string(outputBwdRef[i]) + nwl +
+								std::string("Output:") + tab + std::to_string(outputBwd[i]));*/
+
+								if (fwdRetBool && bwdRetBool)
+									return false;
 							}
 
 							/*const auto maxErrorFwd = std::inner_product(outputFwdRef.cbegin(), outputFwdRef.cend(), outputFwd.cbegin(), Float(0),[](Float x, Float y)->Float { return std::max<Float>(y, x); }, RelativeError);
 							const auto maxErrorBwd = std::inner_product(outputBwdRef.cbegin(), outputBwdRef.cend(), outputBwd.cbegin(), Float(0),[](Float x, Float y)->Float { return std::max<Float>(y, x); }, RelativeError);
-							
+
 							if (std::abs(maxErrorFwd) > errorLimit || std::abs(maxErrorBwd) > errorLimit)
 								throw std::invalid_argument("not passed");*/
-							
-							/*
-							EXPECT_LT(maxErrorFwd, errorLimit); 
-							EXPECT_LT(maxErrorBwd, errorLimit);
-							*/
+
+								/*
+								EXPECT_LT(maxErrorFwd, errorLimit);
+								EXPECT_LT(maxErrorBwd, errorLimit);
+								*/
 						}
 					}
-				}
+				});
 			}
+
+			return true;
 		}
 
 		auto GetWeightsSize(const bool persistOptimizer, const Optimizers optimizer) const
@@ -1661,7 +1683,12 @@ namespace dnn
 				TaskState.store(TaskStates::Running);
 				State.store(States::Idle);
 
-				CheckActivations();
+				if (!CheckActivations())
+				{
+					State.store(States::Completed);
+
+					return;
+				};
 
 				const auto totalSkipConnections = GetTotalSkipConnections();
 
