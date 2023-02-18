@@ -14,16 +14,16 @@ namespace dnn
 		Exp = 6,			//
 		Gelu = 7,
 		GeluErf = 8,
-		HardLogistic = 9,
+		HardSigmoid = 9,
 		HardSwish = 10,
 		Linear = 11,
 		Log = 12,
-		Logistic = 13,		//
-		LogLogistic = 14,
-		Mish = 15,
-		Pow = 16,
-		Relu = 17,			//
-		Round = 18,
+		LogSigmoid = 13,
+		Mish = 14,
+		Pow = 15,
+		Relu = 16,			//
+		Round = 17,
+		Sigmoid = 18,		//
 		SoftPlus = 19,
 		SoftRelu = 20,
 		SoftSign = 21,
@@ -45,6 +45,7 @@ namespace dnn
 		Float alpha, beta;
 		Activations Enum;
 		dnnl::algorithm algorithm;
+		bool test;
 	};
 
 	struct Abs
@@ -83,13 +84,13 @@ namespace dnn
 		inline static Activations Enum() NOEXCEPT { return Activations::Elu; }
 	};
 
-	struct HardLogistic
+	struct HardSigmoid
 	{
 		inline static Float f(const Float& x, const Float& alpha = Float(0.2), const Float& beta = Float(0.5)) NOEXCEPT { return std::max(Float(0), std::min(Float(1), x * alpha + beta)); }
 		inline static Float df(const Float& x, const Float& alpha = Float(0.2), const Float& beta = Float(0.5)) NOEXCEPT { return (x > -beta / alpha && x < (Float(1) - beta) / alpha) ? alpha : Float(0); }
 		inline static VecFloat fVec(const VecFloat& x, const Float& alpha = Float(0.2), const Float& beta = Float(0.5)) NOEXCEPT { return max(Float(0), min(Float(1), x * alpha + beta)); }
 		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(0.2), const Float& beta = Float(0.5)) NOEXCEPT { return select(x > -beta / alpha & x < (Float(1) - beta) / alpha, alpha, Float(0)); }
-		inline static Activations Enum() NOEXCEPT { return Activations::HardLogistic; }
+		inline static Activations Enum() NOEXCEPT { return Activations::HardSigmoid; }
 	};
 
 	struct HardSwish
@@ -119,13 +120,13 @@ namespace dnn
 		inline static Activations Enum() NOEXCEPT { return Activations::Log; }
 	};
 
-	struct Logistic
+	struct Sigmoid
 	{
 		inline static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return (Float(1) / (Float(1) + std::exp(-x))); }
-		inline static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { const auto y = Logistic::f(x); return ( y * (Float(1) - y)); }
+		inline static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { const auto y = Sigmoid::f(x); return ( y * (Float(1) - y)); }
 		inline static VecFloat fVec(const VecFloat& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return (Float(1) / (Float(1) + exp(-x))); }
-		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { const auto y = Logistic::fVec(x); return y * (Float(1) - y); }
-		inline static Activations Enum() NOEXCEPT { return Activations::Logistic; }
+		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { const auto y = Sigmoid::fVec(x); return y * (Float(1) - y); }
+		inline static Activations Enum() NOEXCEPT { return Activations::Sigmoid; }
 	};
 	
 	struct SoftRelu
@@ -137,13 +138,13 @@ namespace dnn
 		inline static Activations Enum() NOEXCEPT { return Activations::SoftRelu; }
 	};
 
-	struct LogLogistic
+	struct LogSigmoid
 	{
 		inline static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return -SoftRelu::f(-x); }
 		inline static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return Float(1) / (std::exp(x) + Float(1)); }
 		inline static VecFloat fVec(const VecFloat& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return -SoftRelu::fVec(-x); }
 		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return Float(1) / (exp(x) + Float(1)); }
-		inline static Activations Enum() NOEXCEPT { return Activations::LogLogistic; }
+		inline static Activations Enum() NOEXCEPT { return Activations::LogSigmoid; }
 	};
 
 	struct Mish
@@ -246,7 +247,7 @@ namespace dnn
 			case Activations::Gelu:
 			case Activations::GeluErf:
 			case Activations::Log:
-			case Activations::Logistic:
+			case Activations::Sigmoid:
 			case Activations::Mish:
 			case Activations::Round:
 			case Activations::SoftSign:
@@ -266,11 +267,11 @@ namespace dnn
 				return alpha == Float(0) ? Float(1) : alpha;
 			case Activations::SoftPlus:
 				return alpha == Float(0) ? Float(20) : alpha;
-			case Activations::HardLogistic:
+			case Activations::HardSigmoid:
 				return alpha == Float(0) ? Float(0.2) : alpha;
 			case Activations::HardSwish:
 				return alpha == Float(0) ? (Float(1) / Float(6)) : alpha;			
-			case Activations::LogLogistic:
+			case Activations::LogSigmoid:
 				return Float(-1);
 			}
 
@@ -292,8 +293,8 @@ namespace dnn
 			case Activations::GeluErf:
 			case Activations::Linear:
 			case Activations::Log:
-			case Activations::LogLogistic:
-			case Activations::Logistic:
+			case Activations::LogSigmoid:
+			case Activations::Sigmoid:
 			case Activations::Mish:
 			case Activations::Pow:
 			case Activations::Relu:
@@ -306,7 +307,7 @@ namespace dnn
 			case Activations::Tanh:
 			case Activations::TanhExp:
 				break;
-			case Activations::HardLogistic:
+			case Activations::HardSigmoid:
 			case Activations::HardSwish:
 				return beta == Float(0) ? Float(0.5) : beta;
 			case Activations::SoftPlus:
@@ -400,7 +401,7 @@ namespace dnn
 				case Activations::GeluErf:
 					algorithm = dnnl::algorithm::eltwise_gelu_erf;
 					break;
-				case Activations::HardLogistic:
+				case Activations::HardSigmoid:
 					algorithm = dnnl::algorithm::eltwise_hardsigmoid;
 					break;
 				case Activations::HardSwish:
@@ -412,10 +413,10 @@ namespace dnn
 				case Activations::Log:
 					algorithm = dnnl::algorithm::eltwise_log;
 					break;
-				case Activations::Logistic:
+				case Activations::Sigmoid:
 					algorithm = dnnl::algorithm::eltwise_logistic;
 					break;
-				case Activations::LogLogistic:
+				case Activations::LogSigmoid:
 					algorithm = dnnl::algorithm::eltwise_soft_relu;
 					break;
 				case Activations::Mish:

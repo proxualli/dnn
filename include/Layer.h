@@ -138,7 +138,7 @@ namespace dnn
 		Average = 2,
 		AvgPooling = 3,
 		BatchNorm = 4,
-		BatchNormHardLogistic = 5,
+		BatchNormHardSigmoid = 5,
 		BatchNormHardSwish = 6,
 		BatchNormHardSwishDropout = 7,
 		BatchNormMish = 8,

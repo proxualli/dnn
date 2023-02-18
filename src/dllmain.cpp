@@ -270,7 +270,7 @@ extern "C" DNN_API void DNNGetImage(const UInt layerIndex, const Byte fillColor,
 		switch (model->Layers[layerIndex]->LayerType)
 		{
 			case LayerTypes::BatchNorm:
-			case LayerTypes::BatchNormHardLogistic:
+			case LayerTypes::BatchNormHardSigmoid:
 			case LayerTypes::BatchNormHardSwish:
 			case LayerTypes::BatchNormHardSwishDropout:
 			case LayerTypes::BatchNormMish:
@@ -526,9 +526,9 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, LayerInfo* info)
 		}
 		break;
 
-		case LayerTypes::BatchNormHardLogistic:
+		case LayerTypes::BatchNormHardSigmoid:
 		{
-			auto bn = dynamic_cast<BatchNormActivation<HardLogistic, LayerTypes::BatchNormHardLogistic>*>(model->Layers[layerIndex].get());
+			auto bn = dynamic_cast<BatchNormActivation<HardSigmoid, LayerTypes::BatchNormHardSigmoid>*>(model->Layers[layerIndex].get());
 			if (bn)
 			{
 				info->Scaling = bn->Scaling;

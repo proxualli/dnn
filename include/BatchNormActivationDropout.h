@@ -34,8 +34,8 @@ namespace dnn
 			case Activations::Gelu:
 			case Activations::GeluErf:
 			case Activations::Log:
-			case Activations::Logistic:
-			case Activations::LogLogistic:
+			case Activations::Sigmoid:
+			case Activations::LogSigmoid:
 			case Activations::Mish:
 			case Activations::Round:
 			case Activations::SoftSign:
@@ -55,7 +55,7 @@ namespace dnn
 				return alpha == Float(0) ? Float(1) : alpha;
 			case Activations::SoftPlus:
 				return alpha == Float(0) ? Float(20) : alpha;
-			case Activations::HardLogistic:
+			case Activations::HardSigmoid:
 				return alpha == Float(0) ? Float(0.2) : alpha;
 			case Activations::HardSwish:
 				return alpha == Float(0) ? (Float(1) / Float(6)) : alpha;
@@ -78,8 +78,8 @@ namespace dnn
 			case Activations::GeluErf:
 			case Activations::Linear:
 			case Activations::Log:
-			case Activations::LogLogistic:
-			case Activations::Logistic:
+			case Activations::LogSigmoid:
+			case Activations::Sigmoid:
 			case Activations::Mish:
 			case Activations::Pow:
 			case Activations::Relu:
@@ -94,7 +94,7 @@ namespace dnn
 				break;
 			case Activations::BoundedRelu:
 				return Float(0);
-			case Activations::HardLogistic:
+			case Activations::HardSigmoid:
 			case Activations::HardSwish:
 				return beta == Float(0) ? Float(0.5) : beta;
 			case Activations::SoftPlus:

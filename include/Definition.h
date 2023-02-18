@@ -308,7 +308,7 @@ namespace dnn
 						{
 						case Activations::BoundedRelu:
 						case Activations::Elu:
-						case Activations::HardLogistic:
+						case Activations::HardSigmoid:
 						case Activations::HardSwish:
 						case Activations::Linear:
 						case Activations::Swish:
@@ -320,8 +320,8 @@ namespace dnn
 						case Activations::Gelu:
 						case Activations::GeluErf:
 						case Activations::Log:
-						case Activations::Logistic:
-						case Activations::LogLogistic:
+						case Activations::Sigmoid:
+						case Activations::LogSigmoid:
 						case Activations::Mish:
 						case Activations::Pow:
 						case Activations::Round:
@@ -491,8 +491,8 @@ namespace dnn
 							model->Layers.push_back(std::make_unique<BatchNorm>(model->Device, model->Format, name, inputs, scaling, momentum, eps, biases));
 							model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsFillerMode, weightsGain, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesFillerMode, biasesGain, biasesScale, biasesLRM, biasesWDM);
 							break;
-						case LayerTypes::BatchNormHardLogistic:
-							model->Layers.push_back(std::make_unique<BatchNormActivation<HardLogistic, LayerTypes::BatchNormHardLogistic>>(model->Device, model->Format, name, inputs, scaling, alpha, beta, momentum, eps, biases));
+						case LayerTypes::BatchNormHardSigmoid:
+							model->Layers.push_back(std::make_unique<BatchNormActivation<HardSigmoid, LayerTypes::BatchNormHardSigmoid>>(model->Device, model->Format, name, inputs, scaling, alpha, beta, momentum, eps, biases));
 							model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsFillerMode, weightsGain, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesFillerMode, biasesGain, biasesScale, biasesLRM, biasesWDM);
 							break;
 						case LayerTypes::BatchNormHardSwish:
@@ -1011,7 +1011,7 @@ namespace dnn
 				switch (layerType)
 				{
 					case LayerTypes::BatchNorm:
-					case LayerTypes::BatchNormHardLogistic:
+					case LayerTypes::BatchNormHardSigmoid:
 					case LayerTypes::BatchNormHardSwish:
 					case LayerTypes::BatchNormHardSwishDropout:
 					case LayerTypes::BatchNormMish:
@@ -2318,10 +2318,10 @@ namespace dnn
 
 				switch (activationFunction)
 				{
-				case Activations::HardLogistic:
+				case Activations::HardSigmoid:
 				case Activations::Log:
-				case Activations::Logistic:
-				case Activations::LogLogistic:
+				case Activations::Sigmoid:
+				case Activations::LogSigmoid:
 					labelTrue = Float(1);
 					labelFalse = Float(0);
 					break;

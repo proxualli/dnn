@@ -543,6 +543,78 @@ namespace dnn
 
 		virtual ~Model() = default;
 		
+		Act GetActivation(Activations activation)
+		{
+			Act act;
+
+			act.test = true;
+
+			switch (activation)
+			{
+			case Activations::HardSigmoid:
+				act.f = &HardSigmoid::f;
+				act.df = &HardSigmoid::df;
+				act.fVec = &HardSigmoid::fVec;
+				act.dfVec = &HardSigmoid::dfVec;
+				act.alpha = Float(0.2);
+				act.beta = Float(0.5);
+				act.Enum = HardSigmoid::Enum();
+				act.algorithm = dnnl::algorithm::eltwise_hardsigmoid;
+				break;
+
+			case Activations::HardSwish:
+				act.f = &HardSwish::f;
+				act.df = &HardSwish::df;
+				act.fVec = &HardSwish::fVec;
+				act.dfVec = &HardSwish::dfVec;
+				act.alpha = Float(1) / Float(6);
+				act.beta = Float(0.5);
+				act.Enum = HardSwish::Enum();
+				act.algorithm = dnnl::algorithm::eltwise_hardswish;
+				break;
+
+			case Activations::Mish:
+				act.f = &Mish::f;
+				act.df = &Mish::df;
+				act.fVec = &Mish::fVec;
+				act.dfVec = &Mish::dfVec;
+				act.alpha = Float(0);
+				act.beta = Float(0);
+				act.Enum = Mish::Enum();
+				act.algorithm = dnnl::algorithm::eltwise_mish;
+				break;
+
+			case Activations::Relu:
+				act.f = &Relu::f;
+				act.df = &Relu::df;
+				act.fVec = &Relu::fVec;
+				act.dfVec = &Relu::dfVec;
+				act.alpha = Float(1);
+				act.beta = Float(0);
+				act.Enum = Relu::Enum();
+				act.algorithm = dnnl::algorithm::eltwise_relu;
+				break;
+
+			case Activations::Swish:
+				act.f = &Swish::f;
+				act.df = &Swish::df;
+				act.fVec = &Swish::fVec;
+				act.dfVec = &Swish::dfVec;
+				act.alpha = Float(1);
+				act.beta = Float(0);
+				act.Enum = Swish::Enum();
+				act.algorithm = dnnl::algorithm::eltwise_swish;
+				break;
+
+			default:
+				// default skip activation check
+				act.test = false;
+				break;
+			}
+
+			return act;
+		}
+
 		void CheckActivations()
 		{
 			if constexpr (TestActivations)
@@ -553,73 +625,9 @@ namespace dnn
 				{
 					if (magic_enum::enum_cast<Activations>(activation).has_value())
 					{
-						auto test = true;
-						Act act;
-												
-						switch (magic_enum::enum_cast<Activations>(activation).value())
-						{
-						case Activations::HardLogistic:
-							act.f = &HardLogistic::f;
-							act.df = &HardLogistic::df;
-							act.fVec = &HardLogistic::fVec;
-							act.dfVec = &HardLogistic::dfVec;
-							act.alpha = Float(0.2);
-							act.beta = Float(0.5);
-							act.Enum = HardLogistic::Enum();
-							act.algorithm = dnnl::algorithm::eltwise_hardsigmoid;
-							break;
+						auto act = GetActivation(magic_enum::enum_cast<Activations>(activation).value());
 
-						case Activations::HardSwish:
-							act.f = &HardSwish::f;
-							act.df = &HardSwish::df;
-							act.fVec = &HardSwish::fVec;
-							act.dfVec = &HardSwish::dfVec;
-							act.alpha = Float(1) / Float(6);
-							act.beta = Float(0.5);
-							act.Enum = HardSwish::Enum();
-							act.algorithm = dnnl::algorithm::eltwise_hardswish;
-							break;
-
-						case Activations::Mish:
-							act.f = &Mish::f;
-							act.df = &Mish::df;
-							act.fVec = &Mish::fVec;
-							act.dfVec = &Mish::dfVec;
-							act.alpha = Float(0);
-							act.beta = Float(0);
-							act.Enum = Mish::Enum();
-							act.algorithm = dnnl::algorithm::eltwise_mish;
-							break;
-
-						case Activations::Relu:
-							act.f = &Relu::f;
-							act.df = &Relu::df;
-							act.fVec = &Relu::fVec;
-							act.dfVec = &Relu::dfVec;
-							act.alpha = Float(1);
-							act.beta = Float(0);
-							act.Enum = Relu::Enum();
-							act.algorithm = dnnl::algorithm::eltwise_relu;
-							break;
-
-						case Activations::Swish:
-							act.f = &Swish::f;
-							act.df = &Swish::df;
-							act.fVec = &Swish::fVec;
-							act.dfVec = &Swish::dfVec;
-							act.alpha = Float(1);
-							act.beta = Float(0);
-							act.Enum = Swish::Enum();
-							act.algorithm = dnnl::algorithm::eltwise_swish;
-							break;
-						
-						default:
-							// default skip activation check
-							test = false;
-							break;
-						}
-
-						if (test)
+						if (act.test)
 						{
 							assert(act.Enum == magic_enum::enum_cast<Activations>(activation).value());
 
