@@ -67,8 +67,8 @@ namespace scripts
     {
         FRelu = 1,
         HardSwish = 10,
-        HardLogistic =  11,
-        Logistic = 12,
+        HardSigmoid =  11,
+        Sigmoid = 12,
         Mish = 16,
         Relu = 19,
         Swish = 25,
@@ -596,7 +596,7 @@ namespace scripts
                     Convolution(1, group + std::string("GAP"), DIV8(hiddenDim / expandRatio), 1, 1, 1, 1, 0, 0, true, group) +
                     BatchNormActivation(1, group + std::string("C1"), to_string(activation == scripts::Activations::FRelu ? scripts::Activations::HardSwish : activation), group) +
                     Convolution(2, group + std::string("B1"), hiddenDim, 1, 1, 1, 1, 0, 0, true, group) +
-                    BatchNormActivation(2, group + std::string("C2"), to_string(scripts::Activations::HardLogistic), group) +
+                    BatchNormActivation(2, group + std::string("C2"), to_string(scripts::Activations::HardSigmoid), group) +
                     Multiply(In("B", C) + std::string(",") + group + std::string("B2"), group) +
 
                     Convolution(C + 1, group + std::string("CM"), DIV8(outputChannels), 1, 1, 1, 1, 0, 0) +
@@ -640,7 +640,7 @@ namespace scripts
                     Convolution(1, group + std::string("GAP"), DIV8(hiddenDim / expandRatio), 1, 1, 1, 1, 0, 0, true, group) +
                     BatchNormActivation(1, group + std::string("C1"), to_string(activation == scripts::Activations::FRelu ? scripts::Activations::HardSwish : activation), group) +
                     Convolution(2, group + std::string("B1"), hiddenDim, 1, 1, 1, 1, 0, 0, true, group) +
-                    BatchNormActivation(2, group + std::string("C2"), to_string(scripts::Activations::HardLogistic), group) +
+                    BatchNormActivation(2, group + std::string("C2"), to_string(scripts::Activations::HardSigmoid), group) +
                     Multiply(In("B", C + 1) + std::string(",") + group + std::string("B2"), group) +
 
                     Convolution(C + 2, group + std::string("CM"), DIV8(outputChannels), 1, 1, 1, 1, 0, 0) +
@@ -691,7 +691,7 @@ namespace scripts
                     Convolution(1, group + std::string("GAP"), DIV8(channels / 4), 1, 1, 1, 1, 0, 0, true, group) +
                     BatchNormActivation(1, group + std::string("C1"), to_string(activation == scripts::Activations::FRelu ? scripts::Activations::HardSwish : activation), group) +
                     Convolution(2, group + std::string("B1"), channels, 1, 1, 1, 1, 0, 0, true, group) +
-                    BatchNormActivation(2, group + std::string("C2"), to_string(scripts::Activations::HardLogistic), group) +
+                    BatchNormActivation(2, group + std::string("C2"), to_string(scripts::Activations::HardSigmoid), group) +
                     Multiply(In("B", C + 3) + std::string(",") + group + std::string("B2"), group) +
                     Concat(A + 1, In("LCS", A) + std::string(",") + group + std::string("CM")) :
                     Concat(A + 1, In("LCS", A) + std::string(",") + In("B", C + 3));
@@ -932,7 +932,7 @@ namespace scripts
                             Convolution(1, group + "GAP", DIV8((6 * W) / 4), 1, 1, 1, 1, 0, 0, false, group) +
                             BatchNormActivation(1, group + "C1", to_string(p.Activation == Activations::FRelu ? Activations::HardSwish : p.Activation), group) +
                             Convolution(2, group + "B1", DIV8(6 * W), 1, 1, 1, 1, 0, 0, false, group) +
-                            BatchNormActivation(2, group + "C2", "HardLogistic", group) +
+                            BatchNormActivation(2, group + "C2", "HardSigmoid", group) +
                             Multiply(In("B", C + 1) + "," + group + "B2", group) +
                             Convolution(C + 2, group + "CM", DIV8(W), 1, 1, 1, 1, 0, 0) :
                             Convolution(C + 2, In("B", C + 1), DIV8(W), 1, 1, 1, 1, 0, 0);
@@ -959,7 +959,7 @@ namespace scripts
                             Convolution(1, group + "GAP", DIV8((6 * W) / 4), 1, 1, 1, 1, 0, 0, true, group) +
                             BatchNormActivation(1, group + "C1", to_string(p.Activation == Activations::FRelu ? Activations::HardSwish : p.Activation), group) +
                             Convolution(2, group + "B1", DIV8(6 * W), 1, 1, 1, 1, 0, 0, true, group) +
-                            BatchNormActivation(2, group + "C2", "HardLogistic", group) +
+                            BatchNormActivation(2, group + "C2", "HardSigmoid", group) +
                             Multiply(In("B", C + 1) + "," + group + "B2", group) +
                             Convolution(C + 2, group + "CM", DIV8(W), 1, 1, 1, 1, 0, 0) :
                             Convolution(C + 2, In("B", C + 1), DIV8(W), 1, 1, 1, 1, 0, 0);
