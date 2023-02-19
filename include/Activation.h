@@ -872,13 +872,16 @@ namespace dnn
 								}
 							}
 							
-							auto message = std::string("");
-							for (auto submsg : lmsg)
-								message.append(submsg + nwl);
+							if (!ret.load())
+							{
+								auto message = std::string("");
+								for (auto submsg : lmsg)
+									message.append(submsg + nwl);
 
-							lock.lock();
-							msg.push_back(message);
-							lock.unlock();
+								lock.lock();
+								msg.push_back(message);
+								lock.unlock();
+							}
 						}
 					}
 				});
