@@ -100,9 +100,9 @@ namespace dnn
 	struct Linear
 	{
 		inline static Float f(const Float& x, const Float& alpha = Float(1), const Float& beta = Float(0)) NOEXCEPT { return x * alpha + beta; }
-		inline static Float df(const Float& x, const Float& alpha = Float(1), const Float& beta = Float(0)) NOEXCEPT { return Float(1); }
+		inline static Float df(const Float& x, const Float& alpha = Float(1), const Float& beta = Float(0)) NOEXCEPT { return alpha; }
 		inline static VecFloat fVec(const VecFloat& x, const Float& alpha = Float(1), const Float& beta = Float(0)) NOEXCEPT { return x * alpha + beta; }
-		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(1), const Float& beta = Float(0)) NOEXCEPT { return VecFloat(1); }
+		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(1), const Float& beta = Float(0)) NOEXCEPT { return VecFloat(alpha); }
 		inline static Activations Enum() NOEXCEPT { return Activations::Linear; }
 	};
 
@@ -236,7 +236,6 @@ namespace dnn
 		bool test;
 	};
 
-	
 
 	class Activation final : public Layer
 	{
@@ -465,7 +464,7 @@ namespace dnn
 				act.beta = Float(0);
 				act.Enum = LogSigmoid::Enum();
 				act.algorithm = dnnl::algorithm::eltwise_soft_relu;
-				act.test = false;
+				act.test = true;
 				break;
 
 			case Activations::Mish:
