@@ -106,7 +106,7 @@ namespace
 	constexpr auto Kahan = true;
 	constexpr auto Reference = true;
 	constexpr auto SingleMeanVariancePass = false;
-	constexpr auto TestActivations = false;
+	constexpr auto TestActivations = true;
 	constexpr auto TestBatchNormalization = false;
 	
 	typedef float Float;
@@ -543,6 +543,19 @@ namespace
 		return select(generator.random8f() < p, Float(1), Float(0));
 #elif defined(DNN_SSE42) || defined(DNN_SSE41)
 		return select(generator.random4f() < p, Float(1), Float(0));
+#endif
+	}
+
+	static auto UniformVecFloat(const Float low = Float(0), const Float high = Float(1)) NOEXCEPT
+	{
+		static thread_local auto generator = Ranvec1(3, Seed<int>(), static_cast<int>(std::hash<std::thread::id>()(std::this_thread::get_id())));
+
+#if defined(DNN_AVX512BW) || defined(DNN_AVX512)
+		return ((—low + generator.random16f()) / (-low + high));
+#elif defined(DNN_AVX2) || defined(DNN_AVX)
+		return ((-low + generator.random8f()) / (-low + high));
+#elif defined(DNN_SSE42) || defined(DNN_SSE41)
+		return ((—low + generator.random4f()) / (-low + high));
 #endif
 	}
 

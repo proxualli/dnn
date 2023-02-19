@@ -578,13 +578,14 @@ namespace dnn
 #endif							
 							const auto size = UInt(N * C * H * W);
 							const auto part = (size / 2ull) + (size / 4ull);
+
 							const auto minLimit = (act.alpha != Float(0)) ? (-act.beta / act.alpha) : Float(-1.5);
 							const auto maxLimit = (act.alpha != Float(0)) ? ((Float(1) - act.beta) / act.alpha) : Float(1.5);
 							
 							auto input = FloatVector(size);
-							for (auto i = 0ull; i < size; i++)
-								input[i] = UniformReal<Float>(minLimit - Float(1.5), maxLimit + Float(1.5));
-
+							for (auto i = 0ull; i < size; i+=VectorSize)
+								UniformVecFloat(minLimit - Float(1.5), maxLimit + Float(1.5)).store_a(&input[i]);
+								
 							input[0] = minLimit;
 							input[1] = maxLimit;
 							input[2] = minLimit - Float(0.0001);
@@ -647,7 +648,7 @@ namespace dnn
 
 								if (fwdErr)
 								{
-									int index = horizontal_find_first(fwdRet);
+									const int index = horizontal_find_first(fwdRet);
 									msg.push_back(
 										std::string(activation) + std::string(" forward pass not passed") + nwl +
 										std::string("Input:") + tab + std::to_string(input[i + index]) + nwl +
@@ -662,7 +663,7 @@ namespace dnn
 								
 								if (bwdErr)
 								{
-									int index = horizontal_find_first(bwdRet);
+									const int index = horizontal_find_first(bwdRet);
 									msg.push_back(
 										std::string(activation) + std::string(" backward pass not passed") + nwl +
 										std::string("Input:") + tab + std::to_string(input[i + index]) + nwl +
