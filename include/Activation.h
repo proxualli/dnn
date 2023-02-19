@@ -648,12 +648,11 @@ namespace dnn
 			return act;
 		}
 
-		static bool CheckActivations(std::vector<std::string>& msg, const Float errorLimit = Float(0.0005))
+		static bool CheckActivations(std::string& msg, const Float errorLimit = Float(0.0005))
 		{
-			msg = std::vector<std::string>();
-			std::atomic<bool> ret = true;
-			ret.store(true);
-
+			msg = std::string();
+			std::atomic<bool> ret(true);
+			
 			if constexpr (TestActivations)
 			{
 				std::mutex lock;
@@ -669,7 +668,7 @@ namespace dnn
 
 						if (act.test)
 						{
-							auto lmsg = std::vector<std::string>();
+							auto lmsg = std::string();
 
 							const auto N = dnnl::memory::dim(64);
 							const auto C = dnnl::memory::dim(64);
@@ -761,42 +760,42 @@ namespace dnn
 							catch (const std::invalid_argument& e)
 							{
 								ret.store(false);
-								lmsg.push_back(e.what());
+								lmsg.append(e.what());
 							}
 							catch (const std::length_error& e)
 							{
 								ret.store(false);
-								lmsg.push_back(e.what());
+								lmsg.append(e.what());
 							}
 							catch (const std::logic_error& e)
 							{
 								ret.store(false);
-								lmsg.push_back(e.what());
+								lmsg.append(e.what());
 							}
 							catch (const std::underflow_error& e)
 							{
 								ret.store(false);
-								lmsg.push_back(e.what());
+								lmsg.append(e.what());
 							}
 							catch (const std::overflow_error& e)
 							{
 								ret.store(false);
-								lmsg.push_back(e.what());
+								lmsg.append(e.what());
 							}
 							catch (const std::range_error& e)
 							{
 								ret.store(false);
-								lmsg.push_back(e.what());
+								lmsg.append(e.what());
 							}
 							catch (const std::runtime_error& e)
 							{
 								ret.store(false);
-								lmsg.push_back(e.what());
+								lmsg.append(e.what());
 							}
 							catch (const std::exception& e)
 							{
 								ret.store(false);
-								lmsg.push_back(e.what());
+								lmsg.append(e.what());
 							}
 
 							if (ret.load())
@@ -836,7 +835,7 @@ namespace dnn
 										const auto ref = outputFwdRef[index];
 										const auto out = outputFwd[index];
 
-										lmsg.push_back(
+										lmsg.append(
 											std::string(activation) + std::string(" forward pass not passed") + nwl +
 											std::string("In:") + tab + std::to_string(in) + nwl +
 											std::string("Ref:") + tab + std::to_string(ref) + nwl +
@@ -855,7 +854,7 @@ namespace dnn
 										const auto ref = outputBwdRef[index];
 										const auto out = outputBwd[index];
 
-										lmsg.push_back(
+										lmsg.append(
 											std::string(activation) + std::string(" backward pass not passed") + nwl +
 											std::string("In:") + tab + std::to_string(in) + nwl +
 											std::string("Ref:") + tab + std::to_string(ref) + nwl +
@@ -874,12 +873,8 @@ namespace dnn
 							
 							if (!ret.load())
 							{
-								auto message = std::string("");
-								for (auto submsg : lmsg)
-									message.append(submsg + nwl);
-
 								lock.lock();
-								msg.push_back(message);
+								msg.append(lmsg);
 								lock.unlock();
 							}
 						}

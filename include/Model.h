@@ -1466,7 +1466,7 @@ namespace dnn
 				TaskState.store(TaskStates::Running);
 				State.store(States::Idle);
 
-				auto msg = std::vector<std::string>();
+				auto msg = std::string();
 				if (!Activation::CheckActivations(msg))
 				{
 					State.store(States::Completed);
