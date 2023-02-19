@@ -692,7 +692,7 @@ namespace dnn
 														
 							auto input = FloatVector(size);
 							for (auto i = 0ull; i < size; i += VectorSize)
-									UniformVecFloat(minLimit - margin, maxLimit + margin).store_a(&input[i]);
+								UniformVecFloat(minLimit - margin, maxLimit + margin).store_a(&input[i]);
 
 							auto outputFwd = FloatVector(size);
 							auto outputBwd = FloatVector(size);
@@ -712,72 +712,89 @@ namespace dnn
 									outputBwd[i] = act.df(input[i], act.alpha, act.beta);
 								}
 
-								/*int fe = fetestexcept(FE_ALL_EXCEPT);
+								/*
+								
+								int fe = fetestexcept(FE_ALL_EXCEPT);
 
 								if (fe & FE_INEXACT)
 								{
-									ret.store(false);
-									lmsg.push_back(std::string("    FE_INEXACT raised"));
+									if (ret.load())
+										ret.store(false);
+									lmsg.append(std::string("    FE_INEXACT raised"));
 								}
 								if (fe & FE_INVALID)
 								{
-									ret.store(false);
-									lmsg.push_back(std::string("    FE_INVALID raised"));
+									if (ret.load())
+										ret.store(false);
+									lmsg.append(std::string("    FE_INVALID raised"));
 								}
 								if (fe & FE_OVERFLOW)
 								{
-									ret.store(false);
-									lmsg.push_back(std::string("    FE_OVERFLOW raised"));
+									if (ret.load())
+										ret.store(false);
+									lmsg.append(std::string("    FE_OVERFLOW raised"));
 								}
 								if (fe & FE_DIVBYZERO)
 								{
-									ret.store(false);
-									lmsg.push_back(std::string("    FE_DIVBYZERO raised"));
+									if (ret.load())
+										ret.store(false);
+									lmsg.append(std::string("    FE_DIVBYZERO raised"));
 								}
 								if (fe & FE_UNDERFLOW)
 								{
-									ret.store(false);
-									lmsg.push_back(std::string("    FE_UNDERFLOW raised"));
-								}*/
+									if (ret.load())
+										ret.store(false);
+									lmsg.append(std::string("    FE_UNDERFLOW raised"));
+								}
+
+								*/
 							}
 							catch (const std::invalid_argument& e)
 							{
-								ret.store(false);
+								if (ret.load())
+									ret.store(false);
 								lmsg.append(e.what());
 							}
 							catch (const std::length_error& e)
 							{
-								ret.store(false);
+								if (ret.load())
+									ret.store(false);
 								lmsg.append(e.what());
 							}
 							catch (const std::logic_error& e)
 							{
-								ret.store(false);
+								if (ret.load())
+									ret.store(false);
 								lmsg.append(e.what());
 							}
 							catch (const std::underflow_error& e)
 							{
-								ret.store(false);
+								if (ret.load())
+									ret.store(false);
 								lmsg.append(e.what());
 							}
 							catch (const std::overflow_error& e)
 							{
-								ret.store(false);
+								if (ret.load())
+									ret.store(false);
 								lmsg.append(e.what());
 							}
 							catch (const std::range_error& e)
 							{
-								ret.store(false);
+								if (ret.load())
+									ret.store(false);
 								lmsg.append(e.what());
 							}
 							catch (const std::runtime_error& e)
 							{
-								ret.store(false);
+								if (ret.load())
+									ret.store(false);
 								lmsg.append(e.what());
 							}
 							catch (const std::exception& e)
 							{
-								ret.store(false);
+								if (ret.load())
+									ret.store(false);
 								lmsg.append(e.what());
 							}
 
