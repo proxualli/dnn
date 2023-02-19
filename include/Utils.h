@@ -864,14 +864,16 @@ namespace
 		std::reverse(startIndex, endIndex);
 	}
 
-	inline static Float RelativeError(Float reference, Float actual)
+	auto RelativeError(const Float reference, const Float actual)
 	{
 		return std::abs(reference - actual) / std::max(std::numeric_limits<Float>().min(), std::abs(reference));
 	}
 
-	inline static Float Median(FloatVector& array)
+	/*
+	auto Float Median(FloatVector& array)
 	{
 		std::nth_element(array.begin(), array.begin() + array.size() / 2, array.end());
 		return array[array.size() / 2];
 	}
+	*/
 }
