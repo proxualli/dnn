@@ -648,12 +648,12 @@ namespace dnn
 
 								if (fwdErr)
 								{
-									const int index = horizontal_find_first(fwdRet);
+									const auto index = i + horizontal_find_first(fwdRet);
 									msg.push_back(
 										std::string(activation) + std::string(" forward pass not passed") + nwl +
-										std::string("Input:") + tab + std::to_string(input[i + index]) + nwl +
-										std::string("Reference:") + tab + std::to_string(outputFwdRef[i + index]) + nwl +
-										std::string("Output:") + tab + std::to_string(outputFwd[i + index]) + nwl);
+										std::string("Input:") + tab + std::to_string(input[index]) + nwl +
+										std::string("Reference:") + tab + std::to_string(outputFwdRef[index]) + nwl +
+										std::string("Output:") + tab + std::to_string(outputFwd[index]) + nwl);
 								}
 
 								const auto bwdRef = VecFloat().load_a(&outputBwdRef[i]);
@@ -663,12 +663,12 @@ namespace dnn
 								
 								if (bwdErr)
 								{
-									const int index = horizontal_find_first(bwdRet);
+									const auto index = i + horizontal_find_first(bwdRet);
 									msg.push_back(
 										std::string(activation) + std::string(" backward pass not passed") + nwl +
-										std::string("Input:") + tab + std::to_string(input[i + index]) + nwl +
-										std::string("Reference:") + tab + std::to_string(outputBwdRef[i + index]) + nwl +
-										std::string("Output:") + tab + std::to_string(outputBwd[i + index]) + nwl);
+										std::string("Input:") + tab + std::to_string(input[index]) + nwl +
+										std::string("Reference:") + tab + std::to_string(outputBwdRef[index]) + nwl +
+										std::string("Output:") + tab + std::to_string(outputBwd[index]) + nwl);
 								}
 
 								if (fwdErr || bwdErr)
