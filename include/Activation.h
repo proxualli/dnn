@@ -70,6 +70,15 @@ namespace dnn
 		inline static Activations Enum() NOEXCEPT { return Activations::Elu; }
 	};
 
+	struct Exp
+	{
+		inline static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return std::exp(x); }
+		inline static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return std::exp(x); }
+		inline static VecFloat fVec(const VecFloat& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return exp(x); }
+		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return exp(x); }
+		inline static Activations Enum() NOEXCEPT { return Activations::Exp; }
+	};
+
 	struct HardSigmoid
 	{
 		inline static Float f(const Float& x, const Float& alpha = Float(0.2), const Float& beta = Float(0.5)) NOEXCEPT { return std::max(Float(0), std::min(Float(1), x * alpha + beta)); }
@@ -90,10 +99,10 @@ namespace dnn
 
 	struct Linear
 	{
-		inline static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return x * alpha + beta; }
-		inline static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return Float(1); }
-		inline static VecFloat fVec(const VecFloat& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return x * alpha + beta; }
-		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return VecFloat(1); }
+		inline static Float f(const Float& x, const Float& alpha = Float(1), const Float& beta = Float(0)) NOEXCEPT { return x * alpha + beta; }
+		inline static Float df(const Float& x, const Float& alpha = Float(1), const Float& beta = Float(0)) NOEXCEPT { return Float(1); }
+		inline static VecFloat fVec(const VecFloat& x, const Float& alpha = Float(1), const Float& beta = Float(0)) NOEXCEPT { return x * alpha + beta; }
+		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(1), const Float& beta = Float(0)) NOEXCEPT { return VecFloat(1); }
 		inline static Activations Enum() NOEXCEPT { return Activations::Linear; }
 	};
 
@@ -104,6 +113,15 @@ namespace dnn
 		inline static VecFloat fVec(const VecFloat& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return log(x); }
 		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return Float(1) / x; }
 		inline static Activations Enum() NOEXCEPT { return Activations::Log; }
+	};
+
+	struct Pow
+	{
+		inline static Float f(const Float& x, const Float& alpha = Float(1), const Float& beta = Float(0)) NOEXCEPT { return alpha * std::pow(x, beta); }
+		inline static Float df(const Float& x, const Float& alpha = Float(1), const Float& beta = Float(0)) NOEXCEPT { return alpha * beta * std::pow(x, beta - Float(1)); }
+		inline static VecFloat fVec(const VecFloat& x, const Float& alpha = Float(1), const Float& beta = Float(0)) NOEXCEPT { return alpha * pow(x, beta); }
+		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(1), const Float& beta = Float(0)) NOEXCEPT { return alpha * beta * pow(x, beta - Float(1)); }
+		inline static Activations Enum() NOEXCEPT { return Activations::Pow; }
 	};
 
 	struct Sigmoid
@@ -117,10 +135,10 @@ namespace dnn
 	
 	struct SoftRelu
 	{
-		inline static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return std::log(Float(1) + std::exp(x)); }
-		inline static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return Float(1) / (Float(1) + std::exp(-x)); }
-		inline static VecFloat fVec(const VecFloat& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return log(Float(1) + exp(x)); }
-		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return Float(1) / (Float(1) + exp(-x)); }
+		inline static Float f(const Float& x, const Float& alpha = Float(1), const Float& beta = Float(0)) NOEXCEPT { return std::log(Float(1) + std::exp(alpha * x)) / alpha; }
+		inline static Float df(const Float& x, const Float& alpha = Float(1), const Float& beta = Float(0)) NOEXCEPT { return Float(1) / (Float(1) + std::exp(-alpha * x)); }
+		inline static VecFloat fVec(const VecFloat& x, const Float& alpha = Float(1), const Float& beta = Float(0)) NOEXCEPT { return log(Float(1) + exp(alpha * x)) / alpha; }
+		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(1), const Float& beta = Float(0)) NOEXCEPT { return Float(1) / (Float(1) + exp(-alpha * x)); }
 		inline static Activations Enum() NOEXCEPT { return Activations::SoftRelu; }
 	};
 
@@ -330,6 +348,18 @@ namespace dnn
 
 			switch (activation)
 			{
+			case Activations::Abs:
+				act.f = &Abs::f;
+				act.df = &Abs::df;
+				act.fVec = &Abs::fVec;
+				act.dfVec = &Abs::dfVec;
+				act.alpha = Float(0);
+				act.beta = Float(0);
+				act.Enum = Abs::Enum();
+				act.algorithm = dnnl::algorithm::eltwise_abs;
+				act.test = true;
+				break;
+
 			case Activations::ASinh:
 				act.f = &ASinh::f;
 				act.df = &ASinh::df;
@@ -351,6 +381,30 @@ namespace dnn
 				act.beta = Float(0);
 				act.Enum = BoundedRelu::Enum();
 				act.algorithm = dnnl::algorithm::eltwise_clip;;
+				act.test = true;
+				break;
+
+			case Activations::Elu:
+				act.f = &Elu::f;
+				act.df = &Elu::df;
+				act.fVec = &Elu::fVec;
+				act.dfVec = &Elu::dfVec;
+				act.alpha = Float(1);
+				act.beta = Float(0);
+				act.Enum = Elu::Enum();
+				act.algorithm = dnnl::algorithm::eltwise_elu;
+				act.test = true;
+				break;
+
+			case Activations::Exp:
+				act.f = &Exp::f;
+				act.df = &Exp::df;
+				act.fVec = &Exp::fVec;
+				act.dfVec = &Exp::dfVec;
+				act.alpha = Float(0);
+				act.beta = Float(0);
+				act.Enum = Exp::Enum();
+				act.algorithm = dnnl::algorithm::eltwise_exp;
 				act.test = false;
 				break;
 
@@ -378,6 +432,42 @@ namespace dnn
 				act.test = true;
 				break;
 
+			case Activations::Linear:
+				act.f = &Linear::f;
+				act.df = &Linear::df;
+				act.fVec = &Linear::fVec;
+				act.dfVec = &Linear::dfVec;
+				act.alpha = Float(1);
+				act.beta = Float(0);
+				act.Enum = Linear::Enum();
+				act.algorithm = dnnl::algorithm::eltwise_linear;
+				act.test = true;
+				break;
+
+			case Activations::Log:
+				act.f = &Log::f;
+				act.df = &Log::df;
+				act.fVec = &Log::fVec;
+				act.dfVec = &Log::dfVec;
+				act.alpha = Float(0);
+				act.beta = Float(0);
+				act.Enum = Log::Enum();
+				act.algorithm = dnnl::algorithm::eltwise_log;
+				act.test = true;
+				break;
+
+			case Activations::LogSigmoid:
+				act.f = &LogSigmoid::f;
+				act.df = &LogSigmoid::df;
+				act.fVec = &LogSigmoid::fVec;
+				act.dfVec = &LogSigmoid::dfVec;
+				act.alpha = Float(-1);
+				act.beta = Float(0);
+				act.Enum = LogSigmoid::Enum();
+				act.algorithm = dnnl::algorithm::eltwise_soft_relu;
+				act.test = false;
+				break;
+
 			case Activations::Mish:
 				act.f = &Mish::f;
 				act.df = &Mish::df;
@@ -387,6 +477,18 @@ namespace dnn
 				act.beta = Float(0);
 				act.Enum = Mish::Enum();
 				act.algorithm = dnnl::algorithm::eltwise_mish;
+				act.test = true;
+				break;
+
+			case Activations::Pow:
+				act.f = &Pow::f;
+				act.df = &Pow::df;
+				act.fVec = &Pow::fVec;
+				act.dfVec = &Pow::dfVec;
+				act.alpha = Float(1);
+				act.beta = Float(0);
+				act.Enum = Pow::Enum();
+				act.algorithm = dnnl::algorithm::eltwise_pow;
 				act.test = true;
 				break;
 
@@ -414,6 +516,18 @@ namespace dnn
 				act.test = false;
 				break;
 
+			case Activations::SoftRelu:
+				act.f = &SoftRelu::f;
+				act.df = &SoftRelu::df;
+				act.fVec = &SoftRelu::fVec;
+				act.dfVec = &SoftRelu::dfVec;
+				act.alpha = Float(1);
+				act.beta = Float(0);
+				act.Enum = SoftRelu::Enum();
+				act.algorithm = dnnl::algorithm::eltwise_soft_relu;
+				act.test = true;
+				break;
+
 			case Activations::SoftSign:
 				act.f = &SoftSign::f;
 				act.df = &SoftSign::df;
@@ -435,6 +549,18 @@ namespace dnn
 				act.beta = Float(0);
 				act.Enum = Swish::Enum();
 				act.algorithm = dnnl::algorithm::eltwise_swish;
+				act.test = true;
+				break;
+
+			case Activations::Tanh:
+				act.f = &Tanh::f;
+				act.df = &Tanh::df;
+				act.fVec = &Tanh::fVec;
+				act.dfVec = &Tanh::dfVec;
+				act.alpha = Float(0);
+				act.beta = Float(0);
+				act.Enum = Tanh::Enum();
+				act.algorithm = dnnl::algorithm::eltwise_tanh;
 				act.test = true;
 				break;
 

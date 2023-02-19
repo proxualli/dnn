@@ -606,77 +606,155 @@ namespace dnn
 
 							auto outputFwd = FloatVector(size);
 							auto outputBwd = FloatVector(size);
-
-							for (auto i = 0ull; i < part; i += VectorSize)
-							{
-								act.fVec(VecFloat().load_a(&input[i]), act.alpha, act.beta).store_a(&outputFwd[i]);
-								act.dfVec(VecFloat().load_a(&input[i]), act.alpha, act.beta).store_a(&outputBwd[i]);
-							}
-							for (auto i = part; i < size; i++)
-							{
-								outputFwd[i] = act.f(input[i], act.alpha, act.beta);
-								outputBwd[i] = act.df(input[i], act.alpha, act.beta);
-							}
-
-							auto outputFwdRef = FloatVector(size);
-							auto outputBwdRef = FloatVector(size, Float(1));
-
-							auto srcMem = dnnl::memory(*DstMemDesc, eng, input.data());
-							auto dstMem = dnnl::memory(*DstMemDesc, eng, outputFwdRef.data());
-#ifdef DNN_CACHE_PRIMITIVES
-							fwd->execute(stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DST, dstMem } });
-#else
-							dnnl::eltwise_forward(*fwdDesc).execute(stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DST, dstMem } });
-#endif
-							stream.wait();
-
 							
-							auto diffSrcMem = dnnl::memory(*DstMemDesc, eng, outputBwdRef.data());
-#ifdef DNN_CACHE_PRIMITIVES
-							bwd->execute(stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DIFF_DST, diffSrcMem }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
-#else
-							dnnl::eltwise_backward(*bwdDesc).execute(stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DIFF_DST, diffSrcMem }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
-#endif
-							stream.wait();
-
-							for (auto i = 0ull; i < size; i += VectorSize)
+							try
 							{
-								const auto fwdRef = VecFloat().load_a(&outputFwdRef[i]);
-								const auto fwd = VecFloat().load_a(&outputFwd[i]);
-								const auto fwdRet = ((fwdRef - errorLimit) > fwd) | ((fwdRef + errorLimit) < fwd);
-								const bool fwdErr = horizontal_max(fwdRet);
-
-								if (fwdErr)
+								for (auto i = 0ull; i < part; i += VectorSize)
 								{
-									const auto index = i + horizontal_find_first(fwdRet);
-									msg.push_back(
-										std::string(activation) + std::string(" forward pass not passed") + nwl +
-										std::string("Input:") + tab + std::to_string(input[index]) + nwl +
-										std::string("Reference:") + tab + std::to_string(outputFwdRef[index]) + nwl +
-										std::string("Output:") + tab + std::to_string(outputFwd[index]) + nwl);
+									act.fVec(VecFloat().load_a(&input[i]), act.alpha, act.beta).store_a(&outputFwd[i]);
+									act.dfVec(VecFloat().load_a(&input[i]), act.alpha, act.beta).store_a(&outputBwd[i]);
 								}
-
-								const auto bwdRef = VecFloat().load_a(&outputBwdRef[i]);
-								const auto bwd = VecFloat().load_a(&outputBwd[i]);
-								const auto bwdRet = ((bwdRef - errorLimit) > bwd) | ((bwdRef + errorLimit) < bwd);
-								const bool bwdErr = horizontal_max(fwdRet);
-								
-								if (bwdErr)
+								for (auto i = part; i < size; i++)
 								{
-									const auto index = i + horizontal_find_first(bwdRet);
-									msg.push_back(
-										std::string(activation) + std::string(" backward pass not passed") + nwl +
-										std::string("Input:") + tab + std::to_string(input[index]) + nwl +
-										std::string("Reference:") + tab + std::to_string(outputBwdRef[index]) + nwl +
-										std::string("Output:") + tab + std::to_string(outputBwd[index]) + nwl);
+									outputFwd[i] = act.f(input[i], act.alpha, act.beta);
+									outputBwd[i] = act.df(input[i], act.alpha, act.beta);
 								}
-
-								if (fwdErr || bwdErr)
+							}
+							catch (const std::invalid_argument& e)
+							{
+								if (ret.load())
 								{
-									if (ret.load())
-										ret.store(false);
+									ret.store(false);
+									msg.push_back(e.what());
+								}
+							}
+							catch (const std::length_error& e)
+							{
+								if (ret.load())
+								{
+									ret.store(false);
+									msg.push_back(e.what());
+								}
+							}
+							catch (const std::logic_error& e)
+							{
+								if (ret.load())
+								{
+									ret.store(false);
+									msg.push_back(e.what());
+								}
+							}
+							catch (const std::underflow_error& e)
+							{
+								if (ret.load())
+								{
+									ret.store(false);
+									msg.push_back(e.what());
+								}
+							}
+							catch (const std::overflow_error& e) 
+							{
+								if (ret.load())
+								{
+									ret.store(false);
+									msg.push_back(e.what());
+								}
+							}
+							catch (const std::range_error& e)
+							{
+								if (ret.load())
+								{
+									ret.store(false);
+									msg.push_back(e.what());
+								}
+							}
+							catch (const std::runtime_error& e)
+							{
+								if (ret.load())
+								{
+									ret.store(false);
+									msg.push_back(e.what());
+								}
+							}
+							catch (const std::exception& e)
+							{
+								if (ret.load())
+								{
+									ret.store(false);
+									msg.push_back(e.what());
+								}
+							}
 
-									break;
+							if (ret.load())
+							{
+								auto outputFwdRef = FloatVector(size);
+								auto outputBwdRef = FloatVector(size, Float(1));
+
+								auto srcMem = dnnl::memory(*DstMemDesc, eng, input.data());
+								auto dstMem = dnnl::memory(*DstMemDesc, eng, outputFwdRef.data());
+#ifdef DNN_CACHE_PRIMITIVES
+								fwd->execute(stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DST, dstMem } });
+#else
+								dnnl::eltwise_forward(*fwdDesc).execute(stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DST, dstMem } });
+#endif
+								stream.wait();
+
+
+								auto diffSrcMem = dnnl::memory(*DstMemDesc, eng, outputBwdRef.data());
+#ifdef DNN_CACHE_PRIMITIVES
+								bwd->execute(stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DIFF_DST, diffSrcMem }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
+#else
+								dnnl::eltwise_backward(*bwdDesc).execute(stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DIFF_DST, diffSrcMem }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
+#endif
+								stream.wait();
+
+								for (auto i = 0ull; i < size; i += VectorSize)
+								{
+									const auto fwdRef = VecFloat().load_a(&outputFwdRef[i]);
+									const auto fwd = VecFloat().load_a(&outputFwd[i]);
+									const auto fwdRet = ((fwdRef - errorLimit) > fwd) | ((fwdRef + errorLimit) < fwd);
+									const bool fwdErr = horizontal_or(fwdRet);
+
+									if (fwdErr)
+									{
+										const auto index = i + horizontal_find_first(fwdRet);
+										const auto in = input[index];
+										const auto ref = outputFwdRef[index];
+										const auto out = outputFwd[index];
+
+										msg.push_back(
+											std::string(activation) + std::string(" forward pass not passed") + nwl +
+											std::string("In:") + tab + std::to_string(in) + nwl +
+											std::string("Ref:") + tab + std::to_string(ref) + nwl +
+											std::string("Out:") + tab + std::to_string(out));
+									}
+
+									const auto bwdRef = VecFloat().load_a(&outputBwdRef[i]);
+									const auto bwd = VecFloat().load_a(&outputBwd[i]);
+									const auto bwdRet = ((bwdRef - errorLimit) > bwd) | ((bwdRef + errorLimit) < bwd);
+									const bool bwdErr = horizontal_or(fwdRet);
+
+									if (bwdErr)
+									{
+										const auto index = i + horizontal_find_first(bwdRet);
+										const auto in = input[index];
+										const auto ref = outputBwdRef[index];
+										const auto out = outputBwd[index];
+
+										msg.push_back(
+											std::string(activation) + std::string(" backward pass not passed") + nwl +
+											std::string("In:") + tab + std::to_string(in) + nwl +
+											std::string("Ref:") + tab + std::to_string(ref) + nwl +
+											std::string("Out:") + tab + std::to_string(out));
+									}
+
+									if (fwdErr || bwdErr)
+									{
+										if (ret.load())
+											ret.store(false);
+
+										break;
+									}
 								}
 							}
 						}
