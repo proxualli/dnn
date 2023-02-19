@@ -387,6 +387,20 @@ namespace dnn
 				act.test = true;
 				break;
 
+			case Activations::Clip:
+				act.alpha = Float(0);
+				act.beta = Float(0);
+				act.algorithm = dnnl::algorithm::eltwise_clip;
+				act.test = false;
+				break;
+
+			case Activations::ClipV2:
+				act.alpha = Float(0);
+				act.beta = Float(0);
+				act.algorithm = dnnl::algorithm::eltwise_clip_v2;
+				act.test = false;
+				break;
+
 			case Activations::Elu:
 				act.f = &Elu::f;
 				act.df = &Elu::df;
@@ -411,15 +425,19 @@ namespace dnn
 				act.test = true;
 				break;
 
-			case Activations::GeluTanh:
-				act.algorithm = dnnl::algorithm::eltwise_gelu_tanh;
-				act.test = false;
-				break;
-
 			case Activations::GeluErf:
+				act.alpha = Float(0);
+				act.beta = Float(0);
 				act.algorithm = dnnl::algorithm::eltwise_gelu_erf;
 				act.test = false;
 				break;
+
+			case Activations::GeluTanh:
+				act.alpha = Float(0);
+				act.beta = Float(0);
+				act.algorithm = dnnl::algorithm::eltwise_gelu_tanh;
+				act.test = false;
+				break;			
 
 			case Activations::HardSigmoid:
 				act.f = &HardSigmoid::f;
@@ -527,6 +545,18 @@ namespace dnn
 				act.Enum = Selu::Enum();
 				act.algorithm = dnnl::algorithm::eltwise_linear;
 				act.test = false;
+				break;
+
+			case Activations::Sigmoid:
+				act.f = &Sigmoid::f;
+				act.df = &Sigmoid::df;
+				act.fVec = &Sigmoid::fVec;
+				act.dfVec = &Sigmoid::dfVec;
+				act.alpha = Float(0);
+				act.beta = Float(0);
+				act.Enum = Sigmoid::Enum();
+				act.algorithm = dnnl::algorithm::eltwise_logistic;
+				act.test = true;
 				break;
 
 			case Activations::SoftPlus:
