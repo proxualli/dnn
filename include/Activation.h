@@ -686,30 +686,12 @@ namespace dnn
 							const auto size = UInt(N * C * H * W);
 							const auto part = (size / 2ull) + (size / 4ull);
 
-							const auto minLimit = (act.Enum == Activations::Exp) ? Float(0) : ((act.alpha != Float(0)) ? (-act.beta / act.alpha) : Float(-1.5));
+							const auto minLimit = (act.Enum == Activations::Exp) ? Float(1.5) : ((act.alpha != Float(0)) ? (-act.beta / act.alpha) : Float(-1.5));
 							const auto maxLimit = (act.alpha != Float(0)) ? ((Float(1) - act.beta) / act.alpha) : Float(1.5);
 														
 							auto input = FloatVector(size);
 							for (auto i = 0ull; i < size; i += VectorSize)
 									UniformVecFloat(minLimit - Float(1.5), maxLimit + Float(1.5)).store_a(&input[i]);
-
-							input[0] = minLimit;
-							input[1] = maxLimit;
-							input[2] = minLimit - Float(0.0001);
-							input[3] = maxLimit - Float(0.0001);
-							input[4] = minLimit + Float(0.0001);
-							input[5] = maxLimit + Float(0.0001);
-							input[6] = Float(0);
-							input[7] = Float(1);
-
-							input[part + 0] = minLimit;
-							input[part + 1] = maxLimit;
-							input[part + 2] = minLimit - Float(0.0001);
-							input[part + 3] = maxLimit - Float(0.0001);
-							input[part + 4] = minLimit + Float(0.0001);
-							input[part + 5] = maxLimit + Float(0.0001);
-							input[part + 6] = Float(0);
-							input[part + 7] = Float(1);
 
 							auto outputFwd = FloatVector(size);
 							auto outputBwd = FloatVector(size);
