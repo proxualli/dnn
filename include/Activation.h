@@ -12,8 +12,8 @@ namespace dnn
 		ClipV2 = 4,			//
 		Elu = 5,			//
 		Exp = 6,			//
-		Gelu = 7,
-		GeluErf = 8,
+		GeluErf = 7,
+		GeluTanh = 8,
 		HardSigmoid = 9,
 		HardSwish = 10,
 		Linear = 11,
@@ -64,10 +64,10 @@ namespace dnn
 
 	struct Elu 
 	{
-		inline static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return x > Float(0) ? x : alpha * (std::exp(x) - Float(1)); }
-		inline static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return x > Float(0) ? Float(1) : alpha * std::exp(x); }
-		inline static VecFloat fVec(const VecFloat& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return select(x > Float(0), x, alpha * (exp(x) - Float(1))); }
-		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return select(x > Float(0), Float(1), alpha * exp(x)); }
+		inline static Float f(const Float& x, const Float& alpha = Float(1), const Float& beta = Float(0)) NOEXCEPT { return x > Float(0) ? x : alpha * (std::exp(x) - Float(1)); }
+		inline static Float df(const Float& x, const Float& alpha = Float(1), const Float& beta = Float(0)) NOEXCEPT { return x > Float(0) ? Float(1) : alpha * std::exp(x); }
+		inline static VecFloat fVec(const VecFloat& x, const Float& alpha = Float(1), const Float& beta = Float(0)) NOEXCEPT { return select(x > Float(0), x, alpha * (exp(x) - Float(1))); }
+		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(1), const Float& beta = Float(0)) NOEXCEPT { return select(x > Float(0), Float(1), alpha * exp(x)); }
 		inline static Activations Enum() NOEXCEPT { return Activations::Elu; }
 	};
 
@@ -264,12 +264,13 @@ namespace dnn
 			case Activations::Clip:
 			case Activations::ClipV2:
 			case Activations::Exp:
-			case Activations::Gelu:
 			case Activations::GeluErf:
+			case Activations::GeluTanh:
 			case Activations::Log:
-			case Activations::Sigmoid:
 			case Activations::Mish:
 			case Activations::Round:
+			case Activations::Selu:
+			case Activations::Sigmoid:
 			case Activations::SoftSign:
 			case Activations::Sqrt:
 			case Activations::Square:
@@ -309,16 +310,17 @@ namespace dnn
 			case Activations::ClipV2:
 			case Activations::Elu:
 			case Activations::Exp:
-			case Activations::Gelu:
 			case Activations::GeluErf:
+			case Activations::GeluTanh:
 			case Activations::Linear:
 			case Activations::Log:
 			case Activations::LogSigmoid:
-			case Activations::Sigmoid:
 			case Activations::Mish:
 			case Activations::Pow:
 			case Activations::Relu:
 			case Activations::Round:
+			case Activations::Selu:
+			case Activations::Sigmoid:
 			case Activations::SoftRelu:
 			case Activations::SoftSign:
 			case Activations::Sqrt:
@@ -406,6 +408,16 @@ namespace dnn
 				act.beta = Float(0);
 				act.Enum = Exp::Enum();
 				act.algorithm = dnnl::algorithm::eltwise_exp;
+				act.test = true;
+				break;
+
+			case Activations::GeluTanh:
+				act.algorithm = dnnl::algorithm::eltwise_gelu_tanh;
+				act.test = false;
+				break;
+
+			case Activations::GeluErf:
+				act.algorithm = dnnl::algorithm::eltwise_gelu_erf;
 				act.test = false;
 				break;
 
@@ -631,10 +643,10 @@ namespace dnn
 							const auto H = dnnl::memory::dim(64);
 							const auto W = dnnl::memory::dim(64);
 
-							auto DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ N, C, H, W }), dnnl::memory::data_type::f32, PlainFmt));
+							auto memDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ N, C, H, W }), dnnl::memory::data_type::f32, PlainFmt));
 
-							auto fwdDesc = std::make_unique<dnnl::eltwise_forward::primitive_desc>(dnnl::eltwise_forward::primitive_desc(eng, dnnl::prop_kind::forward, act.algorithm, *DstMemDesc, *DstMemDesc, (act.Enum == Activations::BoundedRelu) ? act.beta : act.alpha, (act.Enum == Activations::BoundedRelu) ? act.alpha : act.beta));
-							auto bwdDesc = std::make_unique<dnnl::eltwise_backward::primitive_desc>(dnnl::eltwise_backward::primitive_desc(eng, act.algorithm, *DstMemDesc, *DstMemDesc, *DstMemDesc, (act.Enum == Activations::BoundedRelu) ? act.beta : act.alpha, (act.Enum == Activations::BoundedRelu) ? act.alpha : act.beta, *fwdDesc));
+							auto fwdDesc = std::make_unique<dnnl::eltwise_forward::primitive_desc>(dnnl::eltwise_forward::primitive_desc(eng, dnnl::prop_kind::forward, act.algorithm, *memDesc, *memDesc, (act.Enum == Activations::BoundedRelu) ? act.beta : act.alpha, (act.Enum == Activations::BoundedRelu) ? act.alpha : act.beta));
+							auto bwdDesc = std::make_unique<dnnl::eltwise_backward::primitive_desc>(dnnl::eltwise_backward::primitive_desc(eng, act.algorithm, *memDesc, *memDesc, *memDesc, (act.Enum == Activations::BoundedRelu) ? act.beta : act.alpha, (act.Enum == Activations::BoundedRelu) ? act.alpha : act.beta, *fwdDesc));
 #ifdef DNN_CACHE_PRIMITIVES
 							auto fwd = std::make_unique<dnnl::eltwise_forward>(dnnl::eltwise_forward(*fwdDesc));
 							auto bwd = std::make_unique<dnnl::eltwise_backward>(dnnl::eltwise_backward(*bwdDesc));
@@ -753,8 +765,8 @@ namespace dnn
 								auto outputFwdRef = FloatVector(size);
 								auto outputBwdRef = FloatVector(size, Float(1));
 
-								auto srcMem = dnnl::memory(*DstMemDesc, eng, input.data());
-								auto dstMem = dnnl::memory(*DstMemDesc, eng, outputFwdRef.data());
+								auto srcMem = dnnl::memory(*memDesc, eng, input.data());
+								auto dstMem = dnnl::memory(*memDesc, eng, outputFwdRef.data());
 #ifdef DNN_CACHE_PRIMITIVES
 								fwd->execute(stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DST, dstMem } });
 #else
@@ -763,7 +775,7 @@ namespace dnn
 								stream.wait();
 
 
-								auto diffSrcMem = dnnl::memory(*DstMemDesc, eng, outputBwdRef.data());
+								auto diffSrcMem = dnnl::memory(*memDesc, eng, outputBwdRef.data());
 #ifdef DNN_CACHE_PRIMITIVES
 								bwd->execute(stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DIFF_DST, diffSrcMem }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
 #else
@@ -877,6 +889,7 @@ namespace dnn
 			switch (ActivationFunction)
 			{
 				case Activations::ASinh:
+				case Activations::Selu:
 				case Activations::SoftPlus:
 				case Activations::SoftSign:
 				case Activations::TanhExp:
@@ -902,11 +915,11 @@ namespace dnn
 				case Activations::Exp:
 					algorithm = dnnl::algorithm::eltwise_exp;
 					break;
-				case Activations::Gelu:
-					algorithm = dnnl::algorithm::eltwise_gelu_tanh;
-					break;
 				case Activations::GeluErf:
 					algorithm = dnnl::algorithm::eltwise_gelu_erf;
+					break;
+				case Activations::GeluTanh:
+					algorithm = dnnl::algorithm::eltwise_gelu_tanh;
 					break;
 				case Activations::HardSigmoid:
 					algorithm = dnnl::algorithm::eltwise_hardsigmoid;

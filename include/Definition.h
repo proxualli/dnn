@@ -317,14 +317,15 @@ namespace dnn
 						case Activations::Abs:
 						case Activations::ASinh:
 						case Activations::Exp:
-						case Activations::Gelu:
 						case Activations::GeluErf:
+						case Activations::GeluTanh:
 						case Activations::Log:
-						case Activations::Sigmoid:
 						case Activations::LogSigmoid:
 						case Activations::Mish:
 						case Activations::Pow:
 						case Activations::Round:
+						case Activations::Selu:
+						case Activations::Sigmoid:
 						case Activations::SoftPlus:
 						case Activations::SoftRelu:
 						case Activations::SoftSign:

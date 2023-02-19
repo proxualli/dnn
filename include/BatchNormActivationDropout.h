@@ -31,13 +31,14 @@ namespace dnn
 			case Activations::Clip:
 			case Activations::ClipV2:
 			case Activations::Exp:
-			case Activations::Gelu:
 			case Activations::GeluErf:
+			case Activations::GeluTanh:
 			case Activations::Log:
-			case Activations::Sigmoid:
 			case Activations::LogSigmoid:
 			case Activations::Mish:
 			case Activations::Round:
+			case Activations::Selu:
+			case Activations::Sigmoid:
 			case Activations::SoftSign:
 			case Activations::Sqrt:
 			case Activations::Square:
@@ -74,16 +75,17 @@ namespace dnn
 			case Activations::ClipV2:
 			case Activations::Elu:
 			case Activations::Exp:
-			case Activations::Gelu:
 			case Activations::GeluErf:
+			case Activations::GeluTanh:
 			case Activations::Linear:
 			case Activations::Log:
 			case Activations::LogSigmoid:
-			case Activations::Sigmoid:
 			case Activations::Mish:
 			case Activations::Pow:
 			case Activations::Relu:
 			case Activations::Round:
+			case Activations::Selu:
+			case Activations::Sigmoid:
 			case Activations::SoftRelu:
 			case Activations::SoftSign:
 			case Activations::Sqrt:
