@@ -68,6 +68,7 @@
 #include <locale>
 #include <clocale>
 #include <memory>
+#include <mutex>
 #include <numeric>
 #include <random>
 #include <sstream>

@@ -656,11 +656,12 @@ namespace dnn
 
 			if constexpr (TestActivations)
 			{
+				std::mutex lock;
 				const auto eng = dnnl::engine(dnnl::engine::kind::cpu, 0);
 				auto stream = dnnl::stream(eng);
-
 				auto activations = magic_enum::enum_names<Activations>();
-				std::for_each(std::execution::par, activations.begin(), activations.end(), [&msg, &errorLimit, &ret, &eng, &stream](const std::string_view& activation)
+
+				std::for_each(std::execution::par, activations.begin(), activations.end(), [&msg, &errorLimit, &ret, &lock, &eng, &stream](const std::string_view& activation)
 				{
 					if (magic_enum::enum_cast<Activations>(activation).has_value())
 					{
@@ -760,7 +761,6 @@ namespace dnn
 							catch (const std::invalid_argument& e)
 							{
 								ret.store(false);
-								ret.load();
 								lmsg.push_back(e.what());
 							}
 							catch (const std::length_error& e)
@@ -875,8 +875,10 @@ namespace dnn
 							auto message = std::string("");
 							for (auto submsg : lmsg)
 								message.append(submsg + nwl);
-							
+
+							lock.lock();
 							msg.push_back(message);
+							lock.unlock();
 						}
 					}
 				});
