@@ -55,9 +55,12 @@
 #include <array>
 #include <atomic>
 //#include <bit>
-#include <cstdio>
-#include <cstring>
-#include <cmath>
+
+//#include <cfenv>
+//include <cmath>
+//#include <cstdio>
+//#include <cstring>
+
 #include <exception>
 #include <execution>
 #include <filesystem>
@@ -79,6 +82,8 @@
 #include <unordered_map>
 #include <vector>
 #include <utility>
+
+// #pragma fenv_access (on)
 
 #include "dnnl.hpp"
 #include "dnnl_debug.h"

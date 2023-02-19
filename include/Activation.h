@@ -383,7 +383,7 @@ namespace dnn
 				act.alpha = Float(6);
 				act.beta = Float(0);
 				act.Enum = BoundedRelu::Enum();
-				act.algorithm = dnnl::algorithm::eltwise_clip;;
+				act.algorithm = dnnl::algorithm::eltwise_clip;
 				act.test = true;
 				break;
 
@@ -668,6 +668,8 @@ namespace dnn
 
 						if (act.test)
 						{
+							auto lmsg = std::vector<std::string>();
+
 							const auto N = dnnl::memory::dim(64);
 							const auto C = dnnl::memory::dim(64);
 							const auto H = dnnl::memory::dim(64);
@@ -684,12 +686,12 @@ namespace dnn
 							const auto size = UInt(N * C * H * W);
 							const auto part = (size / 2ull) + (size / 4ull);
 
-							const auto minLimit = (act.alpha != Float(0)) ? (-act.beta / act.alpha) : Float(-1.5);
+							const auto minLimit = (act.Enum == Activations::Exp) ? Float(0) : ((act.alpha != Float(0)) ? (-act.beta / act.alpha) : Float(-1.5));
 							const auto maxLimit = (act.alpha != Float(0)) ? ((Float(1) - act.beta) / act.alpha) : Float(1.5);
-
+														
 							auto input = FloatVector(size);
 							for (auto i = 0ull; i < size; i += VectorSize)
-								UniformVecFloat(minLimit - Float(1.5), maxLimit + Float(1.5)).store_a(&input[i]);
+									UniformVecFloat(minLimit - Float(1.5), maxLimit + Float(1.5)).store_a(&input[i]);
 
 							input[0] = minLimit;
 							input[1] = maxLimit;
@@ -714,6 +716,8 @@ namespace dnn
 
 							try
 							{
+								//std::feclearexcept(FE_ALL_EXCEPT);
+
 								for (auto i = 0ull; i < part; i += VectorSize)
 								{
 									act.fVec(VecFloat().load_a(&input[i]), act.alpha, act.beta).store_a(&outputFwd[i]);
@@ -724,70 +728,74 @@ namespace dnn
 									outputFwd[i] = act.f(input[i], act.alpha, act.beta);
 									outputBwd[i] = act.df(input[i], act.alpha, act.beta);
 								}
+
+								/*int fe = fetestexcept(FE_ALL_EXCEPT);
+
+								if (fe & FE_INEXACT)
+								{
+									ret.store(false);
+									lmsg.push_back(std::string("    FE_INEXACT raised"));
+								}
+								if (fe & FE_INVALID)
+								{
+									ret.store(false);
+									lmsg.push_back(std::string("    FE_INVALID raised"));
+								}
+								if (fe & FE_OVERFLOW)
+								{
+									ret.store(false);
+									lmsg.push_back(std::string("    FE_OVERFLOW raised"));
+								}
+								if (fe & FE_DIVBYZERO)
+								{
+									ret.store(false);
+									lmsg.push_back(std::string("    FE_DIVBYZERO raised"));
+								}
+								if (fe & FE_UNDERFLOW)
+								{
+									ret.store(false);
+									lmsg.push_back(std::string("    FE_UNDERFLOW raised"));
+								}*/
 							}
 							catch (const std::invalid_argument& e)
 							{
-								if (ret.load())
-								{
-									ret.store(false);
-									msg.push_back(e.what());
-								}
+								ret.store(false);
+								lmsg.push_back(e.what());
 							}
 							catch (const std::length_error& e)
 							{
-								if (ret.load())
-								{
-									ret.store(false);
-									msg.push_back(e.what());
-								}
+								ret.store(false);
+								lmsg.push_back(e.what());
 							}
 							catch (const std::logic_error& e)
 							{
-								if (ret.load())
-								{
-									ret.store(false);
-									msg.push_back(e.what());
-								}
+								ret.store(false);
+								lmsg.push_back(e.what());
 							}
 							catch (const std::underflow_error& e)
 							{
-								if (ret.load())
-								{
-									ret.store(false);
-									msg.push_back(e.what());
-								}
+								ret.store(false);
+								lmsg.push_back(e.what());
 							}
 							catch (const std::overflow_error& e)
 							{
-								if (ret.load())
-								{
-									ret.store(false);
-									msg.push_back(e.what());
-								}
+								ret.store(false);
+								lmsg.push_back(e.what());
 							}
 							catch (const std::range_error& e)
 							{
-								if (ret.load())
-								{
-									ret.store(false);
-									msg.push_back(e.what());
-								}
+								ret.store(false);
+								lmsg.push_back(e.what());
 							}
 							catch (const std::runtime_error& e)
 							{
-								if (ret.load())
-								{
-									ret.store(false);
-									msg.push_back(e.what());
-								}
+								ret.store(false);
+								lmsg.push_back(e.what());
 							}
 							catch (const std::exception& e)
 							{
-								if (ret.load())
-								{
-									ret.store(false);
-									msg.push_back(e.what());
-								}
+								ret.store(false);
+								lmsg.push_back(e.what());
 							}
 
 							if (ret.load())
@@ -827,7 +835,7 @@ namespace dnn
 										const auto ref = outputFwdRef[index];
 										const auto out = outputFwd[index];
 
-										msg.push_back(
+										lmsg.push_back(
 											std::string(activation) + std::string(" forward pass not passed") + nwl +
 											std::string("In:") + tab + std::to_string(in) + nwl +
 											std::string("Ref:") + tab + std::to_string(ref) + nwl +
@@ -846,7 +854,7 @@ namespace dnn
 										const auto ref = outputBwdRef[index];
 										const auto out = outputBwd[index];
 
-										msg.push_back(
+										lmsg.push_back(
 											std::string(activation) + std::string(" backward pass not passed") + nwl +
 											std::string("In:") + tab + std::to_string(in) + nwl +
 											std::string("Ref:") + tab + std::to_string(ref) + nwl +
@@ -862,6 +870,12 @@ namespace dnn
 									}
 								}
 							}
+							
+							auto message = std::string("");
+							for each (std::string submsg in lmsg)
+								message.append(submsg + nwl);
+							
+							msg.push_back(message);
 						}
 					}
 				});
