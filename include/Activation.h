@@ -23,15 +23,16 @@ namespace dnn
 		Pow = 15,
 		Relu = 16,			//
 		Round = 17,
-		Sigmoid = 18,		//
-		SoftPlus = 19,
-		SoftRelu = 20,
-		SoftSign = 21,
-		Sqrt = 22,			//
-		Square = 23,
-		Swish = 24,
-		Tanh = 25,			//
-		TanhExp = 26
+		Selu = 18,
+		Sigmoid = 19,		//
+		SoftPlus = 20,
+		SoftRelu = 21,
+		SoftSign = 22,
+		Sqrt = 23,			//
+		Square = 24,
+		Swish = 25,
+		Tanh = 26,			//
+		TanhExp = 27
 	};
 
 	struct Abs
@@ -175,6 +176,7 @@ namespace dnn
 		inline static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return x > Float(0) ? Float(1.0507009873554804934193349852946) : Float(1.7580993408473768599402175208123) * std::exp(x); }
 		inline static VecFloat fVec(const VecFloat& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return Float(1.0507009873554804934193349852946) * select(x > Float(0), x, Float(1.6732632423543772848170429916717) * (exp(x) - Float(1))); }
 		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return select(x > Float(0), Float(1.0507009873554804934193349852946), Float(1.7580993408473768599402175208123) * exp(x)); }
+		inline static Activations Enum() NOEXCEPT { return Activations::Selu; }
 	};
 
 	struct SoftPlus
@@ -503,6 +505,18 @@ namespace dnn
 				act.test = true;
 				break;
 
+			case Activations::Selu:
+				act.f = &Selu::f;
+				act.df = &Selu::df;
+				act.fVec = &Selu::fVec;
+				act.dfVec = &Selu::dfVec;
+				act.alpha = Float(20);
+				act.beta = Float(1);
+				act.Enum = Selu::Enum();
+				act.algorithm = dnnl::algorithm::eltwise_linear;
+				act.test = false;
+				break;
+
 			case Activations::SoftPlus:
 				act.f = &SoftPlus::f;
 				act.df = &SoftPlus::df;
@@ -763,6 +777,7 @@ namespace dnn
 			switch (ActivationFunction)
 			{
 			case Activations::ASinh:
+			case Activations::Selu:
 			case Activations::SoftPlus:
 			case Activations::SoftSign:
 			case Activations::TanhExp:
@@ -1021,6 +1036,7 @@ namespace dnn
 			switch (ActivationFunction)
 			{
 			case Activations::ASinh:
+			case Activations::Selu:
 			case Activations::SoftPlus:
 			case Activations::SoftSign:
 			case Activations::TanhExp:
