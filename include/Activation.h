@@ -760,6 +760,7 @@ namespace dnn
 							catch (const std::invalid_argument& e)
 							{
 								ret.store(false);
+								ret.load();
 								lmsg.push_back(e.what());
 							}
 							catch (const std::length_error& e)
@@ -794,7 +795,7 @@ namespace dnn
 							}
 							catch (const std::exception& e)
 							{
-								ret.store(false);
+								ret.store(false, std::memory_order_release);
 								lmsg.push_back(e.what());
 							}
 
@@ -872,7 +873,7 @@ namespace dnn
 							}
 							
 							auto message = std::string("");
-							for each (std::string submsg in lmsg)
+							for (auto submsg : lmsg)
 								message.append(submsg + nwl);
 							
 							msg.push_back(message);
