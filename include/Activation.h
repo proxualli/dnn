@@ -795,7 +795,7 @@ namespace dnn
 							}
 							catch (const std::exception& e)
 							{
-								ret.store(false, std::memory_order_release);
+								ret.store(false);
 								lmsg.push_back(e.what());
 							}
 
