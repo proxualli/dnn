@@ -650,7 +650,7 @@ namespace dnn
 
 		static bool CheckActivations(std::string& msg, const Float errorLimit = Float(0.0005))
 		{
-			msg = std::string();
+			msg = std::string("");
 			std::atomic<bool> ret(true);
 			
 			if constexpr (TestActivations)
@@ -720,31 +720,31 @@ namespace dnn
 								{
 									if (ret.load())
 										ret.store(false);
-									lmsg.append(std::string("    FE_INEXACT raised"));
+									lmsg.append(std::string("FE_INEXACT"));
 								}
 								if (fe & FE_INVALID)
 								{
 									if (ret.load())
 										ret.store(false);
-									lmsg.append(std::string("    FE_INVALID raised"));
+									lmsg.append(std::string("FE_INVALID"));
 								}
 								if (fe & FE_OVERFLOW)
 								{
 									if (ret.load())
 										ret.store(false);
-									lmsg.append(std::string("    FE_OVERFLOW raised"));
+									lmsg.append(std::string("FE_OVERFLOW"));
 								}
 								if (fe & FE_DIVBYZERO)
 								{
 									if (ret.load())
 										ret.store(false);
-									lmsg.append(std::string("    FE_DIVBYZERO raised"));
+									lmsg.append(std::string("FE_DIVBYZERO"));
 								}
 								if (fe & FE_UNDERFLOW)
 								{
 									if (ret.load())
 										ret.store(false);
-									lmsg.append(std::string("    FE_UNDERFLOW raised"));
+									lmsg.append(std::string("FE_UNDERFLOW"));
 								}
 
 								*/
@@ -753,49 +753,49 @@ namespace dnn
 							{
 								if (ret.load())
 									ret.store(false);
-								lmsg.append(e.what());
+								lmsg.append(std::string(e.what()));
 							}
 							catch (const std::length_error& e)
 							{
 								if (ret.load())
 									ret.store(false);
-								lmsg.append(e.what());
+								lmsg.append(std::string(e.what()));
 							}
 							catch (const std::logic_error& e)
 							{
 								if (ret.load())
 									ret.store(false);
-								lmsg.append(e.what());
+								lmsg.append(std::string(e.what()));
 							}
 							catch (const std::underflow_error& e)
 							{
 								if (ret.load())
 									ret.store(false);
-								lmsg.append(e.what());
+								lmsg.append(std::string(e.what()));
 							}
 							catch (const std::overflow_error& e)
 							{
 								if (ret.load())
 									ret.store(false);
-								lmsg.append(e.what());
+								lmsg.append(std::string(e.what()));
 							}
 							catch (const std::range_error& e)
 							{
 								if (ret.load())
 									ret.store(false);
-								lmsg.append(e.what());
+								lmsg.append(std::string(e.what()));
 							}
 							catch (const std::runtime_error& e)
 							{
 								if (ret.load())
 									ret.store(false);
-								lmsg.append(e.what());
+								lmsg.append(std::string(e.what()));
 							}
 							catch (const std::exception& e)
 							{
 								if (ret.load())
 									ret.store(false);
-								lmsg.append(e.what());
+								lmsg.append(std::string(e.what()));
 							}
 
 							if (ret.load())

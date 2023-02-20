@@ -55,6 +55,7 @@
 #include <array>
 #include <atomic>
 //#include <bit>
+#include <cmath>
 #include <cstring>
 #include <exception>
 #include <execution>
