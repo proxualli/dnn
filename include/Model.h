@@ -1469,6 +1469,11 @@ namespace dnn
 				auto msg = std::string();
 				if (!Activation::CheckActivations(msg))
 				{
+#ifndef NDEBUG
+					cimg_library::CImg<unsigned char> visu(640, 480, 1, 3, 0);
+					cimg_library::CImgDisplay disp(visu, msg.c_str());
+					disp.display(visu).wait();
+#endif
 					State.store(States::Completed);
 					return;
 				};

@@ -55,6 +55,7 @@
 #include <array>
 #include <atomic>
 //#include <bit>
+#include <cfenv>
 #include <cmath>
 #include <cstring>
 #include <exception>
@@ -80,7 +81,13 @@
 #include <vector>
 #include <utility>
 
-// #pragma fenv_access (on)
+#ifndef NDEBUG
+#ifdef _WIN32
+#pragma fenv_access (on)
+#else
+#pragma STDC FENV_ACCESS on
+#endif
+#endif
 
 #include "dnnl.hpp"
 #include "dnnl_debug.h"
@@ -108,7 +115,11 @@ namespace
 	constexpr auto Kahan = true;
 	constexpr auto Reference = true;
 	constexpr auto SingleMeanVariancePass = false;
+#ifndef NDEBUG
 	constexpr auto TestActivations = true;
+#else
+	constexpr auto TestActivations = false;
+#endif
 	constexpr auto TestBatchNormalization = false;
 	
 	typedef float Float;
@@ -559,14 +570,14 @@ namespace
 			throw std::invalid_argument("Parameter out of range in UniformVecFloat function");
 #endif
 		static thread_local auto generator = Ranvec1(3, Seed<int>(), static_cast<int>(std::hash<std::thread::id>()(std::this_thread::get_id())));
-		const auto scale = max - min;
-
+		const auto scale = std::abs(max - min);
+	
 #if defined(DNN_AVX512BW) || defined(DNN_AVX512)
-		return (generator.random16f() * scale) - min;
+		return (generator.random16f() * scale) + min;
 #elif defined(DNN_AVX2) || defined(DNN_AVX)
-		return (generator.random8f() * scale) - min;
+		return (generator.random8f() * scale) + min;
 #elif defined(DNN_SSE42) || defined(DNN_SSE41)
-		return (generator.random4f() * scale) - min;
+		return (generator.random4f() * scale) + min;
 #endif
 	}
 
@@ -875,12 +886,12 @@ namespace
 		std::reverse(startIndex, endIndex);
 	}
 
+	/*
 	auto RelativeError(const Float reference, const Float actual)
 	{
 		return std::abs(reference - actual) / std::max(std::numeric_limits<Float>().min(), std::abs(reference));
 	}
-
-	/*
+	
 	auto Float Median(FloatVector& array)
 	{
 		std::nth_element(array.begin(), array.begin() + array.size() / 2, array.end());

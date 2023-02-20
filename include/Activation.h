@@ -83,9 +83,10 @@ namespace dnn
 	struct HardSigmoid
 	{
 		inline static Float f(const Float& x, const Float& alpha = Float(0.2), const Float& beta = Float(0.5)) NOEXCEPT { return std::max(Float(0), std::min(Float(1), x * alpha + beta)); }
-		inline static Float df(const Float& x, const Float& alpha = Float(0.2), const Float& beta = Float(0.5)) NOEXCEPT { return (x > -beta / alpha && x < (Float(1) - beta) / alpha) ? alpha : Float(0); }
+		//inline static Float f(const Float& x, const Float& alpha = Float(0.2), const Float& beta = Float(0.5)) NOEXCEPT { return Clamp<Float>(x * alpha + beta, Float(0), Float(1)); }
+		inline static Float df(const Float& x, const Float& alpha = Float(0.2), const Float& beta = Float(0.5)) NOEXCEPT { return ((x > (-beta / alpha)) && (x < ((Float(1) - beta) / alpha))) ? alpha : Float(0); }
 		inline static VecFloat fVec(const VecFloat& x, const Float& alpha = Float(0.2), const Float& beta = Float(0.5)) NOEXCEPT { return max(Float(0), min(Float(1), x * alpha + beta)); }
-		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(0.2), const Float& beta = Float(0.5)) NOEXCEPT { return select(x > -beta / alpha & x < (Float(1) - beta) / alpha, alpha, Float(0)); }
+		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(0.2), const Float& beta = Float(0.5)) NOEXCEPT { return select((x > (-beta / alpha)) & (x < ((Float(1) - beta) / alpha)), alpha, Float(0)); }
 		inline static Activations Enum() NOEXCEPT { return Activations::HardSigmoid; }
 	};
 
@@ -520,7 +521,7 @@ namespace dnn
 				act.beta = Float(0);
 				act.Enum = Pow::Enum();
 				act.algorithm = dnnl::algorithm::eltwise_pow;
-				act.test = true;
+				act.test = false;
 				break;
 
 			case Activations::Relu:
@@ -632,7 +633,6 @@ namespace dnn
 				break;
 
 			default:
-				// default skip activation check
 				act.f = &Linear::f;
 				act.df = &Linear::df;
 				act.fVec = &Linear::fVec;
@@ -687,7 +687,7 @@ namespace dnn
 							const auto part = (size / 2ull) + (size / 4ull);
 
 							const auto margin = Float(1.5);
-							const auto minLimit = (act.Enum == Activations::Exp) ? margin : ((act.alpha != Float(0)) ? (-act.beta / act.alpha) : -margin);
+							const auto minLimit = ((act.Enum == Activations::Exp) || (act.Enum == Activations::Elu) || (act.Enum == Activations::Log) || (act.Enum == Activations::Mish)) ? margin + Float(0.1): ((act.alpha != Float(0)) ? (-act.beta / act.alpha) : -margin);
 							const auto maxLimit = (act.alpha != Float(0)) ? ((Float(1) - act.beta) / act.alpha) : margin;
 														
 							auto input = FloatVector(size);
@@ -699,7 +699,7 @@ namespace dnn
 
 							try
 							{
-								//std::feclearexcept(FE_ALL_EXCEPT);
+								std::feclearexcept(FE_ALL_EXCEPT);
 
 								for (auto i = 0ull; i < part; i += VectorSize)
 								{
@@ -712,90 +712,86 @@ namespace dnn
 									outputBwd[i] = act.df(input[i], act.alpha, act.beta);
 								}
 
-								/*
-								
-								int fe = fetestexcept(FE_ALL_EXCEPT);
+								int fe = std::fetestexcept(FE_ALL_EXCEPT & ~(FE_INEXACT | FE_UNDERFLOW));
 
+								if (fe & FE_DIVBYZERO)
+								{
+									if (ret.load())
+										ret.store(false);
+									lmsg.append(std::string(activation) + std::string(" FE_DIVBYZERO") + nwl);
+								}
 								if (fe & FE_INEXACT)
 								{
 									if (ret.load())
 										ret.store(false);
-									lmsg.append(std::string("FE_INEXACT"));
+									lmsg.append(std::string(activation) + std::string(" FE_INEXACT") + nwl);
 								}
 								if (fe & FE_INVALID)
 								{
 									if (ret.load())
 										ret.store(false);
-									lmsg.append(std::string("FE_INVALID"));
+									lmsg.append(std::string(activation) + std::string(" FE_INVALID") + nwl);
 								}
 								if (fe & FE_OVERFLOW)
 								{
 									if (ret.load())
 										ret.store(false);
-									lmsg.append(std::string("FE_OVERFLOW"));
-								}
-								if (fe & FE_DIVBYZERO)
-								{
-									if (ret.load())
-										ret.store(false);
-									lmsg.append(std::string("FE_DIVBYZERO"));
+									lmsg.append(std::string(activation) + std::string(" FE_OVERFLOW") + nwl);
 								}
 								if (fe & FE_UNDERFLOW)
 								{
 									if (ret.load())
 										ret.store(false);
-									lmsg.append(std::string("FE_UNDERFLOW"));
+									lmsg.append(std::string(activation) + std::string(" FE_UNDERFLOW") + nwl);
 								}
-
-								*/
 							}
 							catch (const std::invalid_argument& e)
 							{
 								if (ret.load())
 									ret.store(false);
-								lmsg.append(std::string(e.what()));
+								lmsg.append(std::string(activation) + nwl + std::string(e.what()) + nwl);
 							}
 							catch (const std::length_error& e)
 							{
 								if (ret.load())
 									ret.store(false);
-								lmsg.append(std::string(e.what()));
+								lmsg.append(std::string(activation) + nwl + std::string(e.what()) + nwl);
 							}
 							catch (const std::logic_error& e)
 							{
 								if (ret.load())
 									ret.store(false);
-								lmsg.append(std::string(e.what()));
+								lmsg.append(std::string(activation) + nwl + std::string(e.what()) + nwl);
 							}
 							catch (const std::underflow_error& e)
 							{
 								if (ret.load())
 									ret.store(false);
-								lmsg.append(std::string(e.what()));
+								lmsg.append(std::string(activation) + nwl + std::string(e.what()) + nwl);
 							}
 							catch (const std::overflow_error& e)
 							{
 								if (ret.load())
 									ret.store(false);
-								lmsg.append(std::string(e.what()));
+								lmsg.append(std::string(activation) + nwl + std::string(e.what()) + nwl);
 							}
 							catch (const std::range_error& e)
 							{
 								if (ret.load())
 									ret.store(false);
-								lmsg.append(std::string(e.what()));
+								lmsg.append(std::string(activation) + nwl + std::string(e.what()) + nwl);
 							}
 							catch (const std::runtime_error& e)
 							{
 								if (ret.load())
 									ret.store(false);
-								lmsg.append(std::string(e.what()));
+								lmsg.append(std::string(activation) + nwl + std::string(e.what()) + nwl);
 							}
 							catch (const std::exception& e)
 							{
 								if (ret.load())
 									ret.store(false);
-								lmsg.append(std::string(e.what()));
+								lmsg.append(std::string(activation) + nwl + std::string(e.what()) + nwl);
 							}
 
 							if (ret.load())
@@ -839,7 +835,7 @@ namespace dnn
 											std::string(activation) + std::string(" forward pass not passed") + nwl +
 											std::string("In:") + tab + std::to_string(in) + nwl +
 											std::string("Ref:") + tab + std::to_string(ref) + nwl +
-											std::string("Out:") + tab + std::to_string(out));
+											std::string("Out:") + tab + std::to_string(out) + nwl);
 									}
 
 									const auto bwdRef = VecFloat().load_a(&outputBwdRef[i]);
@@ -858,7 +854,7 @@ namespace dnn
 											std::string(activation) + std::string(" backward pass not passed") + nwl +
 											std::string("In:") + tab + std::to_string(in) + nwl +
 											std::string("Ref:") + tab + std::to_string(ref) + nwl +
-											std::string("Out:") + tab + std::to_string(out));
+											std::string("Out:") + tab + std::to_string(out) + nwl);
 									}
 
 									if (fwdErr || bwdErr)

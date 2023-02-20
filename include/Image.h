@@ -7,7 +7,15 @@
 #endif
 
 #undef cimg_display
+#ifdef NDEBUG
 #define cimg_display 0
+#else
+#ifdef _WIN32
+#define cimg_display 2
+#else
+#define cimg_display 1
+#endif
+#endif
 #include "CImg.h"
 
 namespace dnn
