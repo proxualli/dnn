@@ -537,6 +537,10 @@ namespace
 
 	static auto BernoulliVecFloat(const Float p = Float(0.5)) NOEXCEPT
 	{
+#ifndef NDEBUG
+		if (p < 0 || p > 1)
+			throw std::invalid_argument("Parameter out of range in BernoulliVecFloat function");
+#endif
 		static thread_local auto generator = Ranvec1(3, Seed<int>(), static_cast<int>(std::hash<std::thread::id>()(std::this_thread::get_id())));
 
 #if defined(DNN_AVX512BW) || defined(DNN_AVX512)
@@ -548,17 +552,21 @@ namespace
 #endif
 	}
 
-	static auto UniformVecFloat(const Float low = Float(0), const Float high = Float(1)) NOEXCEPT
+	static auto UniformVecFloat(const Float min = Float(0), const Float max = Float(1)) NOEXCEPT
 	{
+#ifndef NDEBUG
+		if (min >= max)
+			throw std::invalid_argument("Parameter out of range in UniformVecFloat function");
+#endif
 		static thread_local auto generator = Ranvec1(3, Seed<int>(), static_cast<int>(std::hash<std::thread::id>()(std::this_thread::get_id())));
-		const auto scale = high - low;
+		const auto scale = max - min;
 
 #if defined(DNN_AVX512BW) || defined(DNN_AVX512)
-		return (generator.random16f() * scale) - low;
+		return (generator.random16f() * scale) - min;
 #elif defined(DNN_AVX2) || defined(DNN_AVX)
-		return (generator.random8f() * scale) - low;
+		return (generator.random8f() * scale) - min;
 #elif defined(DNN_SSE42) || defined(DNN_SSE41)
-		return (generator.random4f() * scale) - low;
+		return (generator.random4f() * scale) - min;
 #endif
 	}
 
