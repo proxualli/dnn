@@ -1428,15 +1428,16 @@ namespace dnn
 				TaskState.store(TaskStates::Running);
 				State.store(States::Idle);
 
+#ifndef NDEBUG
 				auto msg = std::string();
 				if (!Activation::CheckActivations(msg))
 				{
-#ifndef NDEBUG
 					cimg_library::cimg::dialog("Activations Sanity Check", msg.c_str(), "OK");
-#endif
+
 					State.store(States::Completed);
 					return;
 				};
+#endif
 
 				const auto totalSkipConnections = GetTotalSkipConnections();
 
