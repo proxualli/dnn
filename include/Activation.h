@@ -745,48 +745,6 @@ namespace dnn
 									lmsg.append(std::string(activation) + std::string(" FE_UNDERFLOW") + nwl);
 								}
 							}
-							catch (const std::invalid_argument& e)
-							{
-								if (ret.load())
-									ret.store(false);
-								lmsg.append(std::string(activation) + nwl + std::string(e.what()) + nwl);
-							}
-							catch (const std::length_error& e)
-							{
-								if (ret.load())
-									ret.store(false);
-								lmsg.append(std::string(activation) + nwl + std::string(e.what()) + nwl);
-							}
-							catch (const std::logic_error& e)
-							{
-								if (ret.load())
-									ret.store(false);
-								lmsg.append(std::string(activation) + nwl + std::string(e.what()) + nwl);
-							}
-							catch (const std::underflow_error& e)
-							{
-								if (ret.load())
-									ret.store(false);
-								lmsg.append(std::string(activation) + nwl + std::string(e.what()) + nwl);
-							}
-							catch (const std::overflow_error& e)
-							{
-								if (ret.load())
-									ret.store(false);
-								lmsg.append(std::string(activation) + nwl + std::string(e.what()) + nwl);
-							}
-							catch (const std::range_error& e)
-							{
-								if (ret.load())
-									ret.store(false);
-								lmsg.append(std::string(activation) + nwl + std::string(e.what()) + nwl);
-							}
-							catch (const std::runtime_error& e)
-							{
-								if (ret.load())
-									ret.store(false);
-								lmsg.append(std::string(activation) + nwl + std::string(e.what()) + nwl);
-							}
 							catch (const std::exception& e)
 							{
 								if (ret.load())

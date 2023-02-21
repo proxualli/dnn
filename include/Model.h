@@ -685,6 +685,7 @@ namespace dnn
 					}
 				}
 				break;
+
 				default:
 					break;
 				}
@@ -1431,9 +1432,7 @@ namespace dnn
 				if (!Activation::CheckActivations(msg))
 				{
 #ifndef NDEBUG
-					cimg_library::CImg<unsigned char> visu(640, 480, 1, 3, 0);
-					cimg_library::CImgDisplay disp(visu, msg.c_str());
-					disp.display(visu).wait();
+					cimg_library::cimg::dialog("Activations Sanity Check", msg.c_str(), "OK");
 #endif
 					State.store(States::Completed);
 					return;
