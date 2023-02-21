@@ -1035,7 +1035,7 @@ namespace dnn
 				    }
 				    catch (const std::future_error& e)
 				    {
-					    std::cout << std::string("StopTask exception: ") << e.what() << std::endl << std::string("code: ") << e.code() << std::endl;
+					    std::cout << std::string("StopTask exception: ") << std::string(e.what()) << std::endl << std::string("code: ") << e.code().message() << std::endl;
 				    }
 
 				State.store(States::Completed);

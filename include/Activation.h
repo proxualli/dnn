@@ -83,7 +83,6 @@ namespace dnn
 	struct HardSigmoid
 	{
 		inline static Float f(const Float& x, const Float& alpha = Float(0.2), const Float& beta = Float(0.5)) NOEXCEPT { return std::max(Float(0), std::min(Float(1), x * alpha + beta)); }
-		//inline static Float f(const Float& x, const Float& alpha = Float(0.2), const Float& beta = Float(0.5)) NOEXCEPT { return Clamp<Float>(x * alpha + beta, Float(0), Float(1)); }
 		inline static Float df(const Float& x, const Float& alpha = Float(0.2), const Float& beta = Float(0.5)) NOEXCEPT { return ((x > (-beta / alpha)) && (x < ((Float(1) - beta) / alpha))) ? alpha : Float(0); }
 		inline static VecFloat fVec(const VecFloat& x, const Float& alpha = Float(0.2), const Float& beta = Float(0.5)) NOEXCEPT { return max(Float(0), min(Float(1), x * alpha + beta)); }
 		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(0.2), const Float& beta = Float(0.5)) NOEXCEPT { return select((x > (-beta / alpha)) & (x < ((Float(1) - beta) / alpha)), alpha, Float(0)); }
@@ -230,7 +229,7 @@ namespace dnn
 	{
 		typedef Float(*FloatFuncPtrType)(const Float&, const Float&, const Float&);
 		typedef VecFloat(*VecFloatFuncPtrType)(const VecFloat&, const Float&, const Float&);
-
+		
 		FloatFuncPtrType f, df;
 		VecFloatFuncPtrType fVec, dfVec;
 		Float alpha, beta;
