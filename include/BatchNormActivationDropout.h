@@ -179,6 +179,7 @@ namespace dnn
 		{
 			auto description = GetDescriptionHeader();
 
+			description.append(nwl + std::string(" Activation:") + tab + std::string(magic_enum::enum_name<Activations>(ActivationFunction)));
 			description.append(nwl + std::string(" Alpha:") + dtab + FloatToString(Alpha));
 			description.append(nwl + std::string(" Beta:") + dtab + FloatToString(Beta));
 			description += GetWeightsDescription(Scaling);
