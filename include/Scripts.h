@@ -334,22 +334,37 @@ namespace scripts
 
         static std::string BatchNormActivation(UInt id, std::string inputs, std::string activation = "Relu", std::string group = "", std::string prefix = "B")
         {
-            return "[" + group + prefix + std::to_string(id) + "]" + nwl +
-                "Type=BatchNorm" + activation + nwl +
-                "Inputs=" + inputs + nwl + nwl;
+            if (activation == "Relu")
+                return "[" + group + prefix + std::to_string(id) + "]" + nwl +
+                    "Type=BatchNormActivationRelu" + nwl +
+                    "Inputs=" + inputs + nwl + nwl;
+            else
+                return "[" + group + prefix + std::to_string(id) + "]" + nwl +
+                    "Type=BatchNormActivation" + nwl +
+                    "Inputs=" + inputs + nwl + 
+                    "Activation=" + activation + nwl + nwl;
         }
 
         static std::string BatchNormActivation(UInt id, std::string inputs, scripts::Activations activation = scripts::Activations::Relu, std::string group = "", std::string prefix = "B")
         {
             if (activation != scripts::Activations::FRelu)
             {
-                return "[" + group + prefix + std::to_string(id) + "]" + nwl +
-                    "Type=BatchNorm" + std::string(magic_enum::enum_name<scripts::Activations>(activation)) + nwl +
-                    "Inputs=" + inputs + nwl + nwl;
+                if (activation == scripts::Activations::Relu)
+                    return 
+                        "[" + group + prefix + std::to_string(id) + "]" + nwl +
+                        "Type=BatchNormActivationRelu" + nwl +
+                        "Inputs=" + inputs + nwl + nwl;
+                else
+                    return 
+                        "[" + group + prefix + std::to_string(id) + "]" + nwl +
+                        "Type=BatchNormActivation" + nwl +
+                        "Inputs=" + inputs + nwl + 
+                        "Activation=" + std::string(magic_enum::enum_name<scripts::Activations>(activation)) + nwl + nwl;
             }
             else
             {
-                return "[" + group + "B" + std::to_string(id) + "B1]" + nwl +
+                return 
+                    "[" + group + "B" + std::to_string(id) + "B1]" + nwl +
                     "Type=BatchNorm" + nwl +
                     "Inputs=" + inputs + nwl + nwl +
 
@@ -373,16 +388,26 @@ namespace scripts
         {
             if (activation != scripts::Activations::FRelu)
             {
-                return "[" + group + prefix + std::to_string(id) + "]" + nwl +
-                    "Type=BatchNorm" + std::string(magic_enum::enum_name<scripts::Activations>(activation)) + "Dropout" + nwl +
-                    "Inputs=" + inputs + nwl +
-                    (dropout > 0.0f ? "Dropout=" + std::to_string(dropout) + nwl + nwl : nwl);
+                if (activation == scripts::Activations::Relu)
+                    return 
+                        "[" + group + prefix + std::to_string(id) + "]" + nwl +
+                        "Type=BatchNormActivationRelu" + nwl +
+                        "Inputs=" + inputs + nwl + nwl;
+                else
+                    return 
+                        "[" + group + prefix + std::to_string(id) + "]" + nwl +
+                        "Type=BatchNormActivationDropout" + nwl +
+                        "Inputs=" + inputs + nwl +
+                        "Activation=" + std::string(magic_enum::enum_name<scripts::Activations>(activation)) + nwl +
+                        (dropout > 0.0f ? "Dropout=" + std::to_string(dropout) + nwl + nwl : nwl);
             }
             else
             {
-                return "[" + group + prefix + std::to_string(id) + "]" + nwl +
-                    "Type=BatchNormHardSwishDropout" + nwl +
+                return 
+                    "[" + group + prefix + std::to_string(id) + "]" + nwl +
+                    "Type=BatchNormActivationDropout" + nwl +
                     "Inputs=" + inputs + nwl +
+                    "Activation=HardSwish" + nwl +
                     (dropout > 0.0f ? "Dropout=" + std::to_string(dropout) + nwl + nwl : nwl);
             }
         }

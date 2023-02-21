@@ -270,17 +270,8 @@ extern "C" DNN_API void DNNGetImage(const UInt layerIndex, const Byte fillColor,
 		switch (model->Layers[layerIndex]->LayerType)
 		{
 			case LayerTypes::BatchNorm:
-			case LayerTypes::BatchNormHardSigmoid:
-			case LayerTypes::BatchNormHardSwish:
-			case LayerTypes::BatchNormHardSwishDropout:
-			case LayerTypes::BatchNormMish:
-			case LayerTypes::BatchNormMishDropout:
+			case LayerTypes::BatchNormActivation:
 			case LayerTypes::BatchNormRelu:
-			case LayerTypes::BatchNormReluDropout:
-			case LayerTypes::BatchNormSwish:
-			case LayerTypes::BatchNormSwishDropout:
-			case LayerTypes::BatchNormTanhExp:
-			case LayerTypes::BatchNormTanhExpDropout:
 			case LayerTypes::Convolution:
 			case LayerTypes::ConvolutionTranspose:
 			case LayerTypes::Dense:
@@ -526,64 +517,29 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, LayerInfo* info)
 		}
 		break;
 
-		case LayerTypes::BatchNormHardSigmoid:
+		case LayerTypes::BatchNormActivation:
 		{
-			auto bn = dynamic_cast<BatchNormActivation<HardSigmoid, LayerTypes::BatchNormHardSigmoid>*>(model->Layers[layerIndex].get());
+			auto bn = dynamic_cast<BatchNormActivation*>(model->Layers[layerIndex].get());
 			if (bn)
 			{
 				info->Scaling = bn->Scaling;
 				info->Alpha = bn->Alpha;
 				info->Beta = bn->Beta;
+				info->Activation = bn->ActivationFunction;
 			}
 		}
 		break;
 
-		case LayerTypes::BatchNormHardSwish:
+		case LayerTypes::BatchNormActivationDropout:
 		{
-			auto bn = dynamic_cast<BatchNormActivation<HardSwish, LayerTypes::BatchNormHardSwish>*>(model->Layers[layerIndex].get());
-			if (bn)
-			{
-				info->Scaling = bn->Scaling;
-				info->Alpha = bn->Alpha;
-				info->Beta = bn->Beta;
-			}
-		}
-		break;
-
-		case LayerTypes::BatchNormHardSwishDropout:
-		{
-			auto bn = dynamic_cast<BatchNormActivationDropout<HardSwish, LayerTypes::BatchNormHardSwishDropout>*>(model->Layers[layerIndex].get());
+			auto bn = dynamic_cast<BatchNormActivationDropout*>(model->Layers[layerIndex].get());
 			if (bn)
 			{
 				info->Scaling = bn->Scaling;
 				info->Dropout = Float(1) - bn->Keep;
 				info->Alpha = bn->Alpha;
 				info->Beta = bn->Beta;
-			}
-		}
-		break;
-
-		case LayerTypes::BatchNormMish:
-		{
-			auto bn = dynamic_cast<BatchNormActivation<Mish, LayerTypes::BatchNormMish>*>(model->Layers[layerIndex].get());
-			if (bn)
-			{
-				info->Scaling = bn->Scaling;
-				info->Alpha = bn->Alpha;
-				info->Beta = bn->Beta;
-			}
-		}
-		break;
-
-		case LayerTypes::BatchNormMishDropout:
-		{
-			auto bn = dynamic_cast<BatchNormActivationDropout<Mish, LayerTypes::BatchNormMishDropout>*>(model->Layers[layerIndex].get());
-			if (bn)
-			{
-				info->Scaling = bn->Scaling;
-				info->Dropout = Float(1) - bn->Keep;
-				info->Alpha = bn->Alpha;
-				info->Beta = bn->Beta;
+				info->Activation = bn->ActivationFunction;
 			}
 		}
 		break;
@@ -593,69 +549,6 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, LayerInfo* info)
 			auto bn = dynamic_cast<BatchNormRelu*>(model->Layers[layerIndex].get());
 			if (bn)
 				info->Scaling = bn->Scaling;
-		}
-		break;
-
-		case LayerTypes::BatchNormReluDropout:
-		{
-			auto bn = dynamic_cast<BatchNormActivationDropout<Relu, LayerTypes::BatchNormReluDropout>*>(model->Layers[layerIndex].get());
-			if (bn)
-			{
-				info->Scaling = bn->Scaling;
-				info->Dropout = Float(1) - bn->Keep;
-				info->Alpha = bn->Alpha;
-				info->Beta = bn->Beta;
-			}
-		}
-		break;
-
-		case LayerTypes::BatchNormSwish:
-		{
-			auto bn = dynamic_cast<BatchNormActivation<Swish, LayerTypes::BatchNormSwish>*>(model->Layers[layerIndex].get());
-			if (bn)
-			{
-				info->Scaling = bn->Scaling;
-				info->Alpha = bn->Alpha;
-				info->Beta = bn->Beta;
-			}
-		}
-		break;
-
-		case LayerTypes::BatchNormSwishDropout:
-		{
-			auto bn = dynamic_cast<BatchNormActivationDropout<Swish, LayerTypes::BatchNormSwishDropout>*>(model->Layers[layerIndex].get());
-			if (bn)
-			{
-				info->Scaling = bn->Scaling;
-				info->Dropout = Float(1) - bn->Keep;
-				info->Alpha = bn->Alpha;
-				info->Beta = bn->Beta;
-			}
-		}
-		break;
-
-		case LayerTypes::BatchNormTanhExp:
-		{
-			auto bn = dynamic_cast<BatchNormActivation<TanhExp, LayerTypes::BatchNormTanhExp>*>(model->Layers[layerIndex].get());
-			if (bn)
-			{
-				info->Scaling = bn->Scaling;
-				info->Alpha = bn->Alpha;
-				info->Beta = bn->Beta;
-			}
-		}
-		break;
-
-		case LayerTypes::BatchNormTanhExpDropout:
-		{
-			auto bn = dynamic_cast<BatchNormActivationDropout<TanhExp, LayerTypes::BatchNormTanhExpDropout>*>(model->Layers[layerIndex].get());
-			if (bn)
-			{
-				info->Scaling = bn->Scaling;
-				info->Dropout = Float(1) - bn->Keep;
-				info->Alpha = bn->Alpha;
-				info->Beta = bn->Beta;
-			}
 		}
 		break;
 

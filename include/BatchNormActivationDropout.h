@@ -4,7 +4,6 @@
 
 namespace dnn
 {
-	template <typename Activation = HardSwish, typename dnn::LayerTypes T = LayerTypes::BatchNormHardSwishDropout>
 	class BatchNormActivationDropout final : public Layer
 	{
 	private:
@@ -110,6 +109,8 @@ namespace dnn
 		const bool LocalValue;
 		const Float Alpha;
 		const Float Beta;
+		const Activations ActivationFunction;
+		const Act Func;
 		const Float Eps;
 		const Float Momentum;
 		const Float OneMinusMomentum;
@@ -123,11 +124,13 @@ namespace dnn
 		FloatArray NeuronsActive;
 		FloatArray InputNeurons;
 
-		BatchNormActivationDropout<Activation, T>(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const Float dropout = Float(0.5), const bool localValue = false, const bool scaling = true, const Float alpha = Float(0), const Float beta = Float(0), const Float momentum = Float(0.99), const Float eps = Float(1e-04), const bool hasBias = true) :
-			Layer(device, format, name, T, inputs[0]->C, inputs[0]->C, inputs[0]->C, inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs, hasBias, scaling, dropout > 0),
+		BatchNormActivationDropout(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const Activations activation, const std::vector<Layer*>& inputs, const Float dropout = Float(0.5), const bool localValue = false, const bool scaling = true, const Float alpha = Float(0), const Float beta = Float(0), const Float momentum = Float(0.99), const Float eps = Float(1e-04), const bool hasBias = true) :
+			Layer(device, format, name, LayerTypes::BatchNormActivationDropout, inputs[0]->C, inputs[0]->C, inputs[0]->C, inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs, hasBias, scaling, dropout > 0),
 			LocalValue(localValue),
-			Alpha(GetAlpha(Activation::Enum(), alpha, beta)),
-			Beta(GetBeta(Activation::Enum(), alpha, beta)),
+			Alpha(GetAlpha(activation, alpha, beta)),
+			Beta(GetBeta(activation, alpha, beta)),
+			ActivationFunction(activation),
+			Func(Activation::GetActivation(activation)),
 			Eps(eps),
 			Momentum(momentum),
 			OneMinusMomentum(Float(1) - momentum),
@@ -318,9 +321,9 @@ namespace dnn
 								const auto start = c * HW() + (n * CDHW());
 								const auto part = start + partialHW;
 								for (auto hw = start; hw < part; hw += VectorSize)
-									Activation::fVec((VecFloat().load_a(&InputLayer->Neurons[hw]) - RunningMean[c]) * weightedInvStdDev + biases, Alpha, Beta).store_a(&Neurons[hw]);
+									Func.fVec((VecFloat().load_a(&InputLayer->Neurons[hw]) - RunningMean[c]) * weightedInvStdDev + biases, Alpha, Beta).store_a(&Neurons[hw]);
 								for (auto hw = part; hw < start + HW(); hw++)
-									Neurons[hw] = Activation::f((InputLayer->Neurons[hw] - RunningMean[c]) * weightedInvStdDev + biases, Alpha, Beta);
+									Neurons[hw] = Func.f((InputLayer->Neurons[hw] - RunningMean[c]) * weightedInvStdDev + biases, Alpha, Beta);
 							}
 						});
 					}
@@ -346,7 +349,7 @@ namespace dnn
 								{
 									const auto offsetH = offsetC + h * strideH;
 									for (auto w = offsetH; w < offsetH + strideH; w += VectorSize)
-										Activation::fVec(mul_add(VecFloat().load_a(&InputLayer->Neurons[w]) - runningMean, weightedInvStdDev, biases), Alpha, Beta).store_a(&Neurons[w]);
+										Func.fVec(mul_add(VecFloat().load_a(&InputLayer->Neurons[w]) - runningMean, weightedInvStdDev, biases), Alpha, Beta).store_a(&Neurons[w]);
 								}
 							}
 						});
@@ -460,13 +463,13 @@ namespace dnn
 										{
 											mask = BernoulliVecFloat(Keep);
 											mask.store_a(&NeuronsActive[hw]);
-											(mask * Scale * Activation::fVec(((VecFloat().load_a(&InputLayer->Neurons[hw]) - mean) * weightedInvStdDev + biases), Alpha, Beta)).store_a(&Neurons[hw]);
+											(mask * Scale * Func.fVec(((VecFloat().load_a(&InputLayer->Neurons[hw]) - mean) * weightedInvStdDev + biases), Alpha, Beta)).store_a(&Neurons[hw]);
 										}
 										const auto end = start + HW();
 										for (auto hw = part; hw < end; hw++)
 										{
 											NeuronsActive[hw] = Bernoulli<Float>(Keep);
-											Neurons[hw] = NeuronsActive[hw] * Scale * Activation::f((InputLayer->Neurons[hw] - mean) * weightedInvStdDev + biases, Alpha, Beta);
+											Neurons[hw] = NeuronsActive[hw] * Scale * Func.f((InputLayer->Neurons[hw] - mean) * weightedInvStdDev + biases, Alpha, Beta);
 										}
 									}
 								else
@@ -478,7 +481,7 @@ namespace dnn
 										{
 											mask = BernoulliVecFloat(Keep);
 											mask.store_a(&NeuronsActive[hw]);
-											(mask * Scale * Activation::fVec(((VecFloat().load_a(&InputLayer->Neurons[hw]) - mean) * weightedInvStdDev + biases), Alpha, Beta)).store_a(&Neurons[hw]);
+											(mask * Scale * Func.fVec(((VecFloat().load_a(&InputLayer->Neurons[hw]) - mean) * weightedInvStdDev + biases), Alpha, Beta)).store_a(&Neurons[hw]);
 	#ifndef DNN_LEAN
 											VecFloat(0).store_nt(&NeuronsD1[hw]);
 	#endif
@@ -487,7 +490,7 @@ namespace dnn
 										for (auto hw = part; hw < end; hw++)
 										{
 											NeuronsActive[hw] = Bernoulli<Float>(Keep);
-											Neurons[hw] = NeuronsActive[hw] * Scale * Activation::f((InputLayer->Neurons[hw] - mean) * weightedInvStdDev + biases, Alpha, Beta);
+											Neurons[hw] = NeuronsActive[hw] * Scale * Func.f((InputLayer->Neurons[hw] - mean) * weightedInvStdDev + biases, Alpha, Beta);
 	#ifndef DNN_LEAN
 											NeuronsD1[hw] = Float(0);
 	#endif
@@ -502,10 +505,10 @@ namespace dnn
 										const auto start = c * HW() + (n * CDHW());
 										const auto part = start + partialHW;
 										for (auto hw = start; hw < part; hw += VectorSize)
-											(Scale * Activation::fVec(((VecFloat().load_a(&InputLayer->Neurons[hw]) - mean) * weightedInvStdDev + biases), Alpha, Beta)).store_a(&Neurons[hw]);
+											(Scale * Func.fVec(((VecFloat().load_a(&InputLayer->Neurons[hw]) - mean) * weightedInvStdDev + biases), Alpha, Beta)).store_a(&Neurons[hw]);
 										const auto end = start + HW();
 										for (auto hw = part; hw < end; hw++)
-											Neurons[hw] = Scale * Activation::f((InputLayer->Neurons[hw] - mean) * weightedInvStdDev + biases, Alpha, Beta);
+											Neurons[hw] = Scale * Func.f((InputLayer->Neurons[hw] - mean) * weightedInvStdDev + biases, Alpha, Beta);
 									}
 								else
 									for (auto n = 0ull; n < batchSize; n++)
@@ -514,7 +517,7 @@ namespace dnn
 										const auto part = start + partialHW;
 										for (auto hw = start; hw < part; hw += VectorSize)
 										{
-											(Scale * Activation::fVec(((VecFloat().load_a(&InputLayer->Neurons[hw]) - mean) * weightedInvStdDev + biases), Alpha, Beta)).store_a(&Neurons[hw]);
+											(Scale * Func.fVec(((VecFloat().load_a(&InputLayer->Neurons[hw]) - mean) * weightedInvStdDev + biases), Alpha, Beta)).store_a(&Neurons[hw]);
 	#ifndef DNN_LEAN
 											VecFloat(0).store_nt(&NeuronsD1[hw]);
 	#endif
@@ -522,7 +525,7 @@ namespace dnn
 										const auto end = start + HW();
 										for (auto hw = part; hw < end; hw++)
 										{
-											Neurons[hw] = Scale * Activation::f((InputLayer->Neurons[hw] - mean) * weightedInvStdDev + biases, Alpha, Beta);
+											Neurons[hw] = Scale * Func.f((InputLayer->Neurons[hw] - mean) * weightedInvStdDev + biases, Alpha, Beta);
 	#ifndef DNN_LEAN
 											NeuronsD1[hw] = Float(0);
 	#endif
@@ -628,7 +631,7 @@ namespace dnn
 											{
 												mask = BernoulliVecFloat(Keep);
 												mask.store_a(&NeuronsActive[w]);
-												(mask * Scale * Activation::fVec(mul_add(VecFloat().load_a(&InputLayer->Neurons[w]) - mean, weightedInvStdDev, biases), Alpha, Beta)).store_a(&Neurons[w]);
+												(mask * Scale * Func.fVec(mul_add(VecFloat().load_a(&InputLayer->Neurons[w]) - mean, weightedInvStdDev, biases), Alpha, Beta)).store_a(&Neurons[w]);
 											}
 										}
 									}
@@ -643,7 +646,7 @@ namespace dnn
 											{
 												mask = BernoulliVecFloat(Keep);
 												mask.store_a(&NeuronsActive[w]);
-												(mask * Scale * Activation::fVec(mul_add(VecFloat().load_a(&InputLayer->Neurons[w]) - mean, weightedInvStdDev, biases), Alpha, Beta)).store_a(&Neurons[w]);
+												(mask * Scale * Func.fVec(mul_add(VecFloat().load_a(&InputLayer->Neurons[w]) - mean, weightedInvStdDev, biases), Alpha, Beta)).store_a(&Neurons[w]);
 	#ifndef DNN_LEAN
 												VecFloat(0).store_nt(&NeuronsD1[w]);
 	#endif
@@ -661,7 +664,7 @@ namespace dnn
 										{
 											const auto offsetH = offsetC + h * strideH;
 											for (auto w = offsetH; w < offsetH + strideH; w += VectorSize)
-												(Scale * Activation::fVec(mul_add(VecFloat().load_a(&InputLayer->Neurons[w]) - mean, weightedInvStdDev, biases), Alpha, Beta)).store_a(&Neurons[w]);
+												(Scale * Func.fVec(mul_add(VecFloat().load_a(&InputLayer->Neurons[w]) - mean, weightedInvStdDev, biases), Alpha, Beta)).store_a(&Neurons[w]);
 										}
 									}
 								else
@@ -673,7 +676,7 @@ namespace dnn
 											const auto offsetH = offsetC + h * strideH;
 											for (auto w = offsetH; w < offsetH + strideH; w += VectorSize)
 											{
-												(Scale * Activation::fVec(mul_add(VecFloat().load_a(&InputLayer->Neurons[w]) - mean, weightedInvStdDev, biases), Alpha, Beta)).store_a(&Neurons[w]);
+												(Scale * Func.fVec(mul_add(VecFloat().load_a(&InputLayer->Neurons[w]) - mean, weightedInvStdDev, biases), Alpha, Beta)).store_a(&Neurons[w]);
 	#ifndef DNN_LEAN
 												VecFloat(0).store_nt(&NeuronsD1[w]);
 	#endif
@@ -733,13 +736,13 @@ namespace dnn
 							{
 								inputNeurons.load_a(&InputLayerFwd->Neurons[hw]);
 								inputNeurons -= Mean[c];
-								diffSrc = (enabled ? VecFloat().load_a(&NeuronsActive[hw]) : VecFloat(1)) * Activation::dfVec(inputNeurons * weightedInvStdDev + biases, Alpha, Beta) * VecFloat().load_a(&layerD1[hw]);
+								diffSrc = (enabled ? VecFloat().load_a(&NeuronsActive[hw]) : VecFloat(1)) * Func.dfVec(inputNeurons * weightedInvStdDev + biases, Alpha, Beta) * VecFloat().load_a(&layerD1[hw]);
 								KahanSum<VecFloat>(diffSrc * inputNeurons, diffGamma, correction0);
 								KahanSum<VecFloat>(diffSrc, diffBeta, correction1);
 							}
 							for (auto hw = part; hw < start + HW(); hw++)
 							{
-								diffSrcFloat = (enabled ? NeuronsActive[hw] : Float(1)) * Activation::df(((InputLayerFwd->Neurons[hw] - Mean[c]) * weightedInvStdDev) + biases, Alpha, Beta) * layerD1[hw];
+								diffSrcFloat = (enabled ? NeuronsActive[hw] : Float(1)) * Func.df(((InputLayerFwd->Neurons[hw] - Mean[c]) * weightedInvStdDev) + biases, Alpha, Beta) * layerD1[hw];
 								KahanSum<Float>(diffSrcFloat * (InputLayerFwd->Neurons[hw] - Mean[c]), diffGammaFloat, correction0Float);
 								KahanSum<Float>(diffSrcFloat, diffBetaFloat, correction1Float);
 							}
@@ -766,7 +769,7 @@ namespace dnn
 								const auto part = start + partialHW;
 								for (auto hw = start; hw < part; hw += VectorSize)
 								{
-									diffSrc = (enabled ? VecFloat().load_a(&NeuronsActive[hw]) : VecFloat(1)) * Activation::dfVec((VecFloat().load_a(&InputLayerFwd->Neurons[hw]) - Mean[c]) * weightedInvStdDev + biases, Alpha, Beta) * (InplaceBwd ? VecFloat().load_a(&InputLayer->NeuronsD1[hw]) : VecFloat().load_a(&NeuronsD1[hw]));
+									diffSrc = (enabled ? VecFloat().load_a(&NeuronsActive[hw]) : VecFloat(1)) * Func.dfVec((VecFloat().load_a(&InputLayerFwd->Neurons[hw]) - Mean[c]) * weightedInvStdDev + biases, Alpha, Beta) * (InplaceBwd ? VecFloat().load_a(&InputLayer->NeuronsD1[hw]) : VecFloat().load_a(&NeuronsD1[hw]));
 
 									// if not using global stats!
 									diffSrc -= mul_add(VecFloat().load_a(&InputLayerFwd->Neurons[hw]) - Mean[c], diffGammaFloat, diffBetaFloat);
@@ -776,7 +779,7 @@ namespace dnn
 								}
 								for (auto hw = part; hw < start + HW(); hw++)
 								{
-									diffSrcFloat = (enabled ? NeuronsActive[hw] : Float(1)) * Activation::df((InputLayerFwd->Neurons[hw] - Mean[c]) * weightedInvStdDev + biases, Alpha, Beta) * InputLayer->NeuronsD1[hw];
+									diffSrcFloat = (enabled ? NeuronsActive[hw] : Float(1)) * Func.df((InputLayerFwd->Neurons[hw] - Mean[c]) * weightedInvStdDev + biases, Alpha, Beta) * InputLayer->NeuronsD1[hw];
 
 									// if not using global stats!
 									diffSrcFloat -= (InputLayerFwd->Neurons[hw] - Mean[c]) * diffGammaFloat + diffBetaFloat;
@@ -792,7 +795,7 @@ namespace dnn
 								const auto part = start + partialHW;
 								for (auto hw = start; hw < part; hw += VectorSize)
 								{
-									diffSrc = (enabled ? VecFloat().load_a(&NeuronsActive[hw]) : VecFloat(1)) * Activation::dfVec((VecFloat().load_a(&InputLayerFwd->Neurons[hw]) - Mean[c]) * weightedInvStdDev + biases, Alpha, Beta) * VecFloat().load_a(&NeuronsD1[hw]);
+									diffSrc = (enabled ? VecFloat().load_a(&NeuronsActive[hw]) : VecFloat(1)) * Func.dfVec((VecFloat().load_a(&InputLayerFwd->Neurons[hw]) - Mean[c]) * weightedInvStdDev + biases, Alpha, Beta) * VecFloat().load_a(&NeuronsD1[hw]);
 
 									// if not using global stats!
 									diffSrc -= mul_add(VecFloat().load_a(&InputLayerFwd->Neurons[hw]) - Mean[c], diffGammaFloat, diffBetaFloat);
@@ -802,7 +805,7 @@ namespace dnn
 								}
 								for (auto hw = part; hw < start + HW(); hw++)
 								{
-									diffSrcFloat = (enabled ? NeuronsActive[hw] : Float(1)) * Activation::df((InputLayerFwd->Neurons[hw] - Mean[c]) * weightedInvStdDev + biases, Alpha, Beta) * NeuronsD1[hw];
+									diffSrcFloat = (enabled ? NeuronsActive[hw] : Float(1)) * Func.df((InputLayerFwd->Neurons[hw] - Mean[c]) * weightedInvStdDev + biases, Alpha, Beta) * NeuronsD1[hw];
 
 									// if not using global stats!
 									diffSrcFloat -= (InputLayerFwd->Neurons[hw] - Mean[c]) * diffGammaFloat + diffBetaFloat;
@@ -843,7 +846,7 @@ namespace dnn
 									diffSrc.load_a(&layerD1[w]);
 									inputNeurons.load_a(&InputLayerFwd->Neurons[w]);
 									inputNeurons -= mean;
-									diffSrc *= (enabled ? VecFloat().load_a(&NeuronsActive[w]) : VecFloat(1)) * Activation::dfVec(mul_add(inputNeurons, weightedInvStdDev, biases), Alpha, Beta);
+									diffSrc *= (enabled ? VecFloat().load_a(&NeuronsActive[w]) : VecFloat(1)) * Func.dfVec(mul_add(inputNeurons, weightedInvStdDev, biases), Alpha, Beta);
 									KahanSum<VecFloat>(diffSrc * inputNeurons, diffGamma, correction0);
 									KahanSum<VecFloat>(diffSrc, diffBeta, correction1);
 								}
@@ -873,7 +876,7 @@ namespace dnn
 
 									for (auto w = offsetH; w < offsetH + strideH; w += VectorSize)
 									{
-										diffSrc = (enabled ? VecFloat().load_a(&NeuronsActive[w]) : VecFloat(1)) * Activation::dfVec(mul_add(VecFloat().load_a(&InputLayerFwd->Neurons[w]) - mean, weightedInvStdDev, biases), Alpha, Beta) * VecFloat().load_a(&InputLayer->NeuronsD1[w]);
+										diffSrc = (enabled ? VecFloat().load_a(&NeuronsActive[w]) : VecFloat(1)) * Func.dfVec(mul_add(VecFloat().load_a(&InputLayerFwd->Neurons[w]) - mean, weightedInvStdDev, biases), Alpha, Beta) * VecFloat().load_a(&InputLayer->NeuronsD1[w]);
 
 										// if not using global stats!
 										diffSrc -= mul_add(VecFloat().load_a(&InputLayerFwd->Neurons[w]) - mean, diffGamma, diffBeta);
@@ -893,7 +896,7 @@ namespace dnn
 
 									for (auto w = offsetH; w < offsetH + strideH; w += VectorSize)
 									{
-										diffSrc = (enabled ? VecFloat().load_a(&NeuronsActive[w]) : VecFloat(1)) * Activation::dfVec(mul_add(VecFloat().load_a(&InputLayerFwd->Neurons[w]) - mean, weightedInvStdDev, biases), Alpha, Beta) * VecFloat().load_a(&NeuronsD1[w]);
+										diffSrc = (enabled ? VecFloat().load_a(&NeuronsActive[w]) : VecFloat(1)) * Func.dfVec(mul_add(VecFloat().load_a(&InputLayerFwd->Neurons[w]) - mean, weightedInvStdDev, biases), Alpha, Beta) * VecFloat().load_a(&NeuronsD1[w]);
 
 										// if not using global stats!
 										diffSrc -= mul_add(VecFloat().load_a(&InputLayerFwd->Neurons[w]) - mean, diffGamma, diffBeta);
@@ -1022,7 +1025,7 @@ namespace dnn
 								{
 									mask = BernoulliVecFloat(Keep);
 									mask.store_a(&NeuronsActive[hw]);
-									(mask * Scale * Activation::fVec(VecFloat().load_a(&InputNeurons[hw]), Alpha, Beta)).store_a(&Neurons[hw]);
+									(mask * Scale * Func.fVec(VecFloat().load_a(&InputNeurons[hw]), Alpha, Beta)).store_a(&Neurons[hw]);
 #ifndef DNN_LEAN
 									VecFloat(0).store_nt(&NeuronsD1[hw]);
 #endif // DNN_LEAN
@@ -1042,7 +1045,7 @@ namespace dnn
 								{
 									mask = BernoulliVecFloat(Keep);
 									mask.store_a(&NeuronsActive[hw]);
-									(mask * Scale *	Activation::fVec(VecFloat().load_a(&InputNeurons[hw]), Alpha, Beta)).store_a(&Neurons[hw]);
+									(mask * Scale * Func.fVec(VecFloat().load_a(&InputNeurons[hw]), Alpha, Beta)).store_a(&Neurons[hw]);
 								}
 							}
 						});
@@ -1060,7 +1063,7 @@ namespace dnn
 								for (auto hw = offset; hw < offset + HW(); hw++)
 								{
 									NeuronsActive[hw] = Bernoulli<Float>(Keep);
-									Neurons[hw] = NeuronsActive[hw] * Scale * Activation::f(InputNeurons[hw], Alpha, Beta);
+									Neurons[hw] = NeuronsActive[hw] * Scale * Func.f(InputNeurons[hw], Alpha, Beta);
 #ifndef DNN_LEAN
 									NeuronsD1[hw] = Float(0);
 #endif // DNN_LEAN
@@ -1078,7 +1081,7 @@ namespace dnn
 								for (auto hw = offset; hw < offset + HW(); hw++)
 								{
 									NeuronsActive[hw] = Bernoulli<Float>(Keep);
-									Neurons[hw] = NeuronsActive[hw] * Scale * Activation::f(InputNeurons[hw], Alpha, Beta);
+									Neurons[hw] = NeuronsActive[hw] * Scale * Func.f(InputNeurons[hw], Alpha, Beta);
 								}
 							}
 						});
@@ -1095,7 +1098,7 @@ namespace dnn
 						{
 							const auto offset = n * PaddedCDHW() + c * HW();
 							for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
-								Activation::fVec(VecFloat().load_a(&Neurons[hw]), Alpha, Beta).store_a(&Neurons[hw]);
+								Func.fVec(VecFloat().load_a(&Neurons[hw]), Alpha, Beta).store_a(&Neurons[hw]);
 						}
 					});
 				}
@@ -1107,7 +1110,7 @@ namespace dnn
 						{
 							const auto offset = n * CDHW() + c * HW();
 							for (auto hw = offset; hw < offset + HW(); hw++)
-								Neurons[hw] = Activation::f(Neurons[hw], Alpha, Beta);
+								Neurons[hw] = Func.f(Neurons[hw], Alpha, Beta);
 						}
 					});
 				}
@@ -1140,12 +1143,12 @@ namespace dnn
 						if (!plain)
 						{
 							for (auto c = 0ull; c < PaddedC; c += VectorSize)
-								((enabled ? VecFloat().load_a(&NeuronsActive[c]) : VecFloat(1)) * (Activation::dfVec(VecFloat().load_a(&InputNeurons[c]), Alpha, Beta) * VecFloat().load_a(&InputLayer->NeuronsD1[c]))).store_a(&InputLayer->NeuronsD1[c]);
+								((enabled ? VecFloat().load_a(&NeuronsActive[c]) : VecFloat(1)) * (Func.dfVec(VecFloat().load_a(&InputNeurons[c]), Alpha, Beta) * VecFloat().load_a(&InputLayer->NeuronsD1[c]))).store_a(&InputLayer->NeuronsD1[c]);
 						}
 						else
 						{
 							for (auto c = 0ull; c < C; c++)
-								InputLayer->NeuronsD1[c] = (enabled ? NeuronsActive[c] : Float(1)) * Activation::df(InputNeurons[c], Alpha, Beta) * InputLayer->NeuronsD1[c];
+								InputLayer->NeuronsD1[c] = (enabled ? NeuronsActive[c] : Float(1)) * Func.df(InputNeurons[c], Alpha, Beta) * InputLayer->NeuronsD1[c];
 						}
 					}
 					else
@@ -1153,12 +1156,12 @@ namespace dnn
 						if (!plain)
 						{
 							for (auto c = 0ull; c < PaddedC; c += VectorSize)
-								((enabled ? VecFloat().load_a(&NeuronsActive[c]) : VecFloat(1)) * (Activation::dfVec(VecFloat().load_a(&InputNeurons[c]), Alpha, Beta) * VecFloat().load_a(&NeuronsD1[c]))).store_a(&NeuronsD1[c]);
+								((enabled ? VecFloat().load_a(&NeuronsActive[c]) : VecFloat(1)) * (Func.dfVec(VecFloat().load_a(&InputNeurons[c]), Alpha, Beta) * VecFloat().load_a(&NeuronsD1[c]))).store_a(&NeuronsD1[c]);
 						}
 						else
 						{
 							for (auto c = 0ull; c < C; c++)
-								NeuronsD1[c] = (enabled ? NeuronsActive[c] : Float(1)) * Activation::df(InputNeurons[c], Alpha, Beta) * NeuronsD1[c];
+								NeuronsD1[c] = (enabled ? NeuronsActive[c] : Float(1)) * Func.df(InputNeurons[c], Alpha, Beta) * NeuronsD1[c];
 						}
 					}
 				}
@@ -1172,14 +1175,14 @@ namespace dnn
 							{
 								const auto offset = n * PaddedC;
 								for (auto c = offset; c < offset + PaddedC; c += VectorSize)
-									((enabled ? VecFloat().load_a(&NeuronsActive[c]) : VecFloat(1)) * (Activation::dfVec(VecFloat().load_a(&InputNeurons[c]), Alpha, Beta) * VecFloat().load_a(&InputLayer->NeuronsD1[c]))).store_a(&InputLayer->NeuronsD1[c]);
+									((enabled ? VecFloat().load_a(&NeuronsActive[c]) : VecFloat(1)) * (Func.dfVec(VecFloat().load_a(&InputNeurons[c]), Alpha, Beta) * VecFloat().load_a(&InputLayer->NeuronsD1[c]))).store_a(&InputLayer->NeuronsD1[c]);
 							});
 						else
 							for_i(batchSize, threads, [=](UInt n)
 							{
 								const auto offset = n * C;
 								for (auto c = offset; c < offset + C; c++)
-									InputLayer->NeuronsD1[c] = (enabled ? NeuronsActive[c] : Float(1)) * Activation::df(InputNeurons[c], Alpha, Beta) * InputLayer->NeuronsD1[c];
+									InputLayer->NeuronsD1[c] = (enabled ? NeuronsActive[c] : Float(1)) * Func.df(InputNeurons[c], Alpha, Beta) * InputLayer->NeuronsD1[c];
 							});
 					}
 					else
@@ -1189,14 +1192,14 @@ namespace dnn
 							{
 								const auto offset = n * PaddedC;
 								for (auto c = offset; c < offset + PaddedC; c += VectorSize)
-									((enabled ? VecFloat().load_a(&NeuronsActive[c]) : VecFloat(1)) * (Activation::dfVec(VecFloat().load_a(&InputNeurons[c]), Alpha, Beta) * VecFloat().load_a(&NeuronsD1[c]))).store_a(&NeuronsD1[c]);
+									((enabled ? VecFloat().load_a(&NeuronsActive[c]) : VecFloat(1)) * (Func.dfVec(VecFloat().load_a(&InputNeurons[c]), Alpha, Beta) * VecFloat().load_a(&NeuronsD1[c]))).store_a(&NeuronsD1[c]);
 							});
 						else
 							for_i(batchSize, threads, [=](UInt n)
 							{
 								const auto offset = n * C;
 								for (auto c = offset; c < offset + C; c++)
-									NeuronsD1[c] = (enabled ? NeuronsActive[c] : Float(1)) * Activation::df(InputNeurons[c], Alpha, Beta) * NeuronsD1[c];
+									NeuronsD1[c] = (enabled ? NeuronsActive[c] : Float(1)) * Func.df(InputNeurons[c], Alpha, Beta) * NeuronsD1[c];
 							});
 					}
 #ifdef DNN_STOCHASTIC
@@ -1215,7 +1218,7 @@ namespace dnn
 							{
 								const auto offset = c * HW();
 								for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
-									((enabled ? VecFloat().load_a(&NeuronsActive[hw]) : VecFloat(1)) * (Activation::dfVec(VecFloat().load_a(&InputNeurons[hw]), Alpha, Beta) * VecFloat().load_a(&InputLayer->NeuronsD1[hw]))).store_a(&InputLayer->NeuronsD1[hw]);
+									((enabled ? VecFloat().load_a(&NeuronsActive[hw]) : VecFloat(1)) * (Func.dfVec(VecFloat().load_a(&InputNeurons[hw]), Alpha, Beta) * VecFloat().load_a(&InputLayer->NeuronsD1[hw]))).store_a(&InputLayer->NeuronsD1[hw]);
 							}
 						else
 						{
@@ -1223,7 +1226,7 @@ namespace dnn
 							{
 								const auto offset = c * HW();
 								for (auto hw = offset; hw < offset + HW(); hw++)
-									InputLayer->NeuronsD1[hw] = (enabled ? NeuronsActive[hw] : Float(1)) * Activation::df(InputNeurons[hw], Alpha, Beta) * InputLayer->NeuronsD1[hw];
+									InputLayer->NeuronsD1[hw] = (enabled ? NeuronsActive[hw] : Float(1)) * Func.df(InputNeurons[hw], Alpha, Beta) * InputLayer->NeuronsD1[hw];
 							}
 						}
 					}
@@ -1234,7 +1237,7 @@ namespace dnn
 							{
 								const auto offset = c * HW();
 								for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
-									((enabled ? VecFloat().load_a(&NeuronsActive[hw]) : VecFloat(1)) * (Activation::dfVec(VecFloat().load_a(&InputNeurons[hw]), Alpha, Beta) * VecFloat().load_a(&NeuronsD1[hw]))).store_a(&NeuronsD1[hw]);
+									((enabled ? VecFloat().load_a(&NeuronsActive[hw]) : VecFloat(1)) * (Func.dfVec(VecFloat().load_a(&InputNeurons[hw]), Alpha, Beta) * VecFloat().load_a(&NeuronsD1[hw]))).store_a(&NeuronsD1[hw]);
 							}
 						else
 						{
@@ -1242,7 +1245,7 @@ namespace dnn
 							{
 								const auto offset = c * HW();
 								for (auto hw = offset; hw < offset + HW(); hw++)
-									NeuronsD1[hw] = (enabled ? NeuronsActive[hw] : Float(1)) * Activation::df(InputNeurons[hw], Alpha, Beta) * NeuronsD1[hw];
+									NeuronsD1[hw] = (enabled ? NeuronsActive[hw] : Float(1)) * Func.df(InputNeurons[hw], Alpha, Beta) * NeuronsD1[hw];
 							}
 						}
 					}
@@ -1259,7 +1262,7 @@ namespace dnn
 								{
 									const auto offset = n * PaddedCDHW() + c * HW();
 									for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
-										((enabled ? VecFloat().load_a(&NeuronsActive[hw]) : VecFloat(1)) * (Activation::dfVec(VecFloat().load_a(&InputNeurons[hw]), Alpha, Beta) * VecFloat().load_a(&InputLayer->NeuronsD1[hw]))).store_a(&InputLayer->NeuronsD1[hw]);
+										((enabled ? VecFloat().load_a(&NeuronsActive[hw]) : VecFloat(1)) * (Func.dfVec(VecFloat().load_a(&InputNeurons[hw]), Alpha, Beta) * VecFloat().load_a(&InputLayer->NeuronsD1[hw]))).store_a(&InputLayer->NeuronsD1[hw]);
 								}
 							});
 						else
@@ -1269,7 +1272,7 @@ namespace dnn
 								{
 									const auto offset = n * CDHW() + c * HW();
 									for (auto hw = offset; hw < offset + HW(); hw++)
-										InputLayer->NeuronsD1[hw] *= (enabled ? NeuronsActive[hw] : Float(1)) * Activation::df(InputNeurons[hw], Alpha, Beta);
+										InputLayer->NeuronsD1[hw] *= (enabled ? NeuronsActive[hw] : Float(1)) * Func.df(InputNeurons[hw], Alpha, Beta);
 								}
 							});
 					}
@@ -1282,7 +1285,7 @@ namespace dnn
 								{
 									const auto offset = n * PaddedCDHW() + c * HW();
 									for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
-										((enabled ? VecFloat().load_a(&NeuronsActive[hw]) : VecFloat(1)) * (Activation::dfVec(VecFloat().load_a(&InputNeurons[hw]), Alpha, Beta) * VecFloat().load_a(&NeuronsD1[hw]))).store_a(&NeuronsD1[hw]);
+										((enabled ? VecFloat().load_a(&NeuronsActive[hw]) : VecFloat(1)) * (Func.dfVec(VecFloat().load_a(&InputNeurons[hw]), Alpha, Beta) * VecFloat().load_a(&NeuronsD1[hw]))).store_a(&NeuronsD1[hw]);
 								}
 							});
 						else
@@ -1292,7 +1295,7 @@ namespace dnn
 								{
 									const auto offset = n * CDHW() + c * HW();
 									for (auto hw = offset; hw < offset + HW(); hw++)
-										NeuronsD1[hw] *= (enabled ? NeuronsActive[hw] : Float(1)) * Activation::df(InputNeurons[hw], Alpha, Beta);
+										NeuronsD1[hw] *= (enabled ? NeuronsActive[hw] : Float(1)) * Func.df(InputNeurons[hw], Alpha, Beta);
 								}
 							});
 					}
