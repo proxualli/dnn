@@ -1428,7 +1428,6 @@ namespace dnn
 				TaskState.store(TaskStates::Running);
 				State.store(States::Idle);
 
-#ifndef NDEBUG
 				auto msg = std::string();
 				if (!Activation::CheckActivations(msg))
 				{
@@ -1437,7 +1436,6 @@ namespace dnn
 					State.store(States::Completed);
 					return;
 				};
-#endif
 
 				const auto totalSkipConnections = GetTotalSkipConnections();
 
@@ -1833,6 +1831,7 @@ namespace dnn
 			}
 		}
 
+#ifndef NDEBUG
 		void CheckValid()
 		{
 			if (TaskState == TaskStates::Stopped && !BatchSizeChanging.load() && !ResettingWeights.load())
@@ -2013,6 +2012,7 @@ namespace dnn
 				State.store(States::Completed);;
 			}
 		}
+#endif
 
 		void Testing()
 		{

@@ -235,7 +235,7 @@ namespace dnn
 		{
 			if constexpr (Inplace)
 			{
-				if ((layerType == LayerTypes::Activation || layerType == LayerTypes::LayerNorm || std::string(magic_enum::enum_name<LayerTypes>(layerType)).find("BatchNorm", 0) != std::string::npos) && 
+				if ((layerType == LayerTypes::Activation || layerType == LayerTypes::LayerNorm || layerType == LayerTypes::BatchNormActivation || layerType == LayerTypes::BatchNormActivationDropout || layerType == LayerTypes::BatchNormRelu) &&
 					(inputs.size() == 1) &&
 					(inputs[0]->LayerType == LayerTypes::Convolution || inputs[0]->LayerType == LayerTypes::DepthwiseConvolution || inputs[0]->LayerType == LayerTypes::ConvolutionTranspose))
 					return true;

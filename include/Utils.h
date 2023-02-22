@@ -110,16 +110,12 @@ using namespace dnn;
 
 namespace
 {
-	constexpr auto DefaultDatasetMeanStdDev = false;
+	constexpr auto DefaultDatasetMeanStdDev = true;
 	constexpr auto Inplace = false;
-	constexpr auto Kahan = true;
-	constexpr auto Reference = true;
+	constexpr auto Kahan = false;
+	constexpr auto Reference = false;
 	constexpr auto SingleMeanVariancePass = false;
-#ifndef NDEBUG
-	constexpr auto TestActivations = true;
-#else
 	constexpr auto TestActivations = false;
-#endif
 	constexpr auto TestBatchNormalization = false;
 	
 	typedef float Float;
