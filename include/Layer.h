@@ -235,9 +235,16 @@ namespace dnn
 		{
 			if constexpr (Inplace)
 			{
-				if ((layerType == LayerTypes::Activation || layerType == LayerTypes::LayerNorm || layerType == LayerTypes::BatchNorm || layerType == LayerTypes::BatchNormActivation || layerType == LayerTypes::BatchNormActivationDropout || layerType == LayerTypes::BatchNormRelu) &&
+				if ((layerType == LayerTypes::Activation || 
+					layerType == LayerTypes::LayerNorm || 
+					layerType == LayerTypes::BatchNorm || 
+					layerType == LayerTypes::BatchNormActivation || 
+					layerType == LayerTypes::BatchNormActivationDropout || 
+					layerType == LayerTypes::BatchNormRelu) &&
 					(inputs.size() == 1) &&
-					(inputs[0]->LayerType == LayerTypes::Convolution || inputs[0]->LayerType == LayerTypes::DepthwiseConvolution || inputs[0]->LayerType == LayerTypes::ConvolutionTranspose))
+					(inputs[0]->LayerType == LayerTypes::Convolution || 
+					inputs[0]->LayerType == LayerTypes::DepthwiseConvolution || 
+					inputs[0]->LayerType == LayerTypes::ConvolutionTranspose))
 					return true;
 				else
 					return false;
@@ -463,7 +470,11 @@ namespace dnn
 
 		bool IsBatchNorm() const 
 		{ 
-			return std::string(magic_enum::enum_name<LayerTypes>(LayerType)).find("BatchNorm", 0) != std::string::npos;
+			return 
+				LayerType == LayerTypes::BatchNorm || 
+				LayerType == LayerTypes::BatchNormActivation || 
+				LayerType == LayerTypes::BatchNormActivationDropout || 
+				LayerType == LayerTypes::BatchNormRelu;
 		}
 
 		std::string GetDescriptionHeader() const
