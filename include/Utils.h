@@ -110,9 +110,9 @@ using namespace dnn;
 
 namespace
 {
-	constexpr auto DefaultDatasetMeanStdDev = true;
+	constexpr auto DefaultDatasetMeanStdDev = false;
 	constexpr auto Inplace = false;
-	constexpr auto Kahan = false;
+	constexpr auto Kahan = true;
 	constexpr auto Reference = false;
 	constexpr auto SingleMeanVariancePass = false;
 	constexpr auto TestActivations = false;
@@ -723,7 +723,7 @@ namespace
 		static_assert(std::is_floating_point<T>::value, "Only Floating point type supported in BetaDistribution function");
 		static thread_local auto generator = std::mt19937(Seed<unsigned>());
 
-		return beta_distribution<T>(a, b)(generator);
+		return ::beta_distribution<T>(a, b)(generator);
 	}
 
 	auto FloatToString(const Float value, const std::streamsize precision = 8)
@@ -888,7 +888,7 @@ namespace
 		return std::abs(reference - actual) / std::max(std::numeric_limits<Float>().min(), std::abs(reference));
 	}
 	
-	auto Float Median(FloatVector& array)
+	auto auto Median(FloatVector& array)
 	{
 		std::nth_element(array.begin(), array.begin() + array.size() / 2, array.end());
 		return array[array.size() / 2];

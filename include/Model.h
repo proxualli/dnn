@@ -1185,7 +1185,8 @@ namespace dnn
 			}
 		}
 
-		/*void SetBatchSize(const UInt batchSize)
+		/*
+		void SetBatchSize(const UInt batchSize)
 		{
 			if (!BatchSizeChanging.load() && !ResettingWeights.load())
 			{
@@ -1205,7 +1206,8 @@ namespace dnn
 
 				BatchSizeChanging.store(false);
 			}
-		}*/
+		}
+		*/
 
 		void SwitchInplaceBwd(const bool enable)
 		{

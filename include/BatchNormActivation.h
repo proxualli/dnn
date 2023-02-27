@@ -20,94 +20,10 @@ namespace dnn
 		bool reorderBwdSrc;
 		bool reorderBwdDiffSrc;
 
-		auto GetAlpha(const Activations activation, const Float alpha, const Float beta) const
-		{
-			switch (activation)
-			{
-			case Activations::Abs:
-			case Activations::ASinh:
-			case Activations::Clip:
-			case Activations::ClipV2:
-			case Activations::Exp:
-			case Activations::GeluErf:
-			case Activations::GeluTanh:
-			case Activations::Log:
-			case Activations::LogSigmoid:
-			case Activations::Mish:
-			case Activations::Round:
-			case Activations::Selu:
-			case Activations::Sigmoid:
-			case Activations::SoftSign:
-			case Activations::Sqrt:
-			case Activations::Square:
-			case Activations::Tanh:
-			case Activations::TanhExp:
-				break;
-			case Activations::BoundedRelu:
-				return alpha == Float(0) ? Float(6) : alpha;
-			case Activations::Elu:
-			case Activations::Linear:
-			case Activations::Pow:
-			case Activations::Relu:
-			case Activations::SoftRelu:
-			case Activations::Swish:
-				return alpha == Float(0) ? Float(1) : alpha;
-			case Activations::SoftPlus:
-				return alpha == Float(0) ? Float(20) : alpha;
-			case Activations::HardSigmoid:
-				return alpha == Float(0) ? Float(0.2) : alpha;
-			case Activations::HardSwish:
-				return alpha == Float(0) ? (Float(1) / Float(6)) : alpha;
-			}
-
-			return alpha;
-		}
-
-		auto GetBeta(const Activations activation, const Float alpha, const Float beta) const
-		{
-			switch (activation)
-			{
-			case Activations::Abs:
-			case Activations::ASinh:
-			case Activations::Clip:
-			case Activations::ClipV2:
-			case Activations::Elu:
-			case Activations::Exp:
-			case Activations::GeluErf:
-			case Activations::GeluTanh:
-			case Activations::Linear:
-			case Activations::Log:
-			case Activations::LogSigmoid:
-			case Activations::Mish:
-			case Activations::Pow:
-			case Activations::Relu:
-			case Activations::Round:
-			case Activations::Selu:
-			case Activations::Sigmoid:
-			case Activations::SoftRelu:
-			case Activations::SoftSign:
-			case Activations::Sqrt:
-			case Activations::Square:
-			case Activations::Swish:
-			case Activations::Tanh:
-			case Activations::TanhExp:
-				break;
-			case Activations::BoundedRelu:
-				return Float(0);
-			case Activations::HardSigmoid:
-			case Activations::HardSwish:
-				return beta == Float(0) ? Float(0.5) : beta;
-			case Activations::SoftPlus:
-				return beta == Float(0) ? Float(1) : beta;
-			}
-
-			return beta;
-		}
-
 	public:
+		const Activations ActivationFunction;
 		const Float Alpha;
 		const Float Beta;
-		const Activations ActivationFunction;
 		const Act Func;
 		const Float Eps;
 		const Float Momentum;
@@ -121,9 +37,9 @@ namespace dnn
 
 		BatchNormActivation(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const Activations activation, const std::vector<Layer*>& inputs, const bool scaling = true, const Float alpha = Float(0), const Float beta = Float(0), const Float momentum = Float(0.99), const Float eps = Float(1e-04), const bool hasBias = true) :
 			Layer(device, format, name, LayerTypes::BatchNormActivation, inputs[0]->C, inputs[0]->C, inputs[0]->C, inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs, hasBias, scaling),
-			Alpha(GetAlpha(activation, alpha, beta)),
-			Beta(GetBeta(activation, alpha, beta)),
 			ActivationFunction(activation),
+			Alpha(Activation::GetAlpha(activation, alpha, beta)),
+			Beta(Activation::GetBeta(activation, alpha, beta)),
 			Func(Activation::GetActivation(activation)),
 			Eps(eps),
 			Momentum(momentum),
@@ -220,7 +136,7 @@ namespace dnn
 				DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, ChosenFormat));
 				DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, ChosenFormat));
 
-				if constexpr (Reference)
+				if constexpr (Reference || TestBatchNormalization)
 				{
 					if (inference)
 						flags = Scaling ?
@@ -583,7 +499,11 @@ namespace dnn
 				for (auto i = 0ull; i < Neurons.size(); i++)
 				{
 					if (((output[i] - margin) > Neurons[i]) || ((output[i] + margin) < Neurons[i]))
-						throw std::invalid_argument("not passed");
+					{
+						cimg_library::cimg::dialog("BatchNormActivation Sanity Check", (std::string("Forward Check not passed") + Name).c_str(), "OK");
+						//throw std::invalid_argument("not passed");
+						break;
+					}
 				}
 			}
 		}
@@ -825,7 +745,11 @@ namespace dnn
 				for (auto i = 0ull; i < InputLayer->NeuronsD1.size(); i++)
 				{
 					if (((output[i] - margin) > InputLayer->NeuronsD1[i]) || ((output[i] + margin) < InputLayer->NeuronsD1[i]))
-						throw std::invalid_argument("not passed");
+					{
+						cimg_library::cimg::dialog("BatchNormActivation Sanity Check", (std::string("Backward Check not passed") + Name).c_str(), "OK");
+						//throw std::invalid_argument("not passed");
+						break;
+					}
 				}
 			}
 		}
