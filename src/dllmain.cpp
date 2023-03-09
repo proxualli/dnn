@@ -271,6 +271,7 @@ extern "C" DNN_API void DNNGetImage(const UInt layerIndex, const Byte fillColor,
 		{
 			case LayerTypes::BatchNorm:
 			case LayerTypes::BatchNormActivation:
+			case LayerTypes::BatchNormActivationDropout:
 			case LayerTypes::BatchNormRelu:
 			case LayerTypes::Convolution:
 			case LayerTypes::ConvolutionTranspose:
