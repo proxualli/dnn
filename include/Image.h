@@ -1080,9 +1080,9 @@ namespace dnn
 			const auto height = static_cast<unsigned>(static_cast<int>(image.H()) + static_cast<int>(std::round(static_cast<int>(image.H()) * zoom)));
 			const auto width = static_cast<unsigned>(static_cast<int>(image.W()) + static_cast<int>(std::round(static_cast<int>(image.W()) * zoom)));
 
-			Resize(image, image.D(), height, width, interpolation);
+			Image::Resize(image, image.D(), height, width, interpolation);
 
-			return Rotate(image, angle * UniformReal<Float>(Float(-1), Float(1)), interpolation, mean);
+			return Image::Rotate(image, angle * UniformReal<Float>(Float(-1), Float(1)), interpolation, mean);
 		}
 
 		// magnitude = 0   // blurred image

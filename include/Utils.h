@@ -113,7 +113,7 @@ namespace
 	constexpr auto DefaultDatasetMeanStdDev = false;
 	constexpr auto Inplace = false;
 	constexpr auto Kahan = true;
-	constexpr auto Reference = false;
+	constexpr auto Reference = true;
 	constexpr auto SingleMeanVariancePass = false;
 	constexpr auto TestActivations = false;
 	constexpr auto TestBatchNormalization = false;

@@ -23,9 +23,9 @@ namespace dnn
 
 	public:
 		const bool LocalValue;
+		const Activations ActivationFunction;
 		const Float Alpha;
 		const Float Beta;
-		const Activations ActivationFunction;
 		const Act Func;
 		const Float Eps;
 		const Float Momentum;
@@ -938,14 +938,27 @@ namespace dnn
 							for (auto c = 0ull; c < PaddedC; c += VectorSize)
 							{
 								const auto offset = n * PaddedCDHW() + c * HW();
-								for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
+								if (Enabled)
 								{
-									mask = BernoulliVecFloat(Keep);
-									mask.store_a(&NeuronsActive[hw]);
-									(mask * Scale * Func.fVec(VecFloat().load_a(&InputNeurons[hw]), Alpha, Beta)).store_a(&Neurons[hw]);
+									for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
+									{
+										mask = BernoulliVecFloat(Keep);
+										mask.store_a(&NeuronsActive[hw]);
+										(mask * Scale * Func.fVec(VecFloat().load_a(&InputNeurons[hw]), Alpha, Beta)).store_a(&Neurons[hw]);										
 #ifndef DNN_LEAN
-									VecFloat(0).store_nt(&NeuronsD1[hw]);
+										VecFloat(0).store_nt(&NeuronsD1[hw]);
 #endif // DNN_LEAN
+									}
+								}
+								else
+								{
+									for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
+									{
+										Func.fVec(VecFloat().load_a(&InputNeurons[hw]), Alpha, Beta).store_a(&Neurons[hw]);
+#ifndef DNN_LEAN
+										VecFloat(0).store_nt(&NeuronsD1[hw]);
+#endif // DNN_LEAN
+									}
 								}
 							}
 						});
@@ -955,14 +968,26 @@ namespace dnn
 						for_i(batchSize, threads, [=](UInt n)
 						{
 							VecFloat mask;
-							for (auto c = 0ull; c < PaddedC; c += VectorSize)
+							if (Enabled)
 							{
-								const auto offset = n * PaddedCDHW() + c * HW();
-								for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
+								for (auto c = 0ull; c < PaddedC; c += VectorSize)
 								{
-									mask = BernoulliVecFloat(Keep);
-									mask.store_a(&NeuronsActive[hw]);
-									(mask * Scale * Func.fVec(VecFloat().load_a(&InputNeurons[hw]), Alpha, Beta)).store_a(&Neurons[hw]);
+									const auto offset = n * PaddedCDHW() + c * HW();
+									for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
+									{
+										mask = BernoulliVecFloat(Keep);
+										mask.store_a(&NeuronsActive[hw]);
+										(mask * Scale * Func.fVec(VecFloat().load_a(&InputNeurons[hw]), Alpha, Beta)).store_a(&Neurons[hw]);
+									}
+								}
+							}
+							else
+							{
+								for (auto c = 0ull; c < PaddedC; c += VectorSize)
+								{
+									const auto offset = n * PaddedCDHW() + c * HW();
+									for (auto hw = offset; hw < offset + strideHW; hw += VectorSize)
+										Func.fVec(VecFloat().load_a(&InputNeurons[hw]), Alpha, Beta).store_a(&Neurons[hw]);
 								}
 							}
 						});

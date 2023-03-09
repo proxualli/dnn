@@ -501,7 +501,6 @@ namespace dnn
 					if (((output[i] - margin) > Neurons[i]) || ((output[i] + margin) < Neurons[i]))
 					{
 						cimg_library::cimg::dialog("BatchNormActivation Sanity Check", (std::string("Forward Check not passed: ") + Name).c_str(), "OK");
-						//throw std::invalid_argument("not passed");
 						break;
 					}
 				}
@@ -747,7 +746,6 @@ namespace dnn
 					if (((output[i] - margin) > InputLayer->NeuronsD1[i]) || ((output[i] + margin) < InputLayer->NeuronsD1[i]))
 					{
 						cimg_library::cimg::dialog("BatchNormActivation Sanity Check", (std::string("Backward Check not passed: ") + Name).c_str(), "OK");
-						//throw std::invalid_argument("not passed");
 						break;
 					}
 				}
