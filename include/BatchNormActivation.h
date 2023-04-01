@@ -356,7 +356,7 @@ namespace dnn
 									{
 										Func.fVec(((VecFloat().load_a(&InputLayer->Neurons[hw]) - mean) * weightedInvStdDev + biases), Alpha, Beta).store_a(&Neurons[hw]);
 	#ifndef DNN_LEAN
-										VecFloat(0).store_nt(&NeuronsD1[hw]);
+										VecZero.store_nt(&NeuronsD1[hw]);
 	#endif
 									}
 									for (auto hw = part; hw < start + HW(); hw++)
@@ -474,7 +474,7 @@ namespace dnn
 										{
 											Func.fVec(mul_add(VecFloat().load_a(&InputLayer->Neurons[w]) - mean, weightedInvStdDev, biases), Alpha, Beta).store_a(&Neurons[w]);
 #ifndef DNN_LEAN
-											VecFloat(0).store_nt(&NeuronsD1[w]);
+											VecZero.store_nt(&NeuronsD1[w]);
 #endif
 										}
 									}
@@ -861,7 +861,7 @@ namespace dnn
 								{
 									Func.fVec(VecFloat().load_a(&InputNeurons[hw]), Alpha, Beta).store_a(&Neurons[hw]);
 #ifndef DNN_LEAN
-									VecFloat(0).store_nt(&NeuronsD1[hw]);
+									VecZero.store_nt(&NeuronsD1[hw]);
 #endif // DNN_LEAN
 								}
 							}

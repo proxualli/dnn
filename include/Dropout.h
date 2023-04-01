@@ -101,7 +101,7 @@ namespace dnn
 						mask.store_a(&NeuronsActive[i]);
 						(mask * Scale * VecFloat().load_a(&InputLayer->Neurons[i])).store_a(&Neurons[i]);
 #ifndef DNN_LEAN
-						VecFloat(0).store_nt(&NeuronsD1[i]);
+						VecZero.store_nt(&NeuronsD1[i]);
 #endif
 					}
 					for (auto i = part; i < size; i++)
@@ -126,7 +126,7 @@ namespace dnn
 							mask.store_a(&NeuronsActive[i]);
 							(mask * Scale * VecFloat().load_a(&InputLayer->Neurons[i])).store_a(&Neurons[i]);
 #ifndef DNN_LEAN
-							VecFloat(0).store_nt(&NeuronsD1[i]);
+							VecZero.store_nt(&NeuronsD1[i]);
 #endif
 						}
 						for (auto i = end; i < start + size; i++)

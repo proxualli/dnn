@@ -96,7 +96,7 @@ namespace dnn
 								In.load_a(&InputLayer->Neurons[hw + inputOffset]);
 								In.store_a(&Neurons[hw + outputOffset]);
 #ifndef DNN_LEAN
-								VecFloat(0).store_nt(&NeuronsD1[hw + outputOffset]);
+								VecZero.store_nt(&NeuronsD1[hw + outputOffset]);
 #endif // DNN_LEAN
 							}
 						}
@@ -166,7 +166,7 @@ namespace dnn
 									In.load_a(&InputLayer->Neurons[hw + inputOffset]);
 									In.store_a(&Neurons[hw + outputOffset]);
 #ifndef DNN_LEAN
-									VecFloat(0).store_nt(&NeuronsD1[hw + outputOffset]);
+									VecZero.store_nt(&NeuronsD1[hw + outputOffset]);
 #endif // DNN_LEAN
 								}
 							}
@@ -232,7 +232,6 @@ namespace dnn
 
 			const auto plain = IsPlainFormat();
 			const auto threads = GetThreads(batchSize * (plain ? CDHW() : PaddedCDHW()), Float(10));
-			
 			const auto groupC = (Group - 1) * C;
 			const auto strideHW = HW() * VectorSize;
 

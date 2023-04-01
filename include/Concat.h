@@ -23,8 +23,11 @@ namespace dnn
 		}
 
 	public:
+		FloatArray InputNeurons;
+
 		Concat(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs) :
-			Layer(device, format, name, LayerTypes::Concat, 0, 0, InputChannels(inputs), inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs)
+			Layer(device, format, name, LayerTypes::Concat, 0, 0, InputChannels(inputs), inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs),
+			InputNeurons(FloatArray())
 		{
 			assert(Inputs.size() > 1);
 		}
@@ -48,6 +51,14 @@ namespace dnn
 		UInt FanOut() const final override
 		{
 			return 1;
+		}
+
+		void SetBatchSize(const UInt batchSize) final override
+		{
+			Layer::SetBatchSize(batchSize);
+
+			if constexpr (TestConcat)
+				InputNeurons.resize(batchSize, C, H, W, dnnl::memory::data_type::f32, BlockedFmt, Device.engine);
 		}
 
 		void InitializeDescriptors(const UInt batchSize) final override
@@ -119,7 +130,6 @@ namespace dnn
 				{
 					const auto plain = IsPlainFormat();
 					const auto threads = GetThreads(batchSize * (plain ? CDHW() : PaddedCDHW()), Float(10));
-
 					const auto strideHW = HW() * VectorSize;
 
 #ifdef DNN_STOCHASTIC
@@ -141,7 +151,7 @@ namespace dnn
 										In.load_a(&Inputs[inputLayer]->Neurons[w + inputIndex]);
 										In.store_a(&Neurons[w + outputIndex]);
 #ifndef DNN_LEAN
-										VecFloat(0).store_nt(&NeuronsD1[w + outputIndex]);
+										VecZero.store_nt(&NeuronsD1[w + outputIndex]);
 #endif
 									}
 								}
@@ -193,7 +203,7 @@ namespace dnn
 											In.load_a(&Inputs[inputLayer]->Neurons[w + inputIndex]);
 											In.store_a(&Neurons[w + outputIndex]);
 #ifndef DNN_LEAN
-											VecFloat(0).store_nt(&NeuronsD1[w + outputIndex]);
+											VecZero.store_nt(&NeuronsD1[w + outputIndex]);
 #endif
 										}
 									}
@@ -228,7 +238,41 @@ namespace dnn
 #ifdef DNN_STOCHASTIC
 					}
 #endif
-}
+					if constexpr (TestConcat)
+					{
+						fwdArgs = std::unordered_map<int, dnnl::memory>{ { DNNL_ARG_DST, dnnl::memory(*DstMemDesc, Device.engine, InputNeurons.data()) } };
+						for (auto i = 0ull; i < InputsFwd.size(); i++)
+							fwdArgs.insert({ DNNL_ARG_MULTIPLE_SRC + int(i), dnnl::memory(srcsMemsDesc[i], Device.engine, Inputs[i]->Neurons.data()) });
+
+						for (auto i = 0ull; i < InputNeurons.size(); i++)
+							InputNeurons[i] = Float(0);
+
+#ifdef DNN_CACHE_PRIMITIVES
+						fwd->execute(Device.stream, fwdArgs);
+#else
+						dnnl::concat(*fwdDesc).execute(Device.stream, fwdArgs);
+#endif
+						Device.stream.wait();
+
+
+						const auto margin = Float(0.0001);
+
+						for (auto i = 0ull; i < Neurons.size(); i++)
+						{
+							if (((InputNeurons[i] - margin) > Neurons[i]) || ((InputNeurons[i] + margin) < Neurons[i]))
+							{
+								cimg_library::cimg::dialog("Concat Sanity Check", (std::string("Forward Check not passed: ") + Name).c_str(), "OK");
+								break;
+							}
+
+							if (NeuronsD1[i] != Float(0))
+							{
+								cimg_library::cimg::dialog("Concat Sanity Check", (std::string("Forward Check D1 not passed: ") + Name).c_str(), "OK");
+								break;
+							}
+						}
+					}
+				}
 				else
 				{
 #ifdef DNN_CACHE_PRIMITIVES

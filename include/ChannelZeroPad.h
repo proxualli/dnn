@@ -148,7 +148,7 @@ namespace dnn
 								In.load_a(&InputLayer->Neurons[w + inputOffset]);
 								In.store_a(&Neurons[w + inputOffset]);
 #ifndef DNN_LEAN
-								VecFloat(0).store_nt(&NeuronsD1[w + inputOffset]);
+								VecZero.store_nt(&NeuronsD1[w + inputOffset]);
 #endif // DNN_LEAN
 							}
 							
@@ -160,7 +160,7 @@ namespace dnn
 							{
 								VecFloat(0).store_a(&Neurons[w + inputOffset]);
 #ifndef DNN_LEAN
-								VecFloat(0).store_nt(&NeuronsD1[w + inputOffset]);
+								VecZero.store_nt(&NeuronsD1[w + inputOffset]);
 #endif // DNN_LEAN
 							}
 						}
@@ -198,7 +198,7 @@ namespace dnn
 									In.load_a(&InputLayer->Neurons[w + inputOffset]);
 									In.store_a(&Neurons[w + outputOffset]);
 #ifndef DNN_LEAN
-									VecFloat(0).store_nt(&NeuronsD1[w + outputOffset]);
+									VecZero.store_nt(&NeuronsD1[w + outputOffset]);
 #endif // DNN_LEAN
 								}
 							}
@@ -209,7 +209,7 @@ namespace dnn
 								{
 									VecFloat(0).store_a(&Neurons[w + outputOffset]);
 #ifndef DNN_LEAN								
-									VecFloat(0).store_nt(&NeuronsD1[w + outputOffset]);
+									VecZero.store_nt(&NeuronsD1[w + outputOffset]);
 #endif // DNN_LEAN
 								}
 							}

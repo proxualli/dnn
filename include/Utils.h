@@ -117,8 +117,8 @@ namespace
 	constexpr auto SingleMeanVariancePass = false;
 	constexpr auto TestActivations = false;
 	constexpr auto TestBatchNormalization = false;
-	// constexpr auto TestConcat = false;
-	
+	constexpr auto TestConcat = false;
+
 	typedef float Float;
 	typedef std::size_t UInt;
 	typedef unsigned char Byte;
@@ -171,6 +171,7 @@ namespace
 	constexpr auto VectorSize = 4ull;
 	constexpr auto BlockedFmt = dnnl::memory::format_tag::nChw4c;
 #endif
+	inline const auto VecZero = VecFloat(Float(0));
 
 	constexpr auto GetVectorPart(const UInt& elements) NOEXCEPT { return (elements / VectorSize) * VectorSize; }
 	constexpr auto DivUp(const UInt& c) NOEXCEPT { if (c == 0ull) return 0ull; else return (((c - 1) / VectorSize) + 1) * VectorSize; }
