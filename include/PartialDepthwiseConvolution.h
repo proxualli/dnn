@@ -23,6 +23,9 @@ namespace dnn
 		bool reorderBwdDiffDst;
 		bool reorderBwdWeights;
 		bool reorderBwdDiffWeights;
+		bool reorderBwdDataDiffDst;
+		bool sameBwdDiffDstFmt;
+
 		dnnl::memory::desc partSrc;
 		dnnl::memory::desc partDiffSrc;
 
@@ -60,7 +63,9 @@ namespace dnn
 			reorderBwdDiffSrc(false),
 			reorderBwdDiffDst(false),
 			reorderBwdWeights(false),
-			reorderBwdDiffWeights(false)
+			reorderBwdDiffWeights(false),
+			reorderBwdDataDiffDst(false),
+			sameBwdDiffDstFmt(false)
 		{
 			assert(Inputs.size() == 1);
 			assert(Multiplier > 0);
@@ -159,10 +164,12 @@ namespace dnn
 
 			reorderFwdSrc = fwdDesc->src_desc() != partSrc;
 			reorderBwdSrc = bwdWeightsDesc->src_desc() != partSrc;
-			reorderBwdDiffDst = bwdWeightsDesc->diff_dst_desc() != *DiffDstMemDesc;
 			reorderBwdDiffWeights = bwdWeightsDesc->diff_weights_desc() != *WeightsMemDesc;
+			reorderBwdDiffDst = bwdWeightsDesc->diff_dst_desc() != *DiffDstMemDesc;
 			reorderBwdDiffSrc = bwdDataDesc->diff_src_desc() != partDiffSrc;
 			reorderBwdWeights = bwdDataDesc->weights_desc() != *WeightsMemDesc;
+			reorderBwdDataDiffDst = bwdDataDesc->diff_dst_desc() != *DiffDstMemDesc;
+			sameBwdDiffDstFmt = bwdDataDesc->diff_dst_desc() == bwdWeightsDesc->diff_dst_desc();
 			
 #ifdef DNN_CACHE_PRIMITIVES
 			fwd = std::make_unique<dnnl::convolution_forward>(dnnl::convolution_forward(*fwdDesc));
@@ -257,10 +264,17 @@ namespace dnn
 			auto memDiffSrc = dnnl::memory(partDiffSrc, Device.engine, InputLayer->NeuronsD1.data());
 			auto diffSrcMem = reorderBwdDiffSrc ? dnnl::memory(bwdDataDesc->diff_src_desc(), Device.engine) : memDiffSrc;
 
+			auto diffDataDst = sameBwdDiffDstFmt ? diffDst : (reorderBwdDataDiffDst ? dnnl::memory(bwdDataDesc->diff_dst_desc(), Device.engine) : diffDstMem);
+			if (reorderBwdDataDiffDst && !sameBwdDiffDstFmt)
+			{
+				dnnl::reorder(diffDstMem, diffDataDst).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_FROM, diffDstMem}, { DNNL_ARG_TO, diffDataDst } });
+				Device.stream.wait();
+			}
+
 #ifdef DNN_CACHE_PRIMITIVES
-			bwdData->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_DIFF_DST, diffDstMem}, { DNNL_ARG_WEIGHTS, weightsMem }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
+			bwdData->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_DIFF_DST, diffDataDst}, { DNNL_ARG_WEIGHTS, weightsMem }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
 #else
-			dnnl::convolution_backward_data(*bwdDataDesc).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_DIFF_DST, diffDstMem}, { DNNL_ARG_WEIGHTS, weightsMem }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
+			dnnl::convolution_backward_data(*bwdDataDesc).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_DIFF_DST, diffDataDst}, { DNNL_ARG_WEIGHTS, weightsMem }, { DNNL_ARG_DIFF_SRC, diffSrcMem } });
 #endif
 			Device.stream.wait();
 
