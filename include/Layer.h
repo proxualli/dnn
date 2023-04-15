@@ -224,6 +224,11 @@ namespace dnn
 		}
 	};
 
+	bool IsBatchNorm(LayerTypes type)
+	{
+		return std::string(magic_enum::enum_name<LayerTypes>(type)).find("BatchNorm", 0) != std::string::npos;
+	}
+
 	class Layer
 	{
 	protected:
@@ -390,7 +395,7 @@ namespace dnn
 			Skip(false),
 			Scaling(scaling),
 			HasBias(hasBias && biasCount > 0),
-			HasWeights(weightCount > 0),
+			HasWeights(IsBatchNorm(layerType) ? scaling : weightCount > 0),
 			WeightsFiller(Fillers::HeNormal),
 			WeightsFillerMode(FillerModes::In),
 			WeightsGain(Float(1)),
@@ -474,15 +479,6 @@ namespace dnn
 				ChosenFormat == dnnl::memory::format_tag::abc || 
 				ChosenFormat == dnnl::memory::format_tag::abcd || 
 				ChosenFormat == dnnl::memory::format_tag::abcde; 
-		}
-
-		bool IsBatchNorm() const 
-		{ 
-			return 
-				LayerType == LayerTypes::BatchNorm || 
-				LayerType == LayerTypes::BatchNormActivation || 
-				LayerType == LayerTypes::BatchNormActivationDropout || 
-				LayerType == LayerTypes::BatchNormRelu;
 		}
 
 		std::string GetDescriptionHeader() const

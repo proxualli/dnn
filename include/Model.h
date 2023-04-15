@@ -578,7 +578,7 @@ namespace dnn
 		bool BatchNormalizationUsed() const
 		{
 			for (const auto& layer : Layers)
-				if (layer->IsBatchNorm())
+				if (IsBatchNorm(layer->LayerType))
 					return true;
 
 			return false;
