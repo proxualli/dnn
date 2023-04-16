@@ -103,6 +103,7 @@ namespace dnn
 
 				Biases = weights;
 				WeightsMemDesc = std::make_unique<dnnl::memory::desc>(fwdDescPRelu->weights_desc());
+				WeightsFormat = GetDataFmt(*WeightsMemDesc);
 			}
 
 			DstMemDesc = std::make_unique<dnnl::memory::desc>(fwdDescPRelu->dst_desc());

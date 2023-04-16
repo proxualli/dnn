@@ -103,6 +103,7 @@ namespace dnn
 
 				Weights = weights;
 				WeightsMemDesc = std::make_unique<dnnl::memory::desc>(fwdDesc->weights_desc());
+				WeightsFormat = GetDataFmt(*WeightsMemDesc);
 			}
 
 			DstMemDesc = std::make_unique<dnnl::memory::desc>(fwdDesc->dst_desc());

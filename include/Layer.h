@@ -296,6 +296,12 @@ namespace dnn
 			return EqualDimensions(inputs) ? Byte(1) : ((inputs[0]->H == 1 && inputs[0]->W == 1) ? Byte(0) : Byte(1));
 		}
 
+	private:
+		FloatVector* OptWeights;
+		FloatVector* OptWeightsD1;
+		FloatVector* OptWeightsPar1;
+		FloatVector* OptWeightsPar2;
+
 	public:
 		const std::string Name;
 		const LayerTypes LayerType;
@@ -322,6 +328,7 @@ namespace dnn
 		bool SharesInputOriginal;
 		bool SharesInputInplace;
 		dnnl::memory::format_tag Format;
+		dnnl::memory::format_tag WeightsFormat;
 		const bool Scaling;
 		const bool HasBias;
 		const bool HasWeights;
@@ -347,10 +354,6 @@ namespace dnn
 		FloatVector WeightsD1;
 		FloatVector WeightsPar1;
 		FloatVector WeightsPar2;
-		FloatVector* OptWeights;
-		FloatVector* OptWeightsD1;
-		FloatVector* OptWeightsPar1;
-		FloatVector* OptWeightsPar2;
 		FloatVector Biases;
 		FloatVector BiasesD1;
 		FloatVector BiasesPar1;
@@ -378,6 +381,7 @@ namespace dnn
 			Device(device),
 			Format(format),
 			ChosenFormat(format),
+			WeightsFormat(format),
 			Name(name),
 			LayerType(layerType),
 			WeightCount(IsNorm(layerType) ? (scaling ? weightCount : 0ull) : weightCount),
@@ -502,6 +506,8 @@ namespace dnn
 			description.append(nwl + std::string(" Features:") + tab + std::to_string(C) + std::string("x") + std::to_string(H) + std::string("x") + std::to_string(W));
 			description.append(nwl + std::string(" Neurons:") + tab + std::to_string(CDHW()));
 			description.append(nwl + std::string(" Format:") + tab + std::string(dnnl_fmt_tag2str(static_cast<dnnl_format_tag_t>(ChosenFormat))));
+			if (HasWeights)
+				description.append(nwl + std::string(" Weight:") + tab + std::string(dnnl_fmt_tag2str(static_cast<dnnl_format_tag_t>(WeightsFormat))));
 
 			return description;
 		}
