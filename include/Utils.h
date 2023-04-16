@@ -184,6 +184,10 @@ namespace
 		{
 			if (md.get_inner_nblks() == 0)
 			{
+				if (md.get_ndims() == 1)
+				{
+					return dnnl::memory::format_tag::a;
+				}
 				if (md.get_ndims() == 2)
 				{
 					if (md.get_strides()[0] == 1)
