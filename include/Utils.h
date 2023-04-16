@@ -114,7 +114,7 @@ namespace
 	constexpr auto Inplace = true;
 	constexpr auto Kahan = true;
 	constexpr auto Reference = false;
-	constexpr auto SingleMeanVariancePass = false;
+	constexpr auto SingleMeanVariancePass = true;
 	constexpr auto TestActivations = false;
 	constexpr auto TestBatchNormalization = false;
 	constexpr auto TestConcat = false;
@@ -178,76 +178,216 @@ namespace
 	auto IsPlainDataFmt(const dnnl::memory::desc& md) NOEXCEPT { return md.get_format_kind() == dnnl::memory::format_kind::blocked && md.get_inner_nblks() == 0; }
 	//auto IsBlockedDataFmt(const dnnl::memory::desc& md) NOEXCEPT { return md.get_format_kind() == dnnl::memory::format_kind::blocked && md.get_inner_nblks() == 1 && md.get_inner_idxs()[0] == 1 && (md.get_inner_blks()[0] == 4 || md.get_inner_blks()[0] == 8 || md.get_inner_blks()[0] == 16); }
 	constexpr auto PlainFmt = dnnl::memory::format_tag::nchw; // equals dnnl::memory::format_tag::abcd
-	auto GetDataFmt(const dnnl::memory::desc& md)
+	auto GetDataFmt(const dnnl::memory::desc& md) NOEXCEPT
 	{
 		if (md.get_format_kind() == dnnl::memory::format_kind::blocked)
 		{
-			switch (md.get_ndims())
+			if (md.get_inner_nblks() == 0)
 			{
-			case 1:
-				if (md.get_inner_nblks() == 0)
-					return dnnl::memory::format_tag::a;
-				else
-					throw std::invalid_argument("Unsupported format in GetDataFmt function");
-				break;
-			case 2:
-				if (md.get_inner_nblks() == 0)
-					return dnnl::memory::format_tag::ab;
-				else
-					throw std::invalid_argument("Unsupported format in GetDataFmt function");
-				break;
-			case 3:
-				if (md.get_inner_nblks() == 0)
-					return dnnl::memory::format_tag::abc;
-				else
-					throw std::invalid_argument("Unsupported format in GetDataFmt function");
-				break;
-			case 4:
-				if (md.get_inner_nblks() == 0)
+				if (md.get_ndims() == 2)
 				{
-					if (md.get_strides()[1] == 1)
-						return dnnl::memory::format_tag::acdb;
-					else
-						if (md.get_strides()[3] == 1)
-							return dnnl::memory::format_tag::abcd;
-
-					throw std::invalid_argument("Unsupported format in GetDataFmt function");
+					if (md.get_strides()[0] == 1)
+						return dnnl::memory::format_tag::ba;
+					else if (md.get_strides()[1] == 1)
+						return dnnl::memory::format_tag::ab;
 				}
-				else
+				if (md.get_ndims() == 3)
+				{
+					if (md.get_strides()[0] == 1)
+						return dnnl::memory::format_tag::bca;
+					else if (md.get_strides()[1] == 1)
+						return dnnl::memory::format_tag::acb;
+					else if (md.get_strides()[2] == 1)
+						return dnnl::memory::format_tag::abc;
+				}
+				if (md.get_ndims() == 4)
+				{
+					if (md.get_strides()[0] == 1)
+						return dnnl::memory::format_tag::bcda;
+					else if (md.get_strides()[1] == 1)
+						return dnnl::memory::format_tag::acdb;
+					else if (md.get_strides()[2] == 1)
+						return dnnl::memory::format_tag::abdc;
+					else if (md.get_strides()[3] == 1)
+						return dnnl::memory::format_tag::abcd;
+				}
+				if (md.get_ndims() == 5)
+				{
+					if (md.get_strides()[0] == 1)
+						return dnnl::memory::format_tag::bcdea;
+					else if (md.get_strides()[1] == 1)
+						return dnnl::memory::format_tag::acdeb;
+					else if (md.get_strides()[2] == 1)
+						return dnnl::memory::format_tag::abdec;
+					else if (md.get_strides()[3] == 1)
+						return dnnl::memory::format_tag::abced;
+					else if (md.get_strides()[4] == 1)
+						return dnnl::memory::format_tag::abcde;
+				}
+			}
+			else
+			{
+				if (md.get_ndims() == 2)
+				{
+					return dnnl::memory::format_tag::ab;
+				}
+				if (md.get_ndims() == 3)
+				{
+					return dnnl::memory::format_tag::abc;
+				}
+				if (md.get_ndims() == 4)
 				{
 					if (md.get_inner_nblks() == 1 && md.get_inner_idxs()[0] == 1)
 					{
 						switch (md.get_inner_blks()[0])
 						{
 						case 4:
-							return dnnl::memory::format_tag::nChw4c;
+							return dnnl::memory::format_tag::aBcd4b;
 						case 8:
-							return dnnl::memory::format_tag::nChw8c;
+							return dnnl::memory::format_tag::aBcd8b;
 						case 16:
-							return dnnl::memory::format_tag::nChw16c;
+							return dnnl::memory::format_tag::aBcd16b;
 						default:
-							throw std::invalid_argument("Unsupported format in GetDataFmt function");
+							return dnnl::memory::format_tag::undef;
 						}
 					}
-					else
-						throw std::invalid_argument("Unsupported format in GetDataFmt function");
+					else if (md.get_inner_nblks() == 2 && md.get_inner_idxs()[0] == 1 && (md.get_inner_blks()[0] == md.get_inner_blks()[1]))
+					{
+						switch (md.get_inner_blks()[0])
+						{
+						case 4:
+							return dnnl::memory::format_tag::ABcd4b4a;
+						case 8:
+							return dnnl::memory::format_tag::ABcd8b8a;
+						case 16:
+							return dnnl::memory::format_tag::ABcd16b16a;
+						default:
+							return dnnl::memory::format_tag::undef;
+						}
+					}
+					else if (md.get_inner_nblks() == 2 && md.get_inner_idxs()[0] == 0 && (md.get_inner_blks()[0] == md.get_inner_blks()[1]))
+					{
+						switch (md.get_inner_blks()[0])
+						{
+						case 4:
+							return dnnl::memory::format_tag::ABcd4a4b;
+						case 8:
+							return dnnl::memory::format_tag::ABcd8a8b;
+						case 16:
+							return dnnl::memory::format_tag::ABcd16a16b;
+						default:
+							return dnnl::memory::format_tag::undef;
+						}
+					}
 				}
-				break;
-			case 5:
-				if (md.get_inner_nblks() == 0)
-					return dnnl::memory::format_tag::abcde;
-				else
-					throw std::invalid_argument("Unsupported format in GetDataFmt function");
-				break;
-			default:
-				throw std::invalid_argument("Unsupported number of dimensions in GetDataFmt function");
+				if (md.get_ndims() == 5)
+				{
+					if (md.get_inner_nblks() == 1 && md.get_inner_idxs()[0] == 1)
+					{
+						switch (md.get_inner_blks()[0])
+						{
+						case 4:
+							return dnnl::memory::format_tag::aBcde4b;
+						case 8:
+							return dnnl::memory::format_tag::aBcde8b;
+						case 16:
+							return dnnl::memory::format_tag::aBcde16b;
+						default:
+							return dnnl::memory::format_tag::undef;
+						}
+					}
+					else if (md.get_inner_nblks() == 2 && md.get_inner_idxs()[0] == 1 && (md.get_inner_blks()[0] == md.get_inner_blks()[1]))
+					{
+						switch (md.get_inner_blks()[0])
+						{
+						case 4:
+							return dnnl::memory::format_tag::ABcde4b4a;
+						case 8:
+							return dnnl::memory::format_tag::ABcde8b8a;
+						case 16:
+							return dnnl::memory::format_tag::ABcde16b16a;
+						default:
+							return dnnl::memory::format_tag::undef;
+						}
+					}
+					else if (md.get_inner_nblks() == 2 && md.get_inner_idxs()[0] == 0 && (md.get_inner_blks()[0] == md.get_inner_blks()[1]))
+					{
+						switch (md.get_inner_blks()[0])
+						{
+						case 4:
+							return dnnl::memory::format_tag::ABcde4a4b;
+						case 8:
+							return dnnl::memory::format_tag::ABcde8a8b;
+						case 16:
+							return dnnl::memory::format_tag::ABcde16a16b;
+						default:
+							return dnnl::memory::format_tag::undef;
+						}
+					}
+
+					/*
+
+					/// 5D tensor blocked by 1st dimension with block size 16
+					dnnl_ABcde4b16a4b,
+					/// 5D tensor blocked by 1st dimension with block size 8
+					dnnl_ABcde2b8a4b,
+					/// 5D tensor blocked by 2nd dimension with block size 16
+					dnnl_aBcde16b,
+					dnnl_ABcde16b16a,
+					dnnl_aBCde16b16c,
+					dnnl_aBCde16c16b,
+					dnnl_aBCde2c8b4c,
+					dnnl_Abcde4a,
+					/// 5D tensor blocked by 2nd dimension with block size 32
+					dnnl_aBcde32b,
+					/// 5D tensor blocked by 2nd dimension with block size 4
+					dnnl_aBcde4b,
+					dnnl_ABcde4b4a,
+					dnnl_ABcde4a4b,
+					dnnl_aBCde4b4c,
+					dnnl_aBCde2c4b2c,
+					dnnl_aBCde4b8c2b,
+					dnnl_aBCde4c16b4c,
+					dnnl_aBCde16c16b4c,
+					dnnl_aBCde16c16b2c,
+					dnnl_aBCde4c4b,
+					dnnl_Abcde8a,
+					dnnl_ABcde8a8b,
+					dnnl_ABcde8a4b,
+					dnnl_BAcde16b16a,
+					/// 5D tensor blocked by 2nd dimension with block size 8
+					dnnl_aBcde8b,
+					dnnl_ABcde8b16a2b,
+					dnnl_aBCde8b16c2b,
+					dnnl_aBCde4c8b2c,
+					dnnl_aCBde8b16c2b,
+					dnnl_ABcde8b8a,
+					dnnl_ABcde32a32b,
+					dnnl_aBCde8b8c,
+					dnnl_aBCde8b4c,
+					dnnl_ABc4a8b8a4b,
+					dnnl_ABcd4a8b8a4b,
+					dnnl_ABcde4a8b8a4b,
+					dnnl_BAc4b8a8b4a,
+					dnnl_BAcd4b8a8b4a,
+					dnnl_BAcde4b8a8b4a,
+					dnnl_ABcd2a8b8a2b,
+					dnnl_aBCd4b8c8b4c,
+					dnnl_aBCde4b8c8b4c,
+					dnnl_aBCde2b8c8b2c,
+					dnnl_aBCde8c16b2c,
+					dnnl_aBCde8c8b,
+					/// 5D tensor blocked by 3rd dimension with block size 4
+					dnnl_aBCde2b4c2b,
+
+					*/
+				}
 			}
 		}
 
 		return dnnl::memory::format_tag::undef;
 	}
-
-	
+		
 	template<typename T>
 	static void InitArray(T* destination, const std::size_t elements, const int initValue = 0) NOEXCEPT
 	{
