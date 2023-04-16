@@ -182,68 +182,75 @@ namespace
 	{
 		if (md.get_format_kind() == dnnl::memory::format_kind::blocked)
 		{
-			if (md.get_inner_nblks() == 0)
+			const auto ndims = md.get_ndims();
+			const auto inner_nblks = md.get_inner_nblks();
+			const auto strides = md.get_strides();
+			const auto inner_idxs = md.get_inner_idxs();
+			const auto inner_blks = md.get_inner_blks();
+			
+			if (inner_nblks == 0)
 			{
-				if (md.get_ndims() == 1)
+				if (ndims == 1)
 				{
 					return dnnl::memory::format_tag::a;
 				}
-				if (md.get_ndims() == 2)
+				if (ndims == 2)
 				{
-					if (md.get_strides()[0] == 1)
+					
+					if (strides[0] == 1)
 						return dnnl::memory::format_tag::ba;
-					else if (md.get_strides()[1] == 1)
+					else if (strides[1] == 1)
 						return dnnl::memory::format_tag::ab;
 				}
-				if (md.get_ndims() == 3)
+				if (ndims == 3)
 				{
-					if (md.get_strides()[0] == 1)
+					if (strides[0] == 1)
 						return dnnl::memory::format_tag::bca;
-					else if (md.get_strides()[1] == 1)
+					else if (strides[1] == 1)
 						return dnnl::memory::format_tag::acb;
-					else if (md.get_strides()[2] == 1)
+					else if (strides[2] == 1)
 						return dnnl::memory::format_tag::abc;
 				}
-				if (md.get_ndims() == 4)
+				if (ndims == 4)
 				{
-					if (md.get_strides()[0] == 1)
+					if (strides[0] == 1)
 						return dnnl::memory::format_tag::bcda;
-					else if (md.get_strides()[1] == 1)
+					else if (strides[1] == 1)
 						return dnnl::memory::format_tag::acdb;
-					else if (md.get_strides()[2] == 1)
+					else if (strides[2] == 1)
 						return dnnl::memory::format_tag::abdc;
-					else if (md.get_strides()[3] == 1)
+					else if (strides[3] == 1)
 						return dnnl::memory::format_tag::abcd;
 				}
-				if (md.get_ndims() == 5)
+				if (ndims == 5)
 				{
-					if (md.get_strides()[0] == 1)
+					if (strides[0] == 1)
 						return dnnl::memory::format_tag::bcdea;
-					else if (md.get_strides()[1] == 1)
+					else if (strides[1] == 1)
 						return dnnl::memory::format_tag::acdeb;
-					else if (md.get_strides()[2] == 1)
+					else if (strides[2] == 1)
 						return dnnl::memory::format_tag::abdec;
-					else if (md.get_strides()[3] == 1)
+					else if (strides[3] == 1)
 						return dnnl::memory::format_tag::abced;
-					else if (md.get_strides()[4] == 1)
+					else if (strides[4] == 1)
 						return dnnl::memory::format_tag::abcde;
 				}
 			}
 			else
 			{
-				if (md.get_ndims() == 2)
+				if (ndims == 2)
 				{
 					return dnnl::memory::format_tag::ab;
 				}
-				if (md.get_ndims() == 3)
+				if (ndims == 3)
 				{
 					return dnnl::memory::format_tag::abc;
 				}
-				if (md.get_ndims() == 4)
+				if (ndims == 4)
 				{
-					if (md.get_inner_nblks() == 1 && md.get_inner_idxs()[0] == 1)
+					if (inner_nblks == 1 && inner_idxs[0] == 1)
 					{
-						switch (md.get_inner_blks()[0])
+						switch (inner_blks[0])
 						{
 						case 4:
 							return dnnl::memory::format_tag::aBcd4b;
@@ -255,9 +262,9 @@ namespace
 							return dnnl::memory::format_tag::undef;
 						}
 					}
-					else if (md.get_inner_nblks() == 2 && md.get_inner_idxs()[0] == 1 && (md.get_inner_blks()[0] == md.get_inner_blks()[1]))
+					else if (inner_nblks == 2 && inner_idxs[0] == 1 && (inner_blks[0] == inner_blks[1]))
 					{
-						switch (md.get_inner_blks()[0])
+						switch (inner_blks[0])
 						{
 						case 4:
 							return dnnl::memory::format_tag::ABcd4b4a;
@@ -269,9 +276,9 @@ namespace
 							return dnnl::memory::format_tag::undef;
 						}
 					}
-					else if (md.get_inner_nblks() == 2 && md.get_inner_idxs()[0] == 0 && (md.get_inner_blks()[0] == md.get_inner_blks()[1]))
+					else if (inner_nblks == 2 && inner_idxs[0] == 0 && (inner_blks[0] == inner_blks[1]))
 					{
-						switch (md.get_inner_blks()[0])
+						switch (inner_blks[0])
 						{
 						case 4:
 							return dnnl::memory::format_tag::ABcd4a4b;
@@ -284,11 +291,11 @@ namespace
 						}
 					}
 				}
-				if (md.get_ndims() == 5)
+				if (ndims == 5)
 				{
-					if (md.get_inner_nblks() == 1 && md.get_inner_idxs()[0] == 1)
+					if (inner_nblks == 1 && inner_idxs[0] == 1)
 					{
-						switch (md.get_inner_blks()[0])
+						switch (inner_blks[0])
 						{
 						case 4:
 							return dnnl::memory::format_tag::aBcde4b;
@@ -300,9 +307,9 @@ namespace
 							return dnnl::memory::format_tag::undef;
 						}
 					}
-					else if (md.get_inner_nblks() == 2 && md.get_inner_idxs()[0] == 1 && (md.get_inner_blks()[0] == md.get_inner_blks()[1]))
+					else if (inner_nblks == 2 && inner_idxs[0] == 1 && (inner_blks[0] == inner_blks[1]))
 					{
-						switch (md.get_inner_blks()[0])
+						switch (inner_blks[0])
 						{
 						case 4:
 							return dnnl::memory::format_tag::ABcde4b4a;
@@ -314,9 +321,9 @@ namespace
 							return dnnl::memory::format_tag::undef;
 						}
 					}
-					else if (md.get_inner_nblks() == 2 && md.get_inner_idxs()[0] == 0 && (md.get_inner_blks()[0] == md.get_inner_blks()[1]))
+					else if (inner_nblks == 2 && inner_idxs[0] == 0 && (inner_blks[0] == inner_blks[1]))
 					{
-						switch (md.get_inner_blks()[0])
+						switch (inner_blks[0])
 						{
 						case 4:
 							return dnnl::memory::format_tag::ABcde4a4b;
