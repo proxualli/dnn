@@ -224,7 +224,7 @@ namespace dnn
 		}
 	};
 
-	bool IsBatchNorm(LayerTypes type)
+	static bool IsBatchNorm(LayerTypes type)
 	{
 		return std::string(magic_enum::enum_name<LayerTypes>(type)).find("BatchNorm", 0) != std::string::npos;
 	}
