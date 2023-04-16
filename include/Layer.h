@@ -229,7 +229,7 @@ namespace dnn
 		return std::string(magic_enum::enum_name<LayerTypes>(type)).find("BatchNorm", 0) != std::string::npos;
 	}
 
-	static bool IsNormalization(LayerTypes type)
+	static bool IsNorm(LayerTypes type)
 	{
 		return std::string(magic_enum::enum_name<LayerTypes>(type)).find("Norm", 0) != std::string::npos;
 	}
@@ -380,8 +380,8 @@ namespace dnn
 			ChosenFormat(format),
 			Name(name),
 			LayerType(layerType),
-			WeightCount(IsNormalization(layerType) ? (scaling ? weightCount : 0ull) : weightCount),
-			BiasCount(IsNormalization(layerType) ? (scaling ? biasCount : 0ull) : biasCount),
+			WeightCount(IsNorm(layerType) ? (scaling ? weightCount : 0ull) : weightCount),
+			BiasCount(IsNorm(layerType) ? (scaling ? biasCount : 0ull) : biasCount),
 			C(c),
 			D(d),
 			H(h),
@@ -399,8 +399,8 @@ namespace dnn
 			Enabled(enabled),
 			Skip(false),
 			Scaling(scaling),
-			HasBias(hasBias && (IsNormalization(layerType) ? (scaling ? biasCount > 0ull : false) : (biasCount > 0ull))),
-			HasWeights(IsNormalization(layerType) ? scaling : (weightCount > 0)),
+			HasBias(hasBias && (IsNorm(layerType) ? (scaling ? biasCount > 0ull : false) : (biasCount > 0ull))),
+			HasWeights(IsNorm(layerType) ? scaling : (weightCount > 0)),
 			WeightsFiller(Fillers::HeNormal),
 			WeightsFillerMode(FillerModes::In),
 			WeightsGain(Float(1)),
