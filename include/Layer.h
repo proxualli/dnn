@@ -229,6 +229,11 @@ namespace dnn
 		return std::string(magic_enum::enum_name<LayerTypes>(type)).find("BatchNorm", 0) != std::string::npos;
 	}
 
+	static bool IsNormalization(LayerTypes type)
+	{
+		return std::string(magic_enum::enum_name<LayerTypes>(type)).find("Norm", 0) != std::string::npos;
+	}
+
 	class Layer
 	{
 	protected:
@@ -375,8 +380,8 @@ namespace dnn
 			ChosenFormat(format),
 			Name(name),
 			LayerType(layerType),
-			WeightCount(IsBatchNorm(layerType) ? (scaling ? weightCount : 0ull) : weightCount),
-			BiasCount(IsBatchNorm(layerType) ? (scaling ? biasCount : 0ull) : biasCount),
+			WeightCount(IsNormalization(layerType) ? (scaling ? weightCount : 0ull) : weightCount),
+			BiasCount(IsNormalization(layerType) ? (scaling ? biasCount : 0ull) : biasCount),
 			C(c),
 			D(d),
 			H(h),
@@ -384,9 +389,9 @@ namespace dnn
 			PadD(padD),
 			PadH(padH),
 			PadW(padW),
-			Inputs(std::vector<Layer*>(inputs)),		// Inputs is switched between non-inplace (forward) and inplace (backprop) during training 
-			InputsFwd(std::vector<Layer*>(inputs)),		// InputsFwd = the non-inplace inputs 
-			InputsBwd(GetInputsBwd(layerType, inputs)),	// InputsBwd = the inplace inputs for backward prop
+			Inputs(std::vector<Layer*>(inputs)),					// Inputs is switched between non-inplace (forward) and inplace (backprop) during training 
+			InputsFwd(std::vector<Layer*>(inputs)),					// InputsFwd = the non-inplace inputs 
+			InputsBwd(GetInputsBwd(layerType, inputs)),				// InputsBwd = the inplace inputs for backward prop
 			InputLayer(inputs.size() > 0 ? inputs[0] : nullptr),
 			InputLayerFwd(inputs.size() > 0 ? inputs[0] : nullptr),
 			InputLayerBwd(GetInputsBwd(layerType, inputs).size() > 0 ? GetInputsBwd(layerType, inputs)[0] : nullptr),
@@ -394,8 +399,8 @@ namespace dnn
 			Enabled(enabled),
 			Skip(false),
 			Scaling(scaling),
-			HasBias(hasBias && biasCount > 0),
-			HasWeights(IsBatchNorm(layerType) ? scaling : weightCount > 0),
+			HasBias(hasBias && (IsNormalization(layerType) ? (scaling ? biasCount > 0ull : false) : (biasCount > 0ull))),
+			HasWeights(IsNormalization(layerType) ? scaling : (weightCount > 0)),
 			WeightsFiller(Fillers::HeNormal),
 			WeightsFillerMode(FillerModes::In),
 			WeightsGain(Float(1)),
