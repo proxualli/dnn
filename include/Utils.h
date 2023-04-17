@@ -104,6 +104,13 @@
 #define MAGIC_ENUM_RANGE_MAX 255
 #include "magic_enum.hpp"
 
+#include <bitsery/bitsery.h>
+#include <bitsery/adapter/buffer.h>
+#include <bitsery/adapter/stream.h>
+#include <bitsery/traits/array.h>
+#include <bitsery/traits/vector.h>
+#include <bitsery/traits/string.h>
+
 //#include "csv.hpp"
 
 using namespace dnn;
@@ -180,6 +187,9 @@ namespace
 	constexpr auto PlainFmt = dnnl::memory::format_tag::nchw; // equals dnnl::memory::format_tag::abcd
 	auto GetDataFmt(const dnnl::memory::desc& md) NOEXCEPT
 	{
+		using format_tag = dnnl::memory::format_tag;
+		
+		const auto data_type = md.get_data_type();
 		const auto dims = md.get_dims();
 		const auto format_kind = md.get_format_kind();
 		const auto inner_blks = md.get_inner_blks();
@@ -189,67 +199,66 @@ namespace
 		const auto padded_dims = md.get_padded_dims();
 		const auto padded_offsets = md.get_padded_offsets();
 		const auto strides = md.get_strides();
-		const auto data_type = md.get_data_type();
-
+		
 		if (format_kind == dnnl::memory::format_kind::blocked)
 		{	
 			if (inner_nblks == 0)
 			{
 				if (ndims == 1)
 				{
-					return dnnl::memory::format_tag::a;
+					return format_tag::a;
 				}
 				if (ndims == 2)
 				{
 					
 					if (strides[0] == 1)
-						return dnnl::memory::format_tag::ba;
+						return format_tag::ba;
 					else if (strides[1] == 1)
-						return dnnl::memory::format_tag::ab;
+						return format_tag::ab;
 				}
 				if (ndims == 3)
 				{
 					if (strides[0] == 1)
-						return dnnl::memory::format_tag::bca;
+						return format_tag::bca;
 					else if (strides[1] == 1)
-						return dnnl::memory::format_tag::acb;
+						return format_tag::acb;
 					else if (strides[2] == 1)
-						return dnnl::memory::format_tag::abc;
+						return format_tag::abc;
 				}
 				if (ndims == 4)
 				{
 					if (strides[0] == 1)
-						return dnnl::memory::format_tag::bcda;
+						return format_tag::bcda;
 					else if (strides[1] == 1)
-						return dnnl::memory::format_tag::acdb;
+						return format_tag::acdb;
 					else if (strides[2] == 1)
-						return dnnl::memory::format_tag::abdc;
+						return format_tag::abdc;
 					else if (strides[3] == 1)
-						return dnnl::memory::format_tag::abcd;
+						return format_tag::abcd;
 				}
 				if (ndims == 5)
 				{
 					if (strides[0] == 1)
-						return dnnl::memory::format_tag::bcdea;
+						return format_tag::bcdea;
 					else if (strides[1] == 1)
-						return dnnl::memory::format_tag::acdeb;
+						return format_tag::acdeb;
 					else if (strides[2] == 1)
-						return dnnl::memory::format_tag::abdec;
+						return format_tag::abdec;
 					else if (strides[3] == 1)
-						return dnnl::memory::format_tag::abced;
+						return format_tag::abced;
 					else if (strides[4] == 1)
-						return dnnl::memory::format_tag::abcde;
+						return format_tag::abcde;
 				}
 			}
 			else
 			{
 				if (ndims == 2)
 				{
-					return dnnl::memory::format_tag::ab;
+					return format_tag::ab;
 				}
 				if (ndims == 3)
 				{
-					return dnnl::memory::format_tag::abc;
+					return format_tag::abc;
 				}
 				if (ndims == 4)
 				{
@@ -258,13 +267,13 @@ namespace
 						switch (inner_blks[0])
 						{
 						case 4:
-							return dnnl::memory::format_tag::Abcd4a;
+							return format_tag::Abcd4a;
 						case 8:
-							return dnnl::memory::format_tag::Abcd8a;
+							return format_tag::Abcd8a;
 						case 16:
-							return dnnl::memory::format_tag::Abcd16a;
+							return format_tag::Abcd16a;
 						default:
-							return dnnl::memory::format_tag::undef;
+							return format_tag::undef;
 						}
 					}
 					else if (inner_nblks == 1 && inner_idxs[0] == 1)
@@ -272,13 +281,13 @@ namespace
 						switch (inner_blks[0])
 						{
 						case 4:
-							return dnnl::memory::format_tag::aBcd4b;
+							return format_tag::aBcd4b;
 						case 8:
-							return dnnl::memory::format_tag::aBcd8b;
+							return format_tag::aBcd8b;
 						case 16:
-							return dnnl::memory::format_tag::aBcd16b;
+							return format_tag::aBcd16b;
 						default:
-							return dnnl::memory::format_tag::undef;
+							return format_tag::undef;
 						}
 					}
 					//else if (inner_nblks == 1 && inner_idxs[0] == 2)
@@ -286,13 +295,13 @@ namespace
 					//	switch (inner_blks[0])
 					//	{
 					//	case 4:
-					//		return dnnl::memory::format_tag::abCd4c;
+					//		return format_tag::abCd4c;
 					//	/*case 8:
-					//		return dnnl::memory::format_tag::abCd4a8c;
+					//		return format_tag::abCd4a8c;
 					//	case 16:
-					//		return dnnl::memory::format_tag::abCd16c;*/
+					//		return format_tag::abCd16c;*/
 					//	default:
-					//		return dnnl::memory::format_tag::undef;
+					//		return format_tag::undef;
 					//	}
 					//}
 					else if (inner_nblks == 2 && inner_idxs[0] == 1 && (inner_blks[0] == inner_blks[1]))
@@ -300,13 +309,13 @@ namespace
 						switch (inner_blks[0])
 						{
 						case 4:
-							return dnnl::memory::format_tag::ABcd4b4a;
+							return format_tag::ABcd4b4a;
 						case 8:
-							return dnnl::memory::format_tag::ABcd8b8a;
+							return format_tag::ABcd8b8a;
 						case 16:
-							return dnnl::memory::format_tag::ABcd16b16a;
+							return format_tag::ABcd16b16a;
 						default:
-							return dnnl::memory::format_tag::undef;
+							return format_tag::undef;
 						}
 					}
 					else if (inner_nblks == 2 && inner_idxs[0] == 0 && (inner_blks[0] == inner_blks[1]))
@@ -314,13 +323,13 @@ namespace
 						switch (inner_blks[0])
 						{
 						case 4:
-							return dnnl::memory::format_tag::ABcd4a4b;
+							return format_tag::ABcd4a4b;
 						case 8:
-							return dnnl::memory::format_tag::ABcd8a8b;
+							return format_tag::ABcd8a8b;
 						case 16:
-							return dnnl::memory::format_tag::ABcd16a16b;
+							return format_tag::ABcd16a16b;
 						default:
-							return dnnl::memory::format_tag::undef;
+							return format_tag::undef;
 						}
 					}
 				}
@@ -331,13 +340,13 @@ namespace
 						switch (inner_blks[0])
 						{
 						case 4:
-							return dnnl::memory::format_tag::Abcde4a;
+							return format_tag::Abcde4a;
 						case 8:
-							return dnnl::memory::format_tag::Abcde8a;
+							return format_tag::Abcde8a;
 						case 16:
-							return dnnl::memory::format_tag::Abcde16a;
+							return format_tag::Abcde16a;
 						default:
-							return dnnl::memory::format_tag::undef;
+							return format_tag::undef;
 						}
 					}
 					else if (inner_nblks == 1 && inner_idxs[0] == 1)
@@ -345,13 +354,13 @@ namespace
 						switch (inner_blks[0])
 						{
 						case 4:
-							return dnnl::memory::format_tag::aBcde4b;
+							return format_tag::aBcde4b;
 						case 8:
-							return dnnl::memory::format_tag::aBcde8b;
+							return format_tag::aBcde8b;
 						case 16:
-							return dnnl::memory::format_tag::aBcde16b;
+							return format_tag::aBcde16b;
 						default:
-							return dnnl::memory::format_tag::undef;
+							return format_tag::undef;
 						}
 					}
 					else if (inner_nblks == 2 && inner_idxs[0] == 1 && (inner_blks[0] == inner_blks[1]))
@@ -359,13 +368,13 @@ namespace
 						switch (inner_blks[0])
 						{
 						case 4:
-							return dnnl::memory::format_tag::ABcde4b4a;
+							return format_tag::ABcde4b4a;
 						case 8:
-							return dnnl::memory::format_tag::ABcde8b8a;
+							return format_tag::ABcde8b8a;
 						case 16:
-							return dnnl::memory::format_tag::ABcde16b16a;
+							return format_tag::ABcde16b16a;
 						default:
-							return dnnl::memory::format_tag::undef;
+							return format_tag::undef;
 						}
 					}
 					else if (inner_nblks == 2 && inner_idxs[0] == 0 && (inner_blks[0] == inner_blks[1]))
@@ -373,13 +382,13 @@ namespace
 						switch (inner_blks[0])
 						{
 						case 4:
-							return dnnl::memory::format_tag::ABcde4a4b;
+							return format_tag::ABcde4a4b;
 						case 8:
-							return dnnl::memory::format_tag::ABcde8a8b;
+							return format_tag::ABcde8a8b;
 						case 16:
-							return dnnl::memory::format_tag::ABcde16a16b;
+							return format_tag::ABcde16a16b;
 						default:
-							return dnnl::memory::format_tag::undef;
+							return format_tag::undef;
 						}
 					}
 
@@ -443,7 +452,7 @@ namespace
 			}
 		}
 
-		return dnnl::memory::format_tag::undef;
+		return format_tag::undef;
 	}
 		
 	template<typename T>

@@ -142,6 +142,19 @@ namespace dnn
 				Weights = weights;
 				WeightsMemDesc = std::make_unique<dnnl::memory::desc>(fwdDesc->weights_desc());
 				WeightsFormat = GetDataFmt(*WeightsMemDesc);
+
+				/*
+				const auto dims = WeightsMemDesc->get_dims();
+				const auto format_kind = WeightsMemDesc->get_format_kind();
+				const auto inner_blks = WeightsMemDesc->get_inner_blks();
+				const auto inner_idxs = WeightsMemDesc->get_inner_idxs();
+				const auto inner_nblks = WeightsMemDesc->get_inner_nblks();
+				const auto ndims = WeightsMemDesc->get_ndims();
+				const auto padded_dims = WeightsMemDesc->get_padded_dims();
+				const auto padded_offsets = WeightsMemDesc->get_padded_offsets();
+				const auto strides = WeightsMemDesc->get_strides();
+				const auto data_type = WeightsMemDesc->get_data_type();
+				*/
 			}
 
 			DstMemDesc = std::make_unique<dnnl::memory::desc>(fwdDesc->dst_desc());

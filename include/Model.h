@@ -318,7 +318,6 @@ namespace dnn
 		bool Locked;
 	};
 
-	
 
 	class Model
 	{
