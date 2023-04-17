@@ -63,7 +63,7 @@ namespace dnn
 			}
 			else
 			{
-				if (Format == dnnl::memory::format_tag::any)
+				if (NeuronsFormat == dnnl::memory::format_tag::any)
 				{
 					ChosenFormat = GetDataFmt(*Inputs[first]->DstMemDesc);
 					if (ChosenFormat != GetDataFmt(*Inputs[first]->DiffDstMemDesc))

@@ -224,15 +224,11 @@ namespace dnn
 		}
 	};
 
-	static bool IsBatchNorm(LayerTypes type)
-	{
-		return std::string(magic_enum::enum_name<LayerTypes>(type)).find("BatchNorm", 0) != std::string::npos;
-	}
-
-	static bool IsNorm(LayerTypes type)
+	bool IsNorm(const LayerTypes& type)
 	{
 		return std::string(magic_enum::enum_name<LayerTypes>(type)).find("Norm", 0) != std::string::npos;
 	}
+
 
 	class Layer
 	{
@@ -327,7 +323,7 @@ namespace dnn
 		bool SharesInput;
 		bool SharesInputOriginal;
 		bool SharesInputInplace;
-		dnnl::memory::format_tag Format;
+		dnnl::memory::format_tag NeuronsFormat;
 		dnnl::memory::format_tag WeightsFormat;
 		const bool Scaling;
 		const bool HasBias;
@@ -379,7 +375,7 @@ namespace dnn
 
 		Layer(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const LayerTypes layerType, const UInt weightCount, const UInt biasCount, const UInt c, const UInt d, const UInt h, const UInt w, const UInt padD, const UInt padH, const UInt padW, const std::vector<Layer*>& inputs, const bool hasBias = false, const bool scaling = false, const bool enabled = true) :
 			Device(device),
-			Format(format),
+			NeuronsFormat(format),
 			ChosenFormat(format),
 			WeightsFormat(format),
 			Name(name),

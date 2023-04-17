@@ -81,15 +81,15 @@ namespace dnn
 			const auto factor = std::vector<float>({ FactorH, FactorW });
 
 			auto memDesc = std::vector<dnnl::memory::desc>({
-				dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(InputLayer->C), dnnl::memory::dim(InputLayer->H), dnnl::memory::dim(InputLayer->W) }), dnnl::memory::data_type::f32, Format),
-				dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, Format) });
+				dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(InputLayer->C), dnnl::memory::dim(InputLayer->H), dnnl::memory::dim(InputLayer->W) }), dnnl::memory::data_type::f32, NeuronsFormat),
+				dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, NeuronsFormat) });
 
 			fwdDesc = std::make_unique<dnnl::resampling_forward::primitive_desc>(dnnl::resampling_forward::primitive_desc(Device.engine, dnnl::prop_kind::forward, algorithm, factor, *InputLayer->DstMemDesc, memDesc[1]));
 			
 			DstMemDesc = std::make_unique<dnnl::memory::desc>(fwdDesc->dst_desc());
 			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(fwdDesc->dst_desc());
 
-			if (Format == dnnl::memory::format_tag::any)
+			if (NeuronsFormat == dnnl::memory::format_tag::any)
 				ChosenFormat = GetDataFmt(*DstMemDesc);
 			else
 				ChosenFormat = PlainFmt;

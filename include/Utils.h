@@ -183,275 +183,277 @@ namespace
 	constexpr auto GetVectorPart(const UInt& elements) NOEXCEPT { return (elements / VectorSize) * VectorSize; }
 	constexpr auto DivUp(const UInt& c) NOEXCEPT { if (c == 0ull) return 0ull; else return (((c - 1) / VectorSize) + 1) * VectorSize; }
 	auto IsPlainDataFmt(const dnnl::memory::desc& md) NOEXCEPT { return md.get_format_kind() == dnnl::memory::format_kind::blocked && md.get_inner_nblks() == 0; }
-	//auto IsBlockedDataFmt(const dnnl::memory::desc& md) NOEXCEPT { return md.get_format_kind() == dnnl::memory::format_kind::blocked && md.get_inner_nblks() == 1 && md.get_inner_idxs()[0] == 1 && (md.get_inner_blks()[0] == 4 || md.get_inner_blks()[0] == 8 || md.get_inner_blks()[0] == 16); }
 	constexpr auto PlainFmt = dnnl::memory::format_tag::nchw; // equals dnnl::memory::format_tag::abcd
 	auto GetDataFmt(const dnnl::memory::desc& md) NOEXCEPT
 	{
 		using format_tag = dnnl::memory::format_tag;
 		
-		const auto data_type = md.get_data_type();
-		const auto dims = md.get_dims();
-		const auto format_kind = md.get_format_kind();
-		const auto inner_blks = md.get_inner_blks();
-		const auto inner_idxs = md.get_inner_idxs();
-		const auto inner_nblks = md.get_inner_nblks();
-		const auto ndims = md.get_ndims();
-		const auto padded_dims = md.get_padded_dims();
-		const auto padded_offsets = md.get_padded_offsets();
-		const auto strides = md.get_strides();
-		
-		if (format_kind == dnnl::memory::format_kind::blocked)
-		{	
-			if (inner_nblks == 0)
+		if (!md.is_zero())
+		{
+			const auto data_type = md.get_data_type();
+			const auto dims = md.get_dims();
+			const auto format_kind = md.get_format_kind();
+			const auto inner_blks = md.get_inner_blks();
+			const auto inner_idxs = md.get_inner_idxs();
+			const auto inner_nblks = md.get_inner_nblks();
+			const auto ndims = md.get_ndims();
+			const auto padded_dims = md.get_padded_dims();
+			const auto padded_offsets = md.get_padded_offsets();
+			const auto strides = md.get_strides();
+
+			if (format_kind == dnnl::memory::format_kind::blocked)
 			{
-				if (ndims == 1)
+				if (inner_nblks == 0)
 				{
-					return format_tag::a;
+					if (ndims == 1)
+					{
+						return format_tag::a;
+					}
+					if (ndims == 2)
+					{
+
+						if (strides[0] == 1)
+							return format_tag::ba;
+						else if (strides[1] == 1)
+							return format_tag::ab;
+					}
+					if (ndims == 3)
+					{
+						if (strides[0] == 1)
+							return format_tag::bca;
+						else if (strides[1] == 1)
+							return format_tag::acb;
+						else if (strides[2] == 1)
+							return format_tag::abc;
+					}
+					if (ndims == 4)
+					{
+						if (strides[0] == 1)
+							return format_tag::bcda;
+						else if (strides[1] == 1)
+							return format_tag::acdb;
+						else if (strides[2] == 1)
+							return format_tag::abdc;
+						else if (strides[3] == 1)
+							return format_tag::abcd;
+					}
+					if (ndims == 5)
+					{
+						if (strides[0] == 1)
+							return format_tag::bcdea;
+						else if (strides[1] == 1)
+							return format_tag::acdeb;
+						else if (strides[2] == 1)
+							return format_tag::abdec;
+						else if (strides[3] == 1)
+							return format_tag::abced;
+						else if (strides[4] == 1)
+							return format_tag::abcde;
+					}
 				}
-				if (ndims == 2)
+				else
 				{
-					
-					if (strides[0] == 1)
-						return format_tag::ba;
-					else if (strides[1] == 1)
+					if (ndims == 2)
+					{
 						return format_tag::ab;
-				}
-				if (ndims == 3)
-				{
-					if (strides[0] == 1)
-						return format_tag::bca;
-					else if (strides[1] == 1)
-						return format_tag::acb;
-					else if (strides[2] == 1)
+					}
+					if (ndims == 3)
+					{
 						return format_tag::abc;
-				}
-				if (ndims == 4)
-				{
-					if (strides[0] == 1)
-						return format_tag::bcda;
-					else if (strides[1] == 1)
-						return format_tag::acdb;
-					else if (strides[2] == 1)
-						return format_tag::abdc;
-					else if (strides[3] == 1)
-						return format_tag::abcd;
-				}
-				if (ndims == 5)
-				{
-					if (strides[0] == 1)
-						return format_tag::bcdea;
-					else if (strides[1] == 1)
-						return format_tag::acdeb;
-					else if (strides[2] == 1)
-						return format_tag::abdec;
-					else if (strides[3] == 1)
-						return format_tag::abced;
-					else if (strides[4] == 1)
-						return format_tag::abcde;
-				}
-			}
-			else
-			{
-				if (ndims == 2)
-				{
-					return format_tag::ab;
-				}
-				if (ndims == 3)
-				{
-					return format_tag::abc;
-				}
-				if (ndims == 4)
-				{
-					if (inner_nblks == 1 && inner_idxs[0] == 0)
+					}
+					if (ndims == 4)
 					{
-						switch (inner_blks[0])
+						if (inner_nblks == 1 && inner_idxs[0] == 0)
 						{
-						case 4:
-							return format_tag::Abcd4a;
-						case 8:
-							return format_tag::Abcd8a;
-						case 16:
-							return format_tag::Abcd16a;
-						default:
-							return format_tag::undef;
+							switch (inner_blks[0])
+							{
+							case 4:
+								return format_tag::Abcd4a;
+							case 8:
+								return format_tag::Abcd8a;
+							case 16:
+								return format_tag::Abcd16a;
+							default:
+								return format_tag::undef;
+							}
+						}
+						else if (inner_nblks == 1 && inner_idxs[0] == 1)
+						{
+							switch (inner_blks[0])
+							{
+							case 4:
+								return format_tag::aBcd4b;
+							case 8:
+								return format_tag::aBcd8b;
+							case 16:
+								return format_tag::aBcd16b;
+							default:
+								return format_tag::undef;
+							}
+						}
+						//else if (inner_nblks == 1 && inner_idxs[0] == 2)
+						//{
+						//	switch (inner_blks[0])
+						//	{
+						//	case 4:
+						//		return format_tag::abCd4c;
+						//	/*case 8:
+						//		return format_tag::abCd4a8c;
+						//	case 16:
+						//		return format_tag::abCd16c;*/
+						//	default:
+						//		return format_tag::undef;
+						//	}
+						//}
+						else if (inner_nblks == 2 && inner_idxs[0] == 1 && (inner_blks[0] == inner_blks[1]))
+						{
+							switch (inner_blks[0])
+							{
+							case 4:
+								return format_tag::ABcd4b4a;
+							case 8:
+								return format_tag::ABcd8b8a;
+							case 16:
+								return format_tag::ABcd16b16a;
+							default:
+								return format_tag::undef;
+							}
+						}
+						else if (inner_nblks == 2 && inner_idxs[0] == 0 && (inner_blks[0] == inner_blks[1]))
+						{
+							switch (inner_blks[0])
+							{
+							case 4:
+								return format_tag::ABcd4a4b;
+							case 8:
+								return format_tag::ABcd8a8b;
+							case 16:
+								return format_tag::ABcd16a16b;
+							default:
+								return format_tag::undef;
+							}
 						}
 					}
-					else if (inner_nblks == 1 && inner_idxs[0] == 1)
+					if (ndims == 5)
 					{
-						switch (inner_blks[0])
+						if (inner_nblks == 1 && inner_idxs[0] == 0)
 						{
-						case 4:
-							return format_tag::aBcd4b;
-						case 8:
-							return format_tag::aBcd8b;
-						case 16:
-							return format_tag::aBcd16b;
-						default:
-							return format_tag::undef;
+							switch (inner_blks[0])
+							{
+							case 4:
+								return format_tag::Abcde4a;
+							case 8:
+								return format_tag::Abcde8a;
+							case 16:
+								return format_tag::Abcde16a;
+							default:
+								return format_tag::undef;
+							}
 						}
-					}
-					//else if (inner_nblks == 1 && inner_idxs[0] == 2)
-					//{
-					//	switch (inner_blks[0])
-					//	{
-					//	case 4:
-					//		return format_tag::abCd4c;
-					//	/*case 8:
-					//		return format_tag::abCd4a8c;
-					//	case 16:
-					//		return format_tag::abCd16c;*/
-					//	default:
-					//		return format_tag::undef;
-					//	}
-					//}
-					else if (inner_nblks == 2 && inner_idxs[0] == 1 && (inner_blks[0] == inner_blks[1]))
-					{
-						switch (inner_blks[0])
+						else if (inner_nblks == 1 && inner_idxs[0] == 1)
 						{
-						case 4:
-							return format_tag::ABcd4b4a;
-						case 8:
-							return format_tag::ABcd8b8a;
-						case 16:
-							return format_tag::ABcd16b16a;
-						default:
-							return format_tag::undef;
+							switch (inner_blks[0])
+							{
+							case 4:
+								return format_tag::aBcde4b;
+							case 8:
+								return format_tag::aBcde8b;
+							case 16:
+								return format_tag::aBcde16b;
+							default:
+								return format_tag::undef;
+							}
 						}
-					}
-					else if (inner_nblks == 2 && inner_idxs[0] == 0 && (inner_blks[0] == inner_blks[1]))
-					{
-						switch (inner_blks[0])
+						else if (inner_nblks == 2 && inner_idxs[0] == 1 && (inner_blks[0] == inner_blks[1]))
 						{
-						case 4:
-							return format_tag::ABcd4a4b;
-						case 8:
-							return format_tag::ABcd8a8b;
-						case 16:
-							return format_tag::ABcd16a16b;
-						default:
-							return format_tag::undef;
+							switch (inner_blks[0])
+							{
+							case 4:
+								return format_tag::ABcde4b4a;
+							case 8:
+								return format_tag::ABcde8b8a;
+							case 16:
+								return format_tag::ABcde16b16a;
+							default:
+								return format_tag::undef;
+							}
 						}
-					}
-				}
-				if (ndims == 5)
-				{
-					if (inner_nblks == 1 && inner_idxs[0] == 0)
-					{
-						switch (inner_blks[0])
+						else if (inner_nblks == 2 && inner_idxs[0] == 0 && (inner_blks[0] == inner_blks[1]))
 						{
-						case 4:
-							return format_tag::Abcde4a;
-						case 8:
-							return format_tag::Abcde8a;
-						case 16:
-							return format_tag::Abcde16a;
-						default:
-							return format_tag::undef;
+							switch (inner_blks[0])
+							{
+							case 4:
+								return format_tag::ABcde4a4b;
+							case 8:
+								return format_tag::ABcde8a8b;
+							case 16:
+								return format_tag::ABcde16a16b;
+							default:
+								return format_tag::undef;
+							}
 						}
-					}
-					else if (inner_nblks == 1 && inner_idxs[0] == 1)
-					{
-						switch (inner_blks[0])
-						{
-						case 4:
-							return format_tag::aBcde4b;
-						case 8:
-							return format_tag::aBcde8b;
-						case 16:
-							return format_tag::aBcde16b;
-						default:
-							return format_tag::undef;
-						}
-					}
-					else if (inner_nblks == 2 && inner_idxs[0] == 1 && (inner_blks[0] == inner_blks[1]))
-					{
-						switch (inner_blks[0])
-						{
-						case 4:
-							return format_tag::ABcde4b4a;
-						case 8:
-							return format_tag::ABcde8b8a;
-						case 16:
-							return format_tag::ABcde16b16a;
-						default:
-							return format_tag::undef;
-						}
-					}
-					else if (inner_nblks == 2 && inner_idxs[0] == 0 && (inner_blks[0] == inner_blks[1]))
-					{
-						switch (inner_blks[0])
-						{
-						case 4:
-							return format_tag::ABcde4a4b;
-						case 8:
-							return format_tag::ABcde8a8b;
-						case 16:
-							return format_tag::ABcde16a16b;
-						default:
-							return format_tag::undef;
-						}
-					}
 
-					/*
+						/*
 
-					/// 5D tensor blocked by 1st dimension with block size 16
-					dnnl_ABcde4b16a4b,
-					/// 5D tensor blocked by 1st dimension with block size 8
-					dnnl_ABcde2b8a4b,
-					/// 5D tensor blocked by 2nd dimension with block size 16
-					dnnl_aBcde16b,
-					dnnl_ABcde16b16a,
-					dnnl_aBCde16b16c,
-					dnnl_aBCde16c16b,
-					dnnl_aBCde2c8b4c,
-					dnnl_Abcde4a,
-					/// 5D tensor blocked by 2nd dimension with block size 32
-					dnnl_aBcde32b,
-					/// 5D tensor blocked by 2nd dimension with block size 4
-					dnnl_aBcde4b,
-					dnnl_ABcde4b4a,
-					dnnl_ABcde4a4b,
-					dnnl_aBCde4b4c,
-					dnnl_aBCde2c4b2c,
-					dnnl_aBCde4b8c2b,
-					dnnl_aBCde4c16b4c,
-					dnnl_aBCde16c16b4c,
-					dnnl_aBCde16c16b2c,
-					dnnl_aBCde4c4b,
-					dnnl_Abcde8a,
-					dnnl_ABcde8a8b,
-					dnnl_ABcde8a4b,
-					dnnl_BAcde16b16a,
-					/// 5D tensor blocked by 2nd dimension with block size 8
-					dnnl_aBcde8b,
-					dnnl_ABcde8b16a2b,
-					dnnl_aBCde8b16c2b,
-					dnnl_aBCde4c8b2c,
-					dnnl_aCBde8b16c2b,
-					dnnl_ABcde8b8a,
-					dnnl_ABcde32a32b,
-					dnnl_aBCde8b8c,
-					dnnl_aBCde8b4c,
-					dnnl_ABc4a8b8a4b,
-					dnnl_ABcd4a8b8a4b,
-					dnnl_ABcde4a8b8a4b,
-					dnnl_BAc4b8a8b4a,
-					dnnl_BAcd4b8a8b4a,
-					dnnl_BAcde4b8a8b4a,
-					dnnl_ABcd2a8b8a2b,
-					dnnl_aBCd4b8c8b4c,
-					dnnl_aBCde4b8c8b4c,
-					dnnl_aBCde2b8c8b2c,
-					dnnl_aBCde8c16b2c,
-					dnnl_aBCde8c8b,
-					/// 5D tensor blocked by 3rd dimension with block size 4
-					dnnl_aBCde2b4c2b,
+						/// 5D tensor blocked by 1st dimension with block size 16
+						dnnl_ABcde4b16a4b,
+						/// 5D tensor blocked by 1st dimension with block size 8
+						dnnl_ABcde2b8a4b,
+						/// 5D tensor blocked by 2nd dimension with block size 16
+						dnnl_aBcde16b,
+						dnnl_ABcde16b16a,
+						dnnl_aBCde16b16c,
+						dnnl_aBCde16c16b,
+						dnnl_aBCde2c8b4c,
+						dnnl_Abcde4a,
+						/// 5D tensor blocked by 2nd dimension with block size 32
+						dnnl_aBcde32b,
+						/// 5D tensor blocked by 2nd dimension with block size 4
+						dnnl_aBcde4b,
+						dnnl_ABcde4b4a,
+						dnnl_ABcde4a4b,
+						dnnl_aBCde4b4c,
+						dnnl_aBCde2c4b2c,
+						dnnl_aBCde4b8c2b,
+						dnnl_aBCde4c16b4c,
+						dnnl_aBCde16c16b4c,
+						dnnl_aBCde16c16b2c,
+						dnnl_aBCde4c4b,
+						dnnl_Abcde8a,
+						dnnl_ABcde8a8b,
+						dnnl_ABcde8a4b,
+						dnnl_BAcde16b16a,
+						/// 5D tensor blocked by 2nd dimension with block size 8
+						dnnl_aBcde8b,
+						dnnl_ABcde8b16a2b,
+						dnnl_aBCde8b16c2b,
+						dnnl_aBCde4c8b2c,
+						dnnl_aCBde8b16c2b,
+						dnnl_ABcde8b8a,
+						dnnl_ABcde32a32b,
+						dnnl_aBCde8b8c,
+						dnnl_aBCde8b4c,
+						dnnl_ABc4a8b8a4b,
+						dnnl_ABcd4a8b8a4b,
+						dnnl_ABcde4a8b8a4b,
+						dnnl_BAc4b8a8b4a,
+						dnnl_BAcd4b8a8b4a,
+						dnnl_BAcde4b8a8b4a,
+						dnnl_ABcd2a8b8a2b,
+						dnnl_aBCd4b8c8b4c,
+						dnnl_aBCde4b8c8b4c,
+						dnnl_aBCde2b8c8b2c,
+						dnnl_aBCde8c16b2c,
+						dnnl_aBCde8c8b,
+						/// 5D tensor blocked by 3rd dimension with block size 4
+						dnnl_aBCde2b4c2b,
 
-					*/
+						*/
+					}
 				}
 			}
 		}
-
+		
 		return format_tag::undef;
 	}
 		

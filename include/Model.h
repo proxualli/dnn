@@ -318,6 +318,11 @@ namespace dnn
 		bool Locked;
 	};
 
+	bool IsBatchNorm(const LayerTypes& type)
+	{
+		return std::string(magic_enum::enum_name<LayerTypes>(type)).find("BatchNorm", 0) != std::string::npos;
+	}
+
 
 	class Model
 	{
@@ -699,7 +704,7 @@ namespace dnn
 			{
 				Format = plain ? dnnl::memory::format_tag::nchw : dnnl::memory::format_tag::any;
 				for (auto& layer : Layers)
-					layer->Format = Format;
+					layer->NeuronsFormat = Format;
 				
 				return true;
 			}
