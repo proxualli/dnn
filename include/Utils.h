@@ -180,14 +180,19 @@ namespace
 	constexpr auto PlainFmt = dnnl::memory::format_tag::nchw; // equals dnnl::memory::format_tag::abcd
 	auto GetDataFmt(const dnnl::memory::desc& md) NOEXCEPT
 	{
-		if (md.get_format_kind() == dnnl::memory::format_kind::blocked)
-		{
-			const auto ndims = md.get_ndims();
-			const auto inner_nblks = md.get_inner_nblks();
-			const auto strides = md.get_strides();
-			const auto inner_idxs = md.get_inner_idxs();
-			const auto inner_blks = md.get_inner_blks();
-			
+		const auto dims = md.get_dims();
+		const auto format_kind = md.get_format_kind();
+		const auto inner_blks = md.get_inner_blks();
+		const auto inner_idxs = md.get_inner_idxs();
+		const auto inner_nblks = md.get_inner_nblks();
+		const auto ndims = md.get_ndims();
+		const auto padded_dims = md.get_padded_dims();
+		const auto padded_offsets = md.get_padded_offsets();
+		const auto strides = md.get_strides();
+		const auto data_type = md.get_data_type();
+
+		if (format_kind == dnnl::memory::format_kind::blocked)
+		{	
 			if (inner_nblks == 0)
 			{
 				if (ndims == 1)
@@ -248,7 +253,21 @@ namespace
 				}
 				if (ndims == 4)
 				{
-					if (inner_nblks == 1 && inner_idxs[0] == 1)
+					if (inner_nblks == 1 && inner_idxs[0] == 0)
+					{
+						switch (inner_blks[0])
+						{
+						case 4:
+							return dnnl::memory::format_tag::Abcd4a;
+						case 8:
+							return dnnl::memory::format_tag::Abcd8a;
+						case 16:
+							return dnnl::memory::format_tag::Abcd16a;
+						default:
+							return dnnl::memory::format_tag::undef;
+						}
+					}
+					else if (inner_nblks == 1 && inner_idxs[0] == 1)
 					{
 						switch (inner_blks[0])
 						{
@@ -262,6 +281,20 @@ namespace
 							return dnnl::memory::format_tag::undef;
 						}
 					}
+					//else if (inner_nblks == 1 && inner_idxs[0] == 2)
+					//{
+					//	switch (inner_blks[0])
+					//	{
+					//	case 4:
+					//		return dnnl::memory::format_tag::abCd4c;
+					//	/*case 8:
+					//		return dnnl::memory::format_tag::abCd4a8c;
+					//	case 16:
+					//		return dnnl::memory::format_tag::abCd16c;*/
+					//	default:
+					//		return dnnl::memory::format_tag::undef;
+					//	}
+					//}
 					else if (inner_nblks == 2 && inner_idxs[0] == 1 && (inner_blks[0] == inner_blks[1]))
 					{
 						switch (inner_blks[0])
@@ -293,7 +326,21 @@ namespace
 				}
 				if (ndims == 5)
 				{
-					if (inner_nblks == 1 && inner_idxs[0] == 1)
+					if (inner_nblks == 1 && inner_idxs[0] == 0)
+					{
+						switch (inner_blks[0])
+						{
+						case 4:
+							return dnnl::memory::format_tag::Abcde4a;
+						case 8:
+							return dnnl::memory::format_tag::Abcde8a;
+						case 16:
+							return dnnl::memory::format_tag::Abcde16a;
+						default:
+							return dnnl::memory::format_tag::undef;
+						}
+					}
+					else if (inner_nblks == 1 && inner_idxs[0] == 1)
 					{
 						switch (inner_blks[0])
 						{
