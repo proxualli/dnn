@@ -224,7 +224,7 @@ namespace dnn
 		}
 	};
 
-	bool IsNorm(const LayerTypes& type)
+	static const bool IsNorm(const LayerTypes& type)
 	{
 		return std::string(magic_enum::enum_name<LayerTypes>(type)).find("Norm", 0) != std::string::npos;
 	}
@@ -235,8 +235,7 @@ namespace dnn
 	protected:
 		dnn::Device Device;
 		dnnl::memory::format_tag ChosenFormat;
-		std::mt19937 RandomEngine;
-
+		
 		auto IsInplaceBwd(const LayerTypes layerType, const std::vector<Layer*>& inputs) const
 		{
 			if constexpr (Inplace)
@@ -312,26 +311,30 @@ namespace dnn
 		const UInt PadH;
 		const UInt PadW;
 		const bool HasPadding;
-		std::vector<Layer*> Inputs;
-		std::vector<Layer*> Outputs;
-		const std::vector<Layer*> InputsFwd;
-		const std::vector<Layer*> InputsBwd;
-		Layer* InputLayer;
-		Layer* InputLayerBwd;
-		Layer* InputLayerFwd;
-		bool LayerBeforeCost;
-		bool SharesInput;
-		bool SharesInputOriginal;
-		bool SharesInputInplace;
-		dnnl::memory::format_tag NeuronsFormat;
-		dnnl::memory::format_tag WeightsFormat;
 		const bool Scaling;
 		const bool HasBias;
 		const bool HasWeights;
 		const bool InplaceBwd;
+		bool LayerBeforeCost;
+		bool SharesInput;
+		bool SharesInputOriginal;
+		bool SharesInputInplace;
 		bool Enabled;
 		bool Skip;
 		bool UseDefaultParameters;
+		std::atomic<bool> Fwd;
+		std::atomic<bool> Bwd;
+		std::atomic<bool> LockUpdate;
+		std::atomic<bool> RefreshingStats;
+		const std::vector<Layer*> InputsFwd;
+		const std::vector<Layer*> InputsBwd;
+		std::vector<Layer*> Inputs;
+		std::vector<Layer*> Outputs;
+		Layer* InputLayer;
+		Layer* InputLayerBwd;
+		Layer* InputLayerFwd;
+		dnnl::memory::format_tag NeuronsFormat;
+		dnnl::memory::format_tag WeightsFormat;
 		Fillers WeightsFiller;
 		FillerModes WeightsFillerMode;
 		Float WeightsGain;
@@ -344,6 +347,9 @@ namespace dnn
 		Float BiasesScale;
 		Float BiasesLRM;
 		Float BiasesWDM;
+		Float B1;
+		Float B2;
+		Float Gamma;
 		FloatArray Neurons;
 		FloatArray NeuronsD1;
 		FloatVector Weights;
@@ -354,16 +360,9 @@ namespace dnn
 		FloatVector BiasesD1;
 		FloatVector BiasesPar1;
 		FloatVector BiasesPar2;
-		Float B1;
-		Float B2;
-		Float Gamma;
 		Stats NeuronsStats;
 		Stats WeightsStats;
 		Stats BiasesStats;
-		std::atomic<bool> Fwd;
-		std::atomic<bool> Bwd;
-		std::atomic<bool> LockUpdate;
-		std::atomic<bool> RefreshingStats;
 		std::chrono::duration<Float> fpropTime;
 		std::chrono::duration<Float> bpropTime;
 		std::chrono::duration<Float> updateTime;
@@ -375,9 +374,7 @@ namespace dnn
 
 		Layer(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const LayerTypes layerType, const UInt weightCount, const UInt biasCount, const UInt c, const UInt d, const UInt h, const UInt w, const UInt padD, const UInt padH, const UInt padW, const std::vector<Layer*>& inputs, const bool hasBias = false, const bool scaling = false, const bool enabled = true) :
 			Device(device),
-			NeuronsFormat(format),
 			ChosenFormat(format),
-			WeightsFormat(format),
 			Name(name),
 			LayerType(layerType),
 			WeightCount(IsNorm(layerType) ? (scaling ? weightCount : 0ull) : weightCount),
@@ -386,21 +383,34 @@ namespace dnn
 			D(d),
 			H(h),
 			W(w),
+			PaddedC(DivUp(c)),
 			PadD(padD),
 			PadH(padH),
 			PadW(padW),
+			HasPadding(padD > 0 || padH > 0 || padW > 0),
+			Scaling(scaling),
+			HasBias(hasBias && (IsNorm(layerType) ? (scaling ? biasCount > 0ull : false) : (biasCount > 0ull))),
+			HasWeights(IsNorm(layerType) ? scaling : (weightCount > 0)),
+			InplaceBwd(IsInplaceBwd(layerType, inputs)),
+			LayerBeforeCost(false),
+			SharesInput(false),
+			SharesInputOriginal(false),
+			SharesInputInplace(false),
+			Enabled(enabled),
+			Skip(false),
+			UseDefaultParameters(true),
+			Fwd(false),
+			Bwd(false),
+			LockUpdate(false),
+			RefreshingStats(false),
 			Inputs(std::vector<Layer*>(inputs)),					// Inputs is switched between non-inplace (forward) and inplace (backprop) during training 
 			InputsFwd(std::vector<Layer*>(inputs)),					// InputsFwd = the non-inplace inputs 
 			InputsBwd(GetInputsBwd(layerType, inputs)),				// InputsBwd = the inplace inputs for backward prop
 			InputLayer(inputs.size() > 0 ? inputs[0] : nullptr),
 			InputLayerFwd(inputs.size() > 0 ? inputs[0] : nullptr),
 			InputLayerBwd(GetInputsBwd(layerType, inputs).size() > 0 ? GetInputsBwd(layerType, inputs)[0] : nullptr),
-			InplaceBwd(IsInplaceBwd(layerType, inputs)),
-			Enabled(enabled),
-			Skip(false),
-			Scaling(scaling),
-			HasBias(hasBias && (IsNorm(layerType) ? (scaling ? biasCount > 0ull : false) : (biasCount > 0ull))),
-			HasWeights(IsNorm(layerType) ? scaling : (weightCount > 0)),
+			NeuronsFormat(format),
+			WeightsFormat(format),
 			WeightsFiller(Fillers::HeNormal),
 			WeightsFillerMode(FillerModes::In),
 			WeightsGain(Float(1)),
@@ -413,9 +423,9 @@ namespace dnn
 			BiasesScale(Float(0)),
 			BiasesLRM(Float(1)),
 			BiasesWDM(Float(1)),
-			PaddedC(DivUp(c)),
-			HasPadding(padD > 0 || padH > 0 || padW > 0),
-			RandomEngine(std::mt19937(Seed<unsigned>())),
+			B1(Float(0)),
+			B2(Float(0)),
+			Gamma(Float(0)),
 			Neurons(FloatArray()),
 			NeuronsD1(FloatArray()),
 			Weights(FloatVector(weightCount)),
@@ -430,18 +440,6 @@ namespace dnn
 			BiasesD1(FloatVector(biasCount)),
 			BiasesPar1(FloatVector()),
 			BiasesPar2(FloatVector()),
-			B1(Float(0)),
-			B2(Float(0)),
-			Gamma(Float(0)),
-			UseDefaultParameters(true),
-			LockUpdate(false),
-			RefreshingStats(false),
-			LayerBeforeCost(false),
-			SharesInput(false),
-			SharesInputOriginal(false),
-			SharesInputInplace(false),
-			Fwd(false),
-			Bwd(false),
 			NeuronsStats(Stats()),
 			WeightsStats(Stats()),
 			BiasesStats(Stats()),
@@ -1017,6 +1015,8 @@ namespace dnn
 
 		virtual void ResetWeights(const Fillers weightsFiller, const FillerModes weightsFillerMode, const Float weightsGain, const Float weightsScale, const Fillers biasesFiller, const FillerModes biasesFillerMode, const Float biasesGain, const Float biasesScale)
 		{
+			auto rndEngine = std::mt19937(Seed<unsigned>());
+
 			if (HasWeights)
 			{
 				if (UseDefaultParameters)
@@ -1055,7 +1055,7 @@ namespace dnn
 				{
 					auto stddev = weightsGain * std::sqrt(Float(2) / weightsScope);
 					auto distribution = std::normal_distribution<Float>(Float(0), stddev);
-					std::generate_n(weights.begin(), WeightCount, [&]() { return distribution(RandomEngine); });
+					std::generate_n(weights.begin(), WeightCount, [&]() { return distribution(rndEngine); });
 				}
 				break;
 
@@ -1063,7 +1063,7 @@ namespace dnn
 				{
 					auto limit = weightsGain * std::sqrt(Float(6) / weightsScope);
 					auto distribution = std::uniform_real_distribution<Float>(-limit, limit);
-					std::generate_n(weights.begin(), WeightCount, [&]() { return distribution(RandomEngine); });
+					std::generate_n(weights.begin(), WeightCount, [&]() { return distribution(rndEngine); });
 				}
 				break;
 
@@ -1071,7 +1071,7 @@ namespace dnn
 				{
 					auto stddev = weightsGain * std::sqrt(Float(1) / weightsScope);
 					auto distribution = std::normal_distribution<Float>(Float(0), stddev);
-					std::generate_n(weights.begin(), WeightCount, [&]() { return distribution(RandomEngine); });
+					std::generate_n(weights.begin(), WeightCount, [&]() { return distribution(rndEngine); });
 				}
 				break;
 
@@ -1079,14 +1079,14 @@ namespace dnn
 				{
 					auto limit = weightsGain * std::sqrt(Float(3) / weightsScope);
 					auto distribution = std::uniform_real_distribution<Float>(-limit, limit);
-					std::generate_n(weights.begin(), WeightCount, [&]() { return distribution(RandomEngine); });
+					std::generate_n(weights.begin(), WeightCount, [&]() { return distribution(rndEngine); });
 				}
 				break;
 
 				case Fillers::Normal:
 				{
 					auto distribution = std::normal_distribution<Float>(Float(0), WeightsScale);
-					std::generate_n(weights.begin(), WeightCount, [&]() { return distribution(RandomEngine); });
+					std::generate_n(weights.begin(), WeightCount, [&]() { return distribution(rndEngine); });
 				}
 				break;
 
@@ -1097,7 +1097,7 @@ namespace dnn
 					auto x = limit + Float(1);
 					std::generate_n(weights.begin(), WeightCount, [&]()
 					{
-						do { x = distribution(RandomEngine); } while (std::abs(x) > limit);
+						do { x = distribution(rndEngine); } while (std::abs(x) > limit);
 						return x;
 					});
 				}
@@ -1106,7 +1106,7 @@ namespace dnn
 				case Fillers::Uniform:
 				{
 					auto distribution = std::uniform_real_distribution<Float>(-WeightsScale, WeightsScale);
-					std::generate_n(weights.begin(), WeightCount, [&]() { return distribution(RandomEngine); });
+					std::generate_n(weights.begin(), WeightCount, [&]() { return distribution(rndEngine); });
 				}
 				break;
 
@@ -1114,7 +1114,7 @@ namespace dnn
 				{
 					auto stddev = weightsGain * std::sqrt(Float(2) / Float(FanIn() + FanOut()));
 					auto distribution = std::normal_distribution<Float>(Float(0), stddev);
-					std::generate_n(weights.begin(), WeightCount, [&]() { return distribution(RandomEngine); });
+					std::generate_n(weights.begin(), WeightCount, [&]() { return distribution(rndEngine); });
 				}
 				break;
 
@@ -1122,7 +1122,7 @@ namespace dnn
 				{
 					auto limit = weightsGain * std::sqrt(Float(6) / Float(FanIn() + FanOut()));
 					auto distribution = std::uniform_real_distribution<Float>(-limit, limit);
-					std::generate_n(weights.begin(), WeightCount, [&]() { return distribution(RandomEngine); });
+					std::generate_n(weights.begin(), WeightCount, [&]() { return distribution(rndEngine); });
 				}
 				break;
 				}
@@ -1183,7 +1183,7 @@ namespace dnn
 				{
 					auto stddev = biasesGain * std::sqrt(Float(2) / biasesScope);
 					auto distribution = std::normal_distribution<Float>(Float(0), stddev);
-					std::generate_n(Biases.begin(), BiasCount, [&]() { return distribution(RandomEngine); });
+					std::generate_n(Biases.begin(), BiasCount, [&]() { return distribution(rndEngine); });
 				}
 				break;
 
@@ -1191,7 +1191,7 @@ namespace dnn
 				{
 					auto limit = biasesGain * std::sqrt(Float(6) / biasesScope);
 					auto distribution = std::uniform_real_distribution<Float>(-limit, limit);
-					std::generate_n(Biases.begin(), BiasCount, [&]() { return distribution(RandomEngine); });
+					std::generate_n(Biases.begin(), BiasCount, [&]() { return distribution(rndEngine); });
 				}
 				break;
 
@@ -1199,7 +1199,7 @@ namespace dnn
 				{
 					auto stddev = biasesGain * std::sqrt(Float(1) / biasesScope);
 					auto distribution = std::normal_distribution<Float>(Float(0), stddev);
-					std::generate_n(Biases.begin(), BiasCount, [&]() { return distribution(RandomEngine); });
+					std::generate_n(Biases.begin(), BiasCount, [&]() { return distribution(rndEngine); });
 				}
 				break;
 
@@ -1207,14 +1207,14 @@ namespace dnn
 				{
 					auto limit = biasesGain * std::sqrt(Float(3) / biasesScope);
 					auto distribution = std::uniform_real_distribution<Float>(-limit, limit);
-					std::generate_n(Biases.begin(), BiasCount, [&]() { return distribution(RandomEngine); });
+					std::generate_n(Biases.begin(), BiasCount, [&]() { return distribution(rndEngine); });
 				}
 				break;
 
 				case Fillers::Normal:
 				{
 					auto distribution = std::normal_distribution<Float>(Float(0), BiasesScale);
-					std::generate_n(Biases.begin(), BiasCount, [&]() { return distribution(RandomEngine); });
+					std::generate_n(Biases.begin(), BiasCount, [&]() { return distribution(rndEngine); });
 				}
 				break;
 
@@ -1225,7 +1225,7 @@ namespace dnn
 					auto x = limit + Float(1);
 					std::generate_n(Biases.begin(), BiasCount, [&]()
 					{
-						do { x = distribution(RandomEngine); } while (std::abs(x) > limit);
+						do { x = distribution(rndEngine); } while (std::abs(x) > limit);
 						return x;
 					});
 				}
@@ -1234,7 +1234,7 @@ namespace dnn
 				case Fillers::Uniform:
 				{
 					auto distribution = std::uniform_real_distribution<Float>(-BiasesScale, BiasesScale);
-					std::generate_n(Biases.begin(), BiasCount, [&]() { return distribution(RandomEngine); });
+					std::generate_n(Biases.begin(), BiasCount, [&]() { return distribution(rndEngine); });
 				}
 				break;
 
@@ -1242,7 +1242,7 @@ namespace dnn
 				{
 					auto stddev = biasesGain * std::sqrt(Float(2) / Float(FanIn() + FanOut()));
 					auto distribution = std::normal_distribution<Float>(Float(0), stddev);
-					std::generate_n(Biases.begin(), BiasCount, [&]() { return distribution(RandomEngine); });
+					std::generate_n(Biases.begin(), BiasCount, [&]() { return distribution(rndEngine); });
 				}
 				break;
 
@@ -1250,7 +1250,7 @@ namespace dnn
 				{
 					auto limit = biasesGain * std::sqrt(Float(6) / Float(FanIn() + FanOut()));
 					auto distribution = std::uniform_real_distribution<Float>(-limit, limit);
-					std::generate_n(Biases.begin(), BiasCount, [&]() { return distribution(RandomEngine); });
+					std::generate_n(Biases.begin(), BiasCount, [&]() { return distribution(rndEngine); });
 				}
 				break;
 
