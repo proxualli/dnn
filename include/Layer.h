@@ -506,9 +506,7 @@ namespace dnn
 			description.append(nwl + std::string(" Features:") + tab + std::to_string(C) + std::string("x") + std::to_string(H) + std::string("x") + std::to_string(W));
 			description.append(nwl + std::string(" Neurons:") + tab + std::to_string(CDHW()));
 			description.append(nwl + std::string(" Format:") + tab + std::string(dnnl_fmt_tag2str(static_cast<dnnl_format_tag_t>(ChosenFormat))));
-			if (HasWeights)
-				description.append(nwl + std::string(" Weight:") + tab + std::string(dnnl_fmt_tag2str(static_cast<dnnl_format_tag_t>(WeightsFormat))));
-
+			
 			return description;
 		}
 
@@ -519,6 +517,7 @@ namespace dnn
 			if (visible)
 			{
 				description.append(nwl + std::string(" Weights:") + tab + std::to_string(WeightCount));
+				description.append(nwl + std::string(" Format:") + tab + std::string(dnnl_fmt_tag2str(static_cast<dnnl_format_tag_t>(WeightsFormat))));
 				description.append(nwl + std::string("  lr mult:") + tab + FloatToString(WeightsLRM));
 				description.append(nwl + std::string("  wd mult:") + tab + FloatToString(WeightsWDM));
 
