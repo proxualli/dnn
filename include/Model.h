@@ -2800,6 +2800,15 @@ namespace dnn
 	}
 	
 	template<typename S>
+	void serialize(S& s, Stats& o)
+	{
+		s.value4b(o.Mean);
+		s.value4b(o.StdDev);
+		s.value4b(o.Min);
+		s.value4b(o.Max);
+	}
+
+	template<typename S>
 	void serialize(S& s, TrainingRate& o)
 	{
 		s.value4b(o.Optimizer);

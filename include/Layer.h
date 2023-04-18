@@ -239,20 +239,6 @@ namespace dnn
 			Max(max)
 		{
 		}
-
-	private:
-		friend bitsery::Access;
-		template<typename S>
-		void serialize(S& s, Stats& o)
-		{
-			s.ext(*this, bitsery::ext::Growable{}, [](S& s, Stats& o)
-			{
-				s.value4b(o.Mean);
-				s.value4b(o.StdDev);
-				s.value4b(o.Min);
-				s.value4b(o.Max);
-			});
-		}
 	};
 
 	static const bool IsNorm(const LayerTypes& type)
