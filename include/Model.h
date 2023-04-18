@@ -312,7 +312,7 @@ namespace dnn
 	{
 		std::string Name;
 		Datasets Dataset;
-		Costs LossFunction;
+		Costs CostFunction;
 		UInt LayerCount;
 		UInt CostLayerCount;
 		UInt CostIndex;
@@ -353,6 +353,56 @@ namespace dnn
 		bool Locked;
 	};
 
+	struct LogInfo
+	{
+		UInt Cycle;
+		UInt Epoch;
+		UInt GroupIndex;
+		UInt CostIndex;
+		std::string CostName;
+
+		UInt N;
+		UInt D;
+		UInt H;
+		UInt W;
+		UInt PadD;
+		UInt PadH;
+		UInt PadW;
+
+		Optimizers Optimizer;
+		Float Rate;
+		Float Eps;
+		Float Momentum;
+		Float Beta2;
+		Float Gamma;
+		Float L2Penalty;
+		Float Dropout;
+		
+		Float InputDropout;
+		Float Cutout;
+		bool CutMix;
+		Float AutoAugment;
+		bool HorizontalFlip;
+		bool VerticalFlip;
+		Float ColorCast;
+		UInt ColorAngle;
+		Float Distortion;
+		Interpolations Interpolation;
+		Float Scaling;
+		Float Rotation;
+
+		Float AvgTrainLoss;
+		UInt TrainErrors;
+		Float TrainErrorPercentage;
+		Float TrainAccuracy;
+		Float AvgTestLoss;
+		UInt TestErrors;
+		Float TestErrorPercentage;
+		Float TestAccuracy;
+
+		long long ElapsedTicks;
+	};
+
 	static const bool IsBatchNorm(const LayerTypes& type)
 	{
 		return std::string(magic_enum::enum_name<LayerTypes>(type)).find("BatchNorm", 0) != std::string::npos;
@@ -374,7 +424,7 @@ namespace dnn
 		Datasets Dataset;
 		std::atomic<States> State;
 		std::atomic<TaskStates> TaskState;
-		Costs CostFuction;
+		Costs CostFunction;
 		Optimizers Optimizer;
 		UInt CostIndex;
 		UInt LabelIndex;
@@ -423,6 +473,7 @@ namespace dnn
 		Float BatchNormMomentum;
 		Float BatchNormEps;
 		Float Dropout;
+		//CostInfo CostInfo;
 		UInt TrainErrors;
 		UInt TestErrors;
 		Float TrainLoss;
@@ -447,6 +498,7 @@ namespace dnn
 		std::vector<TrainingRate> TrainingRates;
 		std::vector<TrainingStrategy> TrainingStrategies;
 		bool UseTrainingStrategy;
+		std::vector<LogInfo> Log;
 		std::vector<std::unique_ptr<Layer>> Layers;
 		std::vector<Cost*> CostLayers;
 		std::chrono::duration<Float> fpropTime;
@@ -535,12 +587,13 @@ namespace dnn
 			LabelIndex(0),
 			GroupIndex(0),
 			CostIndex(0),
-			CostFuction(Costs::CategoricalCrossEntropy),
+			CostFunction(Costs::CategoricalCrossEntropy),
 			CostLayers(std::vector<Cost*>()),
 			Layers(std::vector<std::unique_ptr<Layer>>()),
 			TrainingRates(std::vector<TrainingRate>()),
 			TrainingStrategies(std::vector<TrainingStrategy>()),
 			UseTrainingStrategy(false),
+			Log(std::vector<LogInfo>()),
 			SampleSpeed(Float(0)),
 			NewEpoch(nullptr),
 			AdjustedTrainingSamplesCount(0),
@@ -1599,6 +1652,7 @@ namespace dnn
 						}
 					}
 
+					timePointGlobal = timer.now();
 					CurrentEpoch++;
 					CurrentCycle = CurrentTrainingRate.Cycles;
 
@@ -1630,9 +1684,9 @@ namespace dnn
 									StochasticDepth(totalSkipConnections, DepthDrop, FixedDepthDrop);
 
 								// Forward
-								timePointGlobal = timer.now();
+								const auto timePointLocal = timer.now();
 								auto SampleLabel = TrainSample(SampleIndex);
-								Layers[0]->fpropTime = timer.now() - timePointGlobal;
+								Layers[0]->fpropTime = timer.now() - timePointlocal;
 
 								for (auto cost : CostLayers)
 									cost->SetSampleLabel(SampleLabel);
@@ -1647,7 +1701,7 @@ namespace dnn
 
 								CostFunction(State.load());
 								Recognized(State.load(), SampleLabel);
-								fpropTime = timer.now() - timePointGlobal;
+								fpropTime = timer.now() - timePointlocal;
 
 								// Backward
 								bpropTimeCount = std::chrono::duration<Float>(Float(0));
@@ -1699,9 +1753,9 @@ namespace dnn
 
 								while (Layers[0]->RefreshingStats.load()) {	std::this_thread::yield(); }
 								Layers[0]->Fwd.store(true);
-								timePointGlobal = timer.now();
+								const auto timePointlocal = timer.now();
 								auto SampleLabels = TrainBatch(SampleIndex, BatchSize);
-								Layers[0]->fpropTime = timer.now() - timePointGlobal;
+								Layers[0]->fpropTime = timer.now() - timePointlocal;
 								Layers[0]->Fwd.store(false);
 
 								for (auto cost : CostLayers)
@@ -1725,7 +1779,7 @@ namespace dnn
 								overflow = SampleIndex >= TrainOverflowCount;
 								CostFunctionBatch(State.load(), BatchSize, overflow, TrainSkipCount);
 								RecognizedBatch(State.load(), BatchSize, overflow, TrainSkipCount, SampleLabels);
-								fpropTime = timer.now() - timePointGlobal;
+								fpropTime = timer.now() - timePointlocal;
 
 								// Backward
 								bpropTimeCount = std::chrono::duration<Float>(Float(0));
@@ -1771,7 +1825,7 @@ namespace dnn
 								bpropTime = bpropTimeCount;
 								updateTime = updateTimeCount;
 
-								elapsedTime = timer.now() - timePointGlobal;
+								elapsedTime = timer.now() - timePointlocal;
 								SampleSpeed = BatchSize / (Float(std::chrono::duration_cast<std::chrono::microseconds>(elapsedTime).count()) / 1000000);
 
 								if (TaskState.load() != TaskStates::Running && !CheckTaskState())
@@ -1813,8 +1867,7 @@ namespace dnn
 							auto overflow = false;
 							for (SampleIndex = 0; SampleIndex < AdjustedTestingSamplesCount; SampleIndex += BatchSize)
 							{
-								timePointGlobal = timer.now();
-
+								const auto timePointlocal = timer.now();
 								while (Layers[0]->RefreshingStats.load()) { std::this_thread::yield(); }
 								Layers[0]->Fwd.store(true);
 								timePoint = timer.now();
@@ -1835,14 +1888,14 @@ namespace dnn
 									Layers[i]->Fwd.store(false);
 								}
 
-								fpropTime = timer.now() - timePointGlobal;
+								fpropTime = timer.now() - timePointlocal;
 
 								overflow = SampleIndex >= TestOverflowCount;
 								CostFunctionBatch(State.load(), BatchSize, overflow, TestSkipCount);
 								RecognizedBatch(State.load(), BatchSize, overflow, TestSkipCount, SampleLabels);
 
-								elapsedTime = timer.now() - timePointGlobal;
-								SampleSpeed = BatchSize / (Float(std::chrono::duration_cast<std::chrono::microseconds>(elapsedTime).count()) / 1000000);
+								elapsedTime = timer.now() - timePointlocal;
+								SampleSpeed = BatchSize / (Float(std::chrono::duration_cast<std::chrono::microseconds>(elapsedTime).count()) / 1000000ll);
 
 								if (TaskState.load() != TaskStates::Running && !CheckTaskState())
 									break;
@@ -1883,6 +1936,51 @@ namespace dnn
 							SaveDefinition((subdir / std::string("model.txt")).string());
 							Save((subdir / std::string("model.bin")).string());
 							State.store(States::NewEpoch);
+							
+							LogInfo logInfo;
+							logInfo.AutoAugment = CurrentTrainingRate.AutoAugment;
+							logInfo.AvgTestLoss = AvgTestLoss;
+							logInfo.AvgTrainLoss = AvgTrainLoss;
+							logInfo.Beta2 = CurrentTrainingRate.Beta2;
+							logInfo.ColorAngle = CurrentTrainingRate.ColorAngle;
+							logInfo.ColorCast = CurrentTrainingRate.ColorCast;
+							logInfo.CostIndex = CostIndex;
+							logInfo.CostName = CostLayers[CostIndex]->Name;
+							logInfo.CutMix = CurrentTrainingRate.CutMix;
+							logInfo.Cutout = CurrentTrainingRate.Cutout;
+							logInfo.Cycle = CurrentCycle;
+							logInfo.D = 1ull;
+							logInfo.Distortion = CurrentTrainingRate.Distortion;
+							logInfo.Dropout = CurrentTrainingRate.Dropout;
+							logInfo.ElapsedTicks = static_cast<long long>(std::chrono::duration_cast<std::chrono::microseconds>(timer.now() - timePointGlobal).count() / 1000000ll);
+							logInfo.Epoch = CurrentEpoch;
+							logInfo.Eps = CurrentTrainingRate.Eps;
+							logInfo.Gamma = CurrentTrainingRate.Gamma;
+							logInfo.GroupIndex = GroupIndex;
+							logInfo.H = CurrentTrainingRate.Height;
+							logInfo.HorizontalFlip = CurrentTrainingRate.HorizontalFlip;
+							logInfo.InputDropout = CurrentTrainingRate.InputDropout;
+							logInfo.Interpolation = CurrentTrainingRate.Interpolation;
+							logInfo.L2Penalty = CurrentTrainingRate.L2Penalty;
+							logInfo.Momentum = CurrentTrainingRate.Momentum;
+							logInfo.N = CurrentTrainingRate.BatchSize;
+							logInfo.Optimizer = CurrentTrainingRate.Optimizer;
+							logInfo.PadD = 1ull;
+							logInfo.PadH = CurrentTrainingRate.PadH;
+							logInfo.PadW = CurrentTrainingRate.PadW;
+							logInfo.Rate = Rate;
+							logInfo.Rotation = CurrentTrainingRate.Rotation;
+							logInfo.Scaling = CurrentTrainingRate.Scaling;
+							logInfo.TestAccuracy = Float(100) - TestErrorPercentage;
+							logInfo.TestErrorPercentage = TestErrorPercentage;
+							logInfo.TestErrors = TestErrors;
+							logInfo.TrainAccuracy = Float(100) - TrainErrorPercentage;
+							logInfo.TrainErrorPercentage = TrainErrorPercentage;
+							logInfo.TrainErrors = TrainErrors;
+							logInfo.VerticalFlip = CurrentTrainingRate.VerticalFlip;
+							logInfo.W = CurrentTrainingRate.Width;
+
+							Log.push_back(logInfo);
 							NewEpoch(CurrentCycle, CurrentEpoch, TotalEpochs, static_cast<UInt>(CurrentTrainingRate.Optimizer), CurrentTrainingRate.Beta2, CurrentTrainingRate.Gamma, CurrentTrainingRate.Eps, CurrentTrainingRate.HorizontalFlip, CurrentTrainingRate.VerticalFlip, CurrentTrainingRate.InputDropout, CurrentTrainingRate.Cutout, CurrentTrainingRate.CutMix, CurrentTrainingRate.AutoAugment, CurrentTrainingRate.ColorCast, CurrentTrainingRate.ColorAngle, CurrentTrainingRate.Distortion, static_cast<UInt>(CurrentTrainingRate.Interpolation), CurrentTrainingRate.Scaling, CurrentTrainingRate.Rotation, CurrentTrainingRate.MaximumRate, CurrentTrainingRate.BatchSize, CurrentTrainingRate.Height, CurrentTrainingRate.Width, CurrentTrainingRate.Momentum, CurrentTrainingRate.L2Penalty, CurrentTrainingRate.Dropout, AvgTrainLoss, TrainErrorPercentage, Float(100) - TrainErrorPercentage, TrainErrors, AvgTestLoss, TestErrorPercentage, Float(100) - TestErrorPercentage, TestErrors);
 						}
 						else
@@ -2843,7 +2941,57 @@ namespace dnn
 		s.value4b(o.Scaling);
 		s.value4b(o.Rotation);
 	}
+	template<typename S>
+	void serialize(S& s, LogInfo& o)
+	{
+		s.value8b(o.Cycle);
+		s.value8b(o.Epoch);
+		s.value8b(o.GroupIndex);
+		s.value8b(o.CostIndex);
+		s.text1b(o.CostName, 256);
+		
+		s.value8b(o.N);
+		s.value8b(o.D);
+		s.value8b(o.H);
+		s.value8b(o.W);
+		s.value8b(o.PadD);
+		s.value8b(o.PadH);
+		s.value8b(o.PadW);
 
+		s.value4b(o.Optimizer);
+		s.value4b(o.Rate);
+		s.value4b(o.Eps);
+		s.value4b(o.Momentum);
+		s.value4b(o.Beta2);
+		s.value4b(o.Gamma);
+		s.value4b(o.L2Penalty);
+		s.value4b(o.Dropout);
+			
+		s.value4b(o.InputDropout);
+		s.value4b(o.Cutout);
+		s.boolValue(o.CutMix);
+		s.value4b(o.AutoAugment);
+		s.boolValue(o.HorizontalFlip);
+		s.boolValue(o.VerticalFlip);
+		s.value4b(o.ColorCast);
+		s.value8b(o.ColorAngle);
+		s.value4b(o.Distortion);
+		s.value4b(o.Interpolation);
+		s.value4b(o.Scaling);
+		s.value4b(o.Rotation);
+
+		s.value4b(o.AvgTrainLoss);
+		s.value8b(o.TrainErrors);
+		s.value4b(o.TrainErrorPercentage);
+		s.value4b(o.TrainAccuracy);
+		s.value4b(o.AvgTestLoss);
+		s.value8b(o.TestErrors);
+		s.value4b(o.TestErrorPercentage);
+		s.value4b(o.TestAccuracy);
+
+		s.value8b(o.ElapsedTicks);
+	}
+	
 	template<typename S>
 	void serialize(S& s, Model& o)
 	{
@@ -2858,7 +3006,7 @@ namespace dnn
 		s.value4b(o.Dataset);
 		//s.value4b<States>(o.State);
 		//s.value4b<TaskStates>(o.TaskState);
-		s.value4b(o.CostFuction);
+		s.value4b(o.CostFunction);
 		s.value4b(o.Optimizer);
 		s.value8b(o.CostIndex);
 		s.value8b(o.LabelIndex);
@@ -2925,6 +3073,7 @@ namespace dnn
 		s.container(o.TrainingRates, 1024);
 		s.container(o.TrainingStrategies, 1024);
 		s.boolValue(o.UseTrainingStrategy);
+		s.container(o.Log, 4096);
 		//s.value8b<UInt>(o.FirstUnlockedLayer);
 	};
 }

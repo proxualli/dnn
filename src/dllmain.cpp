@@ -404,7 +404,7 @@ extern "C" DNN_API void DNNGetModelInfo(ModelInfo* info)
 	{
 		info->Name = model->Name;
 		info->Dataset = dataprovider->Dataset;
-		info->LossFunction = model->CostFuction;
+		info->CostFunction = model->CostFunction;
 		info->LayerCount = model->Layers.size();
 		info->CostLayerCount = model->CostLayers.size();
 		info->CostIndex = model->CostIndex;
