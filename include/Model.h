@@ -96,6 +96,40 @@ namespace dnn
 		Float Scaling;
 		Float Rotation;
 
+		bool operator==(const TrainingRate& o) const
+		{
+			return 
+				std::tie(Epochs, BatchSize, Height, Width, PadH, PadW, Momentum, Beta2, Gamma, L2Penalty, Dropout, HorizontalFlip, VerticalFlip, InputDropout, Cutout, CutMix, AutoAugment, ColorCast, ColorAngle, Distortion, Interpolation, Scaling, Rotation) 
+				== 
+				std::tie(o.Epochs, o.BatchSize, o.Height, o.Width, o.PadH, o.PadW, o.Momentum, o.Beta2, o.Gamma, o.L2Penalty, o.Dropout, o.HorizontalFlip, o.VerticalFlip, o.InputDropout, o.Cutout, o.CutMix, o.AutoAugment, o.ColorCast, o.ColorAngle, o.Distortion, o.Interpolation, o.Scaling, o.Rotation);
+		}
+
+		TrainingStrategy() :
+			Epochs(Float(1)),
+			BatchSize(128),
+			Height(32),
+			Width(32),
+			PadH(4),
+			PadW(4),
+			Momentum(Float(0.9)),
+			Beta2(Float(0.999)),
+			Gamma(Float(0.9)),
+			L2Penalty(Float(0.0005)),
+			Dropout(Float(0)),
+			HorizontalFlip(true),
+			VerticalFlip(false),
+			InputDropout(Float(0)),
+			Cutout(Float(0)),
+			CutMix(false),
+			AutoAugment(Float(0)),
+			ColorCast(Float(0)),
+			Distortion(Float(0)),
+			Interpolation(Interpolations::Cubic),
+			Scaling(Float(10)),
+			Rotation(Float(12))
+		{
+		}
+
 		TrainingStrategy(const Float epochs, const UInt batchSize, const UInt height, const UInt width, const UInt padH, const UInt padW, const Float momentum, const Float beta2, const Float gamma, const Float l2penalty, const Float dropout, const bool horizontalFlip, const bool verticalFlip, const Float inputDropout, const Float cutout, const bool cutMix, const Float autoAugment, const Float colorCast, const UInt colorAngle, const Float distortion, const Interpolations interpolation, const Float scaling, const Float rotation) :
 			Epochs(epochs),
 			BatchSize(batchSize),
@@ -160,6 +194,42 @@ namespace dnn
 			if (Rotation < 0 || Rotation > 180)
 				throw std::invalid_argument("Rotation out of range in TrainingStrategy");
 		}
+
+	/*
+	private:
+		friend bitsery::Access;
+		template<typename S>
+		void serialize(S& s, TrainingStrategy& o)
+		{
+			s.ext(*this, bitsery::ext::Growable{}, [](S& s, TrainingStrategy& o)
+			{
+				s.value4b(o.Epochs);
+				s.value8b(o.BatchSize);
+				s.value8b(o.Height);
+				s.value8b(o.Width);
+				s.value8b(o.PadH);
+				s.value8b(o.PadW);
+				s.value4b(o.Momentum);
+				s.value4b(o.Beta2);
+				s.value4b(o.Gamma);
+				s.value4b(o.L2Penalty);
+				s.value4b(o.Dropout);
+				s.boolValue(o.HorizontalFlip);
+				s.boolValue(o.VerticalFlip);
+				s.value4b(o.InputDropout);
+				s.value4b(o.Cutout);
+				s.boolValue(o.CutMix);
+				s.value4b(o.AutoAugment);
+				s.value4b(o.ColorCast);
+				s.value8b(o.ColorAngle);
+				s.value4b(o.Distortion);
+				s.value4b(o.Interpolation);
+				s.value4b(o.Scaling);
+				s.value4b(o.Rotation);
+			});
+		}
+	*/
+
 	};
 
 	struct TrainingInfo
@@ -323,17 +393,12 @@ namespace dnn
 		return std::string(magic_enum::enum_name<LayerTypes>(type)).find("BatchNorm", 0) != std::string::npos;
 	}
 
-
+	
 	class Model
 	{
 	private:
 		std::future<void> Task;
-		std::vector<UInt> RandomTrainingSamples;
-		std::vector<bool> TrainingSamplesHFlip;
-		std::vector<bool> TrainingSamplesVFlip;
-		std::vector<bool> TestingSamplesHFlip;
-		std::vector<bool> TestingSamplesVFlip;
-		
+
 	public:
 		const std::string Name;
 		const std::string Definition;
@@ -408,6 +473,11 @@ namespace dnn
 		bool HasBias;
 		bool PersistOptimizer;
 		bool DisableLocking;
+		std::vector<bool> TrainingSamplesHFlip;
+		std::vector<bool> TrainingSamplesVFlip;
+		std::vector<bool> TestingSamplesHFlip;
+		std::vector<bool> TestingSamplesVFlip;
+		std::vector<UInt> RandomTrainingSamples;
 		TrainingRate CurrentTrainingRate;
 		std::vector<TrainingRate> TrainingRates;
 		std::vector<TrainingStrategy> TrainingStrategies;
@@ -420,7 +490,7 @@ namespace dnn
 		std::atomic<UInt> FirstUnlockedLayer;
 		std::atomic<bool> BatchSizeChanging;
 		std::atomic<bool> ResettingWeights;
-
+		
 		void(*NewEpoch)(UInt, UInt, UInt, UInt, Float, Float, Float, bool, bool, Float, Float, bool, Float, Float, UInt, Float, UInt, Float, Float, Float, UInt, UInt, UInt, Float, Float, Float, Float, Float, Float, UInt, Float, Float, Float, UInt);
 
 		auto GetModelName(const std::string& definition) const
@@ -450,8 +520,8 @@ namespace dnn
 			Dataset(Datasets::cifar10),				// Dataset
 			C(3),									// Dim
 			D(1),
-			H(8),
-			W(8),
+			H(32),
+			W(32),
 			MeanStdNormalization(true),				// MeanStd
 			MirrorPad(false),						// MirrorPad or ZeroPad
 			PadD(0),
@@ -504,9 +574,8 @@ namespace dnn
 			CostLayers(std::vector<Cost*>()),
 			Layers(std::vector<std::unique_ptr<Layer>>()),
 			TrainingRates(std::vector<TrainingRate>()),
-			fpropTime(std::chrono::duration<Float>(Float(0))),
-			bpropTime(std::chrono::duration<Float>(Float(0))),
-			updateTime(std::chrono::duration<Float>(Float(0))),
+			TrainingStrategies(std::vector<TrainingStrategy>()),
+			UseTrainingStrategy(false),
 			SampleSpeed(Float(0)),
 			NewEpoch(nullptr),
 			AdjustedTrainingSamplesCount(0),
@@ -515,11 +584,12 @@ namespace dnn
 			TestOverflowCount(0),
 			TrainSkipCount(0),
 			TestSkipCount(0),
-			BatchSizeChanging(false),
-			ResettingWeights(false),
+			fpropTime(std::chrono::duration<Float>(Float(0))),
+			bpropTime(std::chrono::duration<Float>(Float(0))),
+			updateTime(std::chrono::duration<Float>(Float(0))),
 			FirstUnlockedLayer(1),
-			UseTrainingStrategy(false),
-			TrainingStrategies(std::vector<TrainingStrategy>())
+			BatchSizeChanging(false),
+			ResettingWeights(false)
 			//LogInterval(10000)
 		{
 #ifdef DNN_LOG
@@ -547,6 +617,31 @@ namespace dnn
 
 		virtual ~Model() = default;
 		
+		void Load(const std::string& fileName)
+		{
+			auto is = std::ifstream(fileName, std::ios::in | std::ios::binary);
+
+			if (!is.bad() && is.is_open())
+			{
+				auto state = bitsery::quickDeserialization<bitsery::InputStreamAdapter>(is, *this);
+				assert(state.first == bitsery::ReaderError::NoError && state.second);
+				is.close();
+			}
+		}
+
+		void Save(const std::string& fileName)
+		{
+			auto os = std::fstream{ fileName, std::ios::binary | std::ios::trunc | std::ios::out };
+
+			if (!os.bad() && os.is_open())
+			{
+				bitsery::Serializer<bitsery::OutputBufferedStreamAdapter> serializer{ os };
+				serializer.object(*this);
+				serializer.adapter().flush();
+				os.close();
+			}
+		}
+
 		auto GetWeightsSize(const bool persistOptimizer, const Optimizers optimizer) const
 		{
 			std::streamsize weightsSize = 0;
@@ -569,10 +664,9 @@ namespace dnn
 
 		void SaveDefinition(const std::string& fileName)
 		{
-			std::fstream file;
+			std::fstream file{ fileName, file.trunc | file.out };
 
-			file.open(fileName, std::ios::out);
-			if (file)
+			if (file.is_open())
 			{
 				file << CaseInsensitiveReplace(Definition.begin(), Definition.end(), nwl, "\n");
 				file.close();
@@ -1822,7 +1916,7 @@ namespace dnn
 							std::filesystem::create_directories(subdir);
 							SaveWeights((subdir / fileName).string(), PersistOptimizer);
 							SaveDefinition((subdir / std::string("model.txt")).string());
-
+							Save((subdir / std::string("model.bin")).string());
 							State.store(States::NewEpoch);
 							NewEpoch(CurrentCycle, CurrentEpoch, TotalEpochs, static_cast<UInt>(CurrentTrainingRate.Optimizer), CurrentTrainingRate.Beta2, CurrentTrainingRate.Gamma, CurrentTrainingRate.Eps, CurrentTrainingRate.HorizontalFlip, CurrentTrainingRate.VerticalFlip, CurrentTrainingRate.InputDropout, CurrentTrainingRate.Cutout, CurrentTrainingRate.CutMix, CurrentTrainingRate.AutoAugment, CurrentTrainingRate.ColorCast, CurrentTrainingRate.ColorAngle, CurrentTrainingRate.Distortion, static_cast<UInt>(CurrentTrainingRate.Interpolation), CurrentTrainingRate.Scaling, CurrentTrainingRate.Rotation, CurrentTrainingRate.MaximumRate, CurrentTrainingRate.BatchSize, CurrentTrainingRate.Height, CurrentTrainingRate.Width, CurrentTrainingRate.Momentum, CurrentTrainingRate.L2Penalty, CurrentTrainingRate.Dropout, AvgTrainLoss, TrainErrorPercentage, Float(100) - TrainErrorPercentage, TrainErrors, AvgTestLoss, TestErrorPercentage, Float(100) - TestErrorPercentage, TestErrors);
 						}
@@ -2710,5 +2804,153 @@ namespace dnn
 
 			return Optimizers::SGD;
 		}
+	};
+
+	template<typename S>
+	void serialize(S& s, TrainingStrategy& o)
+	{
+		s.value4b(o.Epochs);
+		s.value8b(o.BatchSize);
+		s.value8b(o.Height);
+		s.value8b(o.Width);
+		s.value8b(o.PadH);
+		s.value8b(o.PadW);
+		s.value4b(o.Momentum);
+		s.value4b(o.Beta2);
+		s.value4b(o.Gamma);
+		s.value4b(o.L2Penalty);
+		s.value4b(o.Dropout);
+		s.boolValue(o.HorizontalFlip);
+		s.boolValue(o.VerticalFlip);
+		s.value4b(o.InputDropout);
+		s.value4b(o.Cutout);
+		s.boolValue(o.CutMix);
+		s.value4b(o.AutoAugment);
+		s.value4b(o.ColorCast);
+		s.value8b(o.ColorAngle);
+		s.value4b(o.Distortion);
+		s.value4b(o.Interpolation);
+		s.value4b(o.Scaling);
+		s.value4b(o.Rotation);
+	}
+	
+	template<typename S>
+	void serialize(S& s, TrainingRate& o)
+	{
+		s.value4b(o.Optimizer);
+		s.value4b(o.Momentum);
+		s.value4b(o.Beta2);
+		s.value4b(o.L2Penalty);
+		s.value4b(o.Eps);
+		s.value8b(o.BatchSize);
+		s.value8b(o.Height);
+		s.value8b(o.Width);
+		s.value8b(o.PadH);
+		s.value8b(o.PadW);
+		s.value8b(o.Cycles);
+		s.value8b(o.Epochs);
+		s.value8b(o.EpochMultiplier);
+		s.value4b(o.MaximumRate);
+		s.value4b(o.MinimumRate);
+		s.value4b(o.FinalRate);
+		s.value4b(o.Gamma);
+		s.value8b(o.DecayAfterEpochs);
+		s.value4b(o.DecayFactor);
+		s.boolValue(o.HorizontalFlip);
+		s.boolValue(o.VerticalFlip);
+		s.value4b(o.InputDropout);
+		s.value4b(o.Cutout);
+		s.boolValue(o.CutMix);
+		s.value4b(o.AutoAugment);
+		s.value4b(o.ColorCast);
+		s.value8b(o.ColorAngle);
+		s.value4b(o.Distortion);
+		s.value4b(o.Interpolation);
+		s.value4b(o.Scaling);
+		s.value4b(o.Rotation);
+	}
+
+	template<typename S>
+	void serialize(S& s, Model& o)
+	{
+		//s.container1b(o.TrainingSamplesHFlip, 1000000);
+		//s.container1b(o.TrainingSamplesVFlip, 1000000);
+		//s.container1b(o.TestingSamplesHFlip, 500000);
+		//s.container1b(o.TestingSamplesVFlip, 500000);
+		s.container8b(o.RandomTrainingSamples, 1000000);
+		//s.text1b(o.Name, 128);
+		//s.text1b(o.Definition, 250000);
+		s.value4b(o.Format);
+		s.value4b(o.Dataset);
+		//s.value4b<States>(o.State);
+		//s.value4b<TaskStates>(o.TaskState);
+		s.value4b(o.CostFuction);
+		s.value4b(o.Optimizer);
+		s.value8b(o.CostIndex);
+		s.value8b(o.LabelIndex);
+		s.value8b(o.GroupIndex);
+		s.value8b(o.TotalCycles);
+		s.value8b(o.TotalEpochs);
+		s.value8b(o.CurrentCycle);
+		s.value8b(o.CurrentEpoch);
+		s.value8b(o.SampleIndex);
+		s.value8b(o.BatchSize);
+		s.value8b(o.GoToEpoch);
+		s.value8b(o.AdjustedTrainingSamplesCount);
+		s.value8b(o.AdjustedTestingSamplesCount);
+		s.value8b(o.TrainSkipCount);
+		s.value8b(o.TestSkipCount);
+		s.value8b(o.TrainOverflowCount);
+		s.value8b(o.TestOverflowCount);
+		s.value8b(o.C);
+		s.value8b(o.D);
+		s.value8b(o.H);
+		s.value8b(o.W);
+		s.value8b(o.PadC);
+		s.value8b(o.PadD);
+		s.value8b(o.PadH);
+		s.value8b(o.PadW);
+		s.boolValue(o.MirrorPad);
+		s.boolValue(o.RandomCrop);
+		s.boolValue(o.MeanStdNormalization);
+		s.boolValue(o.FixedDepthDrop);
+		s.value4b(o.DepthDrop);
+		s.value4b(o.WeightsFiller);
+		s.value4b(o.WeightsFillerMode);
+		s.value4b(o.WeightsGain);
+		s.value4b(o.WeightsScale);
+		s.value4b(o.WeightsLRM);
+		s.value4b(o.WeightsWDM);
+		s.value4b(o.BiasesFiller);
+		s.value4b(o.BiasesFillerMode);
+		s.value4b(o.BiasesGain);
+		s.value4b(o.BiasesScale);
+		s.value4b(o.BiasesLRM);
+		s.value4b(o.BiasesWDM);
+		s.value4b(o.AlphaFiller);
+		s.value4b(o.BetaFiller);
+		s.value4b(o.BatchNormMomentum);
+		s.value4b(o.BatchNormEps);
+		s.value4b(o.Dropout);
+		s.value8b(o.TrainErrors);
+		s.value8b(o.TestErrors);
+		s.value4b(o.TrainLoss);
+		s.value4b(o.TestLoss);
+		s.value4b(o.AvgTrainLoss);
+		s.value4b(o.AvgTestLoss);
+		s.value4b(o.TrainErrorPercentage);
+		s.value4b(o.TestErrorPercentage);
+		s.value4b(o.Accuracy);
+		s.value4b(o.SampleSpeed);
+		s.value4b(o.Rate);
+		s.boolValue(o.BatchNormScaling);
+		s.boolValue(o.HasBias);
+		s.boolValue(o.PersistOptimizer);
+		s.boolValue(o.DisableLocking);
+		s.object(o.CurrentTrainingRate);
+		s.container<std::vector<TrainingRate>>(o.TrainingRates, 1024);
+		s.container<std::vector<TrainingStrategy>>(o.TrainingStrategies, 1024);
+		s.boolValue(o.UseTrainingStrategy);
+		//s.value8b<UInt>(o.FirstUnlockedLayer);
 	};
 }

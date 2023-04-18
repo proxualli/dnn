@@ -58,6 +58,14 @@ namespace dnn
 		Float Scaling;
 		Float Rotation;
 	
+		bool operator==(const TrainingRate& o) const
+		{
+			return 
+				std::tie(Optimizer, Momentum, Beta2, L2Penalty, Dropout, Eps, BatchSize, Height, Width, PadH, PadW, Cycles, Epochs, EpochMultiplier, MaximumRate, MinimumRate, FinalRate, Gamma, DecayAfterEpochs, DecayFactor, HorizontalFlip, VerticalFlip, InputDropout, Cutout, CutMix, AutoAugment, ColorCast, ColorAngle, Distortion, Interpolation, Scaling, Rotation) 
+				== 
+				std::tie(o.Optimizer, o.Momentum, o.Beta2, o.L2Penalty, o.Dropout, o.Eps, BatchSize, o.Height, o.Width, o.PadH, o.PadW, o.Cycles, o.Epochs, o.EpochMultiplier, o.MaximumRate, o.MinimumRate, o.FinalRate, o.Gamma, o.DecayAfterEpochs, o.DecayFactor, o.HorizontalFlip, o.VerticalFlip, o.InputDropout, o.Cutout, o.CutMix, o.AutoAugment, o.ColorCast, o.ColorAngle, o.Distortion, o.Interpolation, o.Scaling, o.Rotation);
+		}
+
 		TrainingRate() :
 			Optimizer(dnn::Optimizers::NAG),
 			Momentum(Float(0.9)),
@@ -129,7 +137,52 @@ namespace dnn
 			Rotation(rotation)			
 		{
 		}
+
+	/*
+	private:
+		friend bitsery::Access;
+		template<typename S>
+		void serialize(S& s, TrainingRate& o)
+		{
+			s.ext(*this, bitsery::ext::Growable{}, [](S& s, TrainingRate& o)
+			{
+				s.value4b(o.Optimizer);
+				s.value4b(o.Momentum);
+				s.value4b(o.Beta2);
+				s.value4b(o.L2Penalty);
+				s.value4b(o.Eps);
+				s.value8b(o.BatchSize);
+				s.value8b(o.Height);
+				s.value8b(o.Width);
+				s.value8b(o.PadH);
+				s.value8b(o.PadW);
+				s.value8b(o.Cycles);
+				s.value8b(o.Epochs);
+				s.value8b(o.EpochMultiplier);
+				s.value4b(o.MaximumRate);
+				s.value4b(o.MinimumRate);
+				s.value4b(o.FinalRate);
+				s.value4b(o.Gamma);
+				s.value8b(o.DecayAfterEpochs);
+				s.value4b(o.DecayFactor);
+				s.boolValue(o.HorizontalFlip);
+				s.boolValue(o.VerticalFlip);
+				s.value4b(o.InputDropout);
+				s.value4b(o.Cutout);
+				s.boolValue(o.CutMix);
+				s.value4b(o.AutoAugment);
+				s.value4b(o.ColorCast);
+				s.value8b(o.ColorAngle);
+				s.value4b(o.Distortion);
+				s.value4b(o.Interpolation);
+				s.value4b(o.Scaling);
+				s.value4b(o.Rotation);
+			});
+		}
+	*/
+
 	};
+
 
 	enum class LayerTypes
 	{
@@ -207,11 +260,19 @@ namespace dnn
 		Float Min;
 		Float Max;
 
+		bool operator==(const Stats& o) const
+		{
+			return
+				std::tie(Mean, StdDev, Min, Max)
+				==
+				std::tie(o.Mean, o.StdDev, o.Min, o.Max);
+		}
+
 		Stats() : 
-			Mean(0),
-			StdDev(0),
-			Min(0),
-			Max(0)
+			Mean(Float(0)),
+			StdDev(Float(0)),
+			Min(Float(0)),
+			Max(Float(0))
 		{
 		}
 
@@ -221,6 +282,20 @@ namespace dnn
 			Min(min),
 			Max(max)
 		{
+		}
+
+	private:
+		friend bitsery::Access;
+		template<typename S>
+		void serialize(S& s, Stats& o)
+		{
+			s.ext(*this, bitsery::ext::Growable{}, [](S& s, Stats& o)
+			{
+				s.value4b(o.Mean);
+				s.value4b(o.StdDev);
+				s.value4b(o.Min);
+				s.value4b(o.Max);
+			});
 		}
 	};
 

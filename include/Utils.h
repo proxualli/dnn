@@ -105,11 +105,13 @@
 #include "magic_enum.hpp"
 
 #include <bitsery/bitsery.h>
-#include <bitsery/adapter/buffer.h>
+//#include <bitsery/adapter/buffer.h>
 #include <bitsery/adapter/stream.h>
-#include <bitsery/traits/array.h>
-#include <bitsery/traits/vector.h>
+//#include <bitsery/traits/array.h>
 #include <bitsery/traits/string.h>
+#include <bitsery/traits/vector.h>
+//#include <bitsery/ext/growable.h>
+#include <bitsery/ext/std_atomic.h>
 
 //#include "csv.hpp"
 
@@ -121,7 +123,7 @@ namespace
 	constexpr auto Inplace = true;
 	constexpr auto Kahan = true;
 	constexpr auto Reference = false;
-	constexpr auto SingleMeanVariancePass = true;
+	constexpr auto SingleMeanVariancePass = false;
 	constexpr auto TestActivations = false;
 	constexpr auto TestBatchNormalization = false;
 	constexpr auto TestConcat = false;
