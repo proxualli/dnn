@@ -2922,8 +2922,8 @@ namespace dnn
 		s.boolValue(o.PersistOptimizer);
 		s.boolValue(o.DisableLocking);
 		s.object(o.CurrentTrainingRate);
-		s.container<std::vector<TrainingRate>>(o.TrainingRates, 1024);
-		s.container<std::vector<TrainingStrategy>>(o.TrainingStrategies, 1024);
+		s.container(o.TrainingRates, 1024);
+		s.container(o.TrainingStrategies, 1024);
 		s.boolValue(o.UseTrainingStrategy);
 		//s.value8b<UInt>(o.FirstUnlockedLayer);
 	};
