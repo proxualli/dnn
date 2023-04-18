@@ -106,11 +106,11 @@ namespace dnn
 
 		TrainingStrategy() :
 			Epochs(Float(1)),
-			BatchSize(128),
-			Height(32),
-			Width(32),
-			PadH(4),
-			PadW(4),
+			BatchSize(128ull),
+			Height(32ull),
+			Width(32ull),
+			PadH(4ull),
+			PadW(4ull),
 			Momentum(Float(0.9)),
 			Beta2(Float(0.999)),
 			Gamma(Float(0.9)),
@@ -119,11 +119,12 @@ namespace dnn
 			HorizontalFlip(true),
 			VerticalFlip(false),
 			InputDropout(Float(0)),
-			Cutout(Float(0)),
-			CutMix(false),
-			AutoAugment(Float(0)),
-			ColorCast(Float(0)),
-			Distortion(Float(0)),
+			Cutout(Float(0.7)),
+			CutMix(true),
+			AutoAugment(Float(0.7)),
+			ColorCast(Float(0.7)),
+			ColorAngle(16ull),
+			Distortion(Float(0.7)),
 			Interpolation(Interpolations::Cubic),
 			Scaling(Float(10)),
 			Rotation(Float(12))
@@ -194,42 +195,6 @@ namespace dnn
 			if (Rotation < 0 || Rotation > 180)
 				throw std::invalid_argument("Rotation out of range in TrainingStrategy");
 		}
-
-	/*
-	private:
-		friend bitsery::Access;
-		template<typename S>
-		void serialize(S& s, TrainingStrategy& o)
-		{
-			s.ext(*this, bitsery::ext::Growable{}, [](S& s, TrainingStrategy& o)
-			{
-				s.value4b(o.Epochs);
-				s.value8b(o.BatchSize);
-				s.value8b(o.Height);
-				s.value8b(o.Width);
-				s.value8b(o.PadH);
-				s.value8b(o.PadW);
-				s.value4b(o.Momentum);
-				s.value4b(o.Beta2);
-				s.value4b(o.Gamma);
-				s.value4b(o.L2Penalty);
-				s.value4b(o.Dropout);
-				s.boolValue(o.HorizontalFlip);
-				s.boolValue(o.VerticalFlip);
-				s.value4b(o.InputDropout);
-				s.value4b(o.Cutout);
-				s.boolValue(o.CutMix);
-				s.value4b(o.AutoAugment);
-				s.value4b(o.ColorCast);
-				s.value8b(o.ColorAngle);
-				s.value4b(o.Distortion);
-				s.value4b(o.Interpolation);
-				s.value4b(o.Scaling);
-				s.value4b(o.Rotation);
-			});
-		}
-	*/
-
 	};
 
 	struct TrainingInfo
@@ -624,14 +589,14 @@ namespace dnn
 			if (!is.bad() && is.is_open())
 			{
 				auto state = bitsery::quickDeserialization<bitsery::InputStreamAdapter>(is, *this);
-				assert(state.first == bitsery::ReaderError::NoError && state.second);
 				is.close();
+				assert(state.first == bitsery::ReaderError::NoError && state.second);
 			}
 		}
 
 		void Save(const std::string& fileName)
 		{
-			auto os = std::fstream{ fileName, std::ios::binary | std::ios::trunc | std::ios::out };
+			auto os = std::fstream{ fileName, std::ios::out | std::ios::binary | std::ios::trunc };
 
 			if (!os.bad() && os.is_open())
 			{
@@ -664,12 +629,12 @@ namespace dnn
 
 		void SaveDefinition(const std::string& fileName)
 		{
-			std::fstream file{ fileName, file.trunc | file.out };
+			auto os = std::fstream { fileName, std::ios::out | std::ios::trunc };
 
-			if (file.is_open())
+			if (!os.bad() && os.is_open())
 			{
-				file << CaseInsensitiveReplace(Definition.begin(), Definition.end(), nwl, "\n");
-				file.close();
+				os << CaseInsensitiveReplace(Definition.begin(), Definition.end(), nwl, "\n");
+				os.close();
 			}
 		}
 

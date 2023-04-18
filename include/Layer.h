@@ -137,50 +137,6 @@ namespace dnn
 			Rotation(rotation)			
 		{
 		}
-
-	/*
-	private:
-		friend bitsery::Access;
-		template<typename S>
-		void serialize(S& s, TrainingRate& o)
-		{
-			s.ext(*this, bitsery::ext::Growable{}, [](S& s, TrainingRate& o)
-			{
-				s.value4b(o.Optimizer);
-				s.value4b(o.Momentum);
-				s.value4b(o.Beta2);
-				s.value4b(o.L2Penalty);
-				s.value4b(o.Eps);
-				s.value8b(o.BatchSize);
-				s.value8b(o.Height);
-				s.value8b(o.Width);
-				s.value8b(o.PadH);
-				s.value8b(o.PadW);
-				s.value8b(o.Cycles);
-				s.value8b(o.Epochs);
-				s.value8b(o.EpochMultiplier);
-				s.value4b(o.MaximumRate);
-				s.value4b(o.MinimumRate);
-				s.value4b(o.FinalRate);
-				s.value4b(o.Gamma);
-				s.value8b(o.DecayAfterEpochs);
-				s.value4b(o.DecayFactor);
-				s.boolValue(o.HorizontalFlip);
-				s.boolValue(o.VerticalFlip);
-				s.value4b(o.InputDropout);
-				s.value4b(o.Cutout);
-				s.boolValue(o.CutMix);
-				s.value4b(o.AutoAugment);
-				s.value4b(o.ColorCast);
-				s.value8b(o.ColorAngle);
-				s.value4b(o.Distortion);
-				s.value4b(o.Interpolation);
-				s.value4b(o.Scaling);
-				s.value4b(o.Rotation);
-			});
-		}
-	*/
-
 	};
 
 
