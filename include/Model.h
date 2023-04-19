@@ -73,9 +73,11 @@ namespace dnn
 	struct TrainingStrategy
 	{
 		Float Epochs;
-		UInt BatchSize;
-		UInt Height;
-		UInt Width;
+		UInt N;
+		UInt D;
+		UInt H;
+		UInt W;
+		UInt PadD;
 		UInt PadH;
 		UInt PadW;
 		Float Momentum;
@@ -96,19 +98,21 @@ namespace dnn
 		Float Scaling;
 		Float Rotation;
 
-		bool operator==(const TrainingRate& o) const
+		bool operator==(const TrainingStrategy& o) const
 		{
 			return 
-				std::tie(Epochs, BatchSize, Height, Width, PadH, PadW, Momentum, Beta2, Gamma, L2Penalty, Dropout, HorizontalFlip, VerticalFlip, InputDropout, Cutout, CutMix, AutoAugment, ColorCast, ColorAngle, Distortion, Interpolation, Scaling, Rotation) 
+				std::tie(Epochs, N, D, H, W, PadD, PadH, PadW, Momentum, Beta2, Gamma, L2Penalty, Dropout, HorizontalFlip, VerticalFlip, InputDropout, Cutout, CutMix, AutoAugment, ColorCast, ColorAngle, Distortion, Interpolation, Scaling, Rotation) 
 				== 
-				std::tie(o.Epochs, o.N, o.H, o.W, o.PadH, o.PadW, o.Momentum, o.Beta2, o.Gamma, o.L2Penalty, o.Dropout, o.HorizontalFlip, o.VerticalFlip, o.InputDropout, o.Cutout, o.CutMix, o.AutoAugment, o.ColorCast, o.ColorAngle, o.Distortion, o.Interpolation, o.Scaling, o.Rotation);
+				std::tie(o.Epochs, o.N, o.D, o.H, o.W, o.PadD, o.PadH, o.PadW, o.Momentum, o.Beta2, o.Gamma, o.L2Penalty, o.Dropout, o.HorizontalFlip, o.VerticalFlip, o.InputDropout, o.Cutout, o.CutMix, o.AutoAugment, o.ColorCast, o.ColorAngle, o.Distortion, o.Interpolation, o.Scaling, o.Rotation);
 		}
 
 		TrainingStrategy() :
 			Epochs(Float(1)),
-			BatchSize(128ull),
-			Height(32ull),
-			Width(32ull),
+			N(128ull),
+			D(1ull),
+			H(32ull),
+			W(32ull),
+			PadD(0ull),
 			PadH(4ull),
 			PadW(4ull),
 			Momentum(Float(0.9)),
@@ -131,11 +135,13 @@ namespace dnn
 		{
 		}
 
-		TrainingStrategy(const Float epochs, const UInt batchSize, const UInt height, const UInt width, const UInt padH, const UInt padW, const Float momentum, const Float beta2, const Float gamma, const Float l2penalty, const Float dropout, const bool horizontalFlip, const bool verticalFlip, const Float inputDropout, const Float cutout, const bool cutMix, const Float autoAugment, const Float colorCast, const UInt colorAngle, const Float distortion, const Interpolations interpolation, const Float scaling, const Float rotation) :
+		TrainingStrategy(const Float epochs, const UInt n, const UInt d, const UInt h, const UInt w, const UInt padD, const UInt padH, const UInt padW, const Float momentum, const Float beta2, const Float gamma, const Float l2penalty, const Float dropout, const bool horizontalFlip, const bool verticalFlip, const Float inputDropout, const Float cutout, const bool cutMix, const Float autoAugment, const Float colorCast, const UInt colorAngle, const Float distortion, const Interpolations interpolation, const Float scaling, const Float rotation) :
 			Epochs(epochs),
-			BatchSize(batchSize),
-			Height(height),
-			Width(width),
+			N(n),
+			D(d),
+			H(h),
+			W(w),
+			PadD(padD),
 			PadH(padH),
 			PadW(padW),
 			Momentum(momentum),
@@ -158,12 +164,16 @@ namespace dnn
 		{
 			if (Epochs <= 0 || Epochs > 1)
 				throw std::invalid_argument("Epochs out of range in TrainingStrategy");
-			if (BatchSize == 0)
-				throw std::invalid_argument("BatchSize cannot be zero in TrainingStrategy");
-			if (Height == 0)
-				throw std::invalid_argument("Height cannot be zero in TrainingStrategy");
-			if (Width == 0)
-				throw std::invalid_argument("Width cannot be zero in TrainingStrategy");
+			if (N == 0)
+				throw std::invalid_argument("N cannot be zero in TrainingStrategy");
+			if (D == 0)
+				throw std::invalid_argument("D cannot be zero in TrainingStrategy");
+			if (H == 0)
+				throw std::invalid_argument("H cannot be zero in TrainingStrategy");
+			if (W == 0)
+				throw std::invalid_argument("W cannot be zero in TrainingStrategy");
+			if (PadD == 0)
+				throw std::invalid_argument("PadD cannot be zero in TrainingStrategy");
 			if (PadH == 0)
 				throw std::invalid_argument("PadH cannot be zero in TrainingStrategy");
 			if (PadW == 0)
@@ -901,7 +911,7 @@ namespace dnn
 							auto sum = Float(0);
 							for (const auto& strategy : TrainingStrategies)
 							{
-								tmpRate = TrainingRate(rate.Optimizer, strategy.Momentum, strategy.Beta2, weightDecayMultiplier * weightDecayNormalized, strategy.Dropout, rate.Eps, strategy.BatchSize, 1, strategy.Height, strategy.Width, 0, strategy.PadH, strategy.PadW, 1, rate.Epochs, 1, newRate, rate.MinimumRate, rate.FinalRate / LR, strategy.Gamma, 1, Float(1), strategy.HorizontalFlip, strategy.VerticalFlip, strategy.InputDropout, strategy.Cutout, strategy.CutMix, strategy.AutoAugment, strategy.ColorCast, strategy.ColorAngle, strategy.Distortion, strategy.Interpolation, strategy.Scaling, strategy.Rotation);
+								tmpRate = TrainingRate(rate.Optimizer, strategy.Momentum, strategy.Beta2, weightDecayMultiplier * weightDecayNormalized, strategy.Dropout, rate.Eps, strategy.N, strategy.D, strategy.H, strategy.W, strategy.PadD, strategy.PadH, strategy.PadW, 1, rate.Epochs, 1, newRate, rate.MinimumRate, rate.FinalRate / LR, strategy.Gamma, 1, Float(1), strategy.HorizontalFlip, strategy.VerticalFlip, strategy.InputDropout, strategy.Cutout, strategy.CutMix, strategy.AutoAugment, strategy.ColorCast, strategy.ColorAngle, strategy.Distortion, strategy.Interpolation, strategy.Scaling, strategy.Rotation);
 
 								sum += strategy.Epochs * rate.Epochs;
 								if ((i + 1) <= sum)
@@ -925,7 +935,7 @@ namespace dnn
 							auto sum = Float(0);
 							for (const auto& strategy : TrainingStrategies)
 							{
-								tmpRate = TrainingRate(rate.Optimizer, strategy.Momentum, strategy.Beta2, strategy.L2Penalty, strategy.Dropout, rate.Eps, strategy.BatchSize, 1, strategy.Height, strategy.Width, 0, strategy.PadH, strategy.PadW, 1, rate.Epochs, 1, newRate, rate.MinimumRate, rate.FinalRate / LR, strategy.Gamma, 1, Float(1), strategy.HorizontalFlip, strategy.VerticalFlip, strategy.InputDropout, strategy.Cutout, strategy.CutMix, strategy.AutoAugment, strategy.ColorCast, strategy.ColorAngle, strategy.Distortion, strategy.Interpolation, strategy.Scaling, strategy.Rotation);
+								tmpRate = TrainingRate(rate.Optimizer, strategy.Momentum, strategy.Beta2, strategy.L2Penalty, strategy.Dropout, rate.Eps, strategy.N, strategy.D, strategy.H, strategy.W, strategy.PadD, strategy.PadH, strategy.PadW, 1, rate.Epochs, 1, newRate, rate.MinimumRate, rate.FinalRate / LR, strategy.Gamma, 1, Float(1), strategy.HorizontalFlip, strategy.VerticalFlip, strategy.InputDropout, strategy.Cutout, strategy.CutMix, strategy.AutoAugment, strategy.ColorCast, strategy.ColorAngle, strategy.Distortion, strategy.Interpolation, strategy.Scaling, strategy.Rotation);
 
 								sum += strategy.Epochs * rate.Epochs;
 								if ((i + 1) <= sum)
@@ -959,7 +969,7 @@ namespace dnn
 						auto sum = Float(0);
 						for (const auto& strategy : TrainingStrategies)
 						{
-							tmpRate = TrainingRate(rate.Optimizer, strategy.Momentum, strategy.Beta2, weightDecayMultiplier * weightDecayNormalized, strategy.Dropout, rate.Eps, strategy.BatchSize, 1, strategy.Height, strategy.Width, 0, strategy.PadH, strategy.PadW, 1, rate.Epochs - (totIteration * decayAfterEpochs), 1, newRate, rate.MinimumRate, rate.FinalRate / LR, strategy.Gamma, 1, Float(1), strategy.HorizontalFlip, strategy.VerticalFlip, strategy.InputDropout, strategy.Cutout, strategy.CutMix, strategy.AutoAugment, strategy.ColorCast, strategy.ColorAngle, strategy.Distortion, strategy.Interpolation, strategy.Scaling, strategy.Rotation);
+							tmpRate = TrainingRate(rate.Optimizer, strategy.Momentum, strategy.Beta2, weightDecayMultiplier * weightDecayNormalized, strategy.Dropout, rate.Eps, strategy.N, strategy.D, strategy.H, strategy.W, strategy.PadD, strategy.PadH, strategy.PadW, 1, rate.Epochs - (totIteration * decayAfterEpochs), 1, newRate, rate.MinimumRate, rate.FinalRate / LR, strategy.Gamma, 1, Float(1), strategy.HorizontalFlip, strategy.VerticalFlip, strategy.InputDropout, strategy.Cutout, strategy.CutMix, strategy.AutoAugment, strategy.ColorCast, strategy.ColorAngle, strategy.Distortion, strategy.Interpolation, strategy.Scaling, strategy.Rotation);
 
 							sum += strategy.Epochs * rate.Epochs;
 							if (totIteration * decayAfterEpochs <= sum)
@@ -983,7 +993,7 @@ namespace dnn
 						auto sum = Float(0);
 						for (const auto& strategy : TrainingStrategies)
 						{
-							tmpRate = TrainingRate(rate.Optimizer, strategy.Momentum, strategy.Beta2, strategy.L2Penalty, strategy.Dropout, rate.Eps, strategy.BatchSize, 1, strategy.Height, strategy.Width, 0, strategy.PadH, strategy.PadW, 1, rate.Epochs - (totIteration * decayAfterEpochs),1, newRate, rate.MinimumRate, rate.FinalRate / LR, strategy.Gamma, 1, Float(1), strategy.HorizontalFlip, strategy.VerticalFlip, strategy.InputDropout, strategy.Cutout, strategy.CutMix, strategy.AutoAugment, strategy.ColorCast, strategy.ColorAngle, strategy.Distortion, strategy.Interpolation, strategy.Scaling, strategy.Rotation);
+							tmpRate = TrainingRate(rate.Optimizer, strategy.Momentum, strategy.Beta2, strategy.L2Penalty, strategy.Dropout, rate.Eps, strategy.N, strategy.D, strategy.H, strategy.W, strategy.PadD, strategy.PadH, strategy.PadW, 1, rate.Epochs - (totIteration * decayAfterEpochs),1, newRate, rate.MinimumRate, rate.FinalRate / LR, strategy.Gamma, 1, Float(1), strategy.HorizontalFlip, strategy.VerticalFlip, strategy.InputDropout, strategy.Cutout, strategy.CutMix, strategy.AutoAugment, strategy.ColorCast, strategy.ColorAngle, strategy.Distortion, strategy.Interpolation, strategy.Scaling, strategy.Rotation);
 
 							sum += strategy.Epochs * rate.Epochs;
 							if (totIteration * decayAfterEpochs <= sum)
@@ -1034,7 +1044,7 @@ namespace dnn
 								auto sum = Float(0);
 								for (const auto& strategy : TrainingStrategies)
 								{
-									tmpRate = TrainingRate(rate.Optimizer, strategy.Momentum, strategy.Beta2, weightDecayMultiplier * weightDecayNormalized, strategy.Dropout, rate.Eps, strategy.BatchSize, 1, strategy.Height, strategy.Width, 0, strategy.PadH, strategy.PadW, c + 1, 1, rate.EpochMultiplier, newRate, minRate, rate.FinalRate / LR, strategy.Gamma, 1, Float(1), strategy.HorizontalFlip, strategy.VerticalFlip, strategy.InputDropout, strategy.Cutout, strategy.CutMix, strategy.AutoAugment, strategy.ColorCast, strategy.ColorAngle, strategy.Distortion, strategy.Interpolation, strategy.Scaling, strategy.Rotation);
+									tmpRate = TrainingRate(rate.Optimizer, strategy.Momentum, strategy.Beta2, weightDecayMultiplier * weightDecayNormalized, strategy.Dropout, rate.Eps, strategy.N, strategy.D, strategy.H, strategy.W, strategy.PadD, strategy.PadH, strategy.PadW, c + 1, 1, rate.EpochMultiplier, newRate, minRate, rate.FinalRate / LR, strategy.Gamma, 1, Float(1), strategy.HorizontalFlip, strategy.VerticalFlip, strategy.InputDropout, strategy.Cutout, strategy.CutMix, strategy.AutoAugment, strategy.ColorCast, strategy.ColorAngle, strategy.Distortion, strategy.Interpolation, strategy.Scaling, strategy.Rotation);
 
 									sum += strategy.Epochs * totalEpochs;
 									if (epoch <= sum)
@@ -1058,7 +1068,7 @@ namespace dnn
 								auto sum = Float(0);
 								for (const auto& strategy : TrainingStrategies)
 								{
-									tmpRate = TrainingRate(rate.Optimizer, strategy.Momentum, strategy.Beta2, strategy.L2Penalty, strategy.Dropout, rate.Eps, strategy.BatchSize, 1, strategy.Height, strategy.Width, 0, strategy.PadH, strategy.PadW, c + 1, 1, rate.EpochMultiplier, newRate, minRate, rate.FinalRate / LR, strategy.Gamma, 1, Float(1), strategy.HorizontalFlip, strategy.VerticalFlip, strategy.InputDropout, strategy.Cutout, strategy.CutMix, strategy.AutoAugment, strategy.ColorCast, strategy.ColorAngle, strategy.Distortion, strategy.Interpolation, strategy.Scaling, strategy.Rotation);
+									tmpRate = TrainingRate(rate.Optimizer, strategy.Momentum, strategy.Beta2, strategy.L2Penalty, strategy.Dropout, rate.Eps, strategy.N, strategy.D, strategy.H, strategy.W, strategy.PadD, strategy.PadH, strategy.PadW, c + 1, 1, rate.EpochMultiplier, newRate, minRate, rate.FinalRate / LR, strategy.Gamma, 1, Float(1), strategy.HorizontalFlip, strategy.VerticalFlip, strategy.InputDropout, strategy.Cutout, strategy.CutMix, strategy.AutoAugment, strategy.ColorCast, strategy.ColorAngle, strategy.Distortion, strategy.Interpolation, strategy.Scaling, strategy.Rotation);
 									
 									sum += strategy.Epochs * totalEpochs;
 									if (epoch <= sum)
@@ -3158,9 +3168,11 @@ namespace dnn
 	void serialize(S& s, TrainingStrategy& o)
 	{
 		s.value4b(o.Epochs);
-		s.value8b(o.BatchSize);
-		s.value8b(o.Height);
-		s.value8b(o.Width);
+		s.value8b(o.N);
+		s.value8b(o.D);
+		s.value8b(o.H);
+		s.value8b(o.W);
+		s.value8b(o.PadD);
 		s.value8b(o.PadH);
 		s.value8b(o.PadW);
 		s.value4b(o.Momentum);
