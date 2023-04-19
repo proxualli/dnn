@@ -2191,7 +2191,10 @@ namespace dnn
 							Save((subdir / std::string("model.bin")).string());
 							State.store(States::NewEpoch);
 							
-							LogInfo logInfo;
+							const auto dur = timer.now() - timePointGlobal;
+							const auto [hrs, mins, secs, ms] = ChronoBurst(dur);
+
+							auto logInfo = LogInfo{};
 							logInfo.AutoAugment = CurrentTrainingRate.AutoAugment;
 							logInfo.AvgTestLoss = AvgTestLoss;
 							logInfo.AvgTrainLoss = AvgTrainLoss;
@@ -2206,8 +2209,7 @@ namespace dnn
 							logInfo.D = 1ull;
 							logInfo.Distortion = CurrentTrainingRate.Distortion;
 							logInfo.Dropout = CurrentTrainingRate.Dropout;
-							logInfo.ElapsedTicks = std::chrono::duration_cast<std::chrono::milliseconds>(timer.now() - timePointGlobal).count();
-							const auto [hrs, mins, secs, ms] = ChronoBurst(timer.now() - timePointGlobal);
+							logInfo.ElapsedTicks = std::chrono::duration_cast<std::chrono::milliseconds>(dur).count();
 							logInfo.ElapsedTime = (hrs.count() < 10 ? std::string("0") : std::string("")) + std::to_string(hrs.count()) + std::string(":") + (mins.count() < 10 ? std::string("0") : std::string("")) + std::to_string(mins.count()) + std::string(":") + (secs.count() < 10 ? std::string("0") : std::string("")) + std::to_string(secs.count()) + std::string(".") + std::to_string(ms.count());
 							logInfo.Epoch = CurrentEpoch;
 							logInfo.Eps = CurrentTrainingRate.Eps;
