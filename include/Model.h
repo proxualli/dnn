@@ -636,287 +636,9 @@ namespace dnn
 
 		virtual ~Model() = default;
 		
-		void Load(const std::string& fileName)
-		{
-			auto is = std::ifstream(fileName, std::ios::in | std::ios::binary);
-
-			if (!is.bad() && is.is_open())
-			{
-				auto state = bitsery::quickDeserialization<bitsery::InputStreamAdapter>(is, *this);
-				is.close();
-				assert(state.first == bitsery::ReaderError::NoError && state.second);
-			}
-		}
-
-		void Save(const std::string& fileName)
-		{
-			auto os = std::fstream{ fileName, std::ios::out | std::ios::binary | std::ios::trunc };
-
-			if (!os.bad() && os.is_open())
-			{
-				bitsery::Serializer<bitsery::OutputBufferedStreamAdapter> serializer{ os };
-				serializer.object(*this);
-				serializer.adapter().flush();
-				os.close();
-			}
-		}
-
-		void ClearLog()
-		{
-			Log = std::vector<LogInfo>();
-		}
-
-		void LoadLog(const std::string& fileName)
-		{
-			auto header = std::set<std::string>();
-			header.insert(std::string("Cycle"));
-			header.insert(std::string("Epoch"));
-			header.insert(std::string("GroupIndex"));
-			header.insert(std::string("CostIndex"));
-			header.insert(std::string("CostName"));
-			header.insert(std::string("N"));
-			header.insert(std::string("D"));
-			header.insert(std::string("H"));
-			header.insert(std::string("W"));
-			header.insert(std::string("PadD"));
-			header.insert(std::string("PadH"));
-			header.insert(std::string("PadW"));
-			header.insert(std::string("Optimizer"));
-			header.insert(std::string("Rate"));
-			header.insert(std::string("Eps"));
-			header.insert(std::string("Momentum"));
-			header.insert(std::string("Beta2"));
-			header.insert(std::string("Gamma"));
-			header.insert(std::string("L2Penalty"));
-			header.insert(std::string("Dropout"));
-			header.insert(std::string("InputDropout"));
-			header.insert(std::string("Cutout"));
-			header.insert(std::string("CutMix"));
-			header.insert(std::string("AutoAugment"));
-			header.insert(std::string("HorizontalFlip"));
-			header.insert(std::string("VerticalFlip"));
-			header.insert(std::string("ColorCast"));
-			header.insert(std::string("ColorAngle"));
-			header.insert(std::string("Distortion"));
-			header.insert(std::string("Interpolation"));
-			header.insert(std::string("Scaling"));
-			header.insert(std::string("Rotation"));
-			header.insert(std::string("AvgTrainLoss"));
-			header.insert(std::string("TrainErrors"));
-			header.insert(std::string("TrainErrorPercentage"));
-			header.insert(std::string("TrainAccuracy"));
-			header.insert(std::string("AvgTestLoss"));
-			header.insert(std::string("TestErrors"));
-			header.insert(std::string("TestErrorPercentage"));
-			header.insert(std::string("TestAccuracy"));
-			header.insert(std::string("ElapsedTicks"));
-			header.insert(std::string("ElapsedTime"));
-
-			const auto fileContents = ReadFileToString(fileName);
-			auto sstream = std::istringstream(fileContents);
-
-			const auto delimiter = ';';
-			auto tmpLog = std::vector<LogInfo>();
-			auto record = std::string("");
-			auto counter = 0ull;
-			while (std::getline(sstream, record))
-			{
-				auto line = std::istringstream(record);
-				auto idx = 0;
-				auto info = LogInfo{};
-				while (std::getline(line, record, delimiter))
-				{
-					if (counter > 0ull)
-					{
-						try
-						{
-							switch (idx)
-							{
-							case 0:			// Cycle
-								info.Cycle = std::stoull(record);
-								break;
-							case 1:			// Epoch
-								info.Epoch = std::stoull(record);
-								break;
-							case 3:			// GroupIndex
-								info.GroupIndex = std::stoull(record);
-								break;
-							case 4:			// CostIndex
-								info.CostIndex = std::stoull(record);
-								break;
-							case 5:			// CostName
-								info.CostName = record;
-								break;
-							case 6:			// N
-								info.N = std::stoull(record);
-								break;
-							case 7:			// D
-								info.D = std::stoull(record);
-								break;
-							case 8:			// H
-								info.H = std::stoull(record);
-								break;
-							case 9:			// W
-								info.W = std::stoull(record);
-								break;
-							case 10:		// PadD
-								info.PadD = std::stoull(record);
-								break;
-							case 11:		// PadH
-								info.PadH = std::stoull(record);
-								break;
-							case 12:		// PadW
-								info.PadW = std::stoull(record);
-								break;
-							case 13:		// Optimizer
-							{
-								const auto optimizer = magic_enum::enum_cast<Optimizers>(record);
-								if (optimizer.has_value())
-									info.Optimizer = optimizer.value();
-								else
-									info.Optimizer = Optimizers::SGDMomentum;
-							}
-							break;
-							case 14:		// Rate
-								info.Rate = std::stof(record);
-								break;
-							case 15:		// Eps
-								info.Eps = std::stof(record);
-								break;
-							case 16:		// Momentum
-								info.Momentum = std::stof(record);
-								break;
-							case 17:		// Beta2
-								info.Beta2 = std::stof(record);
-								break;
-							case 18:		// Gamma
-								info.Gamma = std::stof(record);
-								break;
-							case 19:		// L2Penalty
-								info.L2Penalty = std::stof(record);
-								break;
-							case 20:		// Dropout
-								info.Dropout = std::stof(record);
-								break;
-							case 21:		// InputDropout
-								info.InputDropout = std::stof(record);
-								break;
-							case 22:		// Cutout
-								info.Cutout = std::stof(record);
-								break;
-							case 23:		// CutMix
-								info.CutMix = StringToBool(record);
-								break;
-							case 24:		// AutoAugment
-								info.AutoAugment = std::stof(record);
-								break;
-							case 25:		// HorizontalFlip
-								info.HorizontalFlip = StringToBool(record);
-								break;
-							case 26:		// VerticalFlip
-								info.VerticalFlip = StringToBool(record);
-								break;
-							case 27:		// ColorCast
-								info.ColorCast = std::stof(record);
-								break;
-							case 28:		// ColorAngle
-								info.ColorAngle = std::stoull(record);
-								break;
-							case 29:		// Distortion
-								info.Distortion = std::stof(record);
-								break;
-							case 30:		// Interpolation
-							{
-								const auto interpolation = magic_enum::enum_cast<Interpolations>(record);
-								if (interpolation.has_value())
-									info.Interpolation = interpolation.value();
-								else
-									info.Interpolation = Interpolations::Linear;
-							}
-							break;
-							case 31:		// Scaling
-								info.Scaling = std::stof(record);
-								break;
-							case 32:		// Rotation
-								info.Rotation = std::stof(record);
-								break;
-							case 33:		// AvgTrainLoss
-								info.AvgTrainLoss = std::stof(record);
-								break;
-							case 34:		// TrainErrors
-								info.TrainErrors = std::stoull(record);
-								break;
-							case 35:		// TrainErrorPercentage
-								info.TrainErrorPercentage = std::stof(record);
-								break;
-							case 36:		// TrainAccuracy
-								info.TrainAccuracy = std::stof(record);
-								break;
-							case 37:		// AvgTestLoss
-								info.AvgTestLoss = std::stof(record);
-								break;
-							case 38:		// TestErrors
-								info.TestErrors = std::stoull(record);
-								break;
-							case 39:		// TestErrorPercentage
-								info.TestErrorPercentage = std::stof(record);
-								break;
-							case 40:		// TestAccuracy
-								info.TestAccuracy = std::stof(record);
-								break;
-							case 41:		// ElapsedTicks
-								info.ElapsedTicks = std::stoll(record);
-								break;
-							case 42:		// ElapsedTime
-								info.ElapsedTime = record;
-								break;
-							}
-						}
-						catch (std::exception&)
-						{
-							return;
-						}
-					}
-					else
-					{
-						// check header is valid
-						if (header.find(record) == header.end())
-							return;
-					}
-
-					idx++;
-				}
-
-				if (counter > 0ull)
-					tmpLog.push_back(info);
-				
-				counter++;
-			}
-
-			tmpLog.shrink_to_fit();
-			Log = std::vector<LogInfo>(tmpLog);
-		}
-
-		void SaveLog(const std::string& fileName)
-		{
-			try
-			{
-				CsvFile csv(fileName);
-
-				csv << "Cycle" << "Epoch" << "GroupIndex" << "CostIndex" << "CostName" << "N" << "D" << "H" << "W" << "PadD" << "PadH" << "PadW" << "Optimizer" << "Rate" << "Eps" << "Momentum" << "Beta2" << "Gamma" << "L2Penalty" << "Dropout" << "InputDropout" << "Cutout" << "CutMix" << "AutoAugment" << "HorizontalFlip" << "VerticalFlip" << "ColorCast" << "ColorAngle" << "Distortion" << "Interpolation" << "Scaling" << "Rotation" << "AvgTrainLoss" << "TrainErrors" << "TrainErrorPercentage" << "TrainAccuracy" << "AvgTestLoss" << "TestErrors" << "TestErrorPercentage" << "TestAccuracy" << "ElapsedTicks" << "ElapsedTime" << EndRow;
-				
-				// Data
-				for (const LogInfo& r : Log)
-					csv << r.Cycle << r.Epoch << r.GroupIndex << r.CostIndex << r.CostName << r.N << r.D << r.H << r.W << r.PadD << r.PadH << r.PadW << std::string(magic_enum::enum_name<Optimizers>(r.Optimizer)) << r.Rate << r.Eps << r.Momentum << r.Beta2 << r.Gamma << r.L2Penalty << r.Dropout << r.InputDropout << r.Cutout << r.CutMix << r.AutoAugment << r.HorizontalFlip << r.VerticalFlip << r.ColorCast << r.ColorAngle << r.Distortion << std::string(magic_enum::enum_name<Interpolations>(r.Interpolation)) << r.Scaling << r.Rotation << r.AvgTrainLoss << r.TrainErrors << r.TrainErrorPercentage << r.TrainAccuracy << r.AvgTestLoss << r.TestErrors << r.TestErrorPercentage << r.TestAccuracy << r.ElapsedTicks << r.ElapsedTime << EndRow;
-			}
-			catch (const std::exception&)
-			{
-			}
-		}
-
 		auto GetWeightsSize(const bool persistOptimizer, const Optimizers optimizer) const
 		{
-			std::streamsize weightsSize = 0;
+			auto weightsSize = std::streamsize(0);
 
 			for (const auto& layer : Layers)
 				weightsSize += layer->GetWeightsSize(persistOptimizer, optimizer);
@@ -926,23 +648,12 @@ namespace dnn
 
 		auto GetNeuronsSize(const UInt batchSize) const
 		{
-			UInt neuronsSize = 0;
+			auto neuronsSize = UInt(0);
 
 			for (const auto& layer : Layers)
 				neuronsSize += layer->GetNeuronsSize(batchSize);
 
 			return neuronsSize;
-		}
-
-		void SaveDefinition(const std::string& fileName)
-		{
-			auto os = std::fstream { fileName, std::ios::out | std::ios::trunc };
-
-			if (!os.bad() && os.is_open())
-			{
-				os << CaseInsensitiveReplace(Definition.begin(), Definition.end(), nwl, "\n");
-				os.close();
-			}
 		}
 
 		bool BatchNormalizationUsed() const
@@ -3039,6 +2750,302 @@ namespace dnn
 				SwitchInplaceBwd(false);
 		}
 		
+		void Save(const std::string& fileName)
+		{
+			auto os = std::fstream{ fileName, std::ios::out | std::ios::binary | std::ios::trunc };
+
+			if (!os.bad() && os.is_open())
+			{
+				bitsery::Serializer<bitsery::OutputBufferedStreamAdapter> serializer{ os };
+				serializer.object(*this);
+				serializer.adapter().flush();
+				os.close();
+			}
+		}
+
+		void Load(const std::string& fileName)
+		{
+			auto is = std::ifstream(fileName, std::ios::in | std::ios::binary);
+
+			if (!is.bad() && is.is_open())
+			{
+				auto state = bitsery::quickDeserialization<bitsery::InputStreamAdapter>(is, *this);
+				is.close();
+				assert(state.first == bitsery::ReaderError::NoError && state.second);
+			}
+		}
+
+		void SaveDefinition(const std::string& fileName)
+		{
+			auto os = std::fstream{ fileName, std::ios::out | std::ios::trunc };
+
+			if (!os.bad() && os.is_open())
+			{
+				os << CaseInsensitiveReplace(Definition.begin(), Definition.end(), nwl, "\n");
+				os.close();
+			}
+		}
+
+		void ClearLog()
+		{
+			Log = std::vector<LogInfo>();
+		}
+		
+		bool SaveLog(const std::string& fileName)
+		{
+			try
+			{
+				CsvFile csv(fileName);
+
+				// Header
+				csv << "Cycle" << "Epoch" << "GroupIndex" << "CostIndex" << "CostName" << "N" << "D" << "H" << "W" << "PadD" << "PadH" << "PadW" << "Optimizer" << "Rate" << "Eps" << "Momentum" << "Beta2" << "Gamma" << "L2Penalty" << "Dropout" << "InputDropout" << "Cutout" << "CutMix" << "AutoAugment" << "HorizontalFlip" << "VerticalFlip" << "ColorCast" << "ColorAngle" << "Distortion" << "Interpolation" << "Scaling" << "Rotation" << "AvgTrainLoss" << "TrainErrors" << "TrainErrorPercentage" << "TrainAccuracy" << "AvgTestLoss" << "TestErrors" << "TestErrorPercentage" << "TestAccuracy" << "ElapsedTicks" << "ElapsedTime" << EndRow;
+
+				// Data
+				for (const LogInfo& r : Log)
+					csv << r.Cycle << r.Epoch << r.GroupIndex << r.CostIndex << r.CostName << r.N << r.D << r.H << r.W << r.PadD << r.PadH << r.PadW << std::string(magic_enum::enum_name<Optimizers>(r.Optimizer)) << r.Rate << r.Eps << r.Momentum << r.Beta2 << r.Gamma << r.L2Penalty << r.Dropout << r.InputDropout << r.Cutout << r.CutMix << r.AutoAugment << r.HorizontalFlip << r.VerticalFlip << r.ColorCast << r.ColorAngle << r.Distortion << std::string(magic_enum::enum_name<Interpolations>(r.Interpolation)) << r.Scaling << r.Rotation << r.AvgTrainLoss << r.TrainErrors << r.TrainErrorPercentage << r.TrainAccuracy << r.AvgTestLoss << r.TestErrors << r.TestErrorPercentage << r.TestAccuracy << r.ElapsedTicks << r.ElapsedTime << EndRow;
+
+				return true;
+			}
+			catch (const std::exception&)
+			{
+			}
+
+			return false;
+		}
+
+		bool LoadLog(const std::string& fileName)
+		{
+			auto headers = std::set<std::string>();
+			headers.insert(std::string("Cycle"));
+			headers.insert(std::string("Epoch"));
+			headers.insert(std::string("GroupIndex"));
+			headers.insert(std::string("CostIndex"));
+			headers.insert(std::string("CostName"));
+			headers.insert(std::string("N"));
+			headers.insert(std::string("D"));
+			headers.insert(std::string("H"));
+			headers.insert(std::string("W"));
+			headers.insert(std::string("PadD"));
+			headers.insert(std::string("PadH"));
+			headers.insert(std::string("PadW"));
+			headers.insert(std::string("Optimizer"));
+			headers.insert(std::string("Rate"));
+			headers.insert(std::string("Eps"));
+			headers.insert(std::string("Momentum"));
+			headers.insert(std::string("Beta2"));
+			headers.insert(std::string("Gamma"));
+			headers.insert(std::string("L2Penalty"));
+			headers.insert(std::string("Dropout"));
+			headers.insert(std::string("InputDropout"));
+			headers.insert(std::string("Cutout"));
+			headers.insert(std::string("CutMix"));
+			headers.insert(std::string("AutoAugment"));
+			headers.insert(std::string("HorizontalFlip"));
+			headers.insert(std::string("VerticalFlip"));
+			headers.insert(std::string("ColorCast"));
+			headers.insert(std::string("ColorAngle"));
+			headers.insert(std::string("Distortion"));
+			headers.insert(std::string("Interpolation"));
+			headers.insert(std::string("Scaling"));
+			headers.insert(std::string("Rotation"));
+			headers.insert(std::string("AvgTrainLoss"));
+			headers.insert(std::string("TrainErrors"));
+			headers.insert(std::string("TrainErrorPercentage"));
+			headers.insert(std::string("TrainAccuracy"));
+			headers.insert(std::string("AvgTestLoss"));
+			headers.insert(std::string("TestErrors"));
+			headers.insert(std::string("TestErrorPercentage"));
+			headers.insert(std::string("TestAccuracy"));
+			headers.insert(std::string("ElapsedTicks"));
+			headers.insert(std::string("ElapsedTime"));
+
+			const auto fileContents = ReadFileToString(fileName);
+			auto sstream = std::istringstream(fileContents);
+
+			const auto delimiter = ';';
+			auto tmpLog = std::vector<LogInfo>();
+			auto record = std::string("");
+			auto counter = 0ull;
+			while (std::getline(sstream, record))
+			{
+				auto line = std::istringstream(record);
+				auto idx = 0;
+				auto info = LogInfo{};
+				while (std::getline(line, record, delimiter))
+				{
+					if (counter > 0ull)
+					{
+						try
+						{
+							switch (idx)
+							{
+							case 0:			// Cycle
+								info.Cycle = std::stoull(record);
+								break;
+							case 1:			// Epoch
+								info.Epoch = std::stoull(record);
+								break;
+							case 3:			// GroupIndex
+								info.GroupIndex = std::stoull(record);
+								break;
+							case 4:			// CostIndex
+								info.CostIndex = std::stoull(record);
+								break;
+							case 5:			// CostName
+								info.CostName = record;
+								break;
+							case 6:			// N
+								info.N = std::stoull(record);
+								break;
+							case 7:			// D
+								info.D = std::stoull(record);
+								break;
+							case 8:			// H
+								info.H = std::stoull(record);
+								break;
+							case 9:			// W
+								info.W = std::stoull(record);
+								break;
+							case 10:		// PadD
+								info.PadD = std::stoull(record);
+								break;
+							case 11:		// PadH
+								info.PadH = std::stoull(record);
+								break;
+							case 12:		// PadW
+								info.PadW = std::stoull(record);
+								break;
+							case 13:		// Optimizer
+							{
+								const auto optimizer = magic_enum::enum_cast<Optimizers>(record);
+								if (optimizer.has_value())
+									info.Optimizer = optimizer.value();
+								else
+									info.Optimizer = Optimizers::SGDMomentum;
+							}
+							break;
+							case 14:		// Rate
+								info.Rate = std::stof(record);
+								break;
+							case 15:		// Eps
+								info.Eps = std::stof(record);
+								break;
+							case 16:		// Momentum
+								info.Momentum = std::stof(record);
+								break;
+							case 17:		// Beta2
+								info.Beta2 = std::stof(record);
+								break;
+							case 18:		// Gamma
+								info.Gamma = std::stof(record);
+								break;
+							case 19:		// L2Penalty
+								info.L2Penalty = std::stof(record);
+								break;
+							case 20:		// Dropout
+								info.Dropout = std::stof(record);
+								break;
+							case 21:		// InputDropout
+								info.InputDropout = std::stof(record);
+								break;
+							case 22:		// Cutout
+								info.Cutout = std::stof(record);
+								break;
+							case 23:		// CutMix
+								info.CutMix = StringToBool(record);
+								break;
+							case 24:		// AutoAugment
+								info.AutoAugment = std::stof(record);
+								break;
+							case 25:		// HorizontalFlip
+								info.HorizontalFlip = StringToBool(record);
+								break;
+							case 26:		// VerticalFlip
+								info.VerticalFlip = StringToBool(record);
+								break;
+							case 27:		// ColorCast
+								info.ColorCast = std::stof(record);
+								break;
+							case 28:		// ColorAngle
+								info.ColorAngle = std::stoull(record);
+								break;
+							case 29:		// Distortion
+								info.Distortion = std::stof(record);
+								break;
+							case 30:		// Interpolation
+							{
+								const auto interpolation = magic_enum::enum_cast<Interpolations>(record);
+								if (interpolation.has_value())
+									info.Interpolation = interpolation.value();
+								else
+									info.Interpolation = Interpolations::Linear;
+							}
+							break;
+							case 31:		// Scaling
+								info.Scaling = std::stof(record);
+								break;
+							case 32:		// Rotation
+								info.Rotation = std::stof(record);
+								break;
+							case 33:		// AvgTrainLoss
+								info.AvgTrainLoss = std::stof(record);
+								break;
+							case 34:		// TrainErrors
+								info.TrainErrors = std::stoull(record);
+								break;
+							case 35:		// TrainErrorPercentage
+								info.TrainErrorPercentage = std::stof(record);
+								break;
+							case 36:		// TrainAccuracy
+								info.TrainAccuracy = std::stof(record);
+								break;
+							case 37:		// AvgTestLoss
+								info.AvgTestLoss = std::stof(record);
+								break;
+							case 38:		// TestErrors
+								info.TestErrors = std::stoull(record);
+								break;
+							case 39:		// TestErrorPercentage
+								info.TestErrorPercentage = std::stof(record);
+								break;
+							case 40:		// TestAccuracy
+								info.TestAccuracy = std::stof(record);
+								break;
+							case 41:		// ElapsedTicks
+								info.ElapsedTicks = std::stoll(record);
+								break;
+							case 42:		// ElapsedTime
+								info.ElapsedTime = record;
+								break;
+							}
+						}
+						catch (std::exception&)
+						{
+							return false;
+						}
+					}
+					else
+					{
+						// check header is valid
+						if (headers.find(record) == headers.end())
+							return false;
+					}
+
+					idx++;
+				}
+
+				if (counter > 0ull)
+					tmpLog.push_back(info);
+
+				counter++;
+			}
+
+			tmpLog.shrink_to_fit();
+			Log = std::vector<LogInfo>(tmpLog);
+
+			return true;
+		}
+
 		int SaveWeights(std::string fileName, const bool persistOptimizer = false) const
 		{
 			auto os = std::ofstream(fileName, std::ios::out | std::ios::binary | std::ios::trunc);
@@ -3201,6 +3208,7 @@ namespace dnn
 		s.value4b(o.Scaling);
 		s.value4b(o.Rotation);
 	}
+
 	template<typename S>
 	void serialize(S& s, LogInfo& o)
 	{
