@@ -656,7 +656,7 @@ namespace dnn
 			return neuronsSize;
 		}
 
-		bool BatchNormalizationUsed() const
+		bool BatchNormUsed() const
 		{
 			for (const auto& layer : Layers)
 				if (IsBatchNorm(layer->LayerType))
@@ -3065,8 +3065,16 @@ namespace dnn
 
 		int LoadWeights(std::string fileName, const bool persistOptimizer = false)
 		{
-			const auto optimizer = GetOptimizerFromString(fileName);
-
+			const auto& optimizers = magic_enum::enum_entries<Optimizers>();
+			
+			auto optimizer = Optimizers::SGD;
+			for (const auto& opt : optimizers)
+			{
+				const auto& optimizerString = std::string("(") + StringToLower(std::string(opt.second)) + std::string(")");
+				if (fileName.find(optimizerString) != std::string::npos)
+					optimizer = opt.first;
+			}
+			
 			if (GetFileSize(fileName) == GetWeightsSize(persistOptimizer, optimizer))
 			{
 				SetOptimizer(optimizer);
@@ -3120,19 +3128,6 @@ namespace dnn
 			}
 
 			return -1;
-		}
-
-		Optimizers GetOptimizerFromString(std::string fileName) const
-		{
-			const auto& optimizers = magic_enum::enum_entries<Optimizers>();
-			for (const auto& optimizer : optimizers)
-			{
-				const auto& optimizerString = std::string("(") + StringToLower(std::string(optimizer.second)) + std::string(")");
-				if (fileName.find(optimizerString) != std::string::npos)
-					return optimizer.first;
-			}
-
-			return Optimizers::SGD;
 		}
 	};
 	

@@ -193,7 +193,7 @@ extern "C" DNN_API void DNNGetLayerInputs(const UInt layerIndex, std::vector<UIn
 extern "C" DNN_API bool DNNBatchNormalizationUsed()
 {
 	if (model)
-		return model->BatchNormalizationUsed();
+		return model->BatchNormUsed();
 
 	return false;
 }
