@@ -31,9 +31,11 @@ namespace dnn
 		Float L2Penalty;
 		Float Dropout;
 		Float Eps;
-		UInt BatchSize;
-		UInt Height;
-		UInt Width;
+		UInt N;
+		UInt D;
+		UInt H;
+		UInt W;
+		UInt PadD;
 		UInt PadH;
 		UInt PadW;
 		UInt Cycles;
@@ -61,9 +63,9 @@ namespace dnn
 		bool operator==(const TrainingRate& o) const
 		{
 			return 
-				std::tie(Optimizer, Momentum, Beta2, L2Penalty, Dropout, Eps, BatchSize, Height, Width, PadH, PadW, Cycles, Epochs, EpochMultiplier, MaximumRate, MinimumRate, FinalRate, Gamma, DecayAfterEpochs, DecayFactor, HorizontalFlip, VerticalFlip, InputDropout, Cutout, CutMix, AutoAugment, ColorCast, ColorAngle, Distortion, Interpolation, Scaling, Rotation) 
+				std::tie(Optimizer, Momentum, Beta2, L2Penalty, Dropout, Eps, N, D, H, W, PadD, PadH, PadW, Cycles, Epochs, EpochMultiplier, MaximumRate, MinimumRate, FinalRate, Gamma, DecayAfterEpochs, DecayFactor, HorizontalFlip, VerticalFlip, InputDropout, Cutout, CutMix, AutoAugment, ColorCast, ColorAngle, Distortion, Interpolation, Scaling, Rotation) 
 				== 
-				std::tie(o.Optimizer, o.Momentum, o.Beta2, o.L2Penalty, o.Dropout, o.Eps, BatchSize, o.Height, o.Width, o.PadH, o.PadW, o.Cycles, o.Epochs, o.EpochMultiplier, o.MaximumRate, o.MinimumRate, o.FinalRate, o.Gamma, o.DecayAfterEpochs, o.DecayFactor, o.HorizontalFlip, o.VerticalFlip, o.InputDropout, o.Cutout, o.CutMix, o.AutoAugment, o.ColorCast, o.ColorAngle, o.Distortion, o.Interpolation, o.Scaling, o.Rotation);
+				std::tie(o.Optimizer, o.Momentum, o.Beta2, o.L2Penalty, o.Dropout, o.Eps, o.N, o.D, o.H, o.W, o.PadD, o.PadH, o.PadW, o.Cycles, o.Epochs, o.EpochMultiplier, o.MaximumRate, o.MinimumRate, o.FinalRate, o.Gamma, o.DecayAfterEpochs, o.DecayFactor, o.HorizontalFlip, o.VerticalFlip, o.InputDropout, o.Cutout, o.CutMix, o.AutoAugment, o.ColorCast, o.ColorAngle, o.Distortion, o.Interpolation, o.Scaling, o.Rotation);
 		}
 
 		TrainingRate() :
@@ -73,9 +75,11 @@ namespace dnn
 			L2Penalty(Float(0.0005)),
 			Dropout(Float(0)),
 			Eps(Float(1E-08)),
-			BatchSize(1),
-			Height(32),
-			Width(32),
+			N(1),
+			D(1),
+			H(32),
+			W(32),
+			PadD(0),
 			PadH(4),
 			PadW(4),
 			Cycles(1),
@@ -102,20 +106,22 @@ namespace dnn
 		{
 		}
 
-		TrainingRate(const dnn::Optimizers optimizer, const Float momentum, const Float beta2, const Float l2Penalty, const Float dropout, const Float eps, const UInt batchSize, const UInt height, const UInt width, const UInt padH, const UInt padW, const UInt cycles, const UInt epochs, const UInt epochMultiplier, const Float maximumRate, const Float minimumRate, const Float finalRate, const Float gamma, const UInt decayAfterEpochs, const Float decayFactor, const bool horizontalFlip, const bool verticalFlip, const Float inputDropout, const Float cutout, const bool cutMix, const Float autoAugment, const Float colorCast, const UInt colorAngle, const Float distortion, const Interpolations interpolation, const Float scaling, const Float rotation) :
+		TrainingRate(const dnn::Optimizers optimizer, const Float momentum, const Float beta2, const Float l2Penalty, const Float dropout, const Float eps, const UInt n, const UInt d, const UInt h, const UInt w, const UInt padD, const UInt padH, const UInt padW, const UInt cycles, const UInt epochs, const UInt epochMultiplier, const Float maximumRate, const Float minimumRate, const Float finalRate, const Float gamma, const UInt decayAfterEpochs, const Float decayFactor, const bool horizontalFlip, const bool verticalFlip, const Float inputDropout, const Float cutout, const bool cutMix, const Float autoAugment, const Float colorCast, const UInt colorAngle, const Float distortion, const Interpolations interpolation, const Float scaling, const Float rotation) :
 			Optimizer(optimizer),
 			Momentum(momentum),
 			Beta2(beta2),
 			L2Penalty(l2Penalty),
 			Dropout(dropout),
 			Eps(eps),
-			BatchSize(batchSize),
-			Cycles(cycles),
-			Epochs(epochs),
-			Height(height),
-			Width(width),
+			N(n),
+			D(d),
+			H(h),
+			W(w),
+			PadD(padD),
 			PadH(padH),
 			PadW(padW),
+			Cycles(cycles),
+			Epochs(epochs),
 			EpochMultiplier(epochMultiplier),
 			MaximumRate(maximumRate),
 			MinimumRate(minimumRate),
@@ -1420,7 +1426,7 @@ namespace dnn
 			const auto eps = rate.Eps;
 			const auto oneMinusBeta1 = Float(1) - beta1;
 			const auto oneMinusBeta2 = Float(1) - beta2;
-			const auto batchRecip = Float(1) / rate.BatchSize;
+			const auto batchRecip = Float(1) / rate.N;
 			B1 = B1 == Float(0) ? beta1 : B1;
 			B2 = B2 == Float(0) ? beta2 : B2;
 			const auto oneMinusB1 = Float(1) - B1;
@@ -1487,7 +1493,7 @@ namespace dnn
 			const auto eps = rate.Eps;
 			const auto oneMinusBeta1 = Float(1) - beta1;
 			const auto oneMinusBeta2 = Float(1) - beta2;
-			const auto batchRecip = Float(1) / rate.BatchSize;
+			const auto batchRecip = Float(1) / rate.N;
 			B1 = B1 == Float(0) ? beta1 : B1;
 			B2 = B2 == Float(0) ? beta2 : B2;
 			const auto oneMinusB1 = Float(1) - B1;
@@ -1557,7 +1563,7 @@ namespace dnn
 			const auto momentum = rate.Momentum;
 			const auto oneMinMomentum = Float(1) - momentum;
 			const auto eps = rate.Eps;
-			const auto batchRecip = Float(1) / rate.BatchSize;
+			const auto batchRecip = Float(1) / rate.N;
 
 			PRAGMA_OMP_SIMD()
 			for (auto i = 0ull; i < WeightCount; i++)
@@ -1586,7 +1592,7 @@ namespace dnn
 		{
 			const auto lr = rate.MaximumRate * WeightsLRM;
 			const auto eps = rate.Eps;
-			const auto batchRecip = Float(1) / rate.BatchSize;
+			const auto batchRecip = Float(1) / rate.N;
 
 			PRAGMA_OMP_SIMD()
 			for (auto i = 0ull; i < WeightCount; i++)
@@ -1613,9 +1619,9 @@ namespace dnn
 			const auto beta2 = rate.Beta2;
 			const auto lr = rate.MaximumRate * WeightsLRM;
 			const auto eps = rate.Eps;
-			const auto oneMinusBeta1 = (Float(1) - beta1) / rate.BatchSize;
+			const auto oneMinusBeta1 = (Float(1) - beta1) / rate.N;
 			const auto oneMinusBeta2 = Float(1) - beta2;
-			const auto batchRecip = Float(1) / rate.BatchSize;
+			const auto batchRecip = Float(1) / rate.N;
 			B1 = B1 == Float(0) ? beta1 : B1;
 			B2 = B2 == Float(0) ? beta2 : B2;
 			const auto oneMinusB1 = Float(1) - B1;
@@ -1650,8 +1656,8 @@ namespace dnn
 			const auto beta1 = rate.Momentum;
 			B1 = B1 == Float(0) ? beta1 : B1;
 			const auto lr = rate.MaximumRate * WeightsLRM / (Float(1) - B1);
-			const auto batchRecip = Float(1) / rate.BatchSize;
-			const auto oneMinusBeta1 = (Float(1) - beta1) / rate.BatchSize;
+			const auto batchRecip = Float(1) / rate.N;
+			const auto oneMinusBeta1 = (Float(1) - beta1) / rate.N;
 			const auto beta2 = rate.Beta2;
 			const auto eps = rate.Eps;
 
@@ -1692,7 +1698,7 @@ namespace dnn
 			const auto eps = rate.Eps;
 			const auto oneMinusBeta1 = Float(1) - beta1;
 			const auto oneMinusBeta2 = Float(1) - beta2;
-			const auto batchRecip = Float(1) / rate.BatchSize;
+			const auto batchRecip = Float(1) / rate.N;
 			B1 = B1 == Float(0) ? beta1 : B1;
 			B2 = B2 == Float(0) ? beta2 : B2;
 			const auto oneMinusB1 = Float(1) - B1;
@@ -1729,7 +1735,7 @@ namespace dnn
 			const auto l2Penalty = rate.L2Penalty * WeightsWDM * lr;
 			const auto momentum = rate.Momentum;
 			const auto momentumPlusOne = momentum + Float(1);
-			const auto batchRecip = Float(1) / rate.BatchSize * lr;
+			const auto batchRecip = Float(1) / rate.N * lr;
 
 			PRAGMA_OMP_SIMD()
 			for (auto i = 0ull; i < WeightCount; i++)
@@ -1742,7 +1748,7 @@ namespace dnn
 			if (HasBias)
 			{
 				const auto lr = rate.MaximumRate * BiasesLRM;
-				const auto batchRecip = Float(1) / rate.BatchSize * lr;
+				const auto batchRecip = Float(1) / rate.N * lr;
 				PRAGMA_OMP_SIMD()
 				for (auto i = 0ull; i < BiasCount; i++)
 				{
@@ -1755,11 +1761,11 @@ namespace dnn
 
 		inline void RMSProp(const TrainingRate& rate)
 		{
-			const auto lr = rate.MaximumRate * WeightsLRM / rate.BatchSize;
+			const auto lr = rate.MaximumRate * WeightsLRM / rate.N;
 			const auto eps = rate.Eps;
 			const auto momentum = rate.Momentum;
 			const auto oneMinusMomentum = Float(1) - momentum;
-			const auto batchRecip = Float(1) / rate.BatchSize;
+			const auto batchRecip = Float(1) / rate.N;
 
 			PRAGMA_OMP_SIMD()
 			for (auto i = 0ull; i < WeightCount; i++)
@@ -1770,7 +1776,7 @@ namespace dnn
 
 			if (HasBias)
 			{
-				const auto lr = rate.MaximumRate * BiasesLRM / rate.BatchSize;
+				const auto lr = rate.MaximumRate * BiasesLRM / rate.N;
 				PRAGMA_OMP_SIMD()
 				for (auto i = 0ull; i < BiasCount; i++)
 				{
@@ -1782,7 +1788,7 @@ namespace dnn
 
 		inline void SGD(const TrainingRate& rate)
 		{
-			const auto lr = rate.MaximumRate * WeightsLRM / rate.BatchSize;
+			const auto lr = rate.MaximumRate * WeightsLRM / rate.N;
 			const auto l2Penalty = rate.MaximumRate * WeightsLRM * rate.L2Penalty * WeightsWDM;
 
 			PRAGMA_OMP_SIMD()
@@ -1791,7 +1797,7 @@ namespace dnn
 
 			if (HasBias)
 			{
-				const auto lr = rate.MaximumRate * BiasesLRM / rate.BatchSize;;
+				const auto lr = rate.MaximumRate * BiasesLRM / rate.N;;
 				PRAGMA_OMP_SIMD()
 				for (auto i = 0ull; i < BiasCount; i++)
 					Biases[i] -= lr * BiasesD1[i];
@@ -1801,7 +1807,7 @@ namespace dnn
 		inline void SGDMomentum(const TrainingRate& rate)
 		{
 			const auto momentum = rate.Momentum;
-			const auto lr = rate.MaximumRate * WeightsLRM / rate.BatchSize;
+			const auto lr = rate.MaximumRate * WeightsLRM / rate.N;
 			const auto l2Penalty = rate.MaximumRate * WeightsLRM * rate.L2Penalty * WeightsWDM;
 
 			PRAGMA_OMP_SIMD()
@@ -1813,7 +1819,7 @@ namespace dnn
 
 			if (HasBias)
 			{
-				const auto lr = rate.MaximumRate * BiasesLRM / rate.BatchSize;
+				const auto lr = rate.MaximumRate * BiasesLRM / rate.N;
 				PRAGMA_OMP_SIMD()
 				for (auto i = 0ull; i < BiasCount; i++)
 				{
@@ -1826,7 +1832,7 @@ namespace dnn
 		inline void SGDW(const TrainingRate& rate)
 		{
 			const auto momentum = rate.Momentum;
-			const auto lr = rate.MaximumRate * WeightsLRM / rate.BatchSize;
+			const auto lr = rate.MaximumRate * WeightsLRM / rate.N;
 			const auto l2Penalty = rate.L2Penalty * WeightsWDM;
 
 			PRAGMA_OMP_SIMD()
@@ -1838,7 +1844,7 @@ namespace dnn
 
 			if (HasBias)
 			{
-				const auto lr = rate.MaximumRate * BiasesLRM / rate.BatchSize;
+				const auto lr = rate.MaximumRate * BiasesLRM / rate.N;
 				PRAGMA_OMP_SIMD()
 				for (auto i = 0ull; i < BiasCount; i++)
 				{

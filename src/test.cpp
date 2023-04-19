@@ -28,7 +28,7 @@ DNN_API void DNNDisableLocking(const bool disable);
 DNN_API void DNNGetConfusionMatrix(const UInt costLayerIndex, std::vector<std::vector<UInt>>* confusionMatrix);
 DNN_API void DNNGetLayerInputs(const UInt layerIndex, std::vector<UInt>* inputs);
 DNN_API void DNNGetLayerInfo(const UInt layerIndex, dnn::LayerInfo* info);
-DNN_API void DNNSetNewEpochDelegate(void(*newEpoch)(UInt, UInt, UInt, UInt, Float, Float, Float, bool, bool, Float, Float, bool, Float, Float, UInt, Float, UInt, Float, Float, Float, UInt, UInt, UInt, Float, Float, Float, Float, Float, Float, UInt, Float, Float, Float, UInt));
+DNN_API void DNNSetNewEpochDelegate(void(*newEpoch)(UInt, UInt, UInt, UInt, Float, Float, Float, bool, bool, Float, Float, bool, Float, Float, UInt, Float, UInt, Float, Float, Float, UInt, UInt, UInt, UInt, UInt, UInt, UInt, Float, Float, Float, Float, Float, Float, UInt, Float, Float, Float, UInt));
 DNN_API void DNNModelDispose();
 DNN_API void DNNDataproviderDispose();
 DNN_API bool DNNBatchNormUsed();
@@ -69,7 +69,7 @@ DNN_API dnn::Optimizers GetOptimizer();
 //DNN_API void DNNPrintModel(const std::string& fileName);
 
 
-void NewEpoch(UInt CurrentCycle, UInt CurrentEpoch, UInt TotalEpochs, UInt Optimizer, Float Beta2, Float Gamma, Float Eps, bool HorizontalFlip, bool VerticalFlip, Float InputDropout, Float Cutout, bool CutMix, Float AutoAugment, Float ColorCast, UInt ColorAngle, Float Distortion, UInt Interpolation, Float Scaling, Float Rotation, Float MaximumRate, UInt BatchSize, UInt Height, UInt Width, Float Momentum, Float L2Penalty, Float Dropout, Float AvgTrainLoss, Float TrainErrorPercentage, Float TrainAccuracy, UInt TrainErrors, Float AvgTestLoss, Float TestErrorPercentage, Float TestAccuracy, UInt TestErrors)
+void NewEpoch(UInt CurrentCycle, UInt CurrentEpoch, UInt TotalEpochs, UInt Optimizer, Float Beta2, Float Gamma, Float Eps, bool HorizontalFlip, bool VerticalFlip, Float InputDropout, Float Cutout, bool CutMix, Float AutoAugment, Float ColorCast, UInt ColorAngle, Float Distortion, UInt Interpolation, Float Scaling, Float Rotation, Float MaximumRate, UInt N, UInt D, UInt H, UInt W, UInt PadD, UInt PadH, UInt PadW, Float Momentum, Float L2Penalty, Float Dropout, Float AvgTrainLoss, Float TrainErrorPercentage, Float TrainAccuracy, UInt TrainErrors, Float AvgTestLoss, Float TestErrorPercentage, Float TestAccuracy, UInt TestErrors)
 {
     std::cout << std::string("Cycle: ") << std::to_string(CurrentCycle) << std::string("  Epoch: ") << std::to_string(CurrentEpoch) << std::string("  Train Accuracy: ") << FloatToStringFixed(TrainAccuracy, 2) << std::string("%  Test Accuracy: ") << FloatToStringFixed(TestAccuracy, 2) << std::string("%                                                                           ") << std::endl;
     std::cout.flush();
@@ -91,10 +91,14 @@ void NewEpoch(UInt CurrentCycle, UInt CurrentEpoch, UInt TotalEpochs, UInt Optim
     DNN_UNREF_PAR(Scaling);
     DNN_UNREF_PAR(Rotation);
     DNN_UNREF_PAR(MaximumRate);
-    DNN_UNREF_PAR(BatchSize);
+    DNN_UNREF_PAR(N);
+    DNN_UNREF_PAR(D);
+    DNN_UNREF_PAR(H);
+    DNN_UNREF_PAR(W);
+    DNN_UNREF_PAR(PadD);
+    DNN_UNREF_PAR(PadH);
+    DNN_UNREF_PAR(PadW);
     DNN_UNREF_PAR(Momentum);
-    DNN_UNREF_PAR(Height);
-    DNN_UNREF_PAR(Width);
     DNN_UNREF_PAR(L2Penalty);
     DNN_UNREF_PAR(Gamma);
     DNN_UNREF_PAR(Dropout);
@@ -212,9 +216,11 @@ int main(int argc, char* argv[])
     rate.L2Penalty = 0.0005f;
     rate.Dropout = 0.0f;
     rate.Eps = 0.00001f,
-    rate.BatchSize = 128;
-    rate.Height = 32;
-    rate.Width = 32;
+    rate.N = 128;
+    rate.D = 1;
+    rate.H = 32;
+    rate.W = 32;
+    rate.PadD = 0;
     rate.PadH = 4;
     rate.PadW = 4;
     rate.Cycles = 1;
