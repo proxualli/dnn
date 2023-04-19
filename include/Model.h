@@ -1899,7 +1899,7 @@ namespace dnn
 							std::filesystem::create_directories(subdir);
 							SaveWeights((subdir / fileName).string(), PersistOptimizer);
 							SaveDefinition((subdir / std::string("model.txt")).string());
-							Save((subdir / std::string("model.bin")).string());
+							SaveModel((subdir / std::string("model.bin")).string());
 							State.store(States::NewEpoch);
 							
 							const auto dur = timer.now() - timePointGlobal;
@@ -2750,29 +2750,52 @@ namespace dnn
 				SwitchInplaceBwd(false);
 		}
 		
-		void Save(const std::string& fileName)
+		bool SaveModel(const std::string& fileName)
 		{
 			auto os = std::fstream{ fileName, std::ios::out | std::ios::binary | std::ios::trunc };
 
 			if (!os.bad() && os.is_open())
 			{
-				bitsery::Serializer<bitsery::OutputBufferedStreamAdapter> serializer{ os };
-				serializer.object(*this);
-				serializer.adapter().flush();
+				try
+				{
+					bitsery::Serializer<bitsery::OutputBufferedStreamAdapter> serializer{ os };
+					serializer.object(*this);
+					serializer.adapter().flush();
+				}
+				catch (std::exception&)
+				{
+					os.close();
+					return false;
+				}
+
 				os.close();
+				return true;
 			}
+
+			return false;
 		}
 
-		void Load(const std::string& fileName)
+		bool LoadModel(const std::string& fileName)
 		{
 			auto is = std::ifstream(fileName, std::ios::in | std::ios::binary);
 
 			if (!is.bad() && is.is_open())
 			{
-				auto state = bitsery::quickDeserialization<bitsery::InputStreamAdapter>(is, *this);
-				is.close();
-				assert(state.first == bitsery::ReaderError::NoError && state.second);
+				try
+				{
+					auto state = bitsery::quickDeserialization<bitsery::InputStreamAdapter>(is, *this);
+					is.close();
+					assert(state.first == bitsery::ReaderError::NoError && state.second);
+				}
+				catch (std::exception&)
+				{
+					return false;
+				}
+
+				return true;
 			}
+
+			return false;
 		}
 
 		void SaveDefinition(const std::string& fileName)

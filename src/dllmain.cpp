@@ -176,6 +176,49 @@ extern "C" DNN_API int DNNLoad(const std::string& fileName, CheckMsg& checkMsg)
 	return 0;
 }
 
+extern "C" DNN_API bool DNNLoadModel(const std::string& fileName)
+{
+	if (model)
+		return model->LoadModel(fileName);
+	
+	return false;
+}
+
+extern "C" DNN_API bool DNNSaveModel(const std::string & fileName)
+{
+	if (model)
+		return model->SaveModel(fileName);
+
+	return false;
+}
+
+extern "C" DNN_API bool DNNClearLog(const std::string & fileName)
+{
+	if (model)
+	{
+		model->ClearLog();
+		return true;
+	}
+
+	return false;
+}
+
+extern "C" DNN_API bool DNNLoadLog(const std::string & fileName)
+{
+	if (model)
+		return model->LoadLog(fileName);
+
+	return false;
+}
+
+extern "C" DNN_API bool DNNSaveLog(const std::string & fileName)
+{
+	if (model)
+		return model->SaveLog(fileName);
+
+	return false;
+}
+
 extern "C" DNN_API void DNNGetLayerInputs(const UInt layerIndex, std::vector<UInt>* inputs)
 {
 	if (model && layerIndex < model->Layers.size())
