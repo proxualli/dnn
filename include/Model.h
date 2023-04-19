@@ -675,13 +675,14 @@ namespace dnn
 			return false;
 		}
 
-		bool ChangeResolution(const UInt batchSize, const UInt h, const UInt w, const UInt padH, const UInt padW)
+		bool ChangeResolution(const UInt n, const UInt d, const UInt h, const UInt w, const UInt padD, const UInt padH, const UInt padW)
 		{
-			if (batchSize < 1 || h < 1 || w < 1 || padH < 1 || padW < 1)
-				throw false;
-
-			if (batchSize == BatchSize && h == H && w == W)
+			if (n < 1 || d < 1 || h < 1 || w < 1)
+				return false;
+			
+			if ((n == BatchSize) && (d == D) && (h == H) && (w == W))
 			{
+				PadD = padD;
 				PadH = padH;
 				PadW = padW;
 
@@ -698,22 +699,24 @@ namespace dnn
 
 			BatchSizeChanging.store(true);
 
-			if (Layers[0]->H != h && Layers[0]->W != w)
+			if (Layers[0]->D != d || Layers[0]->H != h || Layers[0]->W != w)
 			{
+				Layers[0]->H = d;
 				Layers[0]->H = h;
 				Layers[0]->W = w;
 				for (auto& layer : Layers)
 					layer->UpdateResolution();
 			}
 
-			if (batchSize * h * w > BatchSize * H * W)
+			if ((n * d * h * w) > (BatchSize * D * H * W))
 			{
-				auto requestedSize = GetNeuronsSize(batchSize) + GetWeightsSize(PersistOptimizer, Optimizer);
+				auto requestedSize = GetNeuronsSize(n) + GetWeightsSize(PersistOptimizer, Optimizer);
 
 				if (GetTotalFreeMemory() + currentSize < requestedSize)
 				{
-					std::cout << std::string("Memory required: ") << std::to_string(requestedSize / 1024 / 1024) << std::string(" MB with resolution") << std::to_string(batchSize) + std::string("x") + std::to_string(h) + std::string("x") + std::to_string(w) << std::endl << std::endl;
+					std::cout << std::string("Memory required: ") << std::to_string(requestedSize / 1024 / 1024) << std::string(" MB with resolution") << std::to_string(n) + std::string("x") + std::to_string(h) + std::string("x") + std::to_string(w) << std::endl << std::endl;
 
+					Layers[0]->D = D;
 					Layers[0]->H = H;
 					Layers[0]->W = W;
 					for (auto& layer : Layers)
@@ -726,18 +729,20 @@ namespace dnn
 			}
 
 			for (auto& layer : Layers)
-				layer->SetBatchSize(batchSize);
+				layer->SetBatchSize(n);
 				
-			AdjustedTrainingSamplesCount = (DataProv->TrainingSamplesCount % batchSize == 0) ? DataProv->TrainingSamplesCount : ((DataProv->TrainingSamplesCount / batchSize) + 1) * batchSize;
-			AdjustedTestingSamplesCount = (DataProv->TestingSamplesCount % batchSize == 0) ? DataProv->TestingSamplesCount : ((DataProv->TestingSamplesCount / batchSize) + 1) * batchSize;
-			TrainSkipCount = batchSize - (AdjustedTrainingSamplesCount - DataProv->TrainingSamplesCount);
-			TestSkipCount = batchSize - (AdjustedTestingSamplesCount - DataProv->TestingSamplesCount);
-			TrainOverflowCount = AdjustedTrainingSamplesCount - batchSize;
-			TestOverflowCount = AdjustedTestingSamplesCount - batchSize;;
+			AdjustedTrainingSamplesCount = (DataProv->TrainingSamplesCount % n == 0) ? DataProv->TrainingSamplesCount : ((DataProv->TrainingSamplesCount / n) + 1) * n;
+			AdjustedTestingSamplesCount = (DataProv->TestingSamplesCount % n == 0) ? DataProv->TestingSamplesCount : ((DataProv->TestingSamplesCount / n) + 1) * n;
+			TrainSkipCount = n - (AdjustedTrainingSamplesCount - DataProv->TrainingSamplesCount);
+			TestSkipCount = n - (AdjustedTestingSamplesCount - DataProv->TestingSamplesCount);
+			TrainOverflowCount = AdjustedTrainingSamplesCount - n;
+			TestOverflowCount = AdjustedTestingSamplesCount - n;;
 
-			BatchSize = batchSize;
+			BatchSize = n;
+			D = d;
 			H = h;
 			W = w;
+			PadD = padD;
 			PadH = padH;
 			PadW = padW;
 
@@ -1554,7 +1559,7 @@ namespace dnn
 				Rate = CurrentTrainingRate.MaximumRate;
 				CurrentCycle = CurrentTrainingRate.Cycles;
 			
-				if (!ChangeResolution(CurrentTrainingRate.N, CurrentTrainingRate.H, CurrentTrainingRate.W, CurrentTrainingRate.PadH, CurrentTrainingRate.PadW))
+				if (!ChangeResolution(CurrentTrainingRate.N, CurrentTrainingRate.D, CurrentTrainingRate.H, CurrentTrainingRate.W, CurrentTrainingRate.PadD, CurrentTrainingRate.PadH, CurrentTrainingRate.PadW))
 					return;
 				
 				if (Dropout != CurrentTrainingRate.Dropout)
@@ -1607,7 +1612,7 @@ namespace dnn
 						CurrentTrainingRate = TrainingRates[learningRateIndex];
 						Rate = CurrentTrainingRate.MaximumRate;
 						
-						if (!ChangeResolution(CurrentTrainingRate.N, CurrentTrainingRate.H, CurrentTrainingRate.W, CurrentTrainingRate.PadH, CurrentTrainingRate.PadW))
+						if (!ChangeResolution(CurrentTrainingRate.N, CurrentTrainingRate.D, CurrentTrainingRate.H, CurrentTrainingRate.W, CurrentTrainingRate.PadD, CurrentTrainingRate.PadH, CurrentTrainingRate.PadW))
 							return;
 								
 						if (Dropout != CurrentTrainingRate.Dropout)
@@ -1927,7 +1932,7 @@ namespace dnn
 							logInfo.CutMix = CurrentTrainingRate.CutMix;
 							logInfo.Cutout = CurrentTrainingRate.Cutout;
 							logInfo.Cycle = CurrentCycle;
-							logInfo.D = 1ull;
+							logInfo.D = CurrentTrainingRate.D;;
 							logInfo.Distortion = CurrentTrainingRate.Distortion;
 							logInfo.Dropout = CurrentTrainingRate.Dropout;
 							logInfo.ElapsedTicks = std::chrono::duration_cast<std::chrono::milliseconds>(dur).count();
@@ -1944,7 +1949,7 @@ namespace dnn
 							logInfo.Momentum = CurrentTrainingRate.Momentum;
 							logInfo.N = CurrentTrainingRate.N;
 							logInfo.Optimizer = CurrentTrainingRate.Optimizer;
-							logInfo.PadD = 1ull;
+							logInfo.PadD = CurrentTrainingRate.PadD;
 							logInfo.PadH = CurrentTrainingRate.PadH;
 							logInfo.PadW = CurrentTrainingRate.PadW;
 							logInfo.Rate = Rate;
@@ -2173,7 +2178,7 @@ namespace dnn
 				CurrentTrainingRate = TrainingRates[0];
 				Rate = CurrentTrainingRate.MaximumRate;
 
-				if (!ChangeResolution(CurrentTrainingRate.N, CurrentTrainingRate.H, CurrentTrainingRate.W, CurrentTrainingRate.PadH, CurrentTrainingRate.PadW))
+				if (!ChangeResolution(CurrentTrainingRate.N, CurrentTrainingRate.D, CurrentTrainingRate.H, CurrentTrainingRate.W, CurrentTrainingRate.PadD, CurrentTrainingRate.PadH, CurrentTrainingRate.PadW))
 					return;
 
 				if (Dropout != CurrentTrainingRate.Dropout)
