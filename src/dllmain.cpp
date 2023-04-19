@@ -192,7 +192,7 @@ extern "C" DNN_API bool DNNSaveModel(const std::string & fileName)
 	return false;
 }
 
-extern "C" DNN_API bool DNNClearLog(const std::string & fileName)
+extern "C" DNN_API bool DNNClearLog()
 {
 	if (model)
 	{
@@ -233,7 +233,7 @@ extern "C" DNN_API void DNNGetLayerInputs(const UInt layerIndex, std::vector<UIn
 	}
 }
 
-extern "C" DNN_API bool DNNBatchNormalizationUsed()
+extern "C" DNN_API bool DNNBatchNormUsed()
 {
 	if (model)
 		return model->BatchNormUsed();
@@ -831,15 +831,18 @@ extern "C" DNN_API void DNNGetTrainingInfo(TrainingInfo* info)
 	if (model)
 	{
 		const auto sampleIdx = model->SampleIndex + model->BatchSize;
+		const auto costIdx = model->CostIndex;
 
 		switch (model->State)
 		{
 		case States::Training:
 		{
-			model->TrainLoss = model->CostLayers[model->CostIndex]->TrainLoss;
-			model->TrainErrors = model->CostLayers[model->CostIndex]->TrainErrors;
-			model->TrainErrorPercentage = Float(model->TrainErrors * 100) / sampleIdx;
-			model->AvgTrainLoss = model->TrainLoss / sampleIdx;
+			const auto adjustedsampleIndex = sampleIdx > dataprovider->TrainingSamplesCount ? dataprovider->TrainingSamplesCount : sampleIdx;
+
+			model->TrainLoss = model->CostLayers[costIdx]->TrainLoss;
+			model->TrainErrors = model->CostLayers[costIdx]->TrainErrors;
+			model->TrainErrorPercentage = Float(model->CostLayers[costIdx]->TrainErrors * 100) / adjustedsampleIndex;
+			model->AvgTrainLoss = model->CostLayers[costIdx]->TrainLoss / adjustedsampleIndex;
 
 			info->AvgTrainLoss = model->AvgTrainLoss;
 			info->TrainErrorPercentage = model->TrainErrorPercentage;
@@ -851,10 +854,10 @@ extern "C" DNN_API void DNNGetTrainingInfo(TrainingInfo* info)
 		{
 			const auto adjustedsampleIndex = sampleIdx > dataprovider->TestingSamplesCount ? dataprovider->TestingSamplesCount : sampleIdx;
 
-			model->TestLoss = model->CostLayers[model->CostIndex]->TestLoss;
-			model->TestErrors = model->CostLayers[model->CostIndex]->TestErrors;
-			model->TestErrorPercentage = Float(model->TestErrors * 100) / adjustedsampleIndex;
-			model->AvgTestLoss = model->TestLoss / adjustedsampleIndex;
+			model->TestLoss = model->CostLayers[costIdx]->TestLoss;
+			model->TestErrors = model->CostLayers[costIdx]->TestErrors;
+			model->TestErrorPercentage = Float(model->CostLayers[costIdx]->TestErrors * 100) / adjustedsampleIndex;
+			model->AvgTestLoss = model->CostLayers[costIdx]->TestLoss / adjustedsampleIndex;
 
 			info->AvgTestLoss = model->AvgTestLoss;
 			info->TestErrorPercentage = model->TestErrorPercentage;
@@ -917,12 +920,13 @@ extern "C" DNN_API void DNNGetTestingInfo(TestingInfo* info)
 	if (model)
 	{
 		const auto sampleIdx = model->SampleIndex + model->BatchSize;
+		const auto costIdx = model->CostIndex;
 		const auto adjustedsampleIndex = sampleIdx > dataprovider->TestingSamplesCount ? dataprovider->TestingSamplesCount : sampleIdx;
 
-		model->TestLoss = model->CostLayers[model->CostIndex]->TestLoss;
-		model->TestErrors = model->CostLayers[model->CostIndex]->TestErrors;
-		model->TestErrorPercentage = Float(model->TestErrors * 100) / adjustedsampleIndex;
-		model->AvgTestLoss = model->TestLoss / adjustedsampleIndex;
+		model->TestLoss = model->CostLayers[costIdx]->TestLoss;
+		model->TestErrors = model->CostLayers[costIdx]->TestErrors;
+		model->TestErrorPercentage = Float(model->CostLayers[costIdx]->TestErrors * 100) / adjustedsampleIndex;
+		model->AvgTestLoss = model->CostLayers[costIdx]->TestLoss / adjustedsampleIndex;
 
 		info->SampleIndex = model->SampleIndex;
 
