@@ -69,10 +69,12 @@
 #include <limits>
 #include <locale>
 #include <clocale>
+#include <map>
 #include <memory>
 #include <mutex>
 #include <numeric>
 #include <random>
+#include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -109,8 +111,9 @@
 #include <bitsery/traits/string.h>
 #include <bitsery/traits/vector.h>
 //#include <bitsery/ext/std_atomic.h>
+//#include <bitsery/ext/growable.h>
 
-//#include "csv.hpp"
+#include "CsvFile.h"
 
 using namespace dnn;
 
@@ -1104,4 +1107,16 @@ namespace
 		return array[array.size() / 2];
 	}
 	*/
+
+	/* https://stackoverflow.com/questions/64169258/c-print-days-hours-minutes-etc-of-a-chronoduration */
+	template <class Rep, std::intmax_t num, std::intmax_t denom>
+	auto ChronoBurst(std::chrono::duration<Rep, std::ratio<num, denom>> d)
+	{
+		const auto hrs = std::chrono::duration_cast<std::chrono::hours>(d);
+		const auto mins = std::chrono::duration_cast<std::chrono::minutes>(d - hrs);
+		const auto secs = std::chrono::duration_cast<std::chrono::seconds>(d - hrs - mins);
+		const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(d - hrs - mins - secs);
+
+		return std::make_tuple(hrs, mins, secs, ms);
+	}
 }

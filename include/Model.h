@@ -401,6 +401,7 @@ namespace dnn
 		Float TestAccuracy;
 
 		long long ElapsedTicks;
+		std::string ElapsedTime;
 	};
 
 	static const bool IsBatchNorm(const LayerTypes& type)
@@ -657,6 +658,259 @@ namespace dnn
 				serializer.object(*this);
 				serializer.adapter().flush();
 				os.close();
+			}
+		}
+
+		void ClearLog()
+		{
+			Log = std::vector<LogInfo>();
+		}
+
+		void LoadLog(const std::string& fileName)
+		{
+			auto header = std::set<std::string>();
+			header.insert(std::string("Cycle"));
+			header.insert(std::string("Epoch"));
+			header.insert(std::string("GroupIndex"));
+			header.insert(std::string("CostIndex"));
+			header.insert(std::string("CostName"));
+			header.insert(std::string("N"));
+			header.insert(std::string("D"));
+			header.insert(std::string("H"));
+			header.insert(std::string("W"));
+			header.insert(std::string("PadD"));
+			header.insert(std::string("PadH"));
+			header.insert(std::string("PadW"));
+			header.insert(std::string("Optimizer"));
+			header.insert(std::string("Rate"));
+			header.insert(std::string("Eps"));
+			header.insert(std::string("Momentum"));
+			header.insert(std::string("Beta2"));
+			header.insert(std::string("Gamma"));
+			header.insert(std::string("L2Penalty"));
+			header.insert(std::string("Dropout"));
+			header.insert(std::string("InputDropout"));
+			header.insert(std::string("Cutout"));
+			header.insert(std::string("CutMix"));
+			header.insert(std::string("AutoAugment"));
+			header.insert(std::string("HorizontalFlip"));
+			header.insert(std::string("VerticalFlip"));
+			header.insert(std::string("ColorCast"));
+			header.insert(std::string("ColorAngle"));
+			header.insert(std::string("Distortion"));
+			header.insert(std::string("Interpolation"));
+			header.insert(std::string("Scaling"));
+			header.insert(std::string("Rotation"));
+			header.insert(std::string("AvgTrainLoss"));
+			header.insert(std::string("TrainErrors"));
+			header.insert(std::string("TrainErrorPercentage"));
+			header.insert(std::string("TrainAccuracy"));
+			header.insert(std::string("AvgTestLoss"));
+			header.insert(std::string("TestErrors"));
+			header.insert(std::string("TestErrorPercentage"));
+			header.insert(std::string("TestAccuracy"));
+			header.insert(std::string("ElapsedTicks"));
+			header.insert(std::string("ElapsedTime"));
+
+			const auto fileContents = ReadFileToString(fileName);
+			auto sstream = std::istringstream(fileContents);
+
+			const auto delimiter = ';';
+			auto tmpLog = std::vector<LogInfo>();
+			auto record = std::string("");
+			auto counter = 0ull;
+			while (std::getline(sstream, record))
+			{
+				auto line = std::istringstream(record);
+				auto idx = 0;
+				auto info = LogInfo{};
+				while (std::getline(line, record, delimiter))
+				{
+					if (counter > 0ull)
+					{
+						try
+						{
+							switch (idx)
+							{
+							case 0:			// Cycle
+								info.Cycle = std::stoull(record);
+								break;
+							case 1:			// Epoch
+								info.Epoch = std::stoull(record);
+								break;
+							case 3:			// GroupIndex
+								info.GroupIndex = std::stoull(record);
+								break;
+							case 4:			// CostIndex
+								info.CostIndex = std::stoull(record);
+								break;
+							case 5:			// CostName
+								info.CostName = record;
+								break;
+							case 6:			// N
+								info.N = std::stoull(record);
+								break;
+							case 7:			// D
+								info.D = std::stoull(record);
+								break;
+							case 8:			// H
+								info.H = std::stoull(record);
+								break;
+							case 9:			// W
+								info.W = std::stoull(record);
+								break;
+							case 10:		// PadD
+								info.PadD = std::stoull(record);
+								break;
+							case 11:		// PadH
+								info.PadH = std::stoull(record);
+								break;
+							case 12:		// PadW
+								info.PadW = std::stoull(record);
+								break;
+							case 13:		// Optimizer
+							{
+								const auto optimizer = magic_enum::enum_cast<Optimizers>(record);
+								if (optimizer.has_value())
+									info.Optimizer = optimizer.value();
+								else
+									info.Optimizer = Optimizers::SGDMomentum;
+							}
+							break;
+							case 14:		// Rate
+								info.Rate = std::stof(record);
+								break;
+							case 15:		// Eps
+								info.Eps = std::stof(record);
+								break;
+							case 16:		// Momentum
+								info.Momentum = std::stof(record);
+								break;
+							case 17:		// Beta2
+								info.Beta2 = std::stof(record);
+								break;
+							case 18:		// Gamma
+								info.Gamma = std::stof(record);
+								break;
+							case 19:		// L2Penalty
+								info.L2Penalty = std::stof(record);
+								break;
+							case 20:		// Dropout
+								info.Dropout = std::stof(record);
+								break;
+							case 21:		// InputDropout
+								info.InputDropout = std::stof(record);
+								break;
+							case 22:		// Cutout
+								info.Cutout = std::stof(record);
+								break;
+							case 23:		// CutMix
+								info.CutMix = StringToBool(record);
+								break;
+							case 24:		// AutoAugment
+								info.AutoAugment = std::stof(record);
+								break;
+							case 25:		// HorizontalFlip
+								info.HorizontalFlip = StringToBool(record);
+								break;
+							case 26:		// VerticalFlip
+								info.VerticalFlip = StringToBool(record);
+								break;
+							case 27:		// ColorCast
+								info.ColorCast = std::stof(record);
+								break;
+							case 28:		// ColorAngle
+								info.ColorAngle = std::stoull(record);
+								break;
+							case 29:		// Distortion
+								info.Distortion = std::stof(record);
+								break;
+							case 30:		// Interpolation
+							{
+								const auto interpolation = magic_enum::enum_cast<Interpolations>(record);
+								if (interpolation.has_value())
+									info.Interpolation = interpolation.value();
+								else
+									info.Interpolation = Interpolations::Linear;
+							}
+							break;
+							case 31:		// Scaling
+								info.Scaling = std::stof(record);
+								break;
+							case 32:		// Rotation
+								info.Rotation = std::stof(record);
+								break;
+							case 33:		// AvgTrainLoss
+								info.AvgTrainLoss = std::stof(record);
+								break;
+							case 34:		// TrainErrors
+								info.TrainErrors = std::stoull(record);
+								break;
+							case 35:		// TrainErrorPercentage
+								info.TrainErrorPercentage = std::stof(record);
+								break;
+							case 36:		// TrainAccuracy
+								info.TrainAccuracy = std::stof(record);
+								break;
+							case 37:		// AvgTestLoss
+								info.AvgTestLoss = std::stof(record);
+								break;
+							case 38:		// TestErrors
+								info.TestErrors = std::stoull(record);
+								break;
+							case 39:		// TestErrorPercentage
+								info.TestErrorPercentage = std::stof(record);
+								break;
+							case 40:		// TestAccuracy
+								info.TestAccuracy = std::stof(record);
+								break;
+							case 41:		// ElapsedTicks
+								info.ElapsedTicks = std::stoll(record);
+								break;
+							case 42:		// ElapsedTime
+								info.ElapsedTime = record;
+								break;
+							}
+						}
+						catch (std::exception&)
+						{
+							return;
+						}
+					}
+					else
+					{
+						// check header is same
+						if (header.find(record) == header.end())
+							return;
+					}
+
+					idx++;
+				}
+
+				if (counter > 0ull)
+					tmpLog.push_back(info);
+				
+				counter++;
+			}
+
+			tmpLog.shrink_to_fit();
+			Log = std::vector<LogInfo>(tmpLog);
+		}
+
+		void SaveLog(const std::string& fileName)
+		{
+			try
+			{
+				CsvFile csv(fileName);
+
+				csv << "Cycle" << "Epoch" << "GroupIndex" << "CostIndex" << "CostName" << "N" << "D" << "H" << "W" << "PadD" << "PadH" << "PadW" << "Optimizer" << "Rate" << "Eps" << "Momentum" << "Beta2" << "Gamma" << "L2Penalty" << "Dropout" << "InputDropout" << "Cutout" << "CutMix" << "AutoAugment" << "HorizontalFlip" << "VerticalFlip" << "ColorCast" << "ColorAngle" << "Distortion" << "Interpolation" << "Scaling" << "Rotation" << "AvgTrainLoss" << "TrainErrors" << "TrainErrorPercentage" << "TrainAccuracy" << "AvgTestLoss" << "TestErrors" << "TestErrorPercentage" << "TestAccuracy" << "ElapsedTicks" << "ElapsedTime" << EndRow;
+				
+				// Data
+				for (const LogInfo& r : Log)
+					csv << r.Cycle << r.Epoch << r.GroupIndex << r.CostIndex << r.CostName << r.N << r.D << r.H << r.W << r.PadD << r.PadH << r.PadW << std::string(magic_enum::enum_name<Optimizers>(r.Optimizer)) << r.Rate << r.Eps << r.Momentum << r.Beta2 << r.Gamma << r.L2Penalty << r.Dropout << r.InputDropout << r.Cutout << r.CutMix << r.AutoAugment << r.HorizontalFlip << r.VerticalFlip << r.ColorCast << r.ColorAngle << r.Distortion << std::string(magic_enum::enum_name<Interpolations>(r.Interpolation)) << r.Scaling << r.Rotation << r.AvgTrainLoss << r.TrainErrors << r.TrainErrorPercentage << r.TrainAccuracy << r.AvgTestLoss << r.TestErrors << r.TestErrorPercentage << r.TestAccuracy << r.ElapsedTicks << r.ElapsedTime << EndRow;
+			}
+			catch (const std::exception&)
+			{
 			}
 		}
 
@@ -1952,7 +2206,11 @@ namespace dnn
 							logInfo.D = 1ull;
 							logInfo.Distortion = CurrentTrainingRate.Distortion;
 							logInfo.Dropout = CurrentTrainingRate.Dropout;
-							logInfo.ElapsedTicks = static_cast<long long>(std::chrono::duration_cast<std::chrono::microseconds>(timer.now() - timePointGlobal).count() / 1000000ll);
+							logInfo.ElapsedTicks = (timer.now() - timePointGlobal).count();
+							const auto [hrs, mins, secs, ms] = ChronoBurst(timer.now() - timePointGlobal);
+							std::setw(2);
+							std::setfill('0');
+							logInfo.ElapsedTime = std::to_string(hrs.count()) + std::string(":") + std::to_string(mins.count()) + std::string(":") + std::to_string(secs.count()) + std::string(".") + std::to_string(ms.count());
 							logInfo.Epoch = CurrentEpoch;
 							logInfo.Eps = CurrentTrainingRate.Eps;
 							logInfo.Gamma = CurrentTrainingRate.Gamma;
@@ -1981,6 +2239,8 @@ namespace dnn
 							logInfo.W = CurrentTrainingRate.Width;
 
 							Log.push_back(logInfo);
+							SaveLog((subdir / std::string("log.csv")).string());
+
 							NewEpoch(CurrentCycle, CurrentEpoch, TotalEpochs, static_cast<UInt>(CurrentTrainingRate.Optimizer), CurrentTrainingRate.Beta2, CurrentTrainingRate.Gamma, CurrentTrainingRate.Eps, CurrentTrainingRate.HorizontalFlip, CurrentTrainingRate.VerticalFlip, CurrentTrainingRate.InputDropout, CurrentTrainingRate.Cutout, CurrentTrainingRate.CutMix, CurrentTrainingRate.AutoAugment, CurrentTrainingRate.ColorCast, CurrentTrainingRate.ColorAngle, CurrentTrainingRate.Distortion, static_cast<UInt>(CurrentTrainingRate.Interpolation), CurrentTrainingRate.Scaling, CurrentTrainingRate.Rotation, CurrentTrainingRate.MaximumRate, CurrentTrainingRate.BatchSize, CurrentTrainingRate.Height, CurrentTrainingRate.Width, CurrentTrainingRate.Momentum, CurrentTrainingRate.L2Penalty, CurrentTrainingRate.Dropout, AvgTrainLoss, TrainErrorPercentage, Float(100) - TrainErrorPercentage, TrainErrors, AvgTestLoss, TestErrorPercentage, Float(100) - TestErrorPercentage, TestErrors);
 						}
 						else
@@ -2868,7 +3128,7 @@ namespace dnn
 			return Optimizers::SGD;
 		}
 	};
-
+	
 	template<typename S>
 	void serialize(S& s, TrainingStrategy& o)
 	{
@@ -2990,6 +3250,7 @@ namespace dnn
 		s.value4b(o.TestAccuracy);
 
 		s.value8b(o.ElapsedTicks);
+		s.text1b(o.ElapsedTime, 128);
 	}
 	
 	template<typename S>
