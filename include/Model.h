@@ -2206,11 +2206,9 @@ namespace dnn
 							logInfo.D = 1ull;
 							logInfo.Distortion = CurrentTrainingRate.Distortion;
 							logInfo.Dropout = CurrentTrainingRate.Dropout;
-							logInfo.ElapsedTicks = (timer.now() - timePointGlobal).count();
+							logInfo.ElapsedTicks = std::chrono::duration_cast<std::chrono::milliseconds>(timer.now() - timePointGlobal).count();
 							const auto [hrs, mins, secs, ms] = ChronoBurst(timer.now() - timePointGlobal);
-							std::setw(2);
-							std::setfill('0');
-							logInfo.ElapsedTime = std::to_string(hrs.count()) + std::string(":") + std::to_string(mins.count()) + std::string(":") + std::to_string(secs.count()) + std::string(".") + std::to_string(ms.count());
+							logInfo.ElapsedTime = (hrs.count() < 10 ? std::string("0") : std::string("")) + std::to_string(hrs.count()) + std::string(":") + (mins.count() < 10 ? std::string("0") : std::string("")) + std::to_string(mins.count()) + std::string(":") + (secs.count() < 10 ? std::string("0") : std::string("")) + std::to_string(secs.count()) + std::string(".") + std::to_string(ms.count());
 							logInfo.Epoch = CurrentEpoch;
 							logInfo.Eps = CurrentTrainingRate.Eps;
 							logInfo.Gamma = CurrentTrainingRate.Gamma;
