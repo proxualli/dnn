@@ -879,7 +879,7 @@ namespace dnn
 					}
 					else
 					{
-						// check header is same
+						// check header is valid
 						if (header.find(record) == header.end())
 							return;
 					}
