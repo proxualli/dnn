@@ -8,13 +8,17 @@
 class CsvFile
 {
 private:
+    char* userLocale;
     std::ofstream os;
 
 public:
     const std::string Separator;
+    const std::string Quote;
 
-    CsvFile(const std::string filename, const std::string separator = ";") :
+    CsvFile(const std::string& filename, const std::string& separator = ";", const std::string& quote = "") :
         Separator(separator),
+        Quote(quote),
+        userLocale(std::setlocale(LC_ALL, "C")), 
         os()
     {
         os.exceptions(std::ios::failbit | std::ios::badbit);
@@ -25,6 +29,7 @@ public:
     {
         Flush();
         os.close();
+        std::setlocale(LC_ALL, userLocale);
     }
 
     void Flush()
@@ -44,70 +49,38 @@ public:
 
     CsvFile& operator << (const char* val)
     {
-        os << '"' << val << '"' << Separator;
+        os << Quote << val << Quote << Separator;
         return *this;
     }
 
     CsvFile& operator << (const std::string& val)
     {
-        os << '"' << val << '"' << Separator;
+        os << Quote << val << Quote << Separator;
         return *this;
     }
 
     CsvFile& operator << (const bool& val)
     {
-        os << '"' << (val ? std::string("True") : std::string("False")) << '"' << Separator;
+        os << (val ? std::string("True") : std::string("False")) << Separator;
         return *this;
     }
 
     CsvFile& operator << (const float& val)
     {
-        os << '"' << std::to_string(val) << '"' << Separator;
+        std::stringstream stream;
+        stream << std::setprecision(std::streamsize(8)) << std::fixed << val;
+        os << stream.str() << Separator;
         return *this;
     }
 
     CsvFile& operator << (const double& val)
     {
-        os << '"' << std::to_string(val) << '"' << Separator;
+        std::stringstream stream;
+        stream << std::setprecision(std::streamsize(16)) << std::fixed << val;
+        os << stream.str() << Separator;
         return *this;
     }
-
-    CsvFile& operator << (const unsigned& val)
-    {
-        os << '"' << std::to_string(val) << '"' << Separator;
-        return *this;
-    }
-
-    CsvFile& operator << (const int& val)
-    {
-        os << '"' << std::to_string(val) << '"' << Separator;
-        return *this;
-    }
-
-    CsvFile& operator << (const unsigned long& val)
-    {
-        os << '"' << std::to_string(val) << '"' << Separator;
-        return *this;
-    }
-
-    CsvFile& operator << (const long& val)
-    {
-        os << '"' << std::to_string(val) << '"' << Separator;
-        return *this;
-    }
-
-    CsvFile& operator << (const unsigned long long& val)
-    {
-        os << '"' << std::to_string(val) << '"' << Separator;
-        return *this;
-    }
-
-    CsvFile& operator << (const long long& val)
-    {
-        os << '"' << std::to_string(val) << '"' << Separator;
-        return *this;
-    }
-
+      
     template<typename T>
     CsvFile& operator << (const T& val)
     {

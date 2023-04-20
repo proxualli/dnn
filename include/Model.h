@@ -2836,8 +2836,8 @@ namespace dnn
 				CsvFile csv(fileName);
 
 				// Header
-				csv << "Cycle" << "Epoch" << "GroupIndex" << "CostIndex" << "CostName" << "N" << "D" << "H" << "W" << "PadD" << "PadH" << "PadW" << "Optimizer" << "Rate" << "Eps" << "Momentum" << "Beta2" << "Gamma" << "L2Penalty" << "Dropout" << "InputDropout" << "Cutout" << "CutMix" << "AutoAugment" << "HorizontalFlip" << "VerticalFlip" << "ColorCast" << "ColorAngle" << "Distortion" << "Interpolation" << "Scaling" << "Rotation" << "AvgTrainLoss" << "TrainErrors" << "TrainErrorPercentage" << "TrainAccuracy" << "AvgTestLoss" << "TestErrors" << "TestErrorPercentage" << "TestAccuracy" << "ElapsedTicks" << "ElapsedTime" << EndRow;
-
+				csv << "Cycle" << "Epoch" << "GroupIndex" << "CostIndex" << "CostName" << "N" << "D" << "H" << "W" << "PadD" << "PadH" << "PadW" << "Optimizer" << "Rate" << "Eps" << "Momentum" << "Beta2" << "Gamma" << "L2Penalty" << "Dropout"  << "InputDropout" << "Cutout" << "CutMix" << "AutoAugment" << "HorizontalFlip" << "VerticalFlip" << "ColorCast" << "ColorAngle" << "Distortion" << "Interpolation" << "Scaling" << "Rotation" << "AvgTrainLoss" << "TrainErrors" << "TrainErrorPercentage" << "TrainAccuracy" << "AvgTestLoss" << "TestErrors" << "TestErrorPercentage" << "TestAccuracy" << "ElapsedTicks" << "ElapsedTime" << EndRow;
+					
 				// Data
 				for (const LogInfo& r : Log)
 					csv << r.Cycle << r.Epoch << r.GroupIndex << r.CostIndex << r.CostName << r.N << r.D << r.H << r.W << r.PadD << r.PadH << r.PadW << std::string(magic_enum::enum_name<Optimizers>(r.Optimizer)) << r.Rate << r.Eps << r.Momentum << r.Beta2 << r.Gamma << r.L2Penalty << r.Dropout << r.InputDropout << r.Cutout << r.CutMix << r.AutoAugment << r.HorizontalFlip << r.VerticalFlip << r.ColorCast << r.ColorAngle << r.Distortion << std::string(magic_enum::enum_name<Interpolations>(r.Interpolation)) << r.Scaling << r.Rotation << r.AvgTrainLoss << r.TrainErrors << r.TrainErrorPercentage << r.TrainAccuracy << r.AvgTestLoss << r.TestErrors << r.TestErrorPercentage << r.TestAccuracy << r.ElapsedTicks << r.ElapsedTime << EndRow;
@@ -2897,9 +2897,9 @@ namespace dnn
 			headers.insert(std::string("ElapsedTicks"));
 			headers.insert(std::string("ElapsedTime"));
 
+			auto userLocale = std::setlocale(LC_ALL, "C");
 			const auto fileContents = ReadFileToString(fileName);
 			auto sstream = std::istringstream(fileContents);
-
 			const auto delimiter = ';';
 			auto tmpLog = std::vector<LogInfo>();
 			auto record = std::string("");
@@ -2932,28 +2932,28 @@ namespace dnn
 							case 5:			// CostName
 								info.CostName = record;
 								break;
-							case 6:			// N
+							case 6:	// N
 								info.N = std::stoull(record);
 								break;
-							case 7:			// D
+							case 7:	// D
 								info.D = std::stoull(record);
 								break;
-							case 8:			// H
+							case 8:	// H
 								info.H = std::stoull(record);
 								break;
-							case 9:			// W
+							case 9:	// W
 								info.W = std::stoull(record);
 								break;
-							case 10:		// PadD
+							case 10:	// PadD
 								info.PadD = std::stoull(record);
 								break;
-							case 11:		// PadH
+							case 11:	// PadH
 								info.PadH = std::stoull(record);
 								break;
-							case 12:		// PadW
+							case 12:	// PadW
 								info.PadW = std::stoull(record);
 								break;
-							case 13:		// Optimizer
+							case 13:			// Optimizer
 							{
 								const auto optimizer = magic_enum::enum_cast<Optimizers>(record);
 								if (optimizer.has_value())
@@ -2962,55 +2962,55 @@ namespace dnn
 									info.Optimizer = Optimizers::SGDMomentum;
 							}
 							break;
-							case 14:		// Rate
+							case 14:	// Rate
 								info.Rate = std::stof(record);
 								break;
-							case 15:		// Eps
+							case 15:	// Eps
 								info.Eps = std::stof(record);
 								break;
-							case 16:		// Momentum
+							case 16:	// Momentum
 								info.Momentum = std::stof(record);
 								break;
-							case 17:		// Beta2
+							case 17:	// Beta2
 								info.Beta2 = std::stof(record);
 								break;
-							case 18:		// Gamma
+							case 18:	// Gamma
 								info.Gamma = std::stof(record);
 								break;
-							case 19:		// L2Penalty
+							case 19:	// L2Penalty
 								info.L2Penalty = std::stof(record);
 								break;
-							case 20:		// Dropout
+							case 20:	// Dropout
 								info.Dropout = std::stof(record);
 								break;
-							case 21:		// InputDropout
+							case 21:	// InputDropout
 								info.InputDropout = std::stof(record);
 								break;
-							case 22:		// Cutout
+							case 22:	// Cutout
 								info.Cutout = std::stof(record);
 								break;
-							case 23:		// CutMix
+							case 23:	// CutMix
 								info.CutMix = StringToBool(record);
 								break;
-							case 24:		// AutoAugment
+							case 24:	// AutoAugment
 								info.AutoAugment = std::stof(record);
 								break;
-							case 25:		// HorizontalFlip
+							case 25:	// HorizontalFlip
 								info.HorizontalFlip = StringToBool(record);
 								break;
-							case 26:		// VerticalFlip
+							case 26:	// VerticalFlip
 								info.VerticalFlip = StringToBool(record);
 								break;
-							case 27:		// ColorCast
+							case 27:	// ColorCast
 								info.ColorCast = std::stof(record);
 								break;
-							case 28:		// ColorAngle
+							case 28:	// ColorAngle
 								info.ColorAngle = std::stoull(record);
 								break;
-							case 29:		// Distortion
+							case 29:	// Distortion
 								info.Distortion = std::stof(record);
 								break;
-							case 30:		// Interpolation
+							case 30:	// Interpolation
 							{
 								const auto interpolation = magic_enum::enum_cast<Interpolations>(record);
 								if (interpolation.has_value())
@@ -3019,46 +3019,47 @@ namespace dnn
 									info.Interpolation = Interpolations::Linear;
 							}
 							break;
-							case 31:		// Scaling
+							case 31:	// Scaling
 								info.Scaling = std::stof(record);
 								break;
-							case 32:		// Rotation
+							case 32:	// Rotation
 								info.Rotation = std::stof(record);
 								break;
-							case 33:		// AvgTrainLoss
+							case 33:	// AvgTrainLoss
 								info.AvgTrainLoss = std::stof(record);
 								break;
-							case 34:		// TrainErrors
+							case 34:	// TrainErrors
 								info.TrainErrors = std::stoull(record);
 								break;
-							case 35:		// TrainErrorPercentage
+							case 35:	// TrainErrorPercentage
 								info.TrainErrorPercentage = std::stof(record);
 								break;
-							case 36:		// TrainAccuracy
+							case 36:	// TrainAccuracy
 								info.TrainAccuracy = std::stof(record);
 								break;
-							case 37:		// AvgTestLoss
+							case 37:	// AvgTestLoss
 								info.AvgTestLoss = std::stof(record);
 								break;
-							case 38:		// TestErrors
+							case 38:	// TestErrors
 								info.TestErrors = std::stoull(record);
 								break;
-							case 39:		// TestErrorPercentage
+							case 39:	// TestErrorPercentage
 								info.TestErrorPercentage = std::stof(record);
 								break;
-							case 40:		// TestAccuracy
+							case 40:	// TestAccuracy
 								info.TestAccuracy = std::stof(record);
 								break;
-							case 41:		// ElapsedTicks
+							case 41:	// ElapsedTicks
 								info.ElapsedTicks = std::stoll(record);
 								break;
-							case 42:		// ElapsedTime
+							case 42:	// ElapsedTime
 								info.ElapsedTime = record;
 								break;
 							}
 						}
 						catch (std::exception&)
 						{
+							std::setlocale(LC_ALL, userLocale);
 							return false;
 						}
 					}
@@ -3066,7 +3067,10 @@ namespace dnn
 					{
 						// check header is valid
 						if (headers.find(record) == headers.end())
+						{
+							std::setlocale(LC_ALL, userLocale);
 							return false;
+						}
 					}
 
 					idx++;
@@ -3077,10 +3081,11 @@ namespace dnn
 
 				counter++;
 			}
-
+			
 			tmpLog.shrink_to_fit();
 			Log = std::vector<LogInfo>(tmpLog);
 
+			std::setlocale(LC_ALL, userLocale);
 			return true;
 		}
 
