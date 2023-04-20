@@ -8,8 +8,7 @@
 class CsvFile
 {
 private:
-    char* userLocale;
-    std::ofstream os;
+      std::ofstream os;
 
 public:
     const std::string Separator;
@@ -18,9 +17,10 @@ public:
     CsvFile(const std::string& filename, const std::string& separator = ";", const std::string& quote = "") :
         Separator(separator),
         Quote(quote),
-        userLocale(std::setlocale(LC_ALL, "C")), 
         os()
     {
+        std::setlocale(LC_ALL, "C");
+
         os.exceptions(std::ios::failbit | std::ios::badbit);
         os.open(filename);
     }
@@ -29,7 +29,6 @@ public:
     {
         Flush();
         os.close();
-        std::setlocale(LC_ALL, userLocale);
     }
 
     void Flush()
@@ -109,9 +108,7 @@ inline static std::string ReadFileToString(const std::string& fileName)
     if (!file.bad() && file.is_open())
     {
         auto ss = std::ostringstream{};
-
         ss << file.rdbuf();
-
         return ss.str();
     }
 
