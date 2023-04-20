@@ -2898,7 +2898,9 @@ namespace dnn
 			headers.insert(std::string("ElapsedTicks"));
 			headers.insert(std::string("ElapsedTime"));
 
-			auto userLocale = std::setlocale(LC_ALL, "");
+			auto oldLocale = std::setlocale(LC_ALL, NULL);
+			auto newLocale = std::setlocale(LC_ALL, "");
+
 			const auto fileContents = ReadFileToString(fileName);
 			auto sstream = std::istringstream(fileContents);
 			const auto delimiter = ';';
@@ -3062,7 +3064,7 @@ namespace dnn
 						}
 						catch (std::exception&)
 						{
-							std::setlocale(LC_ALL, userLocale);
+							std::setlocale(LC_ALL, oldLocale);
 							return false;
 						}
 					}
@@ -3071,7 +3073,7 @@ namespace dnn
 						// check header is valid
 						if (headers.find(record) == headers.end())
 						{
-							std::setlocale(LC_ALL, userLocale);
+							std::setlocale(LC_ALL, oldLocale);
 							return false;
 						}
 					}
@@ -3088,7 +3090,7 @@ namespace dnn
 			tmpLog.shrink_to_fit();
 			Log = std::vector<LogInfo>(tmpLog);
 
-			std::setlocale(LC_ALL, userLocale);
+			std::setlocale(LC_ALL, oldLocale);
 			return true;
 		}
 
