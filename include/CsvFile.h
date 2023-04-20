@@ -19,7 +19,7 @@ public:
         Quote(quote),
         os()
     {
-        std::setlocale(LC_ALL, "C");
+        std::setlocale(LC_ALL, "");
 
         os.exceptions(std::ios::failbit | std::ios::badbit);
         os.open(filename);

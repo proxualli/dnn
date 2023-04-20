@@ -1561,7 +1561,10 @@ namespace dnn
 				CurrentCycle = CurrentTrainingRate.Cycles;
 			
 				if (!ChangeResolution(CurrentTrainingRate.N, CurrentTrainingRate.D, CurrentTrainingRate.H, CurrentTrainingRate.W, CurrentTrainingRate.PadD, CurrentTrainingRate.PadH, CurrentTrainingRate.PadW))
+				{
+					State.store(States::Completed);
 					return;
+				}
 				
 				if (Dropout != CurrentTrainingRate.Dropout)
 					ChangeDropout(CurrentTrainingRate.Dropout, BatchSize);
@@ -1595,8 +1598,12 @@ namespace dnn
 						layer->ResetOptimizer(Optimizer);
 				else
 					for (auto& layer : Layers)
-						layer->CheckOptimizer(Optimizer);
-
+						if (layer->CheckOptimizer(Optimizer))
+						{
+							State.store(States::Completed);
+							return;
+						}
+			
 				FirstUnlockedLayer.store(Layers.size() - 2);
 				for (auto i = 0ull; i < Layers.size(); i++)
 					if (Layers[i]->Lockable() && !Layers[i]->LockUpdate.load())
@@ -1614,7 +1621,10 @@ namespace dnn
 						Rate = CurrentTrainingRate.MaximumRate;
 						
 						if (!ChangeResolution(CurrentTrainingRate.N, CurrentTrainingRate.D, CurrentTrainingRate.H, CurrentTrainingRate.W, CurrentTrainingRate.PadD, CurrentTrainingRate.PadH, CurrentTrainingRate.PadW))
+						{
+							State.store(States::Completed);
 							return;
+						}
 								
 						if (Dropout != CurrentTrainingRate.Dropout)
 							ChangeDropout(CurrentTrainingRate.Dropout, BatchSize);
@@ -1629,7 +1639,11 @@ namespace dnn
 									layer->ResetOptimizer(Optimizer);
 							else
 								for (auto& layer : Layers)
-									layer->CheckOptimizer(Optimizer);
+									if (layer->CheckOptimizer(Optimizer))
+									{
+										State.store(States::Completed);
+										return;
+									}
 						}
 					}
 

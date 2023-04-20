@@ -841,7 +841,7 @@ namespace dnn
 				return true;
 		}
 
-		void CheckOptimizer(const Optimizers optimizer)
+		bool CheckOptimizer(const Optimizers optimizer)
 		{
 			auto dirty = false;
 
@@ -851,6 +851,9 @@ namespace dnn
 				dirty = true;
 			if (std::isnan(Gamma) || std::isinf(Gamma))
 				dirty = true;
+
+			if (dirty)
+				return dirty;
 
 			switch (optimizer)
 			{
@@ -928,8 +931,7 @@ namespace dnn
 				break;
 			}
 
-			if (dirty)
-				ResetOptimizer(optimizer);
+			return dirty;
 		}
 
 		void ResetOptimizer(const Optimizers optimizer)
