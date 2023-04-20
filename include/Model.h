@@ -370,7 +370,7 @@ namespace dnn
 		UInt GroupIndex;
 		UInt CostIndex;
 		std::string CostName;
-
+		// Resolution
 		UInt N;
 		UInt D;
 		UInt H;
@@ -378,7 +378,7 @@ namespace dnn
 		UInt PadD;
 		UInt PadH;
 		UInt PadW;
-
+		// Regularization
 		Optimizers Optimizer;
 		Float Rate;
 		Float Eps;
@@ -387,7 +387,7 @@ namespace dnn
 		Float Gamma;
 		Float L2Penalty;
 		Float Dropout;
-		
+		// Augmentation
 		Float InputDropout;
 		Float Cutout;
 		bool CutMix;
@@ -400,16 +400,17 @@ namespace dnn
 		Interpolations Interpolation;
 		Float Scaling;
 		Float Rotation;
-
+		// Train
 		Float AvgTrainLoss;
 		UInt TrainErrors;
 		Float TrainErrorPercentage;
 		Float TrainAccuracy;
+		// Test
 		Float AvgTestLoss;
 		UInt TestErrors;
 		Float TestErrorPercentage;
 		Float TestAccuracy;
-
+		// Duration
 		long long ElapsedTicks;
 		std::string ElapsedTime;
 	};
@@ -2011,7 +2012,7 @@ namespace dnn
 				Rate = CurrentTrainingRate.MaximumRate;
 				CurrentCycle = CurrentTrainingRate.Cycles;
 
-				if (!ChangeResolution(CurrentTrainingRate.BatchSize, CurrentTrainingRate.Height, CurrentTrainingRate.Width, CurrentTrainingRate.PadH, CurrentTrainingRate.PadW))
+				if (!ChangeResolution(CurrentTrainingRate.N, CurrentTrainingRate.D, CurrentTrainingRate.H, CurrentTrainingRate.W, CurrentTrainingRate.PadD, CurrentTrainingRate.PadH, CurrentTrainingRate.PadW))
 					return;
 
 				if (Dropout != CurrentTrainingRate.Dropout)
@@ -2897,7 +2898,7 @@ namespace dnn
 			headers.insert(std::string("ElapsedTicks"));
 			headers.insert(std::string("ElapsedTime"));
 
-			auto userLocale = std::setlocale(LC_ALL, "C");
+			auto userLocale = std::setlocale(LC_ALL, "");
 			const auto fileContents = ReadFileToString(fileName);
 			auto sstream = std::istringstream(fileContents);
 			const auto delimiter = ';';
@@ -2923,37 +2924,37 @@ namespace dnn
 							case 1:			// Epoch
 								info.Epoch = std::stoull(record);
 								break;
-							case 3:			// GroupIndex
+							case 2:			// GroupIndex
 								info.GroupIndex = std::stoull(record);
 								break;
-							case 4:			// CostIndex
+							case 3:			// CostIndex
 								info.CostIndex = std::stoull(record);
 								break;
-							case 5:			// CostName
+							case 4:			// CostName
 								info.CostName = record;
 								break;
-							case 6:	// N
+							case 5:	// N
 								info.N = std::stoull(record);
 								break;
-							case 7:	// D
+							case 6:	// D
 								info.D = std::stoull(record);
 								break;
-							case 8:	// H
+							case 7:	// H
 								info.H = std::stoull(record);
 								break;
-							case 9:	// W
+							case 8:	// W
 								info.W = std::stoull(record);
 								break;
-							case 10:	// PadD
+							case 9:	// PadD
 								info.PadD = std::stoull(record);
 								break;
-							case 11:	// PadH
+							case 10:	// PadH
 								info.PadH = std::stoull(record);
 								break;
-							case 12:	// PadW
+							case 11:	// PadW
 								info.PadW = std::stoull(record);
 								break;
-							case 13:			// Optimizer
+							case 12:			// Optimizer
 							{
 								const auto optimizer = magic_enum::enum_cast<Optimizers>(record);
 								if (optimizer.has_value())
@@ -2962,55 +2963,55 @@ namespace dnn
 									info.Optimizer = Optimizers::SGDMomentum;
 							}
 							break;
-							case 14:	// Rate
+							case 13:	// Rate
 								info.Rate = std::stof(record);
 								break;
-							case 15:	// Eps
+							case 14:	// Eps
 								info.Eps = std::stof(record);
 								break;
-							case 16:	// Momentum
+							case 15:	// Momentum
 								info.Momentum = std::stof(record);
 								break;
-							case 17:	// Beta2
+							case 16:	// Beta2
 								info.Beta2 = std::stof(record);
 								break;
-							case 18:	// Gamma
+							case 17:	// Gamma
 								info.Gamma = std::stof(record);
 								break;
-							case 19:	// L2Penalty
+							case 18:	// L2Penalty
 								info.L2Penalty = std::stof(record);
 								break;
-							case 20:	// Dropout
+							case 19:	// Dropout
 								info.Dropout = std::stof(record);
 								break;
-							case 21:	// InputDropout
+							case 20:	// InputDropout
 								info.InputDropout = std::stof(record);
 								break;
-							case 22:	// Cutout
+							case 21:	// Cutout
 								info.Cutout = std::stof(record);
 								break;
-							case 23:	// CutMix
+							case 22:	// CutMix
 								info.CutMix = StringToBool(record);
 								break;
-							case 24:	// AutoAugment
+							case 23:	// AutoAugment
 								info.AutoAugment = std::stof(record);
 								break;
-							case 25:	// HorizontalFlip
+							case 24:	// HorizontalFlip
 								info.HorizontalFlip = StringToBool(record);
 								break;
-							case 26:	// VerticalFlip
+							case 25:	// VerticalFlip
 								info.VerticalFlip = StringToBool(record);
 								break;
-							case 27:	// ColorCast
+							case 26:	// ColorCast
 								info.ColorCast = std::stof(record);
 								break;
-							case 28:	// ColorAngle
+							case 27:	// ColorAngle
 								info.ColorAngle = std::stoull(record);
 								break;
-							case 29:	// Distortion
+							case 28:	// Distortion
 								info.Distortion = std::stof(record);
 								break;
-							case 30:	// Interpolation
+							case 29:	// Interpolation
 							{
 								const auto interpolation = magic_enum::enum_cast<Interpolations>(record);
 								if (interpolation.has_value())
@@ -3019,41 +3020,43 @@ namespace dnn
 									info.Interpolation = Interpolations::Linear;
 							}
 							break;
-							case 31:	// Scaling
+							case 30:	// Scaling
 								info.Scaling = std::stof(record);
 								break;
-							case 32:	// Rotation
+							case 31:	// Rotation
 								info.Rotation = std::stof(record);
 								break;
-							case 33:	// AvgTrainLoss
+							case 32:	// AvgTrainLoss
 								info.AvgTrainLoss = std::stof(record);
 								break;
-							case 34:	// TrainErrors
+							case 33:	// TrainErrors
 								info.TrainErrors = std::stoull(record);
 								break;
-							case 35:	// TrainErrorPercentage
+							case 34:	// TrainErrorPercentage
 								info.TrainErrorPercentage = std::stof(record);
 								break;
-							case 36:	// TrainAccuracy
+							case 35:	// TrainAccuracy
 								info.TrainAccuracy = std::stof(record);
 								break;
-							case 37:	// AvgTestLoss
+							case 36:	// AvgTestLoss
 								info.AvgTestLoss = std::stof(record);
 								break;
-							case 38:	// TestErrors
+							case 37:	// TestErrors
 								info.TestErrors = std::stoull(record);
 								break;
-							case 39:	// TestErrorPercentage
+							case 38:	// TestErrorPercentage
 								info.TestErrorPercentage = std::stof(record);
 								break;
-							case 40:	// TestAccuracy
+							case 39:	// TestAccuracy
 								info.TestAccuracy = std::stof(record);
 								break;
-							case 41:	// ElapsedTicks
+							case 40:	// ElapsedTicks
 								info.ElapsedTicks = std::stoll(record);
 								break;
-							case 42:	// ElapsedTime
+							case 41:	// ElapsedTime
 								info.ElapsedTime = record;
+								break;
+							default:
 								break;
 							}
 						}
