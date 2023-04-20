@@ -983,7 +983,7 @@ namespace
 		return text;
 	}
 
-	auto IsStringBool(std::string text)
+	auto IsStringBool(const std::string& text)
 	{
 		const auto textLower = StringToLower(text);
 		
@@ -993,7 +993,7 @@ namespace
 		return false;
 	}
 
-	auto StringToBool(std::string text)
+	auto StringToBool(const std::string& text)
 	{
 		const auto textLower = StringToLower(text);
 		
