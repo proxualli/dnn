@@ -1918,71 +1918,89 @@ namespace dnn
 							TestErrorPercentage = CostLayers[CostIndex]->TestErrorPercentage;
 							Accuracy = Float(100) - TestErrorPercentage;
 
-							// save the weights and definition
-							State.store(States::SaveWeights);
-							const auto fileName = PersistOptimizer ? (std::string("(") + StringToLower(std::string(magic_enum::enum_name<Datasets>(Dataset))) + std::string(")(") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(Optimizer))) + std::string(").bin")) : (std::string("(") + StringToLower(std::string(magic_enum::enum_name<Datasets>(Dataset))) + std::string(").bin"));
-							const auto dir = DataProv->StorageDirectory / std::string("definitions") / Name;
-							std::filesystem::create_directories(dir);
-							const auto epoch = std::string("(") + StringToLower(std::string(magic_enum::enum_name<Datasets>(Dataset))) + std::string(")(") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(Optimizer))) + std::string(")") + std::to_string(CurrentEpoch) + std::string("-") + std::to_string(CurrentCycle) + std::string("-") + std::to_string(TrainErrors) + std::string("-") + std::to_string(TestErrors);
-							const auto subdir = dir / epoch;
-							std::filesystem::current_path(dir);
-							std::filesystem::create_directories(subdir);
-							SaveWeights((subdir / fileName).string(), PersistOptimizer);
-							SaveDefinition((subdir / std::string("model.txt")).string());
-							SaveModel((subdir / std::string("model.bin")).string());
-							State.store(States::NewEpoch);
-							
-							const auto dur = timer.now() - timePointGlobal;
-							const auto [hrs, mins, secs, ms] = ChronoBurst(dur);
+							auto optimizerStillGood = true;
+							if (PersistOptimizer)
+								for (auto& layer : Layers)
+									if (layer->CheckOptimizer(Optimizer))
+									{
+										optimizerStillGood = false;
+										break;
+									}
 
-							auto logInfo = LogInfo{};
-							logInfo.AutoAugment = CurrentTrainingRate.AutoAugment;
-							logInfo.AvgTestLoss = AvgTestLoss;
-							logInfo.AvgTrainLoss = AvgTrainLoss;
-							logInfo.Beta2 = CurrentTrainingRate.Beta2;
-							logInfo.ColorAngle = CurrentTrainingRate.ColorAngle;
-							logInfo.ColorCast = CurrentTrainingRate.ColorCast;
-							logInfo.CostIndex = CostIndex;
-							logInfo.CostName = CostLayers[CostIndex]->Name;
-							logInfo.CutMix = CurrentTrainingRate.CutMix;
-							logInfo.Cutout = CurrentTrainingRate.Cutout;
-							logInfo.Cycle = CurrentCycle;
-							logInfo.D = CurrentTrainingRate.D;;
-							logInfo.Distortion = CurrentTrainingRate.Distortion;
-							logInfo.Dropout = CurrentTrainingRate.Dropout;
-							logInfo.ElapsedTicks = std::chrono::duration_cast<std::chrono::milliseconds>(dur).count();
-							logInfo.ElapsedTime = (hrs.count() < 10 ? std::string("0") : std::string("")) + std::to_string(hrs.count()) + std::string(":") + (mins.count() < 10 ? std::string("0") : std::string("")) + std::to_string(mins.count()) + std::string(":") + (secs.count() < 10 ? std::string("0") : std::string("")) + std::to_string(secs.count()) + std::string(".") + std::to_string(ms.count());
-							logInfo.Epoch = CurrentEpoch;
-							logInfo.Eps = CurrentTrainingRate.Eps;
-							logInfo.Gamma = CurrentTrainingRate.Gamma;
-							logInfo.GroupIndex = GroupIndex;
-							logInfo.H = CurrentTrainingRate.H;
-							logInfo.HorizontalFlip = CurrentTrainingRate.HorizontalFlip;
-							logInfo.InputDropout = CurrentTrainingRate.InputDropout;
-							logInfo.Interpolation = CurrentTrainingRate.Interpolation;
-							logInfo.L2Penalty = CurrentTrainingRate.L2Penalty;
-							logInfo.Momentum = CurrentTrainingRate.Momentum;
-							logInfo.N = CurrentTrainingRate.N;
-							logInfo.Optimizer = CurrentTrainingRate.Optimizer;
-							logInfo.PadD = CurrentTrainingRate.PadD;
-							logInfo.PadH = CurrentTrainingRate.PadH;
-							logInfo.PadW = CurrentTrainingRate.PadW;
-							logInfo.Rate = Rate;
-							logInfo.Rotation = CurrentTrainingRate.Rotation;
-							logInfo.Scaling = CurrentTrainingRate.Scaling;
-							logInfo.TestAccuracy = Float(100) - TestErrorPercentage;
-							logInfo.TestErrorPercentage = TestErrorPercentage;
-							logInfo.TestErrors = TestErrors;
-							logInfo.TrainAccuracy = Float(100) - TrainErrorPercentage;
-							logInfo.TrainErrorPercentage = TrainErrorPercentage;
-							logInfo.TrainErrors = TrainErrors;
-							logInfo.VerticalFlip = CurrentTrainingRate.VerticalFlip;
-							logInfo.W = CurrentTrainingRate.W;
+							if (optimizerStillGood)
+							{
+								// save the weights and definition
+								State.store(States::SaveWeights);
+								const auto fileName = PersistOptimizer ? (std::string("(") + StringToLower(std::string(magic_enum::enum_name<Datasets>(Dataset))) + std::string(")(") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(Optimizer))) + std::string(").bin")) : (std::string("(") + StringToLower(std::string(magic_enum::enum_name<Datasets>(Dataset))) + std::string(").bin"));
+								const auto dir = DataProv->StorageDirectory / std::string("definitions") / Name;
+								std::filesystem::create_directories(dir);
+								const auto epoch = std::string("(") + StringToLower(std::string(magic_enum::enum_name<Datasets>(Dataset))) + std::string(")(") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(Optimizer))) + std::string(")") + std::to_string(CurrentEpoch) + std::string("-") + std::to_string(CurrentCycle) + std::string("-") + std::to_string(TrainErrors) + std::string("-") + std::to_string(TestErrors);
+								const auto subdir = dir / epoch;
+								std::filesystem::current_path(dir);
+								std::filesystem::create_directories(subdir);
 
-							Log.push_back(logInfo);
-							SaveLog((subdir / std::string("log.csv")).string());
+								SaveWeights((subdir / fileName).string(), PersistOptimizer);
+								SaveDefinition((subdir / std::string("model.txt")).string());
+								SaveModel((subdir / std::string("model.bin")).string());
+								State.store(States::NewEpoch);
 
-							NewEpoch(CurrentCycle, CurrentEpoch, TotalEpochs, static_cast<UInt>(CurrentTrainingRate.Optimizer), CurrentTrainingRate.Beta2, CurrentTrainingRate.Gamma, CurrentTrainingRate.Eps, CurrentTrainingRate.HorizontalFlip, CurrentTrainingRate.VerticalFlip, CurrentTrainingRate.InputDropout, CurrentTrainingRate.Cutout, CurrentTrainingRate.CutMix, CurrentTrainingRate.AutoAugment, CurrentTrainingRate.ColorCast, CurrentTrainingRate.ColorAngle, CurrentTrainingRate.Distortion, static_cast<UInt>(CurrentTrainingRate.Interpolation), CurrentTrainingRate.Scaling, CurrentTrainingRate.Rotation, CurrentTrainingRate.MaximumRate, CurrentTrainingRate.N, CurrentTrainingRate.D, CurrentTrainingRate.H, CurrentTrainingRate.W, CurrentTrainingRate.PadD, CurrentTrainingRate.PadH, CurrentTrainingRate.PadW, CurrentTrainingRate.Momentum, CurrentTrainingRate.L2Penalty, CurrentTrainingRate.Dropout, AvgTrainLoss, TrainErrorPercentage, Float(100) - TrainErrorPercentage, TrainErrors, AvgTestLoss, TestErrorPercentage, Float(100) - TestErrorPercentage, TestErrors);
+								const auto dur = timer.now() - timePointGlobal;
+								const auto [hrs, mins, secs, ms] = ChronoBurst(dur);
+
+								auto logInfo = LogInfo{};
+								logInfo.AutoAugment = CurrentTrainingRate.AutoAugment;
+								logInfo.AvgTestLoss = AvgTestLoss;
+								logInfo.AvgTrainLoss = AvgTrainLoss;
+								logInfo.Beta2 = CurrentTrainingRate.Beta2;
+								logInfo.ColorAngle = CurrentTrainingRate.ColorAngle;
+								logInfo.ColorCast = CurrentTrainingRate.ColorCast;
+								logInfo.CostIndex = CostIndex;
+								logInfo.CostName = CostLayers[CostIndex]->Name;
+								logInfo.CutMix = CurrentTrainingRate.CutMix;
+								logInfo.Cutout = CurrentTrainingRate.Cutout;
+								logInfo.Cycle = CurrentCycle;
+								logInfo.D = CurrentTrainingRate.D;;
+								logInfo.Distortion = CurrentTrainingRate.Distortion;
+								logInfo.Dropout = CurrentTrainingRate.Dropout;
+								logInfo.ElapsedTicks = std::chrono::duration_cast<std::chrono::milliseconds>(dur).count();
+								logInfo.ElapsedTime = (hrs.count() < 10 ? std::string("0") : std::string("")) + std::to_string(hrs.count()) + std::string(":") + (mins.count() < 10 ? std::string("0") : std::string("")) + std::to_string(mins.count()) + std::string(":") + (secs.count() < 10 ? std::string("0") : std::string("")) + std::to_string(secs.count()) + std::string(".") + std::to_string(ms.count());
+								logInfo.Epoch = CurrentEpoch;
+								logInfo.Eps = CurrentTrainingRate.Eps;
+								logInfo.Gamma = CurrentTrainingRate.Gamma;
+								logInfo.GroupIndex = GroupIndex;
+								logInfo.H = CurrentTrainingRate.H;
+								logInfo.HorizontalFlip = CurrentTrainingRate.HorizontalFlip;
+								logInfo.InputDropout = CurrentTrainingRate.InputDropout;
+								logInfo.Interpolation = CurrentTrainingRate.Interpolation;
+								logInfo.L2Penalty = CurrentTrainingRate.L2Penalty;
+								logInfo.Momentum = CurrentTrainingRate.Momentum;
+								logInfo.N = CurrentTrainingRate.N;
+								logInfo.Optimizer = CurrentTrainingRate.Optimizer;
+								logInfo.PadD = CurrentTrainingRate.PadD;
+								logInfo.PadH = CurrentTrainingRate.PadH;
+								logInfo.PadW = CurrentTrainingRate.PadW;
+								logInfo.Rate = Rate;
+								logInfo.Rotation = CurrentTrainingRate.Rotation;
+								logInfo.Scaling = CurrentTrainingRate.Scaling;
+								logInfo.TestAccuracy = Float(100) - TestErrorPercentage;
+								logInfo.TestErrorPercentage = TestErrorPercentage;
+								logInfo.TestErrors = TestErrors;
+								logInfo.TrainAccuracy = Float(100) - TrainErrorPercentage;
+								logInfo.TrainErrorPercentage = TrainErrorPercentage;
+								logInfo.TrainErrors = TrainErrors;
+								logInfo.VerticalFlip = CurrentTrainingRate.VerticalFlip;
+								logInfo.W = CurrentTrainingRate.W;
+
+								Log.push_back(logInfo);
+								SaveLog((subdir / std::string("log.csv")).string());
+
+								NewEpoch(CurrentCycle, CurrentEpoch, TotalEpochs, static_cast<UInt>(CurrentTrainingRate.Optimizer), CurrentTrainingRate.Beta2, CurrentTrainingRate.Gamma, CurrentTrainingRate.Eps, CurrentTrainingRate.HorizontalFlip, CurrentTrainingRate.VerticalFlip, CurrentTrainingRate.InputDropout, CurrentTrainingRate.Cutout, CurrentTrainingRate.CutMix, CurrentTrainingRate.AutoAugment, CurrentTrainingRate.ColorCast, CurrentTrainingRate.ColorAngle, CurrentTrainingRate.Distortion, static_cast<UInt>(CurrentTrainingRate.Interpolation), CurrentTrainingRate.Scaling, CurrentTrainingRate.Rotation, CurrentTrainingRate.MaximumRate, CurrentTrainingRate.N, CurrentTrainingRate.D, CurrentTrainingRate.H, CurrentTrainingRate.W, CurrentTrainingRate.PadD, CurrentTrainingRate.PadH, CurrentTrainingRate.PadW, CurrentTrainingRate.Momentum, CurrentTrainingRate.L2Penalty, CurrentTrainingRate.Dropout, AvgTrainLoss, TrainErrorPercentage, Float(100) - TrainErrorPercentage, TrainErrors, AvgTestLoss, TestErrorPercentage, Float(100) - TestErrorPercentage, TestErrors);
+							}
+							else
+							{
+								State.store(States::Completed);
+								return;
+							}
 						}
 						else
 							break;
