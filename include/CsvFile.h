@@ -27,7 +27,7 @@ public:
     CsvFile(const std::string& filename, const std::string& separator = ";", const std::string& quote = "") :
         Separator(separator),
         Quote(quote),
-        loc(std::locale("", std::locale::all)),
+        loc(std::locale("")),
         os()
     {
         std::setlocale(LC_ALL, "");
