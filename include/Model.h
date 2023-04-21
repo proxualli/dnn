@@ -37,6 +37,15 @@
 
 namespace dnn
 {
+	struct no_separator : std::numpunct<char>
+	{
+	protected:
+		virtual string_type do_grouping() const
+		{
+			return "\000";	// groups of 0 (disable)
+		}
+	};
+
 	enum class TaskStates
 	{
 		Paused = 0,
@@ -2930,14 +2939,15 @@ namespace dnn
 			headers.insert(std::string("ElapsedTicks"));
 			headers.insert(std::string("ElapsedTime"));
 
-			std::setlocale(LC_ALL, "");
-
-			const auto fileContents = ReadFileToString(fileName);
-			auto sstream = std::istringstream(fileContents);
 			const auto delimiter = ';';
 			auto tmpLog = std::vector<LogInfo>();
 			auto record = std::string("");
 			auto counter = 0ull;
+
+			auto loc = std::locale::global(std::locale(std::locale(""), new no_separator()));
+			const auto fileContents = ReadFileToString(fileName);
+			auto sstream = std::istringstream(fileContents);
+			
 			while (std::getline(sstream, record))
 			{
 				auto line = std::istringstream(record);
@@ -2951,34 +2961,34 @@ namespace dnn
 						{
 							switch (idx)
 							{
-							case 0:			// Cycle
+							case 0:		// Cycle
 								info.Cycle = std::stoull(record);
 								break;
-							case 1:			// Epoch
+							case 1:		// Epoch
 								info.Epoch = std::stoull(record);
 								break;
-							case 2:			// GroupIndex
+							case 2:		// GroupIndex
 								info.GroupIndex = std::stoull(record);
 								break;
-							case 3:			// CostIndex
+							case 3:		// CostIndex
 								info.CostIndex = std::stoull(record);
 								break;
-							case 4:			// CostName
+							case 4:		// CostName
 								info.CostName = record;
 								break;
-							case 5:	// N
+							case 5:		// N
 								info.N = std::stoull(record);
 								break;
-							case 6:	// D
+							case 6:		// D
 								info.D = std::stoull(record);
 								break;
-							case 7:	// H
+							case 7:		// H
 								info.H = std::stoull(record);
 								break;
-							case 8:	// W
+							case 8:		// W
 								info.W = std::stoull(record);
 								break;
-							case 9:	// PadD
+							case 9:		// PadD
 								info.PadD = std::stoull(record);
 								break;
 							case 10:	// PadH
@@ -2987,7 +2997,7 @@ namespace dnn
 							case 11:	// PadW
 								info.PadW = std::stoull(record);
 								break;
-							case 12:			// Optimizer
+							case 12:	// Optimizer
 							{
 								const auto optimizer = magic_enum::enum_cast<Optimizers>(record);
 								if (optimizer.has_value())
@@ -3095,7 +3105,7 @@ namespace dnn
 						}
 						catch (std::exception&)
 						{
-							std::setlocale(LC_ALL, "C");
+							std::locale::global(loc);
 							return false;
 						}
 					}
@@ -3104,7 +3114,7 @@ namespace dnn
 						// check header is valid
 						if (headers.find(record) == headers.end())
 						{
-							std::setlocale(LC_ALL, "C");
+							std::locale::global(loc);
 							return false;
 						}
 					}
@@ -3121,7 +3131,7 @@ namespace dnn
 			tmpLog.shrink_to_fit();
 			Log = std::vector<LogInfo>(tmpLog);
 
-			std::setlocale(LC_ALL, "C");
+			std::locale::global(loc);
 			return true;
 		}
 
