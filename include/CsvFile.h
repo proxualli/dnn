@@ -27,7 +27,7 @@ public:
     CsvFile(const std::string& filename, const std::string& separator = ";", const std::string& quote = "") :
         Separator(separator),
         Quote(quote),
-        loc(std::locale(std::locale("", std::locale::all), new no_separator())),
+        loc(std::locale(std::locale(""), new no_separator())),
         os()
     {
         os.exceptions(std::ios::failbit | std::ios::badbit);
