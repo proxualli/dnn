@@ -8,7 +8,6 @@
 class CsvFile
 {
 private:
-    const std::locale loc;
     std::ofstream os;
      
     struct no_separator : std::numpunct<char>
@@ -27,12 +26,10 @@ public:
     CsvFile(const std::string& filename, const std::string& separator = ";", const std::string& quote = "") :
         Separator(separator),
         Quote(quote),
-        loc(std::locale(std::locale(""), new no_separator())),
         os()
     {
         os.exceptions(std::ios::failbit | std::ios::badbit);
         os.open(filename);
-        os.imbue(loc);
     }
 
     ~CsvFile()
@@ -76,8 +73,8 @@ public:
 
     CsvFile& operator << (const float& val)
     {
-        std::stringstream stream;
-        stream.imbue(loc);
+        auto stream = std::stringstream();
+        stream.imbue(std::locale(""));
         stream << std::setprecision(std::streamsize(10)) << std::fixed << val;
         os << stream.str() << Separator;
         return *this;
@@ -85,8 +82,8 @@ public:
 
     CsvFile& operator << (const double& val)
     {
-        std::stringstream stream;
-        stream.imbue(loc);
+        auto stream = std::stringstream();
+        stream.imbue(std::locale(""));
         stream << std::setprecision(std::streamsize(16)) << std::fixed << val;
         os << stream.str() << Separator;
         return *this;
@@ -95,6 +92,7 @@ public:
     template<typename T>
     CsvFile& operator << (const T& val)
     {
+        os.imbue(std::locale(std::locale(""), new no_separator()));
         os << val << Separator;
         return *this;
     }
