@@ -27,10 +27,9 @@ public:
     CsvFile(const std::string& filename, const std::string& separator = ";", const std::string& quote = "") :
         Separator(separator),
         Quote(quote),
-        loc(std::locale("")),
+        loc(std::locale::global(std::locale(std::locale(""), new no_separator()))),
         os()
     {
-        std::setlocale(LC_ALL, "");
         os.exceptions(std::ios::failbit | std::ios::badbit);
         os.open(filename);
     }
@@ -39,7 +38,7 @@ public:
     {
         Flush();
         os.close();
-        std::setlocale(LC_ALL, "C");
+        std::locale::global(loc);
     }
 
     void Flush()
@@ -94,7 +93,7 @@ public:
     template<typename T>
     CsvFile& operator << (const T& val)
     {
-        os.imbue(std::locale(loc, new no_separator()));
+        //os.imbue(std::locale(loc, new no_separator()));
         os << val << Separator;
         return *this;
     }

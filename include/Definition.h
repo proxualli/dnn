@@ -122,8 +122,7 @@ namespace dnn
 
 	Model* Parse(const std::string& definition, CheckMsg& msg, const bool onlyCheck = false, Dataprovider* dataprovider = nullptr)
 	{
-		std::setlocale(LC_ALL, "C");
-
+		auto loc = std::locale::global(std::locale::classic());
 		auto model = static_cast<Model*>(nullptr);
 		auto dataset = Datasets::cifar10;
 		auto classes = UInt(10);
@@ -2578,6 +2577,8 @@ namespace dnn
 			model->ResetWeights();
 			
 		msg = CheckMsg(0, 0, "No issues found", false);	// All checks have passed
+		
+		std::locale::global(loc);
 
 		return model;
 
@@ -2587,6 +2588,8 @@ namespace dnn
 			model->~Model();
 			model = nullptr;
 		}
+
+		std::locale::global(loc);
 
 		return nullptr;
 	}
