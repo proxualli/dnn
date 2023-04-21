@@ -2579,7 +2579,6 @@ namespace dnn
 		msg = CheckMsg(0, 0, "No issues found", false);	// All checks have passed
 		
 		std::locale::global(loc);
-
 		return model;
 
 	FAIL:
@@ -2590,7 +2589,6 @@ namespace dnn
 		}
 
 		std::locale::global(loc);
-
 		return nullptr;
 	}
 

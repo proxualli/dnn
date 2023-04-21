@@ -3266,6 +3266,7 @@ namespace dnn
 		s.value4b(o.Momentum);
 		s.value4b(o.Beta2);
 		s.value4b(o.L2Penalty);
+		s.value4b(o.Dropout);
 		s.value4b(o.Eps);
 		s.value8b(o.N);
 		s.value8b(o.D);
