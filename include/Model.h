@@ -2189,7 +2189,7 @@ namespace dnn
 				AvgTestLoss = CostLayers[CostIndex]->AvgTestLoss;
 				TestErrors = CostLayers[CostIndex]->TestErrors;
 				TestErrorPercentage = CostLayers[CostIndex]->TestErrorPercentage;
-				Accuracy = Float(100) - TestErrorPercentage;
+				TestAccuracy = Float(100) - TestErrorPercentage;
 
 				/*
 				auto fileName = std::string("C:\\test.txt");
