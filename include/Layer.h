@@ -1081,6 +1081,9 @@ namespace dnn
 					auto stddev = weightsGain * std::sqrt(Float(2) / weightsScope);
 					auto distribution = std::normal_distribution<Float>(Float(0), stddev);
 					std::generate_n(weights.begin(), WeightCount, [&]() { return distribution(rndEngine); });
+					for (auto weight : weights)
+						if (weight == Float(0))
+							throw std::exception("zero");
 				}
 				break;
 

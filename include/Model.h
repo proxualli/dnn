@@ -40,9 +40,17 @@ namespace dnn
 	struct no_separator : std::numpunct<char>
 	{
 	protected:
-		virtual string_type do_grouping() const
+		virtual char do_decimal_point() const
 		{
-			return "\000";	// groups of 0 (disable)
+			return ',';
+		}
+		virtual char do_thousands_sep() const
+		{
+			return '.';
+		}
+		virtual std::string do_grouping() const
+		{
+			return std::string("");     // no groups
 		}
 	};
 
@@ -2946,8 +2954,7 @@ namespace dnn
 			auto tmpLog = std::vector<LogInfo>();
 			auto record = std::string("");
 			auto counter = 0ull;
-
-			auto loc = std::locale::global(std::locale(std::locale(""), new no_separator()));
+			auto oldLocale = std::locale::global(std::locale(std::locale(""), new no_separator()));
 			const auto fileContents = ReadFileToString(fileName);
 			auto sstream = std::istringstream(fileContents);
 			
@@ -3108,7 +3115,7 @@ namespace dnn
 						}
 						catch (std::exception&)
 						{
-							std::locale::global(loc);
+							std::locale::global(oldLocale);
 							return false;
 						}
 					}
@@ -3117,7 +3124,7 @@ namespace dnn
 						// check header is valid
 						if (headers.find(record) == headers.end())
 						{
-							std::locale::global(loc);
+							std::locale::global(oldLocale);
 							return false;
 						}
 					}
@@ -3134,7 +3141,7 @@ namespace dnn
 			tmpLog.shrink_to_fit();
 			Log = std::vector<LogInfo>(tmpLog);
 
-			std::locale::global(loc);
+			std::locale::global(oldLocale);
 			return true;
 		}
 

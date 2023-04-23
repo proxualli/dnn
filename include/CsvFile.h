@@ -1,24 +1,34 @@
 #pragma once
 #include <iostream>
+#include <locale>
 #include <fstream>
-#include <vector>
 #include <sstream>
-#include <map>
+#include <vector>
+
 
 class CsvFile
 {
 private:
-    const std::locale loc;
-    std::ofstream os;
-     
     struct no_separator : std::numpunct<char>
     {
     protected:
-        virtual string_type do_grouping() const
+        virtual char do_decimal_point() const
         {
-            return "\000";	// groups of 0 (disable)
+            return ',';
+        }
+        virtual char do_thousands_sep() const
+        {
+            return '.';
+        }
+        virtual std::string do_grouping() const
+        {
+            return std::string("");
         }
     };
+
+    const std::locale newLocale = std::locale(std::locale(""), new no_separator());
+    const std::locale oldLocale;
+    std::ofstream os;
 
 public:
     const char Separator;
@@ -27,7 +37,7 @@ public:
     CsvFile(const std::string& filename, const char separator = ';', const std::string& quote = "") :
         Separator(separator),
         Quote(quote),
-        loc(std::locale::global(std::locale(std::locale(""), new no_separator()))),
+        oldLocale(std::locale::global(newLocale)),
         os(std::ofstream())
     {
         os.exceptions(std::ios::failbit | std::ios::badbit);
@@ -38,7 +48,7 @@ public:
     {
         Flush();
         os.close();
-        std::locale::global(loc);
+        std::locale::global(oldLocale);
     }
 
     void Flush()
@@ -48,6 +58,11 @@ public:
 
     void EndRow()
     {
+        // erase last separator
+        auto pos = os.tellp();
+        pos -= 1;
+        os.seekp(pos);
+        // end of line
         os << std::endl;
     }
 
@@ -77,7 +92,7 @@ public:
     CsvFile& operator << (const float& val)
     {
         auto stream = std::stringstream();
-        stream.imbue(std::locale(""));
+        stream.imbue(newLocale);
         stream << std::setprecision(std::streamsize(10)) << std::fixed << val;
         os << stream.str() << Separator;
         return *this;
@@ -86,7 +101,7 @@ public:
     CsvFile& operator << (const double& val)
     {
         auto stream = std::stringstream();
-        stream.imbue(std::locale(""));
+        stream.imbue(newLocale);
         stream << std::setprecision(std::streamsize(16)) << std::fixed << val;
         os << stream.str() << Separator;
         return *this;
