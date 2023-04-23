@@ -8,6 +8,7 @@
 class CsvFile
 {
 private:
+    const std::locale loc;
     std::ofstream os;
      
     struct no_separator : std::numpunct<char>
@@ -20,13 +21,14 @@ private:
     };
 
 public:
-    const std::string Separator;
+    const char Separator;
     const std::string Quote;
 
-    CsvFile(const std::string& filename, const std::string& separator = ";", const std::string& quote = "") :
+    CsvFile(const std::string& filename, const char separator = ';', const std::string& quote = "") :
         Separator(separator),
         Quote(quote),
-        os()
+        loc(std::locale::global(std::locale(std::locale(""), new no_separator()))),
+        os(std::ofstream())
     {
         os.exceptions(std::ios::failbit | std::ios::badbit);
         os.open(filename);
@@ -36,6 +38,7 @@ public:
     {
         Flush();
         os.close();
+        std::locale::global(loc);
     }
 
     void Flush()
@@ -92,7 +95,6 @@ public:
     template<typename T>
     CsvFile& operator << (const T& val)
     {
-        os.imbue(std::locale(std::locale(""), new no_separator()));
         os << val << Separator;
         return *this;
     }

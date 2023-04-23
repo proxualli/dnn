@@ -503,7 +503,8 @@ namespace dnn
 		Float AvgTestLoss;
 		Float TrainErrorPercentage;
 		Float TestErrorPercentage;
-		Float Accuracy;
+		Float TrainAccuracy;
+		Float TestAccuracy;
 		Float SampleSpeed;
 		Float Rate;
 		bool BatchNormScaling;
@@ -604,7 +605,8 @@ namespace dnn
 			AvgTestLoss(Float(0)),
 			TestErrors(0),
 			TestErrorPercentage(Float(0)),
-			Accuracy(Float(0)),
+			TrainAccuracy(Float(0)),
+			TestAccuracy(Float(0)),
 			LabelIndex(0),
 			GroupIndex(0),
 			CostIndex(0),
@@ -1925,7 +1927,8 @@ namespace dnn
 							TestErrors = CostLayers[CostIndex]->TestErrors;
 							AvgTestLoss = CostLayers[CostIndex]->AvgTestLoss;
 							TestErrorPercentage = CostLayers[CostIndex]->TestErrorPercentage;
-							Accuracy = Float(100) - TestErrorPercentage;
+							TrainAccuracy = Float(100) - TrainErrorPercentage;
+							TestAccuracy = Float(100) - TestErrorPercentage;
 
 							auto optimizerStillGood = true;
 							if (PersistOptimizer)
@@ -2323,7 +2326,7 @@ namespace dnn
 				AvgTestLoss = CostLayers[CostIndex]->AvgTestLoss;
 				TestErrors = CostLayers[CostIndex]->TestErrors;
 				TestErrorPercentage = CostLayers[CostIndex]->TestErrorPercentage;
-				Accuracy = Float(100) - TestErrorPercentage;
+				TestAccuracy = Float(100) - TestErrorPercentage;
 
 				/*
 				auto fileName = std::string("C:\\test.txt");
@@ -3420,7 +3423,8 @@ namespace dnn
 		s.value4b(o.AvgTestLoss);
 		s.value4b(o.TrainErrorPercentage);
 		s.value4b(o.TestErrorPercentage);
-		s.value4b(o.Accuracy);
+		s.value4b(o.TrainAccuracy);
+		s.value4b(o.TestAccuracy);
 		s.value4b(o.SampleSpeed);
 		s.value4b(o.Rate);
 		s.boolValue(o.BatchNormScaling);
@@ -3432,6 +3436,6 @@ namespace dnn
 		s.container(o.TrainingStrategies, 1024);
 		s.boolValue(o.UseTrainingStrategy);
 		s.container(o.Log, 4096);
-		//s.value8b<UInt>(o.FirstUnlockedLayer);
+		//s.value8b(o.FirstUnlockedLayer);
 	};
 }
