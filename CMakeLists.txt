@@ -129,6 +129,7 @@ set(libdnn_headers
   include/Convolution.h
   include/ConvolutionTranspose.h
   include/Cost.h
+  include/CsvFile.h
   include/Dataprovider.h
   include/Definition.h
   include/Dense.h
