@@ -987,7 +987,7 @@ namespace
 	{
 		const auto textLower = StringToLower(text);
 		
-		if (textLower == "true" || textLower == "yes" || textLower == "false" || textLower == "no")
+		if (textLower == std::string("true") || textLower == std::string("yes") || textLower == std::string("false") || textLower == std::string("no"))
 			return true;
 
 		return false;
@@ -997,7 +997,7 @@ namespace
 	{
 		const auto textLower = StringToLower(text);
 		
-		if (textLower == "true" || textLower == "yes")
+		if (textLower == std::string("true") || textLower == std::string("yes"))
 			return true;
 
 		return false;
