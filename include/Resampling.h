@@ -90,7 +90,7 @@ namespace dnn
 			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(fwdDesc->dst_desc());
 
 			if (NeuronsFormat == dnnl::memory::format_tag::any)
-				ChosenFormat = GetDataFmt(*DstMemDesc);
+				ChosenFormat = GetMemoryFormat(*DstMemDesc);
 			else
 				ChosenFormat = PlainFmt;
 

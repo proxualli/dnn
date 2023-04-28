@@ -52,7 +52,7 @@ namespace dnn
 
 			WeightsMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::a));
 			PersistWeightsMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::a));
-			WeightsFormat = GetDataFmt(*WeightsMemDesc);
+			WeightsFormat = GetMemoryFormat(*WeightsMemDesc);
 		}
 
 		void UpdateResolution() final override
@@ -107,8 +107,8 @@ namespace dnn
 			{
 				if (NeuronsFormat == dnnl::memory::format_tag::any)
 				{
-					ChosenFormat = GetDataFmt(*InputLayer->DstMemDesc);
-					if (ChosenFormat != GetDataFmt(*InputLayer->DiffDstMemDesc))
+					ChosenFormat = GetMemoryFormat(*InputLayer->DstMemDesc);
+					if (ChosenFormat != GetMemoryFormat(*InputLayer->DiffDstMemDesc))
 						throw std::invalid_argument(std::string("Src and Diff format are different in ") + std::string(magic_enum::enum_name<LayerTypes>(LayerType)) + std::string(" layer ") + Name);
 				}
 				else

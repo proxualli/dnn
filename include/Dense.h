@@ -103,13 +103,12 @@ namespace dnn
 
 				Weights = weights;
 				WeightsMemDesc = std::make_unique<dnnl::memory::desc>(fwdDesc->weights_desc());
-				WeightsFormat = GetDataFmt(*WeightsMemDesc);
 			}
 
+			WeightsFormat = GetMemoryFormat(*WeightsMemDesc);
 			DstMemDesc = std::make_unique<dnnl::memory::desc>(fwdDesc->dst_desc());
 			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(fwdDesc->dst_desc());
-
-			ChosenFormat = GetDataFmt(*DstMemDesc);
+			ChosenFormat = GetMemoryFormat(*DstMemDesc);
 			
 			bwdAddDesc = std::make_unique<dnnl::binary::primitive_desc>(dnnl::binary::primitive_desc(Device.engine, dnnl::algorithm::binary_add, *InputLayer->DiffDstMemDesc, *InputLayer->DiffDstMemDesc, *InputLayer->DiffDstMemDesc));
 			

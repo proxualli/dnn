@@ -141,8 +141,7 @@ namespace dnn
 
 				Weights = weights;
 				WeightsMemDesc = std::make_unique<dnnl::memory::desc>(fwdDesc->weights_desc());
-				WeightsFormat = GetDataFmt(*WeightsMemDesc);
-
+			
 				/*
 				const auto dims = WeightsMemDesc->get_dims();
 				const auto format_kind = WeightsMemDesc->get_format_kind();
@@ -157,10 +156,10 @@ namespace dnn
 				*/
 			}
 
+			WeightsFormat = GetMemoryFormat(*WeightsMemDesc);
 			DstMemDesc = std::make_unique<dnnl::memory::desc>(fwdDesc->dst_desc());
 			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(fwdDesc->dst_desc());
-
-			ChosenFormat = GetDataFmt(*DstMemDesc);
+			ChosenFormat = GetMemoryFormat(*DstMemDesc);
 			
 			reorderFwdSrc = fwdDesc->src_desc() != *InputLayer->DstMemDesc;
 			reorderBwdWeightsSrc = bwdWeightsDesc->src_desc() != *InputLayer->DstMemDesc;

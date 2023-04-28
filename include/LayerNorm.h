@@ -43,7 +43,7 @@ namespace dnn
 
 			WeightsMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::a));
 			PersistWeightsMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::a));
-			WeightsFormat = GetDataFmt(*WeightsMemDesc);
+			WeightsFormat = GetMemoryFormat(*WeightsMemDesc);
 		}
 				
 		void UpdateResolution() final override

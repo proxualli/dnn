@@ -61,7 +61,7 @@ namespace dnn
 		{
 			DNN_UNREF_PAR(batchSize);
 
-			ChosenFormat = GetDataFmt(*InputLayer->DstMemDesc);
+			ChosenFormat = GetMemoryFormat(*InputLayer->DstMemDesc);
 
 			DstMemDesc = std::make_unique<dnnl::memory::desc>(*InputLayer->DstMemDesc);
 			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(*InputLayer->DiffDstMemDesc);

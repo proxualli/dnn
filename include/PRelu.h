@@ -73,7 +73,7 @@ namespace dnn
 			else
 			{
 				if (NeuronsFormat == dnnl::memory::format_tag::any)
-					ChosenFormat = LayerBeforeCost || IsPlainDataFmt(*InputLayer->DstMemDesc) ? PlainFmt : GetDataFmt(*InputLayer->DstMemDesc);
+					ChosenFormat = LayerBeforeCost || IsPlainDataFmt(*InputLayer->DstMemDesc) ? PlainFmt : GetMemoryFormat(*InputLayer->DstMemDesc);
 				else
 					ChosenFormat = PlainFmt;
 
@@ -103,13 +103,13 @@ namespace dnn
 
 				Biases = weights;
 				WeightsMemDesc = std::make_unique<dnnl::memory::desc>(fwdDescPRelu->weights_desc());
-				WeightsFormat = GetDataFmt(*WeightsMemDesc);
+				WeightsFormat = GetMemoryFormat(*WeightsMemDesc);
 			}
 
 			DstMemDesc = std::make_unique<dnnl::memory::desc>(fwdDescPRelu->dst_desc());
 			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(fwdDescPRelu->dst_desc());
 
-			ChosenFormat = GetDataFmt(*DstMemDesc);
+			ChosenFormat = GetMemoryFormat(*DstMemDesc);
 
 			reorderFwdSrc = fwdDescPRelu->src_desc() != *InputLayer->DstMemDesc;
 			reorderBwdSrc = bwdDescPRelu->src_desc() != *InputLayer->DstMemDesc;

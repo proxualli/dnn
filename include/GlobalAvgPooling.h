@@ -81,7 +81,7 @@ namespace dnn
 			else
 			{
 				if (NeuronsFormat == dnnl::memory::format_tag::any)
-					ChosenFormat = GetDataFmt(*InputLayer->DstMemDesc);
+					ChosenFormat = GetMemoryFormat(*InputLayer->DstMemDesc);
 				else
 					ChosenFormat = PlainFmt;
 

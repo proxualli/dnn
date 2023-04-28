@@ -64,8 +64,8 @@ namespace dnn
 			{
 				if (NeuronsFormat == dnnl::memory::format_tag::any)
 				{
-					ChosenFormat = GetDataFmt(*Inputs[first]->DstMemDesc);
-					if (ChosenFormat != GetDataFmt(*Inputs[first]->DiffDstMemDesc))
+					ChosenFormat = GetMemoryFormat(*Inputs[first]->DstMemDesc);
+					if (ChosenFormat != GetMemoryFormat(*Inputs[first]->DiffDstMemDesc))
 						throw std::invalid_argument("Src and Diff format are different in " + std::string(magic_enum::enum_name<LayerTypes>(LayerType)) + " layer " + Name);
 				}
 				else
