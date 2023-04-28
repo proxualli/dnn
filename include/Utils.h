@@ -942,23 +942,23 @@ namespace
 
 	auto FloatToString(const Float value, const std::streamsize precision = 8)
 	{
-		std::stringstream stream; 
-		stream << std::setprecision(precision) << value;
-		return stream.str();
+		std::stringstream ss; 
+		ss << std::setprecision(precision) << value;
+		return ss.str();
 	}
 
 	auto FloatToStringFixed(const Float value, const std::streamsize precision = 8)
 	{
-		std::stringstream stream; 
-		stream << std::setprecision(precision) << std::fixed << value;
-		return stream.str();
+		std::stringstream ss; 
+		ss << std::setprecision(precision) << std::fixed << value;
+		return ss.str();
 	}
 
 	auto FloatToStringScientific(const Float value, const std::streamsize precision = 4)
 	{
-		std::stringstream stream; 
-		stream << std::setprecision(precision) << std::scientific << value;
-		return stream.str();
+		std::stringstream ss; 
+		ss << std::setprecision(precision) << std::scientific << value;
+		return ss.str();
 	}
 
    	auto GetFileSize(std::string fileName)
@@ -1009,13 +1009,13 @@ namespace
 		MEMORYSTATUSEX statusEx;
 		statusEx.dwLength = sizeof(MEMORYSTATUSEX);
 		GlobalMemoryStatusEx(&statusEx);
-		std::cout << std::string("Available memory: ") << std::to_string(statusEx.ullAvailPhys/1024/1024) << std::string("/") << std::to_string(statusEx.ullTotalPhys/1024/1024) << " MB" << std::endl;
+		std::cout << std::string("Available memory: ") << std::to_string(statusEx.ullAvailPhys/1024/1024) << std::string("/") << std::to_string(statusEx.ullTotalPhys/1024/1024) << std::string(" MB") << std::endl;
 		return statusEx.ullAvailPhys;
 #else        
 		struct sysinfo info;
 		if (sysinfo(&info) == 0)
 		{
-			std::cout << std::string("Available memory: ") << std::to_string(info.freeram*info.mem_unit/1024/1024) << std::string("/") << std::to_string(info.totalram*info.mem_unit/1024/1024) << " MB" << std::endl;
+			std::cout << std::string("Available memory: ") << std::to_string(info.freeram*info.mem_unit/1024/1024) << std::string("/") << std::to_string(info.totalram*info.mem_unit/1024/1024) << std::string(" MB") << std::endl;
 			return static_cast<UInt>(info.freeram * info.mem_unit);
 		}
 		else
