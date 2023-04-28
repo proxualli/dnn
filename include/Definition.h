@@ -187,9 +187,9 @@ namespace dnn
 		auto fixedDepthDrop = false;
 
 		auto iss = std::istringstream(definition);
-		std::string strLine = "", modelName = "", layerName = "", params = "";
+		auto strLine = std::string(""), modelName = std::string(""), layerName = std::string(""), params = std::string("");
 		auto layerNames = std::vector<std::pair<std::string, UInt>>();
-		UInt line = 0, col = 0, modelMandatory = 0, layerMandatory = 0;
+		auto line = 0ull, col = 0ull, modelMandatory = 0ull, layerMandatory = 0ull;
 		auto isModel = true;
 			
 		while (SafeGetline(iss, strLine))
