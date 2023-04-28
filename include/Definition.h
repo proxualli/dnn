@@ -591,7 +591,7 @@ namespace dnn
 					}
 					catch (std::exception exception)
 					{
-						msg = CheckMsg(line, col, std::string("Exception occured when creating layer ") + name + nwl + nwl + exception.what());
+						msg = CheckMsg(line, col, std::string("Exception occured when creating layer ") + name + nwl + nwl + std::string(exception.what()));
 						goto FAIL;
 					}
 
