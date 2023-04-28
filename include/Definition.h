@@ -196,7 +196,7 @@ namespace dnn
 		{
 			line++;
 				
-			if (strLine == "")
+			if (strLine == std::string(""))
 				continue;
 
 			col = strLine.find_first_not_of("[],.=()-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789");
