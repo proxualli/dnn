@@ -161,7 +161,7 @@ namespace dnn
 		auto dropout = Float(0);
 		auto alpha = Float(0);
 		auto beta = Float(0);
-		bool acrossChannels = false;
+		auto acrossChannels = false;
 		auto localSize = UInt(5);
 		auto k = Float(1);
 		auto multiplier = UInt(1);
