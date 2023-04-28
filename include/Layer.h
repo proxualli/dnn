@@ -145,7 +145,6 @@ namespace dnn
 		}
 	};
 
-
 	enum class LayerTypes
 	{
 		Activation = 0,

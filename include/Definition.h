@@ -203,7 +203,7 @@ namespace dnn
 			if (col != std::string::npos)
 			{
 				col++;
-				msg =  CheckMsg(line, col, "Line contains illegal characters.");
+				msg =  CheckMsg(line, col, std::string("Line contains illegal characters."));
 				goto FAIL;
 			}
 			col = strLine.length() + 1;
@@ -216,7 +216,7 @@ namespace dnn
 				if (col != std::string::npos)
 				{
 					col++;
-					msg = CheckMsg(line, col, "Model or layer name contains illegal characters.");
+					msg = CheckMsg(line, col, std::string("Model or layer name contains illegal characters."));
 					goto FAIL;
 				}
 				col = strLine.length() + 1;
@@ -228,13 +228,13 @@ namespace dnn
 						modelName = layerName;
 						model = new Model(definition, dataprovider);
 							
-						layerNames.push_back(std::make_pair("Input", line));
+						layerNames.push_back(std::make_pair(std::string("Input"), line));
 					}
 					else
 					{
 						if (modelMandatory != 129)
 						{
-							msg = CheckMsg(line, col, "Model doesn't have the Dataset and Dim specifiers.");
+							msg = CheckMsg(line, col, std::string("Model doesn't have the Dataset and Dim specifiers."));
 							goto FAIL;
 						}
 
@@ -260,7 +260,7 @@ namespace dnn
 						model->DepthDrop = depthDrop;
 						model->FixedDepthDrop = fixedDepthDrop;
 
-						model->Layers.push_back(std::make_unique<Input>(model->Device, model->Format, "Input", c, model->RandomCrop ? d : d + padD, model->RandomCrop ? h : h + padH, model->RandomCrop ? w : w + padW));
+						model->Layers.push_back(std::make_unique<Input>(model->Device, model->Format, std::string("Input"), c, model->RandomCrop ? d : d + padD, model->RandomCrop ? h : h + padH, model->RandomCrop ? w : w + padW));
 
 						isModel = false;
 
@@ -271,7 +271,7 @@ namespace dnn
 
 						if (exists)
 						{
-							msg = CheckMsg(line, col, "Name already in use, must be unique.");
+							msg = CheckMsg(line, col, std::string("Name already in use, must be unique."));
 							goto FAIL;
 						}
 
@@ -282,7 +282,7 @@ namespace dnn
 				{
 					if (layerMandatory != 129)
 					{
-						msg = CheckMsg(line, col, "Layer doesn't have Type and Inputs specifiers.");
+						msg = CheckMsg(line, col, std::string("Layer doesn't have Type and Inputs specifiers."));
 						goto FAIL;
 					}
 
@@ -293,7 +293,7 @@ namespace dnn
 
 					if (exists)
 					{
-						msg = CheckMsg(line, col, "Layer name already in use, must be unique.");
+						msg = CheckMsg(line, col, std::string("Layer name already in use, must be unique."));
 						goto FAIL;
 					}
 
@@ -334,7 +334,7 @@ namespace dnn
 						case Activations::TanhExp:
 							if (alpha != 0 || beta != 0)
 							{
-								msg = CheckMsg(line - 1, col, "This Activation cannot have an Alpha or Beta parameter.");
+								msg = CheckMsg(line - 1, col, std::string("This Activation cannot have an Alpha or Beta parameter."));
 								goto FAIL;
 							}
 							break;
@@ -343,7 +343,7 @@ namespace dnn
 						case Activations::ClipV2:
 							if (alpha == 0 && beta == 0)
 							{
-								msg = CheckMsg(line - 1, col, "Activation used without Alpha and Beta parameter.");
+								msg = CheckMsg(line - 1, col, std::string("Activation used without Alpha and Beta parameter."));
 								goto FAIL;
 							}
 							break;
@@ -351,12 +351,12 @@ namespace dnn
 						case Activations::Relu:
 							if (alpha < 0)
 							{
-								msg = CheckMsg(line - 1, col, "This Activation Alpha parameter must be positive.");
+								msg = CheckMsg(line - 1, col, std::string("This Activation Alpha parameter must be positive."));
 								goto FAIL;
 							}
 							if (beta != 0)
 							{
-								msg = CheckMsg(line - 1, col, "This Activation doesn't have a Beta parameter.");
+								msg = CheckMsg(line - 1, col, std::string("This Activation doesn't have a Beta parameter."));
 								goto FAIL;
 							}
 							break;
@@ -385,7 +385,7 @@ namespace dnn
 							ok = false;
 						if (!ok)
 						{
-							msg = CheckMsg(line - 1, col, "Kernel, Stride, Dilation or Pad invalid in layer " + layerNames[model->Layers.size()].first);
+							msg = CheckMsg(line - 1, col, std::string("Kernel, Stride, Dilation or Pad invalid in layer ") + layerNames[model->Layers.size()].first);
 							goto FAIL;
 						}
 					}
@@ -405,7 +405,7 @@ namespace dnn
 
 						if (!ok)
 						{
-							msg = CheckMsg(line - 1, col, "Factor invalid in Resampling layer " + layerNames[model->Layers.size()].first);
+							msg = CheckMsg(line - 1, col, std::string("Factor invalid in Resampling layer ") + layerNames[model->Layers.size()].first);
 							goto FAIL;
 						}
 					}
@@ -414,7 +414,7 @@ namespace dnn
 					{
 						if (c != classes)
 						{
-							msg = CheckMsg(line - 1, col, "Cost layers hasn't the same number of channels as the dataset (" + std::to_string(classes) + ").");
+							msg = CheckMsg(line - 1, col, std::string("Cost layers hasn't the same number of channels as the dataset (") + std::to_string(classes) + std::string(")."));
 							goto FAIL;
 						}
 					}
@@ -437,13 +437,13 @@ namespace dnn
 						{
 							if (inputs.size() != 2)
 							{
-								msg = CheckMsg(line, col, "Layer " + name + " has no two inputs.");
+								msg = CheckMsg(line, col, std::string("Layer ") + name + std::string(" has no two inputs."));
 								goto FAIL;
 							}
 
 							if (inputs[0]->C != inputs[1]->C)
 							{
-								msg = CheckMsg(line, col, "Layer " + name + " has uneven channels in the input " + inputs[1]->Name + ", must have " + std::to_string(inputs[0]->C) + " channels.");
+								msg = CheckMsg(line, col, std::string("Layer ") + name + std::string(" has uneven channels in the input ") + inputs[1]->Name + std::string(", must have ") + std::to_string(inputs[0]->C) + std::string(" channels."));
 								goto FAIL;
 							}
 						}
@@ -453,7 +453,7 @@ namespace dnn
 						{
 							if (inputs.size() != 2)
 							{
-								msg = CheckMsg(line, col, "Layer " + name + " has no two inputs.");
+								msg = CheckMsg(line, col, std::string("Layer ") + name + std::string(" has no two inputs."));
 								goto FAIL;
 							}
 						}
@@ -463,7 +463,7 @@ namespace dnn
 						{
 							if (inputs.size() > 1)
 							{
-								msg = CheckMsg(line, col, "Layer " + name + " must have only one input.");
+								msg = CheckMsg(line, col, std::string("Layer ") + name + std::string(" must have only one input."));
 								goto FAIL;
 							}
 						}
@@ -591,7 +591,7 @@ namespace dnn
 					}
 					catch (std::exception exception)
 					{
-						msg = CheckMsg(line, col, "Exception occured when creating layer " + name + nwl + nwl + exception.what());
+						msg = CheckMsg(line, col, std::string("Exception occured when creating layer ") + name + nwl + nwl + exception.what());
 						goto FAIL;
 					}
 
@@ -650,12 +650,12 @@ namespace dnn
 			{
 				if (!isModel)
 				{
-					msg = CheckMsg(line, col, "Dataset cannot be specified in a layer.");
+					msg = CheckMsg(line, col, std::string("Dataset cannot be specified in a layer."));
 					goto FAIL;
 				}
 				if (modelMandatory > 0)
 				{
-					msg = CheckMsg(line, col, "Dataset must be specified first and only once in a model.");
+					msg = CheckMsg(line, col, std::string("Dataset must be specified first and only once in a model."));
 					goto FAIL;
 				}
 
@@ -668,7 +668,7 @@ namespace dnn
 						ok = true;
 				if (!ok)
 				{
-					msg = CheckMsg(line, col, "Dataset is not recognized.");
+					msg = CheckMsg(line, col, std::string("Dataset is not recognized."));
 					goto FAIL;
 				}
 
@@ -692,7 +692,7 @@ namespace dnn
 				}
 				else
 				{
-					msg = CheckMsg(line, col, "Dataset is not recognized.");
+					msg = CheckMsg(line, col, std::string("Dataset is not recognized."));
 					goto FAIL;
 				}
 
@@ -702,17 +702,17 @@ namespace dnn
 			{
 				if (!isModel)
 				{
-					msg = CheckMsg(line, col, "Dim cannot be specified in a layer.");
+					msg = CheckMsg(line, col, std::string("Dim cannot be specified in a layer."));
 					goto FAIL;
 				}
 				if (modelMandatory == 0)
 				{
-					msg = CheckMsg(line, col, "Dim must be specified second in a model.");
+					msg = CheckMsg(line, col, std::string("Dim must be specified second in a model."));
 					goto FAIL;
 				}
 				if (modelMandatory > 1)
 				{
-					msg = CheckMsg(line, col, "Dim must be specified only once in a model.");
+					msg = CheckMsg(line, col, std::string("Dim must be specified only once in a model."));
 					goto FAIL;
 				}
 
@@ -729,13 +729,13 @@ namespace dnn
 				}
 				catch (std::exception exception)
 				{
-					msg = CheckMsg(line, col, "Dim not recognized." + nwl + exception.what());
+					msg = CheckMsg(line, col, std::string("Dim not recognized.") + nwl + std::string(exception.what()));
 					goto FAIL;
 				}
 
 				if (values.size() != 3)
 				{
-					msg = CheckMsg(line, col, "Dim must have three values.");
+					msg = CheckMsg(line, col, std::string("Dim must have three values."));
 					goto FAIL;
 				}
 
@@ -746,17 +746,17 @@ namespace dnn
 
 				if (values[0] != 1 && values[0] != 3)
 				{
-					msg = CheckMsg(line, col, "First Dim (Channels) value must be 1 or 3.");
+					msg = CheckMsg(line, col, std::string("First Dim (Channels) value must be 1 or 3."));
 					goto FAIL;
 				}
 				if (values[1] < 28 || values[1] > 4096)
 				{
-					msg = CheckMsg(line, col, "Second Dim (Height) value must be in the range [28-4096].");
+					msg = CheckMsg(line, col, std::string("Second Dim (Height) value must be in the range [28-4096]."));
 					goto FAIL;
 				}
 				if (values[2] < 28 || values[2] > 4096)
 				{
-					msg = CheckMsg(line, col, "Third Dim (Width) value must be in the range [28-4096].");
+					msg = CheckMsg(line, col, std::string("Third Dim (Width) value must be in the range [28-4096]."));
 					goto FAIL;
 				}
 
@@ -771,7 +771,7 @@ namespace dnn
 			{
 				if (!isModel)
 				{
-					msg = CheckMsg(line, col, "MeanStd cannot be specified in a layer.");
+					msg = CheckMsg(line, col, std::string("MeanStd cannot be specified in a layer."));
 					goto FAIL;
 				}
 
@@ -779,7 +779,7 @@ namespace dnn
 
 				if (!IsStringBool(params))
 				{
-					msg = CheckMsg(line, col, "MeanStd value must be boolean (Yes/No or True/False).");
+					msg = CheckMsg(line, col, std::string("MeanStd value must be boolean (Yes/No or True/False)."));
 					goto FAIL;
 				}
 
@@ -789,7 +789,7 @@ namespace dnn
 			{
 				if (!isModel)
 				{
-					msg = CheckMsg(line, col, "MirrorPad cannot be specified in a layer.");
+					msg = CheckMsg(line, col, std::string("MirrorPad cannot be specified in a layer."));
 					goto FAIL;
 				}
 
@@ -806,13 +806,13 @@ namespace dnn
 				}
 				catch (std::exception exception)
 				{
-					msg = CheckMsg(line, col, "MirrorPad not recognized." + nwl + exception.what());
+					msg = CheckMsg(line, col, std::string("MirrorPad not recognized.") + nwl + std::string(exception.what()));
 					goto FAIL;
 				}
 
 				if (values.size() != 2)
 				{
-					msg = CheckMsg(line, col, "MirrorPad must have two values.");
+					msg = CheckMsg(line, col, std::string("MirrorPad must have two values."));
 					goto FAIL;
 				}
 
@@ -829,7 +829,7 @@ namespace dnn
 			{
 				if (!isModel)
 				{
-					msg = CheckMsg(line, col, "ZeroPad cannot be specified in a layer.");
+					msg = CheckMsg(line, col, std::string("ZeroPad cannot be specified in a layer."));
 					goto FAIL;
 				}
 
@@ -846,13 +846,13 @@ namespace dnn
 				}
 				catch (std::exception exception)
 				{
-					msg = CheckMsg(line, col, "ZeroPad not recognized." + nwl + exception.what());
+					msg = CheckMsg(line, col, std::string("ZeroPad not recognized.") + nwl + std::string(exception.what()));
 					goto FAIL;
 				}
 
 				if (values.size() != 2)
 				{
-					msg = CheckMsg(line, col, "ZeroPad must have two values.");
+					msg = CheckMsg(line, col, std::string("ZeroPad must have two values."));
 					goto FAIL;
 				}
 
@@ -869,7 +869,7 @@ namespace dnn
 			{
 				if (!isModel)
 				{
-					msg = CheckMsg(line, col, "RandomCrop cannot be specified in a layer.");
+					msg = CheckMsg(line, col, std::string("RandomCrop cannot be specified in a layer."));
 					goto FAIL;
 				}
 
@@ -877,7 +877,7 @@ namespace dnn
 						
 				if (!IsStringBool(params))
 				{
-					msg = CheckMsg(line, col, "RandomCrop value must be boolean (Yes/No or True/False).");
+					msg = CheckMsg(line, col, std::string("RandomCrop value must be boolean (Yes/No or True/False)."));
 					goto FAIL;
 				}
 
@@ -887,7 +887,7 @@ namespace dnn
 			{
 				if (!isModel)
 				{
-					msg = CheckMsg(line, col, "FixedDepthDrop cannot be specified in a layer.");
+					msg = CheckMsg(line, col, std::string("FixedDepthDrop cannot be specified in a layer."));
 					goto FAIL;
 				}
 
@@ -895,7 +895,7 @@ namespace dnn
 
 				if (!IsStringBool(params))
 				{
-					msg = CheckMsg(line, col, "FixedDepthDrop value must be boolean (Yes/No or True/False).");
+					msg = CheckMsg(line, col, std::string("FixedDepthDrop value must be boolean (Yes/No or True/False)."));
 					goto FAIL;
 				}
 
@@ -905,7 +905,7 @@ namespace dnn
 			{
 				if (!isModel)
 				{
-					msg = CheckMsg(line, col, "DepthDrop cannot be specified in a layer.");
+					msg = CheckMsg(line, col, std::string("DepthDrop cannot be specified in a layer."));
 					goto FAIL;
 				}
 
@@ -913,7 +913,7 @@ namespace dnn
 
 				if (params.find_first_not_of(".0123456789") != std::string::npos)
 				{
-					msg = CheckMsg(line, col, "DepthDrop contains illegal characters.");
+					msg = CheckMsg(line, col, std::string("DepthDrop contains illegal characters."));
 					goto FAIL;
 				}
 
@@ -923,13 +923,13 @@ namespace dnn
 				}
 				catch (std::exception exception)
 				{
-					msg = CheckMsg(line, col, "DepthDrop value not recognized." + nwl + exception.what());
+					msg = CheckMsg(line, col, std::string("DepthDrop value not recognized.") + nwl + std::string(exception.what()));
 					goto FAIL;
 				}
 
 				if (depthDrop < 0 || depthDrop >= 1)
 				{
-					msg = CheckMsg(line, col, "DepthDrop value must be in the range [0-1[");
+					msg = CheckMsg(line, col, std::string("DepthDrop value must be in the range [0-1["));
 					goto FAIL;
 				}
 
@@ -939,12 +939,12 @@ namespace dnn
 			{
 				if (isModel)
 				{
-					msg = CheckMsg(line, col, "Type cannot be specified in a model.");
+					msg = CheckMsg(line, col, std::string("Type cannot be specified in a model."));
 					goto FAIL;
 				}
 				if (layerMandatory > 0)
 				{
-					msg = CheckMsg(line, col, "Type must be specified first and only once in a layer.");
+					msg = CheckMsg(line, col, std::string("Type must be specified first and only once in a layer."));
 					goto FAIL;
 				}
 
@@ -958,12 +958,12 @@ namespace dnn
 						
 				if (params == "Input")
 				{
-					msg = CheckMsg(line, col, "Type Input cannot be used.");
+					msg = CheckMsg(line, col, std::string("Type Input cannot be used."));
 					goto FAIL;
 				}
 				if (!ok)
 				{
-					msg = CheckMsg(line, col, "Type is not recognized.");
+					msg = CheckMsg(line, col, std::string("Type is not recognized."));
 					goto FAIL;
 				}
 
@@ -972,7 +972,7 @@ namespace dnn
 					layerType = type.value();
 				else
 				{
-					msg = CheckMsg(line, col, "Type is not recognized.");
+					msg = CheckMsg(line, col, std::string("Type is not recognized."));
 					goto FAIL;
 				}
 
@@ -995,17 +995,17 @@ namespace dnn
 			{
 				if (isModel)
 				{
-					msg = CheckMsg(line, col, "Inputs cannot be specified in a model.");
+					msg = CheckMsg(line, col, std::string("Inputs cannot be specified in a model."));
 					goto FAIL;
 				}
 				if (layerMandatory == 0)
 				{
-					msg = CheckMsg(line, col, "Inputs must be specified second in a layer.");
+					msg = CheckMsg(line, col, std::string("Inputs must be specified second in a layer."));
 					goto FAIL;
 				}
 				if (layerMandatory > 1)
 				{
-					msg = CheckMsg(line, col, "Inputs must be specified only once in a layer.");
+					msg = CheckMsg(line, col, std::string("Inputs must be specified only once in a layer."));
 					goto FAIL;
 				}
 
@@ -1025,13 +1025,13 @@ namespace dnn
 							ok = true;
 					if (!ok)
 					{
-						msg = CheckMsg(line, col, "Inputs " + input + " doesn't exists.");
+						msg = CheckMsg(line, col, std::string("Inputs ") + input + std::string(" doesn't exists."));
 						goto FAIL;
 					}
 
 					if (input == layerNames.back().first)
 					{
-						msg = CheckMsg(line, col, "Inputs " + input + " is circular and isn't allowed.");
+						msg = CheckMsg(line, col, std::string("Inputs ") + input + std::string(" is circular and isn't allowed."));
 						goto FAIL;
 					}
 				}
@@ -1042,7 +1042,7 @@ namespace dnn
 			{
 				if (layerType != LayerTypes::Input && !isNormalizationLayer)
 				{
-					msg = CheckMsg(line, col, "Eps cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
+					msg = CheckMsg(line, col, std::string("Eps cannot be specified in a ") + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + std::string(" layer."));
 					goto FAIL;
 				}
 
@@ -1050,7 +1050,7 @@ namespace dnn
 
 				if (params.find_first_not_of(".0123456789") != std::string::npos)
 				{
-					msg = CheckMsg(line, col, "Momentum contains illegal characters.");
+					msg = CheckMsg(line, col, std::string("Momentum contains illegal characters."));
 					goto FAIL;
 				}
 
@@ -1060,13 +1060,13 @@ namespace dnn
 				}
 				catch (std::exception exception)
 				{
-					msg = CheckMsg(line, col, "Momentum value not recognized." + nwl + exception.what());
+					msg = CheckMsg(line, col, std::string("Momentum value not recognized.") + nwl + std::string(exception.what()));
 					goto FAIL;
 				}
 
 				if (momentum <= 0 || momentum >= 1)
 				{
-					msg = CheckMsg(line, col, "Momentum value must be in the range ]0-1[");
+					msg = CheckMsg(line, col, std::string("Momentum value must be in the range ]0-1["));
 					goto FAIL;
 				}
 
@@ -1077,7 +1077,7 @@ namespace dnn
 			{
 				if (layerType != LayerTypes::Input && !isNormalizationLayer)
 				{
-					msg = CheckMsg(line, col, "Eps cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
+					msg = CheckMsg(line, col, std::string("Eps cannot be specified in a ") + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + std::string(" layer."));
 					goto FAIL;
 				}
 
@@ -1085,7 +1085,7 @@ namespace dnn
 
 				if (!IsStringBool(params))
 				{
-					msg = CheckMsg(line, col, "Scaling value must be boolean (Yes/No or True/False).");
+					msg = CheckMsg(line, col, std::string("Scaling value must be boolean (Yes/No or True/False)."));
 					goto FAIL;
 				}
 
@@ -1098,7 +1098,7 @@ namespace dnn
 			{
 				if (layerType != LayerTypes::Input && !isNormalizationLayer && layerType != LayerTypes::Cost)
 				{
-					msg = CheckMsg(line, col, "Eps cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
+					msg = CheckMsg(line, col, std::string("Eps cannot be specified in a ") + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + std::string(" layer."));
 					goto FAIL;
 				}
 
@@ -1106,7 +1106,7 @@ namespace dnn
 					
 				if (params.find_first_not_of(".-eE0123456789") != std::string::npos)
 				{
-					msg = CheckMsg(line, col, "Eps contains illegal characters.");
+					msg = CheckMsg(line, col, std::string("Eps contains illegal characters."));
 					goto FAIL;
 				}
 
@@ -1116,13 +1116,13 @@ namespace dnn
 				}
 				catch (std::exception exception)
 				{
-					msg = CheckMsg(line, col, "Eps value not recognized." + nwl + exception.what());
+					msg = CheckMsg(line, col, std::string("Eps value not recognized.") + nwl + std::string(exception.what()));
 					goto FAIL;
 				}
 
-				if (eps <= 0.0f || eps > 1.0f)
+				if (eps <= Float(0) || eps > Float(1))
 				{
-					msg = CheckMsg(line, col, "Eps value must be in the range ]0-1]");
+					msg = CheckMsg(line, col, std::string("Eps value must be in the range ]0-1]"));
 					goto FAIL;
 				}
 
@@ -1135,7 +1135,7 @@ namespace dnn
 			{
 				if (!isNormalizationLayer && layerType != LayerTypes::Input && layerType != LayerTypes::PRelu && layerType != LayerTypes::DepthwiseConvolution && layerType != LayerTypes::Convolution && layerType != LayerTypes::ConvolutionTranspose && layerType != LayerTypes::Dense && layerType != LayerTypes::PartialDepthwiseConvolution)
 				{
-					msg = CheckMsg(line, col, "WeightsFiller cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
+					msg = CheckMsg(line, col, std::string("WeightsFiller cannot be specified in a ") + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + std::string(" layer."));
 					goto FAIL;
 				}
 
@@ -1155,7 +1155,7 @@ namespace dnn
 					
 				if (!ok)
 				{
-					msg = CheckMsg(line, col, "WeightsFiller not recognized.");
+					msg = CheckMsg(line, col, std::string("WeightsFiller not recognized."));
 					goto FAIL;
 				}
 
@@ -1170,7 +1170,7 @@ namespace dnn
 					{
 						if (value.find_first_not_of("().-eE0123456789") != std::string::npos)
 						{
-							msg = CheckMsg(line, col, "WeightsScale contains illegal characters.");
+							msg = CheckMsg(line, col, std::string("WeightsScale contains illegal characters."));
 							goto FAIL;
 						}
 
@@ -1184,19 +1184,19 @@ namespace dnn
 							}
 							catch (std::exception exception)
 							{
-								msg = CheckMsg(line, col, "WeightsScale value not recognized." + nwl + exception.what());
+								msg = CheckMsg(line, col, std::string("WeightsScale value not recognized.") + nwl + std::string(exception.what()));
 								goto FAIL;
 							}
 
 							if (!ok)
 							{
-								msg = CheckMsg(line, col, "WeightsScale value not recognized.");
+								msg = CheckMsg(line, col, std::string("WeightsScale value not recognized."));
 								goto FAIL;
 							}
 						}
 						else
 						{
-							msg = CheckMsg(line, col, "WeightsScale value not recognized.");
+							msg = CheckMsg(line, col, std::string("WeightsScale value not recognized."));
 							goto FAIL;
 						}
 					}
@@ -1218,7 +1218,7 @@ namespace dnn
 								{
 									if (value.find_first_not_of("(),.-eE0123456789") != std::string::npos)
 									{
-										msg = CheckMsg(line, col, "WeightsGain contains illegal characters.");
+										msg = CheckMsg(line, col, std::string("WeightsGain contains illegal characters."));
 										goto FAIL;
 									}
 
@@ -1232,19 +1232,19 @@ namespace dnn
 										}
 										catch (std::exception exception)
 										{
-											msg = CheckMsg(line, col, "WeightsGain value not recognized." + nwl + exception.what());
+											msg = CheckMsg(line, col, std::string("WeightsGain value not recognized.") + nwl + std::string(exception.what()));
 											goto FAIL;
 										}
 
 										if (!ok)
 										{
-											msg = CheckMsg(line, col, "WeightsGain value not recognized.");
+											msg = CheckMsg(line, col, std::string("WeightsGain value not recognized."));
 											goto FAIL;
 										}
 									}
 									else
 									{
-										msg = CheckMsg(line, col, "WeightsGain value not recognized.");
+										msg = CheckMsg(line, col, std::string("WeightsGain value not recognized."));
 										goto FAIL;
 									}
 								}
@@ -1260,7 +1260,7 @@ namespace dnn
 					{
 						if (value.find_first_not_of("().-eE0123456789") != std::string::npos)
 						{
-							msg = CheckMsg(line, col, "WeightsGain contains illegal characters.");
+							msg = CheckMsg(line, col, std::string("WeightsGain contains illegal characters."));
 							goto FAIL;
 						}
 
@@ -1274,19 +1274,19 @@ namespace dnn
 							}
 							catch (std::exception exception)
 							{
-								msg = CheckMsg(line, col, "WeightsGain value not recognized." + nwl + exception.what());
+								msg = CheckMsg(line, col, std::string("WeightsGain value not recognized.") + nwl + std::string(exception.what()));
 								goto FAIL;
 							}
 
 							if (!ok)
 							{
-								msg = CheckMsg(line, col, "WeightsGain value not recognized.");
+								msg = CheckMsg(line, col, std::string("WeightsGain value not recognized."));
 								goto FAIL;
 							}
 						}
 						else
 						{
-							msg = CheckMsg(line, col, "WeightsGain value not recognized.");
+							msg = CheckMsg(line, col, std::string("WeightsGain value not recognized."));
 							goto FAIL;
 						}
 					}
@@ -1333,7 +1333,7 @@ namespace dnn
 			{
 				if (!isNormalizationLayer && layerType != LayerTypes::Input && layerType != LayerTypes::PRelu && layerType != LayerTypes::DepthwiseConvolution && layerType != LayerTypes::Convolution && layerType != LayerTypes::ConvolutionTranspose && layerType != LayerTypes::Dense && layerType != LayerTypes::PartialDepthwiseConvolution)
 				{
-					msg = CheckMsg(line, col, "WeightsLRM cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
+					msg = CheckMsg(line, col, std::string("WeightsLRM cannot be specified in a ") + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + std::string(" layer."));
 					goto FAIL;
 				}
 
@@ -1341,7 +1341,7 @@ namespace dnn
 					
 				if (params.find_first_not_of("-.eE0123456789") != std::string::npos)
 				{
-					msg = CheckMsg(line, col, "WeightsLRM contains illegal characters.");
+					msg = CheckMsg(line, col, std::string("WeightsLRM contains illegal characters."));
 					goto FAIL;
 				}
 
@@ -1351,7 +1351,7 @@ namespace dnn
 				}
 				catch (std::exception exception)
 				{
-					msg = CheckMsg(line, col, "WeightsLRM value not recognized." + nwl + exception.what());
+					msg = CheckMsg(line, col, std::string("WeightsLRM value not recognized.") + nwl + std::string(exception.what()));
 					goto FAIL;
 				}
 
@@ -1364,7 +1364,7 @@ namespace dnn
 			{
 				if (!isNormalizationLayer && layerType != LayerTypes::Input && layerType != LayerTypes::PRelu && layerType != LayerTypes::DepthwiseConvolution && layerType != LayerTypes::Convolution && layerType != LayerTypes::ConvolutionTranspose && layerType != LayerTypes::Dense && layerType != LayerTypes::PartialDepthwiseConvolution)
 				{
-					msg = CheckMsg(line, col, "WeightsWDM cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
+					msg = CheckMsg(line, col, std::string("WeightsWDM cannot be specified in a ") + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + std::string(" layer."));
 					goto FAIL;
 				}
 
@@ -1372,7 +1372,7 @@ namespace dnn
 
 				if (params.find_first_not_of(".-eE0123456789") != std::string::npos)
 				{
-					msg = CheckMsg(line, col, "WeightsWDM contains illegal characters.");
+					msg = CheckMsg(line, col, std::string("WeightsWDM contains illegal characters."));
 					goto FAIL;
 				}
 
@@ -1382,7 +1382,7 @@ namespace dnn
 				}
 				catch (std::exception exception)
 				{
-					msg = CheckMsg(line, col, "WeightsWDM value not recognized." + nwl + exception.what());
+					msg = CheckMsg(line, col, std::string("WeightsWDM value not recognized.") + nwl + std::string(exception.what()));
 					goto FAIL;
 				}
 
@@ -1395,7 +1395,7 @@ namespace dnn
 			{
 				if (!isNormalizationLayer && layerType != LayerTypes::Input && layerType != LayerTypes::PRelu && layerType != LayerTypes::DepthwiseConvolution && layerType != LayerTypes::Convolution && layerType != LayerTypes::ConvolutionTranspose && layerType != LayerTypes::Dense && layerType != LayerTypes::PartialDepthwiseConvolution)
 				{
-					msg = CheckMsg(line, col, "BiasesFiller cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
+					msg = CheckMsg(line, col, std::string("BiasesFiller cannot be specified in a ") + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + std::string(" layer."));
 					goto FAIL;
 				}
 
@@ -1415,7 +1415,7 @@ namespace dnn
 					
 				if (!ok)
 				{
-					msg = CheckMsg(line, col, "BiasesFiller not recognized.");
+					msg = CheckMsg(line, col, std::string("BiasesFiller not recognized."));
 					goto FAIL;
 				}
 
@@ -1430,7 +1430,7 @@ namespace dnn
 					{
 						if (value.find_first_not_of(".()-eE0123456789") != std::string::npos)
 						{
-							msg = CheckMsg(line, col, "BiasesScale contains illegal characters.");
+							msg = CheckMsg(line, col, std::string("BiasesScale contains illegal characters."));
 							goto FAIL;
 						}
 
@@ -1445,19 +1445,19 @@ namespace dnn
 							}
 							catch (std::exception exception)
 							{
-								msg = CheckMsg(line, col, "BiasesScale value not recognized." + nwl + exception.what());
+								msg = CheckMsg(line, col, std::string("BiasesScale value not recognized.") + nwl + std::string(exception.what()));
 								goto FAIL;
 							}
 
 							if (!ok)
 							{
-								msg = CheckMsg(line, col, "BiasesScale value not recognized.");
+								msg = CheckMsg(line, col, std::string("BiasesScale value not recognized."));
 								goto FAIL;
 							}
 						}
 						else
 						{
-							msg = CheckMsg(line, col, "BiasesScale value not recognized.");
+							msg = CheckMsg(line, col, std::string("BiasesScale value not recognized."));
 							goto FAIL;
 						}
 					}
@@ -1479,7 +1479,7 @@ namespace dnn
 								{
 									if (value.find_first_not_of("(),.-eE0123456789") != std::string::npos)
 									{
-										msg = CheckMsg(line, col, "BiasesGain contains illegal characters.");
+										msg = CheckMsg(line, col, std::string("BiasesGain contains illegal characters."));
 										goto FAIL;
 									}
 
@@ -1493,19 +1493,19 @@ namespace dnn
 										}
 										catch (std::exception exception)
 										{
-											msg = CheckMsg(line, col, "BiasesGain value not recognized." + nwl + exception.what());
+											msg = CheckMsg(line, col, std::string("BiasesGain value not recognized.") + nwl + std::string(exception.what()));
 											goto FAIL;
 										}
 
 										if (!ok)
 										{
-											msg = CheckMsg(line, col, "BiasesGain value not recognized.");
+											msg = CheckMsg(line, col, std::string("BiasesGain value not recognized."));
 											goto FAIL;
 										}
 									}
 									else
 									{
-										msg = CheckMsg(line, col, "BiasesGain value not recognized.");
+										msg = CheckMsg(line, col, std::string("BiasesGain value not recognized."));
 										goto FAIL;
 									}
 								}
@@ -1521,7 +1521,7 @@ namespace dnn
 					{
 						if (value.find_first_not_of(".()-eE0123456789") != std::string::npos)
 						{
-							msg = CheckMsg(line, col, "BiasesGain contains illegal characters.");
+							msg = CheckMsg(line, col, std::string("BiasesGain contains illegal characters."));
 							goto FAIL;
 						}
 
@@ -1536,19 +1536,19 @@ namespace dnn
 							}
 							catch (std::exception exception)
 							{
-								msg = CheckMsg(line, col, "BiasesGain value not recognized." + nwl + exception.what());
+								msg = CheckMsg(line, col, std::string("BiasesGain value not recognized.") + nwl + std::string(exception.what()));
 								goto FAIL;
 							}
 
 							if (!ok)
 							{
-								msg = CheckMsg(line, col, "BiasesGain value not recognized.");
+								msg = CheckMsg(line, col, std::string("BiasesGain value not recognized."));
 								goto FAIL;
 							}
 						}
 						else
 						{
-							msg = CheckMsg(line, col, "BiasesGain value not recognized.");
+							msg = CheckMsg(line, col, std::string("BiasesGain value not recognized."));
 							goto FAIL;
 						}
 					}
@@ -1595,7 +1595,7 @@ namespace dnn
 			{
 				if (!isNormalizationLayer && layerType != LayerTypes::Input && layerType != LayerTypes::PRelu && layerType != LayerTypes::DepthwiseConvolution && layerType != LayerTypes::Convolution && layerType != LayerTypes::ConvolutionTranspose && layerType != LayerTypes::Dense && layerType != LayerTypes::PartialDepthwiseConvolution)
 				{
-					msg = CheckMsg(line, col, "BiasesLRM cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
+					msg = CheckMsg(line, col, std::string("BiasesLRM cannot be specified in a ") + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + std::string(" layer."));
 					goto FAIL;
 				}
 
@@ -1603,7 +1603,7 @@ namespace dnn
 
 				if (params.find_first_not_of(".-eE0123456789") != std::string::npos)
 				{
-					msg = CheckMsg(line, col, "BiasesLRM contains illegal characters.");
+					msg = CheckMsg(line, col, std::string("BiasesLRM contains illegal characters."));
 					goto FAIL;
 				}
 
@@ -1613,7 +1613,7 @@ namespace dnn
 				}
 				catch (std::exception exception)
 				{
-					msg = CheckMsg(line, col, "BiasesLRM value not recognized." + nwl + exception.what());
+					msg = CheckMsg(line, col, std::string("BiasesLRM value not recognized.") + nwl + std::string(exception.what()));
 					goto FAIL;
 				}
 
@@ -1626,7 +1626,7 @@ namespace dnn
 			{
 				if (!isNormalizationLayer && layerType != LayerTypes::Input && layerType != LayerTypes::PRelu && layerType != LayerTypes::DepthwiseConvolution && layerType != LayerTypes::Convolution && layerType != LayerTypes::ConvolutionTranspose && layerType != LayerTypes::Dense && layerType != LayerTypes::PartialDepthwiseConvolution)
 				{
-					msg = CheckMsg(line, col, "BiasesWDM cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
+					msg = CheckMsg(line, col, std::string("BiasesWDM cannot be specified in a ") + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + std::string(" layer."));
 					goto FAIL;
 				}
 
@@ -1634,7 +1634,7 @@ namespace dnn
 
 				if (params.find_first_not_of(".-eE0123456789") != std::string::npos)
 				{
-					msg = CheckMsg(line, col, "BiasesWDM contains illegal characters.");
+					msg = CheckMsg(line, col, std::string("BiasesWDM contains illegal characters."));
 					goto FAIL;
 				}
 
@@ -1644,7 +1644,7 @@ namespace dnn
 				}
 				catch (std::exception exception)
 				{
-					msg = CheckMsg(line, col, "BiasesWDM value not recognized." + nwl + exception.what());
+					msg = CheckMsg(line, col, std::string("BiasesWDM value not recognized.") + nwl + std::string(exception.what()));
 					goto FAIL;
 				}
 
@@ -1657,7 +1657,7 @@ namespace dnn
 			{
 				if (!isNormalizationLayer && layerType != LayerTypes::Input && layerType != LayerTypes::PRelu && layerType != LayerTypes::DepthwiseConvolution && layerType != LayerTypes::Convolution && layerType != LayerTypes::ConvolutionTranspose && layerType != LayerTypes::Dense && layerType != LayerTypes::PartialDepthwiseConvolution)
 				{
-					msg = CheckMsg(line, col, "Biases cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
+					msg = CheckMsg(line, col, std::string("Biases cannot be specified in a ") + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + std::string(" layer."));
 					goto FAIL;
 				}
 
@@ -1665,7 +1665,7 @@ namespace dnn
 
 				if (!IsStringBool(params))
 				{
-					msg = CheckMsg(line, col, "Biases value must be boolean (Yes/No or True/False).");
+					msg = CheckMsg(line, col, std::string("Biases value must be boolean (Yes/No or True/False)."));
 					goto FAIL;
 				}
 
@@ -1680,7 +1680,7 @@ namespace dnn
 					&& layerType != LayerTypes::BatchNormActivationDropout
 					&& layerType != LayerTypes::Dropout)
 				{
-					msg = CheckMsg(line, col, "Dropout cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
+					msg = CheckMsg(line, col, std::string("Dropout cannot be specified in a ") + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + std::string(" layer."));
 					goto FAIL;
 				}
 
@@ -1688,7 +1688,7 @@ namespace dnn
 
 				if (params.find_first_not_of(".0123456789") != std::string::npos)
 				{
-					msg = CheckMsg(line, col, "Dropout contains illegal characters.");
+					msg = CheckMsg(line, col, std::string("Dropout contains illegal characters."));
 					goto FAIL;
 				}
 
@@ -1698,13 +1698,13 @@ namespace dnn
 				}
 				catch (std::exception exception)
 				{
-					msg = CheckMsg(line, col, "Dropout value not recognized." + nwl + exception.what());
+					msg = CheckMsg(line, col, std::string("Dropout value not recognized.") + nwl + std::string(exception.what()));
 					goto FAIL;
 				}
 
 				if (dropout < 0 || dropout >= 1)
 				{
-					msg = CheckMsg(line, col, "Dropout out of range [0-1[");
+					msg = CheckMsg(line, col, std::string("Dropout out of range [0-1["));
 					goto FAIL;
 				}
 
@@ -1715,7 +1715,7 @@ namespace dnn
 			{
 				if (!isNormalizationLayer && layerType != LayerTypes::Input && layerType != LayerTypes::PRelu && layerType != LayerTypes::Activation && layerType != LayerTypes::LocalResponseNorm)
 				{
-					msg = CheckMsg(line, col, "Alpha cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
+					msg = CheckMsg(line, col, std::string("Alpha cannot be specified in a ") + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + std::string(" layer."));
 					goto FAIL;
 				}
 
@@ -1723,7 +1723,7 @@ namespace dnn
 
 				if (params.find_first_not_of(".-0123456789") != std::string::npos)
 				{
-					msg = CheckMsg(line, col, "Alpha contains illegal characters.");
+					msg = CheckMsg(line, col, std::string("Alpha contains illegal characters."));
 					goto FAIL;
 				}
 
@@ -1733,7 +1733,7 @@ namespace dnn
 				}
 				catch (std::exception exception)
 				{
-					msg = CheckMsg(line, col, "Alpha value not recognized." + nwl + exception.what());
+					msg = CheckMsg(line, col, std::string("Alpha value not recognized.") + nwl + std::string(exception.what()));
 					goto FAIL;
 				}
 						
@@ -1744,7 +1744,7 @@ namespace dnn
 			{
 				if (!isNormalizationLayer && layerType != LayerTypes::Input && layerType != LayerTypes::Activation && layerType != LayerTypes::LocalResponseNorm)
 				{
-					msg = CheckMsg(line, col, "Beta cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
+					msg = CheckMsg(line, col, std::string("Beta cannot be specified in a ") + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + std::string(" layer."));
 					goto FAIL;
 				}
 
@@ -1752,7 +1752,7 @@ namespace dnn
 
 				if (params.find_first_not_of(".-0123456789") != std::string::npos)
 				{
-					msg = CheckMsg(line, col, "Beta contains illegal characters.");
+					msg = CheckMsg(line, col, std::string("Beta contains illegal characters."));
 					goto FAIL;
 				}
 
@@ -1762,7 +1762,7 @@ namespace dnn
 				}
 				catch (std::exception exception)
 				{
-					msg = CheckMsg(line, col, "Beta value not recognized." + nwl + exception.what());
+					msg = CheckMsg(line, col, std::string("Beta value not recognized.") + nwl + std::string(exception.what()));
 					goto FAIL;
 				}
 						
@@ -1773,13 +1773,13 @@ namespace dnn
 			{
 				if (isModel)
 				{
-					msg = CheckMsg(line, col, "AcrossChannels cannot be specified in a model.");
+					msg = CheckMsg(line, col, std::string("AcrossChannels cannot be specified in a model."));
 					goto FAIL;
 				}
 
 				if (layerType != LayerTypes::LocalResponseNorm)
 				{
-					msg = CheckMsg(line, col, "AcrossChannels cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
+					msg = CheckMsg(line, col, std::string("AcrossChannels cannot be specified in a ") + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + std::string(" layer."));
 					goto FAIL;
 				}
 
@@ -1787,7 +1787,7 @@ namespace dnn
 
 				if (!IsStringBool(params))
 				{
-					msg = CheckMsg(line, col, "AcrossChannels value must be boolean (Yes/No or True/False).");
+					msg = CheckMsg(line, col, std::string("AcrossChannels value must be boolean (Yes/No or True/False)."));
 					goto FAIL;
 				}
 
@@ -1797,13 +1797,13 @@ namespace dnn
 			{
 				if (isModel)
 				{
-					msg = CheckMsg(line, col, "K cannot be specified in a model.");
+					msg = CheckMsg(line, col, std::string("K cannot be specified in a model."));
 					goto FAIL;
 				}
 
 				if (layerType != LayerTypes::LocalResponseNorm)
 				{
-					msg = CheckMsg(line, col, "K cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
+					msg = CheckMsg(line, col, std::string("K cannot be specified in a ") + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + std::string(" layer."));
 					goto FAIL;
 				}
 
@@ -1811,7 +1811,7 @@ namespace dnn
 
 				if (params.find_first_not_of(".-0123456789") != std::string::npos)
 				{
-					msg = CheckMsg(line, col, "K contains illegal characters.");
+					msg = CheckMsg(line, col, std::string("K contains illegal characters."));
 					goto FAIL;
 				}
 
@@ -1821,7 +1821,7 @@ namespace dnn
 				}
 				catch (std::exception exception)
 				{
-					msg = CheckMsg(line, col, "K value not recognized." + nwl + exception.what());
+					msg = CheckMsg(line, col, std::string("K value not recognized.") + nwl + std::string(exception.what()));
 					goto FAIL;
 				}
 			}
@@ -1829,13 +1829,13 @@ namespace dnn
 			{
 				if (isModel)
 				{
-					msg = CheckMsg(line, col, "LocalSize cannot be specified in a model.");
+					msg = CheckMsg(line, col, std::string("LocalSize cannot be specified in a model."));
 					goto FAIL;
 				}
 
 				if (layerType != LayerTypes::LocalResponseNorm)
 				{
-					msg = CheckMsg(line, col, "LocalSize cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
+					msg = CheckMsg(line, col, std::string("LocalSize cannot be specified in a ") + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + std::string(" layer."));
 					goto FAIL;
 				}
 
@@ -1847,13 +1847,13 @@ namespace dnn
 				}
 				catch (std::exception exception)
 				{
-					msg = CheckMsg(line, col, "LocalSize value not recognized." + nwl + exception.what());
+					msg = CheckMsg(line, col, std::string("LocalSize value not recognized.") + nwl + std::string(exception.what()));
 					goto FAIL;
 				}
 
 				if (localSize == 0)
 				{
-					msg = CheckMsg(line, col, "LocalSize value cannot be zero.");
+					msg = CheckMsg(line, col, std::string("LocalSize value cannot be zero."));
 					goto FAIL;
 				}
 			}
@@ -1861,13 +1861,13 @@ namespace dnn
 			{
 				if (isModel)
 				{
-					msg = CheckMsg(line, col, "Multiplier cannot be specified in a model.");
+					msg = CheckMsg(line, col, std::string("Multiplier cannot be specified in a model."));
 					goto FAIL;
 				}
 
 				if (layerType != LayerTypes::DepthwiseConvolution && layerType != LayerTypes::PartialDepthwiseConvolution)
 				{
-					msg = CheckMsg(line, col, "Multiplier cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
+					msg = CheckMsg(line, col, std::string("Multiplier cannot be specified in a ") + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + std::string(" layer."));
 					goto FAIL;
 				}
 
@@ -1879,13 +1879,13 @@ namespace dnn
 				}
 				catch (std::exception exception)
 				{
-					msg = CheckMsg(line, col, "Multiplier value not recognized." + nwl + exception.what());
+					msg = CheckMsg(line, col, std::string("Multiplier value not recognized.") + nwl + std::string(exception.what()));
 					goto FAIL;
 				}
 
 				if (multiplier == 0)
 				{
-					msg = CheckMsg(line, col, "Multiplier value cannot be zero.");
+					msg = CheckMsg(line, col, std::string("Multiplier value cannot be zero."));
 					goto FAIL;
 				}
 			}
@@ -1893,13 +1893,13 @@ namespace dnn
 			{
 				if (isModel)
 				{
-					msg = CheckMsg(line, col, "Group cannot be specified in a model.");
+					msg = CheckMsg(line, col, std::string("Group cannot be specified in a model."));
 					goto FAIL;
 				}
 
 				if (layerType != LayerTypes::ChannelSplit && layerType != LayerTypes::PartialDepthwiseConvolution)
 				{
-					msg = CheckMsg(line, col, "Group cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
+					msg = CheckMsg(line, col, std::string("Group cannot be specified in a ") + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + std::string(" layer."));
 					goto FAIL;
 				}
 
@@ -1911,13 +1911,13 @@ namespace dnn
 				}
 				catch (std::exception exception)
 				{
-					msg = CheckMsg(line, col, "Group value not recognized." + nwl + exception.what());
+					msg = CheckMsg(line, col, std::string("Group value not recognized.") + nwl + std::string(exception.what()));
 					goto FAIL;
 				}
 
 				if (group == 0)
 				{
-					msg = CheckMsg(line, col, "Group value cannot be zero.");
+					msg = CheckMsg(line, col, std::string("Group value cannot be zero."));
 					goto FAIL;
 				}
 			}
@@ -1925,13 +1925,13 @@ namespace dnn
 			{
 				if (isModel)
 				{
-					msg = CheckMsg(line, col, "Groups cannot be specified in a model.");
+					msg = CheckMsg(line, col, std::string("Groups cannot be specified in a model."));
 					goto FAIL;
 				}
 
 				if (layerType != LayerTypes::Shuffle && layerType != LayerTypes::ChannelSplit && layerType != LayerTypes::Convolution && layerType != LayerTypes::PartialDepthwiseConvolution)
 				{
-					msg = CheckMsg(line, col, "Groups cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
+					msg = CheckMsg(line, col, std::string("Groups cannot be specified in a ") + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + std::string(" layer."));
 					goto FAIL;
 				}
 
@@ -1943,13 +1943,13 @@ namespace dnn
 				}
 				catch (std::exception exception)
 				{
-					msg = CheckMsg(line, col, "Groups value not recognized." + nwl + exception.what());
+					msg = CheckMsg(line, col, std::string("Groups value not recognized.") + nwl + std::string(exception.what()));
 					goto FAIL;
 				}
 
 				if (groups == 0)
 				{
-					msg = CheckMsg(line, col, "Groups value cannot be zero.");
+					msg = CheckMsg(line, col, std::string("Groups value cannot be zero."));
 					goto FAIL;
 				}
 			}
@@ -1957,13 +1957,13 @@ namespace dnn
 			{
 				if (isModel)
 				{
-					msg = CheckMsg(line, col, "Factor cannot be specified in a model.");
+					msg = CheckMsg(line, col, std::string("Factor cannot be specified in a model."));
 					goto FAIL;
 				}
 
 				if (layerType != LayerTypes::Resampling)
 				{
-					msg = CheckMsg(line, col, "Factor cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
+					msg = CheckMsg(line, col, std::string("Factor cannot be specified in a ") + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + std::string(" layer."));
 					goto FAIL;
 				}
 
@@ -1977,7 +1977,7 @@ namespace dnn
 					{
 						if (item.find_first_not_of(".0123456789") != std::string::npos)
 						{
-							msg = CheckMsg(line, col, "Factor contains illegal characters.");
+							msg = CheckMsg(line, col, std::string("Factor contains illegal characters."));
 							goto FAIL;
 						}
 
@@ -1986,13 +1986,13 @@ namespace dnn
 				}
 				catch (std::exception exception)
 				{
-					msg = CheckMsg(line, col, "Factor value(s) not recognized." + nwl + exception.what());
+					msg = CheckMsg(line, col, std::string("Factor value(s) not recognized.") + nwl + std::string(exception.what()));
 					goto FAIL;
 				}
 
 				if (values.size() != 2)
 				{
-					msg = CheckMsg(line, col, "Factor must have two floaing point values.");
+					msg = CheckMsg(line, col, std::string("Factor must have two floaing point values."));
 					goto FAIL;
 				}
 
@@ -2003,13 +2003,13 @@ namespace dnn
 			{
 				if (isModel)
 				{
-					msg = CheckMsg(line, col, "Algorithm cannot be specified in a model.");
+					msg = CheckMsg(line, col, std::string("Algorithm cannot be specified in a model."));
 					goto FAIL;
 				}
 
 				if (layerType != LayerTypes::Resampling)
 				{
-					msg = CheckMsg(line, col, "Algorithm cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
+					msg = CheckMsg(line, col, std::string("Algorithm cannot be specified in a ") + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + std::string(" layer."));
 					goto FAIL;
 				}
 
@@ -2021,7 +2021,7 @@ namespace dnn
 						ok = true;
 				if (!ok)
 				{
-					msg = CheckMsg(line, col, "Algorithm is not recognized.");
+					msg = CheckMsg(line, col, std::string("Algorithm is not recognized."));
 					goto FAIL;
 				}
 
@@ -2029,7 +2029,7 @@ namespace dnn
 					algorithm = magic_enum::enum_cast<Algorithms>(params).value();
 				else
 				{
-					msg = CheckMsg(line, col, "Algorithm unknown.");
+					msg = CheckMsg(line, col, std::string("Algorithm unknown."));
 					goto FAIL;
 				}
 			}
@@ -2037,13 +2037,13 @@ namespace dnn
 			{
 				if (isModel)
 				{
-					msg = CheckMsg(line, col, "GroupIndex cannot be specified in a model.");
+					msg = CheckMsg(line, col, std::string("GroupIndex cannot be specified in a model."));
 					goto FAIL;
 				}
 
 				if (layerType != LayerTypes::Cost)
 				{
-					msg = CheckMsg(line, col, "GroupIndex cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
+					msg = CheckMsg(line, col, std::string("GroupIndex cannot be specified in a ") + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + std::string(" layer."));
 					goto FAIL;
 				}
 
@@ -2055,7 +2055,7 @@ namespace dnn
 				}
 				catch (std::exception exception)
 				{
-					msg = CheckMsg(line, col, "GroupIndex value not recognized." + nwl + exception.what());
+					msg = CheckMsg(line, col, std::string("GroupIndex value not recognized.") + nwl + std::string(exception.what()));
 					goto FAIL;
 				}
 			}
@@ -2063,13 +2063,13 @@ namespace dnn
 			{
 				if (isModel)
 				{
-					msg = CheckMsg(line, col, "LabelIndex cannot be specified in a model.");
+					msg = CheckMsg(line, col, std::string("LabelIndex cannot be specified in a model."));
 					goto FAIL;
 				}
 
 				if (layerType != LayerTypes::Cost)
 				{
-					msg = CheckMsg(line, col, "LabelIndex cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
+					msg = CheckMsg(line, col, std::string("LabelIndex cannot be specified in a ") + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + std::string(" layer."));
 					goto FAIL;
 				}
 
@@ -2081,7 +2081,7 @@ namespace dnn
 				}
 				catch (std::exception exception)
 				{
-					msg = CheckMsg(line, col, "LabelIndex value not recognized." + nwl + exception.what());
+					msg = CheckMsg(line, col, std::string("LabelIndex value not recognized.") + nwl + std::string(exception.what()));
 					goto FAIL;
 				}
 			}
@@ -2089,13 +2089,13 @@ namespace dnn
 			{
 				if (isModel)
 				{
-					msg = CheckMsg(line, col, "Weight cannot be specified in a model.");
+					msg = CheckMsg(line, col, std::string("Weight cannot be specified in a model."));
 					goto FAIL;
 				}
 
 				if (layerType != LayerTypes::Cost)
 				{
-					msg = CheckMsg(line, col, "Weight cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
+					msg = CheckMsg(line, col, std::string("Weight cannot be specified in a ") + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + std::string(" layer."));
 					goto FAIL;
 				}
 
@@ -2103,7 +2103,7 @@ namespace dnn
 						
 				if (params.find_first_not_of(".-eE0123456789") != std::string::npos)
 				{
-					msg = CheckMsg(line, col, "Weight contains illegal characters.");
+					msg = CheckMsg(line, col, std::string("Weight contains illegal characters."));
 					goto FAIL;
 				}
 
@@ -2113,13 +2113,13 @@ namespace dnn
 				}
 				catch (std::exception exception)
 				{
-					msg = CheckMsg(line, col, "Weight value not recognized." + nwl + exception.what());
+					msg = CheckMsg(line, col, std::string("Weight value not recognized.") + nwl + std::string(exception.what()));
 					goto FAIL;
 				}
 
 				if (weight < -10.0f || weight > 10.0f)
 				{
-					msg = CheckMsg(line, col, "Weight value must be int the range [-10-10]");
+					msg = CheckMsg(line, col, std::string("Weight value must be int the range [-10-10]"));
 					goto FAIL;
 				}
 			}
@@ -2127,13 +2127,13 @@ namespace dnn
 			{
 				if (isModel)
 				{
-					msg = CheckMsg(line, col, "LabelTrue cannot be specified in a model.");
+					msg = CheckMsg(line, col, std::string("LabelTrue cannot be specified in a model."));
 					goto FAIL;
 				}
 
 				if (layerType != LayerTypes::Cost)
 				{
-					msg = CheckMsg(line, col, "LabelTrue cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
+					msg = CheckMsg(line, col, std::string("LabelTrue cannot be specified in a ") + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + std::string(" layer."));
 					goto FAIL;
 				}
 
@@ -2141,7 +2141,7 @@ namespace dnn
 						
 				if (params.find_first_not_of(".-eE0123456789") != std::string::npos)
 				{
-					msg = CheckMsg(line, col, "LabelTrue contains illegal characters.");
+					msg = CheckMsg(line, col, std::string("LabelTrue contains illegal characters."));
 					goto FAIL;
 				}
 
@@ -2151,13 +2151,13 @@ namespace dnn
 				}
 				catch (std::exception exception)
 				{
-					msg = CheckMsg(line, col, "LabelTrue value not recognized." + nwl + exception.what());
+					msg = CheckMsg(line, col, std::string("LabelTrue value not recognized.") + nwl + std::string(exception.what()));
 					goto FAIL;
 				}
 
 				if (labelTrue < -10.0f || labelTrue > 10.0f)
 				{
-					msg = CheckMsg(line, col, "LabelTrue value must be int the range [-10-10]");
+					msg = CheckMsg(line, col, std::string("LabelTrue value must be int the range [-10-10]"));
 					goto FAIL;
 				}
 			}
@@ -2165,13 +2165,13 @@ namespace dnn
 			{
 				if (isModel)
 				{
-					msg = CheckMsg(line, col, "LabelFalse cannot be specified in a model.");
+					msg = CheckMsg(line, col, std::string("LabelFalse cannot be specified in a model."));
 					goto FAIL;
 				}
 
 				if (layerType != LayerTypes::Cost)
 				{
-					msg = CheckMsg(line, col, "LabelFalse cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
+					msg = CheckMsg(line, col, std::string("LabelFalse cannot be specified in a ") + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + std::string(" layer."));
 					goto FAIL;
 				}
 
@@ -2179,7 +2179,7 @@ namespace dnn
 						
 				if (params.find_first_not_of(".-eE0123456789") != std::string::npos)
 				{
-					msg = CheckMsg(line, col, "LabelFalse contains illegal characters.");
+					msg = CheckMsg(line, col, std::string("LabelFalse contains illegal characters."));
 					goto FAIL;
 				}
 
@@ -2189,14 +2189,14 @@ namespace dnn
 				}
 				catch (std::exception exception)
 				{
-					msg = CheckMsg(line, col, "LabelFalse value not recognized." + nwl + exception.what());
+					msg = CheckMsg(line, col, std::string("LabelFalse value not recognized.") + nwl + std::string(exception.what()));
 					goto FAIL;
 
 				}
 
 				if (labelFalse < -10.0f || labelFalse > 10.0f)
 				{
-					msg = CheckMsg(line, col, "LabelFalse value must be int the range [-10-10]");
+					msg = CheckMsg(line, col, std::string("LabelFalse value must be int the range [-10-10]"));
 					goto FAIL;
 				}
 			}
@@ -2204,13 +2204,13 @@ namespace dnn
 			{
 				if (isModel)
 				{
-					msg = CheckMsg(line, col, "Cost cannot be specified in a model.");
+					msg = CheckMsg(line, col, std::string("Cost cannot be specified in a model."));
 					goto FAIL;
 				}
 
 				if (layerType != LayerTypes::Cost)
 				{
-					msg = CheckMsg(line, col, "Cost cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
+					msg = CheckMsg(line, col, std::string("Cost cannot be specified in a ") + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + std::string(" layer."));
 					goto FAIL;
 				}
 
@@ -2223,7 +2223,7 @@ namespace dnn
 						ok = true;
 				if (!ok)
 				{
-					msg = CheckMsg(line, col, "Cost is not recognized.");
+					msg = CheckMsg(line, col, std::string("Cost is not recognized."));
 					goto FAIL;
 				}
 
@@ -2232,7 +2232,7 @@ namespace dnn
 					costFunction = cost.value();
 				else
 				{
-					msg = CheckMsg(line, col, "Cost is not recognized.");
+					msg = CheckMsg(line, col, std::string("Cost is not recognized."));
 					goto FAIL;
 				}
 			}
@@ -2240,13 +2240,13 @@ namespace dnn
 			{
 				if (isModel)
 				{
-					msg = CheckMsg(line, col, "Activation cannot be specified in a model.");
+					msg = CheckMsg(line, col, std::string("Activation cannot be specified in a model."));
 					goto FAIL;
 				}
 
 				if (layerType != LayerTypes::BatchNormActivation && layerType != LayerTypes::BatchNormActivationDropout && layerType != LayerTypes::Activation)
 				{
-					msg = CheckMsg(line, col, "Activation cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
+					msg = CheckMsg(line, col, std::string("Activation cannot be specified in a ") + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + std::string(" layer."));
 					goto FAIL;
 				}
 
@@ -2259,7 +2259,7 @@ namespace dnn
 						ok = true;
 				if (!ok)
 				{
-					msg = CheckMsg(line, col, "Activation is not recognized.");
+					msg = CheckMsg(line, col, std::string("Activation is not recognized."));
 					goto FAIL;
 				}
 
@@ -2268,7 +2268,7 @@ namespace dnn
 					activationFunction = activation.value();
 				else
 				{
-					msg = CheckMsg(line, col, "Activation is not recognized.");
+					msg = CheckMsg(line, col, std::string("Activation is not recognized."));
 					goto FAIL;
 				}
 
@@ -2289,13 +2289,13 @@ namespace dnn
 			{
 				if (isModel)
 				{
-					msg = CheckMsg(line, col, "Channels cannot be specified in a model.");
+					msg = CheckMsg(line, col, std::string("Channels cannot be specified in a model."));
 					goto FAIL;
 				}
 
 				if (layerType != LayerTypes::ChannelZeroPad && layerType != LayerTypes::Dense && layerType != LayerTypes::Convolution && layerType != LayerTypes::ConvolutionTranspose && layerType != LayerTypes::Cost)
 				{
-					msg = CheckMsg(line, col, "Channels cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
+					msg = CheckMsg(line, col, std::string("Channels cannot be specified in a ") + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + std::string(" layer."));
 					goto FAIL;
 				}
 
@@ -2307,13 +2307,13 @@ namespace dnn
 				}
 				catch (std::exception exception)
 				{
-					msg = CheckMsg(line, col, "Channels value not recognized." + nwl + exception.what());
+					msg = CheckMsg(line, col, std::string("Channels value not recognized.") + nwl + std::string(exception.what()));
 					goto FAIL;
 				}
 
 				if (c == 0)
 				{
-					msg = CheckMsg(line, col, "Channels value cannot be zero.");
+					msg = CheckMsg(line, col, std::string("Channels value cannot be zero."));
 					goto FAIL;
 				}
 			}
@@ -2321,13 +2321,13 @@ namespace dnn
 			{
 				if (isModel)
 				{
-					msg = CheckMsg(line, col, "Kernel cannot be specified in a model.");
+					msg = CheckMsg(line, col, std::string("Kernel cannot be specified in a model."));
 					goto FAIL;
 				}
 
 				if (layerType != LayerTypes::Convolution && layerType != LayerTypes::ConvolutionTranspose && layerType != LayerTypes::DepthwiseConvolution && layerType != LayerTypes::PartialDepthwiseConvolution && layerType != LayerTypes::AvgPooling && layerType != LayerTypes::MaxPooling)
 				{
-					msg = CheckMsg(line, col, "Kernel cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
+					msg = CheckMsg(line, col, std::string("Kernel cannot be specified in a ") + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + std::string(" layer."));
 					goto FAIL;
 				}
 
@@ -2344,19 +2344,19 @@ namespace dnn
 				}
 				catch (std::exception exception)
 				{
-					msg = CheckMsg(line, col, "Kernel not recognized." + nwl + exception.what());
+					msg = CheckMsg(line, col, std::string("Kernel not recognized.") + nwl + std::string(exception.what()));
 					goto FAIL;
 				}
 
 				if (values.size() != 2)
 				{
-					msg = CheckMsg(line, col, "Kernel must have two values.");
+					msg = CheckMsg(line, col, std::string("Kernel must have two values."));
 					goto FAIL;
 				}
 
 				if (values[0] == 0 || values[1] == 0)
 				{
-					msg = CheckMsg(line, col, "Kernel values cannot be zero.");
+					msg = CheckMsg(line, col, std::string("Kernel values cannot be zero."));
 					goto FAIL;
 				}
 
@@ -2367,13 +2367,13 @@ namespace dnn
 			{
 				if (isModel)
 				{
-					msg = CheckMsg(line, col, "Dilation cannot be specified in a model.");
+					msg = CheckMsg(line, col, std::string("Dilation cannot be specified in a model."));
 					goto FAIL;
 				}
 
 				if (layerType != LayerTypes::Convolution && layerType != LayerTypes::ConvolutionTranspose && layerType != LayerTypes::DepthwiseConvolution && layerType != LayerTypes::PartialDepthwiseConvolution && layerType != LayerTypes::AvgPooling && layerType != LayerTypes::MaxPooling)
 				{
-					msg = CheckMsg(line, col, "Dilation cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
+					msg = CheckMsg(line, col, std::string("Dilation cannot be specified in a ") + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + std::string(" layer."));
 					goto FAIL;
 				}
 
@@ -2390,19 +2390,19 @@ namespace dnn
 				}
 				catch (std::exception exception)
 				{
-					msg = CheckMsg(line, col, "Dilation not recognized." + nwl + exception.what());
+					msg = CheckMsg(line, col, std::string("Dilation not recognized.") + nwl + std::string(exception.what()));
 					goto FAIL;
 				}
 
 				if (values.size() != 2)
 				{
-					msg = CheckMsg(line, col, "Dilation must have two values.");
+					msg = CheckMsg(line, col, std::string("Dilation must have two values."));
 					goto FAIL;
 				}
 
 				if (values[0] == 0 || values[1] == 0)
 				{
-					msg = CheckMsg(line, col, "Dilation values cannot be zero.");
+					msg = CheckMsg(line, col, std::string("Dilation values cannot be zero."));
 					goto FAIL;
 				}
 
@@ -2413,13 +2413,13 @@ namespace dnn
 			{
 				if (isModel)
 				{
-					msg = CheckMsg(line, col, "Stride cannot be specified in a model.");
+					msg = CheckMsg(line, col, std::string("Stride cannot be specified in a model."));
 					goto FAIL;
 				}
 
 				if (layerType != LayerTypes::Convolution && layerType != LayerTypes::ConvolutionTranspose && layerType != LayerTypes::DepthwiseConvolution && layerType != LayerTypes::PartialDepthwiseConvolution && layerType != LayerTypes::AvgPooling && layerType != LayerTypes::MaxPooling)
 				{
-					msg = CheckMsg(line, col, "Stride cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
+					msg = CheckMsg(line, col, std::string("Stride cannot be specified in a ") + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + std::string(" layer."));
 					goto FAIL;
 				}
 
@@ -2436,19 +2436,19 @@ namespace dnn
 				}
 				catch (std::exception exception)
 				{
-					msg = CheckMsg(line, col, "Stride not recognized." + nwl + exception.what());
+					msg = CheckMsg(line, col, std::string("Stride not recognized.") + nwl + std::string(exception.what()));
 					goto FAIL;
 				}
 
 				if (values.size() != 2)
 				{
-					msg = CheckMsg(line, col, "Stride must have two values.");
+					msg = CheckMsg(line, col, std::string("Stride must have two values."));
 					goto FAIL;
 				}
 
 				if (values[0] == 0 || values[1] == 0)
 				{
-					msg = CheckMsg(line, col, "Stride values cannot be zero.");
+					msg = CheckMsg(line, col, std::string("Stride values cannot be zero."));
 					goto FAIL;
 				}
 
@@ -2459,13 +2459,13 @@ namespace dnn
 			{
 				if (isModel)
 				{
-					msg = CheckMsg(line, col, "Pad cannot be specified in a model.");
+					msg = CheckMsg(line, col, std::string("Pad cannot be specified in a model."));
 					goto FAIL;
 				}
 
 				if (layerType != LayerTypes::Convolution && layerType != LayerTypes::ConvolutionTranspose && layerType != LayerTypes::DepthwiseConvolution && layerType != LayerTypes::PartialDepthwiseConvolution && layerType != LayerTypes::AvgPooling && layerType != LayerTypes::MaxPooling)
 				{
-					msg = CheckMsg(line, col, "Pad cannot be specified in a " + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + " layer.");
+					msg = CheckMsg(line, col, std::string("Pad cannot be specified in a ") + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + std::string(" layer."));
 					goto FAIL;
 				}
 
@@ -2482,13 +2482,13 @@ namespace dnn
 				}
 				catch (std::exception exception)
 				{
-					msg = CheckMsg(line, col, "Pad not recognized." + nwl + exception.what());
+					msg = CheckMsg(line, col, std::string("Pad not recognized.") + nwl + std::string(exception.what()));
 					goto FAIL;
 				}
 					
 				if (values.size() != 2)
 				{
-					msg = CheckMsg(line, col, "Pad must have two values.");
+					msg = CheckMsg(line, col, std::string("Pad must have two values."));
 					goto FAIL;
 				}
 
@@ -2498,7 +2498,7 @@ namespace dnn
 			}
 			else
 			{
-				msg = CheckMsg(line, col, "Unrecognized tokens: " + strLine);
+				msg = CheckMsg(line, col, std::string("Unrecognized tokens: ") + strLine);
 				goto FAIL;
 			}
 		}
@@ -2507,7 +2507,7 @@ namespace dnn
 		{
 			if (c != classes)
 			{
-				msg = CheckMsg(line, col, "Cost layers has not the same number of channels as the dataset: " + std::to_string(classes));
+				msg = CheckMsg(line, col, std::string("Cost layers has not the same number of channels as the dataset: ") + std::to_string(classes));
 				goto FAIL;
 			}
 
@@ -2526,7 +2526,7 @@ namespace dnn
 					if (t.first == l->Name)
 						line = t.second;
 
-				msg = CheckMsg(line, col, "Layer " + l->Name + " never referenced.");
+				msg = CheckMsg(line, col, std::string("Layer ") + l->Name + std::string(" never referenced."));
 				goto FAIL;
 			}
 		}
@@ -2539,7 +2539,7 @@ namespace dnn
 		}
 		else
 		{
-			msg = CheckMsg(line, col, "A Cost layer is missing in the model");
+			msg = CheckMsg(line, col, std::string("A Cost layer is missing in the model"));
 			goto FAIL;
 		}
 
@@ -2550,13 +2550,13 @@ namespace dnn
 					if (t.first == l->Name)
 						line = t.second;
 
-				msg = CheckMsg(line, col, "Cost Layer " + l->Name + " is referenced.");
+				msg = CheckMsg(line, col, std::string("Cost Layer ") + l->Name + std::string(" is referenced."));
 				goto FAIL;
 			}
 
 		if (model->Layers.back()->LayerType != LayerTypes::Cost)
 		{
-			msg = CheckMsg(line, col, "Last layer must of type Cost.");
+			msg = CheckMsg(line, col, std::string("Last layer must of type Cost."));
 			goto FAIL;
 		}
 
@@ -2576,7 +2576,7 @@ namespace dnn
 		else
 			model->ResetWeights();
 			
-		msg = CheckMsg(0, 0, "No issues found", false);	// All checks have passed
+		msg = CheckMsg(0, 0, std::string("No issues found"), false);	// All checks have passed
 		
 		std::locale::global(loc);
 		return model;
