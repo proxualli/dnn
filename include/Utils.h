@@ -110,7 +110,7 @@
 #include "bitsery/adapter/stream.h"
 #include "bitsery/traits/string.h"
 #include "bitsery/traits/vector.h"
-//#include "bitsery/ext/std_atomic.h"
+#include "bitsery/ext/std_atomic.h"
 //#include "bitsery/ext/growable.h"
 
 #include "CsvFile.h"

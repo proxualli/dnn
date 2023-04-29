@@ -432,18 +432,18 @@ namespace dnn
 		std::string ElapsedTime;
 	};
 
-	struct FlipInfo
+	struct Flip
 	{
 		bool Horizontal;
 		bool Vertical;
 
-		FlipInfo() :
+		Flip() :
 			Horizontal(false),
 			Vertical(false)
 		{
 		}
 
-		FlipInfo(const bool horizontal, const bool vertical) :
+		Flip(const bool horizontal, const bool vertical) :
 			Horizontal(horizontal),
 			Vertical(vertical)
 		{
@@ -472,7 +472,7 @@ namespace dnn
 		Datasets Dataset;
 		std::atomic<States> State;
 		std::atomic<TaskStates> TaskState;
-		Costs CostFunction;
+		Costs CostFunc;
 		Optimizers Optimizer;
 		UInt CostIndex;
 		UInt LabelIndex;
@@ -538,8 +538,8 @@ namespace dnn
 		bool HasBias;
 		bool PersistOptimizer;
 		bool DisableLocking;
-		std::vector<FlipInfo> TrainSamplesFlip;
-		std::vector<FlipInfo> TestSamplesFlip;
+		std::vector<Flip> TrainSamplesFlip;
+		std::vector<Flip> TestSamplesFlip;
 		std::vector<UInt> RandomTrainingSamples;
 		TrainingRate CurrentTrainingRate;
 		std::vector<TrainingRate> TrainingRates;
@@ -637,7 +637,7 @@ namespace dnn
 			LabelIndex(0),
 			GroupIndex(0),
 			CostIndex(0),
-			CostFunction(Costs::CategoricalCrossEntropy),
+			CostFunc(Costs::CategoricalCrossEntropy),
 			CostLayers(std::vector<Cost*>()),
 			Layers(std::vector<std::unique_ptr<Layer>>()),
 			TrainingRates(std::vector<TrainingRate>()),
@@ -1614,12 +1614,12 @@ namespace dnn
 				for (auto i = 0ull; i < DataProv->TrainingSamplesCount; i++)
 					RandomTrainingSamples[i] = i;
 
-				TrainSamplesFlip = std::vector<FlipInfo>();
-				TestSamplesFlip = std::vector<FlipInfo>();
+				TrainSamplesFlip = std::vector<Flip>();
+				TestSamplesFlip = std::vector<Flip>();
 				for (auto index = 0ull; index < DataProv->TrainingSamplesCount; index++)
-					TrainSamplesFlip.push_back(FlipInfo{ Bernoulli<bool>(Float(0.5)) , Bernoulli<bool>(Float(0.5)) });
+					TrainSamplesFlip.push_back(Flip{ Bernoulli<bool>(Float(0.5)) , Bernoulli<bool>(Float(0.5)) });
 				for (auto index = 0ull; index < DataProv->TestingSamplesCount; index++)
-					TestSamplesFlip.push_back(FlipInfo{ Bernoulli<bool>(Float(0.5)) , Bernoulli<bool>(Float(0.5)) });
+					TestSamplesFlip.push_back(Flip{ Bernoulli<bool>(Float(0.5)) , Bernoulli<bool>(Float(0.5)) });
 				
 				SetOptimizer(CurrentTrainingRate.Optimizer);
 				for (auto& layer : Layers)
@@ -1700,7 +1700,7 @@ namespace dnn
 								// Forward
 								const auto timePointLocal = timer.now();
 								auto SampleLabel = TrainSample(SampleIndex);
-								Layers[0]->fpropTime = timer.now() - timePointlocal;
+								Layers[0]->fpropTime = timer.now() - timePointLocal;
 
 								for (auto cost : CostLayers)
 									cost->SetSampleLabel(SampleLabel);
@@ -1715,7 +1715,7 @@ namespace dnn
 
 								CostFunction(State.load());
 								Recognized(State.load(), SampleLabel);
-								fpropTime = timer.now() - timePointlocal;
+								fpropTime = timer.now() - timePointLocal;
 
 								// Backward
 								bpropTimeCount = std::chrono::duration<Float>(Float(0));
@@ -1767,9 +1767,9 @@ namespace dnn
 
 								while (Layers[0]->RefreshingStats.load()) {	std::this_thread::yield(); }
 								Layers[0]->Fwd.store(true);
-								const auto timePointlocal = timer.now();
+								const auto timePointLocal = timer.now();
 								auto SampleLabels = TrainBatch(SampleIndex, BatchSize);
-								Layers[0]->fpropTime = timer.now() - timePointlocal;
+								Layers[0]->fpropTime = timer.now() - timePointLocal;
 								Layers[0]->Fwd.store(false);
 
 								for (auto cost : CostLayers)
@@ -1793,7 +1793,7 @@ namespace dnn
 								overflow = SampleIndex >= TrainOverflowCount;
 								CostFunctionBatch(State.load(), BatchSize, overflow, TrainSkipCount);
 								RecognizedBatch(State.load(), BatchSize, overflow, TrainSkipCount, SampleLabels);
-								fpropTime = timer.now() - timePointlocal;
+								fpropTime = timer.now() - timePointLocal;
 
 								// Backward
 								bpropTimeCount = std::chrono::duration<Float>(Float(0));
@@ -1839,7 +1839,7 @@ namespace dnn
 								bpropTime = bpropTimeCount;
 								updateTime = updateTimeCount;
 
-								elapsedTime = timer.now() - timePointlocal;
+								elapsedTime = timer.now() - timePointLocal;
 								SampleSpeed = BatchSize / (Float(std::chrono::duration_cast<std::chrono::microseconds>(elapsedTime).count()) / 1000000);
 
 								if (TaskState.load() != TaskStates::Running && !CheckTaskState())
@@ -2072,9 +2072,9 @@ namespace dnn
 				TrainSamplesFlip = std::vector<FlipInfo>();
 				TestSamplesFlip = std::vector<FlipInfo>();
 				for (auto index = 0ull; index < DataProv->TrainingSamplesCount; index++)
-					TrainSamplesFlip.push_back(FlipInfo{ false , false });
+					TrainSamplesFlip.push_back(Flip{ false , false });
 				for (auto index = 0ull; index < DataProv->TestingSamplesCount; index++)
-					TestSamplesFlip.push_back(FlipInfo{ false , false });
+					TestSamplesFlip.push_back(Flip{ false , false });
 
 				SetOptimizer(CurrentTrainingRate.Optimizer);
 				if (!PersistOptimizer)
@@ -2221,12 +2221,12 @@ namespace dnn
 					ChangeDropout(CurrentTrainingRate.Dropout, BatchSize);
 
 
-				TrainSamplesFlip = std::vector<FlipInfo>();
-				TestSamplesFlip = std::vector<FlipInfo>();
+				TrainSamplesFlip = std::vector<Flip>();
+				TestSamplesFlip = std::vector<Flip>();
 				for (auto index = 0ull; index < DataProv->TrainingSamplesCount; index++)
-					TrainSamplesFlip.push_back(FlipInfo{ Bernoulli<bool>(Float(0.5)), Bernoulli<bool>(Float(0.5)) });
+					TrainSamplesFlip.push_back(Flip{ Bernoulli<bool>(Float(0.5)), Bernoulli<bool>(Float(0.5)) });
 				for (auto index = 0ull; index < DataProv->TestingSamplesCount; index++)
-					TestSamplesFlip.push_back(FlipInfo{ Bernoulli<bool>(Float(0.5)), Bernoulli<bool>(Float(0.5)) });
+					TestSamplesFlip.push_back(Flip{ Bernoulli<bool>(Float(0.5)), Bernoulli<bool>(Float(0.5)) });
 
 				State.store(States::Testing);
 
@@ -2423,7 +2423,7 @@ namespace dnn
 			if (CurrentTrainingRate.HorizontalFlip && TrainSamplesFlip[rndIndex].Horizontal)
 				Image<Byte>::HorizontalMirror(imgByte);
 
-			if (CurrentTrainingRate.VerticalFlip && TrainiSamplesFlip[rndIndex].Vertical)
+			if (CurrentTrainingRate.VerticalFlip && TrainSamplesFlip[rndIndex].Vertical)
 				Image<Byte>::VerticalMirror(imgByte);
 
 			if (DataProv->C == 3 && Bernoulli<bool>(CurrentTrainingRate.ColorCast))
@@ -2827,14 +2827,15 @@ namespace dnn
 				try
 				{
 					auto state = bitsery::quickDeserialization<bitsery::InputStreamAdapter>(is, *this);
-					is.close();
 					assert(state.first == bitsery::ReaderError::NoError && state.second);
 				}
 				catch (std::exception&)
 				{
+					is.close();
 					return false;
 				}
 
+				is.close();
 				return true;
 			}
 
@@ -3206,7 +3207,7 @@ namespace dnn
 	};
 	
 	template<typename S>
-	void serialize(S& s, FlipInfo& o)
+	void serialize(S& s, Flip& o)
 	{
 		s.boolValue(o.Horizontal);
 		s.boolValue(o.Vertical);
@@ -3354,7 +3355,7 @@ namespace dnn
 		s.value4b(o.Dataset);
 		//s.value4b<States>(o.State);
 		//s.value4b<TaskStates>(o.TaskState);
-		s.value4b(o.CostFunction);
+		s.value4b(o.CostFunc);
 		s.value4b(o.Optimizer);
 		s.value8b(o.CostIndex);
 		s.value8b(o.LabelIndex);

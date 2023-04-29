@@ -523,7 +523,7 @@ namespace dnn
 						case LayerTypes::Cost:
 							model->Layers.push_back(std::make_unique<Cost>(model->Device, model->Format, name, costFunction, groupIndex, labelIndex, c, inputs, labelTrue, labelFalse, weight, epsSpecified ? eps : Float(0)));
 							model->CostLayers.push_back(dynamic_cast<Cost*>(model->Layers[model->Layers.size() - 1].get()));
-							model->CostFunction = costFunction;
+							model->CostFunc = costFunction;
 							break;
 						case LayerTypes::Dense:
 							model->Layers.push_back(std::make_unique<Dense>(model->Device, model->Format, name, c, inputs, biases));
@@ -2513,7 +2513,7 @@ namespace dnn
 
 			model->Layers.push_back(std::make_unique<Cost>(model->Device, model->Format, layerNames[model->Layers.size()].first, costFunction, groupIndex, labelIndex, c, model->GetLayerInputs(inputsStr), labelTrue, labelFalse, weight, epsSpecified ? eps : Float(0)));
 			model->CostLayers.push_back(dynamic_cast<Cost*>(model->Layers[model->Layers.size() - 1].get()));
-			model->CostFunction = costFunction;
+			model->CostFunc = costFunction;
 		}
 
 		{
