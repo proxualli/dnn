@@ -265,7 +265,7 @@ namespace dnn
 						isModel = false;
 
 						auto exists = false;
-						for (auto layer : layerNames)
+						for (auto& layer : layerNames)
 							if (layer.first == layerName)
 								exists = true;
 
@@ -287,7 +287,7 @@ namespace dnn
 					}
 
 					auto exists = false;
-					for (auto layer : layerNames)
+					for (auto& layer : layerNames)
 						if (layer.first == layerName)
 							exists = true;
 
@@ -422,7 +422,7 @@ namespace dnn
 
 				if (!isModel)
 				{
-					const auto &name = layerNames[model->Layers.size()].first;
+					const auto& name = layerNames[model->Layers.size()].first;
 					const auto inputs = model->GetLayerInputs(inputsStr);
 
 					switch (layerType)
@@ -663,7 +663,7 @@ namespace dnn
 
 				auto ok = false;
 				auto datasets = magic_enum::enum_names<Datasets>();
-				for (auto set : datasets)
+				for (auto& set : datasets)
 					if (params == std::string(set))
 						ok = true;
 				if (!ok)
@@ -1144,7 +1144,7 @@ namespace dnn
 				std::string value;
 				auto ok = false;
 				auto fillers = magic_enum::enum_names<Fillers>();
-				for (auto filler : fillers)
+				for (auto& filler : fillers)
 					if (params.rfind(std::string(filler)) == 0 && magic_enum::enum_cast<Fillers>(filler).has_value())
 					{
 						weightsFiller = magic_enum::enum_cast<Fillers>(filler).value();
@@ -1404,7 +1404,7 @@ namespace dnn
 				std::string value;
 				auto ok = false;
 				auto fillers = magic_enum::enum_names<Fillers>();
-				for (auto filler : fillers)
+				for (auto& filler : fillers)
 					if (params.rfind(std::string(filler)) == 0 && magic_enum::enum_cast<Fillers>(filler).has_value())
 					{
 						biasesFiller = magic_enum::enum_cast<Fillers>(filler).value();
@@ -1469,7 +1469,7 @@ namespace dnn
 					case Fillers::LeCunUniform:
 					{
 						auto fillerModes = magic_enum::enum_names<FillerModes>();
-						for (auto fillerMode : fillerModes)
+						for (auto& fillerMode : fillerModes)
 						{
 							if (value.rfind(std::string(fillerMode)) == 0 && magic_enum::enum_cast<FillerModes>(fillerMode).has_value())
 							{
