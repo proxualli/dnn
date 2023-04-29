@@ -578,8 +578,6 @@ namespace dnn
 			return std::string("");
 		}
 
-		friend class bitsery::Access;
-
 		Model(const std::string& definition, Dataprovider* dataprovider) :
 			Name(GetModelName(definition)),
 			Definition(definition),
@@ -3434,5 +3432,5 @@ namespace dnn
 		s.boolValue(o.UseTrainingStrategy);
 		s.container(o.Log, 4096);
 		//s.value8b(o.FirstUnlockedLayer);
-	};
+	}
 }
