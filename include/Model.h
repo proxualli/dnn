@@ -449,6 +449,15 @@ namespace dnn
 		{
 		}
 
+		void ToggleFlipHorizontal()
+		{
+			Horizontal = !Horizontal;
+		}
+
+		void ToggleFlipVertical()
+		{
+			Vertical = !Vertical;
+		}
 	};
 
 	static const bool IsBatchNorm(const LayerTypes& type)
@@ -1672,11 +1681,11 @@ namespace dnn
 
 					if (CurrentTrainingRate.HorizontalFlip)
 						for (auto index = 0ull; index < DataProv->TrainingSamplesCount; index++)
-							TrainSamplesFlip[index].Horizontal = !TrainSamplesFlip[index].Horizontal;
+							TrainSamplesFlip[index].ToggleFlipHorizontal();
 
 					if (CurrentTrainingRate.VerticalFlip)
 						for (auto index = 0ull; index < DataProv->TrainingSamplesCount; index++)
-							TrainSamplesFlip[index].Vertical = !TrainSamplesFlip[index].Vertical;
+							TrainSamplesFlip[index].ToggleFlipVertical();
 
 					if (CheckTaskState())
 					{
@@ -2072,9 +2081,9 @@ namespace dnn
 				TrainSamplesFlip = std::vector<FlipInfo>();
 				TestSamplesFlip = std::vector<FlipInfo>();
 				for (auto index = 0ull; index < DataProv->TrainingSamplesCount; index++)
-					TrainSamplesFlip.push_back(Flip{ false , false });
+					TrainSamplesFlip.push_back(Flip{ });
 				for (auto index = 0ull; index < DataProv->TestingSamplesCount; index++)
-					TestSamplesFlip.push_back(Flip{ false , false });
+					TestSamplesFlip.push_back(Flip{ });
 
 				SetOptimizer(CurrentTrainingRate.Optimizer);
 				if (!PersistOptimizer)
