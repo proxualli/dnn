@@ -189,7 +189,7 @@ int main(int argc, char* argv[])
     p.PadW = 4;
     p.MirrorPad = false;
     p.Groups = 3;
-    p.Iterations = 4;
+    p.Iterations = 7;
     p.Width = 12;
     p.Activation = scripts::Activations::HardSwish;
     p.Dropout = Float(0);
@@ -209,7 +209,6 @@ int main(int argc, char* argv[])
     const auto persistOptimizer = true;
        
     dnn::TrainingRate rate;
-
     rate.Optimizer = dnn::Optimizers::NAG;
     rate.Momentum = 0.9f;
     rate.Beta2 = 0.999f;
@@ -253,15 +252,15 @@ int main(int argc, char* argv[])
             auto info = new ModelInfo();
             DNNGetModelInfo(info);
 
-            std::cout << std::string("Training ") << info->Name << std::string(" on ") << std::string(magic_enum::enum_name<Datasets>(info->Dataset)) << (std::string(" with ") + std::string(magic_enum::enum_name<Optimizers>(optimizer)) + std::string(" optimizer")) << std::endl << std::endl;
+            std::cout << std::string("Training ") << info->Name << std::string(" on ") << std::string(magic_enum::enum_name<Datasets>(info->Dataset)) << std::string(" with " +  std::string(magic_enum::enum_name<Optimizers>(optimizer)) + " optimizer") << std::endl << std::endl;
             std::cout.flush();
 
             DNNSetNewEpochDelegate(&NewEpoch);
             DNNPersistOptimizer(persistOptimizer);
-            DNNAddTrainingRateSGDR(rate, true, 1, info->TrainingSamplesCount);
+            DNNAddTrainingRateSGDR(rate, true, 1, info->TrainSamplesCount);
             DNNTraining();
 
-            GetTrainingProgress(5, info->TrainingSamplesCount, info->TestingSamplesCount);
+            GetTrainingProgress(5, info->TrainSamplesCount, info->TestSamplesCount);
             
             delete info;
                    

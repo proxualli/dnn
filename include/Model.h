@@ -346,8 +346,8 @@ namespace dnn
 		UInt GroupIndex;
 		UInt LabelIndex;
 		UInt Hierarchies;
-		UInt TrainingSamplesCount;
-		UInt TestingSamplesCount;
+		UInt TrainSamplesCount;
+		UInt TestSamplesCount;
 		bool MeanStdNormalization;
 		std::vector<Float> MeanTrainSet;
 		std::vector<Float> StdTrainSet;
@@ -380,7 +380,7 @@ namespace dnn
 		bool Locked;
 	};
 
-	struct LogInfo
+	struct LogRecord
 	{
 		UInt Cycle;
 		UInt Epoch;
@@ -494,8 +494,8 @@ namespace dnn
 		//UInt LogInterval;
 		UInt BatchSize;
 		UInt GoToEpoch;
-		UInt AdjustedTrainingSamplesCount;
-		UInt AdjustedTestingSamplesCount;
+		UInt AdjustedTrainSamplesCount;
+		UInt AdjustedTestSamplesCount;
 		UInt TrainSkipCount;
 		UInt TestSkipCount;
 		UInt TrainOverflowCount;
@@ -549,12 +549,12 @@ namespace dnn
 		bool DisableLocking;
 		std::vector<Flip> TrainSamplesFlip;
 		std::vector<Flip> TestSamplesFlip;
-		std::vector<UInt> RandomTrainingSamples;
+		std::vector<UInt> RandomTrainSamples;
 		TrainingRate CurrentTrainingRate;
 		std::vector<TrainingRate> TrainingRates;
 		std::vector<TrainingStrategy> TrainingStrategies;
 		bool UseTrainingStrategy;
-		std::vector<LogInfo> Log;
+		std::vector<LogRecord> TrainingLog;
 		std::vector<std::unique_ptr<Layer>> Layers;
 		std::vector<Cost*> CostLayers;
 		std::chrono::duration<Float> fpropTime;
@@ -650,11 +650,11 @@ namespace dnn
 			TrainingRates(std::vector<TrainingRate>()),
 			TrainingStrategies(std::vector<TrainingStrategy>()),
 			UseTrainingStrategy(false),
-			Log(std::vector<LogInfo>()),
+			TrainingLog(std::vector<LogRecord>()),
 			SampleSpeed(Float(0)),
 			NewEpoch(nullptr),
-			AdjustedTrainingSamplesCount(0),
-			AdjustedTestingSamplesCount(0),
+			AdjustedTrainSamplesCount(0),
+			AdjustedTestSamplesCount(0),
 			TrainOverflowCount(0),
 			TestOverflowCount(0),
 			TrainSkipCount(0),
@@ -777,12 +777,12 @@ namespace dnn
 			for (auto& layer : Layers)
 				layer->SetBatchSize(n);
 				
-			AdjustedTrainingSamplesCount = (DataProv->TrainingSamplesCount % n == 0) ? DataProv->TrainingSamplesCount : ((DataProv->TrainingSamplesCount / n) + 1) * n;
-			AdjustedTestingSamplesCount = (DataProv->TestingSamplesCount % n == 0) ? DataProv->TestingSamplesCount : ((DataProv->TestingSamplesCount / n) + 1) * n;
-			TrainSkipCount = n - (AdjustedTrainingSamplesCount - DataProv->TrainingSamplesCount);
-			TestSkipCount = n - (AdjustedTestingSamplesCount - DataProv->TestingSamplesCount);
-			TrainOverflowCount = AdjustedTrainingSamplesCount - n;
-			TestOverflowCount = AdjustedTestingSamplesCount - n;;
+			AdjustedTrainSamplesCount = (DataProv->TrainSamplesCount % n == 0) ? DataProv->TrainSamplesCount : ((DataProv->TrainSamplesCount / n) + 1) * n;
+			AdjustedTestSamplesCount = (DataProv->TestSamplesCount % n == 0) ? DataProv->TestSamplesCount : ((DataProv->TestSamplesCount / n) + 1) * n;
+			TrainSkipCount = n - (AdjustedTrainSamplesCount - DataProv->TrainSamplesCount);
+			TestSkipCount = n - (AdjustedTestSamplesCount - DataProv->TestSamplesCount);
+			TrainOverflowCount = AdjustedTrainSamplesCount - n;
+			TestOverflowCount = AdjustedTestSamplesCount - n;;
 
 			BatchSize = n;
 			D = d;
@@ -1617,15 +1617,15 @@ namespace dnn
 				auto learningRateEpochs = CurrentTrainingRate.Epochs;
 				auto learningRateIndex = 0ull;
 
-				RandomTrainingSamples = std::vector<UInt>(DataProv->TrainingSamplesCount);
-				for (auto i = 0ull; i < DataProv->TrainingSamplesCount; i++)
-					RandomTrainingSamples[i] = i;
+				RandomTrainSamples = std::vector<UInt>(DataProv->TrainSamplesCount);
+				for (auto i = 0ull; i < DataProv->TrainSamplesCount; i++)
+					RandomTrainSamples[i] = i;
 
 				TrainSamplesFlip = std::vector<Flip>();
 				TestSamplesFlip = std::vector<Flip>();
-				for (auto index = 0ull; index < DataProv->TrainingSamplesCount; index++)
+				for (auto index = 0ull; index < DataProv->TrainSamplesCount; index++)
 					TrainSamplesFlip.push_back(Flip{ Bernoulli<bool>(Float(0.5)) , Bernoulli<bool>(Float(0.5)) });
-				for (auto index = 0ull; index < DataProv->TestingSamplesCount; index++)
+				for (auto index = 0ull; index < DataProv->TestSamplesCount; index++)
 					TestSamplesFlip.push_back(Flip{ Bernoulli<bool>(Float(0.5)) , Bernoulli<bool>(Float(0.5)) });
 				
 				SetOptimizer(CurrentTrainingRate.Optimizer);
@@ -1678,11 +1678,11 @@ namespace dnn
 					CurrentCycle = CurrentTrainingRate.Cycles;
 
 					if (CurrentTrainingRate.HorizontalFlip)
-						for (auto index = 0ull; index < DataProv->TrainingSamplesCount; index++)
+						for (auto index = 0ull; index < DataProv->TrainSamplesCount; index++)
 							TrainSamplesFlip[index].ToggleFlipHorizontal();
 
 					if (CurrentTrainingRate.VerticalFlip)
-						for (auto index = 0ull; index < DataProv->TrainingSamplesCount; index++)
+						for (auto index = 0ull; index < DataProv->TrainSamplesCount; index++)
 							TrainSamplesFlip[index].ToggleFlipVertical();
 
 					if (CheckTaskState())
@@ -1691,7 +1691,7 @@ namespace dnn
 
 						const auto shuffleCount = UniformInt<UInt>(DataProv->ShuffleCount / 2ull, DataProv->ShuffleCount);
 						for (auto shuffle = 0ull; shuffle < shuffleCount; shuffle++)
-							std::shuffle(std::begin(RandomTrainingSamples), std::end(RandomTrainingSamples), std::mt19937(Seed<unsigned>()));
+							std::shuffle(std::begin(RandomTrainSamples), std::end(RandomTrainSamples), std::mt19937(Seed<unsigned>()));
 
 						for (auto cost : CostLayers)
 							cost->Reset();
@@ -1699,7 +1699,7 @@ namespace dnn
 #ifdef DNN_STOCHASTIC				
 						if (BatchSize == 1)
 						{
-							for (SampleIndex = 0; SampleIndex < DataProv->TrainingSamplesCount; SampleIndex++)
+							for (SampleIndex = 0; SampleIndex < DataProv->TrainSamplesCount; SampleIndex++)
 							{
 								if (DepthDrop > 0)
 									StochasticDepth(totalSkipConnections, DepthDrop, FixedDepthDrop);
@@ -1766,7 +1766,7 @@ namespace dnn
 						{
 #endif
 							auto overflow = false;
-							for (SampleIndex = 0; SampleIndex < AdjustedTrainingSamplesCount; SampleIndex += BatchSize)
+							for (SampleIndex = 0; SampleIndex < AdjustedTrainSamplesCount; SampleIndex += BatchSize)
 							{
 								// Forward
 								if (DepthDrop > 0)
@@ -1865,7 +1865,7 @@ namespace dnn
 #ifdef DNN_STOCHASTIC	
 						if (BatchSize == 1)
 						{
-							for (SampleIndex = 0; SampleIndex < DataProv->TestingSamplesCount; SampleIndex++)
+							for (SampleIndex = 0; SampleIndex < DataProv->TestSamplesCount; SampleIndex++)
 							{
 								auto SampleLabel = TestSample(SampleIndex);
 
@@ -1886,7 +1886,7 @@ namespace dnn
 						{
 #endif
 							auto overflow = false;
-							for (SampleIndex = 0; SampleIndex < AdjustedTestingSamplesCount; SampleIndex += BatchSize)
+							for (SampleIndex = 0; SampleIndex < AdjustedTestSamplesCount; SampleIndex += BatchSize)
 							{
 								const auto timePointLocal = timer.now();
 								while (Layers[0]->RefreshingStats.load()) { std::this_thread::yield(); }
@@ -1928,10 +1928,10 @@ namespace dnn
 						{
 							for (auto cost : CostLayers)
 							{
-								cost->AvgTrainLoss = cost->TrainLoss / DataProv->TrainingSamplesCount;
-								cost->AvgTestLoss = cost->TestLoss / DataProv->TestingSamplesCount;
-								cost->TrainErrorPercentage = cost->TrainErrors / Float(DataProv->TrainingSamplesCount / 100);
-								cost->TestErrorPercentage = cost->TestErrors / Float(DataProv->TestingSamplesCount / 100);
+								cost->AvgTrainLoss = cost->TrainLoss / DataProv->TrainSamplesCount;
+								cost->AvgTestLoss = cost->TestLoss / DataProv->TestSamplesCount;
+								cost->TrainErrorPercentage = cost->TrainErrors / Float(DataProv->TrainSamplesCount / 100);
+								cost->TestErrorPercentage = cost->TestErrors / Float(DataProv->TestSamplesCount / 100);
 							}
 
 							TrainLoss = CostLayers[CostIndex]->TrainLoss;
@@ -1972,7 +1972,7 @@ namespace dnn
 							const auto dur = timer.now() - timePointGlobal;
 							const auto [hrs, mins, secs, ms] = ChronoBurst(dur);
 
-							auto logInfo = LogInfo{};
+							auto logInfo = LogRecord{};
 							logInfo.AutoAugment = CurrentTrainingRate.AutoAugment;
 							logInfo.AvgTestLoss = AvgTestLoss;
 							logInfo.AvgTrainLoss = AvgTrainLoss;
@@ -2016,7 +2016,7 @@ namespace dnn
 							logInfo.VerticalFlip = CurrentTrainingRate.VerticalFlip;
 							logInfo.W = CurrentTrainingRate.W;
 
-							Log.push_back(logInfo);
+							TrainingLog.push_back(logInfo);
 							SaveLog((subdir / std::string("log.csv")).string());
 
 							NewEpoch(CurrentCycle, CurrentEpoch, TotalEpochs, static_cast<UInt>(CurrentTrainingRate.Optimizer), CurrentTrainingRate.Beta2, CurrentTrainingRate.Gamma, CurrentTrainingRate.Eps, CurrentTrainingRate.HorizontalFlip, CurrentTrainingRate.VerticalFlip, CurrentTrainingRate.InputDropout, CurrentTrainingRate.Cutout, CurrentTrainingRate.CutMix, CurrentTrainingRate.AutoAugment, CurrentTrainingRate.ColorCast, CurrentTrainingRate.ColorAngle, CurrentTrainingRate.Distortion, static_cast<UInt>(CurrentTrainingRate.Interpolation), CurrentTrainingRate.Scaling, CurrentTrainingRate.Rotation, CurrentTrainingRate.MaximumRate, CurrentTrainingRate.N, CurrentTrainingRate.D, CurrentTrainingRate.H, CurrentTrainingRate.W, CurrentTrainingRate.PadD, CurrentTrainingRate.PadH, CurrentTrainingRate.PadW, CurrentTrainingRate.Momentum, CurrentTrainingRate.L2Penalty, CurrentTrainingRate.Dropout, AvgTrainLoss, TrainErrorPercentage, Float(100) - TrainErrorPercentage, TrainErrors, AvgTestLoss, TestErrorPercentage, Float(100) - TestErrorPercentage, TestErrors);
@@ -2072,15 +2072,15 @@ namespace dnn
 				auto learningRateEpochs = CurrentTrainingRate.Epochs;
 				auto learningRateIndex = 0ull;
 
-				RandomTrainingSamples = std::vector<UInt>(DataProv->TrainingSamplesCount);
-				for (auto i = 0ull; i < DataProv->TrainingSamplesCount; i++)
-					RandomTrainingSamples[i] = i;
+				RandomTrainSamples = std::vector<UInt>(DataProv->TrainSamplesCount);
+				for (auto i = 0ull; i < DataProv->TrainSamplesCount; i++)
+					RandomTrainSamples[i] = i;
 
 				TrainSamplesFlip = std::vector<Flip>();
 				TestSamplesFlip = std::vector<Flip>();
-				for (auto index = 0ull; index < DataProv->TrainingSamplesCount; index++)
+				for (auto index = 0ull; index < DataProv->TrainSamplesCount; index++)
 					TrainSamplesFlip.push_back(Flip{ });
-				for (auto index = 0ull; index < DataProv->TestingSamplesCount; index++)
+				for (auto index = 0ull; index < DataProv->TestSamplesCount; index++)
 					TestSamplesFlip.push_back(Flip{ });
 
 				SetOptimizer(CurrentTrainingRate.Optimizer);
@@ -2178,8 +2178,8 @@ namespace dnn
 
 					for (auto cost : CostLayers)
 					{
-						cost->AvgTestLoss = cost->TrainLoss / DataProv->TrainingSamplesCount;
-						cost->TestErrorPercentage = cost->TrainErrors / Float(DataProv->TrainingSamplesCount / 100);
+						cost->AvgTestLoss = cost->TrainLoss / DataProv->TrainSamplesCount;
+						cost->TestErrorPercentage = cost->TrainErrors / Float(DataProv->TrainSamplesCount / 100);
 					}
 				}
 
@@ -2230,9 +2230,9 @@ namespace dnn
 
 				TrainSamplesFlip = std::vector<Flip>();
 				TestSamplesFlip = std::vector<Flip>();
-				for (auto index = 0ull; index < DataProv->TrainingSamplesCount; index++)
+				for (auto index = 0ull; index < DataProv->TrainSamplesCount; index++)
 					TrainSamplesFlip.push_back(Flip{ Bernoulli<bool>(Float(0.5)), Bernoulli<bool>(Float(0.5)) });
-				for (auto index = 0ull; index < DataProv->TestingSamplesCount; index++)
+				for (auto index = 0ull; index < DataProv->TestSamplesCount; index++)
 					TestSamplesFlip.push_back(Flip{ Bernoulli<bool>(Float(0.5)), Bernoulli<bool>(Float(0.5)) });
 
 				State.store(States::Testing);
@@ -2247,7 +2247,7 @@ namespace dnn
 #ifdef DNN_STOCHASTIC
 					if (BatchSize == 1)
 					{
-						for (SampleIndex = 0; SampleIndex < DataProv->TestingSamplesCount; SampleIndex++)
+						for (SampleIndex = 0; SampleIndex < DataProv->TestSamplesCount; SampleIndex++)
 						{
 							auto SampleLabel = TestAugmentedSample(SampleIndex);
 
@@ -2268,7 +2268,7 @@ namespace dnn
 					{
 #endif
 						auto overflow = false;
-						for (SampleIndex = 0; SampleIndex < AdjustedTestingSamplesCount; SampleIndex += BatchSize)
+						for (SampleIndex = 0; SampleIndex < AdjustedTestSamplesCount; SampleIndex += BatchSize)
 						{
 							timePointGlobal = timer.now();
 
@@ -2307,8 +2307,8 @@ namespace dnn
 #endif
 					for (auto cost : CostLayers)
 					{
-						cost->AvgTestLoss = cost->TestLoss / DataProv->TestingSamplesCount;
-						cost->TestErrorPercentage = cost->TestErrors / Float(DataProv->TestingSamplesCount / 100);
+						cost->AvgTestLoss = cost->TestLoss / DataProv->TestSamplesCount;
+						cost->TestErrorPercentage = cost->TestErrors / Float(DataProv->TestSamplesCount / 100);
 					}
 				}
 			
@@ -2342,18 +2342,18 @@ namespace dnn
 				const auto size = Layers[0]->CDHW();
 				const auto offset = (idx - SampleIndex) * size;
 
-				if (State.load() == States::Training && idx < DataProv->TrainingSamplesCount)
+				if (State.load() == States::Training && idx < DataProv->TrainSamplesCount)
 				{
-					*label = DataProv->TrainingLabels[RandomTrainingSamples[idx]];
+					*label = DataProv->TrainLabels[RandomTrainSamples[idx]];
 					
 					for (auto i = 0ull; i < size; i++)
 						(*snapshot)[i] = Layers[0]->Neurons[i + offset];
 
 					return true;
 				}
-				else if (State.load() == States::Testing && idx < DataProv->TestingSamplesCount)
+				else if (State.load() == States::Testing && idx < DataProv->TestSamplesCount)
 				{
-					*label = DataProv->TestingLabels[idx];
+					*label = DataProv->TestLabels[idx];
 					
 					for (auto i = 0ull; i < size; i++)
 						(*snapshot)[i] = Layers[0]->Neurons[i + offset];
@@ -2398,14 +2398,14 @@ namespace dnn
 #ifdef DNN_STOCHASTIC
 		std::vector<LabelInfo> TrainSample(const UInt index)
 		{
-			const auto rndIndex = RandomTrainingSamples[index];
-			auto imgByte = DataProv->TrainingSamples[rndIndex];
+			const auto rndIndex = RandomTrainSamples[index];
+			auto imgByte = DataProv->TrainSamples[rndIndex];
 
-			const auto rndIndexMix = (index + 1 >= DataProv->TrainingSamplesCount) ? RandomTrainingSamples[1] : RandomTrainingSamples[index + 1];
-			auto imgByteMix = Image<Byte>(DataProv->TrainingSamples[rndIndexMix]);
+			const auto rndIndexMix = (index + 1 >= DataProv->TrainSamplesCount) ? RandomTrainSamples[1] : RandomTrainSamples[index + 1];
+			auto imgByteMix = Image<Byte>(DataProv->TrainSamples[rndIndexMix]);
 
-			auto label = DataProv->TrainingLabels[rndIndex];
-			auto labelMix = DataProv->TrainingLabels[rndIndexMix];
+			auto label = DataProv->TrainLabels[rndIndex];
+			auto labelMix = DataProv->TrainLabels[rndIndexMix];
 			
 			std::vector<LabelInfo> SampleLabel;
 		
@@ -2472,10 +2472,10 @@ namespace dnn
 
 		std::vector<LabelInfo> TestSample(const UInt index)
 		{
-			auto label = DataProv->TestingLabels[index];
+			auto label = DataProv->TestLabels[index];
 			auto SampleLabel = GetLabelInfo(label);
 
-			auto imgByte = DataProv->TestingSamples[index];
+			auto imgByte = DataProv->TestSamples[index];
 
 			if (imgByte.D() != D || imgByte.H() != H || imgByte.W() != W)
 				Image<Byte>::Resize(imgByte, D, H, W, Interpolations(CurrentTrainingRate.Interpolation));
@@ -2501,10 +2501,10 @@ namespace dnn
 
 		std::vector<LabelInfo> TestAugmentedSample(const UInt index)
 		{
-			auto label = DataProv->TestingLabels[index];
+			auto label = DataProv->TestLabels[index];
 			auto SampleLabel = GetLabelInfo(label);
 
-			auto imgByte = DataProv->TestingSamples[index];
+			auto imgByte = DataProv->TestSamples[index];
 
 			if (DataProv->C == 3 && Bernoulli<bool>(CurrentTrainingRate.ColorCast))
 				Image<Byte>::ColorCast(imgByte, CurrentTrainingRate.ColorAngle);
@@ -2561,12 +2561,12 @@ namespace dnn
 
 			for_i(batchSize, threads, [=, &SampleLabels](const UInt batchIndex)
 			{
-				const auto sampleIndex = ((index + batchIndex) >= DataProv->TrainingSamplesCount) ? batchIndex : index + batchIndex;
+				const auto sampleIndex = ((index + batchIndex) >= DataProv->TrainSamplesCount) ? batchIndex : index + batchIndex;
 
-				auto labels = DataProv->TrainingLabels[sampleIndex];
+				auto labels = DataProv->TrainLabels[sampleIndex];
 				SampleLabels[batchIndex] = GetLabelInfo(labels);
 
-				auto imgByte = DataProv->TrainingSamples[sampleIndex];
+				auto imgByte = DataProv->TrainSamples[sampleIndex];
 
 				if (resize)
 					Image<Byte>::Resize(imgByte, D, H, W, Interpolations(CurrentTrainingRate.Interpolation));
@@ -2601,14 +2601,14 @@ namespace dnn
 
 			for_i_dynamic(batchSize, threads, [=, &SampleLabels](const UInt batchIndex)
 			{
-				const auto randomIndex = (index + batchIndex >= DataProv->TrainingSamplesCount) ? RandomTrainingSamples[batchIndex] : RandomTrainingSamples[index + batchIndex];
-				auto imgByte = DataProv->TrainingSamples[randomIndex];
+				const auto randomIndex = (index + batchIndex >= DataProv->TrainSamplesCount) ? RandomTrainSamples[batchIndex] : RandomTrainSamples[index + batchIndex];
+				auto imgByte = DataProv->TrainSamples[randomIndex];
 
-				const auto randomIndexMix = (index + batchSize - (batchIndex + 1) >= DataProv->TrainingSamplesCount) ? RandomTrainingSamples[batchSize - (batchIndex + 1)] : RandomTrainingSamples[index + batchSize - (batchIndex + 1)];
-				auto imgByteMix = DataProv->TrainingSamples[randomIndexMix];
+				const auto randomIndexMix = (index + batchSize - (batchIndex + 1) >= DataProv->TrainSamplesCount) ? RandomTrainSamples[batchSize - (batchIndex + 1)] : RandomTrainSamples[index + batchSize - (batchIndex + 1)];
+				auto imgByteMix = DataProv->TrainSamples[randomIndexMix];
 
-				auto labels = DataProv->TrainingLabels[randomIndex];
-				auto mixLabels = DataProv->TrainingLabels[randomIndexMix];
+				auto labels = DataProv->TrainLabels[randomIndex];
+				auto mixLabels = DataProv->TrainLabels[randomIndexMix];
 				
 				auto cutout = false;
 				if (Bernoulli<bool>(CurrentTrainingRate.Cutout))
@@ -2682,12 +2682,12 @@ namespace dnn
 
 			for_i_dynamic(batchSize, threads, [=, &SampleLabels](const UInt batchIndex)
 			{
-				const auto sampleIndex = ((index + batchIndex) >= DataProv->TestingSamplesCount) ? batchIndex : index + batchIndex;
+				const auto sampleIndex = ((index + batchIndex) >= DataProv->TestSamplesCount) ? batchIndex : index + batchIndex;
 
-				auto labels = DataProv->TestingLabels[sampleIndex];
+				auto labels = DataProv->TestLabels[sampleIndex];
 				SampleLabels[batchIndex] = GetLabelInfo(labels);
 
-				auto imgByte = DataProv->TestingSamples[sampleIndex];
+				auto imgByte = DataProv->TestSamples[sampleIndex];
 
 				if (resize)
 					Image<Byte>::Resize(imgByte, D, H, W, Interpolations(CurrentTrainingRate.Interpolation));
@@ -2721,12 +2721,12 @@ namespace dnn
 
 			for_i_dynamic(batchSize, threads, [=, &SampleLabels](const UInt batchIndex)
 			{
-				const auto sampleIndex = ((index + batchIndex) >= DataProv->TestingSamplesCount) ? batchIndex : index + batchIndex;
+				const auto sampleIndex = ((index + batchIndex) >= DataProv->TestSamplesCount) ? batchIndex : index + batchIndex;
 
-				auto labels = DataProv->TestingLabels[sampleIndex];
+				auto labels = DataProv->TestLabels[sampleIndex];
 				SampleLabels[batchIndex] = GetLabelInfo(labels);
 
-				auto imgByte = DataProv->TestingSamples[sampleIndex];
+				auto imgByte = DataProv->TestSamples[sampleIndex];
 
 				if (DataProv->C == 3 && Bernoulli<bool>(CurrentTrainingRate.ColorCast))
 					Image<Byte>::ColorCast(imgByte, CurrentTrainingRate.ColorAngle);
@@ -2862,7 +2862,7 @@ namespace dnn
 
 		void ClearLog()
 		{
-			Log = std::vector<LogInfo>();
+			TrainingLog = std::vector<LogRecord>();
 		}
 		
 		bool SaveLog(const std::string& fileName)
@@ -2875,7 +2875,7 @@ namespace dnn
 				csv << "Cycle" << "Epoch" << "GroupIndex" << "CostIndex" << "CostName" << "N" << "D" << "H" << "W" << "PadD" << "PadH" << "PadW" << "Optimizer" << "Rate" << "Eps" << "Momentum" << "Beta2" << "Gamma" << "L2Penalty" << "Dropout"  << "InputDropout" << "Cutout" << "CutMix" << "AutoAugment" << "HorizontalFlip" << "VerticalFlip" << "ColorCast" << "ColorAngle" << "Distortion" << "Interpolation" << "Scaling" << "Rotation" << "AvgTrainLoss" << "TrainErrors" << "TrainErrorPercentage" << "TrainAccuracy" << "AvgTestLoss" << "TestErrors" << "TestErrorPercentage" << "TestAccuracy" << "ElapsedTicks" << "ElapsedTime" << EndRow;
 					
 				// Data
-				for (const LogInfo& r : Log)
+				for (const LogRecord& r : TrainingLog)
 					csv << r.Cycle << r.Epoch << r.GroupIndex << r.CostIndex << r.CostName << r.N << r.D << r.H << r.W << r.PadD << r.PadH << r.PadW << std::string(magic_enum::enum_name<Optimizers>(r.Optimizer)) << r.Rate << r.Eps << r.Momentum << r.Beta2 << r.Gamma << r.L2Penalty << r.Dropout << r.InputDropout << r.Cutout << r.CutMix << r.AutoAugment << r.HorizontalFlip << r.VerticalFlip << r.ColorCast << r.ColorAngle << r.Distortion << std::string(magic_enum::enum_name<Interpolations>(r.Interpolation)) << r.Scaling << r.Rotation << r.AvgTrainLoss << r.TrainErrors << r.TrainErrorPercentage << r.TrainAccuracy << r.AvgTestLoss << r.TestErrors << r.TestErrorPercentage << r.TestAccuracy << r.ElapsedTicks << r.ElapsedTime << EndRow;
 
 				return true;
@@ -2934,7 +2934,7 @@ namespace dnn
 			headers.insert(std::string("ElapsedTime"));
 
 			const auto delimiter = ';';
-			auto tmpLog = std::vector<LogInfo>();
+			auto tmpLog = std::vector<LogRecord>();
 			auto record = std::string("");
 			auto counter = 0ull;
 			auto oldLocale = std::locale::global(std::locale(std::locale(""), new no_separator()));
@@ -2945,7 +2945,7 @@ namespace dnn
 			{
 				auto line = std::istringstream(record);
 				auto idx = 0;
-				auto info = LogInfo{};
+				auto info = LogRecord{};
 				while (std::getline(line, record, delimiter))
 				{
 					if (counter > 0ull)
@@ -3122,7 +3122,7 @@ namespace dnn
 			}
 			
 			tmpLog.shrink_to_fit();
-			Log = std::vector<LogInfo>(tmpLog);
+			TrainingLog = std::vector<LogRecord>(tmpLog);
 
 			std::locale::global(oldLocale);
 			return true;
@@ -3299,7 +3299,7 @@ namespace dnn
 	}
 
 	template<typename S>
-	void serialize(S& s, LogInfo& o)
+	void serialize(S& s, LogRecord& o)
 	{
 		s.value8b(o.Cycle);
 		s.value8b(o.Epoch);
@@ -3355,7 +3355,7 @@ namespace dnn
 	{
 		s.container(o.TrainSamplesFlip, 1000000);
 		s.container(o.TestSamplesFlip, 500000);
-		s.container8b(o.RandomTrainingSamples, 1000000);
+		s.container8b(o.RandomTrainSamples, 1000000);
 		//s.text1b(o.Name, 128);
 		//s.text1b(o.Definition, 250000);
 		s.value4b(o.Format);
@@ -3374,8 +3374,8 @@ namespace dnn
 		s.value8b(o.SampleIndex);
 		s.value8b(o.BatchSize);
 		s.value8b(o.GoToEpoch);
-		s.value8b(o.AdjustedTrainingSamplesCount);
-		s.value8b(o.AdjustedTestingSamplesCount);
+		s.value8b(o.AdjustedTrainSamplesCount);
+		s.value8b(o.AdjustedTestSamplesCount);
 		s.value8b(o.TrainSkipCount);
 		s.value8b(o.TestSkipCount);
 		s.value8b(o.TrainOverflowCount);
@@ -3430,7 +3430,7 @@ namespace dnn
 		s.container(o.TrainingRates, 1024);
 		s.container(o.TrainingStrategies, 1024);
 		s.boolValue(o.UseTrainingStrategy);
-		s.container(o.Log, 4096);
+		s.container(o.TrainingLog, 4096);
 		//s.value8b(o.FirstUnlockedLayer);
 	}
 }

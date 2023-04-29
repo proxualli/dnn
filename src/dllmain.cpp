@@ -454,8 +454,8 @@ extern "C" DNN_API void DNNGetModelInfo(ModelInfo* info)
 		info->GroupIndex = model->GroupIndex;
 		info->LabelIndex = model->LabelIndex;
 		info->Hierarchies = dataprovider->Hierarchies;
-		info->TrainingSamplesCount = dataprovider->TrainingSamplesCount;
-		info->TestingSamplesCount = dataprovider->TestingSamplesCount;
+		info->TrainSamplesCount = dataprovider->TrainSamplesCount;
+		info->TestSamplesCount = dataprovider->TestSamplesCount;
 		info->MeanStdNormalization = model->MeanStdNormalization;
 		info->MeanTrainSet.clear();
 		info->StdTrainSet.clear();
@@ -837,7 +837,7 @@ extern "C" DNN_API void DNNGetTrainingInfo(TrainingInfo* info)
 		{
 		case States::Training:
 		{
-			const auto adjustedsampleIndex = sampleIdx > dataprovider->TrainingSamplesCount ? dataprovider->TrainingSamplesCount : sampleIdx;
+			const auto adjustedsampleIndex = sampleIdx > dataprovider->TrainSamplesCount ? dataprovider->TrainSamplesCount : sampleIdx;
 
 			model->TrainLoss = model->CostLayers[costIdx]->TrainLoss;
 			model->TrainErrors = model->CostLayers[costIdx]->TrainErrors;
@@ -852,7 +852,7 @@ extern "C" DNN_API void DNNGetTrainingInfo(TrainingInfo* info)
 
 		case States::Testing:
 		{
-			const auto adjustedsampleIndex = sampleIdx > dataprovider->TestingSamplesCount ? dataprovider->TestingSamplesCount : sampleIdx;
+			const auto adjustedsampleIndex = sampleIdx > dataprovider->TestSamplesCount ? dataprovider->TestSamplesCount : sampleIdx;
 
 			model->TestLoss = model->CostLayers[costIdx]->TestLoss;
 			model->TestErrors = model->CostLayers[costIdx]->TestErrors;
@@ -921,7 +921,7 @@ extern "C" DNN_API void DNNGetTestingInfo(TestingInfo* info)
 	{
 		const auto sampleIdx = model->SampleIndex + model->BatchSize;
 		const auto costIdx = model->CostIndex;
-		const auto adjustedsampleIndex = sampleIdx > dataprovider->TestingSamplesCount ? dataprovider->TestingSamplesCount : sampleIdx;
+		const auto adjustedsampleIndex = sampleIdx > dataprovider->TestSamplesCount ? dataprovider->TestSamplesCount : sampleIdx;
 
 		model->TestLoss = model->CostLayers[costIdx]->TestLoss;
 		model->TestErrors = model->CostLayers[costIdx]->TestErrors;

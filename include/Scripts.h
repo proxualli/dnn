@@ -198,9 +198,9 @@ namespace scripts
         bool ChannelZeroPad;
         Float DepthDrop = Float(0.2);
         bool FixedDepthDrop = false;
-        UInt StrideHFirstConv = 2;
-        UInt StrideWFirstConv = 2;
-        scripts::Activations Activation = Activations::Relu;
+        UInt StrideHFirstConv = 1;
+        UInt StrideWFirstConv = 1;
+        scripts::Activations Activation = Activations::HardSwish;
         std::vector<EfficientNetRecord> EfficientNet = { { 1, 24, 2, 1, false }, { 4, 48, 4, 2, false }, { 4, 64, 4, 2, false }, { 4, 128, 6, 2, true }, { 6, 160, 9, 1, true }, { 6, 256, 15, 2, true } };
         std::vector<ShuffleNetRecord> ShuffleNet = { { 7, 3, 1, 2, false }, { 7, 3, 1, 2, true }, { 7, 3, 1, 2, true } };
 
