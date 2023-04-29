@@ -2076,8 +2076,8 @@ namespace dnn
 				for (auto i = 0ull; i < DataProv->TrainingSamplesCount; i++)
 					RandomTrainingSamples[i] = i;
 
-				TrainSamplesFlip = std::vector<FlipInfo>();
-				TestSamplesFlip = std::vector<FlipInfo>();
+				TrainSamplesFlip = std::vector<Flip>();
+				TestSamplesFlip = std::vector<Flip>();
 				for (auto index = 0ull; index < DataProv->TrainingSamplesCount; index++)
 					TrainSamplesFlip.push_back(Flip{ });
 				for (auto index = 0ull; index < DataProv->TestingSamplesCount; index++)
