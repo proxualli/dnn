@@ -91,19 +91,19 @@ public:
 
     CsvFile& operator << (const float& val)
     {
-        auto stream = std::stringstream();
-        stream.imbue(newLocale);
-        stream << std::setprecision(std::streamsize(10)) << std::fixed << val;
-        os << stream.str() << Separator;
+        auto ss = std::stringstream();
+        ss.imbue(newLocale);
+        ss << std::setprecision(std::streamsize(10)) << std::fixed << val;
+        os << ss.str() << Separator;
         return *this;
     }
 
     CsvFile& operator << (const double& val)
     {
-        auto stream = std::stringstream();
-        stream.imbue(newLocale);
-        stream << std::setprecision(std::streamsize(16)) << std::fixed << val;
-        os << stream.str() << Separator;
+        auto ss = std::stringstream();
+        ss.imbue(newLocale);
+        ss << std::setprecision(std::streamsize(16)) << std::fixed << val;
+        os << ss.str() << Separator;
         return *this;
     }
       
@@ -136,6 +136,7 @@ inline static std::string ReadFileToString(const std::string& fileName)
     {
         auto ss = std::ostringstream{};
         ss << file.rdbuf();
+        file.close();
         return ss.str();
     }
 
