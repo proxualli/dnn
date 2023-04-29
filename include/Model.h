@@ -1942,15 +1942,14 @@ namespace dnn
 							TrainAccuracy = Float(100) - TrainErrorPercentage;
 							TestAccuracy = Float(100) - TestErrorPercentage;
 
-							if (PersistOptimizer)
-								for (auto& layer : Layers)
-									if (layer->CheckOptimizer(Optimizer))
-									{
-										for (auto& l : Layers)
-											l->ResetOptimizer(Optimizer);
-										State.store(States::Completed);
-										return;
-									}
+							for (auto& layer : Layers)
+								if (layer->CheckOptimizer(Optimizer))
+								{
+									for (auto& l : Layers)
+										l->ResetOptimizer(Optimizer);
+									State.store(States::Completed);
+									return;
+								}
 
 							// save the weights and definition
 							State.store(States::SaveWeights);
