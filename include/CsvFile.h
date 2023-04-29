@@ -93,7 +93,8 @@ public:
     {
         auto ss = std::stringstream();
         ss.imbue(newLocale);
-        ss << std::setprecision(std::streamsize(10)) << std::fixed << val;
+        ss.precision(std::streamsize(10));
+        ss << val;
         os << ss.str() << Separator;
         return *this;
     }
@@ -102,7 +103,8 @@ public:
     {
         auto ss = std::stringstream();
         ss.imbue(newLocale);
-        ss << std::setprecision(std::streamsize(16)) << std::fixed << val;
+        ss.precision(std::streamsize(16));
+        ss << val;
         os << ss.str() << Separator;
         return *this;
     }

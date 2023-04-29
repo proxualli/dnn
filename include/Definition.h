@@ -2502,7 +2502,7 @@ namespace dnn
 				goto FAIL;
 			}
 		}
-				
+	
 		if (layerType == LayerTypes::Cost)
 		{
 			if (c != classes)

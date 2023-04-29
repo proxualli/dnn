@@ -942,23 +942,26 @@ namespace
 
 	auto FloatToString(const Float value, const std::streamsize precision = 8)
 	{
-		std::stringstream ss; 
-		ss << std::setprecision(precision) << value;
-		return ss.str();
+		auto oss = std::ostringstream();
+		oss.precision(precision);
+		oss << value;
+		return std::move(oss).str();
 	}
 
 	auto FloatToStringFixed(const Float value, const std::streamsize precision = 8)
 	{
-		std::stringstream ss; 
-		ss << std::setprecision(precision) << std::fixed << value;
-		return ss.str();
+		auto oss = std::ostringstream();
+		oss.precision(precision);
+		oss << std::fixed << value;
+		return std::move(oss).str();
 	}
 
 	auto FloatToStringScientific(const Float value, const std::streamsize precision = 4)
 	{
-		std::stringstream ss; 
-		ss << std::setprecision(precision) << std::scientific << value;
-		return ss.str();
+		auto oss = std::ostringstream();
+		oss.precision(precision);
+		oss << std::scientific << value;
+		return std::move(oss).str();
 	}
 
    	auto GetFileSize(std::string fileName)
