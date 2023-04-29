@@ -967,7 +967,7 @@ namespace dnn
 					break;
 			}
 
-			if (InputLayer->DstMemDesc->get_ndims() == 2)
+			if (GetMemoryNDims(*InputLayer->DstMemDesc) == 2)
 			{
 				ChosenFormat = dnnl::memory::format_tag::nc;
 
@@ -1016,7 +1016,7 @@ namespace dnn
 			case Activations::SoftSign:
 			case Activations::TanhExp:
 			{
-				if (InputLayer->DstMemDesc->get_ndims () == 2)
+				if (GetMemoryNDims(*InputLayer->DstMemDesc) == 2)
 				{
 #ifdef DNN_STOCHASTIC
 					if (batchSize == 1)
@@ -1275,7 +1275,7 @@ namespace dnn
 			case Activations::SoftSign:
 			case Activations::TanhExp:
 			{
-				if (InputLayer->DstMemDesc->get_ndims() == 2)
+				if (GetMemoryNDims(*InputLayer->DstMemDesc) == 2)
 				{
 #ifdef DNN_STOCHASTIC
 					if (batchSize == 1)

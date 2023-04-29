@@ -40,14 +40,6 @@ namespace dnn
 	struct no_separator : std::numpunct<char>
 	{
 	protected:
-		virtual char do_decimal_point() const
-		{
-			return ',';
-		}
-		virtual char do_thousands_sep() const
-		{
-			return '.';
-		}
 		virtual std::string do_grouping() const
 		{
 			return std::string("");     // no groups

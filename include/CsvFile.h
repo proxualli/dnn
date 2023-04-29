@@ -12,14 +12,6 @@ private:
     struct no_separator : std::numpunct<char>
     {
     protected:
-        virtual char do_decimal_point() const
-        {
-            return ',';
-        }
-        virtual char do_thousands_sep() const
-        {
-            return '.';
-        }
         virtual std::string do_grouping() const
         {
             return std::string("");
@@ -95,7 +87,7 @@ public:
         auto ss = std::stringstream();
         ss.imbue(newLocale);
         ss.precision(std::streamsize(10));
-        ss << val;
+        ss << std::defaultfloat << val;
         os << ss.str() << Separator;
         return *this;
     }
@@ -105,7 +97,7 @@ public:
         auto ss = std::stringstream();
         ss.imbue(newLocale);
         ss.precision(std::streamsize(16));
-        ss << val;
+        ss << std::defaultfloat << val;
         os << ss.str() << Separator;
         return *this;
     }

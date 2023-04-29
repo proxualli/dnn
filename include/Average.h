@@ -54,7 +54,7 @@ namespace dnn
 
 		void InitializeDescriptors(const UInt batchSize) final override
 		{
-			if (Inputs[first]->DstMemDesc->get_ndims() == 2)
+			if (GetMemoryNDims(*InputLayer->DstMemDesc) == 2)
 			{
 				ChosenFormat = dnnl::memory::format_tag::nc;
 

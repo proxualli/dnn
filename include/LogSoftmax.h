@@ -52,7 +52,7 @@ namespace dnn
 			std::unique_ptr<dnnl::memory::desc> InputLayerDstMemDesc;
 			std::unique_ptr<dnnl::memory::desc> InputLayerDiffDstMemDesc;
 
-			if (InputLayer->DstMemDesc->get_ndims() == 2)
+			if (GetMemoryNDims(*InputLayer->DstMemDesc) == 2)
 			{
 				ChosenFormat = dnnl::memory::format_tag::nc;
 

@@ -65,7 +65,7 @@ namespace dnn
 		void InitializeDescriptors(const UInt batchSize) final override
 		{
 			std::vector<dnnl::memory::desc> memDesc;
-			if (InputLayer->DstMemDesc->get_ndims() == 2)
+			if (GetMemoryNDims(*InputLayer->DstMemDesc) == 2)
 			{
 				memDesc = std::vector<dnnl::memory::desc>({
 					dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(InputLayer->C) }), dnnl::memory::data_type::f32, NeuronsFormat),

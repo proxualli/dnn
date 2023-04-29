@@ -187,6 +187,13 @@ namespace
 	constexpr auto DivUp(const UInt& c) NOEXCEPT { if (c == 0ull) return 0ull; else return (((c - 1) / VectorSize) + 1) * VectorSize; }
 	auto IsPlainDataFmt(const dnnl::memory::desc& md) NOEXCEPT { return md.get_format_kind() == dnnl::memory::format_kind::blocked && md.get_inner_nblks() == 0; }
 	constexpr auto PlainFmt = dnnl::memory::format_tag::abcd;
+	auto GetMemoryNDims(const dnnl::memory::desc& md) NOEXCEPT
+	{
+		if (!md.is_zero())
+			return md.get_ndims();
+
+		return 0;
+	}
 	auto GetMemoryFormat(const dnnl::memory::desc& md) NOEXCEPT
 	{
 		using format_tag = dnnl::memory::format_tag;

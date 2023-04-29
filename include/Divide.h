@@ -53,7 +53,7 @@ namespace dnn
 
 		void InitializeDescriptors(const UInt batchSize) final override
 		{
-			if (Inputs[first]->DstMemDesc->get_ndims() == 2)
+			if (GetMemoryNDims(*Inputs[first]->DstMemDesc) == 2)
 			{
 				ChosenFormat = dnnl::memory::format_tag::nc;
 
@@ -86,6 +86,7 @@ namespace dnn
 			fwd = std::make_unique<dnnl::binary>(dnnl::binary(*fwdDesc));
 #endif
 		}
+
 		void ForwardProp(const UInt batchSize, const bool training) final override
 		{
 			const auto fullDepth = true; // SurvivalProbability[0] == Float(1) && SurvivalProbability[1] == Float(1);
