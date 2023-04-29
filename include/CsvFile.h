@@ -34,7 +34,7 @@ public:
     const char Separator;
     const std::string Quote;
 
-    CsvFile(const std::string& filename, const char separator = ';', const std::string& quote = "") :
+    CsvFile(const std::string& filename, const char separator = ';', const std::string& quote = std::string("")) :
         Separator(separator),
         Quote(quote),
         oldLocale(std::locale::global(newLocale)),
