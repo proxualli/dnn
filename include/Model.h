@@ -1651,18 +1651,8 @@ namespace dnn
 						if (CurrentTrainingRate.Optimizer != Optimizer)
 						{
 							SetOptimizer(CurrentTrainingRate.Optimizer);
-							if (!PersistOptimizer)
-								for (auto& layer : Layers)
-									layer->ResetOptimizer(Optimizer);
-							else
-								for (auto& layer : Layers)
-									if (layer->CheckOptimizer(Optimizer))
-									{
-										for (auto& l : Layers)
-											l->ResetOptimizer(Optimizer);
-										State.store(States::Completed);
-										return;
-									}
+							for (auto& layer : Layers)
+								layer->ResetOptimizer(Optimizer);
 						}
 					}
 
