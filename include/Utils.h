@@ -964,7 +964,7 @@ namespace
 		return std::move(oss).str();
 	}
 
-   	auto GetFileSize(std::string fileName)
+   	auto GetFileSize(const std::string& fileName)
 	{
 		auto file = std::ifstream(fileName, std::ifstream::in | std::ifstream::binary);
 
