@@ -432,6 +432,25 @@ namespace dnn
 		std::string ElapsedTime;
 	};
 
+	struct FlipInfo
+	{
+		bool Horizontal;
+		bool Vertical;
+
+		FlipInfo() :
+			Horizontal(false),
+			Vertical(false)
+		{
+		}
+
+		FlipInfo(const bool horizontal, const bool vertical) :
+			Horizontal(horizontal),
+			Vertical(vertical)
+		{
+		}
+
+	};
+
 	static const bool IsBatchNorm(const LayerTypes& type)
 	{
 		return std::string(magic_enum::enum_name<LayerTypes>(type)).find("BatchNorm", 0) != std::string::npos;
@@ -519,10 +538,8 @@ namespace dnn
 		bool HasBias;
 		bool PersistOptimizer;
 		bool DisableLocking;
-		std::vector<bool> TrainingSamplesHFlip;
-		std::vector<bool> TrainingSamplesVFlip;
-		std::vector<bool> TestingSamplesHFlip;
-		std::vector<bool> TestingSamplesVFlip;
+		std::vector<FlipInfo> TrainSamplesFlip;
+		std::vector<FlipInfo> TestSamplesFlip;
 		std::vector<UInt> RandomTrainingSamples;
 		TrainingRate CurrentTrainingRate;
 		std::vector<TrainingRate> TrainingRates;
@@ -551,6 +568,8 @@ namespace dnn
 
 			return std::string("");
 		}
+
+		friend class bitsery::Access;
 
 		Model(const std::string& definition, Dataprovider* dataprovider) :
 			Name(GetModelName(definition)),
@@ -1595,21 +1614,12 @@ namespace dnn
 				for (auto i = 0ull; i < DataProv->TrainingSamplesCount; i++)
 					RandomTrainingSamples[i] = i;
 
-				TrainingSamplesHFlip = std::vector<bool>();
-				TrainingSamplesVFlip = std::vector<bool>();
-				TestingSamplesHFlip = std::vector<bool>();
-				TestingSamplesVFlip = std::vector<bool>();
-
+				TrainSamplesFlip = std::vector<FlipInfo>();
+				TestSamplesFlip = std::vector<FlipInfo>();
 				for (auto index = 0ull; index < DataProv->TrainingSamplesCount; index++)
-				{
-					TrainingSamplesHFlip.push_back(Bernoulli<bool>(Float(0.5)));
-					TrainingSamplesVFlip.push_back(Bernoulli<bool>(Float(0.5)));
-				}
+					TrainSamplesFlip.push_back(FlipInfo{ Bernoulli<bool>(Float(0.5)) , Bernoulli<bool>(Float(0.5)) });
 				for (auto index = 0ull; index < DataProv->TestingSamplesCount; index++)
-				{
-					TestingSamplesHFlip.push_back(Bernoulli<bool>(Float(0.5)));
-					TestingSamplesVFlip.push_back(Bernoulli<bool>(Float(0.5)));
-				}
+					TestSamplesFlip.push_back(FlipInfo{ Bernoulli<bool>(Float(0.5)) , Bernoulli<bool>(Float(0.5)) });
 				
 				SetOptimizer(CurrentTrainingRate.Optimizer);
 				for (auto& layer : Layers)
@@ -1662,11 +1672,11 @@ namespace dnn
 
 					if (CurrentTrainingRate.HorizontalFlip)
 						for (auto index = 0ull; index < DataProv->TrainingSamplesCount; index++)
-							TrainingSamplesHFlip[index].flip();
+							TrainSamplesFlip[index].Horizontal = !TrainSamplesFlip[index].Horizontal;
 
 					if (CurrentTrainingRate.VerticalFlip)
 						for (auto index = 0ull; index < DataProv->TrainingSamplesCount; index++)
-							TrainingSamplesVFlip[index].flip();
+							TrainSamplesFlip[index].Vertical = !TrainSamplesFlip[index].Vertical;
 
 					if (CheckTaskState())
 					{
@@ -2059,21 +2069,12 @@ namespace dnn
 				for (auto i = 0ull; i < DataProv->TrainingSamplesCount; i++)
 					RandomTrainingSamples[i] = i;
 
-				TrainingSamplesHFlip = std::vector<bool>();
-				TrainingSamplesVFlip = std::vector<bool>();
-				TestingSamplesHFlip = std::vector<bool>();
-				TestingSamplesVFlip = std::vector<bool>();
-
+				TrainSamplesFlip = std::vector<FlipInfo>();
+				TestSamplesFlip = std::vector<FlipInfo>();
 				for (auto index = 0ull; index < DataProv->TrainingSamplesCount; index++)
-				{
-					TrainingSamplesHFlip.push_back(false);
-					TrainingSamplesVFlip.push_back(false);
-				}
+					TrainSamplesFlip.push_back(FlipInfo{ false , false });
 				for (auto index = 0ull; index < DataProv->TestingSamplesCount; index++)
-				{
-					TestingSamplesHFlip.push_back(false);
-					TestingSamplesVFlip.push_back(false);
-				}
+					TestSamplesFlip.push_back(FlipInfo{ false , false });
 
 				SetOptimizer(CurrentTrainingRate.Optimizer);
 				if (!PersistOptimizer)
@@ -2220,20 +2221,12 @@ namespace dnn
 					ChangeDropout(CurrentTrainingRate.Dropout, BatchSize);
 
 
-				TrainingSamplesHFlip = std::vector<bool>();
-				TrainingSamplesVFlip = std::vector<bool>();
-				TestingSamplesHFlip = std::vector<bool>();
-				TestingSamplesVFlip = std::vector<bool>();
+				TrainSamplesFlip = std::vector<FlipInfo>();
+				TestSamplesFlip = std::vector<FlipInfo>();
 				for (auto index = 0ull; index < DataProv->TrainingSamplesCount; index++)
-				{
-					TrainingSamplesHFlip.push_back(Bernoulli<bool>(Float(0.5)));
-					TrainingSamplesVFlip.push_back(Bernoulli<bool>(Float(0.5)));
-				}
+					TrainSamplesFlip.push_back(FlipInfo{ Bernoulli<bool>(Float(0.5)), Bernoulli<bool>(Float(0.5)) });
 				for (auto index = 0ull; index < DataProv->TestingSamplesCount; index++)
-				{
-					TestingSamplesHFlip.push_back(Bernoulli<bool>(Float(0.5)));
-					TestingSamplesVFlip.push_back(Bernoulli<bool>(Float(0.5)));
-				}
+					TestSamplesFlip.push_back(FlipInfo{ Bernoulli<bool>(Float(0.5)), Bernoulli<bool>(Float(0.5)) });
 
 				State.store(States::Testing);
 
@@ -2427,10 +2420,10 @@ namespace dnn
 			else
 				SampleLabel = GetLabelInfo(label);
 
-			if (CurrentTrainingRate.HorizontalFlip && TrainingSamplesHFlip[rndIndex])
+			if (CurrentTrainingRate.HorizontalFlip && TrainSamplesFlip[rndIndex].Horizontal)
 				Image<Byte>::HorizontalMirror(imgByte);
 
-			if (CurrentTrainingRate.VerticalFlip && TrainingSamplesVFlip[rndIndex])
+			if (CurrentTrainingRate.VerticalFlip && TrainiSamplesFlip[rndIndex].Vertical)
 				Image<Byte>::VerticalMirror(imgByte);
 
 			if (DataProv->C == 3 && Bernoulli<bool>(CurrentTrainingRate.ColorCast))
@@ -2509,10 +2502,10 @@ namespace dnn
 			if (DataProv->C == 3 && Bernoulli<bool>(CurrentTrainingRate.ColorCast))
 				Image<Byte>::ColorCast(imgByte, CurrentTrainingRate.ColorAngle);
 
-			if (CurrentTrainingRate.HorizontalFlip && TestingSamplesHFlip[index])
+			if (CurrentTrainingRate.HorizontalFlip && TestSamplesFlip[index].Horizontal)
 				Image<Byte>::HorizontalMirror(imgByte);
 
-			if (CurrentTrainingRate.VerticalFlip && TestingSamplesVFlip[index])
+			if (CurrentTrainingRate.VerticalFlip && TestSamplesFlip[index].Vertical)
 				Image<Byte>::VerticalMirror(imgByte);
 
 			if (imgByte.D() != D || imgByte.H() != H || imgByte.W() != W)
@@ -2628,10 +2621,10 @@ namespace dnn
 				else
 					SampleLabels[batchIndex] = GetLabelInfo(labels);
 				
-				if (CurrentTrainingRate.HorizontalFlip && TrainingSamplesHFlip[randomIndex])
+				if (CurrentTrainingRate.HorizontalFlip && TrainSamplesFlip[randomIndex].Horizontal)
 					Image<Byte>::HorizontalMirror(imgByte);
 
-				if (CurrentTrainingRate.VerticalFlip && TrainingSamplesVFlip[randomIndex])
+				if (CurrentTrainingRate.VerticalFlip && TrainSamplesFlip[randomIndex].Vertical)
 					Image<Byte>::VerticalMirror(imgByte);
 
 				if (DataProv->C == 3 && Bernoulli<bool>(CurrentTrainingRate.ColorCast))
@@ -2731,10 +2724,10 @@ namespace dnn
 				if (DataProv->C == 3 && Bernoulli<bool>(CurrentTrainingRate.ColorCast))
 					Image<Byte>::ColorCast(imgByte, CurrentTrainingRate.ColorAngle);
 
-				if (CurrentTrainingRate.HorizontalFlip && TestingSamplesHFlip[sampleIndex])
+				if (CurrentTrainingRate.HorizontalFlip && TestSamplesFlip[sampleIndex].Horizontal)
 					Image<Byte>::HorizontalMirror(imgByte);
 
-				if (CurrentTrainingRate.VerticalFlip && TestingSamplesVFlip[sampleIndex])
+				if (CurrentTrainingRate.VerticalFlip && TestSamplesFlip[sampleIndex].Vertical)
 					Image<Byte>::VerticalMirror(imgByte);
 
 				if (resize)
@@ -3213,6 +3206,13 @@ namespace dnn
 	};
 	
 	template<typename S>
+	void serialize(S& s, FlipInfo& o)
+	{
+		s.boolValue(o.Horizontal);
+		s.boolValue(o.Vertical);
+	}
+
+	template<typename S>
 	void serialize(S& s, TrainingStrategy& o)
 	{
 		s.value4b(o.Epochs);
@@ -3345,10 +3345,8 @@ namespace dnn
 	template<typename S>
 	void serialize(S& s, Model& o)
 	{
-		//s.container1b(o.TrainingSamplesHFlip, 1000000);
-		//s.container1b(o.TrainingSamplesVFlip, 1000000);
-		//s.container1b(o.TestingSamplesHFlip, 500000);
-		//s.container1b(o.TestingSamplesVFlip, 500000);
+		s.container(o.TrainSamplesFlip, 1000000);
+		s.container(o.TestSamplesFlip, 500000);
 		s.container8b(o.RandomTrainingSamples, 1000000);
 		//s.text1b(o.Name, 128);
 		//s.text1b(o.Definition, 250000);
