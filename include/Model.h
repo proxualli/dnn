@@ -1890,7 +1890,7 @@ namespace dnn
 							auto overflow = false;
 							for (SampleIndex = 0; SampleIndex < AdjustedTestingSamplesCount; SampleIndex += BatchSize)
 							{
-								const auto timePointlocal = timer.now();
+								const auto timePointLocal = timer.now();
 								while (Layers[0]->RefreshingStats.load()) { std::this_thread::yield(); }
 								Layers[0]->Fwd.store(true);
 								timePoint = timer.now();
@@ -1911,13 +1911,13 @@ namespace dnn
 									Layers[i]->Fwd.store(false);
 								}
 
-								fpropTime = timer.now() - timePointlocal;
+								fpropTime = timer.now() - timePointLocal;
 
 								overflow = SampleIndex >= TestOverflowCount;
 								CostFunctionBatch(State.load(), BatchSize, overflow, TestSkipCount);
 								RecognizedBatch(State.load(), BatchSize, overflow, TestSkipCount, SampleLabels);
 
-								elapsedTime = timer.now() - timePointlocal;
+								elapsedTime = timer.now() - timePointLocal;
 								SampleSpeed = BatchSize / (Float(std::chrono::duration_cast<std::chrono::microseconds>(elapsedTime).count()) / 1000000ll);
 
 								if (TaskState.load() != TaskStates::Running && !CheckTaskState())
