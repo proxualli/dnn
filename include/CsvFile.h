@@ -62,7 +62,8 @@ public:
         auto pos = os.tellp();
         pos -= 1;
         os.seekp(pos);
-        // end of line
+
+        // add end of line
         os << std::endl;
     }
 
@@ -136,10 +137,10 @@ inline static std::string ReadFileToString(const std::string& fileName)
 
     if (!file.bad() && file.is_open())
     {
-        auto ss = std::ostringstream{};
-        ss << file.rdbuf();
+        auto oss = std::ostringstream{};
+        oss << file.rdbuf();
         file.close();
-        return ss.str();
+        return oss.str();
     }
 
     std::cerr << std::string("Could not open the file - '") << fileName << std::string("'") << std::endl;
