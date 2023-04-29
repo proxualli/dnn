@@ -1612,18 +1612,14 @@ namespace dnn
 				}
 				
 				SetOptimizer(CurrentTrainingRate.Optimizer);
-				if (!PersistOptimizer)
-					for (auto& layer : Layers)
-						layer->ResetOptimizer(Optimizer);
-				else
-					for (auto& layer : Layers)
-						if (layer->CheckOptimizer(Optimizer))
-						{
-							for (auto& l : Layers)
-								l->ResetOptimizer(Optimizer);
-							State.store(States::Completed);
-							return;
-						}
+				for (auto& layer : Layers)
+					if (layer->CheckOptimizer(Optimizer))
+					{
+						for (auto& l : Layers)
+							l->ResetOptimizer(Optimizer);
+						State.store(States::Completed);
+						return;
+					}
 			
 				FirstUnlockedLayer.store(Layers.size() - 2);
 				for (auto i = 0ull; i < Layers.size(); i++)
