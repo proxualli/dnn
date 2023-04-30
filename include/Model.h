@@ -428,7 +428,7 @@ namespace dnn
 		Float TestErrorPercentage;
 		Float TestAccuracy;
 		// Duration
-		long long ElapsedTicks;
+		long long ElapsedMilliSeconds;
 		std::string ElapsedTime;
 	};
 
@@ -1987,7 +1987,7 @@ namespace dnn
 							logInfo.D = CurrentTrainingRate.D;;
 							logInfo.Distortion = CurrentTrainingRate.Distortion;
 							logInfo.Dropout = CurrentTrainingRate.Dropout;
-							logInfo.ElapsedTicks = std::chrono::duration_cast<std::chrono::milliseconds>(dur).count();
+							logInfo.ElapsedMilliSeconds = std::chrono::duration_cast<std::chrono::milliseconds>(dur).count();
 							logInfo.ElapsedTime = (hrs.count() < 10 ? std::string("0") : std::string("")) + std::to_string(hrs.count()) + std::string(":") + (mins.count() < 10 ? std::string("0") : std::string("")) + std::to_string(mins.count()) + std::string(":") + (secs.count() < 10 ? std::string("0") : std::string("")) + std::to_string(secs.count()) + std::string(".") + std::to_string(ms.count());
 							logInfo.Epoch = CurrentEpoch;
 							logInfo.Eps = CurrentTrainingRate.Eps;
@@ -2872,11 +2872,11 @@ namespace dnn
 				CsvFile csv(fileName);
 
 				// Header
-				csv << "Cycle" << "Epoch" << "GroupIndex" << "CostIndex" << "CostName" << "N" << "D" << "H" << "W" << "PadD" << "PadH" << "PadW" << "Optimizer" << "Rate" << "Eps" << "Momentum" << "Beta2" << "Gamma" << "L2Penalty" << "Dropout"  << "InputDropout" << "Cutout" << "CutMix" << "AutoAugment" << "HorizontalFlip" << "VerticalFlip" << "ColorCast" << "ColorAngle" << "Distortion" << "Interpolation" << "Scaling" << "Rotation" << "AvgTrainLoss" << "TrainErrors" << "TrainErrorPercentage" << "TrainAccuracy" << "AvgTestLoss" << "TestErrors" << "TestErrorPercentage" << "TestAccuracy" << "ElapsedTicks" << "ElapsedTime" << EndRow;
+				csv << "Cycle" << "Epoch" << "GroupIndex" << "CostIndex" << "CostName" << "N" << "D" << "H" << "W" << "PadD" << "PadH" << "PadW" << "Optimizer" << "Rate" << "Eps" << "Momentum" << "Beta2" << "Gamma" << "L2Penalty" << "Dropout"  << "InputDropout" << "Cutout" << "CutMix" << "AutoAugment" << "HorizontalFlip" << "VerticalFlip" << "ColorCast" << "ColorAngle" << "Distortion" << "Interpolation" << "Scaling" << "Rotation" << "AvgTrainLoss" << "TrainErrors" << "TrainErrorPercentage" << "TrainAccuracy" << "AvgTestLoss" << "TestErrors" << "TestErrorPercentage" << "TestAccuracy" << "ElapsedMilliSeconds" << "ElapsedTime" << EndRow;
 					
 				// Data
 				for (const LogRecord& r : TrainingLog)
-					csv << r.Cycle << r.Epoch << r.GroupIndex << r.CostIndex << r.CostName << r.N << r.D << r.H << r.W << r.PadD << r.PadH << r.PadW << std::string(magic_enum::enum_name<Optimizers>(r.Optimizer)) << r.Rate << r.Eps << r.Momentum << r.Beta2 << r.Gamma << r.L2Penalty << r.Dropout << r.InputDropout << r.Cutout << r.CutMix << r.AutoAugment << r.HorizontalFlip << r.VerticalFlip << r.ColorCast << r.ColorAngle << r.Distortion << std::string(magic_enum::enum_name<Interpolations>(r.Interpolation)) << r.Scaling << r.Rotation << r.AvgTrainLoss << r.TrainErrors << r.TrainErrorPercentage << r.TrainAccuracy << r.AvgTestLoss << r.TestErrors << r.TestErrorPercentage << r.TestAccuracy << r.ElapsedTicks << r.ElapsedTime << EndRow;
+					csv << r.Cycle << r.Epoch << r.GroupIndex << r.CostIndex << r.CostName << r.N << r.D << r.H << r.W << r.PadD << r.PadH << r.PadW << std::string(magic_enum::enum_name<Optimizers>(r.Optimizer)) << r.Rate << r.Eps << r.Momentum << r.Beta2 << r.Gamma << r.L2Penalty << r.Dropout << r.InputDropout << r.Cutout << r.CutMix << r.AutoAugment << r.HorizontalFlip << r.VerticalFlip << r.ColorCast << r.ColorAngle << r.Distortion << std::string(magic_enum::enum_name<Interpolations>(r.Interpolation)) << r.Scaling << r.Rotation << r.AvgTrainLoss << r.TrainErrors << r.TrainErrorPercentage << r.TrainAccuracy << r.AvgTestLoss << r.TestErrors << r.TestErrorPercentage << r.TestAccuracy << r.ElapsedMilliSeconds << r.ElapsedTime << EndRow;
 
 				return true;
 			}
@@ -2930,7 +2930,7 @@ namespace dnn
 			headers.insert(std::string("TestErrors"));
 			headers.insert(std::string("TestErrorPercentage"));
 			headers.insert(std::string("TestAccuracy"));
-			headers.insert(std::string("ElapsedTicks"));
+			headers.insert(std::string("ElapsedMilliseconds"));
 			headers.insert(std::string("ElapsedTime"));
 
 			const auto delimiter = ';';
@@ -2939,9 +2939,9 @@ namespace dnn
 			auto counter = 0ull;
 			auto oldLocale = std::locale::global(std::locale(std::locale(""), new no_separator()));
 			const auto fileContents = ReadFileToString(fileName);
-			auto sstream = std::istringstream(fileContents);
+			auto iss = std::istringstream(fileContents);
 			
-			while (std::getline(sstream, record))
+			while (std::getline(iss, record))
 			{
 				auto line = std::istringstream(record);
 				auto idx = 0;
@@ -3086,8 +3086,8 @@ namespace dnn
 							case 39:	// TestAccuracy
 								info.TestAccuracy = std::stof(record);
 								break;
-							case 40:	// ElapsedTicks
-								info.ElapsedTicks = std::stoll(record);
+							case 40:	// ElapsedMilliSeconds
+								info.ElapsedMilliSeconds = std::stoll(record);
 								break;
 							case 41:	// ElapsedTime
 								info.ElapsedTime = record;
@@ -3346,7 +3346,7 @@ namespace dnn
 		s.value4b(o.TestErrorPercentage);
 		s.value4b(o.TestAccuracy);
 
-		s.value8b(o.ElapsedTicks);
+		s.value8b(o.ElapsedMilliSeconds);
 		s.text1b(o.ElapsedTime, 128);
 	}
 	
