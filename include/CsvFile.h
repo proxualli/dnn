@@ -76,7 +76,7 @@ namespace dnn
             oss.imbue(newLocale);
             oss.precision(std::streamsize(10));
             oss << std::defaultfloat << val;
-            os << oss.str() << Separator;
+            os << std::move(oss).str() << Separator;
             return *this;
         }
 
@@ -86,7 +86,7 @@ namespace dnn
             oss.imbue(newLocale);
             oss.precision(std::streamsize(16));
             oss << std::defaultfloat << val;
-            os << oss.str() << Separator;
+            os << std::move(oss).str() << Separator;
             return *this;
         }
 
