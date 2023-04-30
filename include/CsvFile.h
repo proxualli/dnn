@@ -72,21 +72,21 @@ namespace dnn
 
         CsvFile& operator << (const float& val)
         {
-            auto ss = std::stringstream();
-            ss.imbue(newLocale);
-            ss.precision(std::streamsize(10));
-            ss << std::defaultfloat << val;
-            os << ss.str() << Separator;
+            auto oss = std::ostringstream();
+            oss.imbue(newLocale);
+            oss.precision(std::streamsize(10));
+            oss << std::defaultfloat << val;
+            os << oss.str() << Separator;
             return *this;
         }
 
         CsvFile& operator << (const double& val)
         {
-            auto ss = std::stringstream();
-            ss.imbue(newLocale);
-            ss.precision(std::streamsize(16));
-            ss << std::defaultfloat << val;
-            os << ss.str() << Separator;
+            auto oss = std::ostringstream();
+            oss.imbue(newLocale);
+            oss.precision(std::streamsize(16));
+            oss << std::defaultfloat << val;
+            os << oss.str() << Separator;
             return *this;
         }
 
