@@ -476,7 +476,7 @@ namespace dnn
 		inline auto HW() const noexcept { return H * W; }
 		inline auto DHW() const noexcept { return D * H * W; }
 		inline auto CDHW() const noexcept { return C * D * H * W; }
-		inline auto PaddedCDHW() const noexcept { return LayerType == LayerTypes::Input ? (C * D * H * W) : (PaddedC * D * H * W); }
+		inline auto PaddedCDHW() const noexcept { return LayerType == LayerTypes::Input ? CDHW() : (PaddedC * DHW()); }
 
 		virtual void UpdateResolution()	{ }
 
@@ -1054,7 +1054,7 @@ namespace dnn
 				auto weights = FloatVector(WeightCount);
 
 				auto weightsScope = Float(FanIn());
-				switch (weightsFillerMode)
+				switch (WeightsFillerMode)
 				{
 				case FillerModes::Avg:
 					weightsScope = Float(FanIn() + FanOut()) / Float(2);
@@ -1067,7 +1067,7 @@ namespace dnn
 					break;
 				}
 
-				switch (weightsFiller)
+				switch (WeightsFiller)
 				{
 				case Fillers::Constant:
 				{
@@ -1182,7 +1182,7 @@ namespace dnn
 				}
 
 				auto biasesScope = Float(FanIn());
-				switch (biasesFillerMode)
+				switch (BiasesFillerMode)
 				{
 				case FillerModes::Avg:
 					biasesScope = Float(FanIn() + FanOut()) / Float(2);
@@ -1195,7 +1195,7 @@ namespace dnn
 					break;
 				}
 
-				switch (biasesFiller)
+				switch (BiasesFiller)
 				{
 				case Fillers::Constant:
 				{

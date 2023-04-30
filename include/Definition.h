@@ -1293,9 +1293,7 @@ namespace dnn
 					break;
 					}
 				}
-
-				useDefaultParams = false;
-
+								
 				if (isModel)
 				{
 					model->WeightsFiller = weightsFiller;
@@ -1328,6 +1326,8 @@ namespace dnn
 					break;
 					}
 				}
+				else 
+					useDefaultParams = false;
 			}
 			else if (strLine.rfind("WeightsLRM=") == 0)
 			{
@@ -1556,8 +1556,6 @@ namespace dnn
 					}
 				}
 
-				useDefaultParams = false;
-
 				if (isModel)
 				{
 					model->BiasesFiller = biasesFiller;
@@ -1590,6 +1588,8 @@ namespace dnn
 					break;
 					}
 				}
+				else
+					useDefaultParams = false;
 			}
 			else if (strLine.rfind("BiasesLRM=") == 0)
 			{
