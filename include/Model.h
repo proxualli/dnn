@@ -44,6 +44,14 @@ namespace dnn
 		{
 			return std::string("");     // no groups
 		}
+		virtual char do_decimal_point() const
+		{
+			return ',';
+		}
+		virtual char do_thousands_sep() const
+		{
+			return '.';
+		}
 	};
 
 	enum class TaskStates

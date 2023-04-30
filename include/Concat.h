@@ -95,13 +95,13 @@ namespace dnn
 			srcsMemsDesc = std::vector<dnnl::memory::desc>();
 			for (auto i = 0ull; i < Inputs.size(); i++)
 			{
-				if (Inputs[i]->DstMemDesc->get_ndims() == 2)
+				if (GetMemoryNDims(*Inputs[i]->DstMemDesc) == 2)
 					srcsMemsDesc.push_back(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(Inputs[i]->C) }), dnnl::memory::data_type::f32, ChosenFormat));
 				else
 					srcsMemsDesc.push_back(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(Inputs[i]->C), dnnl::memory::dim(Inputs[i]->H), dnnl::memory::dim(Inputs[i]->W) }), dnnl::memory::data_type::f32, ChosenFormat));
 			}
 
-			fwdDesc = std::make_unique<dnnl::concat::primitive_desc>(dnnl::concat::primitive_desc(Device.engine , *DstMemDesc, 1, srcsMemsDesc));
+			fwdDesc = std::make_unique<dnnl::concat::primitive_desc>(dnnl::concat::primitive_desc(Device.engine, *DstMemDesc, 1, srcsMemsDesc));
 
 			fwdArgs = std::unordered_map<int, dnnl::memory>{ { DNNL_ARG_DST, dnnl::memory(*DstMemDesc, Device.engine, Neurons.data()) } };
 			for (auto i = 0ull; i < InputsFwd.size(); i++)

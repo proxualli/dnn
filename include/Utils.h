@@ -947,9 +947,27 @@ namespace
 		return ::beta_distribution<T>(a, b)(generator);
 	}
 
+	struct no_separator : std::numpunct<char>
+	{
+	protected:
+		virtual std::string do_grouping() const
+		{
+			return std::string("");
+		}
+		virtual char do_decimal_point() const
+		{
+			return ',';
+		}
+		virtual char do_thousands_sep() const
+		{
+			return '.';
+		}
+	};
+
 	auto FloatToString(const Float value, const std::streamsize precision = 8)
 	{
 		auto oss = std::ostringstream();
+		oss.imbue(std::locale(std::locale(""), new no_separator()));
 		oss.precision(precision);
 		oss << value;
 		return std::move(oss).str();
@@ -958,6 +976,7 @@ namespace
 	auto FloatToStringFixed(const Float value, const std::streamsize precision = 8)
 	{
 		auto oss = std::ostringstream();
+		oss.imbue(std::locale(std::locale(""), new no_separator()));
 		oss.precision(precision);
 		oss << std::fixed << value;
 		return std::move(oss).str();
@@ -966,6 +985,7 @@ namespace
 	auto FloatToStringScientific(const Float value, const std::streamsize precision = 4)
 	{
 		auto oss = std::ostringstream();
+		oss.imbue(std::locale(std::locale(""), new no_separator()));
 		oss.precision(precision);
 		oss << std::scientific << value;
 		return std::move(oss).str();

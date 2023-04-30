@@ -16,6 +16,14 @@ private:
         {
             return std::string("");
         }
+        virtual char do_decimal_point() const
+        {
+            return ',';
+        }
+        virtual char do_thousands_sep() const
+        {
+            return '.';
+        }
     };
 
     const std::locale newLocale = std::locale(std::locale(""), new no_separator());
