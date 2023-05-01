@@ -1410,12 +1410,12 @@ namespace dnn
 							case LayerTypes::Substract:
 								dynamic_cast<Substract*>(layer.get())->SurvivalProbability[inputLayer] = survivalProb;
 								break;
-							/*case LayerTypes::Multiply:
+							case LayerTypes::Multiply:
 								dynamic_cast<Multiply*>(layer.get())->SurvivalProbability[inputLayer] = survivalProb;
 								break;
 							case LayerTypes::Divide:
 								dynamic_cast<Divide*>(layer.get())->SurvivalProbability[inputLayer] = survivalProb;
-								break;*/
+								break;
 							default:
 								break;
 							}
@@ -3343,9 +3343,6 @@ namespace dnn
 	template<typename S>
 	void serialize(S& s, Model& o)
 	{
-		s.container(o.TrainSamplesFlip, 1000000);
-		s.container(o.TestSamplesFlip, 500000);
-		s.container8b(o.RandomTrainSamples, 1000000);
 		//s.text1b(o.Name, 128);
 		//s.text1b(o.Definition, 250000);
 		s.value4b(o.Format);
@@ -3417,6 +3414,9 @@ namespace dnn
 		s.boolValue(o.PersistOptimizer);
 		s.boolValue(o.DisableLocking);
 		s.object(o.CurrentTrainingRate);
+		s.container(o.TrainSamplesFlip, 1000000);
+		s.container(o.TestSamplesFlip, 500000);
+		s.container8b(o.RandomTrainSamples, 1000000);
 		s.container(o.TrainingRates, 1024);
 		s.container(o.TrainingStrategies, 1024);
 		s.boolValue(o.UseTrainingStrategy);

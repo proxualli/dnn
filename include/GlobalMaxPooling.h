@@ -31,7 +31,7 @@ namespace dnn
 			Layer(device, format, name, LayerTypes::GlobalMaxPooling, 0, 0, inputs[0]->C, 1, 1, 1, 0, 0, 0, inputs),
 			KernelH(inputs[0]->H),
 			KernelW(inputs[0]->W),
-			Scale(Float(1) / inputs[0]->W * inputs[0]->H),
+			Scale(Float(1) / Float(inputs[0]->W * inputs[0]->H)),
 			Kernel(dnnl::memory::dims({ dnnl::memory::dim(inputs[0]->H), dnnl::memory::dim(inputs[0]->W) })),
 			Strides(dnnl::memory::dims({ dnnl::memory::dim(inputs[0]->H) , dnnl::memory::dim(inputs[0]->W) })),
 			Padding(dnnl::memory::dims({ dnnl::memory::dim(0), dnnl::memory::dim(0) })),
@@ -46,7 +46,7 @@ namespace dnn
 		{
 			KernelH = InputLayer->H;
 			KernelW = InputLayer->W;
-			Scale = Float(1) / KernelH * KernelW;
+			Scale = Float(1) / Float(KernelH * KernelW);
 			Kernel = dnnl::memory::dims({ dnnl::memory::dim(KernelH), dnnl::memory::dim(KernelW) });
 			Strides = dnnl::memory::dims({ dnnl::memory::dim(KernelH), dnnl::memory::dim(KernelW) });
 		}

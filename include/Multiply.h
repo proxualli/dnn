@@ -8,7 +8,6 @@ namespace dnn
 	private:
 		std::unique_ptr<dnnl::binary::primitive_desc> fwdDesc;
 		std::unordered_map<int, dnnl::memory> fwdArgs;
-		std::vector<Float> scales;
 #ifdef DNN_CACHE_PRIMITIVES
 		std::unique_ptr<dnnl::binary> fwd;
 #endif
@@ -27,7 +26,7 @@ namespace dnn
 			assert(Inputs[0]->C == Inputs[1]->C);
 			assert(Inputs[0]->D == Inputs[1]->D);
 
-			scales = std::vector<Float>(2, Float(1));
+			//scales = std::vector<Float>(2, Float(1));
 		}
 
 		void UpdateResolution() final override
@@ -90,9 +89,7 @@ namespace dnn
 		void ForwardProp(const UInt batchSize, const bool training) final override
 		{
 			const auto fullDepth = true; // SurvivalProbability[0] == Float(1) && SurvivalProbability[1] == Float(1);
-			scales[0] = fullDepth ? Float(1) : (Inputs[0]->Skip ? Float(0) : Float(1));
-			scales[1] = fullDepth ? Float(1) : (Inputs[1]->Skip ? Float(0) : Float(1));
-
+			
 			if (training)
 			{
 				const auto plain = IsPlainFormat();
@@ -128,22 +125,19 @@ namespace dnn
 							}
 							else
 							{
-								const auto scales0 = scales[0];
-								const auto scales1 = scales[1];
-
 								VecFloat In0, In1;
 								for (auto cdhw = 0ull; cdhw < part; cdhw += VectorSize)
 								{
-									In0.load_a(&Inputs[0]->Neurons[cdhw]);
-									In1.load_a(&Inputs[1]->Neurons[cdhw]);
-									((In0 * scales0) * (In1 * scales1)).store_a(&Neurons[cdhw]);
+									In0 = Inputs[0]->Skip ? VecFloat(1) : VecFloat().load_a(&Inputs[0]->Neurons[cdhw]);
+									In1 = Inputs[1]->Skip ? VecFloat(1) : VecFloat().load_a(&Inputs[1]->Neurons[cdhw]);
+									(In0 * In1).store_a(&Neurons[cdhw]);
 #ifndef DNN_LEAN
 									VecZero.store_nt(&NeuronsD1[cdhw]);
 #endif
 								}
 								for (auto cdhw = part; cdhw < size; cdhw++)
 								{
-									Neurons[cdhw] = (Inputs[0]->Neurons[cdhw] * scales0) * (Inputs[1]->Neurons[cdhw] * scales1);
+									Neurons[cdhw] = (Inputs[0]->Skip ? Float(1) : Inputs[0]->Neurons[cdhw]) * (Inputs[1]->Skip ? Float(1) : Inputs[1]->Neurons[cdhw]);
 #ifndef DNN_LEAN
 									NeuronsD1[cdhw] = 0;
 #endif
@@ -154,7 +148,6 @@ namespace dnn
 						{
 							if (fullDepth)
 							{
-								
 								for (auto c = 0ull; c < PaddedC; c += VectorSize)
 								{
 									const auto outputOffset = c * HW();
@@ -170,15 +163,15 @@ namespace dnn
 							}
 							else
 							{
-								const auto scales0 = scales[first];
-								const auto scales1 = scales[second];
-
+								VecFloat In0, In1;
 								for (auto c = 0ull; c < PaddedC; c += VectorSize)
 								{
 									const auto outputOffset = c * HW();
 									for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
 									{
-										((VecFloat().load_a(&Inputs[first]->Neurons[hw + outputOffset]) * scales0) * (VecFloat().load_a(&Inputs[second]->Neurons[c]) * scales1)).store_a(&Neurons[hw + outputOffset]);
+										In0 = Inputs[first]->Skip ? VecFloat(1) : VecFloat().load_a(&Inputs[first]->Neurons[hw + outputOffset]);
+										In1 = Inputs[second]->Skip ? VecFloat(1) : VecFloat().load_a(&Inputs[second]->Neurons[c]);
+										(In0 * In1).store_a(&Neurons[hw + outputOffset]);
 #ifndef DNN_LEAN
 										VecZero.store_nt(&NeuronsD1[hw + outputOffset]);
 #endif
@@ -204,12 +197,10 @@ namespace dnn
 							}
 							else
 							{
-								const auto scales0 = scales[0];
-								const auto scales1 = scales[1];
 								PRAGMA_OMP_SIMD()
 								for (auto cdhw = 0ull; cdhw < CDHW(); cdhw++)
 								{
-									Neurons[cdhw] = (Inputs[0]->Neurons[cdhw] * scales0) * (Inputs[1]->Neurons[cdhw] * scales1);
+									Neurons[cdhw] = (Inputs[0]->Skip ? Float(1) : Inputs[0]->Neurons[cdhw]) * (Inputs[1]->Skip ? Float(1) : Inputs[1]->Neurons[cdhw]);
 #ifndef DNN_LEAN
 									NeuronsD1[cdhw] = 0;
 #endif
@@ -243,7 +234,7 @@ namespace dnn
 									PRAGMA_OMP_SIMD()
 									for (auto hw = 0ull; hw < HW(); hw++)
 									{
-										Neurons[hw + outputOffset] = ((Inputs[first]->Neurons[hw + outputOffset] * scales0) * (Inputs[second]->Neurons[c] * scales1));
+										Neurons[hw + outputOffset] = ((Inputs[first]->Skip ? Float(1) : Inputs[first]->Neurons[hw + outputOffset]) * (Inputs[second]->Skip ? Float(1) : Inputs[second]->Neurons[c]));
 #ifndef DNN_LEAN
 										NeuronsD1[hw + outputOffset] = 0;
 #endif
@@ -285,23 +276,22 @@ namespace dnn
 							{
 								for_i(batchSize, threads, [=](UInt n)
 								{
+									const auto skip0 = Inputs[0]->Skip;
+									const auto skip1 = Inputs[1]->Skip;
 									const auto start = n * size;
-									const auto scales0 = scales[0];
-									const auto scales1 = scales[1];
-
 									VecFloat In0, In1;
 									for (auto cdhw = start; cdhw < start + part; cdhw += VectorSize)
 									{
-										In0.load_a(&Inputs[0]->Neurons[cdhw]);
-										In1.load_a(&Inputs[1]->Neurons[cdhw]);
-										((In0 * scales0) * (In1 * scales1)).store_a(&Neurons[cdhw]);
+										In0 = skip0 ? VecFloat(1) : VecFloat().load_a(&Inputs[0]->Neurons[cdhw]);
+										In1 = skip1 ? VecFloat(1) : VecFloat().load_a(&Inputs[1]->Neurons[cdhw]);
+										(In0 * In1).store_a(&Neurons[cdhw]);
 #ifndef DNN_LEAN
 										VecZero.store_nt(&NeuronsD1[cdhw]);
 #endif
 									}
 									for (auto cdhw = start + part; cdhw < start + size; cdhw++)
 									{
-										Neurons[cdhw] = (Inputs[0]->Neurons[cdhw] * scales0) * (Inputs[1]->Neurons[cdhw] * scales1);
+										Neurons[cdhw] = (skip0 ? Float(1) : Inputs[0]->Neurons[cdhw]) * (skip1 ? Float(1) : Inputs[1]->Neurons[cdhw]);
 #ifndef DNN_LEAN
 										NeuronsD1[cdhw] = 0;
 #endif
@@ -333,16 +323,18 @@ namespace dnn
 							{
 								for_i(batchSize, threads, [=](UInt n)
 								{
-									const auto scales0 = scales[first];
-									const auto scales1 = scales[second];
-
+									const auto skipFirst = Inputs[first]->Skip;
+									const auto skipSecond = Inputs[second]->Skip;
+									VecFloat In0, In1;
 									for (auto c = 0ull; c < PaddedC; c += VectorSize)
 									{
 										const auto outputOffset = n * PaddedCDHW() + c * HW();
 										const auto channelOffset = n * PaddedC + c;
 										for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
 										{
-											((VecFloat().load_a(&Inputs[first]->Neurons[hw + outputOffset]) * scales0) * (VecFloat().load_a(&Inputs[second]->Neurons[channelOffset]) * scales1)).store_a(&Neurons[hw + outputOffset]);
+											In0 = skipFirst ? VecFloat(1) : VecFloat().load_a(&Inputs[first]->Neurons[hw + outputOffset]);
+											In1 = skipSecond ? VecFloat(1) : VecFloat().load_a(&Inputs[second]->Neurons[channelOffset]);
+											(In0 * In1).store_a(&Neurons[hw + outputOffset]);
 #ifndef DNN_LEAN
 											VecZero.store_nt(&NeuronsD1[hw + outputOffset]);
 #endif
@@ -376,14 +368,14 @@ namespace dnn
 							{
 								for_i(batchSize, threads, [=](UInt n)
 								{
+									const auto skip0 = Inputs[0]->Skip;
+									const auto skip1 = Inputs[1]->Skip;
 									const auto start = n * CDHW();
 									const auto end = start + CDHW();
-									const auto scales0 = scales[0];
-									const auto scales1 = scales[1];
 									PRAGMA_OMP_SIMD()
 									for (auto cdhw = start; cdhw < end; cdhw++)
 									{
-										Neurons[cdhw] = (Inputs[0]->Neurons[cdhw] * scales0) * (Inputs[1]->Neurons[cdhw] * scales1);
+										Neurons[cdhw] = (skip0 ? Float(1) : Inputs[0]->Neurons[cdhw]) * (skip1 ? Float(1) : Inputs[1]->Neurons[cdhw]);
 #ifndef DNN_LEAN
 										NeuronsD1[cdhw] = 0;
 #endif
@@ -416,8 +408,8 @@ namespace dnn
 							{
 								for_i(batchSize, threads, [=](UInt n)
 								{
-									const auto scales0 = scales[first];
-									const auto scales1 = scales[second];
+									const auto skipFirst = Inputs[first]->Skip;
+									const auto skipSecond = Inputs[second]->Skip;
 									for (auto c = 0ull; c < C; c++)
 									{
 										const auto outputOffset = n * CDHW() + c * HW();
@@ -425,7 +417,7 @@ namespace dnn
 										PRAGMA_OMP_SIMD()
 										for (auto hw = 0ull; hw < HW(); hw++)
 										{
-											Neurons[hw + outputOffset] = ((Inputs[first]->Neurons[hw + outputOffset] * scales0) * (Inputs[second]->Neurons[channelOffset] * scales1));
+											Neurons[hw + outputOffset] = (skipFirst ? Float(1) : Inputs[first]->Neurons[hw + outputOffset]) * (skipSecond ? Float(1) : Inputs[second]->Neurons[channelOffset]);
 #ifndef DNN_LEAN
 											NeuronsD1[hw + outputOffset] = 0;
 #endif

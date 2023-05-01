@@ -42,7 +42,7 @@ namespace dnn
 			DilationW(dilationW),
 			DilationKernelH(1 + (kernelH - 1) * dilationH),
 			DilationKernelW(1 + (kernelW - 1) * dilationW),
-			Scale(Float(1) / (kernelH * kernelW)),
+			Scale(Float(1) / Float(kernelH * kernelW)),
 			Kernel(dnnl::memory::dims({ dnnl::memory::dim(kernelH), dnnl::memory::dim(kernelW) })),
 			Strides(dnnl::memory::dims({ dnnl::memory::dim(strideH) , dnnl::memory::dim(strideW) })),
 			Dilation(dnnl::memory::dims({ dnnl::memory::dim(dilationH - 1), dnnl::memory::dim(dilationW - 1) })),

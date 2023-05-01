@@ -964,29 +964,29 @@ namespace
 
 	auto FloatToString(const Float value, const std::streamsize precision = 8)
 	{
-		auto oss = std::ostringstream();
-		oss.imbue(std::locale(std::locale(""), new no_separator()));
-		oss.precision(precision);
-		oss << value;
-		return std::move(oss).str();
+		auto ss = std::stringstream();
+		ss.imbue(std::locale(std::locale(""), new no_separator()));
+		ss.precision(precision);
+		ss << value;
+		return ss.str();
 	}
 
 	auto FloatToStringFixed(const Float value, const std::streamsize precision = 8)
 	{
-		auto oss = std::ostringstream();
-		oss.imbue(std::locale(std::locale(""), new no_separator()));
-		oss.precision(precision);
-		oss << std::fixed << value;
-		return std::move(oss).str();
+		auto ss = std::stringstream();
+		ss.imbue(std::locale(std::locale(""), new no_separator()));
+		ss.precision(precision);
+		ss << std::fixed << value;
+		return ss.str();
 	}
 
 	auto FloatToStringScientific(const Float value, const std::streamsize precision = 4)
 	{
-		auto oss = std::ostringstream();
-		oss.imbue(std::locale(std::locale(""), new no_separator()));
-		oss.precision(precision);
-		oss << std::scientific << value;
-		return std::move(oss).str();
+		auto ss = std::stringstream();
+		ss.imbue(std::locale(std::locale(""), new no_separator()));
+		ss.precision(precision);
+		ss << std::scientific << value;
+		return ss.str();
 	}
 
    	auto GetFileSize(const std::string& fileName)

@@ -869,6 +869,11 @@ namespace dnn
 				if (HasWeights)
 					for (auto i = 0ull; i < WeightCount; i++)
 					{
+						if (std::isnan(Weights[i]) || std::isinf(Weights[i]))
+						{
+							dirty = true;
+							break;
+						}
 						if (std::isnan(WeightsPar1[i]) || std::isinf(WeightsPar1[i]))
 						{
 							dirty = true;
@@ -884,6 +889,11 @@ namespace dnn
 				if (HasBias && !dirty)
 					for (auto i = 0ull; i < BiasCount; i++)
 					{
+						if (std::isnan(Biases[i]) || std::isinf(Biases[i]))
+						{
+							dirty = true;
+							break;
+						}
 						if (std::isnan(BiasesPar1[i]) || std::isinf(BiasesPar1[i]))
 						{
 							dirty = true;
@@ -907,16 +917,27 @@ namespace dnn
 				if (HasWeights)
 					for (auto i = 0ull; i < WeightCount; i++)
 					{
+						if (std::isnan(Weights[i]) || std::isinf(Weights[i]))
+						{
+							dirty = true;
+							break;
+						}
+
 						if (std::isnan(WeightsPar1[i]) || std::isinf(WeightsPar1[i]))
 						{
 							dirty = true;
 							break;
 						}
 					}
-
+				
 				if (HasBias && !dirty)
 					for (auto i = 0ull; i < BiasCount; i++)
 					{
+						if (std::isnan(Biases[i]) || std::isinf(Biases[i]))
+						{
+							dirty = true;
+							break;
+						}
 						if (std::isnan(BiasesPar1[i]) || std::isinf(BiasesPar1[i]))
 						{
 							dirty = true;
