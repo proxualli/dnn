@@ -476,7 +476,7 @@ namespace dnn
 		inline auto HW() const noexcept { return H * W; }
 		inline auto DHW() const noexcept { return D * H * W; }
 		inline auto CDHW() const noexcept { return C * D * H * W; }
-		inline auto PaddedCDHW() const noexcept { return LayerType == LayerTypes::Input ? CDHW() : (PaddedC * DHW()); }
+		inline auto PaddedCDHW() const noexcept { return LayerType == LayerTypes::Input ? (C * D * H * W) : (PaddedC * D * H * W); }
 
 		virtual void UpdateResolution()	{ }
 
@@ -1298,40 +1298,40 @@ namespace dnn
 			{
 				const bool differentOptimzerWeightFormat = *WeightsMemDesc != *PersistWeightsMemDesc;
 
-				FloatVector w, wD1, wPar1, wPar2;
+				FloatVector weights, weightsD1, weightsPar1, weightsPar2;
 
 				if (differentOptimzerWeightFormat)
 				{
-					w = FloatVector(WeightCount);
-					OptWeights = &w;
+					weights = FloatVector(WeightCount);
+					OptWeights = &weights;
 					auto memWeights = dnnl::memory(*WeightsMemDesc, Device.engine, Weights.data());
-					auto weightsMem = dnnl::memory(*PersistWeightsMemDesc, Device.engine, w.data());
+					auto weightsMem = dnnl::memory(*PersistWeightsMemDesc, Device.engine, weights.data());
 					dnnl::reorder(memWeights, weightsMem).execute(Device.stream, { {DNNL_ARG_FROM, memWeights}, {DNNL_ARG_TO, weightsMem} });
 					Device.stream.wait();
 
-					wD1 = FloatVector(WeightCount);
-					OptWeightsD1 = &wD1;
+					weightsD1 = FloatVector(WeightCount);
+					OptWeightsD1 = &weightsD1;
 					auto memWeightsD1 = dnnl::memory(*WeightsMemDesc, Device.engine, WeightsD1.data());
-					auto weightsMemD1 = dnnl::memory(*PersistWeightsMemDesc, Device.engine, wD1.data());
+					auto weightsMemD1 = dnnl::memory(*PersistWeightsMemDesc, Device.engine, weightsD1.data());
 					dnnl::reorder(memWeightsD1, weightsMemD1).execute(Device.stream, { {DNNL_ARG_FROM, memWeightsD1}, {DNNL_ARG_TO, weightsMemD1} });
 					Device.stream.wait();
 
 					if (WeightsPar1.size() > 0)
 					{
-						wPar1 = FloatVector(WeightCount);
-						OptWeightsPar1 = &wPar1;
+						weightsPar1 = FloatVector(WeightCount);
+						OptWeightsPar1 = &weightsPar1;
 						auto memWeightsPar1 = dnnl::memory(*WeightsMemDesc, Device.engine, WeightsPar1.data());
-						auto weightsPar1Mem = dnnl::memory(*PersistWeightsMemDesc, Device.engine, wPar1.data());
+						auto weightsPar1Mem = dnnl::memory(*PersistWeightsMemDesc, Device.engine, weightsPar1.data());
 						dnnl::reorder(memWeightsPar1, weightsPar1Mem).execute(Device.stream, { {DNNL_ARG_FROM, memWeightsPar1}, {DNNL_ARG_TO, weightsPar1Mem} });
 						Device.stream.wait();
 					}
 
 					if (WeightsPar2.size() > 0)
 					{
-						wPar2 = FloatVector(WeightCount);
-						OptWeightsPar2 = &wPar2;
+						weightsPar2 = FloatVector(WeightCount);
+						OptWeightsPar2 = &weightsPar2;
 						auto memWeightsPar2 = dnnl::memory(*WeightsMemDesc, Device.engine, WeightsPar2.data());
-						auto weightsPar2Mem = dnnl::memory(*PersistWeightsMemDesc, Device.engine, wPar2.data());
+						auto weightsPar2Mem = dnnl::memory(*PersistWeightsMemDesc, Device.engine, weightsPar2.data());
 						dnnl::reorder(memWeightsPar2, weightsPar2Mem).execute(Device.stream, { {DNNL_ARG_FROM, memWeightsPar2}, {DNNL_ARG_TO, weightsPar2Mem} });
 						Device.stream.wait();
 					}
@@ -1392,27 +1392,27 @@ namespace dnn
 
 				if (differentOptimzerWeightFormat)
 				{
+					auto weightsMem = dnnl::memory(*PersistWeightsMemDesc, Device.engine, weights.data());
 					auto memWeights = dnnl::memory(*WeightsMemDesc, Device.engine, Weights.data());
-					auto weightsMem = dnnl::memory(*PersistWeightsMemDesc, Device.engine, w.data());
 					dnnl::reorder(weightsMem, memWeights).execute(Device.stream, { {DNNL_ARG_FROM, weightsMem}, {DNNL_ARG_TO, memWeights} });
 					Device.stream.wait();
 
+					auto weightsMemD1 = dnnl::memory(*PersistWeightsMemDesc, Device.engine, weightsD1.data());
 					auto memWeightsD1 = dnnl::memory(*WeightsMemDesc, Device.engine, WeightsD1.data());
-					auto weightsMemD1 = dnnl::memory(*PersistWeightsMemDesc, Device.engine, wD1.data());
 					dnnl::reorder(weightsMemD1, memWeightsD1).execute(Device.stream, { {DNNL_ARG_FROM, weightsMemD1}, {DNNL_ARG_TO, memWeightsD1} });
 					Device.stream.wait();
 
 					if (WeightsPar1.size() > 0)
 					{
+						auto weightsPar1Mem = dnnl::memory(*PersistWeightsMemDesc, Device.engine, weightsPar1.data());
 						auto memWeightsPar1 = dnnl::memory(*WeightsMemDesc, Device.engine, WeightsPar1.data());
-						auto weightsPar1Mem = dnnl::memory(*PersistWeightsMemDesc, Device.engine, wPar1.data());
 						dnnl::reorder(weightsPar1Mem, memWeightsPar1).execute(Device.stream, { {DNNL_ARG_FROM, weightsPar1Mem}, {DNNL_ARG_TO, memWeightsPar1} });
 						Device.stream.wait();
 					}
 					if (WeightsPar2.size() > 0)
 					{
+						auto weightsPar2Mem = dnnl::memory(*PersistWeightsMemDesc, Device.engine, weightsPar2.data());
 						auto memWeightsPar2 = dnnl::memory(*WeightsMemDesc, Device.engine, WeightsPar2.data());
-						auto weightsPar2Mem = dnnl::memory(*PersistWeightsMemDesc, Device.engine, wPar2.data());
 						dnnl::reorder(weightsPar2Mem, memWeightsPar2).execute(Device.stream, { {DNNL_ARG_FROM, weightsPar2Mem}, {DNNL_ARG_TO, memWeightsPar2} });
 						Device.stream.wait();
 					}
@@ -1737,7 +1737,7 @@ namespace dnn
 			const auto momentum = rate.Momentum;
 			const auto momentumPlusOne = momentum + Float(1);
 			const auto batchRecip = Float(1) / rate.N * lr;
-
+			
 			PRAGMA_OMP_SIMD()
 			for (auto i = 0ull; i < WeightCount; i++)
 			{
@@ -1899,12 +1899,11 @@ namespace dnn
 				
 				if (*WeightsMemDesc != *PersistWeightsMemDesc)
 				{
-					auto weights = FloatVector(WeightCount);
 					auto memWeights = dnnl::memory(*WeightsMemDesc, Device.engine, Weights.data());
-					auto weightsMem = dnnl::memory(*PersistWeightsMemDesc, Device.engine, weights.data());
+					auto weightsMem = dnnl::memory(*PersistWeightsMemDesc, Device.engine);
 					dnnl::reorder(memWeights, weightsMem).execute(Device.stream, { {DNNL_ARG_FROM, memWeights}, {DNNL_ARG_TO, weightsMem} });
 					Device.stream.wait();
-					os.write(reinterpret_cast<const char*>(weights.data()), std::streamsize(WeightCount * sizeof(Float)));
+					os.write(reinterpret_cast<const char*>(weightsMem.get_data_handle()), std::streamsize(WeightCount * sizeof(Float)));
 					if (HasBias)
 						os.write(reinterpret_cast<const char*>(Biases.data()), std::streamsize(BiasCount * sizeof(Float)));
 					
@@ -1920,20 +1919,19 @@ namespace dnn
 						case Optimizers::AmsBound:
 						case Optimizers::AmsBoundW:
 						{
-							auto weightsPar1 = FloatVector(WeightCount);
 							auto memWeightsPar1 = dnnl::memory(*WeightsMemDesc, Device.engine, WeightsPar1.data());
-							auto weightsPar1Mem = dnnl::memory(*PersistWeightsMemDesc, Device.engine, weightsPar1.data());
+							auto weightsPar1Mem = dnnl::memory(*PersistWeightsMemDesc, Device.engine);
 							dnnl::reorder(memWeightsPar1, weightsPar1Mem).execute(Device.stream, { {DNNL_ARG_FROM, memWeightsPar1}, {DNNL_ARG_TO, weightsPar1Mem} });
 							Device.stream.wait();
-							os.write(reinterpret_cast<const char*>(weightsPar1.data()), std::streamsize(WeightCount * sizeof(Float)));
+							os.write(reinterpret_cast<const char*>(weightsPar1Mem.get_data_handle()), std::streamsize(WeightCount * sizeof(Float)));
 							if (HasBias)
 								os.write(reinterpret_cast<const char*>(BiasesPar1.data()), std::streamsize(BiasCount * sizeof(Float)));
-							auto weightsPar2 = FloatVector(WeightCount);
+							
 							auto memWeightsPar2 = dnnl::memory(*WeightsMemDesc, Device.engine, WeightsPar2.data());
-							auto weightsPar2Mem = dnnl::memory(*PersistWeightsMemDesc, Device.engine, weightsPar2.data());
+							auto weightsPar2Mem = dnnl::memory(*PersistWeightsMemDesc, Device.engine);
 							dnnl::reorder(memWeightsPar2, weightsPar2Mem).execute(Device.stream, { {DNNL_ARG_FROM, memWeightsPar2}, {DNNL_ARG_TO, weightsPar2Mem} });
 							Device.stream.wait();
-							os.write(reinterpret_cast<const char*>(weightsPar2.data()), std::streamsize(WeightCount * sizeof(Float)));
+							os.write(reinterpret_cast<const char*>(weightsPar2Mem.get_data_handle()), std::streamsize(WeightCount * sizeof(Float)));
 							if (HasBias)
 								os.write(reinterpret_cast<const char*>(BiasesPar2.data()), std::streamsize(BiasCount * sizeof(Float)));
 
@@ -1986,12 +1984,11 @@ namespace dnn
 						case Optimizers::SGDMomentum:
 						case Optimizers::SGDW:
 						{
-							auto weightsPar1 = FloatVector(WeightCount);
 							auto memWeightsPar1 = dnnl::memory(*WeightsMemDesc, Device.engine, WeightsPar1.data());
-							auto weightsPar1Mem = dnnl::memory(*PersistWeightsMemDesc, Device.engine, weightsPar1.data());
+							auto weightsPar1Mem = dnnl::memory(*PersistWeightsMemDesc, Device.engine);
 							dnnl::reorder(memWeightsPar1, weightsPar1Mem).execute(Device.stream, { {DNNL_ARG_FROM, memWeightsPar1}, {DNNL_ARG_TO, weightsPar1Mem} });
 							Device.stream.wait();
-							os.write(reinterpret_cast<const char*>(weightsPar1.data()), std::streamsize(WeightCount * sizeof(Float)));
+							os.write(reinterpret_cast<const char*>(weightsPar1Mem.get_data_handle()), std::streamsize(WeightCount * sizeof(Float)));
 							if (HasBias)
 								os.write(reinterpret_cast<const char*>(BiasesPar1.data()), std::streamsize(BiasCount * sizeof(Float)));
 						}
@@ -2096,9 +2093,8 @@ namespace dnn
 				
 				if (*WeightsMemDesc != *PersistWeightsMemDesc)
 				{
-					auto weights = FloatVector(WeightCount);
-					is.read(reinterpret_cast<char*>(weights.data()), std::streamsize(WeightCount * sizeof(Float)));
-					auto memWeights = dnnl::memory(*PersistWeightsMemDesc, Device.engine, weights.data());
+					auto memWeights = dnnl::memory(*PersistWeightsMemDesc, Device.engine);
+					is.read(reinterpret_cast<char*>(memWeights.get_data_handle()), std::streamsize(WeightCount * sizeof(Float)));
 					auto weightsMem = dnnl::memory(*WeightsMemDesc, Device.engine, Weights.data());
 					dnnl::reorder(memWeights, weightsMem).execute(Device.stream, { {DNNL_ARG_FROM, memWeights}, {DNNL_ARG_TO, weightsMem} });
 					Device.stream.wait();
@@ -2117,17 +2113,16 @@ namespace dnn
 						case Optimizers::AmsBound:
 						case Optimizers::AmsBoundW:
 						{
-							auto weightsPar1 = FloatVector(WeightCount);
-							is.read(reinterpret_cast<char*>(weightsPar1.data()), std::streamsize(WeightCount * sizeof(Float)));
-							auto memWeightsPar1 = dnnl::memory(*PersistWeightsMemDesc, Device.engine, weightsPar1.data());
+							auto memWeightsPar1 = dnnl::memory(*PersistWeightsMemDesc, Device.engine);
+							is.read(reinterpret_cast<char*>(memWeightsPar1.get_data_handle()), std::streamsize(WeightCount * sizeof(Float)));
 							auto weightsPar1Mem = dnnl::memory(*WeightsMemDesc, Device.engine, WeightsPar1.data());
 							dnnl::reorder(memWeightsPar1, weightsPar1Mem).execute(Device.stream, { {DNNL_ARG_FROM, memWeightsPar1}, {DNNL_ARG_TO, weightsPar1Mem} });
 							Device.stream.wait();
 							if (HasBias)
 								is.read(reinterpret_cast<char*>(BiasesPar1.data()), std::streamsize(BiasCount * sizeof(Float)));
-							auto weightsPar2 = FloatVector(WeightCount);
-							is.read(reinterpret_cast<char*>(weightsPar2.data()), std::streamsize(WeightCount * sizeof(Float)));
-							auto memWeightsPar2 = dnnl::memory(*PersistWeightsMemDesc, Device.engine, weightsPar2.data());
+
+							auto memWeightsPar2 = dnnl::memory(*PersistWeightsMemDesc, Device.engine);
+							is.read(reinterpret_cast<char*>(memWeightsPar2.get_data_handle()), std::streamsize(WeightCount * sizeof(Float)));
 							auto weightsPar2Mem = dnnl::memory(*WeightsMemDesc, Device.engine, WeightsPar2.data());
 							dnnl::reorder(memWeightsPar2, weightsPar2Mem).execute(Device.stream, { {DNNL_ARG_FROM, memWeightsPar2}, {DNNL_ARG_TO, weightsPar2Mem} });
 							Device.stream.wait();
@@ -2183,9 +2178,8 @@ namespace dnn
 						case Optimizers::SGDMomentum:
 						case Optimizers::SGDW:
 						{
-							auto weightsPar1 = FloatVector(WeightCount);
-							is.read(reinterpret_cast<char*>(weightsPar1.data()), std::streamsize(WeightCount * sizeof(Float)));
-							auto memWeightsPar1 = dnnl::memory(*PersistWeightsMemDesc, Device.engine, weightsPar1.data());
+							auto memWeightsPar1 = dnnl::memory(*PersistWeightsMemDesc, Device.engine);
+							is.read(reinterpret_cast<char*>(memWeightsPar1.get_data_handle()), std::streamsize(WeightCount * sizeof(Float)));
 							auto weightsPar1Mem = dnnl::memory(*WeightsMemDesc, Device.engine, WeightsPar1.data());
 							dnnl::reorder(memWeightsPar1, weightsPar1Mem).execute(Device.stream, { {DNNL_ARG_FROM, memWeightsPar1}, {DNNL_ARG_TO, weightsPar1Mem} });
 							Device.stream.wait();

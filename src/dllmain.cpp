@@ -792,7 +792,7 @@ extern "C" DNN_API void DNNGetResolution(UInt* N, UInt* C, UInt* D, UInt* H, UIn
 {
 	if (model)
 	{
-		*N = model->BatchSize;
+		*N = model->N;
 		*C = model->C;
 		*D = model->D;
 		*H = model->H;
@@ -807,7 +807,7 @@ extern "C" DNN_API void DNNRefreshStatistics(const UInt layerIndex, StatsInfo* i
 		while (model->BatchSizeChanging.load() || model->ResettingWeights.load())
 			std::this_thread::yield();
 
-		if (model->Layers[layerIndex]->RefreshStatistics(model->BatchSize))
+		if (model->Layers[layerIndex]->RefreshStatistics(model->N))
 		{
 			info->Description = model->Layers[layerIndex]->GetDescription();
 			info->NeuronsStats = model->Layers[layerIndex]->NeuronsStats;
@@ -830,7 +830,7 @@ extern "C" DNN_API void DNNGetTrainingInfo(TrainingInfo* info)
 {
 	if (model)
 	{
-		const auto sampleIdx = model->SampleIndex + model->BatchSize;
+		const auto sampleIdx = model->SampleIndex + model->N;
 		const auto costIdx = model->CostIndex;
 
 		switch (model->State)
@@ -890,7 +890,7 @@ extern "C" DNN_API void DNNGetTrainingInfo(TrainingInfo* info)
 		info->L2Penalty = model->CurrentTrainingRate.L2Penalty;
 		info->Dropout = model->CurrentTrainingRate.Dropout;
 
-		info->BatchSize = model->BatchSize;
+		info->BatchSize = model->N;
 		info->Height = model->H;
 		info->Width = model->W;
 		info->PadH = model->PadH;
@@ -919,7 +919,7 @@ extern "C" DNN_API void DNNGetTestingInfo(TestingInfo* info)
 {
 	if (model)
 	{
-		const auto sampleIdx = model->SampleIndex + model->BatchSize;
+		const auto sampleIdx = model->SampleIndex + model->N;
 		const auto costIdx = model->CostIndex;
 		const auto adjustedsampleIndex = sampleIdx > dataprovider->TestSamplesCount ? dataprovider->TestSamplesCount : sampleIdx;
 
@@ -930,7 +930,7 @@ extern "C" DNN_API void DNNGetTestingInfo(TestingInfo* info)
 
 		info->SampleIndex = model->SampleIndex;
 
-		info->BatchSize = model->BatchSize;
+		info->BatchSize = model->N;
 		info->Height = model->H;
 		info->Width = model->W;
 		info->PadH = model->PadH;

@@ -476,7 +476,6 @@ namespace dnn
 		UInt CurrentEpoch;
 		UInt SampleIndex;
 		//UInt LogInterval;
-		UInt BatchSize;
 		UInt GoToEpoch;
 		UInt AdjustedTrainSamplesCount;
 		UInt AdjustedTestSamplesCount;
@@ -484,6 +483,7 @@ namespace dnn
 		UInt TestSkipCount;
 		UInt TrainOverflowCount;
 		UInt TestOverflowCount;
+		UInt N;
 		UInt C;
 		UInt D;
 		UInt H;
@@ -565,33 +565,45 @@ namespace dnn
 		Model(const std::string& definition, Dataprovider* dataprovider) :
 			Name(GetModelName(definition)),
 			Definition(definition),
-			DataProv(dataprovider),
 			Engine(dnnl::engine(dnnl::engine::kind::cpu, 0)),
 			Device(dnn::Device(Engine, dnnl::stream(Engine))),
 			Format(dnnl::memory::format_tag::any),
-			PersistOptimizer(false),
-			DisableLocking(true),
-			Optimizer(Optimizers::SGD),
-			TaskState(TaskStates::Stopped),
-			State(States::Idle),
+			DataProv(dataprovider),
 			Dataset(Datasets::cifar10),				// Dataset
+			State(States::Idle),
+			TaskState(TaskStates::Stopped),
+			CostFunc(Costs::CategoricalCrossEntropy),
+			Optimizer(Optimizers::SGD),
+			CostIndex(0),
+			LabelIndex(0),
+			GroupIndex(0),
+			TotalCycles(0),
+			TotalEpochs(0),
+			CurrentEpoch(1),
+			CurrentCycle(1),
+			SampleIndex(0),
+			//LogInterval(10000),
+			GoToEpoch(1),
+			AdjustedTrainSamplesCount(0),
+			AdjustedTestSamplesCount(0),
+			TrainSkipCount(0),
+			TestSkipCount(0),
+			TrainOverflowCount(0),
+			TestOverflowCount(0),
+			N(1),
 			C(3),									// Dim
 			D(1),
 			H(32),
 			W(32),
-			MeanStdNormalization(true),				// MeanStd
-			MirrorPad(false),						// MirrorPad or ZeroPad
 			PadD(0),
 			PadC(0),
 			PadH(0),
 			PadW(0),
+			MirrorPad(false),						// MirrorPad or ZeroPad
 			RandomCrop(false),						// RandomCrop
-			BatchNormScaling(true),					// Scaling
-			BatchNormMomentum(Float(0.995)),		// Momentum
-			BatchNormEps(Float(1e-04)),				// Eps
-			DepthDrop(Float(0.0)),					// DepthDrop			(Stochastic Depth: https://www.arxiv-vanity.com/papers/1603.09382/)
+			MeanStdNormalization(true),				// MeanStd
 			FixedDepthDrop(false),					// FixedDepthDrop
-			Dropout(Float(0)),						// Dropout
+			DepthDrop(Float(0.0)),					// DepthDrop			(Stochastic Depth: https://www.arxiv-vanity.com/papers/1603.09382/)
 			WeightsFiller(Fillers::HeNormal),		// WeightsFiller
 			WeightsFillerMode(FillerModes::In),		// WeightsFillerMode
 			WeightsGain(Float(1)),					// WeightsGain
@@ -604,52 +616,40 @@ namespace dnn
 			BiasesScale(Float(0)),					// BiasesScale
 			BiasesLRM(Float(1)),					// BiasesLRM
 			BiasesWDM(Float(1)),					// BiasesWDM
-			HasBias(true),							// Biases
 			AlphaFiller(Float(0)),					// Alpha
 			BetaFiller(Float(0)),					// Beta
-			TotalCycles(0),
-			CurrentCycle(1),
-			TotalEpochs(0),
-			GoToEpoch(1),
-			CurrentEpoch(1),
-			SampleIndex(0),
-			BatchSize(1),
-			Rate(Float(0)),
-			TrainLoss(Float(0)),
-			AvgTrainLoss(Float(0)),
+			BatchNormMomentum(Float(0.995)),		// Momentum
+			BatchNormEps(Float(1e-04)),				// Eps
+			Dropout(Float(0)),						// Dropout
 			TrainErrors(0),
-			TrainErrorPercentage(Float(0)),
-			TestLoss(Float(0)),
-			AvgTestLoss(Float(0)),
 			TestErrors(0),
+			TrainLoss(Float(0)),
+			TestLoss(Float(0)),
+			AvgTrainLoss(Float(0)),
+			AvgTestLoss(Float(0)),
+			TrainErrorPercentage(Float(0)),
 			TestErrorPercentage(Float(0)),
 			TrainAccuracy(Float(0)),
 			TestAccuracy(Float(0)),
-			LabelIndex(0),
-			GroupIndex(0),
-			CostIndex(0),
-			CostFunc(Costs::CategoricalCrossEntropy),
-			CostLayers(std::vector<Cost*>()),
-			Layers(std::vector<std::unique_ptr<Layer>>()),
+			SampleSpeed(Float(0)),
+			Rate(Float(0)),
+			BatchNormScaling(true),					// Scaling
+			HasBias(true),							// Biases
+			PersistOptimizer(false),
+			DisableLocking(true),
+			NewEpoch(nullptr),
 			TrainingRates(std::vector<TrainingRate>()),
 			TrainingStrategies(std::vector<TrainingStrategy>()),
 			UseTrainingStrategy(false),
 			TrainingLog(std::vector<LogRecord>()),
-			SampleSpeed(Float(0)),
-			NewEpoch(nullptr),
-			AdjustedTrainSamplesCount(0),
-			AdjustedTestSamplesCount(0),
-			TrainOverflowCount(0),
-			TestOverflowCount(0),
-			TrainSkipCount(0),
-			TestSkipCount(0),
+			Layers(std::vector<std::unique_ptr<Layer>>()),
+			CostLayers(std::vector<Cost*>()),
 			fpropTime(std::chrono::duration<Float>(Float(0))),
 			bpropTime(std::chrono::duration<Float>(Float(0))),
 			updateTime(std::chrono::duration<Float>(Float(0))),
 			FirstUnlockedLayer(1),
 			BatchSizeChanging(false),
 			ResettingWeights(false)
-			//LogInterval(10000)
 		{
 #ifdef DNN_LOG
 			dnnl_set_verbose(2);
@@ -710,7 +710,7 @@ namespace dnn
 			if (n < 1 || d < 1 || h < 1 || w < 1)
 				return false;
 			
-			if ((n == BatchSize) && (d == D) && (h == H) && (w == W))
+			if ((n == N) && (d == D) && (h == H) && (w == W))
 			{
 				PadD = padD;
 				PadH = padH;
@@ -719,7 +719,7 @@ namespace dnn
 				return true;
 			}
 						
-			const auto currentSize = GetNeuronsSize(BatchSize) + GetWeightsSize(PersistOptimizer, Optimizer);
+			const auto currentSize = GetNeuronsSize(N) + GetWeightsSize(PersistOptimizer, Optimizer);
 
 			while (BatchSizeChanging.load() || ResettingWeights.load())
 			{
@@ -738,7 +738,7 @@ namespace dnn
 					layer->UpdateResolution();
 			}
 
-			if ((n * d * h * w) > (BatchSize * D * H * W))
+			if ((n * d * h * w) > (N * D * H * W))
 			{
 				auto requestedSize = GetNeuronsSize(n) + GetWeightsSize(PersistOptimizer, Optimizer);
 
@@ -750,7 +750,10 @@ namespace dnn
 					Layers[0]->H = H;
 					Layers[0]->W = W;
 					for (auto& layer : Layers)
+					{
 						layer->UpdateResolution();
+						layer->InitializeDescriptors(n);
+					}
 
 					BatchSizeChanging.store(false);
 
@@ -768,7 +771,7 @@ namespace dnn
 			TrainOverflowCount = AdjustedTrainSamplesCount - n;
 			TestOverflowCount = AdjustedTestSamplesCount - n;;
 
-			BatchSize = n;
+			N = n;
 			D = d;
 			H = h;
 			W = w;
@@ -1186,7 +1189,7 @@ namespace dnn
 			{
 				for (auto& layer : Layers)
 				{
-					layer->InitializeDescriptors(BatchSize);
+					layer->InitializeDescriptors(N);
 					layer->SetOptimizer(optimizer);
 				}
 
@@ -1596,7 +1599,7 @@ namespace dnn
 				}
 				
 				if (Dropout != CurrentTrainingRate.Dropout)
-					ChangeDropout(CurrentTrainingRate.Dropout, BatchSize);
+					ChangeDropout(CurrentTrainingRate.Dropout, N);
 
 				auto learningRateEpochs = CurrentTrainingRate.Epochs;
 				auto learningRateIndex = 0ull;
@@ -1645,7 +1648,7 @@ namespace dnn
 						}
 								
 						if (Dropout != CurrentTrainingRate.Dropout)
-							ChangeDropout(CurrentTrainingRate.Dropout, BatchSize);
+							ChangeDropout(CurrentTrainingRate.Dropout, N);
 
 						learningRateEpochs += CurrentTrainingRate.Epochs;
 
@@ -1750,7 +1753,7 @@ namespace dnn
 						{
 #endif
 							auto overflow = false;
-							for (SampleIndex = 0; SampleIndex < AdjustedTrainSamplesCount; SampleIndex += BatchSize)
+							for (SampleIndex = 0; SampleIndex < AdjustedTrainSamplesCount; SampleIndex += N)
 							{
 								// Forward
 								if (DepthDrop > 0)
@@ -1759,7 +1762,7 @@ namespace dnn
 								while (Layers[0]->RefreshingStats.load()) {	std::this_thread::yield(); }
 								Layers[0]->Fwd.store(true);
 								const auto timePointLocal = timer.now();
-								auto SampleLabels = TrainBatch(SampleIndex, BatchSize);
+								auto SampleLabels = TrainBatch(SampleIndex, N);
 								Layers[0]->fpropTime = timer.now() - timePointLocal;
 								Layers[0]->Fwd.store(false);
 
@@ -1773,7 +1776,7 @@ namespace dnn
 										while (Layers[i]->RefreshingStats.load()) { std::this_thread::yield(); }
 										Layers[i]->Fwd.store(true);
 										timePoint = timer.now();
-										Layers[i]->ForwardProp(BatchSize, true);
+										Layers[i]->ForwardProp(N, true);
 										Layers[i]->fpropTime = timer.now() - timePoint;
 										Layers[i]->Fwd.store(false);
 									}
@@ -1782,8 +1785,8 @@ namespace dnn
 								}
 								
 								overflow = SampleIndex >= TrainOverflowCount;
-								CostFunctionBatch(State.load(), BatchSize, overflow, TrainSkipCount);
-								RecognizedBatch(State.load(), BatchSize, overflow, TrainSkipCount, SampleLabels);
+								CostFunctionBatch(State.load(), N, overflow, TrainSkipCount);
+								RecognizedBatch(State.load(), N, overflow, TrainSkipCount, SampleLabels);
 								fpropTime = timer.now() - timePointLocal;
 
 								// Backward
@@ -1806,7 +1809,7 @@ namespace dnn
 											if (Layers[i]->HasWeights)
 											{
 												Layers[i]->ResetGradients();
-												Layers[i]->BackwardProp(BatchSize);
+												Layers[i]->BackwardProp(N);
 												Layers[i]->bpropTime = timer.now() - timePoint;
 
 												timePoint = timer.now();
@@ -1817,7 +1820,7 @@ namespace dnn
 											}
 											else
 											{
-												Layers[i]->BackwardProp(BatchSize);
+												Layers[i]->BackwardProp(N);
 												Layers[i]->bpropTime = timer.now() - timePoint;
 											}
 
@@ -1831,7 +1834,7 @@ namespace dnn
 								updateTime = updateTimeCount;
 
 								elapsedTime = timer.now() - timePointLocal;
-								SampleSpeed = BatchSize / (Float(std::chrono::duration_cast<std::chrono::microseconds>(elapsedTime).count()) / 1000000);
+								SampleSpeed = N / (Float(std::chrono::duration_cast<std::chrono::microseconds>(elapsedTime).count()) / 1000000);
 
 								if (TaskState.load() != TaskStates::Running && !CheckTaskState())
 									break;
@@ -1870,13 +1873,13 @@ namespace dnn
 						{
 #endif
 							auto overflow = false;
-							for (SampleIndex = 0; SampleIndex < AdjustedTestSamplesCount; SampleIndex += BatchSize)
+							for (SampleIndex = 0; SampleIndex < AdjustedTestSamplesCount; SampleIndex += N)
 							{
 								const auto timePointLocal = timer.now();
 								while (Layers[0]->RefreshingStats.load()) { std::this_thread::yield(); }
 								Layers[0]->Fwd.store(true);
 								timePoint = timer.now();
-								auto SampleLabels = TestBatch(SampleIndex, BatchSize);
+								auto SampleLabels = TestBatch(SampleIndex, N);
 								Layers[0]->fpropTime = timer.now() - timePoint;
 								Layers[0]->Fwd.store(false);
 
@@ -1888,7 +1891,7 @@ namespace dnn
 									while (Layers[i]->RefreshingStats.load()) { std::this_thread::yield(); }
 									Layers[i]->Fwd.store(true);
 									timePoint = timer.now();
-									Layers[i]->ForwardProp(BatchSize, false);
+									Layers[i]->ForwardProp(N, false);
 									Layers[i]->fpropTime = timer.now() - timePoint;
 									Layers[i]->Fwd.store(false);
 								}
@@ -1896,11 +1899,11 @@ namespace dnn
 								fpropTime = timer.now() - timePointLocal;
 
 								overflow = SampleIndex >= TestOverflowCount;
-								CostFunctionBatch(State.load(), BatchSize, overflow, TestSkipCount);
-								RecognizedBatch(State.load(), BatchSize, overflow, TestSkipCount, SampleLabels);
+								CostFunctionBatch(State.load(), N, overflow, TestSkipCount);
+								RecognizedBatch(State.load(), N, overflow, TestSkipCount, SampleLabels);
 
 								elapsedTime = timer.now() - timePointLocal;
-								SampleSpeed = BatchSize / (Float(std::chrono::duration_cast<std::chrono::microseconds>(elapsedTime).count()) / 1000000ll);
+								SampleSpeed = N / (Float(std::chrono::duration_cast<std::chrono::microseconds>(elapsedTime).count()) / 1000000ll);
 
 								if (TaskState.load() != TaskStates::Running && !CheckTaskState())
 									break;
@@ -2206,10 +2209,13 @@ namespace dnn
 				Rate = CurrentTrainingRate.MaximumRate;
 
 				if (!ChangeResolution(CurrentTrainingRate.N, CurrentTrainingRate.D, CurrentTrainingRate.H, CurrentTrainingRate.W, CurrentTrainingRate.PadD, CurrentTrainingRate.PadH, CurrentTrainingRate.PadW))
+				{
+					State.store(States::Completed);
 					return;
+				}
 
 				if (Dropout != CurrentTrainingRate.Dropout)
-					ChangeDropout(CurrentTrainingRate.Dropout, BatchSize);
+					ChangeDropout(CurrentTrainingRate.Dropout, N);
 
 
 				TrainSamplesFlip = std::vector<Flip>();
@@ -2252,13 +2258,13 @@ namespace dnn
 					{
 #endif
 						auto overflow = false;
-						for (SampleIndex = 0; SampleIndex < AdjustedTestSamplesCount; SampleIndex += BatchSize)
+						for (SampleIndex = 0; SampleIndex < AdjustedTestSamplesCount; SampleIndex += N)
 						{
 							timePointGlobal = timer.now();
 
 							while (Layers[0]->RefreshingStats.load()) { std::this_thread::yield(); }
 							Layers[0]->Fwd.store(true);
-							auto SampleLabels = TestAugmentedBatch(SampleIndex, BatchSize);
+							auto SampleLabels = TestAugmentedBatch(SampleIndex, N);
 							Layers[0]->fpropTime = timer.now() - timePointGlobal;
 							Layers[0]->Fwd.store(false);
 
@@ -2270,18 +2276,18 @@ namespace dnn
 								while (Layers[i]->RefreshingStats.load()) { std::this_thread::yield(); }
 								Layers[i]->Fwd.store(true);
 								timePoint = timer.now();
-								Layers[i]->ForwardProp(BatchSize, false);
+								Layers[i]->ForwardProp(N, false);
 								Layers[i]->fpropTime = timer.now() - timePoint;
 								Layers[i]->Fwd.store(false);
 							}
 
 							overflow = SampleIndex >= TestOverflowCount;
-							CostFunctionBatch(State.load(), BatchSize, overflow, TestSkipCount);
-							RecognizedBatch(State.load(), BatchSize, overflow, TestSkipCount, SampleLabels);
+							CostFunctionBatch(State.load(), N, overflow, TestSkipCount);
+							RecognizedBatch(State.load(), N, overflow, TestSkipCount, SampleLabels);
 
 							fpropTime = timer.now() - timePointGlobal;
 
-							SampleSpeed = BatchSize / (Float(std::chrono::duration_cast<std::chrono::microseconds>(fpropTime).count()) / 1000000);
+							SampleSpeed = N / (Float(std::chrono::duration_cast<std::chrono::microseconds>(fpropTime).count()) / 1000000);
 
 							if (TaskState.load() != TaskStates::Running && !CheckTaskState())
 								break;
@@ -2322,7 +2328,7 @@ namespace dnn
 		{
 			if (!Layers[0]->Neurons.empty() && !BatchSizeChanging.load() && !ResettingWeights.load() && !Layers[0]->Fwd.load())
 			{
-				const auto idx = UniformInt<UInt>(0ull, BatchSize - 1ull) + SampleIndex;
+				const auto idx = UniformInt<UInt>(0ull, N - 1ull) + SampleIndex;
 				const auto size = Layers[0]->CDHW();
 				const auto offset = (idx - SampleIndex) * size;
 
@@ -3356,7 +3362,6 @@ namespace dnn
 		s.value8b(o.CurrentCycle);
 		s.value8b(o.CurrentEpoch);
 		s.value8b(o.SampleIndex);
-		s.value8b(o.BatchSize);
 		s.value8b(o.GoToEpoch);
 		s.value8b(o.AdjustedTrainSamplesCount);
 		s.value8b(o.AdjustedTestSamplesCount);
@@ -3364,6 +3369,7 @@ namespace dnn
 		s.value8b(o.TestSkipCount);
 		s.value8b(o.TrainOverflowCount);
 		s.value8b(o.TestOverflowCount);
+		s.value8b(o.N);
 		s.value8b(o.C);
 		s.value8b(o.D);
 		s.value8b(o.H);
