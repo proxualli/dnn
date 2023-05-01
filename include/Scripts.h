@@ -244,7 +244,7 @@ namespace scripts
         bool WidthVisible() const { return Script == Scripts::mobilenetv3 || Script == Scripts::resnet || Script == Scripts::shufflenetv2; }
         bool GrowthRateVisible() const { return Script == Scripts::densenet; }
         bool DropoutVisible() const { return Script == Scripts::densenet || Script == Scripts::resnet || Script == Scripts::efficientnetv2; }
-        bool DepthDropVisible() const { return Script == Scripts::densenet || Script == Scripts::mobilenetv3 || Script == Scripts::resnet || Script == Scripts::efficientnetv2 || Script == Scripts::shufflenetv2; }
+        bool DepthDropVisible() const { return Script == Scripts::densenet || Script == Scripts::mobilenetv3 || Script == Scripts::resnet || Script == Scripts::efficientnetv2; }
         bool CompressionVisible() const { return Script == Scripts::densenet; }
         bool BottleneckVisible() const { return Script == Scripts::densenet || Script == Scripts::resnet; }
         bool SqueezeExcitationVisible() const { return Script == Scripts::mobilenetv3; }
@@ -273,7 +273,7 @@ namespace scripts
                 return common + std::to_string(Width) + (Dropout > 0 ? std::string("-dropout") : std::string("")) + (DepthDrop > 0 ? (FixedDepthDrop ? std::string("-fixeddepthdrop") : std::string("-depthdrop")) : std::string("")) + (Bottleneck ? std::string("-bottleneck") : std::string("")) + (ChannelZeroPad ? std::string("-channelzeropad") : std::string("")) + std::string("-") + StringToLower(std::string(magic_enum::enum_name<Activations>(Activation)));
             case Scripts::shufflenetv2:
             {
-                auto name = std::string(magic_enum::enum_name<Scripts>(Script)) + (DepthDrop > 0 ? (FixedDepthDrop ? std::string("-fixeddepthdrop") : std::string("-depthdrop")) : std::string("")) + std::string("-") + std::to_string(Width);
+                auto name = std::string(magic_enum::enum_name<Scripts>(Script)) + std::string("-") + std::to_string(Width);
                 for (auto rec : ShuffleNet)
                     name += rec.to_string();
                 return name;

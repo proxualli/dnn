@@ -67,8 +67,8 @@ namespace dnn
 
 		void UpdateResolution() final override
 		{
-			H = StrideH * ((InputLayer->H - 1) + DilationKernelH - (Padding[0] * 2));
-			W = StrideW * ((InputLayer->W - 1) + DilationKernelW - (Padding[1] * 2));
+			H = StrideH * ((InputLayer->H - 1) + DilationKernelH - (PadH * 2));
+			W = StrideW * ((InputLayer->W - 1) + DilationKernelW - (PadW * 2));
 		}
 
 		std::string GetDescription() const final override
