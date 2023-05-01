@@ -712,6 +712,13 @@ namespace dnn
 			
 			if ((n == N) && (d == D) && (h == H) && (w == W))
 			{
+				AdjustedTrainSamplesCount = (DataProv->TrainSamplesCount % n == 0) ? DataProv->TrainSamplesCount : ((DataProv->TrainSamplesCount / n) + 1) * n;
+				AdjustedTestSamplesCount = (DataProv->TestSamplesCount % n == 0) ? DataProv->TestSamplesCount : ((DataProv->TestSamplesCount / n) + 1) * n;
+				TrainSkipCount = n - (AdjustedTrainSamplesCount - DataProv->TrainSamplesCount);
+				TestSkipCount = n - (AdjustedTestSamplesCount - DataProv->TestSamplesCount);
+				TrainOverflowCount = AdjustedTrainSamplesCount - n;
+				TestOverflowCount = AdjustedTestSamplesCount - n;
+
 				PadD = padD;
 				PadH = padH;
 				PadW = padW;
@@ -750,11 +757,8 @@ namespace dnn
 					Layers[0]->H = H;
 					Layers[0]->W = W;
 					for (auto& layer : Layers)
-					{
 						layer->UpdateResolution();
-						layer->InitializeDescriptors(n);
-					}
-
+					
 					BatchSizeChanging.store(false);
 
 					return false;
@@ -1313,7 +1317,7 @@ namespace dnn
 				}
 			}
 		}
-
+		
 		/*
 		void SetBatchSize(const UInt batchSize)
 		{
@@ -1321,17 +1325,17 @@ namespace dnn
 			{
 				BatchSizeChanging.store(true);
 
-				for (auto &layer : Layers)
+				for (auto& layer : Layers)
 					layer->SetBatchSize(batchSize);
 
-				AdjustedTrainingSamplesCount = (DataProv->TrainingSamplesCount % batchSize == 0) ? DataProv->TrainingSamplesCount : ((DataProv->TrainingSamplesCount / batchSize) + 1) * batchSize;
-				AdjustedTestingSamplesCount = (DataProv->TestingSamplesCount % batchSize == 0) ? DataProv->TestingSamplesCount : ((DataProv->TestingSamplesCount / batchSize) + 1) * batchSize;
-				TrainSkipCount = batchSize - (AdjustedTrainingSamplesCount - DataProv->TrainingSamplesCount);
-				TestSkipCount = batchSize - (AdjustedTestingSamplesCount - DataProv->TestingSamplesCount);
-				TrainOverflowCount = AdjustedTrainingSamplesCount - batchSize;
-				TestOverflowCount = AdjustedTestingSamplesCount - batchSize;;
+				AdjustedTrainSamplesCount = (DataProv->TrainSamplesCount % batchSize == 0) ? DataProv->TrainSamplesCount : ((DataProv->TrainSamplesCount / batchSize) + 1) * batchSize;
+				AdjustedTestSamplesCount = (DataProv->TestSamplesCount % batchSize == 0) ? DataProv->TestSamplesCount : ((DataProv->TestSamplesCount / batchSize) + 1) * batchSize;
+				TrainSkipCount = batchSize - (AdjustedTrainSamplesCount - DataProv->TrainSamplesCount);
+				TestSkipCount = batchSize - (AdjustedTestSamplesCount - DataProv->TestSamplesCount);
+				TrainOverflowCount = AdjustedTrainSamplesCount - batchSize;
+				TestOverflowCount = AdjustedTestSamplesCount - batchSize;;
 
-				BatchSize = batchSize;
+				N = batchSize;
 
 				BatchSizeChanging.store(false);
 			}
@@ -2054,7 +2058,7 @@ namespace dnn
 					return;
 
 				if (Dropout != CurrentTrainingRate.Dropout)
-					ChangeDropout(CurrentTrainingRate.Dropout, BatchSize);
+					ChangeDropout(CurrentTrainingRate.Dropout, N);
 
 				auto learningRateEpochs = CurrentTrainingRate.Epochs;
 				auto learningRateIndex = 0ull;
@@ -2102,7 +2106,7 @@ namespace dnn
 
 					timePointGlobal = timer.now();
 
-					auto SampleLabels = TrainCheckBatch(SampleIndex, BatchSize);
+					auto SampleLabels = TrainCheckBatch(SampleIndex, N);
 					std::filesystem::path path = std::filesystem::path("C:\\Users\\dhaen\\");
 
 					auto os = std::ofstream((path / "testB.bin").string(), std::ios::out | std::ios::binary | std::ios::trunc);
@@ -2125,7 +2129,7 @@ namespace dnn
 						for (auto i = 1ull; i < Layers.size(); i++)
 						{
 							timePoint = timer.now();
-							Layers[i]->ForwardProp(BatchSize, true);
+							Layers[i]->ForwardProp(N, true);
 							if (i < 3ull)
 								Layers[i]->SaveNeurons(os);
 							//oss << std::to_string(point) + " " + Layers[i]->Name + "\n";
@@ -2134,20 +2138,20 @@ namespace dnn
 						}
 						fpropTime = timer.now() - timePointGlobal;
 						overflow = SampleIndex >= TrainOverflowCount;
-						CostFunctionBatch(State.load(), BatchSize, overflow, TrainSkipCount);
-						RecognizedBatch(State.load(), BatchSize, overflow, TrainSkipCount, SampleLabels);
+						CostFunctionBatch(State.load(), N, overflow, TrainSkipCount);
+						RecognizedBatch(State.load(), N, overflow, TrainSkipCount, SampleLabels);
 
 						for (auto i = Layers.size() - 1; i >= FirstUnlockedLayer.load(); --i)
 						{
 							if (Layers[i]->HasWeights)
 							{
 								//Layers[i]->ResetGradients();
-								Layers[i]->BackwardProp(BatchSize);
+								Layers[i]->BackwardProp(N);
 								//Layers[i]->UpdateWeights(CurrentTrainingRate, Optimizer, DisableLocking);
 								//Layers[i]->SaveGradients(os);
 							}
 							else
-								Layers[i]->BackwardProp(BatchSize);
+								Layers[i]->BackwardProp(N);
 
 							//Layers[i]->SaveNeuronsD1(os);
 							//oss << std::to_string(point) + " " + Layers[i]->Name + "\n";
@@ -2161,7 +2165,7 @@ namespace dnn
 						oss.close();
 					}
 
-					SampleSpeed = BatchSize / (Float(std::chrono::duration_cast<std::chrono::microseconds>(fpropTime).count()) / 1000000);
+					SampleSpeed = N / (Float(std::chrono::duration_cast<std::chrono::microseconds>(fpropTime).count()) / 1000000);
 
 					for (auto cost : CostLayers)
 					{
