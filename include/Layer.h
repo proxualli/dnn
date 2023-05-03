@@ -457,7 +457,7 @@ namespace dnn
 			OptWeights(&Weights),
 			OptWeightsD1(&WeightsD1),
 			OptWeightsPar1(&WeightsPar1),
-			OptWeightsPar2(&WeightsPar1),
+			OptWeightsPar2(&WeightsPar2),
 			Biases(FloatVector(biasCount)),
 			BiasesD1(FloatVector(biasCount)),
 			BiasesPar1(FloatVector()),
