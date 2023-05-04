@@ -456,8 +456,9 @@ namespace dnn
 		std::future<void> Task;
 
 	public:
-		const std::string Name;
-		const std::string Definition;
+		std::string Name;
+		std::string Script;
+		std::string Definition;
 		const dnnl::engine Engine;
 		dnn::Device Device;
 		dnnl::memory::format_tag Format;
@@ -562,6 +563,22 @@ namespace dnn
 			return std::string("");
 		}
 
+		auto GetDatasetEnum(const std::string& definition) const
+		{
+			if (definition.length() > 2)
+			{
+				auto start = definition.find("Dataset=");
+				if (start != std::string::npos)
+				{
+					auto end = definition.find(nwl, start);
+					auto datasetStr = definition.substr(start + 8ull, end - 1ull);
+					return magic_enum::enum_cast<Datasets>(datasetStr).value_or(Datasets::cifar10);
+				}
+			}
+
+			return Datasets::cifar10;
+		}
+
 		Model(const std::string& definition, Dataprovider* dataprovider) :
 			Name(GetModelName(definition)),
 			Definition(definition),
@@ -569,7 +586,7 @@ namespace dnn
 			Device(dnn::Device(Engine, dnnl::stream(Engine))),
 			Format(dnnl::memory::format_tag::any),
 			DataProv(dataprovider),
-			Dataset(Datasets::cifar10),				// Dataset
+			Dataset(GetDatasetEnum(definition)),	// Dataset
 			State(States::Idle),
 			TaskState(TaskStates::Stopped),
 			CostFunc(Costs::CategoricalCrossEntropy),
@@ -712,16 +729,16 @@ namespace dnn
 			
 			if ((n == N) && (d == D) && (h == H) && (w == W))
 			{
-				AdjustedTrainSamplesCount = (DataProv->TrainSamplesCount % n == 0) ? DataProv->TrainSamplesCount : ((DataProv->TrainSamplesCount / n) + 1) * n;
-				AdjustedTestSamplesCount = (DataProv->TestSamplesCount % n == 0) ? DataProv->TestSamplesCount : ((DataProv->TestSamplesCount / n) + 1) * n;
-				TrainSkipCount = n - (AdjustedTrainSamplesCount - DataProv->TrainSamplesCount);
-				TestSkipCount = n - (AdjustedTestSamplesCount - DataProv->TestSamplesCount);
-				TrainOverflowCount = AdjustedTrainSamplesCount - n;
-				TestOverflowCount = AdjustedTestSamplesCount - n;
-
 				PadD = padD;
 				PadH = padH;
 				PadW = padW;
+
+				AdjustedTrainSamplesCount = (DataProv->TrainSamplesCount % N == 0) ? DataProv->TrainSamplesCount : ((DataProv->TrainSamplesCount / N) + 1) * N;
+				AdjustedTestSamplesCount = (DataProv->TestSamplesCount % N == 0) ? DataProv->TestSamplesCount : ((DataProv->TestSamplesCount / N) + 1) * N;
+				TrainSkipCount = N - (AdjustedTrainSamplesCount - DataProv->TrainSamplesCount);
+				TestSkipCount = N - (AdjustedTestSamplesCount - DataProv->TestSamplesCount);
+				TrainOverflowCount = AdjustedTrainSamplesCount - N;
+				TestOverflowCount = AdjustedTestSamplesCount - N;
 
 				return true;
 			}
@@ -767,13 +784,7 @@ namespace dnn
 
 			for (auto& layer : Layers)
 				layer->SetBatchSize(n);
-				
-			AdjustedTrainSamplesCount = (DataProv->TrainSamplesCount % n == 0) ? DataProv->TrainSamplesCount : ((DataProv->TrainSamplesCount / n) + 1) * n;
-			AdjustedTestSamplesCount = (DataProv->TestSamplesCount % n == 0) ? DataProv->TestSamplesCount : ((DataProv->TestSamplesCount / n) + 1) * n;
-			TrainSkipCount = n - (AdjustedTrainSamplesCount - DataProv->TrainSamplesCount);
-			TestSkipCount = n - (AdjustedTestSamplesCount - DataProv->TestSamplesCount);
-			TrainOverflowCount = AdjustedTrainSamplesCount - n;
-			TestOverflowCount = AdjustedTestSamplesCount - n;;
+			
 
 			N = n;
 			D = d;
@@ -783,6 +794,13 @@ namespace dnn
 			PadH = padH;
 			PadW = padW;
 
+			AdjustedTrainSamplesCount = (DataProv->TrainSamplesCount % N == 0) ? DataProv->TrainSamplesCount : ((DataProv->TrainSamplesCount / N) + 1) * N;
+			AdjustedTestSamplesCount = (DataProv->TestSamplesCount % N == 0) ? DataProv->TestSamplesCount : ((DataProv->TestSamplesCount / N) + 1) * N;
+			TrainSkipCount = N - (AdjustedTrainSamplesCount - DataProv->TrainSamplesCount);
+			TestSkipCount = N - (AdjustedTestSamplesCount - DataProv->TestSamplesCount);
+			TrainOverflowCount = AdjustedTrainSamplesCount - N;
+			TestOverflowCount = AdjustedTestSamplesCount - N;
+			
 			BatchSizeChanging.store(false);
 
 			return true;
@@ -2924,7 +2942,7 @@ namespace dnn
 			headers.insert(std::string("TestErrors"));
 			headers.insert(std::string("TestErrorPercentage"));
 			headers.insert(std::string("TestAccuracy"));
-			headers.insert(std::string("ElapsedMilliseconds"));
+			headers.insert(std::string("ElapsedMilliSeconds"));
 			headers.insert(std::string("ElapsedTime"));
 
 			const auto delimiter = ';';
@@ -3347,8 +3365,9 @@ namespace dnn
 	template<typename S>
 	void serialize(S& s, Model& o)
 	{
-		//s.text1b(o.Name, 128);
-		//s.text1b(o.Definition, 250000);
+		s.text1b(o.Name, 128);
+		s.text1b(o.Script, 1000000);
+		s.text1b(o.Definition, 1000000);
 		s.value4b(o.Format);
 		s.value4b(o.Dataset);
 		//s.value4b<States>(o.State);
