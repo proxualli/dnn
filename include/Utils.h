@@ -126,6 +126,7 @@ namespace
 	constexpr auto TestActivations = false;
 	constexpr auto TestBatchNormalization = false;
 	constexpr auto TestConcat = false;
+	constexpr auto PlainOptimizerWeights = false;
 
 	typedef float Float;
 	typedef std::size_t UInt;

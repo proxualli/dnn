@@ -1317,9 +1317,12 @@ namespace dnn
 		{
 			if (HasWeights && (disableLocking || (!disableLocking && !LockUpdate.load())))
 			{
-				const bool differentOptimzerWeightFormat = *WeightsMemDesc != *PersistWeightsMemDesc;
+				const bool differentOptimzerWeightFormat = PlainOptimizerWeights && (*WeightsMemDesc != *PersistWeightsMemDesc);
 
-				FloatVector weights, weightsD1, weightsPar1, weightsPar2;
+				FloatVector weights, weightsD1; // , weightsPar1, weightsPar2;
+
+				OptWeightsPar1 = &WeightsPar1;
+				OptWeightsPar2 = &WeightsPar2;
 
 				if (differentOptimzerWeightFormat)
 				{
@@ -1337,7 +1340,7 @@ namespace dnn
 					dnnl::reorder(memWeightsD1, weightsMemD1).execute(Device.stream, { {DNNL_ARG_FROM, memWeightsD1}, {DNNL_ARG_TO, weightsMemD1} });
 					Device.stream.wait();
 
-					if (WeightsPar1.size() > 0)
+					/*if (WeightsPar1.size() > 0)
 					{
 						weightsPar1 = FloatVector(WeightCount);
 						OptWeightsPar1 = &weightsPar1;
@@ -1355,14 +1358,12 @@ namespace dnn
 						auto weightsPar2Mem = dnnl::memory(*PersistWeightsMemDesc, Device.engine, weightsPar2.data());
 						dnnl::reorder(memWeightsPar2, weightsPar2Mem).execute(Device.stream, { {DNNL_ARG_FROM, memWeightsPar2}, {DNNL_ARG_TO, weightsPar2Mem} });
 						Device.stream.wait();
-					}
+					}*/
 				}
 				else
 				{
 					OptWeights = &Weights;
 					OptWeightsD1 = &WeightsD1;
-					OptWeightsPar1 = &WeightsPar1;
-					OptWeightsPar2 = &WeightsPar2;
 				}
 
 				switch (optimizer)
@@ -1423,7 +1424,7 @@ namespace dnn
 					dnnl::reorder(weightsMemD1, memWeightsD1).execute(Device.stream, { {DNNL_ARG_FROM, weightsMemD1}, {DNNL_ARG_TO, memWeightsD1} });
 					Device.stream.wait();
 
-					if (WeightsPar1.size() > 0)
+					/*if (WeightsPar1.size() > 0)
 					{
 						auto weightsPar1Mem = dnnl::memory(*PersistWeightsMemDesc, Device.engine, weightsPar1.data());
 						auto memWeightsPar1 = dnnl::memory(*WeightsMemDesc, Device.engine, WeightsPar1.data());
@@ -1436,7 +1437,7 @@ namespace dnn
 						auto memWeightsPar2 = dnnl::memory(*WeightsMemDesc, Device.engine, WeightsPar2.data());
 						dnnl::reorder(weightsPar2Mem, memWeightsPar2).execute(Device.stream, { {DNNL_ARG_FROM, weightsPar2Mem}, {DNNL_ARG_TO, memWeightsPar2} });
 						Device.stream.wait();
-					}
+					}*/
 				}
 			}
 		}
