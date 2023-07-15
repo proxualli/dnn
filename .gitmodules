@@ -12,7 +12,7 @@
 	url = https://github.com/google/googletest
 [submodule "deps/version2"]
 	path = deps/version2
-	url = https://github.com/zamir1002/version2
+	url = https://github.com/proxualli/version2
 [submodule "deps/zlib"]
 	path = deps/zlib
 	url = https://github.com/madler/zlib
