@@ -320,6 +320,7 @@ extern "C" DNN_API void DNNGetImage(const UInt layerIndex, const Byte fillColor,
 			case LayerTypes::ConvolutionTranspose:
 			case LayerTypes::Dense:
 			case LayerTypes::DepthwiseConvolution:
+			case LayerTypes::GroupNorm:
 			case LayerTypes::LayerNorm:
 			case LayerTypes::PartialDepthwiseConvolution:
 			case LayerTypes::PRelu:
@@ -695,6 +696,16 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, LayerInfo* info)
 			{
 				info->KernelH = pool->KernelH;
 				info->KernelW = pool->KernelW;
+			}
+		}
+		break;
+
+		case LayerTypes::GroupNorm:
+		{
+			auto gn = dynamic_cast<GroupNorm*>(model->Layers[layerIndex].get());
+			if (gn)
+			{
+				info->Scaling = gn->Scaling;
 			}
 		}
 		break;

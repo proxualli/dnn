@@ -167,20 +167,21 @@ namespace dnn
 		Dropout = 17,
 		GlobalAvgPooling = 18,
 		GlobalMaxPooling = 19,
-		Input = 20,
-		LayerNorm = 21,
-		LocalResponseNorm = 22,
-		LogSoftmax = 23,
-		Max = 24,
-		MaxPooling = 25,
-		Min = 26,
-		Multiply = 27,
-		PartialDepthwiseConvolution = 28,
-		PRelu = 29,
-		Resampling = 30,
-		Shuffle = 31,
-		Softmax = 32,
-		Substract = 33
+		GroupNorm = 20,
+		Input = 21,
+		LayerNorm = 22,
+		LocalResponseNorm = 23,
+		LogSoftmax = 24,
+		Max = 25,
+		MaxPooling = 26,
+		Min = 27,
+		Multiply = 28,
+		PartialDepthwiseConvolution = 29,
+		PRelu = 30,
+		Resampling = 31,
+		Shuffle = 32,
+		Softmax = 33,
+		Substract = 34
 	};
 	
 	enum class Fillers
@@ -267,7 +268,8 @@ namespace dnn
 					layerType == LayerTypes::BatchNorm || 
 					layerType == LayerTypes::BatchNormActivation || 
 					layerType == LayerTypes::BatchNormActivationDropout || 
-					layerType == LayerTypes::BatchNormRelu) &&
+					layerType == LayerTypes::BatchNormRelu ||
+					layerType == LayerTypes::GroupNorm) &&
 					(inputs.size() == 1) &&
 					(inputs[0]->LayerType == LayerTypes::Convolution || 
 					inputs[0]->LayerType == LayerTypes::DepthwiseConvolution || 

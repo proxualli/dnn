@@ -545,6 +545,10 @@ namespace dnn
 						case LayerTypes::GlobalMaxPooling:
 							model->Layers.push_back(std::make_unique<GlobalMaxPooling>(model->Device, model->Format, name, inputs));
 							break;
+						case LayerTypes::GroupNorm:
+							model->Layers.push_back(std::make_unique<GroupNorm>(model->Device, model->Format, name, inputs, scaling, groups, eps, biases));
+							model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsFillerMode, weightsGain, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesFillerMode, biasesGain, biasesScale, biasesLRM, biasesWDM);
+							break;
 						case LayerTypes::LayerNorm:
 							model->Layers.push_back(std::make_unique<LayerNorm>(model->Device, model->Format, name, inputs, scaling, eps, biases));
 							model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsFillerMode, weightsGain, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesFillerMode, biasesGain, biasesScale, biasesLRM, biasesWDM);
@@ -1929,7 +1933,7 @@ namespace dnn
 					goto FAIL;
 				}
 
-				if (layerType != LayerTypes::Shuffle && layerType != LayerTypes::ChannelSplit && layerType != LayerTypes::Convolution && layerType != LayerTypes::PartialDepthwiseConvolution)
+				if (layerType != LayerTypes::Shuffle && layerType != LayerTypes::ChannelSplit && layerType != LayerTypes::Convolution && layerType != LayerTypes::PartialDepthwiseConvolution && layerType != LayerTypes::GroupNorm)
 				{
 					msg = CheckMsg(line, col, std::string("Groups cannot be specified in a ") + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + std::string(" layer."));
 					goto FAIL;

@@ -19,6 +19,7 @@
 #include "Dropout.h"
 #include "GlobalAvgPooling.h"
 #include "GlobalMaxPooling.h"
+#include "GroupNorm.h"
 #include "Input.h"
 #include "LayerNorm.h"
 #include "LocalResponseNorm.h"
