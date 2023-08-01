@@ -33,7 +33,7 @@
 #endif //DNN_AVX2
 
 #ifdef DNN_AVX512
-#define INSTRSET 9
+#define INSTRSET 10
 #define MAX_VECTOR_SIZE 512
 #endif //DNN_AVX512
 
@@ -771,11 +771,11 @@ namespace
 		static thread_local auto generator = Ranvec1(3, Seed<int>(), static_cast<int>(std::hash<std::thread::id>()(std::this_thread::get_id())));
 
 #if defined(DNN_AVX512BW) || defined(DNN_AVX512)
-		return select(generator.random16f() < p, Float(1), Float(0));
+		return select(generator.random16f() < p, VecFloat(1), VecFloat(0));
 #elif defined(DNN_AVX2) || defined(DNN_AVX)
-		return select(generator.random8f() < p, Float(1), Float(0));
+		return select(generator.random8f() < p, VecFloat(1), VecFloat(0));
 #elif defined(DNN_SSE42) || defined(DNN_SSE41)
-		return select(generator.random4f() < p, Float(1), Float(0));
+		return select(generator.random4f() < p, VecFloat(1), VecFloat(0));
 #endif
 	}
 

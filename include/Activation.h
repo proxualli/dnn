@@ -40,7 +40,7 @@ namespace dnn
 		inline static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return std::abs(x); }
 		inline static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return x > Float(0) ? Float(1) : x < Float(0) ? Float(-1) : Float(0); }
 		inline static VecFloat fVec(const VecFloat& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return abs(x); }
-		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return select(x > Float(0), Float(1), select(x < Float(0), Float(-1), Float(0))); }
+		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return select(x > Float(0), Float(1), select(x < Float(0), VecFloat(Float(-1)), VecFloat(Float(0)))); }
 		inline static Activations Enum() NOEXCEPT { return Activations::Abs; }
 	};
 
@@ -58,7 +58,7 @@ namespace dnn
 		inline static Float f(const Float& x, const Float& alpha = Float(6), const Float& beta = Float(0)) NOEXCEPT { return std::max(Float(0), std::min(alpha, x)); }
 		inline static Float df(const Float& x, const Float& alpha = Float(6), const Float& beta = Float(0)) NOEXCEPT { return x > Float(0) && x <= alpha ? Float(1) : Float(0); }
 		inline static VecFloat fVec(const VecFloat& x, const Float& alpha = Float(6), const Float& beta = Float(0)) NOEXCEPT { return max(Float(0), min(alpha, x)); }
-		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(6), const Float& beta = Float(0)) NOEXCEPT { return select(x > Float(0), select(x <= alpha, Float(1), Float(0)), Float(0)); }
+		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(6), const Float& beta = Float(0)) NOEXCEPT { return select(x > Float(0), select(x <= alpha, VecFloat(Float(1)), VecFloat(Float(0))), VecFloat(Float(0))); }
 		inline static Activations Enum() NOEXCEPT { return Activations::BoundedRelu; }
 	};
 
@@ -67,7 +67,7 @@ namespace dnn
 		inline static Float f(const Float& x, const Float& alpha = Float(1), const Float& beta = Float(0)) NOEXCEPT { return x > Float(0) ? x : alpha * (std::exp(x) - Float(1)); }
 		inline static Float df(const Float& x, const Float& alpha = Float(1), const Float& beta = Float(0)) NOEXCEPT { return x > Float(0) ? Float(1) : alpha * std::exp(x); }
 		inline static VecFloat fVec(const VecFloat& x, const Float& alpha = Float(1), const Float& beta = Float(0)) NOEXCEPT { return select(x > Float(0), x, alpha * (exp(x) - Float(1))); }
-		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(1), const Float& beta = Float(0)) NOEXCEPT { return select(x > Float(0), Float(1), alpha * exp(x)); }
+		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(1), const Float& beta = Float(0)) NOEXCEPT { return select(x > Float(0), VecFloat(Float(1)), alpha * exp(x)); }
 		inline static Activations Enum() NOEXCEPT { return Activations::Elu; }
 	};
 
@@ -85,7 +85,7 @@ namespace dnn
 		inline static Float f(const Float& x, const Float& alpha = Float(0.2), const Float& beta = Float(0.5)) NOEXCEPT { return std::max(Float(0), std::min(Float(1), x * alpha + beta)); }
 		inline static Float df(const Float& x, const Float& alpha = Float(0.2), const Float& beta = Float(0.5)) NOEXCEPT { return ((x > (-beta / alpha)) && (x < ((Float(1) - beta) / alpha))) ? alpha : Float(0); }
 		inline static VecFloat fVec(const VecFloat& x, const Float& alpha = Float(0.2), const Float& beta = Float(0.5)) NOEXCEPT { return max(Float(0), min(Float(1), x * alpha + beta)); }
-		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(0.2), const Float& beta = Float(0.5)) NOEXCEPT { return select((x > (-beta / alpha)) & (x < ((Float(1) - beta) / alpha)), alpha, Float(0)); }
+		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(0.2), const Float& beta = Float(0.5)) NOEXCEPT { return select((x > (-beta / alpha)) & (x < ((VecFloat(1) - beta) / alpha)), VecFloat(alpha), VecFloat(Float(0))); }
 		inline static Activations Enum() NOEXCEPT { return Activations::HardSigmoid; }
 	};
 
@@ -94,7 +94,7 @@ namespace dnn
 		inline static Float f(const Float& x, const Float& alpha = (Float(1) / Float(6)), const Float& beta = Float(0.5)) NOEXCEPT { return x * std::max(Float(0), std::min(Float(1), x * alpha + beta)); }
 		inline static Float df(const Float& x, const Float& alpha = (Float(1) / Float(6)), const Float& beta = Float(0.5)) NOEXCEPT { return ((x >= (Float(1) - beta) / alpha) ? Float(1) : (((x > -beta / alpha) && x < ((Float(1) - beta) / alpha))) ? (Float(2) * x * alpha + beta) : Float(0)); }
 		inline static VecFloat fVec(const VecFloat& x, const Float& alpha = (Float(1) / Float(6)), const Float& beta = Float(0.5)) NOEXCEPT { return x * max(Float(0), min(Float(1), x * alpha + beta)); }
-		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = (Float(1) / Float(6)), const Float& beta = Float(0.5)) NOEXCEPT { return select(x >= (Float(1) - beta) / alpha, Float(1), select(x > - beta / alpha & x < (Float(1) - beta) / alpha, Float(2) * x * alpha + beta, Float(0))); }
+		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = (Float(1) / Float(6)), const Float& beta = Float(0.5)) NOEXCEPT { return select(x >= (Float(1) - beta) / alpha, VecFloat(Float(1)), select(x > - beta / alpha & x < (Float(1) - beta) / alpha, Float(2) * x * alpha + beta, VecFloat(Float(0)))); }
 		inline static Activations Enum() NOEXCEPT { return Activations::HardSwish; }
 	};
 
@@ -112,7 +112,7 @@ namespace dnn
 		inline static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return std::log(x); }
 		inline static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return Float(1) / x; }
 		inline static VecFloat fVec(const VecFloat& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return log(x); }
-		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return Float(1) / x; }
+		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return VecFloat(Float(1)) / x; }
 		inline static Activations Enum() NOEXCEPT { return Activations::Log; }
 	};
 
@@ -139,7 +139,7 @@ namespace dnn
 		inline static Float f(const Float& x, const Float& alpha = Float(1), const Float& beta = Float(0)) NOEXCEPT { return std::log(Float(1) + std::exp(alpha * x)) / alpha; }
 		inline static Float df(const Float& x, const Float& alpha = Float(1), const Float& beta = Float(0)) NOEXCEPT { return Float(1) / (Float(1) + std::exp(-alpha * x)); }
 		inline static VecFloat fVec(const VecFloat& x, const Float& alpha = Float(1), const Float& beta = Float(0)) NOEXCEPT { return log(Float(1) + exp(alpha * x)) / alpha; }
-		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(1), const Float& beta = Float(0)) NOEXCEPT { return Float(1) / (Float(1) + exp(-alpha * x)); }
+		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(1), const Float& beta = Float(0)) NOEXCEPT { return VecFloat(Float(1)) / (VecFloat(Float(1)) + exp(-alpha * x)); }
 		inline static Activations Enum() NOEXCEPT { return Activations::SoftRelu; }
 	};
 
@@ -148,7 +148,7 @@ namespace dnn
 		inline static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return -SoftRelu::f(-x); }
 		inline static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return Float(1) / (std::exp(x) + Float(1)); }
 		inline static VecFloat fVec(const VecFloat& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return -SoftRelu::fVec(-x); }
-		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return Float(1) / (exp(x) + Float(1)); }
+		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return VecFloat(Float(1)) / (exp(x) + VecFloat(Float(1))); }
 		inline static Activations Enum() NOEXCEPT { return Activations::LogSigmoid; }
 	};
 
@@ -166,7 +166,7 @@ namespace dnn
 		inline static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return x > Float(0) ? x : x * alpha; }
 		inline static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return x > Float(0) ? Float(1) : alpha; }
 		inline static VecFloat fVec(const VecFloat& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return select(x > Float(0), x, x * alpha); }
-		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return select(x > Float(0), Float(1), alpha); }
+		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return select(x > Float(0), VecFloat(Float(1)), VecFloat(alpha)); }
 		inline static Activations Enum() NOEXCEPT { return Activations::Relu; }
 	};
 	
@@ -175,7 +175,7 @@ namespace dnn
 		inline static Float f(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return Float(1.0507009873554804934193349852946) * (x > Float(0) ? x : Float(1.6732632423543772848170429916717) * (std::exp(x) - Float(1))); }
 		inline static Float df(const Float& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return x > Float(0) ? Float(1.0507009873554804934193349852946) : Float(1.7580993408473768599402175208123) * std::exp(x); }
 		inline static VecFloat fVec(const VecFloat& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return Float(1.0507009873554804934193349852946) * select(x > Float(0), x, Float(1.6732632423543772848170429916717) * (exp(x) - Float(1))); }
-		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return select(x > Float(0), Float(1.0507009873554804934193349852946), Float(1.7580993408473768599402175208123) * exp(x)); }
+		inline static VecFloat dfVec(const VecFloat& x, const Float& alpha = Float(0), const Float& beta = Float(0)) NOEXCEPT { return select(x > Float(0), VecFloat(Float(1.0507009873554804934193349852946)), Float(1.7580993408473768599402175208123) * exp(x)); }
 		inline static Activations Enum() NOEXCEPT { return Activations::Selu; }
 	};
 
