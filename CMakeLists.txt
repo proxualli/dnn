@@ -45,7 +45,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 if(WIN32 OR MSVC)
   set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
-  set(flags /arch:AVX2)
+  set(flags /arch:AVX512)
   set(linkflags "")
   add_compile_options(
     "$<$<COMPILE_LANGUAGE:CXX>:${flags}>"
@@ -53,7 +53,7 @@ if(WIN32 OR MSVC)
   set(debug_flags /openmp /W4 /Od)
   set(release_flags /openmp /W3 /O2 /Ob2 /Oi /Ot /GL /GF /Gy /fp:fast)
 else()
-  set(flags -mrdseed -mrdrnd -mfma -mavx2 -march=native -fopenmp)
+  set(flags -mrdseed -mrdrnd -mfma -mavx512f -march=native -fopenmp)
   if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set(linkflags -fopenmp=libiomp5)
   else()
@@ -86,12 +86,12 @@ ENDMACRO()
 set(DNNL_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(DNNL_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 if(WIN32 OR MSVC)
-  set(DNNL_ARCH_OPT_FLAGS "/arch:AVX2" CACHE STRING "" FORCE)
+  set(DNNL_ARCH_OPT_FLAGS "/arch:AVX512" CACHE STRING "" FORCE)
 else()
   if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    set(DNNL_ARCH_OPT_FLAGS "-Ofast -funroll-loops -ftree-vectorize -Wno-error -mfma -mavx2 -march=native -fopenmp" CACHE STRING "" FORCE)
+    set(DNNL_ARCH_OPT_FLAGS "-Ofast -funroll-loops -ftree-vectorize -Wno-error -mfma -mavx512f -march=native -fopenmp" CACHE STRING "" FORCE)
   else()
-    set(DNNL_ARCH_OPT_FLAGS "-Ofast -funroll-loops -ftree-vectorize -Wno-error -mfma -mavx2 -march=native -fopenmp -unroll-aggressive" CACHE STRING "" FORCE)
+    set(DNNL_ARCH_OPT_FLAGS "-Ofast -funroll-loops -ftree-vectorize -Wno-error -mfma -mavx512f -march=native -fopenmp -unroll-aggressive" CACHE STRING "" FORCE)
   endif()
 endif()
 set(WITH_TURBOJPEG FALSE CACHE BOOL "" FORCE) 
@@ -138,6 +138,7 @@ set(libdnn_headers
   include/Dropout.h
   include/GlobalAvgPooling.h
   include/GlobalMaxPooling.h
+  include/GroupNorm.h
   include/Image.h
   include/Input.h
   include/Layer.h
@@ -285,9 +286,9 @@ ENDIF()
 add_library(${PROJECT_NAME} ${libdnn_sources})
 DNN_TARGET_ENABLE_CXX17(${PROJECT_NAME})
 if(BUILD_SHARED_LIBS)
-  target_compile_definitions(${PROJECT_NAME} PRIVATE DNN_EXPORTS DNN_DLL DNN_CACHE_PRIMITIVES DNN_AVX2 cimg_use_openmp cimg_use_cpp11 cimg_use_jpeg cimg_use_png cimg_use_zlib)
+  target_compile_definitions(${PROJECT_NAME} PRIVATE DNN_EXPORTS DNN_DLL DNN_CACHE_PRIMITIVES DNN_AVX512 cimg_use_openmp cimg_use_cpp11 cimg_use_jpeg cimg_use_png cimg_use_zlib)
 else()
-  target_compile_definitions(${PROJECT_NAME} PRIVATE DNN_EXPORTS DNN_CACHE_PRIMITIVES DNN_AVX2 cimg_use_openmp cimg_use_cpp11 cimg_use_jpeg cimg_use_png cimg_use_zlib)
+  target_compile_definitions(${PROJECT_NAME} PRIVATE DNN_EXPORTS DNN_CACHE_PRIMITIVES DNN_AVX512 cimg_use_openmp cimg_use_cpp11 cimg_use_jpeg cimg_use_png cimg_use_zlib)
 endif()
 target_include_directories(${PROJECT_NAME}
     PUBLIC
@@ -299,9 +300,9 @@ target_include_directories(${PROJECT_NAME}
 add_executable(test ${libdnn_test})
 DNN_TARGET_ENABLE_CXX17(test)
 if(BUILD_SHARED_LIBS)
-  target_compile_definitions(test PRIVATE DNN_EXPORTS DNN_DLL DNN_CACHE_PRIMITIVES DNN_AVX2 cimg_use_openmp cimg_use_cpp11 cimg_use_jpeg cimg_use_png cimg_use_zlib)
+  target_compile_definitions(test PRIVATE DNN_EXPORTS DNN_DLL DNN_CACHE_PRIMITIVES DNN_AVX512 cimg_use_openmp cimg_use_cpp11 cimg_use_jpeg cimg_use_png cimg_use_zlib)
 else()
-  target_compile_definitions(test PRIVATE DNN_EXPORTS DNN_CACHE_PRIMITIVES DNN_AVX2 cimg_use_openmp cimg_use_cpp11 cimg_use_jpeg cimg_use_png cimg_use_zlib)
+  target_compile_definitions(test PRIVATE DNN_EXPORTS DNN_CACHE_PRIMITIVES DNN_AVX512 cimg_use_openmp cimg_use_cpp11 cimg_use_jpeg cimg_use_png cimg_use_zlib)
 endif()
 target_include_directories(test 
     PUBLIC
