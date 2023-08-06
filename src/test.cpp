@@ -80,7 +80,7 @@ std::string ToTime(UInt nanoseconds)
 
 void NewEpoch(UInt CurrentCycle, UInt CurrentEpoch, UInt TotalEpochs, UInt Optimizer, Float Beta2, Float Gamma, Float Eps, bool HorizontalFlip, bool VerticalFlip, Float InputDropout, Float Cutout, bool CutMix, Float AutoAugment, Float ColorCast, UInt ColorAngle, Float Distortion, UInt Interpolation, Float Scaling, Float Rotation, Float MaximumRate, UInt N, UInt D, UInt H, UInt W, UInt PadD, UInt PadH, UInt PadW, Float Momentum, Float L2Penalty, Float Dropout, Float AvgTrainLoss, Float TrainErrorPercentage, Float TrainAccuracy, UInt TrainErrors, Float AvgTestLoss, Float TestErrorPercentage, Float TestAccuracy, UInt TestErrors, UInt ElapsedNanoSeconds)
 {
-    std::cout << std::string("Cycle: ") << std::to_string(CurrentCycle) << std::string("  Epoch: ") << std::to_string(CurrentEpoch) << std::string("  Train Accuracy: ") << FloatToStringFixed(TrainAccuracy, 2) << std::string("%  Test Accuracy: ") << FloatToStringFixed(TestAccuracy, 2) << std::string("  Duration: ") + ToTime(ElapsedNanoSeconds) + std::string("%                                                                           ") << std::endl;
+    std::cout << std::string("Cycle: ") << std::to_string(CurrentCycle) << std::string("  Epoch: ") << std::to_string(CurrentEpoch) << std::string("  Train Accuracy: ") << FloatToStringFixed(TrainAccuracy, 2) << std::string("%  Test Accuracy: ") << FloatToStringFixed(TestAccuracy, 2) << std::string("%  Duration: ") + ToTime(ElapsedNanoSeconds) + std::string("                                                                           ") << std::endl;
     std::cout.flush();
 
     DNN_UNREF_PAR(TotalEpochs);
