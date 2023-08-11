@@ -756,7 +756,7 @@ namespace dnn
 
 			if (Layers[0]->D != d || Layers[0]->H != h || Layers[0]->W != w)
 			{
-				Layers[0]->H = d;
+				Layers[0]->D = d;
 				Layers[0]->H = h;
 				Layers[0]->W = w;
 				for (auto& layer : Layers)
