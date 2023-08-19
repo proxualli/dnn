@@ -315,13 +315,13 @@ namespace dnn
 
 		ByteArray GetImage(const Byte fillColor) final override
 		{
-			if (Scaling)
+			if (Scaling && BiasCount > 0)
 			{
 				const auto rangeWeights = GetColorRange<Float>(WeightsStats.Min, WeightsStats.Max);
 				const auto rangeBiases = GetColorRange<Float>(BiasesStats.Min, BiasesStats.Max);
 
 				const auto width = BiasCount;
-				const auto height = WeightCount / BiasCount;
+				const auto height = WeightCount / width;
 				const auto totalSize = width * (height + 3);
 
 				auto image = ByteArray(totalSize, fillColor);

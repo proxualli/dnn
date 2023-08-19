@@ -16,12 +16,12 @@ namespace dnn
 #endif
 		bool reorderFwdSrc;
 		bool reorderBwdDiffSrc;
-
+		
 	public:
 		LogSoftmax(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs) :
 			Layer(device, format, name, LayerTypes::LogSoftmax, 0, 0, inputs[0]->C, inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs, false),
 			reorderFwdSrc(false),
-			reorderBwdDiffSrc(false)
+			reorderBwdDiffSrc(false)			
 		{
 			assert(Inputs.size() == 1);
 		}
@@ -65,8 +65,6 @@ namespace dnn
 			{
 				if (NeuronsFormat == dnnl::memory::format_tag::any)
 					ChosenFormat = (LayerBeforeCost || IsPlainDataFmt(*InputLayer->DstMemDesc)) ? PlainFmt : GetMemoryFormat(*InputLayer->DstMemDesc);
-				else
-					ChosenFormat = PlainFmt;
 
 				DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, ChosenFormat));
 				DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, ChosenFormat));
@@ -99,8 +97,10 @@ namespace dnn
 				dnnl::reorder(memSrc, srcMem).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_FROM, memSrc}, { DNNL_ARG_TO, srcMem } });
 				Device.stream.wait();
 			}
-			
+
 			auto dstMem = dnnl::memory(fwdDesc->dst_desc(), Device.engine, Neurons.data());
+
+
 
 #ifdef DNN_CACHE_PRIMITIVES
 			fwd->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DST, dstMem } });

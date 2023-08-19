@@ -18,7 +18,9 @@ namespace dnn
 	private:
 		std::vector<LabelInfo> sampleLabel;
 		std::vector<std::vector<LabelInfo>> sampleLabels;
-		
+		bool reorderFwdSrc;
+		bool reorderBwdDiffSrc;
+
 	public:
 		const Costs CostFunction;
 		const UInt GroupIndex;
@@ -40,6 +42,8 @@ namespace dnn
 
 		Cost(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const Costs cost, const UInt groupIndex, const UInt labelIndex, const UInt c, const std::vector<Layer*>& inputs, const Float labelTrue, const Float labelFalse, const Float weight, const Float eps) :
 			Layer(device, format, name, LayerTypes::Cost, 0, 0, c, 1, 1, 1, 0, 0, 0, inputs),
+			reorderFwdSrc(false),
+			reorderBwdDiffSrc(false),
 			CostFunction(cost),
 			GroupIndex(groupIndex),
 			LabelIndex(labelIndex),
@@ -93,9 +97,11 @@ namespace dnn
 
 		void InitializeDescriptors(const UInt batchSize) final override
 		{
-			ChosenFormat = dnnl::memory::format_tag::ab;
-			DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C)}), dnnl::memory::data_type::f32, ChosenFormat));
-			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, ChosenFormat));
+			ChosenFormat = PlainFmt;
+			DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(1) , dnnl::memory::dim(1) } ), dnnl::memory::data_type::f32, PlainFmt));
+			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C) , dnnl::memory::dim(1) , dnnl::memory::dim(1) }), dnnl::memory::data_type::f32, PlainFmt));
+			reorderFwdSrc = *DstMemDesc != *InputLayer->DstMemDesc;
+			reorderBwdDiffSrc = *DiffDstMemDesc != *InputLayer->DiffDstMemDesc;
 		}
 
 		void SetSampleLabel(const std::vector<LabelInfo>& label)
@@ -126,6 +132,14 @@ namespace dnn
 		void ForwardProp(const UInt batchSize, const bool training) final override
 		{
 			DNN_UNREF_PAR(training);
+
+			auto memSrc = dnnl::memory(*InputLayer->DstMemDesc, Device.engine, InputLayer->Neurons.data());
+			auto srcMem = reorderFwdSrc ? dnnl::memory(*DstMemDesc, Device.engine) : memSrc;
+			if (reorderFwdSrc)
+			{
+				dnnl::reorder(memSrc, srcMem).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_FROM, memSrc}, { DNNL_ARG_TO, srcMem } });
+				Device.stream.wait();
+			}
 
 			switch (CostFunction)
 			{
@@ -195,7 +209,8 @@ namespace dnn
 						for (auto n = 0ull; n < batchSize; n++)
 						{
 							const auto label = sampleLabels[n][LabelIndex].LabelA + (n * C);
-							Neurons[label] = -InputLayer->Neurons[label];
+							//Neurons[label] = -InputLayer->Neurons[label];
+							Neurons[label] = -((Float*)srcMem.get_data_handle())[label];
 						}
 #ifdef DNN_STOCHASTIC
 					}
@@ -376,6 +391,17 @@ namespace dnn
 			ZeroGradient(batchSize);
 #endif // DNN_LEAN
 
+			auto memSrc = dnnl::memory(*InputLayer->DstMemDesc, Device.engine, InputLayer->Neurons.data());
+			auto srcMem = reorderFwdSrc ? dnnl::memory(*DstMemDesc, Device.engine) : memSrc;
+			if (reorderFwdSrc)
+			{
+				dnnl::reorder(memSrc, srcMem).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_FROM, memSrc}, { DNNL_ARG_TO, srcMem } });
+				Device.stream.wait();
+			}
+
+			auto memDiffSrc = dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data());
+			auto diffSrcMem = reorderBwdDiffSrc ? dnnl::memory(*DiffDstMemDesc, Device.engine) : memDiffSrc;
+
 			switch (CostFunction)
 			{
 			case Costs::BinaryCrossEntropy:
@@ -426,7 +452,7 @@ namespace dnn
 					else
 					{
 #endif
-						for (auto nc = 0ull; nc < C * batchSize; nc++)
+						/*for (auto nc = 0ull; nc < C * batchSize; nc++)
 							InputLayer->NeuronsD1[nc] = std::exp(InputLayerFwd->Neurons[nc]) - (Eps / C);
 
 						for (auto n = 0ull; n < batchSize; n++)
@@ -437,7 +463,21 @@ namespace dnn
 							const auto weightB = ((weightA != Float(1)) && (sampleLabels[n][LabelIndex].LabelA != sampleLabels[n][LabelIndex].LabelB)) ? Float(1) - weightA : Float(1);
 							InputLayer->NeuronsD1[labelA] = std::exp(InputLayerFwd->Neurons[labelA] * weightA) - ((Float(1) - Eps) + (Eps / C));
 							InputLayer->NeuronsD1[labelB] = std::exp(InputLayerFwd->Neurons[labelB] * weightB) - ((Float(1) - Eps) + (Eps / C));
+						}*/
+
+						for (auto nc = 0ull; nc < C * batchSize; nc++)
+							((Float*)diffSrcMem.get_data_handle())[nc] = std::exp(((Float*)srcMem.get_data_handle())[nc]) - (Eps / C);
+
+						for (auto n = 0ull; n < batchSize; n++)
+						{
+							const auto labelA = sampleLabels[n][LabelIndex].LabelA + (n * C);
+							const auto labelB = sampleLabels[n][LabelIndex].LabelB + (n * C);
+							const auto weightA = sampleLabels[n][LabelIndex].Lambda;
+							const auto weightB = ((weightA != Float(1)) && (sampleLabels[n][LabelIndex].LabelA != sampleLabels[n][LabelIndex].LabelB)) ? Float(1) - weightA : Float(1);
+							((Float*)diffSrcMem.get_data_handle())[labelA] = std::exp(((Float*)srcMem.get_data_handle())[labelA] * weightA) - ((Float(1) - Eps) + (Eps / C));
+							((Float*)diffSrcMem.get_data_handle())[labelB] = std::exp(((Float*)srcMem.get_data_handle())[labelB] * weightB) - ((Float(1) - Eps) + (Eps / C));
 						}
+
 #ifdef DNN_STOCHASTIC
 					}
 #endif
@@ -616,6 +656,12 @@ namespace dnn
 #endif
 			}
 			break;
+			}
+
+			if (reorderBwdDiffSrc)
+			{
+				dnnl::reorder(diffSrcMem, memDiffSrc).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_FROM, diffSrcMem}, { DNNL_ARG_TO, memDiffSrc } });
+				Device.stream.wait();
 			}
 
 #ifdef DNN_LEAN
