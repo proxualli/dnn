@@ -252,7 +252,6 @@ namespace dnn
 		return std::string(magic_enum::enum_name<LayerTypes>(type)).find("Norm", 0) != std::string::npos;
 	}
 
-
 	class Layer
 	{
 	protected:

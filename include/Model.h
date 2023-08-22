@@ -1707,7 +1707,7 @@ namespace dnn
 							cost->Reset();
 
 #ifdef DNN_STOCHASTIC				
-						if (BatchSize == 1)
+						if (N == 1)
 						{
 							for (SampleIndex = 0; SampleIndex < DataProv->TrainSamplesCount; SampleIndex++)
 							{
@@ -1746,7 +1746,7 @@ namespace dnn
 										if (!Layers[i]->Skip)
 										{
 											Layers[i]->ResetGradients();
-											Layers[i]->BackwardProp(BatchSize);
+											Layers[i]->BackwardProp(N);
 										}
 										Layers[i]->bpropTime = timer.now() - timePoint;
 										timePoint = timer.now();
@@ -1873,7 +1873,7 @@ namespace dnn
 					{
 						State.store(States::Testing);
 #ifdef DNN_STOCHASTIC	
-						if (BatchSize == 1)
+						if (N == 1)
 						{
 							for (SampleIndex = 0; SampleIndex < DataProv->TestSamplesCount; SampleIndex++)
 							{
@@ -2257,7 +2257,7 @@ namespace dnn
 						cost->Reset();
 
 #ifdef DNN_STOCHASTIC
-					if (BatchSize == 1)
+					if (N == 1)
 					{
 						for (SampleIndex = 0; SampleIndex < DataProv->TestSamplesCount; SampleIndex++)
 						{

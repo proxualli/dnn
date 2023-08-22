@@ -226,8 +226,6 @@ namespace dnn
 							}
 							else
 							{
-								const auto scales0 = scales[first];
-								const auto scales1 = scales[second];
 								for (auto c = 0ull; c < C; c++)
 								{
 									const auto outputOffset = c * HW();
