@@ -520,22 +520,6 @@ namespace scripts
                 "Group=" + std::to_string(part) + nwl + nwl;
         }
 
-        static std::string ChannelSplitRatioLeft(UInt id, std::string inputs, Float ratio = 0.375f, std::string group = "", std::string prefix = "CSRL")
-        {
-            return "[" + group + prefix + std::to_string(id) + "]" + nwl +
-                "Type=ChannelSplitRatioLeft" + nwl +
-                "Inputs=" + inputs + nwl +
-                "Ratio=" + std::to_string(ratio) + nwl + nwl;
-        }
-
-        static std::string ChannelSplitRatioRight(UInt id, std::string inputs, Float ratio = 0.375f, std::string group = "", std::string prefix = "CSRR")
-        {
-            return "[" + group + prefix + std::to_string(id) + "]" + nwl +
-                "Type=ChannelSplitRatioRight" + nwl +
-                "Inputs=" + inputs + nwl +
-                "Ratio=" + std::to_string(ratio) + nwl + nwl;
-        }
-
         static std::string Shuffle(UInt id, std::string inputs, UInt groups = 2, std::string group = "", std::string prefix = "SH")
         {
             return "[" + group + prefix + std::to_string(id) + "]" + nwl +
