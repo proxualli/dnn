@@ -441,7 +441,6 @@ extern "C" DNN_API void DNNGetCostInfo(const UInt index, CostInfo* info)
 	}
 }
 
-
 extern "C" DNN_API void DNNGetModelInfo(ModelInfo* info)
 {
 	if (model)

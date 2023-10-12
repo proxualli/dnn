@@ -3,7 +3,7 @@
 
 namespace dnn
 {
-	using namespace image;
+	//using namespace image;
 
 	typedef std::vector<Image<Byte>, AlignedAllocator<dnn::Image<Byte>, 64ull>> ImageByteVector;
 
@@ -594,7 +594,7 @@ namespace dnn
 						const auto offset = batch * 10000;
 						for (UInt index = 0; index < 10000; index++)
 						{
-							TrainSamples[index + offset] = Image(cimg_library::CImg<Byte>(&TrainPatterns[3073 * index + 1], 32, 32, 1, 3));
+							TrainSamples[index + offset] = Image<Byte>(3, 1, 32, 32, &TrainPatterns[3073 * index + 1]);
 							TrainLabels[index + offset][0] = TrainPatterns[3073 * index];
 							
 						}
@@ -615,7 +615,7 @@ namespace dnn
 					infile.close();
 					for (UInt index = 0; index < TestSamplesCount; index++)
 					{
-						TestSamples[index] = Image(cimg_library::CImg<Byte>(&TestPatterns[3073 * index + 1], 32, 32, 1, 3));
+						TestSamples[index] = Image<Byte>(3, 1, 32, 32, &TestPatterns[3073 * index + 1]);
 						TestLabels[index][0] = TestPatterns[3073 * index];
 					}
 					delete[] TestPatterns;
@@ -638,7 +638,7 @@ namespace dnn
 					infile.close();
 					for (UInt index = 0; index < 50000; index++)
 					{
-						TrainSamples[index] = Image(cimg_library::CImg<Byte>(&TrainPatterns[3074 * index + 2], 32, 32, 1, 3));
+						TrainSamples[index] = Image<Byte>(3, 1, 32, 32, &TrainPatterns[3074 * index + 2]);
 						TrainLabels[index][0] = TrainPatterns[3074 * index];
 						TrainLabels[index][1] = TrainPatterns[3074 * index + 1];
 					}
@@ -655,7 +655,7 @@ namespace dnn
 					infile.close();
 					for (UInt index = 0; index < TestSamplesCount; index++)
 					{
-						TestSamples[index] = Image(cimg_library::CImg<Byte>(&TestPatterns[3074 * index + 2], 32, 32, 1, 3));
+						TestSamples[index] = Image<Byte>(3, 1, 32, 32, &TestPatterns[3074 * index + 2]);
 						TestLabels[index][0] = TestPatterns[3074 * index];
 						TestLabels[index][1] = TestPatterns[3074 * index + 1];
 					}
@@ -692,7 +692,7 @@ namespace dnn
 
 						for (UInt i = 0; i < TrainSamplesCount; i++)
 						{
-							TrainSamples.push_back(Image(cimg_library::CImg<Byte>(&fileBuf[i * 784], 28, 28, 1, 1)));
+							TrainSamples.push_back(Image<Byte>(1, 1, 28, 28, &fileBuf[i * 784]));
 							TrainLabels[i][0] = static_cast<UInt>(fileBufLabels[i]);
 						}
 
@@ -727,7 +727,7 @@ namespace dnn
 
 						for (UInt i = 0; i < TestSamplesCount; i++)
 						{
-							TestSamples.push_back(Image(cimg_library::CImg<Byte>(&fileBuf[i * 784], 28, 28, 1, 1)));
+							TestSamples.push_back(Image<Byte>(1, 1, 28, 28, &fileBuf[i * 784]));
 							TestLabels[i][0] = static_cast<UInt>(fileBufLabels[i]);
 						}
 
@@ -771,7 +771,7 @@ namespace dnn
 						const auto pos = i + offset;
 						const auto fileName = (DatasetsDirectory / std::string(magic_enum::enum_name<Datasets>(dataset))  / "train" / ClassNames[item] / "images" / (ClassNames[item] + "_" + std::to_string(i) + ".JPEG")).string();
 #ifdef cimg_use_jpeg
-						TrainSamples[pos] = Image(LoadJPEG(fileName, true));
+						TrainSamples[pos] = Image<Byte>::LoadJPEG(fileName, true);
 #endif
 						TrainLabels[pos][0] = item;
 					}
@@ -811,7 +811,7 @@ namespace dnn
 					const auto fileName = (DatasetsDirectory / std::string(magic_enum::enum_name<Datasets>(dataset))  / "val" / "images" / ("val_" + std::to_string(i) + ".JPEG")).string();
 					//const auto fileName = (DatasetsDirectory() / std::string(magic_enum::enum_name<Datasets>(dataset))  / "test" / "images" / ("test_" + std::to_string(i) + ".JPEG")).string();
 #ifdef cimg_use_jpeg
-					TestSamples[i] = Image(LoadJPEG(fileName, true));
+					TestSamples[i] = Image<Byte>::LoadJPEG(fileName, true);
 #endif
 					TestLabels[i][0] = labels_idx[i];
 				});

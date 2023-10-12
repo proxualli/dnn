@@ -18,7 +18,7 @@ namespace dnn
 			assert(InputLayer->C % Groups == 0);
 
 			if (InputLayer->C % Groups != 0)
-				throw std::invalid_argument("input not splittable in " + std::string(magic_enum::enum_name<LayerTypes>(LayerType)) + " layer " + Name);
+				throw std::invalid_argument("input not splittable in " + std::string(magic_enum::enum_name<LayerTypes>(LayerType)) + " layer " + InputLayer->Name + "  " + std::to_string(InputLayer->C));
 		}
 
 		void UpdateResolution() final override

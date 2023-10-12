@@ -8,6 +8,8 @@
 #include "BatchNormActivationDropout.h"
 #include "BatchNormRelu.h"
 #include "ChannelSplit.h"
+#include "ChannelSplitRatioLeft.h"
+#include "ChannelSplitRatioRight.h"
 #include "ChannelZeroPad.h"
 #include "Concat.h"
 #include "Convolution.h"
@@ -499,6 +501,7 @@ namespace dnn
 		bool MeanStdNormalization;
 		bool FixedDepthDrop;
 		Float DepthDrop;
+		Float Ratio;
 		Fillers WeightsFiller;
 		FillerModes WeightsFillerMode;
 		Float WeightsGain;
@@ -622,6 +625,7 @@ namespace dnn
 			MeanStdNormalization(true),				// MeanStd
 			FixedDepthDrop(false),					// FixedDepthDrop
 			DepthDrop(Float(0.0)),					// DepthDrop			(Stochastic Depth: https://www.arxiv-vanity.com/papers/1603.09382/)
+			Ratio(Float(0.375)),                    // Ratio
 			WeightsFiller(Fillers::HeNormal),		// WeightsFiller
 			WeightsFillerMode(FillerModes::In),		// WeightsFillerMode
 			WeightsGain(Float(1)),					// WeightsGain
@@ -2427,7 +2431,7 @@ namespace dnn
 				if (CurrentTrainingRate.CutMix)
 				{
 					double lambda = BetaDistribution<double>(1, 1);
-					Image<Byte>::RandomCutMix(imgByte, imgByteMix, &lambda);
+					imgByte = Image<Byte>::RandomCutMix(imgByte, imgByteMix, &lambda);
 					SampleLabel = GetCutMixLabelInfo(label, labelMix, lambda);
 				}
 				else
@@ -2440,16 +2444,16 @@ namespace dnn
 				SampleLabel = GetLabelInfo(label);
 
 			if (CurrentTrainingRate.HorizontalFlip && TrainSamplesFlip[rndIndex].Horizontal)
-				Image<Byte>::HorizontalMirror(imgByte);
+				imgByte = Image<Byte>::HorizontalMirror(imgByte);
 
 			if (CurrentTrainingRate.VerticalFlip && TrainSamplesFlip[rndIndex].Vertical)
-				Image<Byte>::VerticalMirror(imgByte);
+				imgByte = Image<Byte>::VerticalMirror(imgByte);
 
 			if (DataProv->C == 3 && Bernoulli<bool>(CurrentTrainingRate.ColorCast))
-				Image<Byte>::ColorCast(imgByte, CurrentTrainingRate.ColorAngle);
+				imgByte = Image<Byte>::ColorCast(imgByte, CurrentTrainingRate.ColorAngle);
 
 			if (imgByteMix.D() != D || imgByte.H() != H || imgByte.W() != W)
-				Image<Byte>::Resize(imgByte, D, H, W, Interpolations(CurrentTrainingRate.Interpolation));
+				imgByte = Image<Byte>::Resize(imgByte, D, H, W, Interpolations(CurrentTrainingRate.Interpolation));
 
 			if (DataProv->C == 3 && Bernoulli<bool>(CurrentTrainingRate.AutoAugment))
 				imgByte = Image<Byte>::AutoAugment(imgByte, PadD, PadH, PadW, DataProv->Mean, MirrorPad);
@@ -2460,18 +2464,18 @@ namespace dnn
 				imgByte = Image<Byte>::Distorted(imgByte, CurrentTrainingRate.Scaling, CurrentTrainingRate.Rotation, Interpolations(CurrentTrainingRate.Interpolation), DataProv->Mean);
 
 			if (cutout)
-				Image<Byte>::RandomCutout(imgByte, DataProv->Mean);
+				imgByte = Image<Byte>::RandomCutout(imgByte, DataProv->Mean);
 
 			if (CurrentTrainingRate.InputDropout > Float(0))
-				Image<Byte>::Dropout(imgByte, CurrentTrainingRate.InputDropout, DataProv->Mean);
+				imgByte = Image<Byte>::Dropout(imgByte, CurrentTrainingRate.InputDropout, DataProv->Mean);
 
 			if (RandomCrop)
 				imgByte = Image<Byte>::RandomCrop(imgByte, D, H, W, DataProv->Mean);
 
 			for (auto c = 0u; c < imgByte.C(); c++)
 			{
-				const auto mean = MeanStdNormalization ? DataProv->Mean[c] : imgByte.GetChannelMean(c);
-				const auto stddev = MeanStdNormalization ? DataProv->StdDev[c] : imgByte.GetChannelStdDev(c);
+				const auto mean = MeanStdNormalization ? DataProv->Mean[c] : Image<Byte>::GetChannelMean(imgByte, c);
+				const auto stddev = MeanStdNormalization ? DataProv->StdDev[c] : Image<Byte>::GetChannelStdDev(imgByte, c);
 
 				for (auto d = 0u; d < imgByte.D(); d++)
 					for (auto h = 0u; h < imgByte.H(); h++)
@@ -2490,7 +2494,7 @@ namespace dnn
 			auto imgByte = DataProv->TestSamples[index];
 
 			if (imgByte.D() != D || imgByte.H() != H || imgByte.W() != W)
-				Image<Byte>::Resize(imgByte, D, H, W, Interpolations(CurrentTrainingRate.Interpolation));
+				imgByte = Image<Byte>::Resize(imgByte, D, H, W, Interpolations(CurrentTrainingRate.Interpolation));
 
 			imgByte = Image<Byte>::Padding(imgByte, PadD, PadH, PadW, DataProv->Mean, MirrorPad);
 
@@ -2499,8 +2503,8 @@ namespace dnn
 
 			for (auto c = 0u; c < imgByte.C(); c++)
 			{
-				const auto mean = MeanStdNormalization ? DataProv->Mean[c] : imgByte.GetChannelMean(c);
-				const auto stddev = MeanStdNormalization ? DataProv->StdDev[c] : imgByte.GetChannelStdDev(c);
+				const auto mean = MeanStdNormalization ? DataProv->Mean[c] : Image<Byte>::GetChannelMean(imgByte, c);
+				const auto stddev = MeanStdNormalization ? DataProv->StdDev[c] : Image<Byte>::GetChannelStdDev(imgByte, c);
 
 				for (auto d = 0u; d < imgByte.D(); d++)
 					for (auto h = 0u; h < imgByte.H(); h++)
@@ -2519,16 +2523,16 @@ namespace dnn
 			auto imgByte = DataProv->TestSamples[index];
 
 			if (DataProv->C == 3 && Bernoulli<bool>(CurrentTrainingRate.ColorCast))
-				Image<Byte>::ColorCast(imgByte, CurrentTrainingRate.ColorAngle);
+				imgByte = Image<Byte>::ColorCast(imgByte, CurrentTrainingRate.ColorAngle);
 
 			if (CurrentTrainingRate.HorizontalFlip && TestSamplesFlip[index].Horizontal)
-				Image<Byte>::HorizontalMirror(imgByte);
+				imgByte = Image<Byte>::HorizontalMirror(imgByte);
 
 			if (CurrentTrainingRate.VerticalFlip && TestSamplesFlip[index].Vertical)
-				Image<Byte>::VerticalMirror(imgByte);
+				imgByte = Image<Byte>::VerticalMirror(imgByte);
 
 			if (imgByte.D() != D || imgByte.H() != H || imgByte.W() != W)
-				Image<Byte>::Resize(imgByte, D, H, W, static_cast<Interpolations>(CurrentTrainingRate.Interpolation));
+				imgByte = Image<Byte>::Resize(imgByte, D, H, W, static_cast<Interpolations>(CurrentTrainingRate.Interpolation));
 
 			if (DataProv->C == 3 && Bernoulli<bool>(CurrentTrainingRate.AutoAugment))
 				imgByte = Image<Byte>::AutoAugment(imgByte, PadD, PadH, PadW, DataProv->Mean, MirrorPad);
@@ -2539,7 +2543,7 @@ namespace dnn
 				imgByte = Image<Byte>::Distorted(imgByte, CurrentTrainingRate.Scaling, CurrentTrainingRate.Rotation, static_cast<Interpolations>(CurrentTrainingRate.Interpolation), DataProv->Mean);
 
 			if (Bernoulli<bool>(CurrentTrainingRate.Cutout) && !CurrentTrainingRate.CutMix)
-				Image<Byte>::RandomCutout(imgByte, DataProv->Mean);
+				imgByte = Image<Byte>::RandomCutout(imgByte, DataProv->Mean);
 
 			if (RandomCrop)
 				imgByte = Image<Byte>::Crop(imgByte, Positions::Center, D, H, W, DataProv->Mean);
@@ -2549,8 +2553,8 @@ namespace dnn
 
 			for (auto c = 0u; c < imgByte.C(); c++)
 			{
-				const auto mean = MeanStdNormalization ? DataProv->Mean[c] : imgByte.GetChannelMean(c);
-				const auto stddev = MeanStdNormalization ? DataProv->StdDev[c] : imgByte.GetChannelStdDev(c);
+				const auto mean = MeanStdNormalization ? DataProv->Mean[c] : Image<Byte>::GetChannelMean(imgByte, c);
+				const auto stddev = MeanStdNormalization ? DataProv->StdDev[c] : Image<Byte>::GetChannelStdDev(imgByte, c);
 
 				for (auto d = 0u; d < imgByte.D(); d++)
 					for (auto h = 0u; h < imgByte.H(); h++)
@@ -2581,7 +2585,7 @@ namespace dnn
 				auto imgByte = DataProv->TrainSamples[sampleIndex];
 
 				if (resize)
-					Image<Byte>::Resize(imgByte, D, H, W, Interpolations(CurrentTrainingRate.Interpolation));
+					imgByte = Image<Byte>::Resize(imgByte, D, H, W, Interpolations(CurrentTrainingRate.Interpolation));
 
 				imgByte = Image<Byte>::Padding(imgByte, PadD, PadH, PadW, DataProv->Mean, MirrorPad);
 
@@ -2589,9 +2593,9 @@ namespace dnn
 
 				for (auto c = 0u; c < imgByte.C(); c++)
 				{
-					const auto mean = MeanStdNormalization ? DataProv->Mean[c] : imgByte.GetChannelMean(c);
-					const auto stddev = MeanStdNormalization ? DataProv->StdDev[c] : imgByte.GetChannelStdDev(c);
-					
+					const auto mean = MeanStdNormalization ? DataProv->Mean[c] : Image<Byte>::GetChannelMean(imgByte, c);
+					const auto stddev = MeanStdNormalization ? DataProv->StdDev[c] : Image<Byte>::GetChannelStdDev(imgByte, c);
+
 					for (auto d = 0u; d < imgByte.D(); d++)
 						for (auto h = 0u; h < imgByte.H(); h++)
 							for (auto w = 0u; w < imgByte.W(); w++)
@@ -2607,7 +2611,7 @@ namespace dnn
 			const auto hierarchies = DataProv->Hierarchies;
 			auto SampleLabels = std::vector<std::vector<LabelInfo>>(batchSize, std::vector<LabelInfo>(hierarchies));
 			const auto resize = DataProv->D != D || DataProv->H != H || DataProv->W != W;
-			
+
 			const auto elements = batchSize * C * D * H * W;
 			const auto threads = GetThreads(elements, Float(10));
 
@@ -2621,14 +2625,14 @@ namespace dnn
 
 				auto labels = DataProv->TrainLabels[randomIndex];
 				auto mixLabels = DataProv->TrainLabels[randomIndexMix];
-				
+
 				auto cutout = false;
 				if (Bernoulli<bool>(CurrentTrainingRate.Cutout))
 				{
 					if (CurrentTrainingRate.CutMix)
 					{
 						double lambda = BetaDistribution<double>(1, 1);
-						Image<Byte>::RandomCutMix(imgByte, imgByteMix, &lambda);
+						imgByte = Image<Byte>::RandomCutMix(imgByte, imgByteMix, &lambda);
 						SampleLabels[batchIndex] = GetCutMixLabelInfo(labels, mixLabels, lambda);
 					}
 					else
@@ -2639,18 +2643,18 @@ namespace dnn
 				}
 				else
 					SampleLabels[batchIndex] = GetLabelInfo(labels);
-				
+
 				if (CurrentTrainingRate.HorizontalFlip && TrainSamplesFlip[randomIndex].Horizontal)
-					Image<Byte>::HorizontalMirror(imgByte);
+					imgByte = Image<Byte>::HorizontalMirror(imgByte);
 
 				if (CurrentTrainingRate.VerticalFlip && TrainSamplesFlip[randomIndex].Vertical)
-					Image<Byte>::VerticalMirror(imgByte);
+					imgByte = Image<Byte>::VerticalMirror(imgByte);
 
 				if (DataProv->C == 3 && Bernoulli<bool>(CurrentTrainingRate.ColorCast))
-					Image<Byte>::ColorCast(imgByte, CurrentTrainingRate.ColorAngle);
+					imgByte = Image<Byte>::ColorCast(imgByte, CurrentTrainingRate.ColorAngle);
 
 				if (resize)
-					Image<Byte>::Resize(imgByte, D, H, W, Interpolations(CurrentTrainingRate.Interpolation));
+					imgByte = Image<Byte>::Resize(imgByte, D, H, W, Interpolations(CurrentTrainingRate.Interpolation));
 
 				if (DataProv->C == 3 && Bernoulli<bool>(CurrentTrainingRate.AutoAugment))
 					imgByte = Image<Byte>::AutoAugment(imgByte, PadD, PadH, PadW, DataProv->Mean, MirrorPad);
@@ -2661,19 +2665,19 @@ namespace dnn
 					imgByte = Image<Byte>::Distorted(imgByte, CurrentTrainingRate.Scaling, CurrentTrainingRate.Rotation, Interpolations(CurrentTrainingRate.Interpolation), DataProv->Mean);
 
 				if (cutout)
-					Image<Byte>::RandomCutout(imgByte, DataProv->Mean);
+					imgByte = Image<Byte>::RandomCutout(imgByte, DataProv->Mean);
 
 				if (RandomCrop)
 					imgByte = Image<Byte>::RandomCrop(imgByte, D, H, W, DataProv->Mean);
 
 				if (CurrentTrainingRate.InputDropout > Float(0))
-					Image<Byte>::Dropout(imgByte, CurrentTrainingRate.InputDropout, DataProv->Mean);
-				
+					imgByte = Image<Byte>::Dropout(imgByte, CurrentTrainingRate.InputDropout, DataProv->Mean);
+
 				for (auto c = 0u; c < imgByte.C(); c++)
 				{
-					const auto mean = MeanStdNormalization ? DataProv->Mean[c] : imgByte.GetChannelMean(c);
-					const auto stddev = MeanStdNormalization ? DataProv->StdDev[c] : imgByte.GetChannelStdDev(c);
-					
+					const auto mean = MeanStdNormalization ? DataProv->Mean[c] : Image<Byte>::GetChannelMean(imgByte, c);
+					const auto stddev = MeanStdNormalization ? DataProv->StdDev[c] : Image<Byte>::GetChannelStdDev(imgByte, c);
+
 					for (auto d = 0u; d < imgByte.D(); d++)
 						for (auto h = 0u; h < imgByte.H(); h++)
 							for (auto w = 0u; w < imgByte.W(); w++)
@@ -2702,7 +2706,7 @@ namespace dnn
 				auto imgByte = DataProv->TestSamples[sampleIndex];
 
 				if (resize)
-					Image<Byte>::Resize(imgByte, D, H, W, Interpolations(CurrentTrainingRate.Interpolation));
+					imgByte = Image<Byte>::Resize(imgByte, D, H, W, Interpolations(CurrentTrainingRate.Interpolation));
 
 				imgByte = Image<Byte>::Padding(imgByte, PadD, PadH, PadW, DataProv->Mean, MirrorPad);
 
@@ -2710,9 +2714,9 @@ namespace dnn
 
 				for (auto c = 0u; c < imgByte.C(); c++)
 				{
-					const auto mean = MeanStdNormalization ? DataProv->Mean[c] : imgByte.GetChannelMean(c);
-					const auto stddev = MeanStdNormalization ? DataProv->StdDev[c] : imgByte.GetChannelStdDev(c);
-					
+					const auto mean = MeanStdNormalization ? DataProv->Mean[c] : Image<Byte>::GetChannelMean(imgByte, c);
+					const auto stddev = MeanStdNormalization ? DataProv->StdDev[c] : Image<Byte>::GetChannelStdDev(imgByte, c);
+
 					for (auto d = 0u; d < imgByte.D(); d++)
 						for (auto h = 0u; h < imgByte.H(); h++)
 							for (auto w = 0u; w < imgByte.W(); w++)
@@ -2741,16 +2745,16 @@ namespace dnn
 				auto imgByte = DataProv->TestSamples[sampleIndex];
 
 				if (DataProv->C == 3 && Bernoulli<bool>(CurrentTrainingRate.ColorCast))
-					Image<Byte>::ColorCast(imgByte, CurrentTrainingRate.ColorAngle);
+					imgByte = Image<Byte>::ColorCast(imgByte, CurrentTrainingRate.ColorAngle);
 
 				if (CurrentTrainingRate.HorizontalFlip && TestSamplesFlip[sampleIndex].Horizontal)
-					Image<Byte>::HorizontalMirror(imgByte);
+					imgByte = Image<Byte>::HorizontalMirror(imgByte);
 
 				if (CurrentTrainingRate.VerticalFlip && TestSamplesFlip[sampleIndex].Vertical)
-					Image<Byte>::VerticalMirror(imgByte);
+					imgByte = Image<Byte>::VerticalMirror(imgByte);
 
 				if (resize)
-					Image<Byte>::Resize(imgByte, D, H, W, Interpolations(CurrentTrainingRate.Interpolation));
+					imgByte = Image<Byte>::Resize(imgByte, D, H, W, Interpolations(CurrentTrainingRate.Interpolation));
 
 				if (DataProv->C == 3 && Bernoulli<bool>(CurrentTrainingRate.AutoAugment))
 					imgByte = Image<Byte>::AutoAugment(imgByte, PadD, PadH, PadW, DataProv->Mean, MirrorPad);
@@ -2761,19 +2765,19 @@ namespace dnn
 					imgByte = Image<Byte>::Distorted(imgByte, CurrentTrainingRate.Scaling, CurrentTrainingRate.Rotation, Interpolations(CurrentTrainingRate.Interpolation), DataProv->Mean);
 
 				if (Bernoulli<bool>(CurrentTrainingRate.Cutout) && !CurrentTrainingRate.CutMix)
-					Image<Byte>::RandomCutout(imgByte, DataProv->Mean);
-				
+					imgByte = Image<Byte>::RandomCutout(imgByte, DataProv->Mean);
+
 				if (RandomCrop)
 					imgByte = Image<Byte>::Crop(imgByte, Positions::Center, D, H, W, DataProv->Mean);
 
 				if (CurrentTrainingRate.InputDropout > Float(0))
-					Image<Byte>::Dropout(imgByte, CurrentTrainingRate.InputDropout, DataProv->Mean);
+					imgByte = Image<Byte>::Dropout(imgByte, CurrentTrainingRate.InputDropout, DataProv->Mean);
 
 				for (auto c = 0u; c < imgByte.C(); c++)
 				{
-					const auto mean = MeanStdNormalization ? DataProv->Mean[c] : imgByte.GetChannelMean(c);
-					const auto stddev = MeanStdNormalization ? DataProv->StdDev[c] : imgByte.GetChannelStdDev(c);
-					
+					const auto mean = MeanStdNormalization ? DataProv->Mean[c] : Image<Byte>::GetChannelMean(imgByte, c);
+					const auto stddev = MeanStdNormalization ? DataProv->StdDev[c] : Image<Byte>::GetChannelStdDev(imgByte, c);
+
 					for (auto d = 0u; d < imgByte.D(); d++)
 						for (auto h = 0u; h < imgByte.H(); h++)
 							for (auto w = 0u; w < imgByte.W(); w++)

@@ -26,11 +26,12 @@ namespace scripts
    
     enum class Scripts
     {
-        densenet = 0,
-        efficientnetv2 = 1,
-        mobilenetv3 = 2,
-        resnet = 3,
-        shufflenetv2 = 4
+        augshufflenetv2 = 0,
+        densenet = 1,
+        efficientnetv2 = 2,
+        mobilenetv3 = 3,
+        resnet = 4,
+        shufflenetv2 = 5
     };
 
     enum class Datasets
@@ -241,7 +242,7 @@ namespace scripts
             }
         }
 
-        bool WidthVisible() const { return Script == Scripts::mobilenetv3 || Script == Scripts::resnet || Script == Scripts::shufflenetv2; }
+        bool WidthVisible() const { return Script == Scripts::mobilenetv3 || Script == Scripts::resnet || Script == Scripts::shufflenetv2 || Script == Scripts::augshufflenetv2; ; }
         bool GrowthRateVisible() const { return Script == Scripts::densenet; }
         bool DropoutVisible() const { return Script == Scripts::densenet || Script == Scripts::resnet || Script == Scripts::efficientnetv2; }
         bool DepthDropVisible() const { return Script == Scripts::densenet || Script == Scripts::mobilenetv3 || Script == Scripts::resnet || Script == Scripts::efficientnetv2; }
@@ -250,7 +251,7 @@ namespace scripts
         bool SqueezeExcitationVisible() const { return Script == Scripts::mobilenetv3; }
         bool ChannelZeroPadVisible() const { return Script == Scripts::resnet; }
         bool EfficientNetVisible() const { return Script == Scripts::efficientnetv2; }
-        bool ShuffleNetVisible() const { return Script == Scripts::shufflenetv2; }
+        bool ShuffleNetVisible() const { return Script == Scripts::shufflenetv2 || Script == Scripts::augshufflenetv2; }
 
         auto GetName() const
         {
@@ -271,6 +272,7 @@ namespace scripts
                 return common + std::to_string(Width) + std::string("-") + StringToLower(std::string(magic_enum::enum_name<Activations>(Activation))) + (SqueezeExcitation ? std::string("-se") : std::string("")) + (DepthDrop > 0 ? (FixedDepthDrop ? std::string("-fixeddepthdrop") : std::string("-depthdrop")) : std::string(""));
             case Scripts::resnet:
                 return common + std::to_string(Width) + (Dropout > 0 ? std::string("-dropout") : std::string("")) + (DepthDrop > 0 ? (FixedDepthDrop ? std::string("-fixeddepthdrop") : std::string("-depthdrop")) : std::string("")) + (Bottleneck ? std::string("-bottleneck") : std::string("")) + (ChannelZeroPad ? std::string("-channelzeropad") : std::string("")) + std::string("-") + StringToLower(std::string(magic_enum::enum_name<Activations>(Activation)));
+            case Scripts::augshufflenetv2:
             case Scripts::shufflenetv2:
             {
                 auto name = std::string(magic_enum::enum_name<Scripts>(Script)) + std::string("-") + std::to_string(Width);
@@ -318,6 +320,14 @@ namespace scripts
                 return channels;
 
             return ((channels / 8ull) + 1ull) * 8ull;
+        }
+
+        static UInt DIV16(UInt channels)
+        {
+            if (channels % 16ull == 0ull)
+                return channels;
+
+            return ((channels / 16ull) + 1ull) * 16ull;
         }
 
         static std::string In(std::string prefix, UInt id)
@@ -485,6 +495,22 @@ namespace scripts
             }
         }
 
+        static std::string ChannelSplitRatioLeft(UInt id, std::string inputs, Float ratio = 0.375f, std::string group = "", std::string prefix = "CSRL")
+        {
+            return "[" + group + prefix + std::to_string(id) + "]" + nwl +
+                "Type=ChannelSplitRatioLeft" + nwl +
+                "Inputs=" + inputs + nwl +
+                "Ratio=" + std::to_string(ratio) + nwl + nwl;
+        }
+
+        static std::string ChannelSplitRatioRight(UInt id, std::string inputs, Float ratio = 0.375f, std::string group = "", std::string prefix = "CSRR")
+        {
+            return "[" + group + prefix + std::to_string(id) + "]" + nwl +
+                "Type=ChannelSplitRatioRight" + nwl +
+                "Inputs=" + inputs + nwl +
+                "Ratio=" + std::to_string(ratio) + nwl + nwl;
+        }
+
         static std::string ChannelSplit(UInt id, std::string inputs, UInt groups, UInt part, std::string group = "", std::string prefix = "CS")
         {
             return "[" + group + prefix + std::to_string(id) + "]" + nwl +
@@ -492,6 +518,22 @@ namespace scripts
                 "Inputs=" + inputs + nwl +
                 "Groups=" + std::to_string(groups) + nwl +
                 "Group=" + std::to_string(part) + nwl + nwl;
+        }
+
+        static std::string ChannelSplitRatioLeft(UInt id, std::string inputs, Float ratio = 0.375f, std::string group = "", std::string prefix = "CSRL")
+        {
+            return "[" + group + prefix + std::to_string(id) + "]" + nwl +
+                "Type=ChannelSplitRatioLeft" + nwl +
+                "Inputs=" + inputs + nwl +
+                "Ratio=" + std::to_string(ratio) + nwl + nwl;
+        }
+
+        static std::string ChannelSplitRatioRight(UInt id, std::string inputs, Float ratio = 0.375f, std::string group = "", std::string prefix = "CSRR")
+        {
+            return "[" + group + prefix + std::to_string(id) + "]" + nwl +
+                "Type=ChannelSplitRatioRight" + nwl +
+                "Inputs=" + inputs + nwl +
+                "Ratio=" + std::to_string(ratio) + nwl + nwl;
         }
 
         static std::string Shuffle(UInt id, std::string inputs, UInt groups = 2, std::string group = "", std::string prefix = "SH")
@@ -729,6 +771,53 @@ namespace scripts
                     DepthwiseConvolution(C + 1, In("B", C + 1), 1, kernel, kernel, 1, 1, pad, pad) +
                     BatchNorm(C + 2, In("DC", C + 1)) +
                     Convolution(C + 2, In("B", C + 2), channels, 1, 1, 1, 1, 0, 0) +
+                    BatchNormActivation(C + 3, In("C", C + 2), activation) +
+                    strSE;
+            }
+        }
+
+        static std::string AugmentedInvertedResidual(UInt A, UInt C, UInt channels, UInt kernel = 3, UInt pad = 1, bool subsample = false, UInt shuffle = 2, bool se = false, scripts::Activations activation = scripts::Activations::HardSwish)
+        {
+            if (subsample)
+            {
+                return
+                    Convolution(C, In("CC", A), channels, 1, 1, 1, 1, 0, 0) +
+                    BatchNormActivation(C + 1, In("C", C), activation) +
+                    DepthwiseConvolution(C + 1, In("B", C + 1), 1, kernel, kernel, 2, 2, pad, pad) +
+                    BatchNorm(C + 2, In("DC", C + 1)) +
+                    Convolution(C + 2, In("B", C + 2), channels, 1, 1, 1, 1, 0, 0) +
+                    BatchNormActivation(C + 3, In("C", C + 2), activation) +
+                    DepthwiseConvolution(C + 3, In("CC", A), 1, kernel, kernel, 2, 2, pad, pad) +
+                    BatchNorm(C + 4, In("DC", C + 3)) +
+                    Convolution(C + 4, In("B", C + 4), channels, 1, 1, 1, 1, 0, 0) +
+                    BatchNormActivation(C + 5, In("C", C + 4), activation) +
+                    Concat(A + 1, In("B", C + 5) + "," + In("B", C + 3));
+            }
+            else
+            {
+                auto group = In("SE", C + 3);
+                auto strSE =
+                    se ? GlobalAvgPooling(In("B", C + 3), group) +
+                    Convolution(1, group + std::string("GAP"), DIV8(channels / 4), 1, 1, 1, 1, 0, 0, true, group) +
+                    BatchNormActivation(1, group + std::string("C1"), to_string(activation == scripts::Activations::FRelu ? scripts::Activations::HardSwish : activation), group) +
+                    Convolution(2, group + std::string("B1"), channels, 1, 1, 1, 1, 0, 0, true, group) +
+                    BatchNormActivation(2, group + std::string("C2"), to_string(scripts::Activations::HardSigmoid), group) +
+                    Multiply(In("B", C + 3) + std::string(",") + group + std::string("B2"), group) +
+                    Concat(A + 1, In("LCS", A) + std::string(",") + group + std::string("CM")) :
+                    Concat(A + 1, In("LCS", A) + std::string(",") + In("B", C + 3));
+
+                return
+                    Shuffle(A, In("CC", A), shuffle) +
+                    ChannelSplitRatioLeft(A, In("SH", A), 0.375f) + ChannelSplitRatioRight(A, In("SH", A), 0.375f) +
+                    Convolution(C, In("CSRR", A), DIV8((UInt)((2 * channels) * 0.375f)), 1, 1, 1, 1, 0, 0) +
+                    BatchNormActivation(C + 1, In("C", C), activation) +
+                    DepthwiseConvolution(C + 1, In("B", C + 1), 1, kernel, kernel, 1, 1, pad, pad) +
+                    BatchNorm(C + 2, In("DC", C + 1)) +
+                    ChannelSplit(A, In("B", C + 2), 2, 1, "L1") + ChannelSplit(A, In("B", C + 2), 2, 2, "R1") +
+                    ChannelSplit(A, In("CSRL", A), 2, 1, "L2") + ChannelSplit(A, In("CSRL", A), 2, 2, "R2") +
+                    Concat(A, In("L1CS", A) + "," + In("L2CS", A), "L") +
+                    Concat(A, In("R1CS", A) + "," + In("R2CS", A), "R") +
+                    Convolution(C + 2, In("RCC", A), channels, 1, 1, 1, 1, 0, 0) +
                     BatchNormActivation(C + 3, In("C", C + 2), activation) +
                     strSE;
             }
