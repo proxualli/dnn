@@ -8,11 +8,13 @@ namespace dnn
 	public:
 		const UInt Group;
 		const UInt Groups;
+		const bool IsPadded;
 
 		ChannelSplit(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const UInt group, const UInt groups) :
 			Layer(device, format, name, LayerTypes::ChannelSplit, 0, 0, inputs[0]->C / groups, inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs),
 			Group(group),
-			Groups(groups)
+			Groups(groups),
+			IsPadded(PaddedC == C && InputLayer->PaddedC == InputLayer->C)
 		{
 			assert(Inputs.size() == 1);
 			assert(InputLayer->C % Groups == 0);
@@ -84,7 +86,7 @@ namespace dnn
 			{
 				if (training)
 				{
-					if (!plain)
+					if (!plain && IsPadded)
 					{
 						VecFloat In;
 						for (auto c = 0ull; c < PaddedC; c += VectorSize)
@@ -120,7 +122,7 @@ namespace dnn
 				}
 				else
 				{
-					if (!plain)
+					if (!plain && IsPadded)
 					{
 						VecFloat In;
 						for (auto c = 0ull; c < PaddedC; c += VectorSize)
@@ -152,7 +154,7 @@ namespace dnn
 #endif
 				if (training)
 				{
-					if (!plain)
+					if (!plain && IsPadded)
 						for_i(batchSize, threads, [=](UInt n)
 						{
 							const auto vecZero = VecFloat(0);
@@ -191,7 +193,7 @@ namespace dnn
 				}
 				else
 				{
-					if (!plain)
+					if (!plain && IsPadded)
 						for_i(batchSize, threads, [=](UInt n)
 						{
 							VecFloat In;
@@ -238,7 +240,7 @@ namespace dnn
 #ifdef DNN_STOCHASTIC
 			if (batchSize == 1)
 			{
-				if (!plain)
+				if (!plain && IsPadded)
 				{
 					VecFloat inputD1, D1;
 					for (auto c = 0ull; c < PaddedC; c += VectorSize)
@@ -267,7 +269,7 @@ namespace dnn
 			else
 			{
 #endif
-				if (!plain)
+				if (!plain && IsPadded)
 					for_i(batchSize, threads, [=](UInt n)
 					{
 						VecFloat inputD1, D1;

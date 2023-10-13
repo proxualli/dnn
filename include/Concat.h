@@ -22,12 +22,24 @@ namespace dnn
 			return channels;
 		}
 
+		auto IsInputPadded(const std::vector<Layer*>& inputs) const
+		{
+			auto isPadded = true;
+			for (const auto& layer : inputs)
+				if (layer->C != layer->PaddedC)
+					isPadded = false;
+
+			return isPadded;
+		}
+
 	public:
 		FloatArray InputNeurons;
+		const bool IsPadded;
 
 		Concat(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs) :
 			Layer(device, format, name, LayerTypes::Concat, 0, 0, InputChannels(inputs), inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs),
-			InputNeurons(FloatArray())
+			InputNeurons(FloatArray()),
+			IsPadded(IsInputPadded(inputs))
 		{
 			assert(Inputs.size() > 1);
 		}
@@ -135,7 +147,7 @@ namespace dnn
 #ifdef DNN_STOCHASTIC
 					if (batchSize == 1)
 					{
-						if (!plain)
+						if (!plain && IsPadded)
 						{
 							VecFloat In;
 							auto channelOffset = 0ull;
@@ -184,7 +196,7 @@ namespace dnn
 					else
 					{
 #endif
-						if (!plain)
+						if (!plain && IsPadded)
 							for_i(batchSize, threads, [=](UInt n)
 							{
 								const auto outputSampleOffset = n * PaddedCDHW();
@@ -309,7 +321,7 @@ namespace dnn
 #ifdef DNN_STOCHASTIC
 			if (batchSize == 1)
 			{
-				if (!plain)
+				if (!plain && IsPadded)
 				{
 					const auto strideH = HW() * VectorSize;
 					auto channelOffset = 0ull;
@@ -353,7 +365,7 @@ namespace dnn
 			else
 			{
 #endif
-				if (!plain)
+				if (!plain && IsPadded)
 				{
 					const auto strideH = HW() * VectorSize;
 					for_i(batchSize, threads, [=](UInt n)
