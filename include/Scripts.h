@@ -398,18 +398,11 @@ namespace scripts
         {
             if (activation != scripts::Activations::FRelu)
             {
-                if (activation == scripts::Activations::Relu)
-                    return 
-                        "[" + group + prefix + std::to_string(id) + "]" + nwl +
-                        "Type=BatchNormActivationRelu" + nwl +
-                        "Inputs=" + inputs + nwl + nwl;
-                else
-                    return 
-                        "[" + group + prefix + std::to_string(id) + "]" + nwl +
-                        "Type=BatchNormActivationDropout" + nwl +
-                        "Inputs=" + inputs + nwl +
-                        "Activation=" + std::string(magic_enum::enum_name<scripts::Activations>(activation)) + nwl +
-                        (dropout > 0.0f ? "Dropout=" + std::to_string(dropout) + nwl + nwl : nwl);
+                "[" + group + prefix + std::to_string(id) + "]" + nwl +
+                "Type=BatchNormActivationDropout" + nwl +
+                "Inputs=" + inputs + nwl +
+                "Activation=" + std::string(magic_enum::enum_name<scripts::Activations>(activation)) + nwl +
+                (dropout > 0.0f ? "Dropout=" + std::to_string(dropout) + nwl + nwl : nwl);
             }
             else
             {
