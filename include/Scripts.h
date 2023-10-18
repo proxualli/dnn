@@ -26,7 +26,7 @@ namespace scripts
    
     enum class Scripts
     {
-        augshufflenetv2 = 0,
+        augshufflenet = 0,
         densenet = 1,
         efficientnetv2 = 2,
         mobilenetv3 = 3,
