@@ -480,6 +480,7 @@ namespace dnn
 		inline auto DHW() const noexcept { return D * H * W; }
 		inline auto CDHW() const noexcept { return C * D * H * W; }
 		inline auto PaddedCDHW() const noexcept { return LayerType == LayerTypes::Input ? (C * D * H * W) : (PaddedC * D * H * W); }
+		inline auto OffsetPaddedMem(const UInt n, const UInt c, const UInt h, const UInt w) const noexcept { return n * PaddedCDHW() + (c / VectorSize) * HW() * VectorSize + h * W * VectorSize + w * VectorSize + (c % VectorSize); }
 
 		virtual void UpdateResolution()	{ }
 
@@ -1879,12 +1880,6 @@ namespace dnn
 			}
 		}
 
-
-		/*UInt OffsetPaddedMem(const UInt n, const UInt c, const UInt h, const UInt w) const
-		{
-			return n * PaddedCDHW + (c / VectorSize) * HW * VectorSize + h * W * VectorSize + w * VectorSize + (c % VectorSize);
-		}*/
-		
 		virtual void LoadNeurons(std::istream& is)
 		{
 			is.read(reinterpret_cast<char*>(Neurons.data()), std::streamsize(Neurons.size() * sizeof(Float)));

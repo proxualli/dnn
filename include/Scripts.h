@@ -242,7 +242,7 @@ namespace scripts
             }
         }
 
-        bool WidthVisible() const { return Script == Scripts::mobilenetv3 || Script == Scripts::resnet || Script == Scripts::shufflenetv2 || Script == Scripts::augshufflenetv2; ; }
+        bool WidthVisible() const { return Script == Scripts::mobilenetv3 || Script == Scripts::resnet || Script == Scripts::shufflenetv2 || Script == Scripts::augshufflenet; ; }
         bool GrowthRateVisible() const { return Script == Scripts::densenet; }
         bool DropoutVisible() const { return Script == Scripts::densenet || Script == Scripts::resnet || Script == Scripts::efficientnetv2; }
         bool DepthDropVisible() const { return Script == Scripts::densenet || Script == Scripts::mobilenetv3 || Script == Scripts::resnet || Script == Scripts::efficientnetv2; }
@@ -251,7 +251,7 @@ namespace scripts
         bool SqueezeExcitationVisible() const { return Script == Scripts::mobilenetv3; }
         bool ChannelZeroPadVisible() const { return Script == Scripts::resnet; }
         bool EfficientNetVisible() const { return Script == Scripts::efficientnetv2; }
-        bool ShuffleNetVisible() const { return Script == Scripts::shufflenetv2 || Script == Scripts::augshufflenetv2; }
+        bool ShuffleNetVisible() const { return Script == Scripts::shufflenetv2 || Script == Scripts::augshufflenet; }
 
         auto GetName() const
         {
@@ -272,7 +272,7 @@ namespace scripts
                 return common + std::to_string(Width) + std::string("-") + StringToLower(std::string(magic_enum::enum_name<Activations>(Activation))) + (SqueezeExcitation ? std::string("-se") : std::string("")) + (DepthDrop > 0 ? (FixedDepthDrop ? std::string("-fixeddepthdrop") : std::string("-depthdrop")) : std::string(""));
             case Scripts::resnet:
                 return common + std::to_string(Width) + (Dropout > 0 ? std::string("-dropout") : std::string("")) + (DepthDrop > 0 ? (FixedDepthDrop ? std::string("-fixeddepthdrop") : std::string("-depthdrop")) : std::string("")) + (Bottleneck ? std::string("-bottleneck") : std::string("")) + (ChannelZeroPad ? std::string("-channelzeropad") : std::string("")) + std::string("-") + StringToLower(std::string(magic_enum::enum_name<Activations>(Activation)));
-            case Scripts::augshufflenetv2:
+            case Scripts::augshufflenet:
             case Scripts::shufflenetv2:
             {
                 auto name = std::string(magic_enum::enum_name<Scripts>(Script)) + std::string("-") + std::to_string(Width);

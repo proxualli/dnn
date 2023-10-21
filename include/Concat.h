@@ -199,32 +199,59 @@ namespace dnn
 					else
 					{
 #endif
-						if (!plain && IsPadded)
-							for_i(batchSize, threads, [=](UInt n)
+						if (!plain)
+						{
+							if (IsPadded)
 							{
-								const auto outputSampleOffset = n * PaddedCDHW();
-								auto channelOffset = 0ull;
-								UInt inputIndex, outputIndex;
-								VecFloat In;
-								for (auto inputLayer = 0ull; inputLayer < Inputs.size(); inputLayer++)
+								for_i(batchSize, threads, [=](UInt n)
 								{
-									const auto inputSampleOffset = n * Inputs[inputLayer]->PaddedCDHW();
-									for (auto c = channelOffset; c < channelOffset + Inputs[inputLayer]->PaddedC; c += VectorSize)
+									const auto outputSampleOffset = n * PaddedCDHW();
+									auto channelOffset = 0ull;
+									UInt inputIndex, outputIndex;
+									VecFloat In;
+									for (auto inputLayer = 0ull; inputLayer < Inputs.size(); inputLayer++)
 									{
-										inputIndex = ((c - channelOffset) * HW()) + inputSampleOffset;
-										outputIndex = (c * HW()) + outputSampleOffset;
-										for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
+										const auto inputSampleOffset = n * Inputs[inputLayer]->PaddedCDHW();
+										for (auto c = channelOffset; c < channelOffset + Inputs[inputLayer]->PaddedC; c += VectorSize)
 										{
-											In.load_a(&Inputs[inputLayer]->Neurons[hw + inputIndex]);
-											In.store_a(&Neurons[hw + outputIndex]);
+											inputIndex = ((c - channelOffset) * HW()) + inputSampleOffset;
+											outputIndex = (c * HW()) + outputSampleOffset;
+											for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
+											{
+												In.load_a(&Inputs[inputLayer]->Neurons[hw + inputIndex]);
+												In.store_a(&Neurons[hw + outputIndex]);
 #ifndef DNN_LEAN
-											VecZero.store_nt(&NeuronsD1[hw + outputIndex]);
+												VecZero.store_nt(&NeuronsD1[hw + outputIndex]);
 #endif
+											}
 										}
+										channelOffset += Inputs[inputLayer]->PaddedC;
 									}
-									channelOffset += Inputs[inputLayer]->PaddedC;
-								}
-							});
+								});
+							}
+							else
+							{
+								for_i(batchSize, threads, [=](UInt n)
+								{
+									auto channelOffset = 0ull;
+									for (auto i = 0ull; i < Inputs.size(); i++)
+									{
+										for (auto c = 0ull; c < Inputs[i]->C; c++)
+										{
+											for (auto h = 0ull; h < H; h++)
+												for (auto w = 0ull; w < W; w++)
+												{
+													Neurons[OffsetPaddedMem(n, c + channelOffset, h, w)] = Inputs[i]->Neurons[Inputs[i]->OffsetPaddedMem(n, c, h, w)];
+#ifndef DNN_LEAN
+													NeuronsD1[OffsetPaddedMem(n, c + channelOffset, h, w)] = Float(0);
+#endif
+												}
+										}
+										channelOffset += Inputs[i]->C;
+									}
+								});
+							}
+						}
 						else
 							for_i(batchSize, threads, [=](UInt n)
 							{
@@ -401,6 +428,20 @@ namespace dnn
 					{
 						for_i(batchSize, threads, [=](UInt n)
 						{
+							auto channelOffset = 0ull;
+							for (auto i = 0ull; i < Inputs.size(); i++)
+							{
+								for (auto c = 0ull; c < Inputs[i]->C; c++)
+									for (auto h = 0ull; h < H; h++)
+										for (auto w = 0ull; w < W; w++)
+											Inputs[i]->NeuronsD1[Inputs[i]->OffsetPaddedMem(n, c, h, w)] += NeuronsD1[OffsetPaddedMem(n, c + channelOffset, h, w)];
+
+								channelOffset += Inputs[i]->C;
+							}
+						});
+
+						/*for_i(batchSize, threads, [=](UInt n)
+						{
 							const auto outputSampleOffset = n * PaddedCDHW();
 							auto channelOffset = 0ull;
 							UInt inputIndex, outputIndex;
@@ -435,7 +476,7 @@ namespace dnn
 								}
 								channelOffset += Inputs[inputLayer]->C;
 							}
-						});
+						});*/
 					}
 				}
 				else
