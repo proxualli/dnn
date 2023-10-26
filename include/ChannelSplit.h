@@ -239,62 +239,61 @@ namespace dnn
 							});
 						else
 						{
-							for_i(batchSize, threads, [=](UInt n)
-							{
-								for (auto c = 0ull; c < C; c++)
-									for (auto h = 0ull; h < H; h++)
-										for (auto w = 0ull; w < W; w++)
-										{
-											Neurons[OffsetPaddedMem(n, c, h, w)] = InputLayer->Neurons[InputLayer->OffsetPaddedMem(n, c + ChannelsLeft, h, w)];
-#ifndef DNN_LEAN
-											NeuronsD1[OffsetPaddedMem(n, c, h, w)] = Float(0);
-#endif // DNN_LEAN
-										}
-
-								for (auto c = C; c < PaddedC; c++)
-									for (auto h = 0ull; h < H; h++)
-										for (auto w = 0ull; w < W; w++)
-										{
-											Neurons[OffsetPaddedMem(n, c, h, w)] = Float(0);
-#ifndef DNN_LEAN
-											NeuronsD1[OffsetPaddedMem(n, c, h, w)] = Float(0);
-#endif // DNN_LEAN
-										}
-							});
-
-						
 							//							for_i(batchSize, threads, [=](UInt n)
 							//							{
-							//								VecFloat In;
-							//								for (auto c = 0ull; c < (PaddedC - VectorSize); c += VectorSize)
-							//								{
-							//									const auto inputOffset = (n * InputLayer->PaddedCDHW()) + ((c + ChannelsLeft) * HW());
-							//									const auto outputOffset = (n * PaddedCDHW()) + (c * HW());
-							//									for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
-							//									{
-							//										In.load_a(&InputLayer->Neurons[hw + inputOffset]);
-							//										In.store_a(&Neurons[hw + outputOffset]);
+							//								for (auto c = 0ull; c < C; c++)
+							//									for (auto h = 0ull; h < H; h++)
+							//										for (auto w = 0ull; w < W; w++)
+							//										{
+							//											Neurons[OffsetPaddedMem(n, c, h, w)] = InputLayer->Neurons[InputLayer->OffsetPaddedMem(n, c + ChannelsLeft, h, w)];
 							//#ifndef DNN_LEAN
-							//										VecZero.store_nt(&NeuronsD1[hw + outputOffset]);
+							//											NeuronsD1[OffsetPaddedMem(n, c, h, w)] = Float(0);
 							//#endif // DNN_LEAN
-							//									}
-							//								}
-							//								const auto inputOffset = (n * InputLayer->PaddedCDHW()) + (((PaddedC - VectorSize) + ChannelsLeft) * HW());
-							//								const auto outputOffset = (n * PaddedCDHW()) + ((PaddedC - VectorSize) * HW());
-							//								const auto len = VectorSize - (PaddedC - C);
-							//								auto hwIn = 0ull;
-							//								for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
-							//								{
-							//									In.load_a(&InputLayer->Neurons[hwIn + inputOffset]);
-							//									hwIn += len;
-							//									In.cutoff(static_cast<int>(len));
-							//									In.store_a(&Neurons[hw + outputOffset]);
+							//										}
+							//
+							//								for (auto c = C; c < PaddedC; c++)
+							//									for (auto h = 0ull; h < H; h++)
+							//										for (auto w = 0ull; w < W; w++)
+							//										{
+							//											Neurons[OffsetPaddedMem(n, c, h, w)] = Float(0);
 							//#ifndef DNN_LEAN
-							//									VecZero.store_nt(&NeuronsD1[hw + outputOffset]);
+							//											NeuronsD1[OffsetPaddedMem(n, c, h, w)] = Float(0);
 							//#endif // DNN_LEAN
-							//								}
+							//										}
 							//							});
 
+
+							for_i(batchSize, threads, [=](UInt n)
+							{
+								VecFloat In;
+								for (auto c = 0ull; c < (PaddedC - VectorSize); c += VectorSize)
+								{
+									const auto inputOffset = (n * InputLayer->PaddedCDHW()) + ((c + ChannelsLeft) * HW());
+									const auto outputOffset = (n * PaddedCDHW()) + (c * HW());
+									for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
+									{
+										In.load_a(&InputLayer->Neurons[hw + inputOffset]);
+										In.store_a(&Neurons[hw + outputOffset]);
+#ifndef DNN_LEAN
+										VecZero.store_nt(&NeuronsD1[hw + outputOffset]);
+#endif // DNN_LEAN
+									}
+								}
+								const auto inputOffset = (n * InputLayer->PaddedCDHW()) + (((PaddedC - VectorSize) + ChannelsLeft) * HW());
+								const auto outputOffset = (n * PaddedCDHW()) + ((PaddedC - VectorSize) * HW());
+								const auto len = VectorSize - (PaddedC - C);
+								auto hwIn = 0ull;
+								for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
+								{
+									In.load_a(&InputLayer->Neurons[hwIn + inputOffset]);
+									hwIn += len;
+									In.cutoff(static_cast<int>(len));
+									In.store_a(&Neurons[hw + outputOffset]);
+#ifndef DNN_LEAN
+									VecZero.store_nt(&NeuronsD1[hw + outputOffset]);
+#endif // DNN_LEAN
+								}
+							});
 						}
 					}
 					else
@@ -337,7 +336,7 @@ namespace dnn
 						else
 						{
 
-							for_i(batchSize, threads, [=](UInt n)
+							/*for_i(batchSize, threads, [=](UInt n)
 							{
 								for (auto c = 0ull; c < C; c++)
 									for (auto h = 0ull; h < H; h++)
@@ -348,9 +347,9 @@ namespace dnn
 									for (auto h = 0ull; h < H; h++)
 										for (auto w = 0ull; w < W; w++)
 											Neurons[OffsetPaddedMem(n, c, h, w)] = Float(0);
-							});
+							});*/
 
-							/*for_i(batchSize, threads, [=](UInt n)
+							for_i(batchSize, threads, [=](UInt n)
 							{
 								VecFloat In;
 								for (auto c = 0ull; c < PaddedC - VectorSize; c += VectorSize)
@@ -374,7 +373,7 @@ namespace dnn
 									In.cutoff(static_cast<int>(len));
 									In.store_a(&Neurons[hw + outputOffset]);
 								}
-							});*/
+							});
 						}
 					}
 					else
@@ -488,15 +487,15 @@ namespace dnn
 							}
 						});
 					else
-						for_i(batchSize, threads, [=](UInt n)
+						/*for_i(batchSize, threads, [=](UInt n)
 						{
 							for (auto c = 0ull; c < C; c++)
 								for (auto h = 0ull; h < H; h++)
 									for (auto w = 0ull; w < W; w++)
 										InputLayer->NeuronsD1[InputLayer->OffsetPaddedMem(n, c + ChannelsLeft, h, w)] += NeuronsD1[OffsetPaddedMem(n, c, h, w)];
-						});
+						});*/
 
-						/*for_i(batchSize, threads, [=](UInt n)
+						for_i(batchSize, threads, [=](UInt n)
 						{
 							VecFloat inputD1, D1;
 							for (auto c = 0ull; c < (PaddedC - VectorSize); c += VectorSize)
@@ -524,7 +523,7 @@ namespace dnn
 								inputD1.store_a(&InputLayer->NeuronsD1[hwIn + inputOffset]);
 								hwIn += len;
 							}
-						});*/
+						});
 				}
 				else
 					for_i(batchSize, threads, [=](UInt n)
