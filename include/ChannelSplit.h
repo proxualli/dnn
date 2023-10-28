@@ -239,30 +239,6 @@ namespace dnn
 							});
 						else
 						{
-							//							for_i(batchSize, threads, [=](UInt n)
-							//							{
-							//								for (auto c = 0ull; c < C; c++)
-							//									for (auto h = 0ull; h < H; h++)
-							//										for (auto w = 0ull; w < W; w++)
-							//										{
-							//											Neurons[OffsetPaddedMem(n, c, h, w)] = InputLayer->Neurons[InputLayer->OffsetPaddedMem(n, c + ChannelsLeft, h, w)];
-							//#ifndef DNN_LEAN
-							//											NeuronsD1[OffsetPaddedMem(n, c, h, w)] = Float(0);
-							//#endif // DNN_LEAN
-							//										}
-							//
-							//								for (auto c = C; c < PaddedC; c++)
-							//									for (auto h = 0ull; h < H; h++)
-							//										for (auto w = 0ull; w < W; w++)
-							//										{
-							//											Neurons[OffsetPaddedMem(n, c, h, w)] = Float(0);
-							//#ifndef DNN_LEAN
-							//											NeuronsD1[OffsetPaddedMem(n, c, h, w)] = Float(0);
-							//#endif // DNN_LEAN
-							//										}
-							//							});
-
-
 							for_i(batchSize, threads, [=](UInt n)
 							{
 								VecFloat In;
@@ -335,20 +311,6 @@ namespace dnn
 							});
 						else
 						{
-
-							/*for_i(batchSize, threads, [=](UInt n)
-							{
-								for (auto c = 0ull; c < C; c++)
-									for (auto h = 0ull; h < H; h++)
-										for (auto w = 0ull; w < W; w++)
-											Neurons[OffsetPaddedMem(n, c, h, w)] = InputLayer->Neurons[InputLayer->OffsetPaddedMem(n, c + ChannelsLeft, h, w)];
-
-								for (auto c = C; c < PaddedC; c++)
-									for (auto h = 0ull; h < H; h++)
-										for (auto w = 0ull; w < W; w++)
-											Neurons[OffsetPaddedMem(n, c, h, w)] = Float(0);
-							});*/
-
 							for_i(batchSize, threads, [=](UInt n)
 							{
 								VecFloat In;
@@ -487,14 +449,6 @@ namespace dnn
 							}
 						});
 					else
-						/*for_i(batchSize, threads, [=](UInt n)
-						{
-							for (auto c = 0ull; c < C; c++)
-								for (auto h = 0ull; h < H; h++)
-									for (auto w = 0ull; w < W; w++)
-										InputLayer->NeuronsD1[InputLayer->OffsetPaddedMem(n, c + ChannelsLeft, h, w)] += NeuronsD1[OffsetPaddedMem(n, c, h, w)];
-						});*/
-
 						for_i(batchSize, threads, [=](UInt n)
 						{
 							VecFloat inputD1, D1;
