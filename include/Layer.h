@@ -301,9 +301,7 @@ namespace dnn
 
 		auto EqualDimensions(const std::vector<Layer*>& inputs) const
 		{
-			return 
-				(inputs[0]->H == inputs[1]->H) && 
-				(inputs[0]->W == inputs[1]->W);
+			return (inputs[0]->H == inputs[1]->H) && (inputs[0]->W == inputs[1]->W);
 		}
 
 		auto GetFirst(const std::vector<Layer*>& inputs) const

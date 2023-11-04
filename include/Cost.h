@@ -97,9 +97,19 @@ namespace dnn
 
 		void InitializeDescriptors(const UInt batchSize) final override
 		{
-			ChosenFormat = PlainFmt;
-			DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(1) , dnnl::memory::dim(1) } ), dnnl::memory::data_type::f32, PlainFmt));
-			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C) , dnnl::memory::dim(1) , dnnl::memory::dim(1) }), dnnl::memory::data_type::f32, PlainFmt));
+			if (GetMemoryNDims(*InputLayer->DstMemDesc) == 2)
+			{
+				ChosenFormat = dnnl::memory::format_tag::nc;
+				DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, ChosenFormat));
+				DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, ChosenFormat));
+			}
+			else
+			{
+				ChosenFormat = PlainFmt;
+				DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(1) , dnnl::memory::dim(1) }), dnnl::memory::data_type::f32, PlainFmt));
+				DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C) , dnnl::memory::dim(1) , dnnl::memory::dim(1) }), dnnl::memory::data_type::f32, PlainFmt));
+			}
+
 			reorderFwdSrc = *DstMemDesc != *InputLayer->DstMemDesc;
 			reorderBwdDiffSrc = *DiffDstMemDesc != *InputLayer->DiffDstMemDesc;
 		}
