@@ -151,6 +151,8 @@ namespace dnn
 				Device.stream.wait();
 			}
 
+			Float* inputNeurons = (Float*)srcMem.get_data_handle();
+
 			switch (CostFunction)
 			{
 			case Costs::BinaryCrossEntropy:
@@ -160,20 +162,20 @@ namespace dnn
 				{
 					for (auto c = 0ull; c < C; c++)
 					{
-						Neurons[c] = -LabelFalse * std::log(InputLayer->Neurons[c]) - (Float(1) - LabelFalse) * std::log(Float(1) - InputLayer->Neurons[c]);
+						Neurons[c] = -LabelFalse * std::log(inputNeurons[c]) - (Float(1) - LabelFalse) * std::log(Float(1) - inputNeurons[c]);
 #ifndef DNN_LEAN
 						NeuronsD1[c] = Float(0);
 #endif
 					}
 					const auto label = sampleLabel[LabelIndex].LabelA;
-					Neurons[label] = -LabelTrue * std::log(InputLayer->Neurons[label]) - (Float(1) - LabelTrue) * std::log(Float(1) - InputLayer->Neurons[label]);
+					Neurons[label] = -LabelTrue * std::log(inputNeurons[label]) - (Float(1) - LabelTrue) * std::log(Float(1) - inputNeurons[label]);
 				}
 				else
 				{
 #endif
 					for (auto nc = 0ull; nc < C * batchSize; nc++)
 					{
-						Neurons[nc] = -LabelFalse * std::log(InputLayer->Neurons[nc]) - (Float(1) - LabelFalse) * std::log(Float(1) - InputLayer->Neurons[nc]);
+						Neurons[nc] = -LabelFalse * std::log(inputNeurons[nc]) - (Float(1) - LabelFalse) * std::log(Float(1) - inputNeurons[nc]);
 #ifndef DNN_LEAN
 						NeuronsD1[nc] = Float(0);
 #endif
@@ -181,7 +183,7 @@ namespace dnn
 					for (auto n = 0ull; n < batchSize; n++)
 					{
 						const auto label = sampleLabels[n][LabelIndex].LabelA + (n * C);
-						Neurons[label] = -LabelTrue * std::log(InputLayer->Neurons[label]) - (Float(1) - LabelTrue) * std::log(Float(1) - InputLayer->Neurons[label]);
+						Neurons[label] = -LabelTrue * std::log(inputNeurons[label]) - (Float(1) - LabelTrue) * std::log(Float(1) - inputNeurons[label]);
 					}
 #ifdef DNN_STOCHASTIC
 				}
@@ -204,7 +206,7 @@ namespace dnn
 #endif
 						}
 						const auto label = sampleLabel[LabelIndex].LabelA;
-						Neurons[label] = -InputLayer->Neurons[label];
+						Neurons[label] = -inputNeurons[label];
 					}
 					else
 					{
@@ -219,8 +221,7 @@ namespace dnn
 						for (auto n = 0ull; n < batchSize; n++)
 						{
 							const auto label = sampleLabels[n][LabelIndex].LabelA + (n * C);
-							//Neurons[label] = -InputLayer->Neurons[label];
-							Neurons[label] = -((Float*)srcMem.get_data_handle())[label];
+							Neurons[label] = -inputNeurons[label];
 						}
 #ifdef DNN_STOCHASTIC
 					}
@@ -239,7 +240,7 @@ namespace dnn
 #endif
 						}
 						const auto label = sampleLabel[LabelIndex].LabelA;
-						Neurons[label] = -std::log(InputLayer->Neurons[label]);
+						Neurons[label] = -std::log(inputNeurons[label]);
 					}
 					else
 					{
@@ -254,7 +255,7 @@ namespace dnn
 						for (auto n = 0ull; n < batchSize; n++)
 						{
 							const auto label = sampleLabels[n][LabelIndex].LabelA + (n * C);
-							Neurons[label] = -std::log(InputLayer->Neurons[label]);
+							Neurons[label] = -std::log(inputNeurons[label]);
 						}
 #ifdef DNN_STOCHASTIC
 					}
@@ -269,21 +270,21 @@ namespace dnn
 				if (batchSize == 1)
 				{
 					for (auto c = 0ull; c < C; c++)
-						Neurons[c] = std::abs(InputLayer->Neurons[c] - LabelFalse);
+						Neurons[c] = std::abs(inputNeurons[c] - LabelFalse);
 
 					const auto label = sampleLabel[LabelIndex].LabelA;
-					Neurons[label] = std::abs(InputLayer->Neurons[label] - LabelTrue);
+					Neurons[label] = std::abs(inputNeurons[label] - LabelTrue);
 				}
 				else
 				{
 #endif
 					for (auto nc = 0ull; nc < C * batchSize; nc++)
-						Neurons[nc] = std::abs(InputLayer->Neurons[nc] - LabelFalse);
+						Neurons[nc] = std::abs(inputNeurons[nc] - LabelFalse);
 
 					for (auto n = 0ull; n < batchSize; n++)
 					{
 						const auto label = sampleLabels[n][LabelIndex].LabelA + (n * C);
-						Neurons[label] = std::abs(InputLayer->Neurons[label] - LabelTrue);
+						Neurons[label] = std::abs(inputNeurons[label] - LabelTrue);
 					}
 #ifdef DNN_STOCHASTIC
 				}
@@ -298,11 +299,11 @@ namespace dnn
 				{
 					for (auto c = 0ull; c < C; c++)
 					{
-						const auto diff = std::abs(InputLayer->Neurons[c] - LabelFalse);
+						const auto diff = std::abs(inputNeurons[c] - LabelFalse);
 						Neurons[c] = diff > Eps ? diff : Float(0);
 					}
 					const auto label = sampleLabel[LabelIndex].LabelA;
-					const auto diff = std::abs(InputLayer->Neurons[label] - LabelTrue);
+					const auto diff = std::abs(inputNeurons[label] - LabelTrue);
 					Neurons[label] = diff > Eps ? diff : Float(0);
 				}
 				else
@@ -310,13 +311,13 @@ namespace dnn
 #endif
 					for (auto nc = 0ull; nc < C * batchSize; nc++)
 					{
-						const auto diff = std::abs(InputLayer->Neurons[nc] - LabelFalse);
+						const auto diff = std::abs(inputNeurons[nc] - LabelFalse);
 						Neurons[nc] = diff > Eps ? diff : Float(0);
 					}
 					for (auto n = 0ull; n < batchSize; n++)
 					{
 						const auto label = sampleLabels[n][LabelIndex].LabelA + (n * C);
-						const auto diff = std::abs(InputLayer->Neurons[label] - LabelTrue);
+						const auto diff = std::abs(inputNeurons[label] - LabelTrue);
 						Neurons[label] = diff > Eps ? diff : Float(0);
 					}
 #ifdef DNN_STOCHASTIC
@@ -331,21 +332,21 @@ namespace dnn
 				if (batchSize == 1)
 				{
 					for (auto c = 0ull; c < C; c++)
-						Neurons[c] = Square<Float>(InputLayer->Neurons[c] - LabelFalse);
+						Neurons[c] = Square<Float>(inputNeurons[c] - LabelFalse);
 
 					const auto label = sampleLabel[LabelIndex].LabelA;
-					Neurons[label] = Square<Float>(InputLayer->Neurons[label] - LabelTrue);
+					Neurons[label] = Square<Float>(inputNeurons[label] - LabelTrue);
 				}
 				else
 				{
 #endif
 					for (auto nc = 0ull; nc < C * batchSize; nc++)
-						Neurons[nc] = Square<Float>(InputLayer->Neurons[nc] - LabelFalse);
+						Neurons[nc] = Square<Float>(inputNeurons[nc] - LabelFalse);
 
 					for (auto n = 0ull; n < batchSize; n++)
 					{
 						const auto label = sampleLabels[n][LabelIndex].LabelA + (n * C);
-						Neurons[label] = Square<Float>(InputLayer->Neurons[label] - LabelTrue);
+						Neurons[label] = Square<Float>(inputNeurons[label] - LabelTrue);
 					}
 #ifdef DNN_STOCHASTIC
 				}
@@ -360,14 +361,14 @@ namespace dnn
 				{
 					for (auto c = 0ull; c < C; c++)
 					{
-						const auto ty = LabelFalse * InputLayer->Neurons[c];
+						const auto ty = LabelFalse * inputNeurons[c];
 						Neurons[c] = ty <= 0 ? Float(0.5) - ty : ty < Float(1) ? Square<Float>(1 - ty) * Float(0.5) : Float(0);
 #ifndef DNN_LEAN
 						NeuronsD1[c] = Float(0);
 #endif
 					}
 					const auto label = sampleLabel[LabelIndex].LabelA;
-					const auto ty = LabelTrue * InputLayer->Neurons[label];
+					const auto ty = LabelTrue * inputNeurons[label];
 					Neurons[label] = ty <= 0 ? Float(0.5) - ty : ty < Float(1) ? Square<Float>(1 - ty) * Float(0.5) : Float(0);
 				}
 				else
@@ -375,7 +376,7 @@ namespace dnn
 #endif
 					for (auto nc = 0ull; nc < C * batchSize; nc++)
 					{
-						const auto ty = LabelFalse * InputLayer->Neurons[nc];
+						const auto ty = LabelFalse * inputNeurons[nc];
 						Neurons[nc] = ty <= 0 ? Float(0.5) - ty : ty < Float(1) ? Square<Float>(1 - ty) * Float(0.5) : Float(0);
 #ifndef DNN_LEAN
 						NeuronsD1[nc] = Float(0);
@@ -384,7 +385,7 @@ namespace dnn
 					for (auto n = 0ull; n < batchSize; n++)
 					{
 						const auto label = sampleLabels[n][LabelIndex].LabelA + (n * C);
-						const auto ty = LabelTrue * InputLayer->Neurons[label];
+						const auto ty = LabelTrue * inputNeurons[label];
 						Neurons[label] = ty <= 0 ? Float(0.5) - ty : ty < Float(1) ? Square<Float>(1 - ty) * Float(0.5) : Float(0);
 					}
 #ifdef DNN_STOCHASTIC
@@ -401,7 +402,7 @@ namespace dnn
 			ZeroGradient(batchSize);
 #endif // DNN_LEAN
 
-			auto memSrc = dnnl::memory(*InputLayer->DstMemDesc, Device.engine, InputLayer->Neurons.data());
+			auto memSrc = dnnl::memory(*InputLayer->DstMemDesc, Device.engine, InputLayerFwd->Neurons.data());
 			auto srcMem = reorderFwdSrc ? dnnl::memory(*DstMemDesc, Device.engine) : memSrc;
 			if (reorderFwdSrc)
 			{
@@ -412,6 +413,9 @@ namespace dnn
 			auto memDiffSrc = dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data());
 			auto diffSrcMem = reorderBwdDiffSrc ? dnnl::memory(*DiffDstMemDesc, Device.engine) : memDiffSrc;
 
+			Float* inputNeurons = (Float*)srcMem.get_data_handle();
+			Float* inputDiffNeurons = (Float*)diffSrcMem.get_data_handle();
+
 			switch (CostFunction)
 			{
 			case Costs::BinaryCrossEntropy:
@@ -420,21 +424,21 @@ namespace dnn
 				if (batchSize == 1)
 				{
 					for (auto c = 0ull; c < C; c++)
-						InputLayer->NeuronsD1[c] = (InputLayerFwd->Neurons[c] - LabelFalse) / (InputLayerFwd->Neurons[c] * (Float(1) - InputLayerFwd->Neurons[c]));
+						inputDiffNeurons[c] = (inputNeurons[c] - LabelFalse) / (inputNeurons[c] * (Float(1) - inputNeurons[c]));
 
 					const auto label = sampleLabel[LabelIndex].LabelA;
-					InputLayer->NeuronsD1[label] = (InputLayerFwd->Neurons[label] - LabelTrue) / (InputLayerFwd->Neurons[label] * (Float(1) - InputLayerFwd->Neurons[label]));
+					inputDiffNeurons[label] = (inputNeurons[label] - LabelTrue) / (inputNeurons[label] * (Float(1) - inputNeurons[label]));
 				}
 				else
 				{
 #endif
 					for (auto nc = 0ull; nc < C * batchSize; nc++)
-						InputLayer->NeuronsD1[nc] = (InputLayerFwd->Neurons[nc] - LabelFalse) / (InputLayerFwd->Neurons[nc] * (Float(1) - InputLayerFwd->Neurons[nc]));
+						inputDiffNeurons[nc] = (inputNeurons[nc] - LabelFalse) / (inputNeurons[nc] * (Float(1) - inputNeurons[nc]));
 
 					for (auto n = 0ull; n < batchSize; n++)
 					{
 						const auto label = sampleLabels[n][LabelIndex].LabelA + (n * C);
-						InputLayer->NeuronsD1[label] = (InputLayerFwd->Neurons[label] - LabelTrue) / (InputLayerFwd->Neurons[label] * (Float(1) - InputLayerFwd->Neurons[label]));
+						inputDiffNeurons[label] = (inputNeurons[label] - LabelTrue) / (inputNeurons[label] * (Float(1) - inputNeurons[label]));
 					}
 #ifdef DNN_STOCHASTIC
 				}
@@ -450,33 +454,20 @@ namespace dnn
 					if (batchSize == 1)
 					{
 						for (auto c = 0ull; c < C; c++)
-							InputLayer->NeuronsD1[c] = std::exp(InputLayerFwd->Neurons[c]) - (Eps / C);
+							inputDiffNeurons[c] = std::exp(inputNeurons[c]) - (Eps / C);
 
 						const auto labelA = sampleLabel[LabelIndex].LabelA;
 						const auto labelB = sampleLabel[LabelIndex].LabelB;
 						const auto weightA = sampleLabel[LabelIndex].Lambda;
 						const auto weightB = ((weightA != Float(1)) && (sampleLabel[LabelIndex].LabelA != sampleLabel[LabelIndex].LabelB)) ? Float(1) - weightA : Float(1);
-						InputLayer->NeuronsD1[labelA] = std::exp(InputLayerFwd->Neurons[labelA] * weightA) - ((Float(1) - Eps) + (Eps / C));
-						InputLayer->NeuronsD1[labelB] = std::exp(InputLayerFwd->Neurons[labelB] * weightB) - ((Float(1) - Eps) + (Eps / C));
+						inputDiffNeurons[labelA] = std::exp(inputNeurons[labelA] * weightA) - ((Float(1) - Eps) + (Eps / C));
+						inputDiffNeurons[labelB] = std::exp(inputNeurons[labelB] * weightB) - ((Float(1) - Eps) + (Eps / C));
 					}
 					else
 					{
 #endif
-						/*for (auto nc = 0ull; nc < C * batchSize; nc++)
-							InputLayer->NeuronsD1[nc] = std::exp(InputLayerFwd->Neurons[nc]) - (Eps / C);
-
-						for (auto n = 0ull; n < batchSize; n++)
-						{
-							const auto labelA = sampleLabels[n][LabelIndex].LabelA + (n * C);
-							const auto labelB = sampleLabels[n][LabelIndex].LabelB + (n * C);
-							const auto weightA = sampleLabels[n][LabelIndex].Lambda;
-							const auto weightB = ((weightA != Float(1)) && (sampleLabels[n][LabelIndex].LabelA != sampleLabels[n][LabelIndex].LabelB)) ? Float(1) - weightA : Float(1);
-							InputLayer->NeuronsD1[labelA] = std::exp(InputLayerFwd->Neurons[labelA] * weightA) - ((Float(1) - Eps) + (Eps / C));
-							InputLayer->NeuronsD1[labelB] = std::exp(InputLayerFwd->Neurons[labelB] * weightB) - ((Float(1) - Eps) + (Eps / C));
-						}*/
-
 						for (auto nc = 0ull; nc < C * batchSize; nc++)
-							((Float*)diffSrcMem.get_data_handle())[nc] = std::exp(((Float*)srcMem.get_data_handle())[nc]) - (Eps / C);
+							inputDiffNeurons[nc] = std::exp(inputNeurons[nc]) - (Eps / C);
 
 						for (auto n = 0ull; n < batchSize; n++)
 						{
@@ -484,8 +475,8 @@ namespace dnn
 							const auto labelB = sampleLabels[n][LabelIndex].LabelB + (n * C);
 							const auto weightA = sampleLabels[n][LabelIndex].Lambda;
 							const auto weightB = ((weightA != Float(1)) && (sampleLabels[n][LabelIndex].LabelA != sampleLabels[n][LabelIndex].LabelB)) ? Float(1) - weightA : Float(1);
-							((Float*)diffSrcMem.get_data_handle())[labelA] = std::exp(((Float*)srcMem.get_data_handle())[labelA] * weightA) - ((Float(1) - Eps) + (Eps / C));
-							((Float*)diffSrcMem.get_data_handle())[labelB] = std::exp(((Float*)srcMem.get_data_handle())[labelB] * weightB) - ((Float(1) - Eps) + (Eps / C));
+							inputDiffNeurons[labelA] = std::exp(inputNeurons[labelA] * weightA) - ((Float(1) - Eps) + (Eps / C));
+							inputDiffNeurons[labelB] = std::exp(inputNeurons[labelB] * weightB) - ((Float(1) - Eps) + (Eps / C));
 						}
 
 #ifdef DNN_STOCHASTIC
@@ -498,20 +489,20 @@ namespace dnn
 					if (batchSize == 1)
 					{
 						for (auto c = 0ull; c < C; c++)
-							InputLayer->NeuronsD1[c] = InputLayerFwd->Neurons[c] - (Eps / C);
+							inputDiffNeurons[c] = inputNeurons[c] - (Eps / C);
 
 						const auto labelA = sampleLabel[LabelIndex].LabelA;
 						const auto labelB = sampleLabel[LabelIndex].LabelB;
 						const auto weightA = sampleLabel[LabelIndex].Lambda;
 						const auto weightB = ((weightA != Float(1)) && (sampleLabel[LabelIndex].LabelA != sampleLabel[LabelIndex].LabelB)) ? Float(1) - weightA : Float(1);
-						InputLayer->NeuronsD1[labelA] = (InputLayerFwd->Neurons[labelA] * weightA) - ((Float(1) - Eps) + (Eps / C));
-						InputLayer->NeuronsD1[labelB] = (InputLayerFwd->Neurons[labelB] * weightB) - ((Float(1) - Eps) + (Eps / C));
+						inputDiffNeurons[labelA] = (inputNeurons[labelA] * weightA) - ((Float(1) - Eps) + (Eps / C));
+						inputDiffNeurons[labelB] = (inputNeurons[labelB] * weightB) - ((Float(1) - Eps) + (Eps / C));
 					}
 					else
 					{
 #endif
 						for (auto nc = 0ull; nc < C * batchSize; nc++)
-							InputLayer->NeuronsD1[nc] = InputLayerFwd->Neurons[nc] - (Eps / C);
+							inputDiffNeurons[nc] = inputNeurons[nc] - (Eps / C);
 
 						for (auto n = 0ull; n < batchSize; n++)
 						{
@@ -519,8 +510,8 @@ namespace dnn
 							const auto labelB = sampleLabels[n][LabelIndex].LabelB + (n * C);
 							const auto weightA = sampleLabels[n][LabelIndex].Lambda;
 							const auto weightB = ((weightA != Float(1)) && (sampleLabels[n][LabelIndex].LabelA != sampleLabels[n][LabelIndex].LabelB)) ? Float(1) - weightA : Float(1);
-							InputLayer->NeuronsD1[labelA] = (InputLayerFwd->Neurons[labelA] * weightA) - ((Float(1) - Eps) + (Eps / C));
-							InputLayer->NeuronsD1[labelB] = (InputLayerFwd->Neurons[labelB] * weightB) - ((Float(1) - Eps) + (Eps / C));
+							inputDiffNeurons[labelA] = (inputNeurons[labelA] * weightA) - ((Float(1) - Eps) + (Eps / C));
+							inputDiffNeurons[labelB] = (inputNeurons[labelB] * weightB) - ((Float(1) - Eps) + (Eps / C));
 						}
 #ifdef DNN_STOCHASTIC
 					}
@@ -538,27 +529,27 @@ namespace dnn
 				{
 					for (auto c = 0ull; c < C; c++)
 					{
-						const auto sign = InputLayer->InputLayerFwd->Neurons[c] - LabelFalse;
-						InputLayer->NeuronsD1[c] = sign < 0 ? -factor : sign > 0 ? factor : 0;
+						const auto sign = inputNeurons[c] - LabelFalse;
+						inputDiffNeurons[c] = sign < 0 ? -factor : sign > 0 ? factor : 0;
 					}
 					const auto label = sampleLabel[LabelIndex].LabelA;
-					const auto sign = InputLayer->InputLayerFwd->Neurons[label] - LabelTrue;
-					InputLayer->NeuronsD1[label] = sign < 0 ? -factor : sign > 0 ? factor : 0;
+					const auto sign = inputNeurons[label] - LabelTrue;
+					inputDiffNeurons[label] = sign < 0 ? -factor : sign > 0 ? factor : 0;
 				}
 				else
 				{
 #endif
 					for (auto nc = 0ull; nc < C * batchSize; nc++)
 					{
-						const auto sign = InputLayer->InputLayerFwd->Neurons[nc] - LabelFalse;
-						InputLayer->NeuronsD1[nc] = sign < 0 ? -factor : sign > 0 ? factor : 0;
+						const auto sign = inputNeurons[nc] - LabelFalse;
+						inputDiffNeurons[nc] = sign < 0 ? -factor : sign > 0 ? factor : 0;
 					}
 
 					for (auto n = 0ull; n < batchSize; n++)
 					{
 						const auto label = sampleLabels[n][LabelIndex].LabelA + (n * C);
-						const auto sign = InputLayerFwd->Neurons[label] - LabelTrue;
-						InputLayer->NeuronsD1[label] = sign < 0 ? -factor : sign > 0 ? factor : 0;
+						const auto sign = inputNeurons[label] - LabelTrue;
+						inputDiffNeurons[label] = sign < 0 ? -factor : sign > 0 ? factor : 0;
 					}
 #ifdef DNN_STOCHASTIC
 				}
@@ -575,27 +566,27 @@ namespace dnn
 				{
 					for (auto c = 0ull; c < C; c++)
 					{
-						const auto sign = InputLayerFwd->Neurons[c] - LabelFalse;
-						InputLayer->NeuronsD1[c] = sign < -Eps ? -factor : sign > Eps ? factor : 0;
+						const auto sign = inputNeurons[c] - LabelFalse;
+						inputDiffNeurons[c] = sign < -Eps ? -factor : sign > Eps ? factor : 0;
 					}
 					const auto label = sampleLabel[LabelIndex].LabelA;
-					const auto sign = InputLayerFwd->Neurons[label] - LabelTrue;
-					InputLayer->NeuronsD1[label] = sign < -Eps ? -factor : sign > Eps ? factor : 0;
+					const auto sign = inputNeurons[label] - LabelTrue;
+					inputDiffNeurons[label] = sign < -Eps ? -factor : sign > Eps ? factor : 0;
 				}
 				else
 				{
 #endif
 					for (auto nc = 0ull; nc < C * batchSize; nc++)
 					{
-						const auto sign = InputLayerFwd->Neurons[nc] - LabelFalse;
-						InputLayer->NeuronsD1[nc] = sign < -Eps ? -factor : sign > Eps ? factor : 0;
+						const auto sign = inputNeurons[nc] - LabelFalse;
+						inputDiffNeurons[nc] = sign < -Eps ? -factor : sign > Eps ? factor : 0;
 					}
 
 					for (auto n = 0ull; n < batchSize; n++)
 					{
 						const auto label = sampleLabels[n][LabelIndex].LabelA + (n * C);
-						const auto sign = InputLayerFwd->Neurons[label] - LabelTrue;
-						InputLayer->NeuronsD1[label] = sign < -Eps ? -factor : sign > Eps ? factor : 0;
+						const auto sign = inputNeurons[label] - LabelTrue;
+						inputDiffNeurons[label] = sign < -Eps ? -factor : sign > Eps ? factor : 0;
 					}
 #ifdef DNN_STOCHASTIC
 				}
@@ -611,21 +602,21 @@ namespace dnn
 				if (batchSize == 1)
 				{
 					for (auto c = 0ull; c < C; c++)
-						InputLayer->NeuronsD1[c] = (InputLayerFwd->Neurons[c] - LabelFalse) * factor;
+						inputDiffNeurons[c] = (inputNeurons[c] - LabelFalse) * factor;
 
 					const auto label = sampleLabel[LabelIndex].LabelA;
-					InputLayer->NeuronsD1[label] = (InputLayerFwd->Neurons[label] - LabelTrue) * factor;
+					inputDiffNeurons[label] = (inputNeurons[label] - LabelTrue) * factor;
 				}
 				else
 				{
 #endif
 					for (auto nc = 0ull; nc < C * batchSize; nc++)
-						InputLayer->NeuronsD1[nc] = (InputLayerFwd->Neurons[nc] - LabelFalse) * factor;
+						inputDiffNeurons[nc] = (inputNeurons[nc] - LabelFalse) * factor;
 
 					for (auto n = 0ull; n < batchSize; n++)
 					{
 						const auto label = sampleLabels[n][LabelIndex].LabelA + (n * C);
-						InputLayer->NeuronsD1[label] = (InputLayerFwd->Neurons[label] - LabelTrue) * factor;
+						inputDiffNeurons[label] = (inputNeurons[label] - LabelTrue) * factor;
 					}
 #ifdef DNN_STOCHASTIC
 				}
@@ -640,26 +631,26 @@ namespace dnn
 				{
 					for (auto c = 0ull; c < C; c++)
 					{
-						const auto ty = LabelFalse * InputLayerFwd->Neurons[c];
-						InputLayer->NeuronsD1[c] = ty <= 0 ? -Float(1) : ty < Float(1) ? ty - Float(1) : Float(0);
+						const auto ty = LabelFalse * inputNeurons[c];
+						inputDiffNeurons[c] = ty <= 0 ? -Float(1) : ty < Float(1) ? ty - Float(1) : Float(0);
 					}
 					const auto label = sampleLabel[LabelIndex].LabelA;
-					const auto ty = LabelTrue * InputLayerFwd->Neurons[label];
-					InputLayer->NeuronsD1[label] = ty <= 0 ? -Float(1) : ty < Float(1) ? ty - Float(1) : Float(0);
+					const auto ty = LabelTrue * inputNeurons[label];
+					inputDiffNeurons[label] = ty <= 0 ? -Float(1) : ty < Float(1) ? ty - Float(1) : Float(0);
 				}
 				else
 				{
 #endif
 					for (auto nc = 0ull; nc < C * batchSize; nc++)
 					{
-						const auto ty = LabelFalse * InputLayerFwd->Neurons[nc];
-						InputLayer->NeuronsD1[nc] = ty <= 0 ? -Float(1) : ty < Float(1) ? ty - Float(1) : Float(0);
+						const auto ty = LabelFalse * inputNeurons[nc];
+						inputDiffNeurons[nc] = ty <= 0 ? -Float(1) : ty < Float(1) ? ty - Float(1) : Float(0);
 					}
 					for (auto n = 0ull; n < batchSize; n++)
 					{
 						const auto label = sampleLabels[n][LabelIndex].LabelA + (n * C);
-						const auto ty = LabelTrue * InputLayerFwd->Neurons[label];
-						InputLayer->NeuronsD1[label] = ty <= 0 ? -Float(1) : ty < Float(1) ? ty - Float(1) : Float(0);
+						const auto ty = LabelTrue * inputNeurons[label];
+						inputDiffNeurons[label] = ty <= 0 ? -Float(1) : ty < Float(1) ? ty - Float(1) : Float(0);
 					}
 #ifdef DNN_STOCHASTIC
 				}
