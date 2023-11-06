@@ -827,6 +827,51 @@ namespace scripts
 
             switch (p.Script)
             {
+            case Scripts::augshufflenet:
+            {
+                auto channels = DIV8(p.Width * 16);
+
+                net +=
+                    Convolution(1, "Input", channels, 3, 3, p.StrideHFirstConv, p.StrideWFirstConv, 1, 1) +
+                    BatchNormActivation(1, "C1", p.Activation) +
+                    Convolution(2, "B1", channels, 1, 1, 1, 1, 0, 0) +
+                    BatchNormActivation(2, "C2", p.Activation) +
+                    DepthwiseConvolution(3, "B2", 1, 3, 3, 1, 1, 1, 1) +
+                    BatchNorm(3, "DC3") +
+                    Convolution(4, "B3", channels, 1, 1, 1, 1, 0, 0) +
+                    BatchNormActivation(4, "C4", p.Activation) +
+                    Convolution(5, "B1", channels, 1, 1, 1, 1, 0, 0) +
+                    Concat(1, "C5,B4");
+
+                auto C = 6ull;
+                auto A = 1ull;
+                auto subsample = false;
+                for (const auto& rec : p.ShuffleNet)
+                {
+                    if (subsample)
+                    {
+                        channels *= 2;
+                        net += AugmentedInvertedResidual(A++, C, channels, rec.Kernel, rec.Pad, true, rec.Shuffle, rec.SE, p.Activation);
+                        C += 5;
+                    }
+                    for (auto n = 0ull; n < rec.Iterations; n++)
+                    {
+                        net += AugmentedInvertedResidual(A++, C, channels, rec.Kernel, rec.Pad, false, rec.Shuffle, rec.SE, p.Activation);
+                        C += 3;
+                    }
+                    subsample = true;
+                }
+
+                net +=
+                    Convolution(C, In("CC", A), 1024, 1, 1, 1, 1, 0, 0) +
+                    BatchNorm(C + 1, In("C", C)) +
+                    GlobalAvgPooling(In("B", C + 1)) +
+                    Dense(C + 1, "GAP", p.Classes()) +
+                    LogSoftmax(In("DS", C + 1)) +
+                    Cost("LSM", p.Dataset, p.Classes(), "CategoricalCrossEntropy", 0.125f);
+            }
+            break;
+
             case Scripts::densenet:
             {
                 auto channels = DIV8(p.GrowthRate);
@@ -929,11 +974,13 @@ namespace scripts
                     net += block;
 
                 net +=
-                    Convolution(C, In("CC", CC), p.Classes(), 1, 1, p.StrideHFirstConv, p.StrideWFirstConv, 0, 0) +
+                    Convolution(C, In("CC", CC), 1024, 1, 1, 1, 1, 0, 0) +
                     BatchNorm(C + 1, In("C", C)) +
                     GlobalAvgPooling(In("B", C + 1)) +
-                    LogSoftmax("GAP") +
+                    Dense(C + 1, "GAP", p.Classes()) +
+                    LogSoftmax(In("DS", C + 1)) +
                     Cost("LSM", p.Dataset, p.Classes(), "CategoricalCrossEntropy", 0.125f);
+
             }
             break;
 
@@ -981,9 +1028,9 @@ namespace scripts
                     Convolution(C, In("A", A - 1), DIV8((UInt)((Float)1792 * width)), 1, 1, 1, 1, 0, 0) +
                     BatchNormActivation(C, In("C", C), p.Activation) +
                     GlobalAvgPooling(In("B", C)) +
-                    Dropout(1, "GAP") +
-                    Dense(1, In("D", 1), p.Classes(), true, "", "DS", "Normal(0.001)") +
-                    LogSoftmax("DS1") +
+                    Dropout(C, "GAP") +
+                    Dense(C, In("D", C), p.Classes(), true, "", "DS", "Normal(0.001)") +
+                    LogSoftmax(In("DS", C)) +
                     Cost("LSM", p.Dataset, p.Classes(), "CategoricalCrossEntropy", 0.125f);
             }
             break;
@@ -1074,10 +1121,11 @@ namespace scripts
 
                 net +=
                     BatchNormActivation(C, In("A", A), p.Activation) +
-                    Convolution(C, In("B", C), p.Classes(), 1, 1, 1, 1, 0, 0) +
+                    Convolution(C, In("B", C), 1024, 1, 1, 1, 1, 0, 0) +
                     BatchNorm(C + 1, In("C", C)) +
                     GlobalAvgPooling(In("B", C + 1)) +
-                    LogSoftmax("GAP") +
+                    Dense(C + 1, "GAP", p.Classes()) +
+                    LogSoftmax(In("DS", C + 1)) +
                     Cost("LSM", p.Dataset, p.Classes(), "CategoricalCrossEntropy", 0.125f);
             }
             break;
@@ -1189,10 +1237,11 @@ namespace scripts
 
                 net +=
                     BatchNormActivation(C, In("A", A), p.Activation) +
-                    Convolution(C, In("B", C), p.Classes(), 1, 1, 1, 1, 0, 0) +
+                    Convolution(C, In("B", C), 1024, 1, 1, 1, 1, 0, 0) +
                     BatchNorm(C + 1, In("C", C)) +
                     GlobalAvgPooling(In("B", C + 1)) +
-                    LogSoftmax("GAP") +
+                    Dense(C + 1, "GAP", p.Classes()) +
+                    LogSoftmax(In("DS", C + 1)) +
                     Cost("LSM", p.Dataset, p.Classes(), "CategoricalCrossEntropy", 0.125f);
             }
             break;
@@ -1233,10 +1282,11 @@ namespace scripts
                 }
 
                 net +=
-                    Convolution(C, In("CC", A), p.Classes(), 1, 1, 1, 1, 0, 0) +
+                    Convolution(C, In("CC", A), 1024, 1, 1, 1, 1, 0, 0) +
                     BatchNorm(C + 1, In("C", C)) +
                     GlobalAvgPooling(In("B", C + 1)) +
-                    LogSoftmax("GAP") +
+                    Dense(C + 1, "GAP", p.Classes()) +
+                    LogSoftmax(In("DS", C + 1)) +
                     Cost("LSM", p.Dataset, p.Classes(), "CategoricalCrossEntropy", 0.125f);
             }
             break;
