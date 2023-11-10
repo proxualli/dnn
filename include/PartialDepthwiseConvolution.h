@@ -224,7 +224,7 @@ namespace dnn
 				Device.stream.wait();
 			}
 
-			auto memSrc = dnnl::memory(partSrc, Device.engine, InputLayer->Neurons.data());
+			auto memSrc = dnnl::memory(partSrc, Device.engine, InputLayerFwd->Neurons.data());
 			auto srcMem = reorderBwdWeightsSrc ? dnnl::memory(bwdWeightsDesc->src_desc(), Device.engine) : memSrc;
 			if (reorderBwdWeightsSrc)
 			{
@@ -298,6 +298,7 @@ namespace dnn
 			const auto width = C * pitchH + border;
 			const auto height = pitchW + border;
 			const auto biasOffset = height * width;
+
 			auto image = ByteArray(biasOffset + width, fillColor);
 			FloatVector weights;
 

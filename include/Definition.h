@@ -454,9 +454,9 @@ namespace dnn
 							
 						case LayerTypes::Concat:
 						{
-							if (inputs.size() != 2)
+							if (inputs.size() < 2)
 							{
-								msg = CheckMsg(line, col, std::string("Layer ") + name + std::string(" has no two inputs."));
+								msg = CheckMsg(line, col, std::string("Layer ") + name + std::string(" has just one input."));
 								goto FAIL;
 							}
 						}
