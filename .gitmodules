@@ -25,3 +25,6 @@
 [submodule "deps/bitsery"]
 	path = deps/bitsery
 	url = https://github.com/fraillt/bitsery.git
+[submodule "deps/libjpeg-turbo"]
+	path = deps/libjpeg-turbo
+	url = https://github.com/libjpeg-turbo/libjpeg-turbo.git
