@@ -19,9 +19,6 @@
 [submodule "deps/csv-parser"]
 	path = deps/csv-parser
 	url = https://github.com/vincentlaucsb/csv-parser
-[submodule "deps/libjpeg-turbo"]
-	path = deps/libjpeg-turbo
-	url = https://github.com/libjpeg-turbo/libjpeg-turbo.git
 [submodule "deps/libpng"]
 	path = deps/libpng
 	url = https://github.com/glennrp/libpng.git
