@@ -755,10 +755,6 @@ namespace dnn
 		
 		void ForwardPropRef (const UInt batchSize, const bool training)
 		{
-			const auto plain = IsPlainFormat();
-			const auto maxThreads = GetThreads(batchSize * (plain ? CDHW() : PaddedCDHW()), Float(5));
-			const auto threads = std::min<UInt>(maxThreads, batchSize);
-
 			if (!training)
 			{
 				if (!inference)
@@ -845,6 +841,9 @@ namespace dnn
 				}
 			}
 				
+			const auto plain = IsPlainFormat();
+			const auto maxThreads = GetThreads(batchSize * (plain ? CDHW() : PaddedCDHW()), Float(5));
+			const auto threads = std::min<UInt>(maxThreads, batchSize);
 			const auto strideHW = HW() * VectorSize;
 
 			if (training)
@@ -955,7 +954,6 @@ namespace dnn
 			const auto elements = batchSize * (plain ? CDHW() : PaddedCDHW());
 			const auto maxThreads = GetThreads(elements, Float(5));
 			const auto threads = std::min<UInt>(maxThreads, batchSize);
-
 			const auto strideHW = HW() * VectorSize;
 
 			if (InputLayer->DstMemDesc->get_ndims() == 2)
@@ -1262,7 +1260,7 @@ namespace dnn
 		UInt GetNeuronsSize(const UInt batchSize) const override
 		{
 			if constexpr (Reference)
-				return Layer::GetNeuronsSize(batchSize) + (batchSize * PaddedCDHW());
+				return Layer::GetNeuronsSize(batchSize) + (batchSize * PaddedCDHW() * sizeof(Float));
 			else
 				return Layer::GetNeuronsSize(batchSize);
 		}
