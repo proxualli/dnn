@@ -1003,11 +1003,6 @@ namespace dnn
 
 		void ForwardProp(const UInt batchSize, const bool training) final override
 		{
-			const auto plain = IsPlainFormat();
-			const auto threads = batchSize == 1 ? 1ull : GetThreads(batchSize * (plain ? CDHW() : PaddedCDHW()), Float(10));
-
-			const auto strideHW = HW() * VectorSize;
-			
 			switch (ActivationFunction)
 			{
 			case Activations::ASinh:
@@ -1016,6 +1011,10 @@ namespace dnn
 			case Activations::SoftSign:
 			case Activations::TanhExp:
 			{
+				const auto plain = IsPlainFormat();
+				const auto threads = batchSize == 1 ? 1ull : GetThreads(batchSize * (plain ? CDHW() : PaddedCDHW()), Float(10));
+				const auto strideHW = HW() * VectorSize;
+
 				if (GetMemoryNDims(*InputLayer->DstMemDesc) == 2)
 				{
 #ifdef DNN_STOCHASTIC
@@ -1263,10 +1262,6 @@ namespace dnn
 			ZeroGradient(batchSize);
 #endif // DNN_LEAN
 
-			const auto plain = IsPlainFormat();
-			const auto threads = batchSize == 1ull ? 1ull : GetThreads(batchSize * (plain ? CDHW() : PaddedCDHW()), Float(10));
-			const auto strideHW = HW() * VectorSize;
-
 			switch (ActivationFunction)
 			{
 			case Activations::ASinh:
@@ -1275,6 +1270,10 @@ namespace dnn
 			case Activations::SoftSign:
 			case Activations::TanhExp:
 			{
+				const auto plain = IsPlainFormat();
+				const auto threads = batchSize == 1ull ? 1ull : GetThreads(batchSize * (plain ? CDHW() : PaddedCDHW()), Float(10));
+				const auto strideHW = HW() * VectorSize;
+
 				if (GetMemoryNDims(*InputLayer->DstMemDesc) == 2)
 				{
 #ifdef DNN_STOCHASTIC
