@@ -224,7 +224,7 @@ namespace dnn
 
 		UInt GetNeuronsSize(const UInt batchSize) const override
 		{
-			return Layer::GetNeuronsSize(batchSize) + (batchSize * PaddedCDHW());
+			return Layer::GetNeuronsSize(batchSize) + (batchSize * PaddedCDHW() * sizeof(Float));
 		}
 	};
 }
