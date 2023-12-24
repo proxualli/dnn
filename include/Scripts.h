@@ -864,11 +864,10 @@ namespace scripts
                 }
 
                 net +=
-                    Convolution(C, In("CC", A), 1024, 1, 1, 1, 1, 0, 0) +
+                    Convolution(C, In("CC", A), p.Classes(), 1, 1, 1, 1, 0, 0) +
                     BatchNorm(C + 1, In("C", C)) +
                     GlobalAvgPooling(In("B", C + 1)) +
-                    Dense(C + 1, "GAP", p.Classes()) +
-                    LogSoftmax(In("DS", C + 1)) +
+                    LogSoftmax("GAP") +
                     Cost("LSM", p.Dataset, p.Classes(), "CategoricalCrossEntropy", 0.125f);
             }
             break;
@@ -975,11 +974,10 @@ namespace scripts
                     net += block;
 
                 net +=
-                    Convolution(C, In("CC", CC), 1024, 1, 1, 1, 1, 0, 0) +
+                    Convolution(C, In("CC", CC), p.Classes(), 1, 1, 1, 1, 0, 0) +
                     BatchNorm(C + 1, In("C", C)) +
                     GlobalAvgPooling(In("B", C + 1)) +
-                    Dense(C + 1, "GAP", p.Classes()) +
-                    LogSoftmax(In("DS", C + 1)) +
+                    LogSoftmax("GAP") +
                     Cost("LSM", p.Dataset, p.Classes(), "CategoricalCrossEntropy", 0.125f);
 
             }
@@ -1000,19 +998,20 @@ namespace scripts
                 auto input = In("B", C++);
                 for (const auto& rec : p.EfficientNet)
                 {
+                    auto beginStage = stage < 3ul;
                     auto outputChannels = DIV8(UInt(width * (Float)rec.Channels));
                     for (auto n = 0ull; n < rec.Iterations; n++)
                     {
                         auto stride = n == 0ull ? rec.Stride : 1ull;
                         auto identity = stride == 1ull && inputChannels == outputChannels;
 
-                        auto subblocks = stage < 3ull ? FusedMBConv(A, C, input, inputChannels, outputChannels, stride, rec.ExpandRatio, rec.SE, p.Activation) : 
+                        auto subblocks = beginStage ? FusedMBConv(A, C, input, inputChannels, outputChannels, stride, rec.ExpandRatio, rec.SE, p.Activation) :
                                                              MBConv(A, C, input, inputChannels, outputChannels, stride, rec.ExpandRatio, rec.SE, p.Activation);
                         for(auto blk : subblocks)
                             net += blk;
 
                         inputChannels = outputChannels;
-                        C += stage < 3ull ? 1ull : 2ull;
+                        C += beginStage ? 1ull : 2ull;
 
                         if (identity)
                         {
@@ -1026,12 +1025,10 @@ namespace scripts
                 }
 
                 net +=
-                    Convolution(C, In("A", A - 1), DIV8((UInt)((Float)1792 * width)), 1, 1, 1, 1, 0, 0) +
-                    BatchNormActivation(C, In("C", C), p.Activation) +
+                    Convolution(C, In("A", A - 1), p.Classes(), 1, 1, 1, 1, 0, 0) +
+                    BatchNormActivationDropout(C, In("C", C), p.Activation) +
                     GlobalAvgPooling(In("B", C)) +
-                    Dropout(C, "GAP") +
-                    Dense(C, In("D", C), p.Classes(), true, "", "DS", "Normal(0.001)") +
-                    LogSoftmax(In("DS", C)) +
+                    LogSoftmax("GAP") +
                     Cost("LSM", p.Dataset, p.Classes(), "CategoricalCrossEntropy", 0.125f);
             }
             break;
@@ -1122,11 +1119,10 @@ namespace scripts
 
                 net +=
                     BatchNormActivation(C, In("A", A), p.Activation) +
-                    Convolution(C, In("B", C), 1024, 1, 1, 1, 1, 0, 0) +
+                    Convolution(C, In("CC", C), p.Classes(), 1, 1, 1, 1, 0, 0) +
                     BatchNorm(C + 1, In("C", C)) +
                     GlobalAvgPooling(In("B", C + 1)) +
-                    Dense(C + 1, "GAP", p.Classes()) +
-                    LogSoftmax(In("DS", C + 1)) +
+                    LogSoftmax("GAP") +
                     Cost("LSM", p.Dataset, p.Classes(), "CategoricalCrossEntropy", 0.125f);
             }
             break;
@@ -1238,11 +1234,10 @@ namespace scripts
 
                 net +=
                     BatchNormActivation(C, In("A", A), p.Activation) +
-                    Convolution(C, In("B", C), 1024, 1, 1, 1, 1, 0, 0) +
+                    Convolution(C, In("B", C), p.Classes(), 1, 1, 1, 1, 0, 0) +
                     BatchNorm(C + 1, In("C", C)) +
                     GlobalAvgPooling(In("B", C + 1)) +
-                    Dense(C + 1, "GAP", p.Classes()) +
-                    LogSoftmax(In("DS", C + 1)) +
+                    LogSoftmax("GAP") +
                     Cost("LSM", p.Dataset, p.Classes(), "CategoricalCrossEntropy", 0.125f);
             }
             break;
@@ -1283,12 +1278,12 @@ namespace scripts
                 }
 
                 net +=
-                    Convolution(C, In("CC", A), 1024, 1, 1, 1, 1, 0, 0) +
+                    Convolution(C, In("CC", A), p.Classes(), 1, 1, 1, 1, 0, 0) +
                     BatchNorm(C + 1, In("C", C)) +
                     GlobalAvgPooling(In("B", C + 1)) +
-                    Dense(C + 1, "GAP", p.Classes()) +
-                    LogSoftmax(In("DS", C + 1)) +
+                    LogSoftmax("GAP") +
                     Cost("LSM", p.Dataset, p.Classes(), "CategoricalCrossEntropy", 0.125f);
+
             }
             break;
 
