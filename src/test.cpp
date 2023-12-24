@@ -66,6 +66,7 @@ DNN_API void DNNGetCostInfo(const UInt costIndex, dnn::CostInfo* info);
 DNN_API void DNNGetImage(const UInt layer, const Byte fillColor, Byte* image);
 DNN_API bool DNNSetFormat(const bool plain);
 DNN_API dnn::Optimizers GetOptimizer();
+DNN_API bool DNNClearLog();
 //DNN_API void DNNPrintModel(const std::string& fileName);
 
 std::string ToTime(UInt nanoseconds)
@@ -260,7 +261,7 @@ int main(int argc, char* argv[])
             //DNNPrintModel(path + "Normal.txt");
             auto info = new ModelInfo();
             DNNGetModelInfo(info);
-
+            DNNClearLog();
             std::cout << std::string("Training ") << info->Name << std::string(" on ") << std::string(magic_enum::enum_name<Datasets>(info->Dataset)) << (std::string(" with ") + std::string(magic_enum::enum_name<Optimizers>(optimizer)) + std::string(" optimizer")) << std::endl << std::endl;
             std::cout.flush();
 
