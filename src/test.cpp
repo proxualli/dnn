@@ -179,12 +179,33 @@ void GetTrainingProgress(int seconds = 5, UInt trainingSamples = 50000, UInt tes
 
 #ifdef _WIN32
 int __cdecl wmain(int argc, wchar_t* argv[])
+{
+    auto gotoEpoch = 1ull;
+
+    try
+    {
+        if (argc == 2)
+            gotoEpoch = static_cast<UInt>(_wtoll(argv[1]));
+    }
+    catch (std::exception exception)
+    {
+        return EXIT_FAILURE;
+    }
 #else
 int main(int argc, char* argv[])
-#endif
 {
-    DNN_UNREF_PAR(argc);
-    DNN_UNREF_PAR(argv);
+    auto gotoEpoch = 1ull;
+
+    try
+    {
+        if (argc == 2)
+            gotoEpoch = static_cast<UInt>(atoll(argv[1]));
+    }
+    catch (std::exception exception)
+    {
+        return EXIT_FAILURE;
+    }
+#endif
 
     CheckMsg msg;
 
@@ -261,13 +282,16 @@ int main(int argc, char* argv[])
             //DNNPrintModel(path + "Normal.txt");
             auto info = new ModelInfo();
             DNNGetModelInfo(info);
-            DNNClearLog();
+            
+            if (gotoEpoch == 1ull)
+                DNNClearLog();
+
             std::cout << std::string("Training ") << info->Name << std::string(" on ") << std::string(magic_enum::enum_name<Datasets>(info->Dataset)) << (std::string(" with ") + std::string(magic_enum::enum_name<Optimizers>(optimizer)) + std::string(" optimizer")) << std::endl << std::endl;
             std::cout.flush();
 
             DNNSetNewEpochDelegate(&NewEpoch);
             DNNPersistOptimizer(persistOptimizer);
-            DNNAddTrainingRateSGDR(rate, true, 1, info->TrainSamplesCount);
+            DNNAddTrainingRateSGDR(rate, true, gotoEpoch, info->TrainSamplesCount);
             DNNTraining();
 
             GetTrainingProgress(5, info->TrainSamplesCount, info->TestSamplesCount);
@@ -284,4 +308,6 @@ int main(int argc, char* argv[])
         std::cout << std::endl << std::string("Could not load model") << std::endl << msg.Message << std::endl << model << std::endl;
 
     DNNDataproviderDispose();
+
+    return EXIT_SUCCESS;
 }
