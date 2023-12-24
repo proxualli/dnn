@@ -12,7 +12,7 @@ namespace dnn
 #ifdef DNN_CACHE_PRIMITIVES
 		std::unique_ptr<dnnl::concat> fwd;
 #endif
-
+		
 		auto InputChannels(const std::vector<Layer*>& inputs) const
 		{
 			auto channels = 0ull;
