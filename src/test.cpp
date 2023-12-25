@@ -213,14 +213,14 @@ int main(int argc, char* argv[])
     p.MirrorPad = false;
     p.Groups = 3;
     p.Iterations = 4;
-    p.Width = 12;
+    p.Width = 4;
     p.Activation = scripts::Activations::HardSwish;
     p.Dropout = Float(0);
     p.Bottleneck = false;
     p.SqueezeExcitation = true;
     p.ChannelZeroPad = false;
     p.EfficientNet = { { 1, 24, 2, 1, false }, { 4, 48, 4, 2, false }, { 4, 64, 4, 2, false }, { 4, 128, 6, 2, true }, { 6, 160, 9, 1, true }, { 6, 256, 15, 2, true } };
-    p.ShuffleNet = { { 7, 3, 1, 2, false }, { 7, 3, 1, 2, true }, { 7, 3, 1, 2, true } };
+    p.ShuffleNet = { { 3, 3, 1, 2, false }, { 3, 3, 1, 2, false }, { 7, 3, 1, 2, false } };
     p.WeightsFiller = scripts::Fillers::HeNormal;
     p.WeightsFillerMode = scripts::FillerModes::In;
     p.StrideHFirstConv = 1;
