@@ -3203,7 +3203,7 @@ namespace dnn
 			}
 
 			//#ifndef NDEBUG
-			std::cerr << std::string("Model::LoadWeights(const std::string& fileName, const bool persistOptimizer = false)  -  ") << fileName << std::string("  -  Could not open the file") << std::endl;
+			std::cerr << std::string("Model::LoadWeights(const std::string& fileName, const bool persistOptimizer = false)  -  ") << fileName << std::string(", ") << persistOptimizer << std::string("  -  Could not open the file") << std::endl;
 			//#endif
 
 			return -1;
