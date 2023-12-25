@@ -292,11 +292,12 @@ int main(int argc, char* argv[])
                 for (auto const& dir_entry : std::filesystem::directory_iterator{ dir })
                     if (dir_entry.is_directory())
                     {
-                        if (dir_entry.path().string().find(std::string("(") + StringToLower(std::string(magic_enum::enum_name<scripts::Datasets>(p.Dataset))) + std::string(")(") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(optimizer))) + std::string(")") + std::to_string(gotoEpoch) + std::string("-")) != std::string::npos)
+                        const auto& entry = dir_entry.path().string();
+                        if (entry.find(std::string("(") + StringToLower(std::string(magic_enum::enum_name<scripts::Datasets>(p.Dataset))) + std::string(")(") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(optimizer))) + std::string(")") + std::to_string(gotoEpoch) + std::string("-")) != std::string::npos)
                             for (auto const& subdir_entry : std::filesystem::directory_iterator{ dir_entry.path() })
                                 if (subdir_entry.is_regular_file())
                                 {
-                                    auto filename = subdir_entry.path().string();
+                                    const auto& filename = subdir_entry.path().string();
                                     if (filename.find(std::string("(") + StringToLower(std::string(magic_enum::enum_name<scripts::Datasets>(p.Dataset))) + std::string(")(") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(optimizer))) + std::string(").bin")) != std::string::npos)
                                     {
                                         std::cerr << filename << std::endl;
