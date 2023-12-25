@@ -293,22 +293,32 @@ int main(int argc, char* argv[])
                     if (dir_entry.is_directory())
                     {
                         const auto& entry = dir_entry.path().string();
+                        const auto dirname = persistOptimizer ? (std::string("(") + StringToLower(std::string(magic_enum::enum_name<scripts::Datasets>(p.Dataset))) + std::string(")(") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(optimizer))) + std::string(")") + std::to_string((gotoEpoch - 1)) + std::string("-1-")) : (std::string("(") + StringToLower(std::string(magic_enum::enum_name<scripts::Datasets>(p.Dataset))) + std::string(")") + std::to_string((gotoEpoch - 1)) + std::string("-1-"));
+
+#ifndef NDEBUG
                         std::cerr << entry << std::endl;
-                        const auto dirname = persistOptimizer ? (std::string("(") + StringToLower(std::string(magic_enum::enum_name<scripts::Datasets>(p.Dataset))) + std::string(")(") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(optimizer))) + std::string(")1-") + std::to_string((gotoEpoch - 1))) : (std::string("(") + StringToLower(std::string(magic_enum::enum_name<scripts::Datasets>(p.Dataset))) + std::string(")") + std::to_string((gotoEpoch - 1)) + std::string("-1-"));
                         std::cerr << dirname << std::endl;
+#endif
                         if (entry.find(dirname) != std::string::npos)
                             for (auto const& subdir_entry : std::filesystem::directory_iterator{ dir_entry.path() })
                                 if (subdir_entry.is_regular_file())
                                 {
                                     const auto& filename = subdir_entry.path().string();
-                                    std::cerr << filename << std::endl;
                                     const auto& compare = persistOptimizer ? (std::string("(") + StringToLower(std::string(magic_enum::enum_name<scripts::Datasets>(p.Dataset))) + std::string(")(") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(optimizer))) + std::string(").bin")) : (std::string("(") + StringToLower(std::string(magic_enum::enum_name<scripts::Datasets>(p.Dataset))) + std::string(").bin"));
+#ifndef NDEBUG
+                                    std::cerr << filename << std::endl;
                                     std::cerr << compare << std::endl;
+#endif
                                     if (filename.find(compare) != std::string::npos)
                                     {
+#ifndef NDEBUG
                                         std::cerr << std::string("Loading...") << std::endl;
+#endif
                                         DNNLoadWeights(filename, persistOptimizer);
+#ifndef NDEBUG
                                         std::cerr << std::string("Loaded") << std::endl;
+#endif
+                                        break;
                                     }
                                 }
                     }
