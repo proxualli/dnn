@@ -285,15 +285,17 @@ int main(int argc, char* argv[])
             DNNSetUseTrainingStrategy(false);
             DNNSetLocked(false);
 
+            const auto& dir = std::filesystem::path(std::filesystem::u8path(path)) / std::string("definitions") / p.GetName();
             if (gotoEpoch == 1ull)
                 DNNClearLog();
             else
-                for (auto const& dir_entry : std::filesystem::directory_iterator{ std::filesystem::path(std::filesystem::u8path(path)) / std::string("definitions") / p.GetName() })
+                for (auto const& dir_entry : std::filesystem::directory_iterator{ dir })
                     if (dir_entry.is_directory())
                     {
                         auto subdir = dir_entry.path().string();
+                        std::cerr << subdir << std::endl;
                         if (subdir.find(std::string("(") + StringToLower(std::string(magic_enum::enum_name<scripts::Datasets>(p.Dataset))) + std::string(")(") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(optimizer))) + std::string(")") + std::to_string(gotoEpoch) + std::string("-")) != std::string::npos)
-                            DNNLoadWeights((dir_entry.path() / (std::string("(") + StringToLower(std::string(magic_enum::enum_name<scripts::Datasets>(p.Dataset))) + std::string(")(") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(optimizer))) + std::string(").bin"))).string(), persistOptimizer);
+                            DNNLoadWeights(subdir + std::string("(") + StringToLower(std::string(magic_enum::enum_name<scripts::Datasets>(p.Dataset))) + std::string(")(") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(optimizer))) + std::string(").bin")), persistOptimizer);
                     }
 
             std::cout << std::string("Training ") << info->Name << std::string(" on ") << std::string(magic_enum::enum_name<Datasets>(info->Dataset)) << (std::string(" with ") + std::string(magic_enum::enum_name<Optimizers>(optimizer)) + std::string(" optimizer")) << std::endl << std::endl;
