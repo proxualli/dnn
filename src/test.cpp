@@ -302,7 +302,7 @@ int main(int argc, char* argv[])
                                 {
                                     const auto& filename = subdir_entry.path().string();
                                     std::cerr << filename << std::endl;
-                                    const auto& compare = std::string("(") + StringToLower(std::string(magic_enum::enum_name<scripts::Datasets>(p.Dataset))) + std::string(")(") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(optimizer))) + std::string(").bin");
+                                    const auto& compare = persistOptimizer ? (std::string("(") + StringToLower(std::string(magic_enum::enum_name<scripts::Datasets>(p.Dataset))) + std::string(")(") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(optimizer))) + std::string(").bin")) : (std::string("(") + StringToLower(std::string(magic_enum::enum_name<scripts::Datasets>(p.Dataset))) + std::string(").bin"));
                                     std::cerr << compare << std::endl;
                                     if (filename.find(compare) != std::string::npos)
                                     {
