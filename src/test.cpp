@@ -294,7 +294,7 @@ int main(int argc, char* argv[])
                     {
                         const auto& entry = dir_entry.path().string();
                         std::cerr << entry << std::endl;
-                        const auto& dirname = std::string("(") + StringToLower(std::string(magic_enum::enum_name<scripts::Datasets>(p.Dataset))) + std::string(")(") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(optimizer))) + std::string(")1-") + std::to_string((gotoEpoch-1));
+                        const auto dirname = persistOptimizer ? (std::string("(") + StringToLower(std::string(magic_enum::enum_name<scripts::Datasets>(p.Dataset))) + std::string(")(") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(optimizer))) + std::string(")1-") + std::to_string((gotoEpoch - 1))) : (std::string("(") + StringToLower(std::string(magic_enum::enum_name<scripts::Datasets>(p.Dataset))) + std::string(")1-") + std::to_string((gotoEpoch - 1)) + std::string("-"));
                         std::cerr << dirname << std::endl;
                         if (entry.find(dirname) != std::string::npos)
                             for (auto const& subdir_entry : std::filesystem::directory_iterator{ dir_entry.path() })
