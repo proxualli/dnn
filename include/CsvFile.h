@@ -123,9 +123,9 @@ namespace dnn
             return oss.str();
         }
 
-//#ifndef NDEBUG
+#ifndef NDEBUG
         std::cerr << std::string("CsvFile::") << NAMEOF(ReadFileToString) << std::string("(const std::string& fileName)  -  ") << fileName << std::string("  -  Could not open the file") << std::endl;
-//#endif
+#endif
 
         return std::string("");
     }
