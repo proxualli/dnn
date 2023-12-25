@@ -6,7 +6,7 @@ namespace dnn
     class CsvFile
     {
     private:
-        //const std::locale newLocale = std::locale(std::locale(""), new no_separator());
+        const std::locale newLocale = std::locale(std::locale(""), new no_separator());
         const std::locale oldLocale;
         std::ofstream os;
 
@@ -17,7 +17,7 @@ namespace dnn
         CsvFile(const std::string& filename, const char separator = ';', const std::string& quote = std::string("")) :
             Separator(separator),
             Quote(quote),
-            oldLocale(std::locale::global(std::locale::classic())),
+            oldLocale(std::locale::global(newLocale)),
             os(std::ofstream())
         {
             os.exceptions(std::ios::failbit | std::ios::badbit);
@@ -73,7 +73,7 @@ namespace dnn
         CsvFile& operator << (const float& val)
         {
             auto ss = std::stringstream();
-            ss.imbue(std::locale::classic());
+            ss.imbue(newLocale);
             ss.precision(std::streamsize(10));
             ss << std::defaultfloat << val;
             os << ss.str() << Separator;
@@ -83,7 +83,7 @@ namespace dnn
         CsvFile& operator << (const double& val)
         {
             auto ss = std::stringstream();
-            ss.imbue(std::locale::classic());
+            ss.imbue(newLocale);
             ss.precision(std::streamsize(16));
             ss << std::defaultfloat << val;
             os << ss.str() << Separator;
