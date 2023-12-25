@@ -293,7 +293,7 @@ int main(int argc, char* argv[])
                     if (dir_entry.is_directory())
                     {
                         for (auto const& subdir_entry : std::filesystem::directory_iterator{ dir_entry.path() })
-                            if (subdir_entry.is_block_file())
+                            if (subdir_entry.is_regular_file())
                             {
                                 auto entry = subdir_entry.path().string();
                                 std::cerr << entry << std::endl;
