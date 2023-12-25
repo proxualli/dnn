@@ -313,9 +313,17 @@ int main(int argc, char* argv[])
 #ifndef NDEBUG
                                         std::cerr << std::string("Loading...") << std::endl;
 #endif
-                                        DNNLoadWeights(filename, persistOptimizer);
+                                        if (DNNLoadWeights(filename, persistOptimizer) == 0)
 #ifndef NDEBUG
-                                        std::cerr << std::string("Loaded") << std::endl;
+                                            std::cerr << std::string("Loaded") << std::endl;
+#else
+                                            ;
+#endif
+                                        else
+#ifndef NDEBUG
+                                            std::cerr << std::string("Not loaded") << std::endl;
+#else
+                                            ;
 #endif
                                         break;
                                     }
