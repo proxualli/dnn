@@ -293,15 +293,19 @@ int main(int argc, char* argv[])
                     if (dir_entry.is_directory())
                     {
                         const auto& entry = dir_entry.path().string();
+                        std::cerr << entry << std::endl;
+
                         if (entry.find(std::string("(") + StringToLower(std::string(magic_enum::enum_name<scripts::Datasets>(p.Dataset))) + std::string(")(") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(optimizer))) + std::string(")") + std::to_string(gotoEpoch) + std::string("-")) != std::string::npos)
                             for (auto const& subdir_entry : std::filesystem::directory_iterator{ dir_entry.path() })
                                 if (subdir_entry.is_regular_file())
                                 {
                                     const auto& filename = subdir_entry.path().string();
+                                    std::cerr << filename << std::endl;
                                     if (filename.find(std::string("(") + StringToLower(std::string(magic_enum::enum_name<scripts::Datasets>(p.Dataset))) + std::string(")(") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(optimizer))) + std::string(").bin")) != std::string::npos)
                                     {
-                                        std::cerr << filename << std::endl;
+                                        std::cerr << std::string("Loading...") << std::endl;
                                         DNNLoadWeights(filename, persistOptimizer);
+                                        std::cerr << std::string("Loaded") << std::endl;
                                     }
                                 }
                     }
