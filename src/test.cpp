@@ -297,8 +297,11 @@ int main(int argc, char* argv[])
                                 if (subdir_entry.is_regular_file())
                                 {
                                     auto filename = subdir_entry.path().string();
-                                    std::cerr << filename << std::endl;
-                                    DNNLoadWeights(filename, persistOptimizer);
+                                    if (filename.find(std::string("(") + StringToLower(std::string(magic_enum::enum_name<scripts::Datasets>(p.Dataset))) + std::string(")(") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(optimizer))) + std::string(").bin")) != std::string::npos)
+                                    {
+                                        std::cerr << filename << std::endl;
+                                        DNNLoadWeights(filename, persistOptimizer);
+                                    }
                                 }
                     }
 
