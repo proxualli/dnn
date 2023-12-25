@@ -285,8 +285,8 @@ int main(int argc, char* argv[])
                     if (dir_entry.is_directory())
                     {
                         auto subdir = dir_entry.path().string();
-                        if (subdir.find(std::string("(") + std::string(magic_enum::enum_name<scripts::Datasets>(p.Dataset)) + std::string(")(") + std::string(magic_enum::enum_name<Optimizers>(optimizer)) + std::string(")") + std::to_string(gotoEpoch) + std::string("-")) != std::string::npos)
-                            DNNLoadWeights((dir_entry.path() / (std::string("(") + std::string(magic_enum::enum_name<scripts::Datasets>(p.Dataset)) + std::string(")(") + std::string(magic_enum::enum_name<Optimizers>(optimizer)) + std::string(").bin"))).string(), persistOptimizer);
+                        if (subdir.find(std::string("(") + StringToLower(std::string(magic_enum::enum_name<scripts::Datasets>(p.Dataset))) + std::string(")(") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(optimizer))) + std::string(")") + std::to_string(gotoEpoch) + std::string("-")) != std::string::npos)
+                            DNNLoadWeights((dir_entry.path() / (std::string("(") + StringToLower(std::string(magic_enum::enum_name<scripts::Datasets>(p.Dataset))) + std::string(")(") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(optimizer))) + std::string(").bin"))).string(), persistOptimizer);
                     }
 
             std::cout << std::string("Training ") << info->Name << std::string(" on ") << std::string(magic_enum::enum_name<Datasets>(info->Dataset)) << (std::string(" with ") + std::string(magic_enum::enum_name<Optimizers>(optimizer)) + std::string(" optimizer")) << std::endl << std::endl;
