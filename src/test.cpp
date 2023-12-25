@@ -13,9 +13,9 @@
 #include "Scripts.h"
 
 #ifdef _WIN32
-static std::string path = std::string(getenv("USERPROFILE")) + std::string("\\Documents\\convnet\\");
+static const std::string path = std::string(getenv("USERPROFILE")) + std::string("\\Documents\\convnet\\");
 #else
-static std::string path = std::string(getenv("HOME")) + std::string("/convnet/");
+static const std::string path = std::string(getenv("HOME")) + std::string("/convnet/");
 #endif
 
 using namespace dnn;
@@ -179,33 +179,25 @@ void GetTrainingProgress(int seconds = 5, UInt trainingSamples = 50000, UInt tes
 
 #ifdef _WIN32
 int __cdecl wmain(int argc, wchar_t* argv[])
-{
-    auto gotoEpoch = 1ull;
-
-    try
-    {
-        if (argc == 2)
-            gotoEpoch = static_cast<UInt>(_wtoll(argv[1]));
-    }
-    catch (std::exception exception)
-    {
-        return EXIT_FAILURE;
-    }
 #else
 int main(int argc, char* argv[])
+#endif
 {
     auto gotoEpoch = 1ull;
 
     try
     {
         if (argc == 2)
+#ifdef _WIN32
+            gotoEpoch = static_cast<UInt>(_wtoll(argv[1]));
+#else
             gotoEpoch = static_cast<UInt>(atoll(argv[1]));
+#endif
     }
     catch (std::exception exception)
     {
         return EXIT_FAILURE;
     }
-#endif
 
     CheckMsg msg;
 
@@ -240,7 +232,7 @@ int main(int argc, char* argv[])
     const auto persistOptimizer = true;
        
     dnn::TrainingRate rate;
-    rate.Optimizer = dnn::Optimizers::NAG;
+    rate.Optimizer = optimizer;
     rate.Momentum = 0.9f;
     rate.Beta2 = 0.999f;
     rate.L2Penalty = 0.0005f;
@@ -283,17 +275,25 @@ int main(int argc, char* argv[])
             auto info = new ModelInfo();
             DNNGetModelInfo(info);
             
+            DNNSetNewEpochDelegate(&NewEpoch);
+            DNNPersistOptimizer(persistOptimizer);
+
             if (gotoEpoch == 1ull)
                 DNNClearLog();
+            else
+                for (auto const& dir_entry : std::filesystem::directory_iterator{ std::filesystem::path(std::filesystem::u8path(path)) / std::string("definitions") / p.GetName()})
+                    if (dir_entry.is_directory())
+                    {
+                        auto subdir = dir_entry.path().string();
+                        if (subdir.find(std::string("(") + std::string(magic_enum::enum_name<scripts::Datasets>(p.Dataset)) + std::string(")(") + std::string(magic_enum::enum_name<Optimizers>(optimizer)) + std::string(")") + std::to_string(gotoEpoch) + std::string("-")) != std::string::npos)
+                            DNNLoadWeights((dir_entry.path() / (std::string("(") + std::string(magic_enum::enum_name<scripts::Datasets>(p.Dataset)) + std::string(")(") + std::string(magic_enum::enum_name<Optimizers>(optimizer)) + std::string(").bin"))).string(), persistOptimizer);
+                    }
 
             std::cout << std::string("Training ") << info->Name << std::string(" on ") << std::string(magic_enum::enum_name<Datasets>(info->Dataset)) << (std::string(" with ") + std::string(magic_enum::enum_name<Optimizers>(optimizer)) + std::string(" optimizer")) << std::endl << std::endl;
             std::cout.flush();
-
-            DNNSetNewEpochDelegate(&NewEpoch);
-            DNNPersistOptimizer(persistOptimizer);
+                        
             DNNAddTrainingRateSGDR(rate, true, gotoEpoch, info->TrainSamplesCount);
             DNNTraining();
-
             GetTrainingProgress(5, info->TrainSamplesCount, info->TestSamplesCount);
             
             delete info;
