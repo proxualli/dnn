@@ -111,7 +111,7 @@ namespace dnn
         return file;
     }
 
-    inline static std::string ReadFileToString(const std::string& fileName)
+    inline static auto ReadFileToString(const std::string& fileName)
     {
         auto file = std::ifstream(fileName);
 
