@@ -117,7 +117,10 @@ namespace dnn
 
         if (!file.bad() && file.is_open())
         {
+            const std::locale newLocale = std::locale(std::locale(""), new no_separator());
+            
             auto oss = std::ostringstream{};
+            oss.imbue(newLocale);
             oss << file.rdbuf();
             file.close();
             return oss.str();
