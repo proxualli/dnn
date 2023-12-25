@@ -1975,8 +1975,9 @@ namespace dnn
 							State.store(States::SaveWeights);
 							const auto fileName = PersistOptimizer ? (std::string("(") + StringToLower(std::string(magic_enum::enum_name<Datasets>(Dataset))) + std::string(")(") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(Optimizer))) + std::string(").bin")) : (std::string("(") + StringToLower(std::string(magic_enum::enum_name<Datasets>(Dataset))) + std::string(").bin"));
 							const auto dir = DataProv->StorageDirectory / std::string("definitions") / Name;
-							const auto stateDir = DataProv->StorageDirectory / std::string("state");
+							const auto statedir = DataProv->StorageDirectory / std::string("state");
 							std::filesystem::create_directories(dir);
+							std::filesystem::create_directories(statedir);
 							const auto epoch = std::string("(") + StringToLower(std::string(magic_enum::enum_name<Datasets>(Dataset))) + std::string(")(") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(Optimizer))) + std::string(")") + std::to_string(CurrentEpoch) + std::string("-") + std::to_string(CurrentCycle) + std::string("-") + std::to_string(TrainErrors) + std::string("-") + std::to_string(TestErrors);
 							const auto subdir = dir / epoch;
 							std::filesystem::current_path(dir);
@@ -2035,7 +2036,7 @@ namespace dnn
 
 							TrainingLog.push_back(logInfo);
 							SaveLog((subdir / std::string("log.csv")).string());
-							SaveLog((stateDir / (Name + std::string("-(") + std::string(magic_enum::enum_name<Datasets>(Dataset)) + std::string(").csv"))).string());
+							SaveLog((statedir / (Name + std::string("-(") + std::string(magic_enum::enum_name<Datasets>(Dataset)) + std::string(").csv"))).string());
 
 							NewEpoch(CurrentCycle, CurrentEpoch, TotalEpochs, static_cast<UInt>(CurrentTrainingRate.Optimizer), CurrentTrainingRate.Beta2, CurrentTrainingRate.Gamma, CurrentTrainingRate.Eps, CurrentTrainingRate.HorizontalFlip, CurrentTrainingRate.VerticalFlip, CurrentTrainingRate.InputDropout, CurrentTrainingRate.Cutout, CurrentTrainingRate.CutMix, CurrentTrainingRate.AutoAugment, CurrentTrainingRate.ColorCast, CurrentTrainingRate.ColorAngle, CurrentTrainingRate.Distortion, static_cast<UInt>(CurrentTrainingRate.Interpolation), CurrentTrainingRate.Scaling, CurrentTrainingRate.Rotation, CurrentTrainingRate.MaximumRate, CurrentTrainingRate.N, CurrentTrainingRate.D, CurrentTrainingRate.H, CurrentTrainingRate.W, CurrentTrainingRate.PadD, CurrentTrainingRate.PadH, CurrentTrainingRate.PadW, CurrentTrainingRate.Momentum, CurrentTrainingRate.L2Penalty, CurrentTrainingRate.Dropout, AvgTrainLoss, TrainErrorPercentage, Float(100) - TrainErrorPercentage, TrainErrors, AvgTestLoss, TestErrorPercentage, Float(100) - TestErrorPercentage, TestErrors, UInt(dur.count()));
 						}
