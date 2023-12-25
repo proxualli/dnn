@@ -123,7 +123,7 @@ namespace dnn
             return oss.str();
         }
 
-        std::cerr << std::string("Could not open the file - '") << fileName << std::string("'") << std::endl;
+        std::cerr << std::string("CVSFile::ReadFileToString('") << fileName << std::string("')  -  Could not open the file") << std::endl;
 
         return std::string("");
     }

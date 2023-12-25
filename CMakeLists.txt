@@ -255,6 +255,16 @@ IF(NOT DEFINED VECTORCLASS_SOURCE_DIR)
   SET(MAGIC_ENUM_SOURCE_DIR "${DNN_DEPENDENCIES_SOURCE_DIR}/magic_enum" CACHE STRING "MagicEnum source directory")
  ENDIF()
 
+ IF(NOT DEFINED NAMEOF_SOURCE_DIR)
+  MESSAGE(STATUS "Downloading Nameof to ${DNN_DEPENDENCIES_SOURCE_DIR}/nameof (define NAMEOF_SOURCE_DIR to avoid it)")
+  CONFIGURE_FILE(cmake/DownloadNameof.cmake "${DNN_DEPENDENCIES_BINARY_DIR}/nameof-download/CMakeLists.txt")
+  EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
+    WORKING_DIRECTORY "${DNN_DEPENDENCIES_BINARY_DIR}/nameof-download")
+  EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" --build .
+    WORKING_DIRECTORY "${DNN_DEPENDENCIES_BINARY_DIR}/nameof-download")
+  SET(NAMEOF_SOURCE_DIR "${DNN_DEPENDENCIES_SOURCE_DIR}/nameof" CACHE STRING "Nameof source directory")
+ ENDIF()
+
  IF(NOT DEFINED ONEDNN_SOURCE_DIR)
   MESSAGE(STATUS "Downloading oneDNN to ${DNN_DEPENDENCIES_SOURCE_DIR}/oneDNN (define ONEDNN_SOURCE_DIR to avoid it)")
   CONFIGURE_FILE(cmake/DownloadOneDNN.cmake "${DNN_DEPENDENCIES_BINARY_DIR}/oneDNN-download/CMakeLists.txt")
@@ -327,6 +337,7 @@ include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/oneDNN/src)
 include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/oneDNN/src)
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/version2)
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/magic_enum/include)
+include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/nameof/include)
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/CImg)
 
 # ---[ Configure Bisery
@@ -408,6 +419,13 @@ IF(NOT TARGET magic_enum)
   ADD_SUBDIRECTORY(
     "${MAGIC_ENUM_SOURCE_DIR}"
     "${DNN_DEPENDENCIES_BINARY_DIR}/magic_enum")
+ENDIF()
+
+# ---[ Configure Nameof
+IF(NOT TARGET nameof)
+  ADD_SUBDIRECTORY(
+    "${NAMEOF_SOURCE_DIR}"
+    "${DNN_DEPENDENCIES_BINARY_DIR}/nameof")
 ENDIF()
 
 IF(DNN_BUILD_TESTS)
