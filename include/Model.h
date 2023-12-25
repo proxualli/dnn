@@ -2960,8 +2960,8 @@ namespace dnn
 			auto record = std::string("");
 			auto counter = 0ull;
 			
-			const auto newLocale = std::locale(std::locale(""), new no_separator());
-			auto loc = std::locale(std::locale::global(newLocale));
+			//const auto newLocale = std::locale(std::locale(""), new no_separator());
+			auto loc = std::locale(std::locale::global(std::locale::classic()));
 
 			const auto fileContents = ReadFileToString(fileName);
 			auto iss = std::istringstream(fileContents);
@@ -2969,7 +2969,7 @@ namespace dnn
 			while (std::getline(iss, record))
 			{
 				auto line = std::istringstream(record);
-				line.imbue(newLocale);
+				//line.imbue(newLocale);
 				auto idx = 0;
 				auto info = LogRecord{};
 				while (std::getline(line, record, delimiter))
