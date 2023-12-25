@@ -277,6 +277,7 @@ int main(int argc, char* argv[])
             
             DNNSetNewEpochDelegate(&NewEpoch);
             DNNPersistOptimizer(persistOptimizer);
+            DNNSetOptimizer(optimizer);
 
             if (gotoEpoch == 1ull)
                 DNNClearLog();
