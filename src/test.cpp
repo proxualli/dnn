@@ -298,7 +298,7 @@ int main(int argc, char* argv[])
                                 auto entry = subdir_entry.path().string();
                                 std::cerr << entry << std::endl;
                                 if (entry.find(std::string("(") + StringToLower(std::string(magic_enum::enum_name<scripts::Datasets>(p.Dataset))) + std::string(")(") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(optimizer))) + std::string(")") + std::to_string(gotoEpoch) + std::string("-")) != std::string::npos)
-                                    DNNLoadWeights(entry + std::string("/(") + StringToLower(std::string(magic_enum::enum_name<scripts::Datasets>(p.Dataset))) + std::string(")(") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(optimizer))) + std::string(").bin"), persistOptimizer);
+                                    DNNLoadWeights(entry, persistOptimizer);
                             }
                     }
 
