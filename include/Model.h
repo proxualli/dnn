@@ -481,6 +481,7 @@ namespace dnn
 		UInt SampleIndex;
 		//UInt LogInterval;
 		UInt GoToEpoch;
+		UInt GoToCycle;
 		UInt AdjustedTrainSamplesCount;
 		UInt AdjustedTestSamplesCount;
 		UInt TrainSkipCount;
@@ -1083,6 +1084,7 @@ namespace dnn
 
 			TotalCycles = rate.Cycles;
 			GoToEpoch = gotoEpoch;
+			GoToCycle = gotoCycle;
 
 			const auto LR = rate.MaximumRate;
 			auto maxRate = rate.MaximumRate;
@@ -3406,6 +3408,7 @@ namespace dnn
 		s.value8b(o.CurrentEpoch);
 		s.value8b(o.SampleIndex);
 		s.value8b(o.GoToEpoch);
+		s.value8b(o.GoToCycle);
 		s.value8b(o.AdjustedTrainSamplesCount);
 		s.value8b(o.AdjustedTestSamplesCount);
 		s.value8b(o.TrainSkipCount);
