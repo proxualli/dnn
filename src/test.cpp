@@ -186,47 +186,44 @@ int main(int argc, char* argv[])
     auto gotoEpoch = 1ull;
     auto gotoCycle = 1ull;
 
-    try
+    if (argc == 2)
     {
-        if (argc == 2)
+        try
         {
-            try
-            {
 #ifdef _WIN32
-                gotoEpoch = static_cast<UInt>(_wtoll(argv[1]));
+            gotoEpoch = static_cast<UInt>(_wtoll(argv[1]));
 #else
-                gotoEpoch = static_cast<UInt>(atoll(argv[1]));
+            gotoEpoch = static_cast<UInt>(atoll(argv[1]));
 #endif
-            }
-            catch (std::exception e) 
-            {
-                return EXIT_FAILURE;
-            }
-
+        }
+        catch (std::exception e) 
+        {
+            return EXIT_FAILURE;
         }
 
-        if (argc == 3)
+    }
+
+    if (argc == 3)
+    {
+        try
         {
-            try
-            {
 #ifdef _WIN32
-                gotoEpoch = static_cast<UInt>(_wtoll(argv[1]));
-                gotoCycle = static_cast<UInt>(_wtoll(argv[2]));
+            gotoEpoch = static_cast<UInt>(_wtoll(argv[1]));
+            gotoCycle = static_cast<UInt>(_wtoll(argv[2]));
 #else
-                gotoEpoch = static_cast<UInt>(atoll(argv[1]));
-                gotoCycle = static_cast<UInt>(atoll(argv[2]));
+            gotoEpoch = static_cast<UInt>(atoll(argv[1]));
+            gotoCycle = static_cast<UInt>(atoll(argv[2]));
 #endif
-            }
-            catch (std::exception e)
-            {
-                return EXIT_FAILURE;
-            }
+        }
+        catch (std::exception e)
+        {
+            return EXIT_FAILURE;
         }
     }
-    catch (std::exception exception)
-    {
-        return EXIT_FAILURE;
-    }
+
+    gotoEpoch = gotoEpoch < 1ull ? 1ull : gotoEpoch;
+    gotoCycle = gotoCycle < 1ull ? 1ull : gotoCycle;
+   
 
     CheckMsg msg;
 
