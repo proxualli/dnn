@@ -190,22 +190,37 @@ int main(int argc, char* argv[])
     {
         if (argc == 2)
         {
+            try
+            {
 #ifdef _WIN32
-            gotoEpoch = static_cast<UInt>(_wtoll(argv[1]));
+                gotoEpoch = static_cast<UInt>(_wtoll(argv[1]));
 #else
-            gotoEpoch = static_cast<UInt>(atoll(argv[1]));
+                gotoEpoch = static_cast<UInt>(atoll(argv[1]));
 #endif
+            }
+            catch (std::exception e) 
+            {
+                return EXIT_FAILURE;
+            }
+
         }
 
         if (argc == 3)
         {
+            try
+            {
 #ifdef _WIN32
-            gotoEpoch = static_cast<UInt>(_wtoll(argv[1]));
-            gotoCycle = static_cast<UInt>(_wtoll(argv[2]));
+                gotoEpoch = static_cast<UInt>(_wtoll(argv[1]));
+                gotoCycle = static_cast<UInt>(_wtoll(argv[2]));
 #else
-            gotoEpoch = static_cast<UInt>(atoll(argv[1]));
-            gotoCycle = static_cast<UInt>(atoll(argv[2]));
+                gotoEpoch = static_cast<UInt>(atoll(argv[1]));
+                gotoCycle = static_cast<UInt>(atoll(argv[2]));
 #endif
+            }
+            catch (std::exception e)
+            {
+                return EXIT_FAILURE;
+            }
         }
     }
     catch (std::exception exception)
@@ -242,9 +257,9 @@ int main(int argc, char* argv[])
 
     auto model = scripts::ScriptsCatalog::Generate(p);
 
-    const auto optimizer = Optimizers::NAG;
     const auto persistOptimizer = true;
-       
+    const auto optimizer = Optimizers::NAG;
+           
     dnn::TrainingRate rate;
     rate.Optimizer = optimizer;
     rate.Momentum = Float(0.9);
@@ -302,7 +317,7 @@ int main(int argc, char* argv[])
             DNNSetLocked(false);
 
             const auto& dir = std::filesystem::path(std::filesystem::u8path(path)) / std::string("definitions") / p.GetName();
-            if (gotoEpoch == 1ull)
+            if (gotoEpoch == 1ull && gotoCycle == 1ull)
                 DNNClearLog();
             else
                 for (auto const& dir_entry : std::filesystem::directory_iterator{ dir })
@@ -310,7 +325,7 @@ int main(int argc, char* argv[])
                     {
                         const auto& entry = dir_entry.path().string();
                         const auto& dirname = persistOptimizer ? (std::string("(") + StringToLower(std::string(magic_enum::enum_name<scripts::Datasets>(p.Dataset))) + std::string(")(") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(optimizer))) + std::string(")") + std::string(")") + std::to_string((gotoEpoch - 1)) + std::string("-") + std::to_string(gotoCycle) + std::string("-")) : (std::string("(") + StringToLower(std::string(magic_enum::enum_name<scripts::Datasets>(p.Dataset))) + std::string(")") + std::to_string((gotoEpoch - 1)) + std::string("-") + std::to_string(gotoCycle) + std::string("-"));
-#ifndef NDEBUG
+#ifdef NDEBUG
                         std::cerr << entry << std::endl;
                         std::cerr << dirname << std::endl;
 #endif
@@ -320,23 +335,23 @@ int main(int argc, char* argv[])
                                 {
                                     const auto& filename = subdir_entry.path().string();
                                     const auto& compare = persistOptimizer ? (std::string("(") + StringToLower(std::string(magic_enum::enum_name<scripts::Datasets>(p.Dataset))) + std::string(")(") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(optimizer))) + std::string(").bin")) : (std::string("(") + StringToLower(std::string(magic_enum::enum_name<scripts::Datasets>(p.Dataset))) + std::string(").bin"));
-#ifndef NDEBUG
+#ifdef NDEBUG
                                     std::cerr << filename << std::endl;
                                     std::cerr << compare << std::endl;
 #endif
                                     if (filename.find(compare) != std::string::npos)
                                     {
-#ifndef NDEBUG
+#ifdef NDEBUG
                                         std::cerr << std::string("Loading...") << std::endl;
 #endif
                                         if (DNNLoadWeights(filename, persistOptimizer) == 0)
-#ifndef NDEBUG
+#ifdef NDEBUG
                                             std::cerr << std::string("Loaded") << std::endl;
 #else
                                             ;
 #endif
                                         else
-#ifndef NDEBUG
+#ifdef NDEBUG
                                             std::cerr << std::string("Not loaded") << std::endl;
 #else
                                             ;
