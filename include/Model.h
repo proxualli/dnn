@@ -584,6 +584,21 @@ namespace dnn
 			return Datasets::cifar10;
 		}
 
+		auto GetLogFileName(const std::string& modelName, const Datasets dataset) const
+		{
+			return modelName + std::string("-(") + StringToLower(std::string(magic_enum::enum_name<Datasets>(dataset))) + std::string(").csv");
+		}
+
+		auto GetWeightsFileName(const bool persistOptimizer, const Datasets dataset, const Optimizers optimizer) const
+		{
+			auto fileName = std::string("(") + StringToLower(std::string(magic_enum::enum_name<Datasets>(dataset)));
+
+			if (persistOptimizer)
+				fileName += std::string(")(") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(optimizer)));
+			
+			return fileName + std::string(").bin");
+		}
+
 		Model(const std::string& definition, Dataprovider* dataprovider) :
 			Name(GetModelName(definition)),
 			Definition(definition),
@@ -697,10 +712,7 @@ namespace dnn
 			//dnnl::set_default_fpmath_mode(dnnl::fpmath_mode::any);
 
 			if (DataProv != nullptr)
-			{
-				const auto stateDir = DataProv->StorageDirectory / std::string("state");
-				LoadLog((stateDir / (Name + std::string("-(") + StringToLower(std::string(magic_enum::enum_name<Datasets>(Dataset))) + std::string(").csv"))).string());
-			}
+				LoadLog((DataProv->StorageDirectory / std::string("state") / GetLogFileName(Name, Dataset)).string());
 		}
 
 		virtual ~Model() = default;
@@ -1981,21 +1993,30 @@ namespace dnn
 
 							// save the weights and definition
 							State.store(States::SaveWeights);
-							const auto fileName = PersistOptimizer ? (std::string("(") + StringToLower(std::string(magic_enum::enum_name<Datasets>(Dataset))) + std::string(")(") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(Optimizer))) + std::string(").bin")) : (std::string("(") + StringToLower(std::string(magic_enum::enum_name<Datasets>(Dataset))) + std::string(").bin"));
-							const auto dir = DataProv->StorageDirectory / std::string("definitions") / Name;
-							const auto statedir = DataProv->StorageDirectory / std::string("state");
-							std::filesystem::create_directories(dir);
-							std::filesystem::create_directories(statedir);
-							const auto epoch = std::string("(") + StringToLower(std::string(magic_enum::enum_name<Datasets>(Dataset))) + std::string(")(") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(Optimizer))) + std::string(")") + std::to_string(CurrentEpoch) + std::string("-") + std::to_string(CurrentCycle) + std::string("-") + std::to_string(TrainErrors) + std::string("-") + std::to_string(TestErrors);
-							const auto subdir = dir / epoch;
-							std::filesystem::current_path(dir);
-							std::filesystem::create_directories(subdir);
+							const auto epoch = 
+								std::string("(") + 
+								StringToLower(std::string(magic_enum::enum_name<Datasets>(Dataset))) + 
+								std::string(")(") + 
+								StringToLower(std::string(magic_enum::enum_name<Optimizers>(Optimizer))) + 
+								std::string(")") + 
+								std::to_string(CurrentEpoch) + 
+								std::string("-") + 
+								std::to_string(CurrentCycle) + 
+								std::string("-") + 
+								std::to_string(TrainErrors) + 
+								std::string("-") + 
+								std::to_string(TestErrors);
 
-							SaveWeights((subdir / fileName).string(), PersistOptimizer);
+							const auto dir = DataProv->StorageDirectory / std::string("definitions") / Name;
+							std::filesystem::create_directories(dir);
+							std::filesystem::current_path(dir);
+							const auto subdir = dir / epoch;
+							std::filesystem::create_directories(subdir);
+							SaveWeights((subdir / GetWeightsFileName(PersistOptimizer, Dataset, Optimizer)).string(), PersistOptimizer);
 							SaveDefinition((subdir / std::string("model.txt")).string());
 							SaveModel((subdir / std::string("model.bin")).string());
+							
 							State.store(States::NewEpoch);
-
 							const auto dur = timer.now() - timePointGlobal;
 							const auto [hrs, mins, secs, ms] = ChronoBurst(dur);
 							auto logInfo = LogRecord{};
@@ -2043,8 +2064,10 @@ namespace dnn
 							logInfo.W = CurrentTrainingRate.W;
 
 							TrainingLog.push_back(logInfo);
+
 							SaveLog((subdir / std::string("log.csv")).string());
-							SaveLog((statedir / (Name + std::string("-(") + std::string(magic_enum::enum_name<Datasets>(Dataset)) + std::string(").csv"))).string());
+							std::filesystem::create_directories(DataProv->StorageDirectory / std::string("state"));
+							SaveLog((DataProv->StorageDirectory / std::string("state") / GetLogFileName(Name, Dataset)).string());
 
 							NewEpoch(CurrentCycle, CurrentEpoch, TotalEpochs, static_cast<UInt>(CurrentTrainingRate.Optimizer), CurrentTrainingRate.Beta2, CurrentTrainingRate.Gamma, CurrentTrainingRate.Eps, CurrentTrainingRate.HorizontalFlip, CurrentTrainingRate.VerticalFlip, CurrentTrainingRate.InputDropout, CurrentTrainingRate.Cutout, CurrentTrainingRate.CutMix, CurrentTrainingRate.AutoAugment, CurrentTrainingRate.ColorCast, CurrentTrainingRate.ColorAngle, CurrentTrainingRate.Distortion, static_cast<UInt>(CurrentTrainingRate.Interpolation), CurrentTrainingRate.Scaling, CurrentTrainingRate.Rotation, CurrentTrainingRate.MaximumRate, CurrentTrainingRate.N, CurrentTrainingRate.D, CurrentTrainingRate.H, CurrentTrainingRate.W, CurrentTrainingRate.PadD, CurrentTrainingRate.PadH, CurrentTrainingRate.PadW, CurrentTrainingRate.Momentum, CurrentTrainingRate.L2Penalty, CurrentTrainingRate.Dropout, AvgTrainLoss, TrainErrorPercentage, Float(100) - TrainErrorPercentage, TrainErrors, AvgTestLoss, TestErrorPercentage, Float(100) - TestErrorPercentage, TestErrors, UInt(dur.count()));
 						}
@@ -2967,17 +2990,13 @@ namespace dnn
 			auto tmpLog = std::vector<LogRecord>();
 			auto record = std::string("");
 			auto counter = 0ull;
-			
-			//const auto newLocale = std::locale(std::locale(""), new no_separator());
-			auto loc = std::locale(std::locale::global(std::locale::classic()));
-
+			auto oldLocale = std::locale::global(std::locale(std::locale(""), new no_separator()));
 			const auto fileContents = ReadFileToString(fileName);
 			auto iss = std::istringstream(fileContents);
 			
 			while (std::getline(iss, record))
 			{
 				auto line = std::istringstream(record);
-				//line.imbue(newLocale);
 				auto idx = 0;
 				auto info = LogRecord{};
 				while (std::getline(line, record, delimiter))
@@ -3132,7 +3151,7 @@ namespace dnn
 						}
 						catch (std::exception&)
 						{
-							std::locale::global(loc);
+							std::locale::global(oldLocale);
 
 							return false;
 						}
@@ -3142,7 +3161,7 @@ namespace dnn
 						// check header is valid
 						if (headers.find(record) == headers.end())
 						{
-							std::locale::global(loc);
+							std::locale::global(oldLocale);
 
 							return false;
 						}
@@ -3160,7 +3179,8 @@ namespace dnn
 			tmpLog.shrink_to_fit();
 			TrainingLog = std::vector<LogRecord>(tmpLog);
 
-			std::locale::global(loc);
+			std::locale::global(oldLocale);
+
 			return true;
 		}
 
