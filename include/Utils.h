@@ -994,7 +994,16 @@ namespace
 		return ss.str();
 	}
 
-   	auto GetFileSize(const std::string& fileName)
+	// template<typename String>
+	auto ToStringLocale(const std::string& str, std::locale const& locale = std::locale())
+	{
+		auto ss = std::stringstream();
+		ss.imbue(locale);
+		ss << str;
+		return ss.str();
+	}
+
+	auto GetFileSize(const std::string& fileName)
 	{
 		auto file = std::ifstream(fileName, std::ifstream::in | std::ifstream::binary);
 

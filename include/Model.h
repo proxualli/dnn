@@ -2990,18 +2990,21 @@ namespace dnn
 			auto tmpLog = std::vector<LogRecord>();
 			auto record = std::string("");
 			auto counter = 0ull;
-			auto oldLocale = std::locale::global(std::locale(std::locale(""), new no_separator()));
+			auto loc = std::locale::classic(); // (std::locale(""), new no_separator());
+			//auto oldLocale = std::locale::global(loc);
 			const auto fileContents = ReadFileToString(fileName);
 			auto iss = std::istringstream(fileContents);
-			iss.imbue(std::locale(std::locale(""), new no_separator()));
+			//iss.imbue(std::locale(loc));
 			while (std::getline(iss, record))
 			{
 				auto line = std::istringstream(record);
-				line.imbue(std::locale(std::locale(""), new no_separator()));
+				//line.imbue(std::locale(loc));
 				auto idx = 0;
 				auto info = LogRecord{};
 				while (std::getline(line, record, delimiter))
 				{
+					record = ToStringLocale(record, loc);
+
 					if (counter > 0ull)
 					{
 						try
@@ -3152,7 +3155,7 @@ namespace dnn
 						}
 						catch (std::exception&)
 						{
-							std::locale::global(oldLocale);
+							//std::locale::global(oldLocale);
 
 							return false;
 						}
@@ -3162,7 +3165,7 @@ namespace dnn
 						// check header is valid
 						if (headers.find(record) == headers.end())
 						{
-							std::locale::global(oldLocale);
+							//std::locale::global(oldLocale);
 
 							return false;
 						}
@@ -3180,7 +3183,7 @@ namespace dnn
 			tmpLog.shrink_to_fit();
 			TrainingLog = std::vector<LogRecord>(tmpLog);
 
-			std::locale::global(oldLocale);
+			//std::locale::global(oldLocale);
 
 			return true;
 		}
