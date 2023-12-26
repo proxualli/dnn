@@ -480,8 +480,8 @@ namespace dnn
 		UInt CurrentEpoch;
 		UInt SampleIndex;
 		//UInt LogInterval;
-		UInt GoToEpoch;
-		UInt GoToCycle;
+		UInt GotoEpoch;
+		UInt GotoCycle;
 		UInt AdjustedTrainSamplesCount;
 		UInt AdjustedTestSamplesCount;
 		UInt TrainSkipCount;
@@ -620,7 +620,7 @@ namespace dnn
 			CurrentCycle(1),
 			SampleIndex(0),
 			//LogInterval(10000),
-			GoToEpoch(1),
+			GotoEpoch(1),
 			AdjustedTrainSamplesCount(0),
 			AdjustedTestSamplesCount(0),
 			TrainSkipCount(0),
@@ -967,7 +967,7 @@ namespace dnn
 				TrainingRates.clear();
 
 			TotalCycles = 1;
-			GoToEpoch = gotoEpoch;
+			GotoEpoch = gotoEpoch;
 			
 			const auto LR = rate.MaximumRate;
 			const auto Epochs = rate.Epochs;
@@ -1098,8 +1098,8 @@ namespace dnn
 				TrainingRates.clear();
 
 			TotalCycles = rate.Cycles;
-			GoToEpoch = gotoEpoch;
-			GoToCycle = gotoCycle;
+			GotoEpoch = gotoEpoch;
+			GotoCycle = gotoCycle;
 
 			const auto LR = rate.MaximumRate;
 			auto maxRate = rate.MaximumRate;
@@ -1630,14 +1630,14 @@ namespace dnn
 				TotalEpochs = 0;
 				for (const auto& rate : TrainingRates)
 					TotalEpochs += rate.Epochs;
-				TotalEpochs += GoToEpoch - 1;
+				TotalEpochs += GotoEpoch - 1;
 
 				auto useCycli = false;
 				for (const auto& rate : TrainingRates)
 					if (rate.Cycles != 1)
 						useCycli = true;
 
-				CurrentEpoch = GoToEpoch - 1;
+				CurrentEpoch = GotoEpoch - 1;
 				CurrentTrainingRate = TrainingRates[0];
 				Rate = CurrentTrainingRate.MaximumRate;
 				CurrentCycle = CurrentTrainingRate.Cycles;
@@ -1685,7 +1685,7 @@ namespace dnn
 
 				while (CurrentEpoch < TotalEpochs)
 				{
-					if (CurrentEpoch - (GoToEpoch - 1) == learningRateEpochs)
+					if (CurrentEpoch - (GotoEpoch - 1) == learningRateEpochs)
 					{
 						learningRateIndex++;
 						CurrentTrainingRate = TrainingRates[learningRateIndex];
@@ -3430,8 +3430,8 @@ namespace dnn
 		s.value8b(o.CurrentCycle);
 		s.value8b(o.CurrentEpoch);
 		s.value8b(o.SampleIndex);
-		s.value8b(o.GoToEpoch);
-		s.value8b(o.GoToCycle);
+		s.value8b(o.GotoEpoch);
+		s.value8b(o.GotoCycle);
 		s.value8b(o.AdjustedTrainSamplesCount);
 		s.value8b(o.AdjustedTestSamplesCount);
 		s.value8b(o.TrainSkipCount);
