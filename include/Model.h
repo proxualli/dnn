@@ -2993,10 +2993,11 @@ namespace dnn
 			auto oldLocale = std::locale::global(std::locale(std::locale(""), new no_separator()));
 			const auto fileContents = ReadFileToString(fileName);
 			auto iss = std::istringstream(fileContents);
-			
+			iss.imbue(std::locale(std::locale(""), new no_separator()));
 			while (std::getline(iss, record))
 			{
 				auto line = std::istringstream(record);
+				line.imbue(std::locale(std::locale(""), new no_separator()));
 				auto idx = 0;
 				auto info = LogRecord{};
 				while (std::getline(line, record, delimiter))
