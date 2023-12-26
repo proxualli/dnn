@@ -964,7 +964,7 @@ namespace dnn
 		void AddTrainingRate(const TrainingRate& rate, const bool clear, const UInt gotoEpoch, const UInt trainSamples)
 		{
 			if (clear)
-				TrainingRates.clear();
+				TrainingRates = std::vector<TrainingRate>();
 
 			TotalCycles = 1;
 			GotoEpoch = gotoEpoch;
@@ -1095,7 +1095,7 @@ namespace dnn
 		void AddTrainingRateSGDR(const TrainingRate& rate, const bool clear, const UInt gotoEpoch, const UInt gotoCycle, const UInt trainSamples)
 		{
 			if (clear)
-				TrainingRates.clear();
+				TrainingRates = std::vector<TrainingRate>();
 
 			TotalCycles = rate.Cycles;
 			GotoEpoch = gotoEpoch;
@@ -1108,7 +1108,7 @@ namespace dnn
 
 			for (auto c = 0ull; c < TotalCycles; c++)
 			{	
-				if (c >= gotoCycle)
+				if (c >= (gotoCycle-1))
 				{
 					const auto totalEpochs = rate.Epochs * (c > 0 ? (rate.EpochMultiplier != 1 ? c * rate.EpochMultiplier : 1) : 1);
 					for (auto i = 0ull; i < totalEpochs; i++)
@@ -2101,14 +2101,14 @@ namespace dnn
 				TotalEpochs = 0;
 				for (const auto& rate : TrainingRates)
 					TotalEpochs += rate.Epochs;
-				TotalEpochs += GoToEpoch - 1;
+				TotalEpochs += GotoEpoch - 1;
 
 				auto useCycli = false;
 				for (const auto& rate : TrainingRates)
 					if (rate.Cycles != 1)
 						useCycli = true;
 
-				CurrentEpoch = GoToEpoch - 1;
+				CurrentEpoch = GotoEpoch - 1;
 				CurrentTrainingRate = TrainingRates[0];
 				Rate = CurrentTrainingRate.MaximumRate;
 				CurrentCycle = CurrentTrainingRate.Cycles;
