@@ -321,7 +321,7 @@ int main(int argc, char* argv[])
                     if (dir_entry.is_directory())
                     {
                         const auto& entry = dir_entry.path().string();
-                        const auto& dirname = persistOptimizer ? (std::string("(") + StringToLower(std::string(magic_enum::enum_name<scripts::Datasets>(p.Dataset))) + std::string(")(") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(optimizer))) + std::string(")") + std::string(")") + std::to_string((gotoEpoch - 1)) + std::string("-") + std::to_string(gotoCycle) + std::string("-")) : (std::string("(") + StringToLower(std::string(magic_enum::enum_name<scripts::Datasets>(p.Dataset))) + std::string(")") + std::to_string((gotoEpoch - 1)) + std::string("-") + std::to_string(gotoCycle) + std::string("-"));
+                        const auto& dirname = persistOptimizer ? (std::string("(") + StringToLower(std::string(magic_enum::enum_name<scripts::Datasets>(p.Dataset))) + std::string(")(") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(optimizer))) + std::string(")") + std::to_string((gotoEpoch - 1)) + std::string("-") + std::to_string(gotoCycle) + std::string("-")) : (std::string("(") + StringToLower(std::string(magic_enum::enum_name<scripts::Datasets>(p.Dataset))) + std::string(")") + std::to_string((gotoEpoch - 1)) + std::string("-") + std::to_string(gotoCycle) + std::string("-"));
 #ifdef NDEBUG
                         std::cerr << entry << std::endl;
                         std::cerr << dirname << std::endl;
