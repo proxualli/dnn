@@ -322,7 +322,7 @@ int main(int argc, char* argv[])
                     {
                         const auto& entry = dir_entry.path().string();
                         const auto& dirname = persistOptimizer ? (std::string("(") + StringToLower(std::string(magic_enum::enum_name<scripts::Datasets>(p.Dataset))) + std::string(")(") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(optimizer))) + std::string(")") + std::to_string((gotoEpoch - 1)) + std::string("-") + std::to_string(gotoCycle) + std::string("-")) : (std::string("(") + StringToLower(std::string(magic_enum::enum_name<scripts::Datasets>(p.Dataset))) + std::string(")") + std::to_string((gotoEpoch - 1)) + std::string("-") + std::to_string(gotoCycle) + std::string("-"));
-#ifdef NDEBUG
+#ifndef NDEBUG
                         std::cerr << entry << std::endl;
                         std::cerr << dirname << std::endl;
 #endif
@@ -332,23 +332,23 @@ int main(int argc, char* argv[])
                                 {
                                     const auto& filename = subdir_entry.path().string();
                                     const auto& compare = persistOptimizer ? (std::string("(") + StringToLower(std::string(magic_enum::enum_name<scripts::Datasets>(p.Dataset))) + std::string(")(") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(optimizer))) + std::string(").bin")) : (std::string("(") + StringToLower(std::string(magic_enum::enum_name<scripts::Datasets>(p.Dataset))) + std::string(").bin"));
-#ifdef NDEBUG
+#ifndef NDEBUG
                                     std::cerr << filename << std::endl;
                                     std::cerr << compare << std::endl;
 #endif
                                     if (filename.find(compare) != std::string::npos)
                                     {
-#ifdef NDEBUG
+#ifndef NDEBUG
                                         std::cerr << std::string("Loading...") << std::endl;
 #endif
                                         if (DNNLoadWeights(filename, persistOptimizer) == 0)
-#ifdef NDEBUG
+#ifndef NDEBUG
                                             std::cerr << std::string("Loaded") << std::endl;
 #else
                                             ;
 #endif
                                         else
-#ifdef NDEBUG
+#ifndef NDEBUG
                                             std::cerr << std::string("Not loaded") << std::endl;
 #else
                                             ;
