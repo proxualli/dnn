@@ -184,7 +184,7 @@ extern "C" DNN_API bool DNNLoadModel(const std::string& fileName)
 	return false;
 }
 
-extern "C" DNN_API bool DNNSaveModel(const std::string & fileName)
+extern "C" DNN_API bool DNNSaveModel(const std::string& fileName)
 {
 	if (model)
 		return model->SaveModel(fileName);
@@ -203,7 +203,7 @@ extern "C" DNN_API bool DNNClearLog()
 	return false;
 }
 
-extern "C" DNN_API bool DNNLoadLog(const std::string & fileName)
+extern "C" DNN_API bool DNNLoadLog(const std::string& fileName)
 {
 	if (model)
 		return model->LoadLog(fileName);
@@ -211,7 +211,7 @@ extern "C" DNN_API bool DNNLoadLog(const std::string & fileName)
 	return false;
 }
 
-extern "C" DNN_API bool DNNSaveLog(const std::string & fileName)
+extern "C" DNN_API bool DNNSaveLog(const std::string& fileName)
 {
 	if (model)
 		return model->SaveLog(fileName);
@@ -365,10 +365,10 @@ extern "C" DNN_API void DNNAddTrainingRate(const TrainingRate& rate, const bool 
 		model->AddTrainingRate(rate, clear, gotoEpoch, trainSamples);
 }
 
-extern "C" DNN_API void DNNAddTrainingRateSGDR(const TrainingRate& rate, const bool clear, const UInt gotoEpoch, const UInt trainSamples)
+extern "C" DNN_API void DNNAddTrainingRateSGDR(const TrainingRate& rate, const bool clear, const UInt gotoEpoch, const UInt gotoCycle, const UInt trainSamples)
 {
 	if (model)
-		model->AddTrainingRateSGDR(rate, clear, gotoEpoch, trainSamples);
+		model->AddTrainingRateSGDR(rate, clear, gotoEpoch, gotoCycle, trainSamples);
 }
 
 extern "C" DNN_API void DNNClearTrainingStrategies()

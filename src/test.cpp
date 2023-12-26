@@ -35,7 +35,7 @@ DNN_API bool DNNBatchNormUsed();
 DNN_API void DNNResetWeights();
 DNN_API void DNNResetLayerWeights(const UInt layerIndex);
 DNN_API void DNNAddTrainingRate(const dnn::TrainingRate& rate, const bool clear, const UInt gotoEpoch, const UInt trainSamples);
-DNN_API void DNNAddTrainingRateSGDR(const dnn::TrainingRate& rate, const bool clear, const UInt gotoEpoch, const UInt trainSamples);
+DNN_API void DNNAddTrainingRateSGDR(const dnn::TrainingRate& rate, const bool clear, const UInt gotoEpoch, const UInt gotoCycle, const UInt trainSamples);
 DNN_API void DNNClearTrainingStrategies();
 DNN_API void DNNSetUseTrainingStrategy(const bool enable);
 DNN_API void DNNAddTrainingStrategy(const dnn::TrainingStrategy& strategy);
@@ -184,15 +184,29 @@ int main(int argc, char* argv[])
 #endif
 {
     auto gotoEpoch = 1ull;
+    auto gotoCycle = 1ull;
 
     try
     {
         if (argc == 2)
+        {
 #ifdef _WIN32
             gotoEpoch = static_cast<UInt>(_wtoll(argv[1]));
 #else
             gotoEpoch = static_cast<UInt>(atoll(argv[1]));
 #endif
+        }
+
+        if (argc == 3)
+        {
+#ifdef _WIN32
+            gotoEpoch = static_cast<UInt>(_wtoll(argv[1]));
+            gotoCycle = static_cast<UInt>(_wtoll(argv[2]));
+#else
+            gotoEpoch = static_cast<UInt>(atoll(argv[1]));
+            gotoCycle = static_cast<UInt>(_wtoll(argv[2]));
+#endif
+        }
     }
     catch (std::exception exception)
     {
@@ -293,7 +307,7 @@ int main(int argc, char* argv[])
                     if (dir_entry.is_directory())
                     {
                         const auto& entry = dir_entry.path().string();
-                        const auto& dirname = persistOptimizer ? (std::string("(") + StringToLower(std::string(magic_enum::enum_name<scripts::Datasets>(p.Dataset))) + std::string(")(") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(optimizer))) + std::string(")") + std::to_string((gotoEpoch - 1)) + std::string("-1-")) : (std::string("(") + StringToLower(std::string(magic_enum::enum_name<scripts::Datasets>(p.Dataset))) + std::string(")") + std::to_string((gotoEpoch - 1)) + std::string("-1-"));
+                        const auto& dirname = persistOptimizer ? (std::string("(") + StringToLower(std::string(magic_enum::enum_name<scripts::Datasets>(p.Dataset))) + std::string(")(") + StringToLower(std::string(magic_enum::enum_name<Optimizers>(optimizer))) + std::string(")") + std::string(")") + std::to_string((gotoEpoch - 1)) + std::string("-") + std::to_string(gotoCycle) + std::string("-")) : (std::string("(") + StringToLower(std::string(magic_enum::enum_name<scripts::Datasets>(p.Dataset))) + std::string(")") + std::to_string((gotoEpoch - 1)) + std::string("-") + std::to_string(gotoCycle) + std::string("-"));
 #ifndef NDEBUG
                         std::cerr << entry << std::endl;
                         std::cerr << dirname << std::endl;
@@ -333,7 +347,7 @@ int main(int argc, char* argv[])
             std::cout << std::string("Training ") << info->Name << std::string(" on ") << std::string(magic_enum::enum_name<Datasets>(info->Dataset)) << (std::string(" with ") + std::string(magic_enum::enum_name<Optimizers>(optimizer)) + std::string(" optimizer")) << std::endl << std::endl;
             std::cout.flush();
                         
-            DNNAddTrainingRateSGDR(rate, true, gotoEpoch, info->TrainSamplesCount);
+            DNNAddTrainingRateSGDR(rate, true, gotoEpoch, gotoCycle, info->TrainSamplesCount);
             DNNTraining();
             GetTrainingProgress(5, info->TrainSamplesCount, info->TestSamplesCount);
             

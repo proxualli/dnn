@@ -1076,7 +1076,7 @@ namespace dnn
 			}
 		}
 
-		void AddTrainingRateSGDR(const TrainingRate& rate, const bool clear, const UInt gotoEpoch, const UInt trainSamples)
+		void AddTrainingRateSGDR(const TrainingRate& rate, const bool clear, const UInt gotoEpoch, const UInt gotoCycle, const UInt trainSamples)
 		{
 			if (clear)
 				TrainingRates.clear();
@@ -1090,71 +1090,74 @@ namespace dnn
 			auto epoch = 0ull;
 
 			for (auto c = 0ull; c < TotalCycles; c++)
-			{
-				const auto totalEpochs = rate.Epochs * (c > 0 ? (rate.EpochMultiplier != 1 ? c * rate.EpochMultiplier : 1) : 1);
-				for (auto i = 0ull; i < totalEpochs; i++)
+			{	
+				if (c >= gotoCycle)
 				{
-					const auto newRate = (minRate + Float(0.5) * (maxRate - minRate) * (Float(1) + std::cos(Float(i) / Float(totalEpochs) * Float(3.1415926535897932384626433832))));
-					
-					epoch++;
-					
-					if (rate.Optimizer == Optimizers::AdaBoundW || rate.Optimizer == Optimizers::AdamW || rate.Optimizer == Optimizers::AmsBoundW || rate.Optimizer == Optimizers::SGDW)
+					const auto totalEpochs = rate.Epochs * (c > 0 ? (rate.EpochMultiplier != 1 ? c * rate.EpochMultiplier : 1) : 1);
+					for (auto i = 0ull; i < totalEpochs; i++)
 					{
-						const auto weightDecayMultiplier = newRate / LR;
-						const auto weightDecayNormalized = rate.L2Penalty / std::pow(Float(rate.N) / (Float(trainSamples) / rate.N) * totalEpochs, Float(0.5));
+						const auto newRate = (minRate + Float(0.5) * (maxRate - minRate) * (Float(1) + std::cos(Float(i) / Float(totalEpochs) * Float(3.1415926535897932384626433832))));
 
-						if (epoch >= gotoEpoch)
+						epoch++;
+
+						if (rate.Optimizer == Optimizers::AdaBoundW || rate.Optimizer == Optimizers::AdamW || rate.Optimizer == Optimizers::AmsBoundW || rate.Optimizer == Optimizers::SGDW)
 						{
-							if (UseTrainingStrategy && TrainingStrategies.size() > 0)
+							const auto weightDecayMultiplier = newRate / LR;
+							const auto weightDecayNormalized = rate.L2Penalty / std::pow(Float(rate.N) / (Float(trainSamples) / rate.N) * totalEpochs, Float(0.5));
+
+							if (epoch >= gotoEpoch)
 							{
-								TrainingRate tmpRate;
-
-								auto sum = Float(0);
-								for (const auto& strategy : TrainingStrategies)
+								if (UseTrainingStrategy && TrainingStrategies.size() > 0)
 								{
-									tmpRate = TrainingRate(rate.Optimizer, strategy.Momentum, strategy.Beta2, weightDecayMultiplier * weightDecayNormalized, strategy.Dropout, rate.Eps, strategy.N, strategy.D, strategy.H, strategy.W, strategy.PadD, strategy.PadH, strategy.PadW, c + 1, 1, rate.EpochMultiplier, newRate, minRate, rate.FinalRate / LR, strategy.Gamma, 1, Float(1), strategy.HorizontalFlip, strategy.VerticalFlip, strategy.InputDropout, strategy.Cutout, strategy.CutMix, strategy.AutoAugment, strategy.ColorCast, strategy.ColorAngle, strategy.Distortion, strategy.Interpolation, strategy.Scaling, strategy.Rotation);
+									TrainingRate tmpRate;
 
-									sum += strategy.Epochs * totalEpochs;
-									if (epoch <= sum)
-										break;
+									auto sum = Float(0);
+									for (const auto& strategy : TrainingStrategies)
+									{
+										tmpRate = TrainingRate(rate.Optimizer, strategy.Momentum, strategy.Beta2, weightDecayMultiplier * weightDecayNormalized, strategy.Dropout, rate.Eps, strategy.N, strategy.D, strategy.H, strategy.W, strategy.PadD, strategy.PadH, strategy.PadW, c + 1, 1, rate.EpochMultiplier, newRate, minRate, rate.FinalRate / LR, strategy.Gamma, 1, Float(1), strategy.HorizontalFlip, strategy.VerticalFlip, strategy.InputDropout, strategy.Cutout, strategy.CutMix, strategy.AutoAugment, strategy.ColorCast, strategy.ColorAngle, strategy.Distortion, strategy.Interpolation, strategy.Scaling, strategy.Rotation);
+
+										sum += strategy.Epochs * totalEpochs;
+										if (epoch <= sum)
+											break;
+									}
+
+									TrainingRates.push_back(tmpRate);
 								}
-
-								TrainingRates.push_back(tmpRate);
+								else
+									TrainingRates.push_back(TrainingRate(rate.Optimizer, rate.Momentum, rate.Beta2, weightDecayMultiplier * weightDecayNormalized, rate.Dropout, rate.Eps, rate.N, rate.D, rate.H, rate.W, rate.PadD, rate.PadH, rate.PadW, c + 1, 1, rate.EpochMultiplier, newRate, minRate, rate.FinalRate / LR, rate.Gamma, 1, Float(1), rate.HorizontalFlip, rate.VerticalFlip, rate.InputDropout, rate.Cutout, rate.CutMix, rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
 							}
-							else
-								TrainingRates.push_back(TrainingRate(rate.Optimizer, rate.Momentum, rate.Beta2, weightDecayMultiplier * weightDecayNormalized, rate.Dropout, rate.Eps, rate.N, rate.D, rate.H, rate.W, rate.PadD, rate.PadH, rate.PadW, c + 1, 1, rate.EpochMultiplier, newRate, minRate, rate.FinalRate / LR, rate.Gamma, 1, Float(1), rate.HorizontalFlip, rate.VerticalFlip, rate.InputDropout, rate.Cutout, rate.CutMix, rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
+						}
+						else
+						{
+							if (epoch >= gotoEpoch)
+							{
+								if (UseTrainingStrategy && TrainingStrategies.size() > 0)
+								{
+									TrainingRate tmpRate;
+
+									auto sum = Float(0);
+									for (const auto& strategy : TrainingStrategies)
+									{
+										tmpRate = TrainingRate(rate.Optimizer, strategy.Momentum, strategy.Beta2, strategy.L2Penalty, strategy.Dropout, rate.Eps, strategy.N, strategy.D, strategy.H, strategy.W, strategy.PadD, strategy.PadH, strategy.PadW, c + 1, 1, rate.EpochMultiplier, newRate, minRate, rate.FinalRate / LR, strategy.Gamma, 1, Float(1), strategy.HorizontalFlip, strategy.VerticalFlip, strategy.InputDropout, strategy.Cutout, strategy.CutMix, strategy.AutoAugment, strategy.ColorCast, strategy.ColorAngle, strategy.Distortion, strategy.Interpolation, strategy.Scaling, strategy.Rotation);
+
+										sum += strategy.Epochs * totalEpochs;
+										if (epoch <= sum)
+											break;
+									}
+
+									TrainingRates.push_back(tmpRate);
+								}
+								else
+									TrainingRates.push_back(TrainingRate(rate.Optimizer, rate.Momentum, rate.Beta2, rate.L2Penalty, rate.Dropout, rate.Eps, rate.N, rate.D, rate.H, rate.W, rate.PadD, rate.PadH, rate.PadW, c + 1, 1, rate.EpochMultiplier, newRate, minRate, rate.FinalRate / LR, rate.Gamma, 1, Float(1), rate.HorizontalFlip, rate.VerticalFlip, rate.InputDropout, rate.Cutout, rate.CutMix, rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
+							}
 						}
 					}
-					else
-					{
-						if (epoch >= gotoEpoch)
-						{
-							if (UseTrainingStrategy && TrainingStrategies.size() > 0)
-							{
-								TrainingRate tmpRate;
-								
-								auto sum = Float(0);
-								for (const auto& strategy : TrainingStrategies)
-								{
-									tmpRate = TrainingRate(rate.Optimizer, strategy.Momentum, strategy.Beta2, strategy.L2Penalty, strategy.Dropout, rate.Eps, strategy.N, strategy.D, strategy.H, strategy.W, strategy.PadD, strategy.PadH, strategy.PadW, c + 1, 1, rate.EpochMultiplier, newRate, minRate, rate.FinalRate / LR, strategy.Gamma, 1, Float(1), strategy.HorizontalFlip, strategy.VerticalFlip, strategy.InputDropout, strategy.Cutout, strategy.CutMix, strategy.AutoAugment, strategy.ColorCast, strategy.ColorAngle, strategy.Distortion, strategy.Interpolation, strategy.Scaling, strategy.Rotation);
-									
-									sum += strategy.Epochs * totalEpochs;
-									if (epoch <= sum)
-										break;
-								}
 
-								TrainingRates.push_back(tmpRate);
-							}
-							else
-								TrainingRates.push_back(TrainingRate(rate.Optimizer, rate.Momentum, rate.Beta2, rate.L2Penalty, rate.Dropout, rate.Eps, rate.N, rate.D, rate.H, rate.W, rate.PadD, rate.PadH, rate.PadW, c + 1, 1, rate.EpochMultiplier, newRate, minRate, rate.FinalRate / LR, rate.Gamma, 1, Float(1), rate.HorizontalFlip, rate.VerticalFlip, rate.InputDropout, rate.Cutout, rate.CutMix, rate.AutoAugment, rate.ColorCast, rate.ColorAngle, rate.Distortion, rate.Interpolation, rate.Scaling, rate.Rotation));
-						}
+					if (rate.DecayFactor != Float(1))
+					{
+						maxRate *= rate.DecayFactor;
+						minRate *= rate.DecayFactor;
 					}
-				}
-				
-				if (rate.DecayFactor != Float(1))
-				{
-					maxRate *= rate.DecayFactor;
-					minRate *= rate.DecayFactor;
 				}
 			}
 		}
@@ -3202,9 +3205,9 @@ namespace dnn
 				}
 			}
 
-			//#ifndef NDEBUG
+#ifndef NDEBUG
 			std::cerr << std::string("Model::LoadWeights(const std::string& fileName, const bool persistOptimizer = false)  -  ") << fileName << std::string(", ") << persistOptimizer << std::string("  -  Could not open the file") << std::endl;
-			//#endif
+#endif
 
 			return -1;
 		}
