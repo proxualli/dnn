@@ -696,8 +696,11 @@ namespace dnn
 			//dnnl::set_primitive_cache_capacity(1000);
 			//dnnl::set_default_fpmath_mode(dnnl::fpmath_mode::any);
 
-			const auto stateDir = DataProv->StorageDirectory / std::string("state");
-			LoadLog((stateDir / (Name + std::string("-(") + StringToLower(std::string(magic_enum::enum_name<Datasets>(Dataset))) + std::string(").csv"))).string());
+			if (DataProv != nullptr)
+			{
+				const auto stateDir = DataProv->StorageDirectory / std::string("state");
+				LoadLog((stateDir / (Name + std::string("-(") + StringToLower(std::string(magic_enum::enum_name<Datasets>(Dataset))) + std::string(").csv"))).string());
+			}
 		}
 
 		virtual ~Model() = default;
