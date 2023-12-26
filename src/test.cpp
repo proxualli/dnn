@@ -204,7 +204,7 @@ int main(int argc, char* argv[])
             gotoCycle = static_cast<UInt>(_wtoll(argv[2]));
 #else
             gotoEpoch = static_cast<UInt>(atoll(argv[1]));
-            gotoCycle = static_cast<UInt>(_wtoll(argv[2]));
+            gotoCycle = static_cast<UInt>(atoll(argv[2]));
 #endif
         }
     }
