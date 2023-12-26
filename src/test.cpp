@@ -247,11 +247,11 @@ int main(int argc, char* argv[])
        
     dnn::TrainingRate rate;
     rate.Optimizer = optimizer;
-    rate.Momentum = 0.9f;
-    rate.Beta2 = 0.999f;
-    rate.L2Penalty = 0.0005f;
-    rate.Dropout = 0.0f;
-    rate.Eps = 0.00001f,
+    rate.Momentum = Float(0.9);
+    rate.Beta2 = Float(0.999);
+    rate.L2Penalty = Float(0.0005);
+    rate.Dropout = Float(0.0);
+    rate.Eps = Float(0.00001),
     rate.N = 128;
     rate.D = 1;
     rate.H = 32;
@@ -262,22 +262,24 @@ int main(int argc, char* argv[])
     rate.Cycles = 1;
     rate.Epochs = 200;
     rate.EpochMultiplier = 1;
-    rate.MaximumRate = 0.05f;
-    rate.MinimumRate = 0.0001f;
-    rate.FinalRate = 0.1f;
-    rate.Gamma = 0.003f;
+    rate.MaximumRate = Float(0.05);
+    rate.MinimumRate = Float(0.0001);
+    rate.FinalRate = Float(0.1);
+    rate.Gamma = Float(0.003);
     rate.DecayAfterEpochs = 200;
-    rate.DecayFactor = 1.0f;
+    rate.DecayFactor = Float(1.0);
     rate.HorizontalFlip = true;
     rate.VerticalFlip = false;
-    rate.InputDropout = 0.0f;
-    rate.Cutout = 0.7f;
+    rate.InputDropout = Float(0.0);
+    rate.Cutout = Float(0.7);
     rate.CutMix = true;
-    rate.AutoAugment = 0.7f;
-    rate.Distortion = 0.7f;
+    rate.ColorAngle = 16;
+    rate.ColorCast = Float(0.7);
+    rate.AutoAugment = Float(0.7);
+    rate.Distortion = Float(0.7);
     rate.Interpolation = dnn::Interpolations::Cubic;
-    rate.Scaling = 10.0f;
-    rate.Rotation = 12.0f;
+    rate.Scaling = Float(10.0);
+    rate.Rotation = Float(12.0);
     
     DNNDataprovider(path);
     
