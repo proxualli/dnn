@@ -2990,12 +2990,8 @@ namespace dnn
 			auto tmpLog = std::vector<LogRecord>();
 			auto record = std::string("");
 			auto counter = 0ull;
-			//auto loc = std::locale(std::locale(""), new no_separator());
-			//auto loc = std::locale::global(std::locale::classic());
-			//auto loc = std::locale::global(std::locale(std::locale(""), new no_separator()));
 			const auto fileContents = ReadFileToString(fileName);
 			auto iss = std::istringstream(fileContents);
-			
 			while (std::getline(iss, record))
 			{
 				auto line = std::istringstream(record);
