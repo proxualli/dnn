@@ -2940,7 +2940,7 @@ namespace dnn
 			return false;
 		}
 
-		bool LoadLog(const std::string& fileName)
+		bool LoadLog(const std::string& fileName, const std::locale& loc = std::locale(std::locale(""), new no_separator()))
 		{
 			auto headers = std::set<std::string>();
 			headers.insert(std::string("Cycle"));
@@ -2990,7 +2990,8 @@ namespace dnn
 			auto tmpLog = std::vector<LogRecord>();
 			auto record = std::string("");
 			auto counter = 0ull;
-			auto loc = std::locale::global(std::locale::classic());
+			//auto loc = std::locale(std::locale(""), new no_separator());
+			//auto loc = std::locale::global(std::locale::classic());
 			//auto loc = std::locale::global(std::locale(std::locale(""), new no_separator()));
 			const auto fileContents = ReadFileToString(fileName);
 			auto iss = std::istringstream(fileContents);
@@ -3002,8 +3003,6 @@ namespace dnn
 				auto info = LogRecord{};
 				while (std::getline(line, record, delimiter))
 				{
-					//record = ToStringLocale(record, loc);
-
 					if (counter > 0ull)
 					{
 						try
@@ -3056,37 +3055,37 @@ namespace dnn
 							}
 							break;
 							case 13:	// Rate
-								info.Rate = std::stof(record);
+								info.Rate = StringToFloat(record, loc);
 								break;
 							case 14:	// Eps
-								info.Eps = std::stof(record);
+								info.Eps = StringToFloat(record, loc);
 								break;
 							case 15:	// Momentum
-								info.Momentum = std::stof(record);
+								info.Momentum = StringToFloat(record, loc);
 								break;
 							case 16:	// Beta2
-								info.Beta2 = std::stof(record);
+								info.Beta2 = StringToFloat(record, loc);
 								break;
 							case 17:	// Gamma
-								info.Gamma = std::stof(record);
+								info.Gamma = StringToFloat(record, loc);
 								break;
 							case 18:	// L2Penalty
-								info.L2Penalty = std::stof(record);
+								info.L2Penalty = StringToFloat(record, loc);
 								break;
 							case 19:	// Dropout
-								info.Dropout = std::stof(record);
+								info.Dropout = StringToFloat(record, loc);
 								break;
 							case 20:	// InputDropout
-								info.InputDropout = std::stof(record);
+								info.InputDropout = StringToFloat(record, loc);
 								break;
 							case 21:	// Cutout
-								info.Cutout = std::stof(record);
+								info.Cutout = StringToFloat(record, loc);
 								break;
 							case 22:	// CutMix
 								info.CutMix = StringToBool(record);
 								break;
 							case 23:	// AutoAugment
-								info.AutoAugment = std::stof(record);
+								info.AutoAugment = StringToFloat(record, loc);
 								break;
 							case 24:	// HorizontalFlip
 								info.HorizontalFlip = StringToBool(record);
@@ -3095,13 +3094,13 @@ namespace dnn
 								info.VerticalFlip = StringToBool(record);
 								break;
 							case 26:	// ColorCast
-								info.ColorCast = std::stof(record);
+								info.ColorCast = StringToFloat(record, loc);
 								break;
 							case 27:	// ColorAngle
 								info.ColorAngle = std::stoull(record);
 								break;
 							case 28:	// Distortion
-								info.Distortion = std::stof(record);
+								info.Distortion = StringToFloat(record, loc);
 								break;
 							case 29:	// Interpolation
 							{
@@ -3113,34 +3112,34 @@ namespace dnn
 							}
 							break;
 							case 30:	// Scaling
-								info.Scaling = std::stof(record);
+								info.Scaling = StringToFloat(record, loc);
 								break;
 							case 31:	// Rotation
-								info.Rotation = std::stof(record);
+								info.Rotation = StringToFloat(record, loc);
 								break;
 							case 32:	// AvgTrainLoss
-								info.AvgTrainLoss = std::stof(record);
+								info.AvgTrainLoss = StringToFloat(record, loc);
 								break;
 							case 33:	// TrainErrors
 								info.TrainErrors = std::stoull(record);
 								break;
 							case 34:	// TrainErrorPercentage
-								info.TrainErrorPercentage = std::stof(record);
+								info.TrainErrorPercentage = StringToFloat(record, loc);
 								break;
 							case 35:	// TrainAccuracy
-								info.TrainAccuracy = std::stof(record);
+								info.TrainAccuracy = StringToFloat(record, loc);
 								break;
 							case 36:	// AvgTestLoss
-								info.AvgTestLoss = std::stof(record);
+								info.AvgTestLoss = StringToFloat(record, loc);
 								break;
 							case 37:	// TestErrors
 								info.TestErrors = std::stoull(record);
 								break;
 							case 38:	// TestErrorPercentage
-								info.TestErrorPercentage = std::stof(record);
+								info.TestErrorPercentage = StringToFloat(record, loc);
 								break;
 							case 39:	// TestAccuracy
-								info.TestAccuracy = std::stof(record);
+								info.TestAccuracy = StringToFloat(record, loc);
 								break;
 							case 40:	// ElapsedMilliSeconds
 								info.ElapsedMilliSeconds = std::stoll(record);
@@ -3154,7 +3153,7 @@ namespace dnn
 						}
 						catch (std::exception&)
 						{
-							std::locale::global(loc);
+							//std::locale::global(loc);
 							return false;
 						}
 					}
@@ -3163,7 +3162,7 @@ namespace dnn
 						// check header is valid
 						if (headers.find(record) == headers.end())
 						{
-							std::locale::global(loc);
+							//std::locale::global(loc);
 							return false;
 						}
 					}
@@ -3180,7 +3179,7 @@ namespace dnn
 			tmpLog.shrink_to_fit();
 			TrainingLog = std::vector<LogRecord>(tmpLog);
 
-			std::locale::global(loc);
+			//std::locale::global(loc);
 			return true;
 		}
 

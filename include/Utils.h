@@ -994,12 +994,16 @@ namespace
 		return ss.str();
 	}
 
-	auto ToStringLocale(const std::string& str, std::locale const& locale = std::locale())
+	auto StringToFloat(const std::string& str, const std::locale& locale = std::locale())
 	{
-		auto ss = std::stringstream();
+		auto value = Float(0);
+
+		auto ss = std::stringstream(str);
+
 		ss.imbue(locale);
-		ss << str;
-		return ss.str();
+		ss >> value;
+
+		return value;
 	}
 
 	auto GetFileSize(const std::string& fileName)
