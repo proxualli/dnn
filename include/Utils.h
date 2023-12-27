@@ -994,7 +994,6 @@ namespace
 		return ss.str();
 	}
 
-	// template<typename String>
 	auto ToStringLocale(const std::string& str, std::locale const& locale = std::locale())
 	{
 		auto ss = std::stringstream();
