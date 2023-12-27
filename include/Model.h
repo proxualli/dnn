@@ -2940,7 +2940,7 @@ namespace dnn
 			return false;
 		}
 
-		bool LoadLog(const std::string& fileName, const std::locale& loc = std::locale(std::locale(""), new no_separator()))
+		bool LoadLog(const std::string& fileName)
 		{
 			auto headers = std::set<std::string>();
 			headers.insert(std::string("Cycle"));
@@ -3051,37 +3051,37 @@ namespace dnn
 							}
 							break;
 							case 13:	// Rate
-								info.Rate = StringToFloat(record, loc);
+								info.Rate = StringToFloat(record);
 								break;
 							case 14:	// Eps
-								info.Eps = StringToFloat(record, loc);
+								info.Eps = StringToFloat(record);
 								break;
 							case 15:	// Momentum
-								info.Momentum = StringToFloat(record, loc);
+								info.Momentum = StringToFloat(record);
 								break;
 							case 16:	// Beta2
-								info.Beta2 = StringToFloat(record, loc);
+								info.Beta2 = StringToFloat(record);
 								break;
 							case 17:	// Gamma
-								info.Gamma = StringToFloat(record, loc);
+								info.Gamma = StringToFloat(record);
 								break;
 							case 18:	// L2Penalty
-								info.L2Penalty = StringToFloat(record, loc);
+								info.L2Penalty = StringToFloat(record);
 								break;
 							case 19:	// Dropout
-								info.Dropout = StringToFloat(record, loc);
+								info.Dropout = StringToFloat(record);
 								break;
 							case 20:	// InputDropout
-								info.InputDropout = StringToFloat(record, loc);
+								info.InputDropout = StringToFloat(record);
 								break;
 							case 21:	// Cutout
-								info.Cutout = StringToFloat(record, loc);
+								info.Cutout = StringToFloat(record);
 								break;
 							case 22:	// CutMix
 								info.CutMix = StringToBool(record);
 								break;
 							case 23:	// AutoAugment
-								info.AutoAugment = StringToFloat(record, loc);
+								info.AutoAugment = StringToFloat(record);
 								break;
 							case 24:	// HorizontalFlip
 								info.HorizontalFlip = StringToBool(record);
@@ -3090,13 +3090,13 @@ namespace dnn
 								info.VerticalFlip = StringToBool(record);
 								break;
 							case 26:	// ColorCast
-								info.ColorCast = StringToFloat(record, loc);
+								info.ColorCast = StringToFloat(record);
 								break;
 							case 27:	// ColorAngle
 								info.ColorAngle = std::stoull(record);
 								break;
 							case 28:	// Distortion
-								info.Distortion = StringToFloat(record, loc);
+								info.Distortion = StringToFloat(record);
 								break;
 							case 29:	// Interpolation
 							{
@@ -3108,34 +3108,34 @@ namespace dnn
 							}
 							break;
 							case 30:	// Scaling
-								info.Scaling = StringToFloat(record, loc);
+								info.Scaling = StringToFloat(record);
 								break;
 							case 31:	// Rotation
-								info.Rotation = StringToFloat(record, loc);
+								info.Rotation = StringToFloat(record);
 								break;
 							case 32:	// AvgTrainLoss
-								info.AvgTrainLoss = StringToFloat(record, loc);
+								info.AvgTrainLoss = StringToFloat(record);
 								break;
 							case 33:	// TrainErrors
 								info.TrainErrors = std::stoull(record);
 								break;
 							case 34:	// TrainErrorPercentage
-								info.TrainErrorPercentage = StringToFloat(record, loc);
+								info.TrainErrorPercentage = StringToFloat(record);
 								break;
 							case 35:	// TrainAccuracy
-								info.TrainAccuracy = StringToFloat(record, loc);
+								info.TrainAccuracy = StringToFloat(record);
 								break;
 							case 36:	// AvgTestLoss
-								info.AvgTestLoss = StringToFloat(record, loc);
+								info.AvgTestLoss = StringToFloat(record);
 								break;
 							case 37:	// TestErrors
 								info.TestErrors = std::stoull(record);
 								break;
 							case 38:	// TestErrorPercentage
-								info.TestErrorPercentage = StringToFloat(record, loc);
+								info.TestErrorPercentage = StringToFloat(record);
 								break;
 							case 39:	// TestAccuracy
-								info.TestAccuracy = StringToFloat(record, loc);
+								info.TestAccuracy = StringToFloat(record);
 								break;
 							case 40:	// ElapsedMilliSeconds
 								info.ElapsedMilliSeconds = std::stoll(record);
@@ -3149,7 +3149,6 @@ namespace dnn
 						}
 						catch (std::exception&)
 						{
-							//std::locale::global(loc);
 							return false;
 						}
 					}
@@ -3158,7 +3157,6 @@ namespace dnn
 						// check header is valid
 						if (headers.find(record) == headers.end())
 						{
-							//std::locale::global(loc);
 							return false;
 						}
 					}
@@ -3175,7 +3173,6 @@ namespace dnn
 			tmpLog.shrink_to_fit();
 			TrainingLog = std::vector<LogRecord>(tmpLog);
 
-			//std::locale::global(loc);
 			return true;
 		}
 

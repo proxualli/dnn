@@ -994,15 +994,13 @@ namespace
 		return ss.str();
 	}
 
-	auto StringToFloat(const std::string& str, const std::locale& locale = std::locale())
+	auto StringToFloat(const std::string& str, const std::locale& locale = std::locale(std::locale(""), new no_separator()))
 	{
 		auto value = Float(0);
-
 		auto ss = std::stringstream(str);
-
 		ss.imbue(locale);
-		ss >> value;
-
+		ss.precision(std::streamsize(8));
+		ss >> std::defaultfloat >> value;
 		return value;
 	}
 
