@@ -183,8 +183,8 @@ namespace dnn
 
 				if (Scaling)
 				{
-					auto memScale = dnnl::memory(*WeightsMemDesc, Device.engine, Weights.data());
-					auto memShift = dnnl::memory(*WeightsMemDesc, Device.engine, Biases.data());
+					const auto& memScale = dnnl::memory(*WeightsMemDesc, Device.engine, Weights.data());
+					const auto& memShift = dnnl::memory(*WeightsMemDesc, Device.engine, Biases.data());
 
 #ifdef DNN_CACHE_PRIMITIVES
 					fwd->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_MEAN, memMean }, { DNNL_ARG_VARIANCE, memVariance }, { DNNL_ARG_SCALE, memScale }, { DNNL_ARG_SHIFT, memShift }, { DNNL_ARG_DST, dstMem } });
