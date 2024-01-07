@@ -444,11 +444,11 @@ namespace dnn
 								goto FAIL;
 							}
 
-							if (inputs[0]->C != inputs[1]->C)
+							/*if (inputs[0]->C != inputs[1]->C)
 							{
 								msg = CheckMsg(line, col, std::string("Layer ") + name + std::string(" has uneven channels in the input ") + inputs[1]->Name + std::string(", must have ") + std::to_string(inputs[0]->C) + std::string(" channels."));
 								goto FAIL;
-							}
+							}*/
 						}
 						break;
 							
@@ -587,6 +587,12 @@ namespace dnn
 						case LayerTypes::PRelu:
 							model->Layers.push_back(std::make_unique<PRelu>(model->Device, model->Format, name, inputs, alpha));
 							model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsFillerMode, weightsGain, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesFillerMode, biasesGain, biasesScale, biasesLRM, biasesWDM);
+							break;
+						case LayerTypes::ReductionAvg:
+							model->Layers.push_back(std::make_unique<ReductionAvg>(model->Device, model->Format, name, inputs));
+							break;
+						case LayerTypes::ReductionMax:
+							model->Layers.push_back(std::make_unique<ReductionMax>(model->Device, model->Format, name, inputs));
 							break;
 						case LayerTypes::Resampling:
 							model->Layers.push_back(std::make_unique<Resampling>(model->Device, model->Format, name, inputs, algorithm, factorH, factorW));

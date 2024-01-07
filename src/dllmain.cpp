@@ -772,6 +772,16 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, LayerInfo* info)
 		}
 		break;
 
+		case LayerTypes::ReductionAvg:
+		{
+		}
+		break;
+
+		case LayerTypes::ReductionMax:
+		{
+		}
+		break;
+
 		case LayerTypes::Resampling:
 		{
 			auto resampling = dynamic_cast<Resampling*>(model->Layers[layerIndex].get());

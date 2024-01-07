@@ -293,7 +293,7 @@ namespace dnn
 #endif
 											}
 										}
-										inputIndex = (((Inputs[inputLayer]->PaddedC - VectorSize) - channelOffset) * HW()) + inputSampleOffset;
+										inputIndex = (((Inputs[inputLayer]->PaddedC - VectorSize) + channelOffset) * HW()) + inputSampleOffset;
 										outputIndex = ((Inputs[inputLayer]->PaddedC - VectorSize) * HW()) + outputSampleOffset;
 										const auto len = VectorSize - (Inputs[inputLayer]->PaddedC - Inputs[inputLayer]->C);
 										auto hwIn = 0ull;
@@ -545,7 +545,7 @@ namespace dnn
 										inputD1.store_a(&Inputs[inputLayer]->NeuronsD1[hw + inputIndex]);
 									}
 								}
-								inputIndex = (((Inputs[inputLayer]->PaddedC - VectorSize) - channelOffset) * HW()) + inputSampleOffset;
+								inputIndex = (((Inputs[inputLayer]->PaddedC - VectorSize) + channelOffset) * HW()) + inputSampleOffset;
 								outputIndex = ((Inputs[inputLayer]->PaddedC - VectorSize) * HW()) + outputSampleOffset;
 								const auto len = VectorSize - (Inputs[inputLayer]->PaddedC - Inputs[inputLayer]->C);
 								auto hwIn = 0ull;

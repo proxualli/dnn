@@ -180,10 +180,12 @@ namespace dnn
 		Multiply = 30,
 		PartialDepthwiseConvolution = 31,
 		PRelu = 32,
-		Resampling = 33,
-		Shuffle = 34,
-		Softmax = 35,
-		Substract = 36
+		ReductionAvg = 33,
+		ReductionMax = 34,
+		Resampling = 35,
+		Shuffle = 36,
+		Softmax = 37,
+		Substract = 38
 	};
 	
 	enum class Fillers
@@ -299,6 +301,21 @@ namespace dnn
 			}
 		}
 
+		auto EqualChannels(const std::vector<Layer*>& inputs) const
+		{
+			return inputs[0]->C == inputs[1]->C;
+		}
+
+		auto MostChannels(const std::vector<Layer*>& inputs) const
+		{
+			return inputs[0]->C >= inputs[1]->C ? Byte(0) : Byte(1);
+		}
+
+		auto LeastChannels(const std::vector<Layer*>& inputs) const
+		{
+			return inputs[0]->C <= inputs[1]->C ? Byte(0) : Byte(1);
+		}
+
 		auto EqualDimensions(const std::vector<Layer*>& inputs) const
 		{
 			return (inputs[0]->H == inputs[1]->H) && (inputs[0]->W == inputs[1]->W);
@@ -306,12 +323,18 @@ namespace dnn
 
 		auto GetFirst(const std::vector<Layer*>& inputs) const
 		{
-			return EqualDimensions(inputs) ? Byte(0) : ((inputs[0]->H == 1 && inputs[0]->W == 1) ? Byte(1) : Byte(0));
+			if(EqualChannels(inputs))
+				return EqualDimensions(inputs) ? Byte(0) : ((inputs[0]->H == 1 && inputs[0]->W == 1) ? Byte(1) : Byte(0));
+			else
+				return MostChannels(inputs);
 		}
 
 		auto GetSecond(const std::vector<Layer*>& inputs) const
 		{
-			return EqualDimensions(inputs) ? Byte(1) : ((inputs[0]->H == 1 && inputs[0]->W == 1) ? Byte(0) : Byte(1));
+			if(EqualChannels(inputs))
+				return EqualDimensions(inputs) ? Byte(1) : ((inputs[0]->H == 1 && inputs[0]->W == 1) ? Byte(0) : Byte(1));
+			else
+				return LeastChannels(inputs);
 		}
 
 	private:
