@@ -106,15 +106,17 @@ namespace dnn
 				{
 					for_i(batchSize, threads, [=](UInt n)
 					{
-						VecFloat InD1, OutD1;
+						VecFloat In, Out, InD1, OutD1;
 						for (auto c = 0ull; c < PaddedC; c += VectorSize)
 						{
 							const auto inputOffset = c * HW();
 							for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
 							{
+								In.load_a(&InputLayer->Neurons[hw + inputOffset]);
 								InD1.load_a(&InputLayer->NeuronsD1[hw + inputOffset]);
+								Out.load_a(&Neurons[hw]);
 								OutD1.load_a(&NeuronsD1[hw]);
-								InD1 += OutD1;
+								InD1 += select(In == Out, OutD1, Float(0));
 								InD1.store_a(&InputLayer->NeuronsD1[hw + inputOffset]);
 							}
 						}
@@ -126,14 +128,10 @@ namespace dnn
 					{
 						const auto start = n * CDHW();
 						const auto inStart = n * InputLayer->CDHW();;
-
 						for (auto c = 0ull; c < C; c++)
 							PRAGMA_OMP_SIMD()
 							for (auto hw = 0; hw < HW(); hw++)
-							{
-								InputLayer->NeuronsD1[(c * HW()) + hw] += NeuronsD1[hw];
-
-							}
+								InputLayer->NeuronsD1[(c * HW()) + hw] += (InputLayer->Neurons[(c * HW()) + hw] == Neurons[hw]) ? NeuronsD1[hw] : Float(0);
 					});
 				}
 			}
@@ -144,16 +142,18 @@ namespace dnn
 				{
 					for_i(batchSize, threads, [=](UInt n)
 					{
-						VecFloat InD1, OutD1;
+						VecFloat In, Out, InD1, OutD1;
 						for (auto c = 0ull; c < PaddedC; c += VectorSize)
 						{
 							const auto inputOffset = (n * InputLayer->PaddedCDHW()) + (c * HW());
 							const auto outputOffset = n * PaddedCDHW();
 							for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
 							{
+								In.load_a(&InputLayer->Neurons[hw + inputOffset]);
 								InD1.load_a(&InputLayer->NeuronsD1[hw + inputOffset]);
+								Out.load_a(&Neurons[hw + outputOffset]);
 								OutD1.load_a(&NeuronsD1[hw + outputOffset]);
-								InD1 += OutD1;
+								InD1 += select(In == Out, OutD1, Float(0));
 								InD1.store_a(&InputLayer->NeuronsD1[hw + inputOffset]);
 							}
 						}
@@ -165,14 +165,10 @@ namespace dnn
 					{
 						const auto start = n * CDHW();
 						const auto inStart = n * InputLayer->CDHW();;
-
 						for (auto c = 0ull; c < C; c++)
 							PRAGMA_OMP_SIMD()
 							for (auto hw = 0; hw < HW(); hw++)
-							{
-								InputLayer->NeuronsD1[inStart + (c * HW()) + hw] += NeuronsD1[start + hw];
-
-							}
+								InputLayer->NeuronsD1[inStart + (c * HW()) + hw] += (InputLayer->Neurons[inStart + (c * HW()) + hw] == Neurons[start + hw]) ? NeuronsD1[start + hw] : Float(0);
 					});
 				}
 #ifdef DNN_STOCHASTIC
