@@ -127,7 +127,7 @@ namespace dnn
 					for_i(batchSize, threads, [=](UInt n)
 					{
 						const auto start = n * CDHW();
-						const auto inStart = n * InputLayer->CDHW();;
+						const auto inStart = n * InputLayer->CDHW();
 						for (auto c = 0ull; c < C; c++)
 							PRAGMA_OMP_SIMD()
 							for (auto hw = 0; hw < HW(); hw++)
@@ -164,7 +164,7 @@ namespace dnn
 					for_i(batchSize, threads, [=](UInt n)
 					{
 						const auto start = n * CDHW();
-						const auto inStart = n * InputLayer->CDHW();;
+						const auto inStart = n * InputLayer->CDHW();
 						for (auto c = 0ull; c < C; c++)
 							PRAGMA_OMP_SIMD()
 							for (auto hw = 0; hw < HW(); hw++)
