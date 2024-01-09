@@ -34,6 +34,8 @@
 #include "PRelu.h"
 #include "ReductionAvg.h"
 #include "ReductionMax.h"
+#include "ReductionMin.h"
+#include "ReductionSum.h"
 #include "Shuffle.h"
 #include "Softmax.h"
 #include "Substract.h"

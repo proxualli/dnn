@@ -594,6 +594,12 @@ namespace dnn
 						case LayerTypes::ReductionMax:
 							model->Layers.push_back(std::make_unique<ReductionMax>(model->Device, model->Format, name, inputs));
 							break;
+						case LayerTypes::ReductionMin:
+							model->Layers.push_back(std::make_unique<ReductionMin>(model->Device, model->Format, name, inputs));
+							break;
+						case LayerTypes::ReductionSum:
+							model->Layers.push_back(std::make_unique<ReductionSum>(model->Device, model->Format, name, inputs));
+							break;
 						case LayerTypes::Resampling:
 							model->Layers.push_back(std::make_unique<Resampling>(model->Device, model->Format, name, inputs, algorithm, factorH, factorW));
 							break;

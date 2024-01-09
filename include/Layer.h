@@ -182,10 +182,12 @@ namespace dnn
 		PRelu = 32,
 		ReductionAvg = 33,
 		ReductionMax = 34,
-		Resampling = 35,
-		Shuffle = 36,
-		Softmax = 37,
-		Substract = 38
+		ReductionMin = 35,
+		ReductionSum = 36,
+		Resampling = 37,
+		Shuffle = 38,
+		Softmax = 39,
+		Substract = 40
 	};
 	
 	enum class Fillers
