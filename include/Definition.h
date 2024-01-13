@@ -187,6 +187,9 @@ namespace dnn
 		auto strideW = UInt(1);
 		auto depthDrop = Float(0);
 		auto fixedDepthDrop = false;
+		auto reduceOp = ReduceOperations::Avg;
+		auto reduceP = Float(0);
+		auto reduceEps = Float(0);
 
 		auto iss = std::istringstream(definition);
 		auto strLine = std::string(""), modelName = std::string(""), layerName = std::string(""), params = std::string("");
@@ -588,17 +591,8 @@ namespace dnn
 							model->Layers.push_back(std::make_unique<PRelu>(model->Device, model->Format, name, inputs, alpha));
 							model->Layers[model->Layers.size() - 1]->SetParameters(useDefaultParams, weightsFiller, weightsFillerMode, weightsGain, weightsScale, weightsLRM, weightsWDM, biasesFiller, biasesFillerMode, biasesGain, biasesScale, biasesLRM, biasesWDM);
 							break;
-						case LayerTypes::ReductionAvg:
-							model->Layers.push_back(std::make_unique<ReductionAvg>(model->Device, model->Format, name, inputs));
-							break;
-						case LayerTypes::ReductionMax:
-							model->Layers.push_back(std::make_unique<ReductionMax>(model->Device, model->Format, name, inputs));
-							break;
-						case LayerTypes::ReductionMin:
-							model->Layers.push_back(std::make_unique<ReductionMin>(model->Device, model->Format, name, inputs));
-							break;
-						case LayerTypes::ReductionSum:
-							model->Layers.push_back(std::make_unique<ReductionSum>(model->Device, model->Format, name, inputs));
+						case LayerTypes::Reduction:
+							model->Layers.push_back(std::make_unique<Reduction>(model->Device, model->Format, name, inputs, reduceOp, reduceP, reduceEps));
 							break;
 						case LayerTypes::Resampling:
 							model->Layers.push_back(std::make_unique<Resampling>(model->Device, model->Format, name, inputs, algorithm, factorH, factorW));
@@ -2556,6 +2550,42 @@ namespace dnn
 				padD = 0;
 				padH = values[0];
 				padW = values[1];
+			}
+			else if (strLine.rfind("Operation=") == 0)
+			{
+				if (isModel)
+				{
+					msg = CheckMsg(line, col, std::string("Operation cannot be specified in a model."));
+					goto FAIL;
+				}
+
+				if (layerType != LayerTypes::Reduction)
+				{
+					msg = CheckMsg(line, col, std::string("Operation cannot be specified in a ") + std::string(magic_enum::enum_name<LayerTypes>(layerType)) + std::string(" layer."));
+					goto FAIL;
+				}
+
+				params = strLine.erase(0, 10);
+
+				auto ok = false;
+				auto ops = magic_enum::enum_names<ReduceOperations>();
+				for (auto op : ops)
+					if (params == std::string(op))
+						ok = true;
+				if (!ok)
+				{
+					msg = CheckMsg(line, col, std::string("Operation is not recognized."));
+					goto FAIL;
+				}
+
+				auto op = magic_enum::enum_cast<ReduceOperations>(params);
+				if (op.has_value())
+					reduceOp = op.value();
+				else
+				{
+					msg = CheckMsg(line, col, std::string("Operation is not recognized."));
+					goto FAIL;
+				}
 			}
 			else
 			{

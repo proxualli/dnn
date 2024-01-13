@@ -198,16 +198,14 @@ namespace dnn
 									inputIndex = (((Inputs[inputLayer]->PaddedC - VectorSize) - channelOffset) * HW());
 									outputIndex = ((Inputs[inputLayer]->PaddedC - VectorSize) * HW());
 									const auto len = VectorSize - (Inputs[inputLayer]->PaddedC - Inputs[inputLayer]->C);
-									auto hwIn = 0ull;
 									for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
 									{
-										In.load_a(&Inputs[inputLayer]->Neurons[hwIn + inputIndex]);
+										In.load_a(&Inputs[inputLayer]->Neurons[hw + inputIndex]);
 										In.cutoff(static_cast<int>(len));
 										In.store_a(&Neurons[hw + outputIndex]);
 #ifndef DNN_LEAN
 										VecZero.store_nt(&NeuronsD1[hw + outputIndex]);
 #endif
-										hwIn += len;
 									}
 									channelOffset += Inputs[inputLayer]->C;
 								}
@@ -293,19 +291,18 @@ namespace dnn
 #endif
 											}
 										}
+										
 										inputIndex = (((Inputs[inputLayer]->PaddedC - VectorSize) + channelOffset) * HW()) + inputSampleOffset;
 										outputIndex = ((Inputs[inputLayer]->PaddedC - VectorSize) * HW()) + outputSampleOffset;
 										const auto len = VectorSize - (Inputs[inputLayer]->PaddedC - Inputs[inputLayer]->C);
-										auto hwIn = 0ull;
 										for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
 										{
-											In.load_a(&Inputs[inputLayer]->Neurons[hwIn + inputIndex]);
+											In.load_a(&Inputs[inputLayer]->Neurons[hw + inputIndex]);
 											In.cutoff(static_cast<int>(len));
 											In.store_a(&Neurons[hw + outputIndex]);
 #ifndef DNN_LEAN
 											VecZero.store_nt(&NeuronsD1[hw + outputIndex]);
 #endif
-											hwIn += len;
 										}
 										channelOffset += Inputs[inputLayer]->C;
 									}
@@ -458,15 +455,13 @@ namespace dnn
 							inputIndex = (((Inputs[inputLayer]->PaddedC - VectorSize) - channelOffset) * HW());
 							outputIndex = ((Inputs[inputLayer]->PaddedC - VectorSize) * HW());
 							const auto len = VectorSize - (Inputs[inputLayer]->PaddedC - Inputs[inputLayer]->C);
-							auto hwIn = 0ull;
 							for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
 							{
-								inputD1.load_a(&Inputs[inputLayer]->NeuronsD1[hwIn + inputIndex]);
+								inputD1.load_a(&Inputs[inputLayer]->NeuronsD1[hw + inputIndex]);
 								D1.load_a(&NeuronsD1[hw + outputIndex]);
 								inputD1 += D1;
 								inputD1.cutoff(static_cast<int>(len));
-								inputD1.store_a(&Inputs[inputLayer]->NeuronsD1[hwIn + inputIndex]);
-								hwIn += len;
+								inputD1.store_a(&Inputs[inputLayer]->NeuronsD1[hw + inputIndex]);
 							}
 							channelOffset += Inputs[inputLayer]->C;
 						}
@@ -548,15 +543,13 @@ namespace dnn
 								inputIndex = (((Inputs[inputLayer]->PaddedC - VectorSize) + channelOffset) * HW()) + inputSampleOffset;
 								outputIndex = ((Inputs[inputLayer]->PaddedC - VectorSize) * HW()) + outputSampleOffset;
 								const auto len = VectorSize - (Inputs[inputLayer]->PaddedC - Inputs[inputLayer]->C);
-								auto hwIn = 0ull;
 								for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
 								{
-									inputD1.load_a(&Inputs[inputLayer]->NeuronsD1[hwIn + inputIndex]);
+									inputD1.load_a(&Inputs[inputLayer]->NeuronsD1[hw + inputIndex]);
 									D1.load_a(&NeuronsD1[hw + outputIndex]);
 									inputD1 += D1;
 									inputD1.cutoff(static_cast<int>(len));
-									inputD1.store_a(&Inputs[inputLayer]->NeuronsD1[hwIn + inputIndex]);
-									hwIn += len;
+									inputD1.store_a(&Inputs[inputLayer]->NeuronsD1[hw + inputIndex]);
 								}
 								channelOffset += Inputs[inputLayer]->C;
 							}

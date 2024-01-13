@@ -772,22 +772,7 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, LayerInfo* info)
 		}
 		break;
 
-		case LayerTypes::ReductionAvg:
-		{
-		}
-		break;
-
-		case LayerTypes::ReductionMax:
-		{
-		}
-		break;
-
-		case LayerTypes::ReductionMin:
-		{
-		}
-		break;
-
-		case LayerTypes::ReductionSum:
+		case LayerTypes::Reduction:
 		{
 		}
 		break;
