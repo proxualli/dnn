@@ -767,7 +767,7 @@ namespace scripts
                     Concat(1, In(groupSP + "RAVG", 1) + "," + In(groupSP + "RMAX", 1), groupSP) +
                     Convolution(1, In(groupSP + "CC", 1), 1, 7, 7, 1, 1, 3, 3, false, groupSP) +
                     BatchNormActivation(1, groupSP + In("C", 1), to_string(scripts::Activations::HardSigmoid), groupSP) +
-                    Multiply(In("B", C + 3) + "," + groupSP + In("B", 1), groupSP) +
+                    Multiply(groupCH + "CM," + groupSP + In("B", 1), groupSP) +
                     Concat(A + 1, In("LCS", A) + "," + groupSP + "CM") :
                     Concat(A + 1, In("LCS", A) + "," + In("B", C + 3));
 
@@ -817,7 +817,7 @@ namespace scripts
                     Concat(1, In(groupSP + "RAVG", 1) + "," + In(groupSP + "RMAX", 1), groupSP) +
                     Convolution(1, In(groupSP + "CC", 1), 1, 7, 7, 1, 1, 3, 3, false, groupSP) +
                     BatchNormActivation(1, groupSP + In("C", 1), to_string(scripts::Activations::HardSigmoid), groupSP) +
-                    Multiply(In("B", C + 3) + "," + groupSP + In("B", 1), groupSP) +
+                    Multiply(groupCH + "CM," + groupSP + In("B", 1), groupSP) +
                     Concat(A + 1, In("LCS", A) + "," + groupSP + "CM") :
                     Concat(A + 1, In("LCS", A) + "," + In("B", C + 3));
 
