@@ -109,8 +109,10 @@ namespace dnn
 #endif
 			Device.stream.wait();
 
+#ifndef DNN_LEAN
 			if (training)
 				InitArray<Float>(NeuronsD1.data(), batchSize * PaddedCDHW());
+#endif
 		}
 
 		void BackwardPropAvg(const UInt batchSize)
