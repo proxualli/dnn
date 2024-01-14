@@ -555,6 +555,29 @@ namespace scripts
                 "Type=GlobalAvgPooling" + nwl +
                 "Inputs=" + input + nwl + nwl;
         }
+        
+        static std::string GlobalMaxPooling(std::string input, std::string group = "", std::string prefix = "GMP")
+        {
+            return "[" + group + prefix + "]" + nwl +
+                "Type=GlobalMaxPooling" + nwl +
+                "Inputs=" + input + nwl + nwl;
+        }
+
+        static std::string ReductionAvg(UInt id, std::string inputs, std::string group = "", std::string prefix = "RAVG")
+        {
+            return "[" + group + prefix + std::to_string(id) + "]" + nwl +
+                "Type=Reduction" + nwl +
+                "Inputs=" + inputs + nwl +
+                "Operation=Avg" + nwl + nwl;
+        }
+
+        static std::string ReductionMax(UInt id, std::string inputs, std::string group = "", std::string prefix = "RMAX")
+        {
+            return "[" + group + prefix + std::to_string(id) + "]" + nwl +
+                "Type=Reduction" + nwl +
+                "Inputs=" + inputs + nwl +
+                "Operation=Max" + nwl + nwl;
+        }
 
         static std::string Add(UInt id, std::string inputs, std::string group = "", std::string prefix = "A")
         {
@@ -730,16 +753,23 @@ namespace scripts
             }
             else
             {
-                auto group = In("SE", C + 3);
-                auto strSE =
-                    se ? GlobalAvgPooling(In("B", C + 3), group) +
-                    Convolution(1, group + std::string("GAP"), DIV8(channels / 4), 1, 1, 1, 1, 0, 0, true, group) +
-                    BatchNormActivation(1, group + std::string("C1"), to_string(activation == scripts::Activations::FRelu ? scripts::Activations::HardSwish : activation), group) +
-                    Convolution(2, group + std::string("B1"), channels, 1, 1, 1, 1, 0, 0, true, group) +
-                    BatchNormActivation(2, group + std::string("C2"), to_string(scripts::Activations::HardSigmoid), group) +
-                    Multiply(In("B", C + 3) + std::string(",") + group + std::string("B2"), group) +
-                    Concat(A + 1, In("LCS", A) + std::string(",") + group + std::string("CM")) :
-                    Concat(A + 1, In("LCS", A) + std::string(",") + In("B", C + 3));
+                auto groupCH = In("CHATT", C + 3); // Channel Attention
+                auto groupSP = In("SPATT", C + 3); // Spatial Attention
+                auto strSE = se ?
+                    GlobalAvgPooling(In("B", C + 3), groupCH) +
+                    GlobalMaxPooling(In("B", C + 3), groupCH) +
+                    Concat(A + 1, groupCH + "GAP" + "," + groupCH + "GMP", groupCH) +
+                    Convolution(1, In(groupCH + "CC", A + 1), DIV8(channels), 1, 1, 1, 1, 0, 0, false, groupCH) +
+                    BatchNormActivation(A + 1, groupCH + In("C", 1), to_string(scripts::Activations::HardSigmoid), groupCH) +
+                    Multiply(In("B", C + 3) + "," + In(groupCH + "B", A + 1), groupCH) +
+                    ReductionAvg(1, groupCH + "CM", groupSP) +
+                    ReductionMax(1, groupCH + "CM", groupSP) +
+                    Concat(1, In(groupSP + "RAVG", 1) + "," + In(groupSP + "RMAX", 1), groupSP) +
+                    Convolution(1, In(groupSP + "CC", 1), 1, 7, 7, 1, 1, 3, 3, false, groupSP) +
+                    BatchNormActivation(1, groupSP + In("C", 1), to_string(scripts::Activations::HardSigmoid), groupSP) +
+                    Multiply(In("B", C + 3) + "," + groupSP + In("B", 1), groupSP) +
+                    Concat(A + 1, In("LCS", A) + "," + groupSP + "CM") :
+                    Concat(A + 1, In("LCS", A) + "," + In("B", C + 3));
 
                 return
                     Shuffle(A, In("CC", A), shuffle) +
@@ -773,16 +803,23 @@ namespace scripts
             }
             else
             {
-                auto group = In("SE", C + 3);
-                auto strSE =
-                    se ? GlobalAvgPooling(In("B", C + 3), group) +
-                    Convolution(1, group + std::string("GAP"), DIV8(channels / 4), 1, 1, 1, 1, 0, 0, true, group) +
-                    BatchNormActivation(1, group + std::string("C1"), to_string(activation == scripts::Activations::FRelu ? scripts::Activations::HardSwish : activation), group) +
-                    Convolution(2, group + std::string("B1"), channels, 1, 1, 1, 1, 0, 0, true, group) +
-                    BatchNormActivation(2, group + std::string("C2"), to_string(scripts::Activations::HardSigmoid), group) +
-                    Multiply(In("B", C + 3) + std::string(",") + group + std::string("B2"), group) +
-                    Concat(A + 1, In("LCS", A) + std::string(",") + group + std::string("CM")) :
-                    Concat(A + 1, In("LCS", A) + std::string(",") + In("B", C + 3));
+                auto groupCH = In("CHATT", C + 3); // Channel Attention
+                auto groupSP = In("SPATT", C + 3); // Spatial Attention
+                auto strSE = se ?
+                    GlobalAvgPooling(In("B", C + 3), groupCH) +
+                    GlobalMaxPooling(In("B", C + 3), groupCH) +
+                    Concat(A + 1, groupCH + "GAP" + "," + groupCH + "GMP", groupCH) +
+                    Convolution(1, In(groupCH + "CC", A + 1), DIV8(channels), 1, 1, 1, 1, 0, 0, false, groupCH) +
+                    BatchNormActivation(A + 1, groupCH + In("C", 1), to_string(scripts::Activations::HardSigmoid), groupCH) +
+                    Multiply(In("B", C + 3) + "," + In(groupCH + "B", A + 1), groupCH) +
+                    ReductionAvg(1, groupCH + "CM", groupSP) +
+                    ReductionMax(1, groupCH + "CM", groupSP) +
+                    Concat(1, In(groupSP + "RAVG", 1) + "," + In(groupSP + "RMAX", 1), groupSP) +
+                    Convolution(1, In(groupSP + "CC", 1), 1, 7, 7, 1, 1, 3, 3, false, groupSP) +
+                    BatchNormActivation(1, groupSP + In("C", 1), to_string(scripts::Activations::HardSigmoid), groupSP) +
+                    Multiply(In("B", C + 3) + "," + groupSP + In("B", 1), groupSP) +
+                    Concat(A + 1, In("LCS", A) + "," + groupSP + "CM") :
+                    Concat(A + 1, In("LCS", A) + "," + In("B", C + 3));
 
                 return
                     Shuffle(A, In("CC", A), shuffle) +
