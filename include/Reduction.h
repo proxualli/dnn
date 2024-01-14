@@ -11,7 +11,7 @@ namespace dnn
 #ifdef DNN_CACHE_PRIMITIVES
 		std::unique_ptr<dnnl::reduction> fwdReduction;
 #endif
-		dnnl::algorithm algo; 
+		dnnl::algorithm algorithm; 
 
 	public:
 		const ReduceOperations Op;
@@ -23,7 +23,7 @@ namespace dnn
 			Op(op),
 			Eps(eps),
 			P(p),
-			algo(dnnl::algorithm::reduction_mean)
+			algorithm(dnnl::algorithm::reduction_mean)
 		{
 		}
 
@@ -76,20 +76,20 @@ namespace dnn
 			switch (Op)
 			{
 			case ReduceOperations::Avg:
-				algo = dnnl::algorithm::reduction_mean;
+				algorithm = dnnl::algorithm::reduction_mean;
 				break;
 			case ReduceOperations::Min:
-				algo = dnnl::algorithm::reduction_min;
+				algorithm = dnnl::algorithm::reduction_min;
 				break;
 			case ReduceOperations::Max:
-				algo = dnnl::algorithm::reduction_max;
+				algorithm = dnnl::algorithm::reduction_max;
 				break;
 			case ReduceOperations::Sum:
-				algo = dnnl::algorithm::reduction_sum;
+				algorithm = dnnl::algorithm::reduction_sum;
 				break;
 			}
 
-			fwdDescReduction = std::make_unique<dnnl::reduction::primitive_desc>(dnnl::reduction::primitive_desc(Device.engine, algo, *InputLayer->DstMemDesc, *DstMemDesc, P, Eps));
+			fwdDescReduction = std::make_unique<dnnl::reduction::primitive_desc>(dnnl::reduction::primitive_desc(Device.engine, algorithm, *InputLayer->DstMemDesc, *DstMemDesc, P, Eps));
 #ifdef DNN_CACHE_PRIMITIVES
 			fwdReduction = std::make_unique<dnnl::reduction>(dnnl::reduction(*fwdDescReduction));
 #endif
