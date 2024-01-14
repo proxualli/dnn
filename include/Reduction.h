@@ -135,7 +135,7 @@ namespace dnn
 								{
 									InD1.load_a(&InputLayer->NeuronsD1[hw + inputOffset]);
 									OutD1.load_a(&NeuronsD1[hw]);
-									InD1 += OutD1 / InputLayer->C;
+									InD1 += OutD1 / Float(InputLayer->C);
 									InD1.store_a(&InputLayer->NeuronsD1[hw + inputOffset]);
 								}
 							}
@@ -150,7 +150,7 @@ namespace dnn
 							for (auto c = 0ull; c < C; c++)
 								PRAGMA_OMP_SIMD()
 								for (auto hw = 0; hw < HW(); hw++)
-									InputLayer->NeuronsD1[(c * HW()) + hw] += NeuronsD1[hw] / InputLayer->C;
+									InputLayer->NeuronsD1[(c * HW()) + hw] += NeuronsD1[hw] / Float(InputLayer->C);
 						});
 				}
 			}
@@ -170,7 +170,7 @@ namespace dnn
 								{
 									InD1.load_a(&InputLayer->NeuronsD1[hw + inputOffset]);
 									OutD1.load_a(&NeuronsD1[hw + outputOffset]);
-									InD1 += OutD1 / InputLayer->C;
+									InD1 += OutD1 / Float(InputLayer->C);
 									InD1.store_a(&InputLayer->NeuronsD1[hw + inputOffset]);
 								}
 							}
@@ -186,7 +186,7 @@ namespace dnn
 							for (auto c = 0ull; c < C; c++)
 								PRAGMA_OMP_SIMD()
 								for (auto hw = 0; hw < HW(); hw++)
-									InputLayer->NeuronsD1[inStart + (c * HW()) + hw] += (NeuronsD1[start + hw] / InputLayer->C);
+									InputLayer->NeuronsD1[inStart + (c * HW()) + hw] += (NeuronsD1[start + hw] / Float(InputLayer->C));
 						});
 				}
 #ifdef DNN_STOCHASTIC

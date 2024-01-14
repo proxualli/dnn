@@ -195,20 +195,23 @@ namespace dnn
 #endif
 										}
 									}
-									inputIndex = (((Inputs[inputLayer]->PaddedC - VectorSize) - channelOffset) * HW());
-									outputIndex = ((Inputs[inputLayer]->PaddedC - VectorSize) * HW());
-									const auto len = VectorSize - (Inputs[inputLayer]->PaddedC - Inputs[inputLayer]->C);
-									for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
-									{
-										In.load_a(&Inputs[inputLayer]->Neurons[hw + inputIndex]);
-										In.cutoff(static_cast<int>(len));
-										In.store_a(&Neurons[hw + outputIndex]);
-#ifndef DNN_LEAN
-										VecZero.store_nt(&NeuronsD1[hw + outputIndex]);
-#endif
-									}
+									for (auto c = channelOffset + (Inputs[inputLayer]->PaddedC - VectorSize); c < channelOffset + Inputs[inputLayer]->C; c++)
+										for (auto h = 0ull; h < H; h++)
+											for (auto w = 0ull; w < W; w++)
+											{
+												Neurons[OffsetPaddedMem(0, c, h, w)] = Inputs[inputLayer]->Neurons[Inputs[inputLayer]->OffsetPaddedMem(0, c - channelOffset, h, w)];
+												NeuronsD1[OffsetPaddedMem(0, c, h, w)] = Float(0);
+											}
+
 									channelOffset += Inputs[inputLayer]->C;
 								}
+								for (auto c = channelOffset; c < DivUp(channelOffset); c++)
+									for (auto h = 0ull; h < H; h++)
+										for (auto w = 0ull; w < W; w++)
+										{
+											Neurons[OffsetPaddedMem(0, c, h, w)] = Float(0);
+											NeuronsD1[OffsetPaddedMem(0, c, h, w)] = Float(0);
+										}
 							}
 						}
 						else
@@ -291,21 +294,23 @@ namespace dnn
 #endif
 											}
 										}
-										
-										inputIndex = (((Inputs[inputLayer]->PaddedC - VectorSize) + channelOffset) * HW()) + inputSampleOffset;
-										outputIndex = ((Inputs[inputLayer]->PaddedC - VectorSize) * HW()) + outputSampleOffset;
-										const auto len = VectorSize - (Inputs[inputLayer]->PaddedC - Inputs[inputLayer]->C);
-										for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
-										{
-											In.load_a(&Inputs[inputLayer]->Neurons[hw + inputIndex]);
-											In.cutoff(static_cast<int>(len));
-											In.store_a(&Neurons[hw + outputIndex]);
-#ifndef DNN_LEAN
-											VecZero.store_nt(&NeuronsD1[hw + outputIndex]);
-#endif
-										}
+										for (auto c = channelOffset + (Inputs[inputLayer]->PaddedC - VectorSize); c < channelOffset + Inputs[inputLayer]->C; c++)
+											for (auto h = 0ull; h < H; h++)
+												for (auto w = 0ull; w < W; w++)
+												{
+													Neurons[OffsetPaddedMem(n, c, h, w)] = Inputs[inputLayer]->Neurons[Inputs[inputLayer]->OffsetPaddedMem(n, c - channelOffset, h, w)];
+													NeuronsD1[OffsetPaddedMem(n, c, h, w)] = Float(0);
+												}
+																				
 										channelOffset += Inputs[inputLayer]->C;
 									}
+									for (auto c = channelOffset; c < DivUp(channelOffset); c++)
+										for (auto h = 0ull; h < H; h++)
+											for (auto w = 0ull; w < W; w++)
+											{
+												Neurons[OffsetPaddedMem(n, c, h, w)] = Float(0);
+												NeuronsD1[OffsetPaddedMem(n, c, h, w)] = Float(0);
+											}
 								});
 							}
 						}
@@ -452,17 +457,11 @@ namespace dnn
 									inputD1.store_a(&Inputs[inputLayer]->NeuronsD1[hw + inputIndex]);
 								}
 							}
-							inputIndex = (((Inputs[inputLayer]->PaddedC - VectorSize) - channelOffset) * HW());
-							outputIndex = ((Inputs[inputLayer]->PaddedC - VectorSize) * HW());
-							const auto len = VectorSize - (Inputs[inputLayer]->PaddedC - Inputs[inputLayer]->C);
-							for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
-							{
-								inputD1.load_a(&Inputs[inputLayer]->NeuronsD1[hw + inputIndex]);
-								D1.load_a(&NeuronsD1[hw + outputIndex]);
-								inputD1 += D1;
-								inputD1.cutoff(static_cast<int>(len));
-								inputD1.store_a(&Inputs[inputLayer]->NeuronsD1[hw + inputIndex]);
-							}
+							for (auto c = channelOffset + (Inputs[inputLayer]->PaddedC - VectorSize); c < channelOffset + Inputs[inputLayer]->C; c++)
+								for (auto h = 0ull; h < H; h++)
+									for (auto w = 0ull; w < W; w++)
+										Inputs[inputLayer]->NeuronsD1[Inputs[inputLayer]->OffsetPaddedMem(0, c - channelOffset, h, w)] += NeuronsD1[OffsetPaddedMem(0, c, h, w)];
+
 							channelOffset += Inputs[inputLayer]->C;
 						}
 					}
@@ -540,17 +539,11 @@ namespace dnn
 										inputD1.store_a(&Inputs[inputLayer]->NeuronsD1[hw + inputIndex]);
 									}
 								}
-								inputIndex = (((Inputs[inputLayer]->PaddedC - VectorSize) + channelOffset) * HW()) + inputSampleOffset;
-								outputIndex = ((Inputs[inputLayer]->PaddedC - VectorSize) * HW()) + outputSampleOffset;
-								const auto len = VectorSize - (Inputs[inputLayer]->PaddedC - Inputs[inputLayer]->C);
-								for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
-								{
-									inputD1.load_a(&Inputs[inputLayer]->NeuronsD1[hw + inputIndex]);
-									D1.load_a(&NeuronsD1[hw + outputIndex]);
-									inputD1 += D1;
-									inputD1.cutoff(static_cast<int>(len));
-									inputD1.store_a(&Inputs[inputLayer]->NeuronsD1[hw + inputIndex]);
-								}
+								for (auto c = channelOffset + (Inputs[inputLayer]->PaddedC - VectorSize); c < channelOffset + Inputs[inputLayer]->C; c++)
+									for (auto h = 0ull; h < H; h++)
+										for (auto w = 0ull; w < W; w++)
+											Inputs[inputLayer]->NeuronsD1[Inputs[inputLayer]->OffsetPaddedMem(n, c - channelOffset, h, w)] += NeuronsD1[OffsetPaddedMem(n, c, h, w)];
+																
 								channelOffset += Inputs[inputLayer]->C;
 							}
 						});
