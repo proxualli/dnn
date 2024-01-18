@@ -304,7 +304,7 @@ namespace dnn
 		{
 			const auto rangeWeights = GetColorRange<Float>(WeightsStats.Min, WeightsStats.Max);
 			const auto rangeBiases = GetColorRange<Float>(BiasesStats.Min, BiasesStats.Max);
-			const auto border = 1ull;
+			const auto border = (KernelH == 1ull && KernelW == 1ull) ? 0ull : 1ull;
 			const auto pitchH = KernelH + border;
 			const auto pitchW = KernelW + border;
 			const auto width = C * pitchH + border;

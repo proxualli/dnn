@@ -304,7 +304,7 @@ namespace dnn
 
 			if (InputLayer->C != 3)
 			{
-				const auto border = 1ull;
+				const auto border = (KernelH == 1ull && KernelW == 1ull) ? 0ull : 1ull;
 				const auto pitchH = KernelH + border;
 				const auto pitchW = KernelW + border;
 				const auto width = C * pitchH + border;
