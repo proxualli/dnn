@@ -166,23 +166,13 @@ namespace dnn
 							for (auto h = 0ull; h < H; h++)
 								PRAGMA_OMP_SIMD()
 								for (auto w = 0ull; w < W; w++)
-								{
 									Neurons[OffsetPaddedMem(0, c, h, w)] = InputLayer->Neurons[InputLayer->OffsetPaddedMem(0, c + ChannelsLeft, h, w)];
-#ifndef DNN_LEAN
-									NeuronsD1[OffsetPaddedMem(0, c, h, w)] = Float(0);
-#endif  // DNN_LEAN
-								}
 
 						for (auto c = C; c < PaddedC; c++)
 							for (auto h = 0ull; h < H; h++)
 								PRAGMA_OMP_SIMD()
 								for (auto w = 0ull; w < W; w++)
-								{
 									Neurons[OffsetPaddedMem(0, c, h, w)] = Float(0);
-#ifndef DNN_LEAN
-									NeuronsD1[OffsetPaddedMem(0, c, h, w)] = Float(0);
-#endif  // DNN_LEAN
-								}
 					}
 					else
 					{
