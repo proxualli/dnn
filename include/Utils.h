@@ -130,6 +130,7 @@ namespace
 	constexpr auto TestActivations = false;
 	constexpr auto TestBatchNormalization = false;
 	constexpr auto TestConcat = false;
+	constexpr auto TestMultiply = false;
 	constexpr auto PlainOptimizerWeights = true;
 
 	typedef float Float;
