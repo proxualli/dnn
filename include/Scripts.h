@@ -768,10 +768,10 @@ namespace scripts
                 auto groupSP = In("SPATT", C + 3); // Spatial Attention
                 auto strSE = se ?
                     GlobalAvgPooling(In("B", C + 3), groupCH) +
-                    Convolution(1, groupCH + "GAP", DIV8(channels / 4), 1, 1, 1, 1, 0, 0, false, groupCH) +
+                    Convolution(1, groupCH + "GAP", DIV8(channels), 1, 1, 1, 1, 0, 0, false, groupCH) +
                     BatchNormActivation(1, groupCH + In("C", 1), activation, groupCH) +
                     GlobalMaxPooling(In("B", C + 3), groupCH) +
-                    Convolution(2, groupCH + "GMP", DIV8(channels / 4), 1, 1, 1, 1, 0, 0, false, groupCH) +
+                    Convolution(2, groupCH + "GMP", DIV8(channels), 1, 1, 1, 1, 0, 0, false, groupCH) +
                     BatchNormActivation(2, groupCH + In("C", 2), activation, groupCH) +
                     Add(1, In(groupCH + "B", 1) + "," + In(groupCH + "B", 2), groupCH) +
                     Convolution(3, groupCH + "A1", DIV8(channels), 1, 1, 1, 1, 0, 0, false, groupCH) +
@@ -824,10 +824,10 @@ namespace scripts
                 auto groupSP = In("SPATT", C + 3); // Spatial Attention
                 auto strSE = se ?
                     GlobalAvgPooling(In("B", C + 3), groupCH) +
-                    Convolution(1, groupCH + "GAP", DIV8(channels / 4), 1, 1, 1, 1, 0, 0, false, groupCH) +
+                    Convolution(1, groupCH + "GAP", DIV8(channels), 1, 1, 1, 1, 0, 0, false, groupCH) +
                     BatchNormActivation(1, groupCH + In("C", 1), activation, groupCH) +
                     GlobalMaxPooling(In("B", C + 3), groupCH) +
-                    Convolution(2, groupCH + "GMP", DIV8(channels / 4), 1, 1, 1, 1, 0, 0, false, groupCH) +
+                    Convolution(2, groupCH + "GMP", DIV8(channels), 1, 1, 1, 1, 0, 0, false, groupCH) +
                     BatchNormActivation(2, groupCH + In("C", 2), activation, groupCH) +
                     Add(1, In(groupCH + "B", 1) + "," + In(groupCH + "B", 2), groupCH) +
                     Convolution(3, groupCH + "A1", DIV8(channels), 1, 1, 1, 1, 0, 0, false, groupCH) +

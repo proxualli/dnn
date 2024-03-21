@@ -233,38 +233,38 @@ namespace dnn
 								if (EqualDimensions(Inputs))
 								{
 									for_i(batchSize, threads, [=](UInt n)
+									{
+										for (auto c = 0ull; c < PaddedC; c += VectorSize)
 										{
-											for (auto c = 0ull; c < PaddedC; c += VectorSize)
-											{
-												const auto outputOffset = n * PaddedCDHW() + c * HW();
+											const auto outputOffset = n * PaddedCDHW() + c * HW();
 
-												for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
-												{
-													(VecFloat().load_a(&Inputs[0]->Neurons[hw + outputOffset]) * VecFloat().load_a(&Inputs[1]->Neurons[hw + outputOffset])).store_a(&Neurons[hw + outputOffset]);
+											for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
+											{
+												(VecFloat().load_a(&Inputs[0]->Neurons[hw + outputOffset]) * VecFloat().load_a(&Inputs[1]->Neurons[hw + outputOffset])).store_a(&Neurons[hw + outputOffset]);
 #ifndef DNN_LEAN
-													VecZero.store_nt(&NeuronsD1[hw + outputOffset]);
+												VecZero.store_nt(&NeuronsD1[hw + outputOffset]);
 #endif
-												}
 											}
-										});
+										}
+									});
 								}
 								else
 								{
 									for_i(batchSize, threads, [=](UInt n)
+									{
+										for (auto c = 0ull; c < PaddedC; c += VectorSize)
 										{
-											for (auto c = 0ull; c < PaddedC; c += VectorSize)
+											const auto outputOffset = n * PaddedCDHW() + c * HW();
+											const auto channelOffset = n * PaddedC + c;
+											for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
 											{
-												const auto outputOffset = n * PaddedCDHW() + c * HW();
-												const auto channelOffset = n * PaddedC + c;
-												for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
-												{
-													(VecFloat().load_a(&Inputs[first]->Neurons[hw + outputOffset]) * VecFloat().load_a(&Inputs[second]->Neurons[channelOffset])).store_a(&Neurons[hw + outputOffset]);
+												(VecFloat().load_a(&Inputs[first]->Neurons[hw + outputOffset]) * VecFloat().load_a(&Inputs[second]->Neurons[channelOffset])).store_a(&Neurons[hw + outputOffset]);
 #ifndef DNN_LEAN
-													VecZero.store_nt(&NeuronsD1[hw + outputOffset]);
+												VecZero.store_nt(&NeuronsD1[hw + outputOffset]);
 #endif
-												}
 											}
-										});
+										}
+									});
 								}
 							}
 							else
@@ -318,13 +318,13 @@ namespace dnn
 											const auto outputOffset = n * CDHW() + c * HW();
 											const auto channelOffset = n * C + c;
 											PRAGMA_OMP_SIMD()
-												for (auto hw = 0ull; hw < HW(); hw++)
-												{
-													Neurons[hw + outputOffset] = Inputs[first]->Neurons[hw + outputOffset] * Inputs[second]->Neurons[channelOffset];
+											for (auto hw = 0ull; hw < HW(); hw++)
+											{
+												Neurons[hw + outputOffset] = Inputs[first]->Neurons[hw + outputOffset] * Inputs[second]->Neurons[channelOffset];
 #ifndef DNN_LEAN
-													NeuronsD1[hw + outputOffset] = 0;
+												NeuronsD1[hw + outputOffset] = 0;
 #endif
-												}
+											}
 										}
 									});
 								}

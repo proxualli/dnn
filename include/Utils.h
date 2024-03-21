@@ -106,16 +106,16 @@
 #define MAGIC_ENUM_RANGE_MAX 255
 #include "magic_enum/magic_enum.hpp"
 
-#define NAMEOF_ENUM_RANGE_MIN 0
-#define NAMEOF_ENUM_RANGE_MAX 255
-#include "nameof.hpp"
+// #define NAMEOF_ENUM_RANGE_MIN 0
+// #define NAMEOF_ENUM_RANGE_MAX 255
+// #include "nameof.hpp"
 
 #include "bitsery/bitsery.h"
 #include "bitsery/adapter/stream.h"
 #include "bitsery/traits/string.h"
 #include "bitsery/traits/vector.h"
-//#include "bitsery/ext/std_atomic.h"
-//#include "bitsery/ext/growable.h"
+// #include "bitsery/ext/std_atomic.h"
+// #include "bitsery/ext/growable.h"
 
 
 using namespace dnn;
@@ -123,7 +123,7 @@ using namespace dnn;
 namespace
 {
 	constexpr auto DefaultDatasetMeanStdDev = false;
-	constexpr auto Inplace = true;
+	constexpr auto Inplace = false;
 	constexpr auto Kahan = true;
 	constexpr auto Reference = true;
 	constexpr auto SingleMeanVariancePass = false;
