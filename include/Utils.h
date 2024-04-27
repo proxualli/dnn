@@ -123,15 +123,16 @@ using namespace dnn;
 namespace
 {
 	constexpr auto DefaultDatasetMeanStdDev = false;
-	constexpr auto Inplace = false;
+	constexpr auto Inplace = true;
 	constexpr auto Kahan = true;
+	constexpr auto PlainOptimizerWeights = true;
 	constexpr auto Reference = true;
 	constexpr auto SingleMeanVariancePass = false;
+		
 	constexpr auto TestActivations = false;
 	constexpr auto TestBatchNormalization = false;
 	constexpr auto TestConcat = false;
 	constexpr auto TestMultiply = false;
-	constexpr auto PlainOptimizerWeights = true;
 
 	typedef float Float;
 	typedef std::size_t UInt;
