@@ -344,12 +344,7 @@ namespace dnn
 				return LeastChannels(inputs);
 		}
 
-	private:
-		/*FloatVector* OptWeights;
-		FloatVector* OptWeightsD1;
-		FloatVector* OptWeightsPar1;
-		FloatVector* OptWeightsPar2;*/
-
+	
 	public:
 		const std::string Name;
 		const LayerTypes LayerType;
@@ -485,10 +480,6 @@ namespace dnn
 			WeightsD1(FloatVector(weightCount)),
 			WeightsPar1(FloatVector()),
 			WeightsPar2(FloatVector()),
-			/*OptWeights(&Weights),
-			OptWeightsD1(&WeightsD1),
-			OptWeightsPar1(&WeightsPar1),
-			OptWeightsPar2(&WeightsPar2),*/
 			Biases(FloatVector(biasCount)),
 			BiasesD1(FloatVector(biasCount)),
 			BiasesPar1(FloatVector()),
