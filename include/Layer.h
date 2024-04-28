@@ -275,7 +275,7 @@ namespace dnn
 
 		WeightsStruct() :
 			Weights(nullptr),
-		    WeightsD1(nullptr),
+			WeightsD1(nullptr),
 			WeightsPar1(nullptr),
 			WeightsPar2(nullptr)
 		{
