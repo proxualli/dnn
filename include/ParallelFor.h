@@ -28,6 +28,7 @@
 #if DNNL_CPU_THREADING_RUNTIME == DNNL_RUNTIME_OMP
 #define PRAGMA_OMP(...) PRAGMA_MACRO(CHAIN2(omp, __VA_ARGS__))
 #define PRAGMA_OMP_PARALLEL_FOR_COLLAPSE(n) PRAGMA_MACRO(omp parallel for collapse(n))
+#define PRAGMA_OMP_PARALLEL PRAGMA_MACRO(omp parallel)
 #define PRAGMA_OMP_PARALLEL_THREADS(n) PRAGMA_MACRO(omp parallel num_threads(n))
 #define PRAGMA_OMP_FOR_SCHEDULE_STATIC(n) PRAGMA_MACRO(omp for schedule(static,n))
 #define PRAGMA_OMP_FOR_SCHEDULE_DYNAMIC(n) PRAGMA_MACRO(omp for schedule(dynamic,n))
@@ -36,6 +37,7 @@
 #else
 #define PRAGMA_OMP(...)
 #define PRAGMA_OMP_PARALLEL_FOR_COLLAPSE(n)
+#define PRAGMA_OMP_PARALLEL()
 #define PRAGMA_OMP_PARALLEL_THREADS(n)
 #define PRAGMA_OMP_FOR_SCHEDULE_STATIC(n)
 #define PRAGMA_OMP_FOR_SCHEDULE_DYNAMIC(n)
@@ -182,7 +184,7 @@ namespace dnn
 					f(i);
 			}
 	#else
-			PRAGMA_OMP_PARALLEL_THREADS(static_cast<int>(threads))
+			PRAGMA_OMP_PARALLEL()
 			{
 				PRAGMA_OMP_FOR_SCHEDULE_STATIC(1)
 				for (auto i = 0ull; i < range; i++)
@@ -215,7 +217,7 @@ namespace dnn
 				f(i);
 		}
 	#else
-		PRAGMA_OMP_PARALLEL_THREADS(omp_get_max_threads())
+		PRAGMA_OMP_PARALLEL()
 		{
 			PRAGMA_OMP_FOR_SCHEDULE_DYNAMIC(1)
 			for (auto i = 0ull; i < range; i++)
@@ -245,7 +247,7 @@ namespace dnn
 						f(i);
 			}
 	#else
-			PRAGMA_OMP_PARALLEL_THREADS(static_cast<int>(threads))
+			PRAGMA_OMP_PARALLEL()
 			{
 				PRAGMA_OMP_FOR_SCHEDULE_DYNAMIC(1)
 				for (auto i = 0ull; i < range; i++)
