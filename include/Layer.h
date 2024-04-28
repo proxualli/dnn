@@ -1355,7 +1355,11 @@ namespace dnn
 				FloatVector* OptWeightsD1 = &WeightsD1;
 				FloatVector* OptWeightsPar1 = &WeightsPar1;
 				FloatVector* OptWeightsPar2 = &WeightsPar1;
-				FloatVector weights, weightsD1, weightsPar1, weightsPar2;
+				
+				auto weights = FloatVector();
+				auto weightsD1 = FloatVector();
+				auto weightsPar1 = FloatVector();
+				auto weightsPar2 = FloatVector();
 
 				if (differentOptimzerWeightFormat)
 				{
@@ -1393,14 +1397,7 @@ namespace dnn
 						Device.stream.wait();
 					}
 				}
-				/*else
-				{
-					OptWeights = &Weights;
-					OptWeightsD1 = &WeightsD1;
-					OptWeightsPar1 = &WeightsPar1;
-					OptWeightsPar2 = &WeightsPar2;
-				}*/
-
+				
 				switch (optimizer)
 				{
 				case Optimizers::AdaBound:
