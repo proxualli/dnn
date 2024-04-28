@@ -155,7 +155,7 @@ namespace dnn
 	#else
 		PRAGMA_OMP_PARALLEL_THREADS(omp_get_max_threads())
 		{
-			PRAGMA_OMP_FOR_SCHEDULE_STATIC(1)
+			#pragma omp parallel for
 			for (auto i = 0ull; i < range; i++)
 				f(i);
 		}
@@ -186,7 +186,7 @@ namespace dnn
 	#else
 			PRAGMA_OMP_PARALLEL_THREADS(static_cast<int>(threads))
 			{
-				PRAGMA_OMP_FOR_SCHEDULE_STATIC(1)
+				#pragma omp parallel for
 				for (auto i = 0ull; i < range; i++)
 					f(i);
 			}
