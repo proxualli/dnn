@@ -345,10 +345,10 @@ namespace dnn
 		}
 
 	private:
-		FloatVector* OptWeights;
+		/*FloatVector* OptWeights;
 		FloatVector* OptWeightsD1;
 		FloatVector* OptWeightsPar1;
-		FloatVector* OptWeightsPar2;
+		FloatVector* OptWeightsPar2;*/
 
 	public:
 		const std::string Name;
@@ -485,10 +485,10 @@ namespace dnn
 			WeightsD1(FloatVector(weightCount)),
 			WeightsPar1(FloatVector()),
 			WeightsPar2(FloatVector()),
-			OptWeights(&Weights),
+			/*OptWeights(&Weights),
 			OptWeightsD1(&WeightsD1),
 			OptWeightsPar1(&WeightsPar1),
-			OptWeightsPar2(&WeightsPar2),
+			OptWeightsPar2(&WeightsPar2),*/
 			Biases(FloatVector(biasCount)),
 			BiasesD1(FloatVector(biasCount)),
 			BiasesPar1(FloatVector()),
@@ -1350,9 +1350,13 @@ namespace dnn
 			if (HasWeights && (disableLocking || (!disableLocking && !LockUpdate.load())))
 			{
 				const bool differentOptimzerWeightFormat = PlainOptimizerWeights && (*WeightsMemDesc != *PersistWeightsMemDesc);
-
-				FloatVector weights, weightsD1, weightsPar1, weightsPar2;
 				
+				FloatVector* OptWeights = &Weights;
+				FloatVector* OptWeightsD1 = &WeightsD1;
+				FloatVector* OptWeightsPar1 = &WeightsPar1;
+				FloatVector* OptWeightsPar2 = &WeightsPar1;
+				FloatVector weights, weightsD1, weightsPar1, weightsPar2;
+
 				if (differentOptimzerWeightFormat)
 				{
 					weights = FloatVector(WeightCount);
@@ -1389,57 +1393,57 @@ namespace dnn
 						Device.stream.wait();
 					}
 				}
-				else
+				/*else
 				{
 					OptWeights = &Weights;
 					OptWeightsD1 = &WeightsD1;
 					OptWeightsPar1 = &WeightsPar1;
 					OptWeightsPar2 = &WeightsPar2;
-				}
+				}*/
 
 				switch (optimizer)
 				{
 				case Optimizers::AdaBound:
-					AdaBound(rate);
+					AdaBound(rate, OptWeights, OptWeightsD1, OptWeightsPar1, OptWeightsPar2);
 					break;
 				case Optimizers::AdaBoundW:
-					AdaBoundW(rate);
+					AdaBoundW(rate, OptWeights, OptWeightsD1, OptWeightsPar1, OptWeightsPar2);
 					break;
 				case Optimizers::AdaDelta:
-					AdaDelta(rate);
+					AdaDelta(rate, OptWeights, OptWeightsD1, OptWeightsPar1, OptWeightsPar2);
 					break;
 				case Optimizers::AdaGrad:
-					AdaGrad(rate);
+					AdaGrad(rate, OptWeights, OptWeightsD1, OptWeightsPar1, OptWeightsPar2);
 					break;
 				case Optimizers::Adam:
-					Adam(rate);
+					Adam(rate, OptWeights, OptWeightsD1, OptWeightsPar1, OptWeightsPar2);
 					break;
 				case Optimizers::Adamax:
-					Adamax(rate);
+					Adamax(rate, OptWeights, OptWeightsD1, OptWeightsPar1, OptWeightsPar2);
 					break;
 				case Optimizers::AdamW:
-					AdamW(rate);
+					AdamW(rate, OptWeights, OptWeightsD1, OptWeightsPar1, OptWeightsPar2);
 					break;
 				case Optimizers::AmsBound:
-					AdaBound(rate, true);
+					AdaBound(rate, OptWeights, OptWeightsD1, OptWeightsPar1, OptWeightsPar2, true);
 					break;
 				case Optimizers::AmsBoundW:
-					AdaBoundW(rate, true);
+					AdaBoundW(rate, OptWeights, OptWeightsD1, OptWeightsPar1, OptWeightsPar2, true);
 					break;
 				case Optimizers::NAG:
-					NAG(rate);
+					NAG(rate, OptWeights, OptWeightsD1, OptWeightsPar1, OptWeightsPar2);
 					break;
 				case Optimizers::RMSProp:
-					RMSProp(rate);
+					RMSProp(rate, OptWeights, OptWeightsD1, OptWeightsPar1, OptWeightsPar2);
 					break;
 				case Optimizers::SGD:
-					SGD(rate);
+					SGD(rate, OptWeights, OptWeightsD1, OptWeightsPar1, OptWeightsPar2);
 					break;
 				case Optimizers::SGDMomentum:
-					SGDMomentum(rate);
+					SGDMomentum(rate, OptWeights, OptWeightsD1, OptWeightsPar1, OptWeightsPar2);
 					break;
 				case Optimizers::SGDW:
-					SGDW(rate);
+					SGDW(rate, OptWeights, OptWeightsD1, OptWeightsPar1, OptWeightsPar2);
 					break;
 				}
 
@@ -1473,7 +1477,7 @@ namespace dnn
 			}
 		}
 
-		inline void AdaBound(const TrainingRate& rate, const bool amsbound = false)
+		inline void AdaBound(const TrainingRate& rate, FloatVector* OptWeights, FloatVector* OptWeightsD1, FloatVector* OptWeightsPar1, FloatVector* OptWeightsPar2, const bool amsbound = false)
 		{
 			const auto beta1 = rate.Momentum;
 			const auto beta2 = rate.Beta2;
@@ -1540,7 +1544,7 @@ namespace dnn
 			Gamma += rate.Gamma;
 		}
 
-		inline void AdaBoundW(const TrainingRate& rate, const bool amsbound = false)
+		inline void AdaBoundW(const TrainingRate& rate, FloatVector* OptWeights, FloatVector* OptWeightsD1, FloatVector* OptWeightsPar1, FloatVector* OptWeightsPar2, const bool amsbound = false)
 		{
 			const auto beta1 = rate.Momentum;
 			const auto beta2 = rate.Beta2;
@@ -1611,7 +1615,7 @@ namespace dnn
 			Gamma += rate.Gamma;
 		}
 
-		inline void AdaDelta(const TrainingRate& rate)
+		inline void AdaDelta(const TrainingRate& rate, FloatVector* OptWeights, FloatVector* OptWeightsD1, FloatVector* OptWeightsPar1, FloatVector* OptWeightsPar2)
 		{
 			const auto lr = -rate.MaximumRate * WeightsLRM;
 			const auto momentum = rate.Momentum;
@@ -1642,7 +1646,7 @@ namespace dnn
 			}
 		}
 
-		inline void AdaGrad(const TrainingRate& rate)
+		inline void AdaGrad(const TrainingRate& rate, FloatVector* OptWeights, FloatVector* OptWeightsD1, FloatVector* OptWeightsPar1, FloatVector* OptWeightsPar2)
 		{
 			const auto lr = rate.MaximumRate * WeightsLRM;
 			const auto eps = rate.Eps;
@@ -1667,7 +1671,7 @@ namespace dnn
 			}
 		}
 
-		inline void Adam(const TrainingRate& rate)
+		inline void Adam(const TrainingRate& rate, FloatVector* OptWeights, FloatVector* OptWeightsD1, FloatVector* OptWeightsPar1, FloatVector* OptWeightsPar2)
 		{
 			const auto beta1 = rate.Momentum;
 			const auto beta2 = rate.Beta2;
@@ -1705,7 +1709,7 @@ namespace dnn
 			B2 *= beta2;
 		}
 
-		inline void Adamax(const TrainingRate& rate)
+		inline void Adamax(const TrainingRate& rate, FloatVector* OptWeights, FloatVector* OptWeightsD1, FloatVector* OptWeightsPar1, FloatVector* OptWeightsPar2)
 		{
 			const auto beta1 = rate.Momentum;
 			B1 = B1 == Float(0) ? beta1 : B1;
@@ -1743,7 +1747,7 @@ namespace dnn
 			B1 *= beta1;
 		}
 
-		inline void AdamW(const TrainingRate& rate)
+		inline void AdamW(const TrainingRate& rate, FloatVector* OptWeights, FloatVector* OptWeightsD1, FloatVector* OptWeightsPar1, FloatVector* OptWeightsPar2)
 		{
 			const auto beta1 = rate.Momentum;
 			const auto beta2 = rate.Beta2;
@@ -1783,7 +1787,7 @@ namespace dnn
 			B2 *= beta2;
 		}
 
-		inline void NAG(const TrainingRate& rate)
+		inline void NAG(const TrainingRate& rate, FloatVector* OptWeights, FloatVector* OptWeightsD1, FloatVector* OptWeightsPar1, FloatVector* OptWeightsPar2)
 		{
 			const auto lr = rate.MaximumRate * WeightsLRM;
 			const auto l2Penalty = rate.L2Penalty * WeightsWDM * lr;
@@ -1813,7 +1817,7 @@ namespace dnn
 			}
 		}
 
-		inline void RMSProp(const TrainingRate& rate)
+		inline void RMSProp(const TrainingRate& rate, FloatVector* OptWeights, FloatVector* OptWeightsD1, FloatVector* OptWeightsPar1, FloatVector* OptWeightsPar2)
 		{
 			const auto lr = rate.MaximumRate * WeightsLRM / rate.N;
 			const auto eps = rate.Eps;
@@ -1840,7 +1844,7 @@ namespace dnn
 			}
 		}
 
-		inline void SGD(const TrainingRate& rate)
+		inline void SGD(const TrainingRate& rate, FloatVector* OptWeights, FloatVector* OptWeightsD1, FloatVector* OptWeightsPar1, FloatVector* OptWeightsPar2)
 		{
 			const auto lr = rate.MaximumRate * WeightsLRM / rate.N;
 			const auto l2Penalty = rate.MaximumRate * WeightsLRM * rate.L2Penalty * WeightsWDM;
@@ -1858,7 +1862,7 @@ namespace dnn
 			}
 		}
 
-		inline void SGDMomentum(const TrainingRate& rate)
+		inline void SGDMomentum(const TrainingRate& rate, FloatVector* OptWeights, FloatVector* OptWeightsD1, FloatVector* OptWeightsPar1, FloatVector* OptWeightsPar2)
 		{
 			const auto momentum = rate.Momentum;
 			const auto lr = rate.MaximumRate * WeightsLRM / rate.N;
@@ -1883,7 +1887,7 @@ namespace dnn
 			}
 		}
 
-		inline void SGDW(const TrainingRate& rate)
+		inline void SGDW(const TrainingRate& rate, FloatVector* OptWeights, FloatVector* OptWeightsD1, FloatVector* OptWeightsPar1, FloatVector* OptWeightsPar2)
 		{
 			const auto momentum = rate.Momentum;
 			const auto lr = rate.MaximumRate * WeightsLRM / rate.N;
