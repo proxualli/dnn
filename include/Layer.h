@@ -1702,12 +1702,31 @@ namespace dnn
 			const auto oneMinusB1 = Float(1) - B1;
 			const auto oneMinusB2 = Float(1) - B2;
 
+			/*
 			PRAGMA_OMP_SIMD()
 			for (auto i = 0ull; i < WeightCount; i++)
 			{
 				(*weights.WeightsPar1)[i] = (beta1 * (*weights.WeightsPar1)[i]) + (oneMinusBeta1 * (*weights.WeightsD1)[i]);
 				(*weights.WeightsPar2)[i] = (beta2 * (*weights.WeightsPar2)[i]) + (oneMinusBeta2 * Square<Float>((*weights.WeightsD1)[i] * batchRecip));
 				(*weights.Weights)[i] -= lr * ((*weights.WeightsPar1)[i] / oneMinusB1) / std::sqrt(((*weights.WeightsPar2)[i] / oneMinusB2) + eps);
+			}
+			*/
+
+			VecFloat weight, weightD1, par1, par2;
+			for (auto i = 0ull; i < WeightCount; i += VectorSize)
+			{
+				weight.load_a(&(*weights.Weights)[i]);
+				weightD1.load_a(&(*weights.WeightsD1)[i]);
+				par1.load_a(&(*weights.WeightsPar1)[i]);
+				par2.load_a(&(*weights.WeightsPar2)[i]);
+
+				par1 = (beta1 * par1) + (oneMinusBeta1 * weightD1);
+				par2 = (beta2 * par2) + (oneMinusBeta2 * square(weightD1 * batchRecip));
+				weight -= lr * (par1 / oneMinusB1) / square((par2 / oneMinusB2) + eps);
+
+				weight.store_a(&(*weights.Weights)[i]);
+				par1.store_a(&(*weights.WeightsPar1)[i]);
+				par2.store_a(&(*weights.WeightsPar2)[i]);
 			}
 
 			if (HasBias)
@@ -1736,18 +1755,31 @@ namespace dnn
 			const auto beta2 = rate.Beta2;
 			const auto eps = rate.Eps;
 
+			/*
+			PRAGMA_OMP_SIMD()
+			for (auto i = 0ull; i < WeightCount; i++)
+			{
+				(*weights.WeightsPar1)[i] = (beta1 * (*weights.WeightsPar1)[i]) + (oneMinusBeta1 * (*weights.WeightsD1)[i]);
+				(*weights.WeightsPar2)[i] = std::max(beta2 * (*weights.WeightsPar2)[i], std::abs((*weights.WeightsD1)[i] * batchRecip));
+				(*weights.Weights)[i] -= lr * (*weights.WeightsPar1)[i] / ((*weights.WeightsPar2)[i] + eps);
+			}
+			*/
+
 			VecFloat weight, weightD1, par1, par2;
 			for (auto i = 0ull; i < WeightCount; i += VectorSize)
 			{
-				par1.load_a(&(*weights.WeightsPar1)[i]);
-				par1 = (beta1 * par1) + (oneMinusBeta1 * weightD1.load_a(&(*weights.WeightsD1)[i]));
-				par1.store_a(&(*weights.WeightsPar1)[i]);
-				par2.load_a(&(*weights.WeightsPar2)[i]);
-				par2 = max(beta2 * par2, abs(weightD1 * batchRecip));
-				par2.store_a(&(*weights.WeightsPar2)[i]);
 				weight.load_a(&(*weights.Weights)[i]);
+				weightD1.load_a(&(*weights.WeightsD1)[i]);
+				par1.load_a(&(*weights.WeightsPar1)[i]);
+				par2.load_a(&(*weights.WeightsPar2)[i]);
+				
+				par1 = (beta1 * par1) + (oneMinusBeta1 * weightD1);
+				par2 = max(beta2 * par2, abs(weightD1 * batchRecip));
 				weight -= lr * par1 / (par2 + eps);
+				
 				weight.store_a(&(*weights.Weights)[i]);
+				par1.store_a(&(*weights.WeightsPar1)[i]);
+				par2.store_a(&(*weights.WeightsPar2)[i]);
 			}
 
 			if (HasBias)
@@ -1779,12 +1811,31 @@ namespace dnn
 			const auto oneMinusB1 = Float(1) - B1;
 			const auto oneMinusB2 = Float(1) - B2;
 
+			/*
 			PRAGMA_OMP_SIMD()
 			for (auto i = 0ull; i < WeightCount; i++)
 			{
 				(*weights.WeightsPar1)[i] = (beta1 * (*weights.WeightsPar1)[i]) + (oneMinusBeta1 * (*weights.WeightsD1)[i] * batchRecip);
 				(*weights.WeightsPar2)[i] = (beta2 * (*weights.WeightsPar2)[i]) + (oneMinusBeta2 * Square<Float>((*weights.WeightsD1)[i] * batchRecip));
 				(*weights.Weights)[i] -= lr * (((*weights.WeightsPar1)[i] / oneMinusB1) / std::sqrt(((*weights.WeightsPar2)[i] / oneMinusB2) + eps) + (weightDecay * (*weights.Weights)[i]));
+			}
+			*/
+
+			VecFloat weight, weightD1, par1, par2;
+			for (auto i = 0ull; i < WeightCount; i += VectorSize)
+			{
+				weight.load_a(&(*weights.Weights)[i]);
+				weightD1.load_a(&(*weights.WeightsD1)[i]);
+				par1.load_a(&(*weights.WeightsPar1)[i]);
+				par2.load_a(&(*weights.WeightsPar2)[i]);
+
+				par1 = (beta1 * par1) + (oneMinusBeta1 * weightD1 * batchRecip);
+				par2 = (beta2 * par2) + (oneMinusBeta2 * square(weightD1 * batchRecip));
+				weight -= lr * (par1 / oneMinusB1) / square((par2 / oneMinusB2) + eps) + (weightDecay * weight);
+
+				weight.store_a(&(*weights.Weights)[i]);
+				par1.store_a(&(*weights.WeightsPar1)[i]);
+				par2.store_a(&(*weights.WeightsPar2)[i]);
 			}
 
 			if (HasBias)
