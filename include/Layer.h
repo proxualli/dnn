@@ -1374,7 +1374,7 @@ namespace dnn
 			{
 				const bool differentOptimzerWeightFormat = PlainOptimizerWeights && (*WeightsMemDesc != *PersistWeightsMemDesc);
 				
-				auto OptWeights = WeightsStruct(&Weights, &WeightsD1, &WeightsPar1, &WeightsPar2);
+				auto optWeights = WeightsStruct(&Weights, &WeightsD1, &WeightsPar1, &WeightsPar2);
 				
 				auto weights = FloatVector();
 				auto weightsD1 = FloatVector();
@@ -1384,14 +1384,14 @@ namespace dnn
 				if (differentOptimzerWeightFormat)
 				{
 					weights = FloatVector(WeightCount);
-					OptWeights.Weights = &weights;
+					optWeights.Weights = &weights;
 					auto memWeights = dnnl::memory(*WeightsMemDesc, Device.engine, Weights.data());
 					auto weightsMem = dnnl::memory(*PersistWeightsMemDesc, Device.engine, weights.data());
 					dnnl::reorder(memWeights, weightsMem).execute(Device.stream, { {DNNL_ARG_FROM, memWeights}, {DNNL_ARG_TO, weightsMem} });
 					Device.stream.wait();
 
 					weightsD1 = FloatVector(WeightCount);
-					OptWeights.WeightsD1 = &weightsD1;
+					optWeights.WeightsD1 = &weightsD1;
 					auto memWeightsD1 = dnnl::memory(*WeightsMemDesc, Device.engine, WeightsD1.data());
 					auto weightsMemD1 = dnnl::memory(*PersistWeightsMemDesc, Device.engine, weightsD1.data());
 					dnnl::reorder(memWeightsD1, weightsMemD1).execute(Device.stream, { {DNNL_ARG_FROM, memWeightsD1}, {DNNL_ARG_TO, weightsMemD1} });
@@ -1400,7 +1400,7 @@ namespace dnn
 					if (WeightsPar1.size() > 0)
 					{
 						weightsPar1 = FloatVector(WeightCount);
-						OptWeights.WeightsPar1 = &weightsPar1;
+						optWeights.WeightsPar1 = &weightsPar1;
 						auto memWeightsPar1 = dnnl::memory(*WeightsMemDesc, Device.engine, WeightsPar1.data());
 						auto weightsPar1Mem = dnnl::memory(*PersistWeightsMemDesc, Device.engine, weightsPar1.data());
 						dnnl::reorder(memWeightsPar1, weightsPar1Mem).execute(Device.stream, { {DNNL_ARG_FROM, memWeightsPar1}, {DNNL_ARG_TO, weightsPar1Mem} });
@@ -1410,7 +1410,7 @@ namespace dnn
 					if (WeightsPar2.size() > 0)
 					{
 						weightsPar2 = FloatVector(WeightCount);
-						OptWeights.WeightsPar2 = &weightsPar2;
+						optWeights.WeightsPar2 = &weightsPar2;
 						auto memWeightsPar2 = dnnl::memory(*WeightsMemDesc, Device.engine, WeightsPar2.data());
 						auto weightsPar2Mem = dnnl::memory(*PersistWeightsMemDesc, Device.engine, weightsPar2.data());
 						dnnl::reorder(memWeightsPar2, weightsPar2Mem).execute(Device.stream, { {DNNL_ARG_FROM, memWeightsPar2}, {DNNL_ARG_TO, weightsPar2Mem} });
@@ -1421,46 +1421,46 @@ namespace dnn
 				switch (optimizer)
 				{
 				case Optimizers::AdaBound:
-					AdaBound(rate, OptWeights);
+					AdaBound(rate, optWeights);
 					break;
 				case Optimizers::AdaBoundW:
-					AdaBoundW(rate, OptWeights);
+					AdaBoundW(rate, optWeights);
 					break;
 				case Optimizers::AdaDelta:
-					AdaDelta(rate, OptWeights);
+					AdaDelta(rate, optWeights);
 					break;
 				case Optimizers::AdaGrad:
-					AdaGrad(rate, OptWeights);
+					AdaGrad(rate, optWeights);
 					break;
 				case Optimizers::Adam:
-					Adam(rate, OptWeights);
+					Adam(rate, optWeights);
 					break;
 				case Optimizers::Adamax:
-					Adamax(rate, OptWeights);
+					Adamax(rate, optWeights);
 					break;
 				case Optimizers::AdamW:
-					AdamW(rate, OptWeights);
+					AdamW(rate, optWeights);
 					break;
 				case Optimizers::AmsBound:
-					AdaBound(rate, OptWeights, true);
+					AdaBound(rate, optWeights, true);
 					break;
 				case Optimizers::AmsBoundW:
-					AdaBoundW(rate, OptWeights, true);
+					AdaBoundW(rate, optWeights, true);
 					break;
 				case Optimizers::NAG:
-					NAG(rate, OptWeights);
+					NAG(rate, optWeights);
 					break;
 				case Optimizers::RMSProp:
-					RMSProp(rate, OptWeights);
+					RMSProp(rate, optWeights);
 					break;
 				case Optimizers::SGD:
-					SGD(rate, OptWeights);
+					SGD(rate, optWeights);
 					break;
 				case Optimizers::SGDMomentum:
-					SGDMomentum(rate, OptWeights);
+					SGDMomentum(rate, optWeights);
 					break;
 				case Optimizers::SGDW:
-					SGDW(rate, OptWeights);
+					SGDW(rate, optWeights);
 					break;
 				}
 
