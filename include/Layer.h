@@ -1688,7 +1688,7 @@ namespace dnn
 						BiasesD1[i] += weightDecay * Biases[i];
 						BiasesPar1[i] = (beta1 * BiasesPar1[i]) + (oneMinusBeta1 * BiasesD1[i] * batchRecip);
 						BiasesPar2[i] = (beta2 * BiasesPar2[i]) + (oneMinusBeta2 * Square<Float>(BiasesD1[i] * batchRecip));
-						Biases[i] -= Clamp<Float>(step_size / (std::sqrt(BiasesPar2[i]) + eps), lowerBound, upperBound) * BiasesPar1[i];
+						Biases[i] -= Clamp<Float>(step_size / std::sqrt(BiasesPar2[i] + eps), lowerBound, upperBound) * BiasesPar1[i];
 					}
 				else
 					PRAGMA_OMP_SIMD()
