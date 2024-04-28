@@ -1513,6 +1513,7 @@ namespace dnn
 			const auto weightDecay = rate.L2Penalty * WeightsWDM;
 			const auto step_size = rate.MaximumRate * WeightsLRM * std::sqrt(oneMinusB2) / oneMinusB1;
 
+			/*
 			if (!amsbound)
 				PRAGMA_OMP_SIMD()
 				for (auto i = 0ull; i < WeightCount; i++)
@@ -1528,6 +1529,41 @@ namespace dnn
 					(*weights.WeightsPar1)[i] = (beta1 * (*weights.WeightsPar1)[i]) + (oneMinusBeta1 * (*weights.WeightsD1)[i] * batchRecip);
 					(*weights.WeightsPar2)[i] = (beta2 * (*weights.WeightsPar2)[i]) + (oneMinusBeta2 * Square<Float>((*weights.WeightsD1)[i] * batchRecip));
 					(*weights.Weights)[i] -= Clamp<Float>(step_size / (std::sqrt(std::max((*weights.WeightsPar1)[i], (*weights.WeightsPar2)[i])) + eps), lowerBound, upperBound) * (*weights.WeightsPar1)[i];
+				}
+			*/
+
+			VecFloat weight, weightD1, par1, par2;
+			if (!amsbound)
+				for (auto i = 0ull; i < WeightCount; i += VectorSize)
+				{
+					weight.load_a(&(*weights.Weights)[i]);
+					weightD1.load_a(&(*weights.WeightsD1)[i]);
+					par1.load_a(&(*weights.WeightsPar1)[i]);
+					par2.load_a(&(*weights.WeightsPar2)[i]);
+
+					par1 = (beta1 * par1) + (oneMinusBeta1 * weightD1 *  batchRecip);
+					par2 = (beta2 * par2) + (oneMinusBeta2 * square(weightD1 * batchRecip));
+					weight -= Clamp<VecFloat>(step_size / sqrt(par2 + eps), lowerBound, upperBound) * par1;
+
+					weight.store_a(&(*weights.Weights)[i]);
+					par1.store_a(&(*weights.WeightsPar1)[i]);
+					par2.store_a(&(*weights.WeightsPar2)[i]);
+				}
+			else
+				for (auto i = 0ull; i < WeightCount; i += VectorSize)
+				{
+					weight.load_a(&(*weights.Weights)[i]);
+					weightD1.load_a(&(*weights.WeightsD1)[i]);
+					par1.load_a(&(*weights.WeightsPar1)[i]);
+					par2.load_a(&(*weights.WeightsPar2)[i]);
+
+					par1 = (beta1 * par1) + (oneMinusBeta1 * weightD1 * batchRecip);
+					par2 = (beta2 * par2) + (oneMinusBeta2 * square(weightD1 * batchRecip));
+					weight -= Clamp<VecFloat>(step_size / sqrt(max(par1, par2) + eps), lowerBound, upperBound) * par1;
+
+					weight.store_a(&(*weights.Weights)[i]);
+					par1.store_a(&(*weights.WeightsPar1)[i]);
+					par2.store_a(&(*weights.WeightsPar2)[i]);
 				}
 
 			if (HasBias)
@@ -1580,6 +1616,7 @@ namespace dnn
 			const auto weightDecay = rate.L2Penalty * WeightsWDM;
 			const auto step_size = rate.MaximumRate * WeightsLRM * std::sqrt(oneMinusB2) / oneMinusB1;
 
+			/*
 			if (!amsbound)
 				PRAGMA_OMP_SIMD()
 				for (auto i = 0ull; i < WeightCount; i++)
@@ -1597,6 +1634,43 @@ namespace dnn
 					(*weights.WeightsPar1)[i] = (beta1 * (*weights.WeightsPar1)[i]) + (oneMinusBeta1 * (*weights.WeightsD1)[i] * batchRecip);
 					(*weights.WeightsPar2)[i] = (beta2 * (*weights.WeightsPar2)[i]) + (oneMinusBeta2 * Square<Float>((*weights.WeightsD1)[i] * batchRecip));
 					(*weights.Weights)[i] -= Clamp<Float>(step_size / (std::sqrt(std::max((*weights.WeightsPar1)[i], (*weights.WeightsPar2)[i])) + eps), lowerBound, upperBound) * (*weights.WeightsPar1)[i];
+				}
+			*/
+
+			VecFloat weight, weightD1, par1, par2;
+			if (!amsbound)
+				for (auto i = 0ull; i < WeightCount; i += VectorSize)
+				{
+					weight.load_a(&(*weights.Weights)[i]);
+					weightD1.load_a(&(*weights.WeightsD1)[i]);
+					par1.load_a(&(*weights.WeightsPar1)[i]);
+					par2.load_a(&(*weights.WeightsPar2)[i]);
+
+					weightD1 += weightDecay * weight;
+					par1 = (beta1 * par1) + (oneMinusBeta1 * weightD1 * batchRecip);
+					par2 = (beta2 * par2) + (oneMinusBeta2 * square(weightD1 * batchRecip));
+					weight -= Clamp<VecFloat>(step_size / sqrt(par2 + eps), lowerBound, upperBound) * par1;
+
+					weight.store_a(&(*weights.Weights)[i]);
+					par1.store_a(&(*weights.WeightsPar1)[i]);
+					par2.store_a(&(*weights.WeightsPar2)[i]);
+				}
+			else
+				for (auto i = 0ull; i < WeightCount; i += VectorSize)
+				{
+					weight.load_a(&(*weights.Weights)[i]);
+					weightD1.load_a(&(*weights.WeightsD1)[i]);
+					par1.load_a(&(*weights.WeightsPar1)[i]);
+					par2.load_a(&(*weights.WeightsPar2)[i]);
+
+					weightD1 += weightDecay * weight;
+					par1 = (beta1 * par1) + (oneMinusBeta1 * weightD1 * batchRecip);
+					par2 = (beta2 * par2) + (oneMinusBeta2 * square(weightD1 * batchRecip));
+					weight -= Clamp<VecFloat>(step_size / sqrt(max(par1, par2) + eps), lowerBound, upperBound) * par1;
+
+					weight.store_a(&(*weights.Weights)[i]);
+					par1.store_a(&(*weights.WeightsPar1)[i]);
+					par2.store_a(&(*weights.WeightsPar2)[i]);
 				}
 
 			if (HasBias)
