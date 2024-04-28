@@ -274,10 +274,10 @@ namespace dnn
 		}
 
 		WeightsStruct() :
-			Weights(&FloatVector()),
-		    WeightsD1(&FloatVector()),
-			WeightsPar1(&FloatVector()),
-			WeightsPar2(&FloatVector())
+			Weights(nullptr),
+		    WeightsD1(nullptr),
+			WeightsPar1(nullptr),
+			WeightsPar2(nullptr)
 		{
 		}
 
