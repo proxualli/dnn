@@ -62,7 +62,7 @@ namespace dnn
 
 		virtual ~Dataprovider() = default;
 
-		bool DatasetAvailable(const Datasets dataset)
+		bool DatasetAvailable(const Datasets dataset) const
 		{
 			std::filesystem::path path;
 

@@ -135,6 +135,8 @@ namespace
 	constexpr auto TestMultiply = false;
 
 	typedef float Float;
+	typedef double Double;
+	typedef long long Int;
 	typedef std::size_t UInt;
 	typedef unsigned char Byte;
 	
@@ -1051,7 +1053,7 @@ namespace
 	auto GetTotalFreeMemory()
 	{
 #if defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW32__)
-		MEMORYSTATUSEX statusEx;
+		auto statusEx = MEMORYSTATUSEX();
 		statusEx.dwLength = sizeof(MEMORYSTATUSEX);
 		GlobalMemoryStatusEx(&statusEx);
 		std::cout << std::string("Available memory: ") << std::to_string(statusEx.ullAvailPhys/1024/1024) << std::string("/") << std::to_string(statusEx.ullTotalPhys/1024/1024) << std::string(" MB") << std::endl;

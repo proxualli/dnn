@@ -907,9 +907,9 @@ namespace dnn
 		{
 			std::transform(name.begin(), name.end(), name.begin(), ::tolower);
 			
-			for (auto& layer : Layers)
+			for (const auto& layer : Layers)
 			{
-				auto layerName = layer->Name;
+				auto layerName = std::string(layer->Name);
 				std::transform(layerName.begin(), layerName.end(), layerName.begin(), ::tolower);
 				if (layerName == name)
 					return false;
@@ -2419,7 +2419,7 @@ namespace dnn
 			return false;
 		}
 
-		std::vector<LabelInfo> GetLabelInfo(std::vector<UInt> labels)
+		std::vector<LabelInfo> GetLabelInfo(std::vector<UInt> labels) const
 		{
 			const auto hierarchies = DataProv->Hierarchies;
 			auto SampleLabels = std::vector<LabelInfo>(hierarchies);
@@ -2434,7 +2434,7 @@ namespace dnn
 			return SampleLabels;
 		}
 
-		std::vector<LabelInfo> GetCutMixLabelInfo(std::vector<UInt> labels, std::vector<UInt> mixLabels, double lambda)
+		std::vector<LabelInfo> GetCutMixLabelInfo(std::vector<UInt> labels, std::vector<UInt> mixLabels, double lambda) const
 		{
 			const auto hierarchies = DataProv->Hierarchies;
 			auto SampleLabels = std::vector<LabelInfo>(hierarchies);
@@ -2617,11 +2617,10 @@ namespace dnn
 			{
 				const auto sampleIndex = ((index + batchIndex) >= DataProv->TrainSamplesCount) ? batchIndex : index + batchIndex;
 
-				auto labels = DataProv->TrainLabels[sampleIndex];
+				auto labels = std::vector<UInt>(DataProv->TrainLabels[sampleIndex]);
 				SampleLabels[batchIndex] = GetLabelInfo(labels);
 
-				auto imgByte = DataProv->TrainSamples[sampleIndex];
-
+				auto imgByte = Image<Byte>(DataProv->TrainSamples[sampleIndex]);
 				if (resize)
 					imgByte = Image<Byte>::Resize(imgByte, D, H, W, Interpolations(CurrentTrainingRate.Interpolation));
 
@@ -2656,13 +2655,13 @@ namespace dnn
 			for_i_dynamic(batchSize, threads, [=, &SampleLabels](const UInt batchIndex)
 			{
 				const auto randomIndex = (index + batchIndex >= DataProv->TrainSamplesCount) ? RandomTrainSamples[batchIndex] : RandomTrainSamples[index + batchIndex];
-				auto imgByte = DataProv->TrainSamples[randomIndex];
+				auto imgByte = Image<Byte>(DataProv->TrainSamples[randomIndex]);
 
 				const auto randomIndexMix = (index + batchSize - (batchIndex + 1) >= DataProv->TrainSamplesCount) ? RandomTrainSamples[batchSize - (batchIndex + 1)] : RandomTrainSamples[index + batchSize - (batchIndex + 1)];
-				auto imgByteMix = DataProv->TrainSamples[randomIndexMix];
+				auto imgByteMix = Image<Byte>(DataProv->TrainSamples[randomIndexMix]);
 
-				auto labels = DataProv->TrainLabels[randomIndex];
-				auto mixLabels = DataProv->TrainLabels[randomIndexMix];
+				auto labels = std::vector<UInt>(DataProv->TrainLabels[randomIndex]);
+				auto mixLabels = std::vector<UInt>(DataProv->TrainLabels[randomIndexMix]);
 
 				auto cutout = false;
 				if (Bernoulli<bool>(CurrentTrainingRate.Cutout))
@@ -2738,11 +2737,11 @@ namespace dnn
 			{
 				const auto sampleIndex = ((index + batchIndex) >= DataProv->TestSamplesCount) ? batchIndex : index + batchIndex;
 
-				auto labels = DataProv->TestLabels[sampleIndex];
+				auto labels = std::vector<UInt>(DataProv->TestLabels[sampleIndex]);
 				SampleLabels[batchIndex] = GetLabelInfo(labels);
 
-				auto imgByte = DataProv->TestSamples[sampleIndex];
-
+				auto imgByte = Image<Byte>(DataProv->TestSamples[sampleIndex]);
+				
 				if (resize)
 					imgByte = Image<Byte>::Resize(imgByte, D, H, W, Interpolations(CurrentTrainingRate.Interpolation));
 
@@ -2777,10 +2776,10 @@ namespace dnn
 			{
 				const auto sampleIndex = ((index + batchIndex) >= DataProv->TestSamplesCount) ? batchIndex : index + batchIndex;
 
-				auto labels = DataProv->TestLabels[sampleIndex];
+				auto labels = std::vector<UInt>(DataProv->TestLabels[sampleIndex]);
 				SampleLabels[batchIndex] = GetLabelInfo(labels);
 
-				auto imgByte = DataProv->TestSamples[sampleIndex];
+				auto imgByte = Image<Byte>(DataProv->TestSamples[sampleIndex]);
 
 				if (DataProv->C == 3 && Bernoulli<bool>(CurrentTrainingRate.ColorCast))
 					imgByte = Image<Byte>::ColorCast(imgByte, CurrentTrainingRate.ColorAngle);
@@ -2854,7 +2853,7 @@ namespace dnn
 				SwitchInplaceBwd(false);
 		}
 		
-		bool SaveModel(const std::string& fileName)
+		bool SaveModel(const std::string& fileName) const
 		{
 			auto os = std::fstream{ fileName, std::ios::out | std::ios::binary | std::ios::trunc };
 

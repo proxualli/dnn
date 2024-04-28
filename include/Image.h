@@ -781,9 +781,9 @@ namespace dnn
 
 		static Image Distorted(const Image& image, const Float scale, const Float angle, const Interpolations interpolation, const std::vector<Float>& mean)
 		{
-			const auto zoom = scale / Float(100) * UniformReal<Float>( Float(-1), Float(1));
-			const auto height = image.Height + int(std::round(Float(image.Height) * zoom));
-			const auto width = image.Width + int(std::round(Float(image.Width) * zoom));
+			const auto zoom = Double(scale) / Double(100) * UniformReal<Double>(Double(-1), Double(1));
+			const auto height = image.Height + UInt(Int(std::round(Double(image.Height) * zoom)));
+			const auto width = image.Width + UInt(Int(std::round(Double(image.Width) * zoom)));
 
 			return Image::Crop(Image::Rotate(Image::Resize(image, image.Depth, height, width, interpolation), angle * UniformReal<Float>( Float(-1), Float(1)), interpolation, mean), Positions::Center, image.Depth, image.Height, image.Width, mean);
 		}

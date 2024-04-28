@@ -67,28 +67,28 @@ namespace dnn
 		defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), "Ratio=", "Ratio=");
 
 		auto types = magic_enum::enum_names<LayerTypes>();
-		for (auto type : types)
+		for (const auto& type : types)
 		{
 			auto text = "Type=" + std::string(type);
 			defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), text, text);
 		}
 
 		auto activations = magic_enum::enum_names<Activations>();
-		for (auto activation : activations)
+		for (const auto& activation : activations)
 		{
 			auto text = "Activation=" + std::string(activation);
 			defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), text, text);
 		}
 
 		auto costs = magic_enum::enum_names<Costs>();
-		for (auto cost : costs)
+		for (const auto& cost : costs)
 		{
 			auto text = "Cost=" + std::string(cost);
 			defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), text, text);
 		}
 
 		auto fillers = magic_enum::enum_names<Fillers>();
-		for (auto filler : fillers)
+		for (const auto& filler : fillers)
 		{
 			auto textFillerWeights = "WeightsFiller=" + std::string(filler);
 			defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), textFillerWeights, textFillerWeights);
@@ -98,21 +98,21 @@ namespace dnn
 		}
 
 		auto fillerModes = magic_enum::enum_names<FillerModes>();
-		for (auto fillerMode : fillerModes)
+		for (const auto& fillerMode : fillerModes)
 		{
 			auto textFillerMode = "(" + std::string(fillerMode) + ")";
 			defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), textFillerMode, textFillerMode);
 		}
 
 		auto datasets = magic_enum::enum_names<Datasets>();
-		for (auto dataset : datasets)
+		for (const auto& dataset : datasets)
 		{
 			auto text = "Dataset=" + std::string(dataset);
 			defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), text, text);
 		}
 
 		auto algorithms = magic_enum::enum_names<Algorithms>();
-		for (auto algorithm : algorithms)
+		for (const auto& algorithm : algorithms)
 		{
 			auto text = "Algorithm=" + std::string(algorithm);
 			defNorm = CaseInsensitiveReplace(defNorm.begin(), defNorm.end(), text, text);
@@ -1007,7 +1007,7 @@ namespace dnn
 
 				auto ok = false;
 				auto types = magic_enum::enum_names<LayerTypes>();
-				for (auto type : types)
+				for (const auto& type : types)
 					if (params == std::string(type))
 						ok = true;
 						
@@ -1072,10 +1072,10 @@ namespace dnn
 				while (std::getline(list, item, ','))
 					inputsStr.push_back(item);
 
-				for (auto input : inputsStr)
+				for (const auto& input : inputsStr)
 				{
 					auto ok = false;
-					for (auto name : layerNames)
+					for (const auto& name : layerNames)
 						if (name.first.compare(input) == 0)
 							ok = true;
 					if (!ok)
@@ -2071,7 +2071,7 @@ namespace dnn
 				params = strLine.erase(0, 10);
 
 				auto ok = false;
-				for (auto algo : magic_enum::enum_names<Algorithms>())
+				for (const auto& algo : magic_enum::enum_names<Algorithms>())
 					if (params == std::string(algo))
 						ok = true;
 				if (!ok)
@@ -2273,7 +2273,7 @@ namespace dnn
 
 				auto ok = false;
 				auto costs = magic_enum::enum_names<Costs>();
-				for (auto cost : costs)
+				for (const auto& cost : costs)
 					if (params == std::string(cost))
 						ok = true;
 				if (!ok)
@@ -2309,7 +2309,7 @@ namespace dnn
 
 				auto ok = false;
 				auto activations = magic_enum::enum_names<Activations>();
-				for (auto activation : activations)
+				for (const auto& activation : activations)
 					if (params == std::string(activation))
 						ok = true;
 				if (!ok)
@@ -2569,7 +2569,7 @@ namespace dnn
 
 				auto ok = false;
 				auto ops = magic_enum::enum_names<ReduceOperations>();
-				for (auto op : ops)
+				for (const auto& op : ops)
 					if (params == std::string(op))
 						ok = true;
 				if (!ok)
@@ -2613,7 +2613,7 @@ namespace dnn
 			if (unreferencedLayers.size() > 0)
 			{
 				auto l = unreferencedLayers[0];
-				for (auto t : layerNames)
+				for (const auto& t : layerNames)
 					if (t.first == l->Name)
 						line = t.second;
 
@@ -2637,7 +2637,7 @@ namespace dnn
 		for (auto l : model->CostLayers)
 			if (model->GetLayerOutputs(l).size() > 0)
 			{
-				for (auto t : layerNames)
+				for (const auto& t : layerNames)
 					if (t.first == l->Name)
 						line = t.second;
 
