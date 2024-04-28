@@ -150,8 +150,7 @@ namespace dnn
 			for (auto i = 0ll; i < static_cast<long long>(range); i++)
 				f(i);
 #else
-			PRAGMA_OMP_FOR_SCHEDULE_STATIC(1)
-			for (auto i = 0ll; i < static_cast<long long>(range); i++)
+			for (auto i = 0ull; i < range; i++)
 				f(i);
 #endif
 		}
@@ -177,8 +176,7 @@ namespace dnn
 				for (auto i = 0ll; i < static_cast<long long>(range); i++)
 					f(i);
 #else
-				PRAGMA_OMP_FOR_SCHEDULE_STATIC(1)
-				for (auto i = 0ll; i < static_cast<long long>(range); i++)
+				for (auto i = 0ull; i < range; i++)
 					f(i);
 #endif
 			}
