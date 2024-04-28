@@ -145,12 +145,13 @@ namespace dnn
 #if DNNL_CPU_RUNTIME == DNNL_RUNTIME_OMP
 		PRAGMA_OMP_PARALLEL_THREADS(omp_get_max_threads())
 		{
-			PRAGMA_OMP_FOR_SCHEDULE_STATIC(1)
 #if defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER)
+			PRAGMA_OMP_FOR_SCHEDULE_STATIC(1)
 			for (auto i = 0ll; i < static_cast<long long>(range); i++)
 				f(i);
 #else
-			for (auto i = 0ull; i < range; i++)
+			PRAGMA_OMP_FOR_SCHEDULE_STATIC(1)
+			for (auto i = 0ll; i < static_cast<long long>(range); i++)
 				f(i);
 #endif
 		}
@@ -171,12 +172,13 @@ namespace dnn
 #if DNNL_CPU_RUNTIME == DNNL_RUNTIME_OMP
 			PRAGMA_OMP_PARALLEL_THREADS(static_cast<int>(threads))
 			{
-				PRAGMA_OMP_FOR_SCHEDULE_STATIC(1)
 #if defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER)
+				PRAGMA_OMP_FOR_SCHEDULE_STATIC(1)
 				for (auto i = 0ll; i < static_cast<long long>(range); i++)
 					f(i);
 #else
-				for (auto i = 0ull; i < range; i++)
+				PRAGMA_OMP_FOR_SCHEDULE_STATIC(1)
+				for (auto i = 0ll; i < static_cast<long long>(range); i++)
 					f(i);
 #endif
 			}
