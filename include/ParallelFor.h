@@ -153,7 +153,7 @@ namespace dnn
 					f(i);
 		}
 	#else
-		PRAGMA_OMP_PARALLEL_THREADS(omp_get_max_threads())
+		PRAGMA_OMP_PARALLEL
 		{
 			PRAGMA_OMP_FOR_SCHEDULE_STATIC(1)
 				for (auto i = 0ull; i < range; i++)
@@ -184,7 +184,7 @@ namespace dnn
 					f(i);
 			}
 	#else
-			PRAGMA_OMP_PARALLEL()
+			PRAGMA_OMP_PARALLEL
 			{
 				PRAGMA_OMP_FOR_SCHEDULE_STATIC(1)
 				for (auto i = 0ull; i < range; i++)
@@ -217,7 +217,7 @@ namespace dnn
 				f(i);
 		}
 	#else
-		PRAGMA_OMP_PARALLEL()
+		PRAGMA_OMP_PARALLEL
 		{
 			PRAGMA_OMP_FOR_SCHEDULE_DYNAMIC(1)
 			for (auto i = 0ull; i < range; i++)
@@ -247,7 +247,7 @@ namespace dnn
 						f(i);
 			}
 	#else
-			PRAGMA_OMP_PARALLEL()
+			PRAGMA_OMP_PARALLEL
 			{
 				PRAGMA_OMP_FOR_SCHEDULE_DYNAMIC(1)
 				for (auto i = 0ull; i < range; i++)
