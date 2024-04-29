@@ -151,10 +151,9 @@ namespace dnn
 				f(i);
 		}
 	#else
-			#pragma omp parallel for schedule(static,1) num_threads(omp_get_max_threads())
-			for (auto i = 0ull; i < range; i++)
-				f(i);
-		}
+		#pragma omp parallel for schedule(static,1) num_threads(omp_get_max_threads())
+		for (auto i = 0ull; i < range; i++)
+			f(i);
 	#endif
 	
 #else
@@ -237,9 +236,9 @@ namespace dnn
 					f(i);
 			}
 	#else
-			#pragma omp parallel for schedule(dynamic,1) num_threads(threads)
-			for (auto i = 0ull; i < range; i++)
-				f(i);
+		#pragma omp parallel for schedule(dynamic,1) num_threads(threads)
+		for (auto i = 0ull; i < range; i++)
+			f(i);
 	#endif
 #else
 			DNN_UNREF_PAR(threads);
