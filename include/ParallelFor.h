@@ -179,7 +179,7 @@ namespace dnn
 					f(i);
 			}
 	#else
-            #pragma omp parallel for schedule(static,1) num_threads(static_cast<int>(threads))
+            #pragma omp parallel for num_threads(static_cast<int>(threads))
 			for (auto i = 0ull; i < range; i++)
 				f(i);
 	#endif
