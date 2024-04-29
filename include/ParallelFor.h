@@ -151,7 +151,7 @@ namespace dnn
 				f(i);
 		}
 	#else
-		#pragma omp parallel for num_threads(omp_get_max_threads())
+		#pragma omp parallel for shared(f) schedule(static,1) num_threads(omp_get_max_threads())
 		for (auto i = 0ull; i < range; i++)
 			f(i);
 	#endif
@@ -179,7 +179,7 @@ namespace dnn
 					f(i);
 			}
 	#else
-            #pragma omp parallel for shared(f) num_threads(static_cast<int>(threads))
+            #pragma omp parallel for shared(f) schedule(static,1) num_threads(static_cast<int>(threads))
 			for (auto i = 0ull; i < range; i++)
 				f(i);
 	#endif
