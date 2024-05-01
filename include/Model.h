@@ -1543,7 +1543,7 @@ namespace dnn
 				layer->Outputs = GetLayerOutputs(layer.get());
 				auto outputsCount = layer->Outputs.size();
 
-				if (outputsCount > 1)
+				if (outputsCount > 1)  // layer is used as input more than once
 				{
 					for (auto& l : Layers)
 					{
@@ -1554,8 +1554,8 @@ namespace dnn
 						{
 							if (input->Name == layer->Name)
 							{
-								l->SharesInput = l->InplaceBwd ? false : true;
-								l->SharesInputOriginal = l->InplaceBwd ? false : true;
+								l->SharesInput = !l->InplaceBwd;
+								l->SharesInputOriginal = l->SharesInput;
 								outputsCount--;
 								break;
 							}
@@ -1577,7 +1577,7 @@ namespace dnn
 			{
 				auto outputsCount = GetLayerOutputs(layer.get(), true).size();
 
-				if (outputsCount > 1)
+				if (outputsCount > 1)  // layer is used as input more than once
 				{
 					for (auto& l : Layers)
 					{
@@ -1588,7 +1588,7 @@ namespace dnn
 						{
 							if (input->Name == layer->Name)
 							{
-								l->SharesInputInplace = l->InplaceBwd ? false : true;
+								l->SharesInputInplace = !l->InplaceBwd;
 								outputsCount--;
 								break;
 							}
@@ -1603,6 +1603,33 @@ namespace dnn
 			return unreferencedLayers;
 		}
 	
+		/*
+		bool CheckRelation()
+		{
+			auto listA = std::vector<bool>();
+			for (auto& layer : Layers)
+			{
+				listA.push_back(layer->SharesInput);
+
+				if (layer->InplaceBwd && layer->SharesInput)
+					return false;
+			}
+
+			auto listB = std::vector<bool>();
+			SwitchInplaceBwd(true);
+			for (auto& layer : Layers)
+			{
+				listB.push_back(layer->SharesInput);
+
+				if (layer->InplaceBwd && layer->SharesInput)
+					return false;
+			}
+			SwitchInplaceBwd(false);
+
+			return std::equal(listA.begin(), listA.end(), listB.begin());
+		}
+		*/
+
 		void Training()
 		{
 			if (TaskState.load() == TaskStates::Stopped && !BatchSizeChanging.load() && !ResettingWeights.load())
@@ -1683,6 +1710,14 @@ namespace dnn
 						FirstUnlockedLayer.store(i);
 						break;
 					}
+
+				/*
+				if (!CheckRelation())
+				{
+					State.store(States::Completed);
+					return;
+				}
+				*/
 
 				while (CurrentEpoch < TotalEpochs)
 				{

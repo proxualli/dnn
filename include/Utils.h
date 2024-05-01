@@ -126,7 +126,7 @@ namespace
 	constexpr auto Inplace = true;
 	constexpr auto Kahan = true;
 	constexpr auto PlainOptimizerWeights = true;
-	constexpr auto Reference = true;
+	constexpr auto Reference = false;
 	constexpr auto SingleMeanVariancePass = false;
 		
 	constexpr auto TestActivations = false;
@@ -1048,6 +1048,11 @@ namespace
 			return true;
 
 		return false;
+	}
+
+	auto BoolToString(const bool value)
+	{
+		return value ? std::string("Yes") : std::string("No");
 	}
 
 	auto GetTotalFreeMemory()

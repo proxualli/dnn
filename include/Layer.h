@@ -473,7 +473,7 @@ namespace dnn
 			HasWeights(IsNorm(layerType) ? scaling : (weightCount > 0)),
 			InplaceBwd(IsInplaceBwd(layerType, inputs)),
 			LayerBeforeCost(false),
-			SharesInput(false),
+			SharesInput(false),										// 
 			SharesInputOriginal(false),
 			SharesInputInplace(false),
 			Enabled(enabled),
@@ -577,6 +577,10 @@ namespace dnn
 			description.append(nwl + std::string(" Features:") + tab + std::to_string(C) + std::string("x") + std::to_string(H) + std::string("x") + std::to_string(W));
 			description.append(nwl + std::string(" Neurons:") + tab + std::to_string(CDHW()));
 			description.append(nwl + std::string(" Format:") + tab + std::string(dnnl_fmt_tag2str(static_cast<dnnl_format_tag_t>(ChosenFormat))));
+#if defined DNN_DEV
+			description.append(nwl + std::string(" SharesInput:") + tab + BoolToString(SharesInput));
+			description.append(nwl + std::string(" InplaceBwd:") + tab + BoolToString(InplaceBwd));
+#endif
 			
 			return description;
 		}
@@ -591,7 +595,7 @@ namespace dnn
 				description.append(nwl + std::string(" Format:") + tab + std::string(dnnl_fmt_tag2str(static_cast<dnnl_format_tag_t>(WeightsFormat))));
 				description.append(nwl + std::string("  lr mult:") + tab + FloatToString(WeightsLRM));
 				description.append(nwl + std::string("  wd mult:") + tab + FloatToString(WeightsWDM));
-
+	
 				if (HasBias)
 				{
 					description.append(nwl + std::string(" Biases:") + tab + std::to_string(BiasCount));
@@ -1734,7 +1738,7 @@ namespace dnn
 				par2.load_a(&(*weights.WeightsPar2)[i]);
 
 				par1 = (momentum * par1) + (oneMinMomentum * square(weightD1 * batchRecip));
-				const auto update = lr * (sqrt(par2 + eps) / sqrt(par1 + eps)) * weightD1[i] * batchRecip;
+				const auto update = lr * (sqrt(par2 + eps) / sqrt(par1 + eps)) * weightD1 * batchRecip;
 				par2 = (momentum * par2) + (oneMinMomentum * square(update));
 				weight += update;
 

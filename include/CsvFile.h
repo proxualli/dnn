@@ -124,7 +124,7 @@ namespace dnn
         }
 
 #ifndef NDEBUG
-        std::cerr << std::string("CsvFile::") << NAMEOF(ReadFileToString) << std::string("(const std::string& fileName)  -  ") << fileName << std::string("  -  Could not open the file") << std::endl;
+        std::cerr << std::string("CsvFile::") << std::string("ReadFileToString") << std::string("(const std::string& fileName)  -  ") << fileName << std::string("  -  Could not open the file") << std::endl;
 #endif
 
         return std::string("");
