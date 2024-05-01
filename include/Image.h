@@ -5,9 +5,16 @@
 #include "jpeglib.h"
 #include "jerror.h"
 #endif
-
 #undef cimg_display
+#if defined DNN_DEV
+#if defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW32__)
+#define cimg_display 2
+#else
+#define cimg_display 1
+#endif
+#else	
 #define cimg_display 0
+#endif
 #include "CImg.h"
 
 namespace dnn

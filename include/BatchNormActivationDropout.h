@@ -221,6 +221,8 @@ namespace dnn
 				const auto strideH = W * VectorSize;
 				const auto plain = IsPlainFormat();
 				const auto elements = batchSize * (plain ? CDHW() : PaddedCDHW());
+				const auto padded = C == PaddedC;
+				const auto part = padded ? PaddedC : (PaddedC - VectorSize);
 
 				if (!training)
 				{
@@ -254,6 +256,9 @@ namespace dnn
 
 						for_i(PaddedC / VectorSize, threads, [=](UInt c)
 						{
+							const auto overflow = ((!padded) && (c >= (part / VectorSize)));
+							const auto cutoff = overflow ? int(VectorSize - (PaddedC - C)) : int(VectorSize);
+
 							const auto channelOffset = c * VectorSize;
 							const auto mapOffset = channelOffset * HW();
 
@@ -461,6 +466,9 @@ namespace dnn
 
 						for_i(PaddedC / VectorSize, threads, [=](UInt c)
 						{
+							const auto overflow = ((!padded) && (c >= (part / VectorSize)));
+							const auto cutoff = overflow ? int(VectorSize - (PaddedC - C)) : int(VectorSize);
+
 							const auto channelOffset = c * VectorSize;
 							const auto mapOffset = channelOffset * HW();
 
@@ -492,6 +500,10 @@ namespace dnn
 								unbiasedVariance = max(VecFloat(0), (variance / Float(batchSize * HW() - 1)) - square(mean));
 								variance /= Float(batchSize * HW());
 								variance -= square(mean);
+
+								mean = mean.cutoff(cutoff);
+								unbiasedVariance = unbiasedVariance.cutoff(cutoff);
+								variance = variance.cutoff(cutoff);
 							}
 							else
 							{
@@ -524,17 +536,22 @@ namespace dnn
 
 								unbiasedVariance = max(VecFloat(0), (variance / Float(batchSize * HW() - 1)));
 								variance /= Float(batchSize * HW());
+
+								mean = mean.cutoff(cutoff);
+								unbiasedVariance = unbiasedVariance.cutoff(cutoff);
+								variance = variance.cutoff(cutoff);
 							}
 
 							variance = max(VecFloat(0), variance);
 							variance.store_a(&Variance[channelOffset]);
+							variance = variance.cutoff(cutoff);
 
 							mul_add(VecFloat().load_a(&RunningMean[channelOffset]), Momentum, OneMinusMomentum * mean).store_a(&RunningMean[channelOffset]);
 							mul_add(VecFloat().load_a(&RunningVariance[channelOffset]), Momentum, OneMinusMomentum * unbiasedVariance).store_a(&RunningVariance[channelOffset]);
 
-							const auto invStddev = VecFloat(1) / sqrt(variance + Eps);
-							const auto weightedInvStdDev = Scaling ? (VecFloat().load_a(&Weights[channelOffset]) * invStddev) : invStddev;
-							const auto biases = Scaling && HasBias ? VecFloat().load_a(&Biases[channelOffset]) : VecFloat(0);
+							const auto invStddev = (VecFloat(Float(1)) / sqrt(variance + Eps)).cutoff(cutoff);
+							const auto weightedInvStdDev = Scaling ? (VecFloat().load_a(&Weights[channelOffset]).cutoff(cutoff) * invStddev) : invStddev;
+							const auto biases = Scaling && HasBias ? VecFloat().load_a(&Biases[channelOffset]).cutoff(cutoff) : VecFloat(0);
 
 							invStddev.store_a(&InvStdDev[channelOffset]);
 
@@ -552,7 +569,7 @@ namespace dnn
 											{
 												mask = BernoulliVecFloat(Keep);
 												mask.store_a(&NeuronsActive[w]);
-												(mask * Scale * Func.fVec(mul_add(VecFloat().load_a(&InputLayer->Neurons[w]) - mean, weightedInvStdDev, biases), Alpha, Beta)).store_a(&Neurons[w]);
+												(mask * Scale * Func.fVec(mul_add(VecFloat().load_a(&InputLayer->Neurons[w]).cutoff(cutoff) - mean, weightedInvStdDev, biases), Alpha, Beta)).store_a(&Neurons[w]);
 											}
 										}
 									}
@@ -567,7 +584,7 @@ namespace dnn
 											{
 												mask = BernoulliVecFloat(Keep);
 												mask.store_a(&NeuronsActive[w]);
-												(mask * Scale * Func.fVec(mul_add(VecFloat().load_a(&InputLayer->Neurons[w]) - mean, weightedInvStdDev, biases), Alpha, Beta)).store_a(&Neurons[w]);
+												(mask * Scale * Func.fVec(mul_add(VecFloat().load_a(&InputLayer->Neurons[w]).cutoff(cutoff) - mean, weightedInvStdDev, biases), Alpha, Beta)).store_a(&Neurons[w]);
 	#ifndef DNN_LEAN
 												VecZero.store_nt(&NeuronsD1[w]);
 	#endif
@@ -585,7 +602,7 @@ namespace dnn
 										{
 											const auto offsetH = offsetC + h * strideH;
 											for (auto w = offsetH; w < offsetH + strideH; w += VectorSize)
-												(Scale * Func.fVec(mul_add(VecFloat().load_a(&InputLayer->Neurons[w]) - mean, weightedInvStdDev, biases), Alpha, Beta)).store_a(&Neurons[w]);
+												(Scale * Func.fVec(mul_add(VecFloat().load_a(&InputLayer->Neurons[w]).cutoff(cutoff) - mean, weightedInvStdDev, biases), Alpha, Beta)).store_a(&Neurons[w]);
 										}
 									}
 								else
@@ -597,7 +614,7 @@ namespace dnn
 											const auto offsetH = offsetC + h * strideH;
 											for (auto w = offsetH; w < offsetH + strideH; w += VectorSize)
 											{
-												(Scale * Func.fVec(mul_add(VecFloat().load_a(&InputLayer->Neurons[w]) - mean, weightedInvStdDev, biases), Alpha, Beta)).store_a(&Neurons[w]);
+												(Scale * Func.fVec(mul_add(VecFloat().load_a(&InputLayer->Neurons[w]).cutoff(cutoff) - mean, weightedInvStdDev, biases), Alpha, Beta)).store_a(&Neurons[w]);
 	#ifndef DNN_LEAN
 												VecZero.store_nt(&NeuronsD1[w]);
 	#endif
@@ -651,15 +668,18 @@ namespace dnn
 				ZeroGradient(batchSize);
 #endif // DNN_LEAN
 
-				const auto strideH = W * VectorSize;
 				const auto enabled = Enabled;
+				const auto strideH = W * VectorSize;
 				const auto plain = IsPlainFormat();
 				const auto elements = batchSize * (plain ? CDHW() : PaddedCDHW());
-				const auto threads = GetThreads(elements, Float(10));
-
+				const auto maxThreads = GetThreads(elements, Float(10));
+				const auto padded = C == PaddedC;
+				const auto part = padded ? PaddedC : (PaddedC - VectorSize);
+				
 				if (plain)
 				{
 					const auto partialHW = GetVectorPart(HW());
+					const auto threads = std::min<UInt>(maxThreads, C);
 
 					for_i(C, threads, [=](UInt c)
 					{
@@ -769,15 +789,20 @@ namespace dnn
 				}
 				else
 				{
+					const auto threads = std::min<UInt>(maxThreads, PaddedC / VectorSize);
+
 					for_i(PaddedC / VectorSize, threads, [=](UInt c)
 					{
+						const auto overflow = ((!padded) && (c >= (part / VectorSize)));
+						const auto cutoff = overflow ? int(VectorSize - (PaddedC - C)) : int(VectorSize);
+
 						const auto channelOffset = c * VectorSize;
 						const auto mapOffset = channelOffset * HW();
 
-						const auto mean = VecFloat().load_a(&Mean[channelOffset]);
-						const auto invStdDev = VecFloat().load_a(&InvStdDev[channelOffset]);
-						const auto weightedInvStdDev = Scaling ? invStdDev * VecFloat().load_a(&Weights[channelOffset]) : invStdDev;
-						const auto biases = Scaling && HasBias ? VecFloat().load_a(&Biases[channelOffset]) : VecFloat(0);
+						const auto mean = VecFloat().load_a(&Mean[channelOffset]).cutoff(cutoff);
+						const auto invStdDev = VecFloat().load_a(&InvStdDev[channelOffset]).cutoff(cutoff);
+						const auto weightedInvStdDev = Scaling ? invStdDev * VecFloat().load_a(&Weights[channelOffset]).cutoff(cutoff) : invStdDev;
+						const auto biases = Scaling && HasBias ? VecFloat().load_a(&Biases[channelOffset]).cutoff(cutoff) : VecFloat(0);
 						auto diffGamma = VecFloat(0);
 						auto diffBeta = VecFloat(0);
 						auto diffSrc = VecFloat(0);
@@ -794,9 +819,10 @@ namespace dnn
 								const auto offsetH = offsetC + h * strideH;
 								for (auto w = offsetH; w < offsetH + strideH; w += VectorSize)
 								{
-									diffSrc.load_a(&layerD1[w]);
 									inputNeurons.load_a(&InputLayerFwd->Neurons[w]);
 									inputNeurons -= mean;
+									inputNeurons = inputNeurons.cutoff(cutoff);
+									diffSrc.load_a(&layerD1[w]);
 									diffSrc *= (enabled ? VecFloat().load_a(&NeuronsActive[w]) : VecFloat(1)) * Func.dfVec(mul_add(inputNeurons, weightedInvStdDev, biases), Alpha, Beta);
 									KahanSum<VecFloat>(diffSrc * inputNeurons, diffGamma, correction0);
 									KahanSum<VecFloat>(diffSrc, diffBeta, correction1);
@@ -815,7 +841,7 @@ namespace dnn
 						diffGamma *= invStdDev / Float(batchSize * HW());
 						diffBeta /= Float(batchSize * HW());
 
-						const auto gamma = Scaling ? VecFloat().load_a(&Weights[channelOffset]) * invStdDev : invStdDev;
+						const auto gamma = Scaling ? VecFloat().load_a(&Weights[channelOffset]).cutoff(cutoff) * invStdDev : invStdDev;
 
 						if (InplaceBwd)
 							for (auto n = 0ull; n < batchSize; ++n)
@@ -827,10 +853,14 @@ namespace dnn
 
 									for (auto w = offsetH; w < offsetH + strideH; w += VectorSize)
 									{
-										diffSrc = (enabled ? VecFloat().load_a(&NeuronsActive[w]) : VecFloat(1)) * Func.dfVec(mul_add(VecFloat().load_a(&InputLayerFwd->Neurons[w]) - mean, weightedInvStdDev, biases), Alpha, Beta) * VecFloat().load_a(&InputLayer->NeuronsD1[w]);
+										inputNeurons.load_a(&InputLayerFwd->Neurons[w]);
+										inputNeurons -= mean;
+										inputNeurons = inputNeurons.cutoff(cutoff);
+
+										diffSrc = (enabled ? VecFloat().load_a(&NeuronsActive[w]) : VecFloat(1)) * Func.dfVec(mul_add(inputNeurons, weightedInvStdDev, biases), Alpha, Beta) * VecFloat().load_a(&layerD1[w]);
 
 										// if not using global stats!
-										diffSrc -= mul_add(VecFloat().load_a(&InputLayerFwd->Neurons[w]) - mean, diffGamma, diffBeta);
+										diffSrc -= mul_add(inputNeurons, diffGamma, diffBeta);
 
 										//diffSrc *= gamma;
 										mul_add(diffSrc, gamma, VecFloat(0)).store_a(&InputLayer->NeuronsD1[w]);
@@ -847,10 +877,14 @@ namespace dnn
 
 									for (auto w = offsetH; w < offsetH + strideH; w += VectorSize)
 									{
-										diffSrc = (enabled ? VecFloat().load_a(&NeuronsActive[w]) : VecFloat(1)) * Func.dfVec(mul_add(VecFloat().load_a(&InputLayerFwd->Neurons[w]) - mean, weightedInvStdDev, biases), Alpha, Beta) * VecFloat().load_a(&NeuronsD1[w]);
+										inputNeurons.load_a(&InputLayerFwd->Neurons[w]);
+										inputNeurons -= mean;
+										inputNeurons = inputNeurons.cutoff(cutoff);
+
+										diffSrc = (enabled ? VecFloat().load_a(&NeuronsActive[w]) : VecFloat(1)) * Func.dfVec(mul_add(inputNeurons, weightedInvStdDev, biases), Alpha, Beta) * VecFloat().load_a(&layerD1[w]);
 
 										// if not using global stats!
-										diffSrc -= mul_add(VecFloat().load_a(&InputLayerFwd->Neurons[w]) - mean, diffGamma, diffBeta);
+										diffSrc -= mul_add(inputNeurons, diffGamma, diffBeta);
 
 										//diffSrc *= gamma;
 										mul_add(diffSrc, gamma, VecFloat().load_a(&InputLayer->NeuronsD1[w])).store_a(&InputLayer->NeuronsD1[w]);
