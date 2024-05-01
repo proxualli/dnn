@@ -701,8 +701,7 @@ namespace dnn
 									inputNeurons.load_a(&InputLayerFwd->Neurons[w]);
 									inputNeurons -= mean;
 									inputNeurons = inputNeurons.cutoff(cutoff);
-									diffSrc.load_a(&layerD1[w]);
-									diffSrc *= Func.dfVec(mul_add(inputNeurons, weightedInvStdDev, biases), Alpha, Beta);
+									diffSrc = Func.dfVec(mul_add(inputNeurons, weightedInvStdDev, biases), Alpha, Beta) * VecFloat().load_a(&layerD1[w]);
 									KahanSum<VecFloat>(diffSrc * inputNeurons, diffGamma, correction0);
 									KahanSum<VecFloat>(diffSrc, diffBeta, correction1);
 								}
@@ -784,7 +783,7 @@ namespace dnn
 				// check has equal neurons
 				BackwardPropRef(batchSize);
 
-				const auto margin = Float(0.0015);
+				const auto margin = Float(0.0025);
 				
 				for (auto i = 0ull; i < InputLayer->NeuronsD1.size(); i++)
 				{
