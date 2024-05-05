@@ -25,10 +25,10 @@ DNN_API void DNNSetLocked(const bool locked);
 DNN_API bool DNNSetLayerLocked(const UInt layerIndex, const bool locked);
 DNN_API void DNNPersistOptimizer(const bool persist);
 DNN_API void DNNDisableLocking(const bool disable);
-DNN_API void DNNGetConfusionMatrix(const UInt costLayerIndex, std::vector<std::vector<UInt>>* confusionMatrix);
-DNN_API void DNNGetLayerInputs(const UInt layerIndex, std::vector<UInt>* inputs);
+DNN_API void DNNGetConfusionMatrix(const UInt costLayerIndex, UInt* confusionMatrix);
+DNN_API void DNNGetLayerInputs(const UInt layerIndex, UInt* inputs);
 DNN_API void DNNGetLayerInfo(const UInt layerIndex, dnn::LayerInfo* info);
-DNN_API void DNNSetNewEpochDelegate(void(*newEpoch)(UInt, UInt, UInt, UInt, Float, Float, Float, bool, bool, Float, Float, bool, Float, Float, UInt, Float, UInt, Float, Float, Float, UInt, UInt, UInt, UInt, UInt, UInt, UInt, Float, Float, Float, Float, Float, Float, UInt, Float, Float, Float, UInt, UInt));
+DNN_API void DNNSetNewEpochDelegate(void* newEpoch);
 DNN_API void DNNModelDispose();
 DNN_API void DNNDataproviderDispose();
 DNN_API bool DNNBatchNormUsed();
@@ -51,23 +51,23 @@ DNN_API void DNNGetModelInfo(dnn::ModelInfo* info);
 DNN_API void DNNSetOptimizer(const dnn::Optimizers strategy);
 DNN_API void DNNResetOptimizer();
 DNN_API void DNNRefreshStatistics(const UInt layerIndex, dnn::StatsInfo* info);
-DNN_API bool DNNGetInputSnapShot(std::vector<Float>* snapshot, std::vector<UInt>* label);
-DNN_API bool DNNCheck(std::string& definition, dnn::CheckMsg& checkMsg);
-DNN_API int DNNLoad(const std::string& fileName, dnn::CheckMsg& checkMsg);
-DNN_API int DNNRead(const std::string& definition, dnn::CheckMsg& checkMsg);
-DNN_API void DNNDataprovider(const std::string& directory);
-DNN_API int DNNLoadWeights(const std::string& fileName, const bool persistOptimizer);
-DNN_API int DNNSaveWeights(const std::string& fileName, const bool persistOptimizer);
-DNN_API int DNNLoadLayerWeights(const std::string& fileName, const UInt layerIndex, const bool persistOptimizer);
-DNN_API int DNNSaveLayerWeights(const std::string& fileName, const UInt layerIndex, const bool persistOptimizer);
-DNN_API void DNNGetLayerWeights(const UInt layerIndex, std::vector<Float>* weights, std::vector<Float>* biases);
+DNN_API bool DNNGetInputSnapShot(Float* snapshot, UInt* label);
+DNN_API bool DNNCheck(char* definition, dnn::CheckMsg& checkMsg);
+DNN_API int DNNLoad(const char* fileName, dnn::CheckMsg& checkMsg);
+DNN_API int DNNRead(const char* definition, dnn::CheckMsg& checkMsg);
+DNN_API void DNNDataprovider(const char* directory);
+DNN_API int DNNLoadWeights(const char* fileName, const bool persistOptimizer);
+DNN_API int DNNSaveWeights(const char* fileName, const bool persistOptimizer);
+DNN_API int DNNLoadLayerWeights(const char* fileName, const UInt layerIndex, const bool persistOptimizer);
+DNN_API int DNNSaveLayerWeights(const char* fileName, const UInt layerIndex, const bool persistOptimizer);
+DNN_API void DNNGetLayerWeights(const UInt layerIndex, Float* weights, Float* biases);
 DNN_API void DNNSetCostIndex(const UInt index);
 DNN_API void DNNGetCostInfo(const UInt costIndex, dnn::CostInfo* info);
 DNN_API void DNNGetImage(const UInt layer, const Byte fillColor, Byte* image);
 DNN_API bool DNNSetFormat(const bool plain);
 DNN_API dnn::Optimizers GetOptimizer();
 DNN_API bool DNNClearLog();
-//DNN_API void DNNPrintModel(const std::string& fileName);
+//DNN_API void DNNPrintModel(const char* fileName);
 
 std::string ToTime(UInt nanoseconds)
 {
@@ -293,15 +293,16 @@ int main(int argc, char* argv[])
     rate.Scaling = Float(10.0);
     rate.Rotation = Float(12.0);
     
-    DNNDataprovider(path);
+    DNNDataprovider(path.c_str());
     
-    if (DNNRead(model, msg) == 1)
+    if (DNNRead(model.c_str(), msg) == 1)
     {
         if (DNNLoadDataset())
         {
             DNNResetWeights();
 
-            //DNNPrintModel(path + "Normal.txt");
+            //DNNPrintModel((path + std::string("Normal.txt")).c_str());
+
             auto info = new ModelInfo();
             DNNGetModelInfo(info);
             
@@ -341,7 +342,7 @@ int main(int argc, char* argv[])
 #ifndef NDEBUG
                                         std::cerr << std::string("Loading...") << std::endl;
 #endif
-                                        if (DNNLoadWeights(filename, persistOptimizer) == 0)
+                                        if (DNNLoadWeights(filename.c_str(), persistOptimizer) == 0)
 #ifndef NDEBUG
                                             std::cerr << std::string("Loaded") << std::endl;
 #else

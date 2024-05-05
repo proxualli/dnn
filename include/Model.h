@@ -64,14 +64,17 @@ namespace dnn
 		UInt Row;
 		UInt Column;
 		bool Error;
-		std::string Message;
-		
+		char Message[512];
+				
 		CheckMsg(const UInt row = 0, const UInt column = 0, const std::string& message = "", const bool error = true) :
 			Row(row),
 			Column(column),
-			Message(message),
 			Error(error)
 		{
+			auto i = 0ull;
+			for (auto token : message)
+				Message[i++] = token;
+			Message[i] = '\0';
 		}
 	};
 	
@@ -276,8 +279,10 @@ namespace dnn
 
 	struct LayerInfo
 	{
-		std::string Name;
-		std::string Description;
+		char Name[512];
+		char Description[2048];
+		//std::string Name;
+		//std::string Description;
 		LayerTypes LayerType;
 		Activations Activation;
 		Algorithms Algorithm;
@@ -325,7 +330,7 @@ namespace dnn
 
 	struct ModelInfo
 	{
-		std::string Name;
+		char Name[512];
 		Datasets Dataset;
 		Costs CostFunction;
 		UInt LayerCount;
@@ -337,8 +342,8 @@ namespace dnn
 		UInt TrainSamplesCount;
 		UInt TestSamplesCount;
 		bool MeanStdNormalization;
-		std::vector<Float> MeanTrainSet;
-		std::vector<Float> StdTrainSet;
+		Float MeanTrainSet[3];
+		Float StdTrainSet[3];
 	};
 
 	struct CostInfo
@@ -355,7 +360,6 @@ namespace dnn
 
 	struct StatsInfo
 	{
-		std::string Description;
 		Stats NeuronsStats;
 		Stats WeightsStats;
 		Stats BiasesStats;
@@ -366,6 +370,7 @@ namespace dnn
 		Float BPropTime;
 		Float UpdateTime;
 		bool Locked;
+		char Description[2048];
 	};
 
 	struct LogRecord
@@ -2423,7 +2428,7 @@ namespace dnn
 			}
 		}
 
-		bool GetInputSnapShot(std::vector<Float>* snapshot, std::vector<UInt>* label)
+		bool GetInputSnapShot(Float* snapshot, UInt* label)
 		{
 			if (!Layers[0]->Neurons.empty() && !BatchSizeChanging.load() && !ResettingWeights.load() && !Layers[0]->Fwd.load())
 			{
@@ -2433,19 +2438,19 @@ namespace dnn
 
 				if (State.load() == States::Training && idx < DataProv->TrainSamplesCount)
 				{
-					*label = DataProv->TrainLabels[RandomTrainSamples[idx]];
+					label = DataProv->TrainLabels[RandomTrainSamples[idx]].data();
 					
 					for (auto i = 0ull; i < size; i++)
-						(*snapshot)[i] = Layers[0]->Neurons[i + offset];
+						snapshot[i] = Layers[0]->Neurons[i + offset];
 
 					return true;
 				}
 				else if (State.load() == States::Testing && idx < DataProv->TestSamplesCount)
 				{
-					*label = DataProv->TestLabels[idx];
+					label = DataProv->TestLabels[idx].data();
 					
 					for (auto i = 0ull; i < size; i++)
-						(*snapshot)[i] = Layers[0]->Neurons[i + offset];
+						snapshot[i] = Layers[0]->Neurons[i + offset];
 
 					return true;
 				}

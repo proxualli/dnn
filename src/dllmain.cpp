@@ -62,10 +62,12 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
 #endif
 
 
-extern "C" DNN_API void DNNSetNewEpochDelegate(void(*newEpoch)(UInt, UInt, UInt, UInt, Float, Float, Float, bool, bool, Float, Float, bool, Float, Float, UInt, Float, UInt, Float, Float, Float, UInt, UInt, UInt, UInt, UInt, UInt, UInt, Float, Float, Float, Float, Float, Float, UInt, Float, Float, Float, UInt, UInt))
-{																	     
+extern "C" DNN_API void DNNSetNewEpochDelegate(void* newEpoch)
+{
+	typedef void(*newEpochDelegate)(UInt, UInt, UInt, UInt, Float, Float, Float, bool, bool, Float, Float, bool, Float, Float, UInt, Float, UInt, Float, Float, Float, UInt, UInt, UInt, UInt, UInt, UInt, UInt, Float, Float, Float, Float, Float, Float, UInt, Float, Float, Float, UInt, UInt);
+
 	if (model)
-		model->NewEpoch = newEpoch;
+		model->NewEpoch = reinterpret_cast<newEpochDelegate>(newEpoch);
 }
 
 extern "C" DNN_API void DNNModelDispose()
@@ -74,11 +76,11 @@ extern "C" DNN_API void DNNModelDispose()
 		model.reset();
 }
 
-//extern "C" DNN_API void DNNPrintModel(const std::string& fileName)
+//extern "C" DNN_API void DNNPrintModel(const char* fileName)
 //{
 //	if (model)
 //	{
-//		auto os = std::ofstream(fileName);
+//		auto os = std::ofstream(std::string(fileName));
 //
 //		if (os)
 //		{
@@ -95,16 +97,21 @@ extern "C" DNN_API void DNNModelDispose()
 //	}
 //}
 
-extern "C" DNN_API Model* DNNModel(const std::string definition)
+extern "C" DNN_API Model* DNNModel(const char* definition)
 {
-	model = std::make_unique<Model>(definition, dataprovider.get());
+	if (dataprovider)
+	{
+		model = std::make_unique<Model>(std::string(definition), dataprovider.get());
+		if (model)
+			return model.get();
+	}
 
-	return model.get();
+	return nullptr;
 }
 
-extern "C" DNN_API void DNNDataprovider(const std::string& directory)
+extern "C" DNN_API void DNNDataprovider(const char* directory)
 {
-	dataprovider = std::make_unique<Dataprovider>(directory);
+	dataprovider = std::make_unique<Dataprovider>(std::string(directory));
 }
 
 extern "C" DNN_API bool DNNLoadDataset()
@@ -135,34 +142,44 @@ extern "C" DNN_API void DNNDataproviderDispose()
 		dataprovider.reset();
 }
 
-extern "C" DNN_API bool DNNCheck(std::string& definition, CheckMsg& checkMsg)
+extern "C" DNN_API bool DNNCheck(char* definition, CheckMsg& checkMsg)
 {
-	return Check(definition, checkMsg);
+	auto def = std::string(definition);
+	
+	const auto ret = Check(def, checkMsg);
+	
+	def.copy(definition, def.size() + 1);
+	definition[def.size()] = '\0';
+	
+	return ret;
 }
 
-extern "C" DNN_API int DNNRead(const std::string& definition, CheckMsg& checkMsg)
+extern "C" DNN_API int DNNRead(const char* definition, CheckMsg& checkMsg)
 {
 	dnn::Model* ptr = nullptr;
 
-	ptr = Read(definition, dataprovider.get(), checkMsg);
-
-	if (ptr)
+	if (dataprovider)
 	{
-		model.reset();
-		model = std::unique_ptr<Model>(ptr);
-		ptr = nullptr;
+		ptr = Read(std::string(definition), dataprovider.get(), checkMsg);
 
-		return 1;
+		if (ptr)
+		{
+			model.reset();
+			model = std::unique_ptr<Model>(ptr);
+			ptr = nullptr;
+
+			return 1;
+		}
 	}
 
 	return 0;
 }
 
-extern "C" DNN_API int DNNLoad(const std::string& fileName, CheckMsg& checkMsg)
+extern "C" DNN_API int DNNLoad(const char* fileName, CheckMsg& checkMsg)
 {
 	dnn::Model* ptr = nullptr;
 
-	ptr = Load(fileName, dataprovider.get(), checkMsg);
+	ptr = Load(std::string(fileName), dataprovider.get(), checkMsg);
 	
 	if (ptr)
 	{
@@ -176,18 +193,18 @@ extern "C" DNN_API int DNNLoad(const std::string& fileName, CheckMsg& checkMsg)
 	return 0;
 }
 
-extern "C" DNN_API bool DNNLoadModel(const std::string& fileName)
+extern "C" DNN_API bool DNNLoadModel(const char* fileName)
 {
 	if (model)
-		return model->LoadModel(fileName);
+		return model->LoadModel(std::string(fileName));
 	
 	return false;
 }
 
-extern "C" DNN_API bool DNNSaveModel(const std::string& fileName)
+extern "C" DNN_API bool DNNSaveModel(const char* fileName)
 {
 	if (model)
-		return model->SaveModel(fileName);
+		return model->SaveModel(std::string(fileName));
 
 	return false;
 }
@@ -203,23 +220,23 @@ extern "C" DNN_API bool DNNClearLog()
 	return false;
 }
 
-extern "C" DNN_API bool DNNLoadLog(const std::string& fileName)
+extern "C" DNN_API bool DNNLoadLog(const char* fileName)
 {
 	if (model)
-		return model->LoadLog(fileName);
+		return model->LoadLog(std::string(fileName));
 
 	return false;
 }
 
-extern "C" DNN_API bool DNNSaveLog(const std::string& fileName)
+extern "C" DNN_API bool DNNSaveLog(const char* fileName)
 {
 	if (model)
-		return model->SaveLog(fileName);
+		return model->SaveLog(std::string(fileName));
 
 	return false;
 }
 
-extern "C" DNN_API void DNNGetLayerInputs(const UInt layerIndex, std::vector<UInt>* inputs)
+extern "C" DNN_API void DNNGetLayerInputs(const UInt layerIndex, UInt* inputs)
 {
 	if (model && layerIndex < model->Layers.size())
 	{
@@ -228,7 +245,7 @@ extern "C" DNN_API void DNNGetLayerInputs(const UInt layerIndex, std::vector<UIn
 			auto inputLayerName = model->Layers[layerIndex]->Inputs[i]->Name;
 			for (auto index = 0ull; index < model->Layers.size(); index++)
 				if (model->Layers[index]->Name == inputLayerName)
-					inputs->push_back(index);
+					inputs[i] = index;
 		}
 	}
 }
@@ -258,10 +275,25 @@ extern "C" DNN_API bool DNNSetFormat(const bool plain)
 	return false;
 }
 
-extern "C" DNN_API void DNNGetConfusionMatrix(const UInt costLayerIndex, std::vector<std::vector<UInt>>* confusionMatrix)
+extern "C" DNN_API void DNNGetConfusionMatrix(const UInt costLayerIndex, UInt* confusionMatrix)
 {
 	if (model && costLayerIndex < model->CostLayers.size())
-		(*confusionMatrix) = model->CostLayers[costLayerIndex]->ConfusionMatrix;
+	{
+		const auto classCount = model->CostLayers[costLayerIndex]->C;
+		auto matrix = model->CostLayers[costLayerIndex]->ConfusionMatrix;
+		
+		auto y = 0ull;
+		for (auto row : matrix)
+		{
+			auto x = 0ull;
+			for (auto column : row)
+			{
+				confusionMatrix[y * classCount + x] = column;
+				x++;
+			}
+			y++;
+		}
+	}
 }
 
 extern "C" DNN_API void DNNPersistOptimizer(const bool persistOptimizer)
@@ -337,25 +369,25 @@ extern "C" DNN_API void DNNGetImage(const UInt layerIndex, const Byte fillColor,
 	}
 }
 
-extern "C" DNN_API bool DNNGetInputSnapShot(std::vector<Float>* snapshot, std::vector<UInt>* label)
+extern "C" DNN_API bool DNNGetInputSnapShot(Float* snapshot, UInt* label)
 {
 	if (model)
 		if (model->TaskState.load() == TaskStates::Running && (model->State.load() == States::Training || model->State.load() == States::Testing))
-			return model->GetInputSnapShot(snapshot, label);
-
+			return model->GetInputSnapShot(snapshot, label);;
+		
 	return false;
 }
 
-extern "C" DNN_API void DNNGetLayerWeights(const UInt layerIndex, std::vector<Float>* weights, std::vector<Float>* biases)
+extern "C" DNN_API void DNNGetLayerWeights(const UInt layerIndex, Float* weights, Float* biases)
 {
 	if (model && layerIndex < model->Layers.size() && model->Layers[layerIndex]->HasWeights)
 	{
 		for (auto i = 0ull; i < model->Layers[layerIndex]->WeightCount; i++)
-			(*weights)[i] = model->Layers[layerIndex]->Weights[i];
+			weights[i] = model->Layers[layerIndex]->Weights[i];
 	
 		if (model->Layers[layerIndex]->HasBias)
 			for (auto i = 0ull; i < model->Layers[layerIndex]->BiasCount; i++)
-				(*biases)[i] = model->Layers[layerIndex]->Biases[i];
+				biases[i] = model->Layers[layerIndex]->Biases[i];
 	}
 }
 
@@ -445,7 +477,8 @@ extern "C" DNN_API void DNNGetModelInfo(ModelInfo* info)
 {
 	if (model)
 	{
-		info->Name = model->Name;
+		model->Name.copy(info->Name, model->Name.size() + 1);
+		info->Name[model->Name.size()] = '\0';
 		info->Dataset = dataprovider->Dataset;
 		info->CostFunction = model->CostFunc;
 		info->LayerCount = model->Layers.size();
@@ -457,9 +490,7 @@ extern "C" DNN_API void DNNGetModelInfo(ModelInfo* info)
 		info->TrainSamplesCount = dataprovider->TrainSamplesCount;
 		info->TestSamplesCount = dataprovider->TestSamplesCount;
 		info->MeanStdNormalization = model->MeanStdNormalization;
-		info->MeanTrainSet.clear();
-		info->StdTrainSet.clear();
-		
+			
 		switch (dataprovider->Dataset)
 		{
 		case Datasets::cifar10:
@@ -467,14 +498,14 @@ extern "C" DNN_API void DNNGetModelInfo(ModelInfo* info)
 		case Datasets::tinyimagenet:
 			for (auto c = 0ull; c < 3ull; c++)
 			{
-				info->MeanTrainSet.push_back(dataprovider->Mean[c]);
-				info->StdTrainSet.push_back(dataprovider->StdDev[c]);
+				info->MeanTrainSet[c] = dataprovider->Mean[c];
+				info->StdTrainSet[c] = dataprovider->StdDev[c];
 			}
 			break;
 		case Datasets::fashionmnist:
 		case Datasets::mnist:
-			info->MeanTrainSet.push_back(dataprovider->Mean[0]);
-			info->StdTrainSet.push_back(dataprovider->StdDev[0]);
+			info->MeanTrainSet[0] = dataprovider->Mean[0];
+			info->StdTrainSet[0] = dataprovider->StdDev[0];
 			break;
 		}
 	}
@@ -485,8 +516,15 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, LayerInfo* info)
 	if (model && layerIndex < model->Layers.size())
 	{
 		info->LayerIndex = layerIndex;
-		info->Name = model->Layers[layerIndex]->Name;
-		info->Description = model->Layers[layerIndex]->GetDescription();
+		
+		//info->Name = model->Layers[layerIndex]->Name;
+		model->Layers[layerIndex]->Name.copy(info->Name, model->Layers[layerIndex]->Name.size() + 1);
+		info->Name[model->Layers[layerIndex]->Name.size()] = '\0';
+
+		//info->Description = model->Layers[layerIndex]->GetDescription();
+		model->Layers[layerIndex]->GetDescription().copy(info->Description, model->Layers[layerIndex]->GetDescription().size() + 1);
+		info->Description[model->Layers[layerIndex]->Name.size()] = '\0';
+		
 		info->LayerType = model->Layers[layerIndex]->LayerType;
 		info->Algorithm = Algorithms::Linear;
 		info->InputsCount = model->Layers[layerIndex]->Inputs.size();
@@ -824,7 +862,10 @@ extern "C" DNN_API void DNNRefreshStatistics(const UInt layerIndex, StatsInfo* i
 
 		if (model->Layers[layerIndex]->RefreshStatistics(model->N))
 		{
-			info->Description = model->Layers[layerIndex]->GetDescription();
+			auto text = model->Layers[layerIndex]->GetDescription();
+			
+			text.copy(info->Description, text.size() + 1);
+			info->Description[text.size()] = '\0';
 			info->NeuronsStats = model->Layers[layerIndex]->NeuronsStats;
 			info->WeightsStats = model->Layers[layerIndex]->WeightsStats;
 			info->BiasesStats = model->Layers[layerIndex]->BiasesStats;
@@ -970,28 +1011,28 @@ extern "C" DNN_API Optimizers GetOptimizer()
 	return Optimizers::SGD;
 }
 
-extern "C" DNN_API int DNNLoadWeights(const std::string& fileName, const bool persistOptimizer)
+extern "C" DNN_API int DNNLoadWeights(const char* fileName, const bool persistOptimizer)
 {
 	if (model)
-		return model->LoadWeights(fileName, persistOptimizer);
+		return model->LoadWeights(std::string(fileName), persistOptimizer);
 	
 	return -10;
 }
 
-extern "C" DNN_API int DNNSaveWeights(const std::string& fileName, const bool persistOptimizer)
+extern "C" DNN_API int DNNSaveWeights(const char* fileName, const bool persistOptimizer)
 {
 	if (model)
-		return model->SaveWeights(fileName, persistOptimizer);
+		return model->SaveWeights(std::string(fileName), persistOptimizer);
 	
 	return -10;
 }
 
-extern "C" DNN_API int DNNLoadLayerWeights(const std::string& fileName, const UInt layerIndex, const bool persistOptimizer)
+extern "C" DNN_API int DNNLoadLayerWeights(const char* fileName, const UInt layerIndex, const bool persistOptimizer)
 {
 	if (model)
 	{
-		if (GetFileSize(fileName) == model->Layers[layerIndex]->GetWeightsSize(persistOptimizer, model->Optimizer))
-			return model->LoadLayerWeights(fileName, layerIndex, persistOptimizer);
+		if (GetFileSize(std::string(fileName)) == model->Layers[layerIndex]->GetWeightsSize(persistOptimizer, model->Optimizer))
+			return model->LoadLayerWeights(std::string(fileName), layerIndex, persistOptimizer);
 		else
 			return -1;
 	}
@@ -999,10 +1040,10 @@ extern "C" DNN_API int DNNLoadLayerWeights(const std::string& fileName, const UI
 	return -10;
 }
 
-extern "C" DNN_API int DNNSaveLayerWeights(const std::string& fileName, const UInt layerIndex, const bool persistOptimizer)
+extern "C" DNN_API int DNNSaveLayerWeights(const char* fileName, const UInt layerIndex, const bool persistOptimizer)
 {
 	if (model && layerIndex < model->Layers.size())
-		return model->SaveLayerWeights(fileName, layerIndex, persistOptimizer);
+		return model->SaveLayerWeights(std::string(fileName), layerIndex, persistOptimizer);
 
 	return -10;
 }

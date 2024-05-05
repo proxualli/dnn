@@ -208,7 +208,7 @@ namespace dnn
 			if (col != std::string::npos)
 			{
 				col++;
-				msg =  CheckMsg(line, col, std::string("Line contains illegal characters."));
+				msg =  CheckMsg(line, col, std::string("Line contains illegal characters.").c_str());
 				goto FAIL;
 			}
 			col = strLine.length() + 1;
@@ -2715,7 +2715,7 @@ namespace dnn
 			stream << file.rdbuf();
 			const auto buffer = stream.str();
 			file.close();
-			model = Read(buffer, dataprovider, checkMsg);
+			model = Read(buffer.c_str(), dataprovider, checkMsg);
 		}
 
 		return model;
