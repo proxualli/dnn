@@ -306,7 +306,7 @@ int main(int argc, char* argv[])
             auto info = new ModelInfo();
             DNNGetModelInfo(info);
             
-            DNNSetNewEpochDelegate(&NewEpoch);
+            DNNSetNewEpochDelegate(reinterpret_cast<void*>(&NewEpoch));
             
             DNNSetFormat(false);
             DNNPersistOptimizer(persistOptimizer);
