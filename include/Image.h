@@ -6,7 +6,7 @@
 #include "jerror.h"
 #endif
 #undef cimg_display
-#if defined DNN_DEV
+#ifndef NDEBUG
 #if defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW32__)
 #define cimg_display 2
 #else
@@ -916,7 +916,7 @@ namespace dnn
 		}
 #endif
 
-
+#ifdef cimg_use_png
 		static Image LoadPNG(const std::string& fileName, const bool forceColorFormat = false)
 		{
 			auto bitsPerPixel = 0u;
@@ -937,6 +937,7 @@ namespace dnn
 			else
 				return dstImage;
 		}
+#endif
 
 		static Image MirrorPad(const Image& image, const UInt depth, const UInt height, const UInt width)
 		{

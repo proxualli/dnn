@@ -112,7 +112,7 @@ namespace dnn
 		{
 			Layer::SetBatchSize(batchSize);
 
-			if constexpr (Reference || TestBatchNormalization)
+			if constexpr (Reference || TestBatchNormalization || ReferenceBatchNormalization)
 				InputNeurons.resize(batchSize, C, H, W, dnnl::memory::data_type::f32, BlockedFmt, Device.engine);
 		}
 
@@ -140,7 +140,7 @@ namespace dnn
 				DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, ChosenFormat));
 			}
 			
-			if constexpr (Reference || TestBatchNormalization)
+			if constexpr (Reference || TestBatchNormalization || ReferenceBatchNormalization)
 			{
 				if (inference)
 					flags = Scaling ?
@@ -183,7 +183,7 @@ namespace dnn
 
 		void ForwardProp(const UInt batchSize, const bool training) final override
 		{			
-			if constexpr (Reference && !TestBatchNormalization)
+			if constexpr ((Reference || ReferenceBatchNormalization) && !TestBatchNormalization)
 				ForwardPropRef(batchSize, training);
 			else
 			{
@@ -539,7 +539,7 @@ namespace dnn
 					output[i] = InputLayer->NeuronsD1[i];
 			}
 
-			if constexpr (Reference && !TestBatchNormalization)
+			if constexpr ((Reference || ReferenceBatchNormalization ) && !TestBatchNormalization)
 				BackwardPropRef(batchSize);
 			else
 			{
