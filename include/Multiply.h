@@ -109,7 +109,7 @@ namespace dnn
 #endif
 				Device.stream.wait();
 #else
-				if constexpr (!Reference)
+				if constexpr (!Reference && !ReferenceMultiply)
 				{
 					const auto plain = IsPlainFormat();
 					const auto size = plain ? CDHW() : PaddedCDHW();

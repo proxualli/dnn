@@ -141,7 +141,7 @@ namespace dnn
 #endif
 				Device.stream.wait();
 #else
-				if constexpr (!Reference)
+				if constexpr (!Reference && !ReferenceConcat)
 				{
 					const auto plain = IsPlainFormat();
 					const auto threads = GetThreads(batchSize * (plain ? CDHW() : PaddedCDHW()), Float(10));
