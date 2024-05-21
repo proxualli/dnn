@@ -55,9 +55,9 @@ if(WIN32 OR MSVC)
 else()
   set(flags -mrdseed -mrdrnd -mfma -mavx512f -mavx512dq -mavx512vl -mavx512bw -mavx512ifma -mavx512vbmi -mavx512vbmi2 -mavx512bitalg -mavx512vpopcntdq -mavx512vnni -mavx512bf16 -march=native -fopenmp)
   if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    set(linkflags -fopenmp=libiomp5)
+    set(linkflags -fopenmp=libiomp5 -z noexecstack)
   else()
-    set(linkflags -fopenmp)
+    set(linkflags -fopenmp -z noexecstack)
   endif()
   add_compile_options(
     "$<$<COMPILE_LANGUAGE:CXX>:${flags}>"
