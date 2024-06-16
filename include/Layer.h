@@ -15,21 +15,96 @@ namespace dnn
 
 	enum class Optimizers
 	{
-		AdaBound = 0,
-		AdaBoundW = 1,
-		AdaDelta = 2,
-		AdaGrad = 3,
-		Adam = 4,
-		Adamax = 5,
-		AdamW = 6,
-		AmsBound = 7,
-		AmsBoundW = 8,
-		NAG = 9,
-		RMSProp = 10,
-		SGD = 11,
-		SGDMomentum = 12,
-		SGDW = 13
+		AdaBelief = 0,
+		AdaBound = 1,
+		AdaBoundW = 2,
+		AdaDelta = 3,
+		AdaGrad = 4,
+		Adam = 5,
+		Adamax = 6,
+		AdamW = 7,
+		AmsBound = 8,
+		AmsBoundW = 9,
+		NAG = 10,
+		RMSProp = 11,
+		SGD = 12,
+		SGDMomentum = 13,
+		SGDW = 14
 	};
+	
+	constexpr auto GetOptimizerParameters(const Optimizers& optimizer)
+	{
+		switch (optimizer)
+		{
+		case Optimizers::AdaBelief:
+		case Optimizers::AdaBound:
+		case Optimizers::AdaBoundW:
+		case Optimizers::AdaDelta:
+		case Optimizers::Adam:
+		case Optimizers::AdamW:
+		case Optimizers::Adamax:
+		case Optimizers::AmsBound:
+		case Optimizers::AmsBoundW:
+			return 2ull;
+		case Optimizers::AdaGrad:
+		case Optimizers::NAG:
+		case Optimizers::RMSProp:
+		case Optimizers::SGDMomentum:
+		case Optimizers::SGDW:
+			return 1ull;
+		default:
+			return 0ull;
+		}
+	}
+
+	constexpr auto HasOptimizerParameterB1(const Optimizers& optimizer)
+	{
+		switch (optimizer)
+		{
+		case Optimizers::AdaBelief:
+		case Optimizers::AdaBound:
+		case Optimizers::AdaBoundW:
+		case Optimizers::Adam:
+		case Optimizers::Adamax:
+		case Optimizers::AdamW:
+		case Optimizers::AmsBound:
+		case Optimizers::AmsBoundW:
+			return true;
+		default:
+			return false;
+		}
+	}
+
+	constexpr bool HasOptimizerParameterB2(const Optimizers& optimizer)
+	{
+		switch (optimizer)
+		{
+		case Optimizers::AdaBelief:
+		case Optimizers::AdaBound:
+		case Optimizers::AdaBoundW:
+		case Optimizers::Adam:
+		case Optimizers::AdamW:
+		case Optimizers::AmsBound:
+		case Optimizers::AmsBoundW:
+			return true;
+		default:
+			return false;
+		}
+	}
+
+	constexpr bool HasOptimizerParameterGamma(const Optimizers& optimizer)
+	{
+		switch (optimizer)
+		{
+		case Optimizers::AdaBound:
+		case Optimizers::AdaBoundW:
+		case Optimizers::AmsBound:
+		case Optimizers::AmsBoundW:
+			return true;
+		default:
+			return false;
+		}
+	}
 
 	struct TrainingRate
 	{
@@ -376,7 +451,6 @@ namespace dnn
 				return LeastChannels(inputs);
 		}
 
-	
 	public:
 		const std::string Name;
 		const LayerTypes LayerType;
@@ -903,27 +977,19 @@ namespace dnn
 		{
 			auto dirty = false;
 
-			if (std::isnan(B1) || std::isinf(B1))
+			if (HasOptimizerParameterB1(optimizer) && (std::isnan(B1) || std::isinf(B1)))
 				dirty = true;
-			if (std::isnan(B2) || std::isinf(B2))
+			if (HasOptimizerParameterB2(optimizer) && (std::isnan(B2) || std::isinf(B2)))
 				dirty = true;
-			if (std::isnan(Gamma) || std::isinf(Gamma))
+			if (HasOptimizerParameterGamma(optimizer) && (std::isnan(Gamma) || std::isinf(Gamma)))
 				dirty = true;
 
 			if (dirty)
 				return dirty;
 
-			switch (optimizer)
+			switch (GetOptimizerParameters(optimizer))
 			{
-			
-			case Optimizers::AdaBound:
-			case Optimizers::AdaBoundW:
-			case Optimizers::AdaDelta:
-			case Optimizers::Adam:
-			case Optimizers::AdamW:
-			case Optimizers::Adamax:
-			case Optimizers::AmsBound:
-			case Optimizers::AmsBoundW:
+			case 2ull:
 			{
 				if (HasWeights)
 					for (auto i = 0ull; i < WeightCount; i++)
@@ -967,11 +1033,7 @@ namespace dnn
 			}
 			break;
 
-			case Optimizers::AdaGrad:
-			case Optimizers::NAG:
-			case Optimizers::RMSProp:
-			case Optimizers::SGDMomentum:
-			case Optimizers::SGDW:
+			case 1ull:
 			{
 				if (HasWeights)
 					for (auto i = 0ull; i < WeightCount; i++)
@@ -988,7 +1050,7 @@ namespace dnn
 							break;
 						}
 					}
-				
+
 				if (HasBias && !dirty)
 					for (auto i = 0ull; i < BiasCount; i++)
 					{
@@ -1006,8 +1068,29 @@ namespace dnn
 			}
 			break;
 
-			default:
-				break;
+			case 0ull:
+			{
+				if (HasWeights)
+					for (auto i = 0ull; i < WeightCount; i++)
+					{
+						if (std::isnan(Weights[i]) || std::isinf(Weights[i]))
+						{
+							dirty = true;
+							break;
+						}
+					}
+
+				if (HasBias && !dirty)
+					for (auto i = 0ull; i < BiasCount; i++)
+					{
+						if (std::isnan(Biases[i]) || std::isinf(Biases[i]))
+						{
+							dirty = true;
+							break;
+						}
+					}
+			}
+			break;
 			}
 
 			return dirty;
@@ -1027,16 +1110,9 @@ namespace dnn
 				WeightsD1.resize(weightsSize, Float(0));
 				BiasesD1.resize(biasesSize, Float(0));
 			
-				switch (optimizer)
+				switch (GetOptimizerParameters(optimizer))
 				{
-				case Optimizers::AdaBound:
-				case Optimizers::AdaBoundW:
-				case Optimizers::AdaDelta:
-				case Optimizers::Adam:
-				case Optimizers::Adamax:
-				case Optimizers::AdamW:
-				case Optimizers::AmsBound:
-				case Optimizers::AmsBoundW:
+				case 2ull:
 					WeightsPar1.resize(weightsSize);
 					WeightsPar2.resize(weightsSize);
 					BiasesPar1.resize(biasesSize);
@@ -1047,11 +1123,7 @@ namespace dnn
 					std::fill(BiasesPar2.begin(), BiasesPar2.end(), Float(0));
 					break;
 
-				case Optimizers::AdaGrad:
-				case Optimizers::NAG:
-				case Optimizers::RMSProp:
-				case Optimizers::SGDMomentum:
-				case Optimizers::SGDW:
+				case 1ull:
 					WeightsPar1.resize(weightsSize);
 					WeightsPar2.resize(0);
 					BiasesPar1.resize(biasesSize);
@@ -1060,7 +1132,7 @@ namespace dnn
 					std::fill(BiasesPar1.begin(), BiasesPar1.end(), Float(0));					
 					break;
 
-				case Optimizers::SGD:
+				case 0ull:
 					WeightsPar1.resize(0);
 					WeightsPar2.resize(0);
 					BiasesPar1.resize(0);
@@ -1080,34 +1152,23 @@ namespace dnn
 				WeightsD1.resize(weightsSize, Float(0));
 				BiasesD1.resize(biasesSize, Float(0));
 
-				switch (optimizer)
+				switch (GetOptimizerParameters(optimizer))
 				{
-				case Optimizers::AdaBound:
-				case Optimizers::AdaBoundW:
-				case Optimizers::AdaDelta:
-				case Optimizers::Adam:
-				case Optimizers::Adamax:
-				case Optimizers::AdamW:
-				case Optimizers::AmsBound:
-				case Optimizers::AmsBoundW:
+				case 2ull:
 					WeightsPar1.resize(weightsSize, Float(0));
 					WeightsPar2.resize(weightsSize, Float(0));
 					BiasesPar1.resize(biasesSize, Float(0));
 					BiasesPar2.resize(biasesSize, Float(0));
 					break;
 
-				case Optimizers::AdaGrad:
-				case Optimizers::NAG:
-				case Optimizers::RMSProp:
-				case Optimizers::SGDMomentum:
-				case Optimizers::SGDW:
+				case 1ull:
 					WeightsPar1.resize(weightsSize, Float(0));
 					WeightsPar2.resize(0);
 					BiasesPar1.resize(biasesSize, Float(0));
 					BiasesPar2.resize(0);
 					break;
 
-				case Optimizers::SGD:
+				case 0ull:
 					WeightsPar1.resize(0);
 					WeightsPar2.resize(0);
 					BiasesPar1.resize(0);
@@ -1424,6 +1485,9 @@ namespace dnn
 				
 				switch (optimizer)
 				{
+				case Optimizers::AdaBelief:
+					AdaBelief(rate, optWeights);
+					break;
 				case Optimizers::AdaBound:
 					AdaBound(rate, optWeights);
 					break;
@@ -1498,6 +1562,66 @@ namespace dnn
 			}
 		}
 
+		inline void AdaBelief(const TrainingRate& rate, WeightsStruct weights)
+		{
+			const auto beta1 = rate.Momentum;
+			const auto beta2 = rate.Beta2;
+			const auto lr = rate.MaximumRate * WeightsLRM;
+			const auto eps = rate.Eps;
+			const auto oneMinusBeta1 = (Float(1) - beta1) / rate.N;
+			const auto oneMinusBeta2 = Float(1) - beta2;
+			const auto batchRecip = Float(1) / rate.N;
+			B1 = B1 == Float(0) ? beta1 : B1;
+			B2 = B2 == Float(0) ? beta2 : B2;
+			const auto oneMinusB1 = Float(1) - B1;
+			const auto oneMinusB2 = Float(1) - B2;
+
+			if (WeightCount % VectorSize != 0)
+			{
+				//PRAGMA_OMP_SIMD()
+				for (auto i = 0ull; i < WeightCount; i++)
+				{
+					(*weights.WeightsPar1)[i] = (beta1 * (*weights.WeightsPar1)[i]) + (oneMinusBeta1 * (*weights.WeightsD1)[i]);
+					(*weights.WeightsPar2)[i] = (beta2 * (*weights.WeightsPar2)[i]) + (oneMinusBeta2 * Square<Float>(((*weights.WeightsD1)[i] * batchRecip) - (*weights.WeightsPar1)[i])) + eps;
+					(*weights.Weights)[i] -= lr * ((*weights.WeightsPar1)[i] / oneMinusB1) / std::sqrt(((*weights.WeightsPar2)[i] / oneMinusB2) + eps);
+				}
+			}
+			else
+			{
+				VecFloat weight, weightD1, par1, par2;
+				for (auto i = 0ull; i < WeightCount; i += VectorSize)
+				{
+					weight.load_a(&(*weights.Weights)[i]);
+					weightD1.load_a(&(*weights.WeightsD1)[i]);
+					par1.load_a(&(*weights.WeightsPar1)[i]);
+					par2.load_a(&(*weights.WeightsPar2)[i]);
+
+					par1 = (beta1 * par1) + (oneMinusBeta1 * weightD1);
+					par2 = (beta2 * par2) + (oneMinusBeta2 * square((weightD1 * batchRecip) - par1)) + eps;
+					weight -= lr * (par1 / oneMinusB1) / square((par2 / oneMinusB2) + eps);
+
+					weight.store_a(&(*weights.Weights)[i]);
+					par1.store_a(&(*weights.WeightsPar1)[i]);
+					par2.store_a(&(*weights.WeightsPar2)[i]);
+				}
+			}
+
+			if (HasBias)
+			{
+				const auto lr = rate.MaximumRate * BiasesLRM;
+				// PRAGMA_OMP_SIMD()
+				for (auto i = 0ull; i < BiasCount; i++)
+				{
+					BiasesPar1[i] = (beta1 * BiasesPar1[i]) + (oneMinusBeta1 * BiasesD1[i]);
+					BiasesPar2[i] = (beta2 * BiasesPar2[i]) + (oneMinusBeta2 * Square<Float>((BiasesD1[i] * batchRecip) - BiasesPar1[i])) + eps;
+					Biases[i] -= lr * (BiasesPar1[i] / oneMinusB1) / std::sqrt((BiasesPar2[i] / oneMinusB2) + eps);
+				}
+			}
+
+			B1 *= beta1;
+			B2 *= beta2;
+		}
+
 		inline void AdaBound(const TrainingRate& rate, WeightsStruct weights, const bool amsbound = false)
 		{
 			const auto beta1 = rate.Momentum;
@@ -1517,58 +1641,61 @@ namespace dnn
 			const auto weightDecay = rate.L2Penalty * WeightsWDM;
 			const auto step_size = rate.MaximumRate * WeightsLRM * std::sqrt(oneMinusB2) / oneMinusB1;
 
-			/*
-			if (!amsbound)
-				PRAGMA_OMP_SIMD()
-				for (auto i = 0ull; i < WeightCount; i++)
-				{
-					(*weights.WeightsPar1)[i] = (beta1 * (*weights.WeightsPar1)[i]) + (oneMinusBeta1 * (*weights.WeightsD1)[i] * batchRecip);
-					(*weights.WeightsPar2)[i] = (beta2 * (*weights.WeightsPar2)[i]) + (oneMinusBeta2 * Square<Float>((*weights.WeightsD1)[i] * batchRecip));
-					(*weights.Weights)[i] -= Clamp<Float>(step_size / (std::sqrt((*weights.WeightsPar2)[i]) + eps), lowerBound, upperBound) * (*weights.WeightsPar1)[i];
-				}
+			if (WeightCount % VectorSize != 0)
+			{
+				if (!amsbound)
+					PRAGMA_OMP_SIMD()
+					for (auto i = 0ull; i < WeightCount; i++)
+					{
+						(*weights.WeightsPar1)[i] = (beta1 * (*weights.WeightsPar1)[i]) + (oneMinusBeta1 * (*weights.WeightsD1)[i] * batchRecip);
+						(*weights.WeightsPar2)[i] = (beta2 * (*weights.WeightsPar2)[i]) + (oneMinusBeta2 * Square<Float>((*weights.WeightsD1)[i] * batchRecip));
+						(*weights.Weights)[i] -= Clamp<Float>(step_size / (std::sqrt((*weights.WeightsPar2)[i]) + eps), lowerBound, upperBound) * (*weights.WeightsPar1)[i];
+					}
+				else
+					PRAGMA_OMP_SIMD()
+					for (auto i = 0ull; i < WeightCount; i++)
+					{
+						(*weights.WeightsPar1)[i] = (beta1 * (*weights.WeightsPar1)[i]) + (oneMinusBeta1 * (*weights.WeightsD1)[i] * batchRecip);
+						(*weights.WeightsPar2)[i] = (beta2 * (*weights.WeightsPar2)[i]) + (oneMinusBeta2 * Square<Float>((*weights.WeightsD1)[i] * batchRecip));
+						(*weights.Weights)[i] -= Clamp<Float>(step_size / (std::sqrt(std::max((*weights.WeightsPar1)[i], (*weights.WeightsPar2)[i])) + eps), lowerBound, upperBound) * (*weights.WeightsPar1)[i];
+					}
+			}
 			else
-				PRAGMA_OMP_SIMD()
-				for (auto i = 0ull; i < WeightCount; i++)
-				{
-					(*weights.WeightsPar1)[i] = (beta1 * (*weights.WeightsPar1)[i]) + (oneMinusBeta1 * (*weights.WeightsD1)[i] * batchRecip);
-					(*weights.WeightsPar2)[i] = (beta2 * (*weights.WeightsPar2)[i]) + (oneMinusBeta2 * Square<Float>((*weights.WeightsD1)[i] * batchRecip));
-					(*weights.Weights)[i] -= Clamp<Float>(step_size / (std::sqrt(std::max((*weights.WeightsPar1)[i], (*weights.WeightsPar2)[i])) + eps), lowerBound, upperBound) * (*weights.WeightsPar1)[i];
-				}
-			*/
+			{
+				VecFloat weight, weightD1, par1, par2;
+				if (!amsbound)
+					for (auto i = 0ull; i < WeightCount; i += VectorSize)
+					{
+						weight.load_a(&(*weights.Weights)[i]);
+						weightD1.load_a(&(*weights.WeightsD1)[i]);
+						par1.load_a(&(*weights.WeightsPar1)[i]);
+						par2.load_a(&(*weights.WeightsPar2)[i]);
 
-			VecFloat weight, weightD1, par1, par2;
-			if (!amsbound)
-				for (auto i = 0ull; i < WeightCount; i += VectorSize)
-				{
-					weight.load_a(&(*weights.Weights)[i]);
-					weightD1.load_a(&(*weights.WeightsD1)[i]);
-					par1.load_a(&(*weights.WeightsPar1)[i]);
-					par2.load_a(&(*weights.WeightsPar2)[i]);
+						par1 = (beta1 * par1) + (oneMinusBeta1 * weightD1 *  batchRecip);
+						par2 = (beta2 * par2) + (oneMinusBeta2 * square(weightD1 * batchRecip));
+						weight -= Clamp<VecFloat>(step_size / sqrt(par2 + eps), lowerBound, upperBound) * par1;
 
-					par1 = (beta1 * par1) + (oneMinusBeta1 * weightD1 *  batchRecip);
-					par2 = (beta2 * par2) + (oneMinusBeta2 * square(weightD1 * batchRecip));
-					weight -= Clamp<VecFloat>(step_size / sqrt(par2 + eps), lowerBound, upperBound) * par1;
+						weight.store_a(&(*weights.Weights)[i]);
+						par1.store_a(&(*weights.WeightsPar1)[i]);
+						par2.store_a(&(*weights.WeightsPar2)[i]);
+					}
+				else
+					for (auto i = 0ull; i < WeightCount; i += VectorSize)
+					{
+						weight.load_a(&(*weights.Weights)[i]);
+						weightD1.load_a(&(*weights.WeightsD1)[i]);
+						par1.load_a(&(*weights.WeightsPar1)[i]);
+						par2.load_a(&(*weights.WeightsPar2)[i]);
 
-					weight.store_a(&(*weights.Weights)[i]);
-					par1.store_a(&(*weights.WeightsPar1)[i]);
-					par2.store_a(&(*weights.WeightsPar2)[i]);
-				}
-			else
-				for (auto i = 0ull; i < WeightCount; i += VectorSize)
-				{
-					weight.load_a(&(*weights.Weights)[i]);
-					weightD1.load_a(&(*weights.WeightsD1)[i]);
-					par1.load_a(&(*weights.WeightsPar1)[i]);
-					par2.load_a(&(*weights.WeightsPar2)[i]);
+						par1 = (beta1 * par1) + (oneMinusBeta1 * weightD1 * batchRecip);
+						par2 = (beta2 * par2) + (oneMinusBeta2 * square(weightD1 * batchRecip));
+						weight -= Clamp<VecFloat>(step_size / sqrt(max(par1, par2) + eps), lowerBound, upperBound) * par1;
 
-					par1 = (beta1 * par1) + (oneMinusBeta1 * weightD1 * batchRecip);
-					par2 = (beta2 * par2) + (oneMinusBeta2 * square(weightD1 * batchRecip));
-					weight -= Clamp<VecFloat>(step_size / sqrt(max(par1, par2) + eps), lowerBound, upperBound) * par1;
-
-					weight.store_a(&(*weights.Weights)[i]);
-					par1.store_a(&(*weights.WeightsPar1)[i]);
-					par2.store_a(&(*weights.WeightsPar2)[i]);
-				}
+						weight.store_a(&(*weights.Weights)[i]);
+						par1.store_a(&(*weights.WeightsPar1)[i]);
+						par2.store_a(&(*weights.WeightsPar2)[i]);
+					}
+			}
 
 			if (HasBias)
 			{
@@ -1620,62 +1747,65 @@ namespace dnn
 			const auto weightDecay = rate.L2Penalty * WeightsWDM;
 			const auto step_size = rate.MaximumRate * WeightsLRM * std::sqrt(oneMinusB2) / oneMinusB1;
 
-			/*
-			if (!amsbound)
-				PRAGMA_OMP_SIMD()
-				for (auto i = 0ull; i < WeightCount; i++)
-				{
-					(*weights.WeightsD1)[i] += weightDecay * (*weights.Weights)[i];
-					(*weights.WeightsPar1)[i] = (beta1 * (*weights.WeightsPar1)[i]) + (oneMinusBeta1 * (*weights.WeightsD1)[i] * batchRecip);
-					(*weights.WeightsPar2)[i] = (beta2 * (*weights.WeightsPar2)[i]) + (oneMinusBeta2 * Square<Float>((*weights.WeightsD1)[i] * batchRecip));
-					(*weights.Weights)[i] -= Clamp<Float>(step_size / (std::sqrt((*weights.WeightsPar2)[i]) + eps), lowerBound, upperBound) * (*weights.WeightsPar1)[i];
-				}
+			if (WeightCount % VectorSize != 0)
+			{
+				if (!amsbound)
+					PRAGMA_OMP_SIMD()
+					for (auto i = 0ull; i < WeightCount; i++)
+					{
+						(*weights.WeightsD1)[i] += weightDecay * (*weights.Weights)[i];
+						(*weights.WeightsPar1)[i] = (beta1 * (*weights.WeightsPar1)[i]) + (oneMinusBeta1 * (*weights.WeightsD1)[i] * batchRecip);
+						(*weights.WeightsPar2)[i] = (beta2 * (*weights.WeightsPar2)[i]) + (oneMinusBeta2 * Square<Float>((*weights.WeightsD1)[i] * batchRecip));
+						(*weights.Weights)[i] -= Clamp<Float>(step_size / (std::sqrt((*weights.WeightsPar2)[i]) + eps), lowerBound, upperBound) * (*weights.WeightsPar1)[i];
+					}
+				else
+					PRAGMA_OMP_SIMD()
+					for (auto i = 0ull; i < WeightCount; i++)
+					{
+						(*weights.WeightsD1)[i] += weightDecay * (*weights.Weights)[i];
+						(*weights.WeightsPar1)[i] = (beta1 * (*weights.WeightsPar1)[i]) + (oneMinusBeta1 * (*weights.WeightsD1)[i] * batchRecip);
+						(*weights.WeightsPar2)[i] = (beta2 * (*weights.WeightsPar2)[i]) + (oneMinusBeta2 * Square<Float>((*weights.WeightsD1)[i] * batchRecip));
+						(*weights.Weights)[i] -= Clamp<Float>(step_size / (std::sqrt(std::max((*weights.WeightsPar1)[i], (*weights.WeightsPar2)[i])) + eps), lowerBound, upperBound) * (*weights.WeightsPar1)[i];
+					}
+			}
 			else
-				PRAGMA_OMP_SIMD()
-				for (auto i = 0ull; i < WeightCount; i++)
-				{
-					(*weights.WeightsD1)[i] += weightDecay * (*weights.Weights)[i];
-					(*weights.WeightsPar1)[i] = (beta1 * (*weights.WeightsPar1)[i]) + (oneMinusBeta1 * (*weights.WeightsD1)[i] * batchRecip);
-					(*weights.WeightsPar2)[i] = (beta2 * (*weights.WeightsPar2)[i]) + (oneMinusBeta2 * Square<Float>((*weights.WeightsD1)[i] * batchRecip));
-					(*weights.Weights)[i] -= Clamp<Float>(step_size / (std::sqrt(std::max((*weights.WeightsPar1)[i], (*weights.WeightsPar2)[i])) + eps), lowerBound, upperBound) * (*weights.WeightsPar1)[i];
-				}
-			*/
+			{
+				VecFloat weight, weightD1, par1, par2;
+				if (!amsbound)
+					for (auto i = 0ull; i < WeightCount; i += VectorSize)
+					{
+						weight.load_a(&(*weights.Weights)[i]);
+						weightD1.load_a(&(*weights.WeightsD1)[i]);
+						par1.load_a(&(*weights.WeightsPar1)[i]);
+						par2.load_a(&(*weights.WeightsPar2)[i]);
 
-			VecFloat weight, weightD1, par1, par2;
-			if (!amsbound)
-				for (auto i = 0ull; i < WeightCount; i += VectorSize)
-				{
-					weight.load_a(&(*weights.Weights)[i]);
-					weightD1.load_a(&(*weights.WeightsD1)[i]);
-					par1.load_a(&(*weights.WeightsPar1)[i]);
-					par2.load_a(&(*weights.WeightsPar2)[i]);
+						weightD1 += weightDecay * weight;
+						par1 = (beta1 * par1) + (oneMinusBeta1 * weightD1 * batchRecip);
+						par2 = (beta2 * par2) + (oneMinusBeta2 * square(weightD1 * batchRecip));
+						weight -= Clamp<VecFloat>(step_size / sqrt(par2 + eps), lowerBound, upperBound) * par1;
 
-					weightD1 += weightDecay * weight;
-					par1 = (beta1 * par1) + (oneMinusBeta1 * weightD1 * batchRecip);
-					par2 = (beta2 * par2) + (oneMinusBeta2 * square(weightD1 * batchRecip));
-					weight -= Clamp<VecFloat>(step_size / sqrt(par2 + eps), lowerBound, upperBound) * par1;
+						weight.store_a(&(*weights.Weights)[i]);
+						par1.store_a(&(*weights.WeightsPar1)[i]);
+						par2.store_a(&(*weights.WeightsPar2)[i]);
+					}
+				else
+					for (auto i = 0ull; i < WeightCount; i += VectorSize)
+					{
+						weight.load_a(&(*weights.Weights)[i]);
+						weightD1.load_a(&(*weights.WeightsD1)[i]);
+						par1.load_a(&(*weights.WeightsPar1)[i]);
+						par2.load_a(&(*weights.WeightsPar2)[i]);
 
-					weight.store_a(&(*weights.Weights)[i]);
-					par1.store_a(&(*weights.WeightsPar1)[i]);
-					par2.store_a(&(*weights.WeightsPar2)[i]);
-				}
-			else
-				for (auto i = 0ull; i < WeightCount; i += VectorSize)
-				{
-					weight.load_a(&(*weights.Weights)[i]);
-					weightD1.load_a(&(*weights.WeightsD1)[i]);
-					par1.load_a(&(*weights.WeightsPar1)[i]);
-					par2.load_a(&(*weights.WeightsPar2)[i]);
+						weightD1 += weightDecay * weight;
+						par1 = (beta1 * par1) + (oneMinusBeta1 * weightD1 * batchRecip);
+						par2 = (beta2 * par2) + (oneMinusBeta2 * square(weightD1 * batchRecip));
+						weight -= Clamp<VecFloat>(step_size / sqrt(max(par1, par2) + eps), lowerBound, upperBound) * par1;
 
-					weightD1 += weightDecay * weight;
-					par1 = (beta1 * par1) + (oneMinusBeta1 * weightD1 * batchRecip);
-					par2 = (beta2 * par2) + (oneMinusBeta2 * square(weightD1 * batchRecip));
-					weight -= Clamp<VecFloat>(step_size / sqrt(max(par1, par2) + eps), lowerBound, upperBound) * par1;
-
-					weight.store_a(&(*weights.Weights)[i]);
-					par1.store_a(&(*weights.WeightsPar1)[i]);
-					par2.store_a(&(*weights.WeightsPar2)[i]);
-				}
+						weight.store_a(&(*weights.Weights)[i]);
+						par1.store_a(&(*weights.WeightsPar1)[i]);
+						par2.store_a(&(*weights.WeightsPar2)[i]);
+					}
+			}
 
 			if (HasBias)
 			{
@@ -1718,33 +1848,36 @@ namespace dnn
 			const auto eps = rate.Eps;
 			const auto batchRecip = Float(1) / rate.N;
 
-			/*
-			PRAGMA_OMP_SIMD()
-			for (auto i = 0ull; i < WeightCount; i++)
+			
+			if (WeightCount % VectorSize != 0)
 			{
-				(*weights.WeightsPar1)[i] = (momentum * (*weights.WeightsPar1)[i]) + (oneMinMomentum * Square<Float>((*weights.WeightsD1)[i] * batchRecip));
-				const auto update = lr * (std::sqrt((*weights.WeightsPar2)[i] + eps) / std::sqrt((*weights.WeightsPar1)[i] + eps)) * (*weights.WeightsD1)[i] * batchRecip;
-				(*weights.WeightsPar2)[i] = (momentum * (*weights.WeightsPar2)[i]) + (oneMinMomentum * Square<Float>(update));
-				(*weights.Weights)[i] += update;
+				for (auto i = 0ull; i < WeightCount; i++)
+				{
+					(*weights.WeightsPar1)[i] = (momentum * (*weights.WeightsPar1)[i]) + (oneMinMomentum * Square<Float>((*weights.WeightsD1)[i] * batchRecip));
+					const auto update = lr * (std::sqrt((*weights.WeightsPar2)[i] + eps) / std::sqrt((*weights.WeightsPar1)[i] + eps)) * (*weights.WeightsD1)[i] * batchRecip;
+					(*weights.WeightsPar2)[i] = (momentum * (*weights.WeightsPar2)[i]) + (oneMinMomentum * Square<Float>(update));
+					(*weights.Weights)[i] += update;
+				}
 			}
-			*/
-
-			VecFloat weight, weightD1, par1, par2;
-			for (auto i = 0ull; i < WeightCount; i += VectorSize)
+			else
 			{
-				weight.load_a(&(*weights.Weights)[i]);
-				weightD1.load_a(&(*weights.WeightsD1)[i]);
-				par1.load_a(&(*weights.WeightsPar1)[i]);
-				par2.load_a(&(*weights.WeightsPar2)[i]);
+				VecFloat weight, weightD1, par1, par2;
+				for (auto i = 0ull; i < WeightCount; i += VectorSize)
+				{
+					weight.load_a(&(*weights.Weights)[i]);
+					weightD1.load_a(&(*weights.WeightsD1)[i]);
+					par1.load_a(&(*weights.WeightsPar1)[i]);
+					par2.load_a(&(*weights.WeightsPar2)[i]);
 
-				par1 = (momentum * par1) + (oneMinMomentum * square(weightD1 * batchRecip));
-				const auto update = lr * (sqrt(par2 + eps) / sqrt(par1 + eps)) * weightD1 * batchRecip;
-				par2 = (momentum * par2) + (oneMinMomentum * square(update));
-				weight += update;
+					par1 = (momentum * par1) + (oneMinMomentum * square(weightD1 * batchRecip));
+					const auto update = lr * (sqrt(par2 + eps) / sqrt(par1 + eps)) * weightD1 * batchRecip;
+					par2 = (momentum * par2) + (oneMinMomentum * square(update));
+					weight += update;
 
-				weight.store_a(&(*weights.Weights)[i]);
-				par1.store_a(&(*weights.WeightsPar1)[i]);
-				par2.store_a(&(*weights.WeightsPar2)[i]);
+					weight.store_a(&(*weights.Weights)[i]);
+					par1.store_a(&(*weights.WeightsPar1)[i]);
+					par2.store_a(&(*weights.WeightsPar2)[i]);
+				}
 			}
 
 			if (HasBias)
@@ -1800,31 +1933,34 @@ namespace dnn
 			const auto oneMinusB1 = Float(1) - B1;
 			const auto oneMinusB2 = Float(1) - B2;
 
-			/*
-			PRAGMA_OMP_SIMD()
-			for (auto i = 0ull; i < WeightCount; i++)
+			
+			if (WeightCount % VectorSize != 0)
 			{
-				(*weights.WeightsPar1)[i] = (beta1 * (*weights.WeightsPar1)[i]) + (oneMinusBeta1 * (*weights.WeightsD1)[i]);
-				(*weights.WeightsPar2)[i] = (beta2 * (*weights.WeightsPar2)[i]) + (oneMinusBeta2 * Square<Float>((*weights.WeightsD1)[i] * batchRecip));
-				(*weights.Weights)[i] -= lr * ((*weights.WeightsPar1)[i] / oneMinusB1) / std::sqrt(((*weights.WeightsPar2)[i] / oneMinusB2) + eps);
+				for (auto i = 0ull; i < WeightCount; i++)
+				{
+					(*weights.WeightsPar1)[i] = (beta1 * (*weights.WeightsPar1)[i]) + (oneMinusBeta1 * (*weights.WeightsD1)[i]);
+					(*weights.WeightsPar2)[i] = (beta2 * (*weights.WeightsPar2)[i]) + (oneMinusBeta2 * Square<Float>((*weights.WeightsD1)[i] * batchRecip));
+					(*weights.Weights)[i] -= lr * ((*weights.WeightsPar1)[i] / oneMinusB1) / std::sqrt(((*weights.WeightsPar2)[i] / oneMinusB2) + eps);
+				}
 			}
-			*/
-
-			VecFloat weight, weightD1, par1, par2;
-			for (auto i = 0ull; i < WeightCount; i += VectorSize)
+			else
 			{
-				weight.load_a(&(*weights.Weights)[i]);
-				weightD1.load_a(&(*weights.WeightsD1)[i]);
-				par1.load_a(&(*weights.WeightsPar1)[i]);
-				par2.load_a(&(*weights.WeightsPar2)[i]);
+				VecFloat weight, weightD1, par1, par2;
+				for (auto i = 0ull; i < WeightCount; i += VectorSize)
+				{
+					weight.load_a(&(*weights.Weights)[i]);
+					weightD1.load_a(&(*weights.WeightsD1)[i]);
+					par1.load_a(&(*weights.WeightsPar1)[i]);
+					par2.load_a(&(*weights.WeightsPar2)[i]);
 
-				par1 = (beta1 * par1) + (oneMinusBeta1 * weightD1);
-				par2 = (beta2 * par2) + (oneMinusBeta2 * square(weightD1 * batchRecip));
-				weight -= lr * (par1 / oneMinusB1) / square((par2 / oneMinusB2) + eps);
+					par1 = (beta1 * par1) + (oneMinusBeta1 * weightD1);
+					par2 = (beta2 * par2) + (oneMinusBeta2 * square(weightD1 * batchRecip));
+					weight -= lr * (par1 / oneMinusB1) / square((par2 / oneMinusB2) + eps);
 
-				weight.store_a(&(*weights.Weights)[i]);
-				par1.store_a(&(*weights.WeightsPar1)[i]);
-				par2.store_a(&(*weights.WeightsPar2)[i]);
+					weight.store_a(&(*weights.Weights)[i]);
+					par1.store_a(&(*weights.WeightsPar1)[i]);
+					par2.store_a(&(*weights.WeightsPar2)[i]);
+				}
 			}
 
 			if (HasBias)
@@ -1853,31 +1989,34 @@ namespace dnn
 			const auto beta2 = rate.Beta2;
 			const auto eps = rate.Eps;
 
-			/*
-			PRAGMA_OMP_SIMD()
-			for (auto i = 0ull; i < WeightCount; i++)
+			
+			if (WeightCount % VectorSize != 0)
 			{
-				(*weights.WeightsPar1)[i] = (beta1 * (*weights.WeightsPar1)[i]) + (oneMinusBeta1 * (*weights.WeightsD1)[i]);
-				(*weights.WeightsPar2)[i] = std::max(beta2 * (*weights.WeightsPar2)[i], std::abs((*weights.WeightsD1)[i] * batchRecip));
-				(*weights.Weights)[i] -= lr * (*weights.WeightsPar1)[i] / ((*weights.WeightsPar2)[i] + eps);
+				for (auto i = 0ull; i < WeightCount; i++)
+				{
+					(*weights.WeightsPar1)[i] = (beta1 * (*weights.WeightsPar1)[i]) + (oneMinusBeta1 * (*weights.WeightsD1)[i]);
+					(*weights.WeightsPar2)[i] = std::max(beta2 * (*weights.WeightsPar2)[i], std::abs((*weights.WeightsD1)[i] * batchRecip));
+					(*weights.Weights)[i] -= lr * (*weights.WeightsPar1)[i] / ((*weights.WeightsPar2)[i] + eps);
+				}
 			}
-			*/
-
-			VecFloat weight, weightD1, par1, par2;
-			for (auto i = 0ull; i < WeightCount; i += VectorSize)
+			else
 			{
-				weight.load_a(&(*weights.Weights)[i]);
-				weightD1.load_a(&(*weights.WeightsD1)[i]);
-				par1.load_a(&(*weights.WeightsPar1)[i]);
-				par2.load_a(&(*weights.WeightsPar2)[i]);
-				
-				par1 = (beta1 * par1) + (oneMinusBeta1 * weightD1);
-				par2 = max(beta2 * par2, abs(weightD1 * batchRecip));
-				weight -= lr * par1 / (par2 + eps);
-				
-				weight.store_a(&(*weights.Weights)[i]);
-				par1.store_a(&(*weights.WeightsPar1)[i]);
-				par2.store_a(&(*weights.WeightsPar2)[i]);
+				VecFloat weight, weightD1, par1, par2;
+				for (auto i = 0ull; i < WeightCount; i += VectorSize)
+				{
+					weight.load_a(&(*weights.Weights)[i]);
+					weightD1.load_a(&(*weights.WeightsD1)[i]);
+					par1.load_a(&(*weights.WeightsPar1)[i]);
+					par2.load_a(&(*weights.WeightsPar2)[i]);
+
+					par1 = (beta1 * par1) + (oneMinusBeta1 * weightD1);
+					par2 = max(beta2 * par2, abs(weightD1 * batchRecip));
+					weight -= lr * par1 / (par2 + eps);
+
+					weight.store_a(&(*weights.Weights)[i]);
+					par1.store_a(&(*weights.WeightsPar1)[i]);
+					par2.store_a(&(*weights.WeightsPar2)[i]);
+				}
 			}
 
 			if (HasBias)
@@ -1910,31 +2049,34 @@ namespace dnn
 			const auto oneMinusB1 = Float(1) - B1;
 			const auto oneMinusB2 = Float(1) - B2;
 
-			/*
-			PRAGMA_OMP_SIMD()
-			for (auto i = 0ull; i < WeightCount; i++)
+			
+			if (WeightCount % VectorSize != 0)
 			{
-				(*weights.WeightsPar1)[i] = (beta1 * (*weights.WeightsPar1)[i]) + (oneMinusBeta1 * (*weights.WeightsD1)[i] * batchRecip);
-				(*weights.WeightsPar2)[i] = (beta2 * (*weights.WeightsPar2)[i]) + (oneMinusBeta2 * Square<Float>((*weights.WeightsD1)[i] * batchRecip));
-				(*weights.Weights)[i] -= lr * (((*weights.WeightsPar1)[i] / oneMinusB1) / std::sqrt(((*weights.WeightsPar2)[i] / oneMinusB2) + eps) + (weightDecay * (*weights.Weights)[i]));
+				for (auto i = 0ull; i < WeightCount; i++)
+				{
+					(*weights.WeightsPar1)[i] = (beta1 * (*weights.WeightsPar1)[i]) + (oneMinusBeta1 * (*weights.WeightsD1)[i] * batchRecip);
+					(*weights.WeightsPar2)[i] = (beta2 * (*weights.WeightsPar2)[i]) + (oneMinusBeta2 * Square<Float>((*weights.WeightsD1)[i] * batchRecip));
+					(*weights.Weights)[i] -= lr * (((*weights.WeightsPar1)[i] / oneMinusB1) / std::sqrt(((*weights.WeightsPar2)[i] / oneMinusB2) + eps) + (weightDecay * (*weights.Weights)[i]));
+				}
 			}
-			*/
-
-			VecFloat weight, weightD1, par1, par2;
-			for (auto i = 0ull; i < WeightCount; i += VectorSize)
+			else
 			{
-				weight.load_a(&(*weights.Weights)[i]);
-				weightD1.load_a(&(*weights.WeightsD1)[i]);
-				par1.load_a(&(*weights.WeightsPar1)[i]);
-				par2.load_a(&(*weights.WeightsPar2)[i]);
+				VecFloat weight, weightD1, par1, par2;
+				for (auto i = 0ull; i < WeightCount; i += VectorSize)
+				{
+					weight.load_a(&(*weights.Weights)[i]);
+					weightD1.load_a(&(*weights.WeightsD1)[i]);
+					par1.load_a(&(*weights.WeightsPar1)[i]);
+					par2.load_a(&(*weights.WeightsPar2)[i]);
 
-				par1 = (beta1 * par1) + (oneMinusBeta1 * weightD1 * batchRecip);
-				par2 = (beta2 * par2) + (oneMinusBeta2 * square(weightD1 * batchRecip));
-				weight -= lr * (par1 / oneMinusB1) / square((par2 / oneMinusB2) + eps) + (weightDecay * weight);
+					par1 = (beta1 * par1) + (oneMinusBeta1 * weightD1 * batchRecip);
+					par2 = (beta2 * par2) + (oneMinusBeta2 * square(weightD1 * batchRecip));
+					weight -= lr * (par1 / oneMinusB1) / square((par2 / oneMinusB2) + eps) + (weightDecay * weight);
 
-				weight.store_a(&(*weights.Weights)[i]);
-				par1.store_a(&(*weights.WeightsPar1)[i]);
-				par2.store_a(&(*weights.WeightsPar2)[i]);
+					weight.store_a(&(*weights.Weights)[i]);
+					par1.store_a(&(*weights.WeightsPar1)[i]);
+					par2.store_a(&(*weights.WeightsPar2)[i]);
+				}
 			}
 
 			if (HasBias)
@@ -2126,16 +2268,10 @@ namespace dnn
 						os.write(reinterpret_cast<const char*>(Biases.data()), std::streamsize(BiasCount * sizeof(Float)));
 					
 					if (persistOptimizer)
-						switch (optimizer)
+					{
+						switch (GetOptimizerParameters(optimizer))
 						{
-						case Optimizers::AdaBound:
-						case Optimizers::AdaBoundW:
-						case Optimizers::AdaDelta:
-						case Optimizers::Adam:
-						case Optimizers::Adamax:
-						case Optimizers::AdamW:
-						case Optimizers::AmsBound:
-						case Optimizers::AmsBoundW:
+						case 2ull:
 						{
 							auto memWeightsPar1 = dnnl::memory(*WeightsMemDesc, Device.engine, WeightsPar1.data());
 							auto weightsPar1Mem = dnnl::memory(*PersistWeightsMemDesc, Device.engine);
@@ -2144,7 +2280,7 @@ namespace dnn
 							os.write(reinterpret_cast<const char*>(weightsPar1Mem.get_data_handle()), std::streamsize(WeightCount * sizeof(Float)));
 							if (HasBias)
 								os.write(reinterpret_cast<const char*>(BiasesPar1.data()), std::streamsize(BiasCount * sizeof(Float)));
-							
+
 							auto memWeightsPar2 = dnnl::memory(*WeightsMemDesc, Device.engine, WeightsPar2.data());
 							auto weightsPar2Mem = dnnl::memory(*PersistWeightsMemDesc, Device.engine);
 							dnnl::reorder(memWeightsPar2, weightsPar2Mem).execute(Device.stream, { {DNNL_ARG_FROM, memWeightsPar2}, {DNNL_ARG_TO, weightsPar2Mem} });
@@ -2152,55 +2288,10 @@ namespace dnn
 							os.write(reinterpret_cast<const char*>(weightsPar2Mem.get_data_handle()), std::streamsize(WeightCount * sizeof(Float)));
 							if (HasBias)
 								os.write(reinterpret_cast<const char*>(BiasesPar2.data()), std::streamsize(BiasCount * sizeof(Float)));
-
-							switch (optimizer)
-							{
-							case Optimizers::AdaBound:
-							case Optimizers::AdaBoundW:
-							case Optimizers::Adam:
-							case Optimizers::Adamax:
-							case Optimizers::AdamW:
-							case Optimizers::AmsBound:
-							case Optimizers::AmsBoundW:
-								os.write(reinterpret_cast<const char*>(&B1), std::streamsize(sizeof(Float)));
-								break;
-							default:
-								break;
-							}
-
-							switch (optimizer)
-							{
-							case Optimizers::AdaBound:
-							case Optimizers::AdaBoundW:
-							case Optimizers::Adam:
-							case Optimizers::AdamW:
-							case Optimizers::AmsBound:
-							case Optimizers::AmsBoundW:
-								os.write(reinterpret_cast<const char*>(&B2), std::streamsize(sizeof(Float)));
-								break;
-							default:
-								break;
-							}
-
-							switch (optimizer)
-							{
-							case Optimizers::AdaBound:
-							case Optimizers::AdaBoundW:
-							case Optimizers::AmsBound:
-							case Optimizers::AmsBoundW:
-								os.write(reinterpret_cast<const char*>(&Gamma), std::streamsize(sizeof(Float)));
-								break;
-							default:
-								break;
-							}
 						}
 						break;
 
-						case Optimizers::AdaGrad:
-						case Optimizers::NAG:
-						case Optimizers::RMSProp:
-						case Optimizers::SGDMomentum:
-						case Optimizers::SGDW:
+						case 1ull:
 						{
 							auto memWeightsPar1 = dnnl::memory(*WeightsMemDesc, Device.engine, WeightsPar1.data());
 							auto weightsPar1Mem = dnnl::memory(*PersistWeightsMemDesc, Device.engine);
@@ -2212,9 +2303,19 @@ namespace dnn
 						}
 						break;
 
-						case Optimizers::SGD:
-						break;
+						case 0ull:
+							break;
 						}
+
+						if (HasOptimizerParameterB1(optimizer))
+							os.write(reinterpret_cast<const char*>(&B1), std::streamsize(sizeof(Float)));
+
+						if (HasOptimizerParameterB2(optimizer))
+							os.write(reinterpret_cast<const char*>(&B2), std::streamsize(sizeof(Float)));
+
+						if (HasOptimizerParameterGamma(optimizer))
+							os.write(reinterpret_cast<const char*>(&Gamma), std::streamsize(sizeof(Float)));
+					}
 				}
 				else
 				{
@@ -2223,16 +2324,10 @@ namespace dnn
 						os.write(reinterpret_cast<const char*>(Biases.data()), std::streamsize(BiasCount * sizeof(Float)));
 
 					if (persistOptimizer)
-						switch (optimizer)
+					{
+						switch (GetOptimizerParameters(optimizer))
 						{
-						case Optimizers::AdaBound:
-						case Optimizers::AdaBoundW:
-						case Optimizers::AdaDelta:
-						case Optimizers::Adam:
-						case Optimizers::Adamax:
-						case Optimizers::AdamW:
-						case Optimizers::AmsBound:
-						case Optimizers::AmsBoundW:
+						case 2ull:
 						{
 							os.write(reinterpret_cast<const char*>(WeightsPar1.data()), std::streamsize(WeightCount * sizeof(Float)));
 							if (HasBias)
@@ -2240,55 +2335,10 @@ namespace dnn
 							os.write(reinterpret_cast<const char*>(WeightsPar2.data()), std::streamsize(WeightCount * sizeof(Float)));
 							if (HasBias)
 								os.write(reinterpret_cast<const char*>(BiasesPar2.data()), std::streamsize(BiasCount * sizeof(Float)));
-
-							switch (optimizer)
-							{
-							case Optimizers::AdaBound:
-							case Optimizers::AdaBoundW:
-							case Optimizers::Adam:
-							case Optimizers::Adamax:
-							case Optimizers::AdamW:
-							case Optimizers::AmsBound:
-							case Optimizers::AmsBoundW:
-								os.write(reinterpret_cast<const char*>(&B1), std::streamsize(sizeof(Float)));
-								break;
-							default:
-								break;
-							}
-
-							switch (optimizer)
-							{
-							case Optimizers::AdaBound:
-							case Optimizers::AdaBoundW:
-							case Optimizers::Adam:
-							case Optimizers::AdamW:
-							case Optimizers::AmsBound:
-							case Optimizers::AmsBoundW:
-								os.write(reinterpret_cast<const char*>(&B2), std::streamsize(sizeof(Float)));
-								break;
-							default:
-								break;
-							}
-
-							switch (optimizer)
-							{
-							case Optimizers::AdaBound:
-							case Optimizers::AdaBoundW:
-							case Optimizers::AmsBound:
-							case Optimizers::AmsBoundW:
-								os.write(reinterpret_cast<const char*>(&Gamma), std::streamsize(sizeof(Float)));
-								break;
-							default:
-								break;
-							}
 						}
 						break;
 
-						case Optimizers::AdaGrad:
-						case Optimizers::NAG:
-						case Optimizers::RMSProp:
-						case Optimizers::SGDMomentum:
-						case Optimizers::SGDW:
+						case 1ull:
 						{
 							os.write(reinterpret_cast<const char*>(WeightsPar1.data()), std::streamsize(WeightCount * sizeof(Float)));
 							if (HasBias)
@@ -2296,9 +2346,19 @@ namespace dnn
 						}
 						break;
 
-						case Optimizers::SGD:
-						break;
+						case 0ull:
+							break;
 						}
+
+						if (HasOptimizerParameterB1(optimizer))
+							os.write(reinterpret_cast<const char*>(&B1), std::streamsize(sizeof(Float)));
+
+						if (HasOptimizerParameterB2(optimizer))
+							os.write(reinterpret_cast<const char*>(&B2), std::streamsize(sizeof(Float)));
+
+						if (HasOptimizerParameterGamma(optimizer))
+							os.write(reinterpret_cast<const char*>(&Gamma), std::streamsize(sizeof(Float)));
+					}
 				}
 			}
 		}
@@ -2320,16 +2380,10 @@ namespace dnn
 						is.read(reinterpret_cast<char*>(Biases.data()), std::streamsize(BiasCount * sizeof(Float)));
 					
 					if (persistOptimizer)
-						switch (optimizer)
+					{
+						switch (GetOptimizerParameters(optimizer))
 						{
-						case Optimizers::AdaBound:
-						case Optimizers::AdaBoundW:
-						case Optimizers::AdaDelta:
-						case Optimizers::Adam:
-						case Optimizers::Adamax:
-						case Optimizers::AdamW:
-						case Optimizers::AmsBound:
-						case Optimizers::AmsBoundW:
+						case 2ull:
 						{
 							auto memWeightsPar1 = dnnl::memory(*PersistWeightsMemDesc, Device.engine);
 							is.read(reinterpret_cast<char*>(memWeightsPar1.get_data_handle()), std::streamsize(WeightCount * sizeof(Float)));
@@ -2346,55 +2400,10 @@ namespace dnn
 							Device.stream.wait();
 							if (HasBias)
 								is.read(reinterpret_cast<char*>(BiasesPar2.data()), std::streamsize(BiasCount * sizeof(Float)));
-
-							switch (optimizer)
-							{
-							case Optimizers::AdaBound:
-							case Optimizers::AdaBoundW:
-							case Optimizers::Adam:
-							case Optimizers::Adamax:
-							case Optimizers::AdamW:
-							case Optimizers::AmsBound:
-							case Optimizers::AmsBoundW:
-								is.read(reinterpret_cast<char*>(&B1), std::streamsize(sizeof(Float)));
-								break;
-							default:
-								break;
-							}
-
-							switch (optimizer)
-							{
-							case Optimizers::AdaBound:
-							case Optimizers::AdaBoundW:
-							case Optimizers::Adam:
-							case Optimizers::AdamW:
-							case Optimizers::AmsBound:
-							case Optimizers::AmsBoundW:
-								is.read(reinterpret_cast<char*>(&B2), std::streamsize(sizeof(Float)));
-								break;
-							default:
-								break;
-							}
-
-							switch (optimizer)
-							{
-							case Optimizers::AdaBound:
-							case Optimizers::AdaBoundW:
-							case Optimizers::AmsBound:
-							case Optimizers::AmsBoundW:
-								is.read(reinterpret_cast<char*>(&Gamma), std::streamsize(sizeof(Float)));
-								break;
-							default:
-								break;
-							}
 						}
 						break;
 
-						case Optimizers::AdaGrad:
-						case Optimizers::NAG:
-						case Optimizers::RMSProp:
-						case Optimizers::SGDMomentum:
-						case Optimizers::SGDW:
+						case 1ull:
 						{
 							auto memWeightsPar1 = dnnl::memory(*PersistWeightsMemDesc, Device.engine);
 							is.read(reinterpret_cast<char*>(memWeightsPar1.get_data_handle()), std::streamsize(WeightCount * sizeof(Float)));
@@ -2406,9 +2415,19 @@ namespace dnn
 						}
 						break;
 
-						case Optimizers::SGD:
-						break;
+						case 0ull:
+							break;
 						}
+
+						if (HasOptimizerParameterB1(optimizer))
+							is.read(reinterpret_cast<char*>(&B1), std::streamsize(sizeof(Float)));
+
+						if (HasOptimizerParameterB2(optimizer))
+							is.read(reinterpret_cast<char*>(&B2), std::streamsize(sizeof(Float)));
+
+						if (HasOptimizerParameterGamma(optimizer))
+							is.read(reinterpret_cast<char*>(&Gamma), std::streamsize(sizeof(Float)));
+					}
 				}
 				else
 				{
@@ -2417,16 +2436,10 @@ namespace dnn
 						is.read(reinterpret_cast<char*>(Biases.data()), std::streamsize(BiasCount * sizeof(Float)));
 
 					if (persistOptimizer)
-						switch (optimizer)
+					{
+						switch (GetOptimizerParameters(optimizer))
 						{
-						case Optimizers::AdaBound:
-						case Optimizers::AdaBoundW:
-						case Optimizers::AdaDelta:
-						case Optimizers::Adam:
-						case Optimizers::Adamax:
-						case Optimizers::AdamW:
-						case Optimizers::AmsBound:
-						case Optimizers::AmsBoundW:
+						case 2ull:
 						{
 							is.read(reinterpret_cast<char*>(WeightsPar1.data()), std::streamsize(WeightCount * sizeof(Float)));
 							if (HasBias)
@@ -2434,55 +2447,10 @@ namespace dnn
 							is.read(reinterpret_cast<char*>(WeightsPar2.data()), std::streamsize(WeightCount * sizeof(Float)));
 							if (HasBias)
 								is.read(reinterpret_cast<char*>(BiasesPar2.data()), std::streamsize(BiasCount * sizeof(Float)));
-
-							switch (optimizer)
-							{
-							case Optimizers::AdaBound:
-							case Optimizers::AdaBoundW:
-							case Optimizers::Adam:
-							case Optimizers::Adamax:
-							case Optimizers::AdamW:
-							case Optimizers::AmsBound:
-							case Optimizers::AmsBoundW:
-								is.read(reinterpret_cast<char*>(&B1), std::streamsize(sizeof(Float)));
-								break;
-							default:
-								break;
-							}
-
-							switch (optimizer)
-							{
-							case Optimizers::AdaBound:
-							case Optimizers::AdaBoundW:
-							case Optimizers::Adam:
-							case Optimizers::AdamW:
-							case Optimizers::AmsBound:
-							case Optimizers::AmsBoundW:
-								is.read(reinterpret_cast<char*>(&B2), std::streamsize(sizeof(Float)));
-								break;
-							default:
-								break;
-							}
-
-							switch (optimizer)
-							{
-							case Optimizers::AdaBound:
-							case Optimizers::AdaBoundW:
-							case Optimizers::AmsBound:
-							case Optimizers::AmsBoundW:
-								is.read(reinterpret_cast<char*>(&Gamma), std::streamsize(sizeof(Float)));
-								break;
-							default:
-								break;
-							}
 						}
 						break;
 
-						case Optimizers::AdaGrad:
-						case Optimizers::NAG:
-						case Optimizers::RMSProp:
-						case Optimizers::SGDMomentum:
-						case Optimizers::SGDW:
+						case 1ull:
 						{
 							is.read(reinterpret_cast<char*>(WeightsPar1.data()), std::streamsize(WeightCount * sizeof(Float)));
 							if (HasBias)
@@ -2490,9 +2458,19 @@ namespace dnn
 						}
 						break;
 
-						case Optimizers::SGD:
-						break;
+						case 0ull:
+							break;
 						}
+
+						if (HasOptimizerParameterB1(optimizer))
+							is.read(reinterpret_cast<char*>(&B1), std::streamsize(sizeof(Float)));
+
+						if (HasOptimizerParameterB2(optimizer))
+							is.read(reinterpret_cast<char*>(&B2), std::streamsize(sizeof(Float)));
+
+						if (HasOptimizerParameterGamma(optimizer))
+							is.read(reinterpret_cast<char*>(&Gamma), std::streamsize(sizeof(Float)));
+					}
 				}
 			}
 		}
@@ -2507,84 +2485,18 @@ namespace dnn
 
 				if (persistOptimizer)
 				{
-					switch (optimizer)
-					{
-					case Optimizers::AdaBound:
-					case Optimizers::AdaBoundW:
-					case Optimizers::AdaDelta:
-					case Optimizers::Adam:
-					case Optimizers::Adamax:
-					case Optimizers::AdamW:
-					case Optimizers::AmsBound:
-					case Optimizers::AmsBoundW:
-					{
-						weightsSize += 3 * WeightCount * sizeof(Float);
-						if (HasBias)
-							weightsSize += 3 * BiasCount * sizeof(Float);
+					weightsSize += (GetOptimizerParameters(optimizer) + 1ull) * WeightCount * sizeof(Float);
+					if (HasBias)
+						weightsSize += (GetOptimizerParameters(optimizer) + 1ull) * BiasCount * sizeof(Float);
 
-						switch (optimizer)
-						{
-						case Optimizers::AdaBound:
-						case Optimizers::AdaBoundW:
-						case Optimizers::Adam:
-						case Optimizers::Adamax:
-						case Optimizers::AdamW:
-						case Optimizers::AmsBound:
-						case Optimizers::AmsBoundW:
-							weightsSize += sizeof(Float);
-							break;
-						default:
-							break;
-						}
+					if (HasOptimizerParameterB1(optimizer))
+						weightsSize += sizeof(Float);
 
-						switch (optimizer)
-						{
-						case Optimizers::AdaBound:
-						case Optimizers::AdaBoundW:
-						case Optimizers::Adam:
-						case Optimizers::AdamW:
-						case Optimizers::AmsBound:
-						case Optimizers::AmsBoundW:
-							weightsSize += sizeof(Float);
-							break;
-						default:
-							break;
-						}
+					if (HasOptimizerParameterB2(optimizer))
+						weightsSize += sizeof(Float);
 
-						switch (optimizer)
-						{
-						case Optimizers::AdaBound:
-						case Optimizers::AdaBoundW:
-						case Optimizers::AmsBound:
-						case Optimizers::AmsBoundW:
-							weightsSize += sizeof(Float);
-							break;
-						default:
-							break;
-						}
-					}
-					break;
-
-					case Optimizers::AdaGrad:
-					case Optimizers::NAG:
-					case Optimizers::RMSProp:
-					case Optimizers::SGDMomentum:
-					case Optimizers::SGDW:
-					{
-						weightsSize += 2 * WeightCount * sizeof(Float);
-						if (HasBias)
-							weightsSize += 2 * BiasCount * sizeof(Float);
-					}
-					break;
-
-					case Optimizers::SGD:
-					{
-						weightsSize += WeightCount * sizeof(Float);
-						if (HasBias)
-							weightsSize += BiasCount * sizeof(Float);
-					}
-					break;
-					}
+					if (HasOptimizerParameterGamma(optimizer))
+						weightsSize += sizeof(Float);
 				}
 				else
 				{

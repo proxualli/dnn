@@ -1313,7 +1313,7 @@ namespace dnn
 		
 		UInt GetNeuronsSize(const UInt batchSize) const override
 		{
-			if constexpr (Reference)
+			if constexpr (ReferenceBatchNormalization || Reference)
 				return Layer::GetNeuronsSize(batchSize) + (batchSize * PaddedCDHW() * sizeof(Float));
 			else
 				return Layer::GetNeuronsSize(batchSize);
