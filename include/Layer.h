@@ -365,7 +365,7 @@ namespace dnn
 		}
 	};
 
-	static const bool IsNorm(const LayerTypes& type)
+	static bool IsNorm(const LayerTypes& type)
 	{
 		return std::string(magic_enum::enum_name<LayerTypes>(type)).find("Norm", 0) != std::string::npos;
 	}
@@ -639,21 +639,21 @@ namespace dnn
 		{
 			auto description = std::string("");
 
-			description.append(std::string(" Type:") + dtab + std::string(magic_enum::enum_name<LayerTypes>(LayerType)));
+			description.append(std::string(" Type:       ") + tab + std::string(magic_enum::enum_name<LayerTypes>(LayerType)));
 
 			if (LayerType != LayerTypes::Input)
 			{
-				description.append(nwl + std::string(" Inputs:") + tab);
+				description.append(nwl + std::string(" Inputs:     ") + tab);
 				for (auto i = 0ull; i < InputsFwd.size(); i++)
 					description.append((i == 0 ? std::string("") : std::string(",")) + InputsFwd[i]->Name);
 			}
-
-			description.append(nwl + std::string(" Features:") + tab + std::to_string(C) + std::string("x") + std::to_string(H) + std::string("x") + std::to_string(W));
-			description.append(nwl + std::string(" Neurons:") + tab + std::to_string(CDHW()));
-			description.append(nwl + std::string(" Format:") + tab + std::string(dnnl_fmt_tag2str(static_cast<dnnl_format_tag_t>(ChosenFormat))));
+			
+			description.append(nwl + std::string(" Features:   ") + tab + std::to_string(C) + std::string("x") + std::to_string(H) + std::string("x") + std::to_string(W));
+			description.append(nwl + std::string(" Neurons:    ") + tab + std::to_string(CDHW()));
+			description.append(nwl + std::string(" Format:     ") + tab + std::string(dnnl_fmt_tag2str(static_cast<dnnl_format_tag_t>(ChosenFormat))));
 #ifndef NDEBUG
 			description.append(nwl + std::string(" SharesInput:") + tab + BoolToString(SharesInput));
-			description.append(nwl + std::string(" InplaceBwd:") + tab + BoolToString(InplaceBwd));
+			description.append(nwl + std::string(" InplaceBwd: ") + tab + BoolToString(InplaceBwd));
 #endif
 			
 			return description;
@@ -665,16 +665,16 @@ namespace dnn
 
 			if (visible)
 			{
-				description.append(nwl + std::string(" Weights:") + tab + std::to_string(WeightCount));
-				description.append(nwl + std::string(" Format:") + tab + std::string(dnnl_fmt_tag2str(static_cast<dnnl_format_tag_t>(WeightsFormat))));
-				description.append(nwl + std::string("  lr mult:") + tab + FloatToString(WeightsLRM));
-				description.append(nwl + std::string("  wd mult:") + tab + FloatToString(WeightsWDM));
+				description.append(nwl + std::string(" Weights:    ") + tab + std::to_string(WeightCount));
+				description.append(nwl + std::string(" Format:     ") + tab + std::string(dnnl_fmt_tag2str(static_cast<dnnl_format_tag_t>(WeightsFormat))));
+				description.append(nwl + std::string("  lr mult:   ") + tab + FloatToString(WeightsLRM));
+				description.append(nwl + std::string("  wd mult:   ") + tab + FloatToString(WeightsWDM));
 	
 				if (HasBias)
 				{
-					description.append(nwl + std::string(" Biases:") + tab + std::to_string(BiasCount));
-					description.append(nwl + std::string("  lr mult:") + tab + FloatToString(BiasesLRM));
-					description.append(nwl + std::string("  wd mult:") + tab + FloatToString(BiasesWDM));
+				    description.append(nwl + std::string(" Biases:     ") + tab + std::to_string(BiasCount));
+					description.append(nwl + std::string("  lr mult:   ") + tab + FloatToString(BiasesLRM));
+					description.append(nwl + std::string("  wd mult:   ") + tab + FloatToString(BiasesWDM));
 				}
 			}
 
@@ -1673,7 +1673,7 @@ namespace dnn
 
 						par1 = (beta1 * par1) + (oneMinusBeta1 * weightD1 *  batchRecip);
 						par2 = (beta2 * par2) + (oneMinusBeta2 * square(weightD1 * batchRecip));
-						weight -= Clamp<VecFloat>(step_size / sqrt(par2 + eps), lowerBound, upperBound) * par1;
+						weight -= ClampVecFloat(step_size / sqrt(par2 + eps), VecFloat(lowerBound), VecFloat(upperBound)) * par1;
 
 						weight.store_a(&(*weights.Weights)[i]);
 						par1.store_a(&(*weights.WeightsPar1)[i]);
@@ -1689,7 +1689,7 @@ namespace dnn
 
 						par1 = (beta1 * par1) + (oneMinusBeta1 * weightD1 * batchRecip);
 						par2 = (beta2 * par2) + (oneMinusBeta2 * square(weightD1 * batchRecip));
-						weight -= Clamp<VecFloat>(step_size / sqrt(max(par1, par2) + eps), lowerBound, upperBound) * par1;
+						weight -= ClampVecFloat(step_size / sqrt(max(par1, par2) + eps), VecFloat(lowerBound), VecFloat(upperBound)) * par1;
 
 						weight.store_a(&(*weights.Weights)[i]);
 						par1.store_a(&(*weights.WeightsPar1)[i]);
@@ -1782,7 +1782,7 @@ namespace dnn
 						weightD1 += weightDecay * weight;
 						par1 = (beta1 * par1) + (oneMinusBeta1 * weightD1 * batchRecip);
 						par2 = (beta2 * par2) + (oneMinusBeta2 * square(weightD1 * batchRecip));
-						weight -= Clamp<VecFloat>(step_size / sqrt(par2 + eps), lowerBound, upperBound) * par1;
+						weight -= ClampVecFloat(step_size / sqrt(par2 + eps), VecFloat(lowerBound), VecFloat(upperBound)) * par1;
 
 						weight.store_a(&(*weights.Weights)[i]);
 						par1.store_a(&(*weights.WeightsPar1)[i]);
@@ -1799,7 +1799,7 @@ namespace dnn
 						weightD1 += weightDecay * weight;
 						par1 = (beta1 * par1) + (oneMinusBeta1 * weightD1 * batchRecip);
 						par2 = (beta2 * par2) + (oneMinusBeta2 * square(weightD1 * batchRecip));
-						weight -= Clamp<VecFloat>(step_size / sqrt(max(par1, par2) + eps), lowerBound, upperBound) * par1;
+						weight -= ClampVecFloat(step_size / sqrt(max(par1, par2) + eps), VecFloat(lowerBound), VecFloat(upperBound)) * par1;
 
 						weight.store_a(&(*weights.Weights)[i]);
 						par1.store_a(&(*weights.WeightsPar1)[i]);

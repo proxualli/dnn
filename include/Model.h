@@ -453,7 +453,7 @@ namespace dnn
 		}
 	};
 
-	static const bool IsBatchNorm(const LayerTypes& type)
+	static bool IsBatchNorm(const LayerTypes& type)
 	{
 		return std::string(magic_enum::enum_name<LayerTypes>(type)).find("BatchNorm", 0) != std::string::npos;
 	}
@@ -2438,7 +2438,7 @@ namespace dnn
 
 				if (State.load() == States::Training && idx < DataProv->TrainSamplesCount)
 				{
-					label = DataProv->TrainLabels[RandomTrainSamples[idx]].data();
+					label[LabelIndex] = DataProv->TrainLabels[RandomTrainSamples[idx]][LabelIndex];
 					
 					for (auto i = 0ull; i < size; i++)
 						snapshot[i] = Layers[0]->Neurons[i + offset];
@@ -2447,7 +2447,7 @@ namespace dnn
 				}
 				else if (State.load() == States::Testing && idx < DataProv->TestSamplesCount)
 				{
-					label = DataProv->TestLabels[idx].data();
+					label[LabelIndex] = DataProv->TestLabels[idx][LabelIndex];
 					
 					for (auto i = 0ull; i < size; i++)
 						snapshot[i] = Layers[0]->Neurons[i + offset];
