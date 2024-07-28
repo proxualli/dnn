@@ -150,7 +150,7 @@ namespace dnn
 				{
 					if (!plain)
 					{
-						VecFloat In;
+						/*VecFloat In;
 						for (auto c = 0ull; c < part; c += VectorSize)
 						{
 							const auto inputOffset = InputLayer->OffsetPaddedMem(0, c + ChannelsLeft, 0, 0);
@@ -160,9 +160,9 @@ namespace dnn
 								In.load_a(&InputLayer->Neurons[hw + inputOffset]);
 								In.store_a(&Neurons[hw + outputOffset]);
 							}
-						}
+						}*/
 
-						for (auto c = part; c < C; c++)
+						for (auto c = 0ull; c < C; c++)
 							for (auto h = 0ull; h < H; h++)
 								PRAGMA_OMP_SIMD()
 								for (auto w = 0ull; w < W; w++)
