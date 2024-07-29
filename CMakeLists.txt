@@ -153,6 +153,7 @@ set(libdnn_headers
   include/Multiply.h
   include/ParallelFor.h
   include/PartialDepthwiseConvolution.h
+  include/Reduction.h
   include/Resampling.h
   include/Scripts.h
   include/Shuffle.h
