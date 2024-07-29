@@ -134,7 +134,7 @@ namespace
 	constexpr auto TestConcat = false;
 	constexpr auto TestMultiply = false;
 
-	constexpr auto ReferenceBatchNormalization = false;
+	constexpr auto ReferenceBatchNormalization = true;
 	constexpr auto ReferenceConcat = false;
 	constexpr auto ReferenceMultiply = true;
 
