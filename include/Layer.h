@@ -1673,7 +1673,7 @@ namespace dnn
 
 						par1 = (beta1 * par1) + (oneMinusBeta1 * weightD1 *  batchRecip);
 						par2 = (beta2 * par2) + (oneMinusBeta2 * square(weightD1 * batchRecip));
-						weight -= ClampVecFloat(step_size / sqrt(par2 + eps), VecFloat(lowerBound), VecFloat(upperBound)) * par1;
+						weight -= ClampVecFloat(step_size / sqrt(par2 + eps), lowerBound, upperBound) * par1;
 
 						weight.store_a(&(*weights.Weights)[i]);
 						par1.store_a(&(*weights.WeightsPar1)[i]);
@@ -1689,7 +1689,7 @@ namespace dnn
 
 						par1 = (beta1 * par1) + (oneMinusBeta1 * weightD1 * batchRecip);
 						par2 = (beta2 * par2) + (oneMinusBeta2 * square(weightD1 * batchRecip));
-						weight -= ClampVecFloat(step_size / sqrt(max(par1, par2) + eps), VecFloat(lowerBound), VecFloat(upperBound)) * par1;
+						weight -= ClampVecFloat(step_size / sqrt(max(par1, par2) + eps), lowerBound, upperBound) * par1;
 
 						weight.store_a(&(*weights.Weights)[i]);
 						par1.store_a(&(*weights.WeightsPar1)[i]);
@@ -1782,7 +1782,7 @@ namespace dnn
 						weightD1 += weightDecay * weight;
 						par1 = (beta1 * par1) + (oneMinusBeta1 * weightD1 * batchRecip);
 						par2 = (beta2 * par2) + (oneMinusBeta2 * square(weightD1 * batchRecip));
-						weight -= ClampVecFloat(step_size / sqrt(par2 + eps), VecFloat(lowerBound), VecFloat(upperBound)) * par1;
+						weight -= ClampVecFloat(step_size / sqrt(par2 + eps), lowerBound, upperBound) * par1;
 
 						weight.store_a(&(*weights.Weights)[i]);
 						par1.store_a(&(*weights.WeightsPar1)[i]);
@@ -1799,7 +1799,7 @@ namespace dnn
 						weightD1 += weightDecay * weight;
 						par1 = (beta1 * par1) + (oneMinusBeta1 * weightD1 * batchRecip);
 						par2 = (beta2 * par2) + (oneMinusBeta2 * square(weightD1 * batchRecip));
-						weight -= ClampVecFloat(step_size / sqrt(max(par1, par2) + eps), VecFloat(lowerBound), VecFloat(upperBound)) * par1;
+						weight -= ClampVecFloat(step_size / sqrt(max(par1, par2) + eps), lowerBound, upperBound) * par1;
 
 						weight.store_a(&(*weights.Weights)[i]);
 						par1.store_a(&(*weights.WeightsPar1)[i]);

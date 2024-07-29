@@ -135,7 +135,7 @@ namespace
 	constexpr auto TestMultiply = false;
 
 	constexpr auto ReferenceBatchNormalization = false;
-	constexpr auto ReferenceConcat = true;
+	constexpr auto ReferenceConcat = false;
 	constexpr auto ReferenceMultiply = true;
 
 	typedef float Float;
@@ -727,7 +727,7 @@ namespace
 	template<typename T>
 	constexpr auto inline Square(const T& value) NOEXCEPT { return (value * value); }
 	template<typename T>
-	constexpr auto inline Clamp(const T& v, const T& lo, const T& hi) NOEXCEPT { return (v < lo) ? lo : (hi < v) ? hi : v; }
+	constexpr auto inline Clamp(const T& v, const T& lo, const T& hi) NOEXCEPT { return std::clamp<T>(v, lo, hi); }
 	template<typename T>
 	constexpr auto inline Saturate(const T& value) NOEXCEPT { return (value > T(255)) ? Byte(255) : (value < T(0)) ? Byte(0) : Byte(value); }
 	template<typename T>
@@ -735,7 +735,7 @@ namespace
 	template<typename T>
 	constexpr auto inline GetColorRange(const T& min, const T& max) NOEXCEPT { return (min == max) ? T(0) : T(255) / ((std::signbit(min) && std::signbit(max)) ? -(min + max) : (max - min)); }
 		
-	static auto inline ClampVecFloat(const VecFloat& v, const VecFloat& lo, const VecFloat& hi) NOEXCEPT { return min(max(v, lo), hi); }
+	static auto inline ClampVecFloat(const VecFloat& v, const Float& lo, const Float& hi) NOEXCEPT { return min(max(v, VecFloat(lo)), VecFloat(hi)); }
 
 	/* https://en.wikipedia.org/wiki/Kahan_summation_algorithm */
 	template<typename T>
