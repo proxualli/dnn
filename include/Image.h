@@ -10,7 +10,7 @@
 #if defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW32__)
 #define cimg_display 2
 #else
-#define cimg_display 1
+#define cimg_display 0
 #endif
 #else	
 #define cimg_display 0
