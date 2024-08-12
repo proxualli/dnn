@@ -87,7 +87,7 @@
 #ifdef _WIN32
 #pragma fenv_access (on)
 #else
-#pragma STDC FENV_ACCESS on
+#pragma STDC FENV_ACCESS ON
 #endif
 #endif
 
