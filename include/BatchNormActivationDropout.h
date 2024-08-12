@@ -71,6 +71,10 @@ namespace dnn
 			WeightsMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::a));
 			PersistWeightsMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::a));
 			WeightsFormat = GetMemoryFormat(*WeightsMemDesc);
+
+			FwdInferenceWeight = Float(5);
+			FwdTrainingWeight = Float(10);
+			BwdTrainingWeight = Float(10);
 		}
 				
 		void UpdateResolution() final override
@@ -220,18 +224,17 @@ namespace dnn
 			{
 				const auto strideH = W * VectorSize;
 				const auto plain = IsPlainFormat();
-				const auto elements = batchSize * (plain ? CDHW() : PaddedCDHW());
 				const auto padded = C == PaddedC;
 				const auto part = padded ? PaddedC : (PaddedC - VectorSize);
 
 				if (!training)
 				{
-					const auto maxTreads = GetThreads(elements, Float(5));
+					const auto maxThreads = GetThreads(batchSize * GetElementsCount(), FwdInferenceWeight);
 
 					if (plain) // nchw
 					{
 						const auto partialHW = GetVectorPart(HW());
-						const auto threads = std::min<UInt>(maxTreads, C);
+						const auto threads = std::min<UInt>(maxThreads, C);
 
 						for_i(C, threads, [=](UInt c)
 						{
@@ -252,7 +255,7 @@ namespace dnn
 					}
 					else
 					{
-						const auto threads = std::min<UInt>(maxTreads, PaddedC / VectorSize);
+						const auto threads = std::min<UInt>(maxThreads, PaddedC / VectorSize);
 
 						for_i(PaddedC / VectorSize, threads, [=](UInt c)
 						{
@@ -283,12 +286,12 @@ namespace dnn
 				}
 				else
 				{
-					const auto maxTreads = GetThreads(elements, Float(10));
+					const auto maxThreads = GetThreads(batchSize * GetElementsCount(), FwdTrainingWeight);
 
 					if (plain)
 					{
 						const auto partialHW = GetVectorPart(HW());
-						const auto threads = std::min<UInt>(maxTreads, C);
+						const auto threads = std::min<UInt>(maxThreads, C);
 
 						for_i(C, threads, [=](UInt c)
 						{
@@ -462,7 +465,7 @@ namespace dnn
 					}
 					else
 					{
-						const auto threads = std::min<UInt>(maxTreads, PaddedC / VectorSize);
+						const auto threads = std::min<UInt>(maxThreads, PaddedC / VectorSize);
 
 						for_i(PaddedC / VectorSize, threads, [=](UInt c)
 						{
@@ -671,8 +674,7 @@ namespace dnn
 				const auto enabled = Enabled;
 				const auto strideH = W * VectorSize;
 				const auto plain = IsPlainFormat();
-				const auto elements = batchSize * (plain ? CDHW() : PaddedCDHW());
-				const auto maxThreads = GetThreads(elements, Float(10));
+				const auto maxThreads = GetThreads(batchSize * GetElementsCount(), BwdTrainingWeight);
 				const auto padded = C == PaddedC;
 				const auto part = padded ? PaddedC : (PaddedC - VectorSize);
 				

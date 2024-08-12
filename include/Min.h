@@ -28,6 +28,10 @@ namespace dnn
 			assert(Inputs[0]->D == Inputs[1]->D);
 
 			scales = std::vector<Float>(2, Float(1));
+
+			FwdInferenceWeight = Float(2);
+			FwdTrainingWeight = Float(4);
+			BwdTrainingWeight = Float(4);
 		}
 
 		void UpdateResolution() final override
@@ -98,8 +102,7 @@ namespace dnn
 				const auto plain = IsPlainFormat();
 				const auto size = plain ? CDHW() : PaddedCDHW();
 				const auto part = GetVectorPart(size);
-				const auto threads = batchSize == 1 ? 1ull : GetThreads(batchSize * size, Float(4));
-				
+				const auto threads = batchSize == 1ull ? 1ull : GetThreads(batchSize * GetElementsCount(), FwdTrainingWeight);
 				const auto strideHW = HW() * VectorSize;
 
 				if (plain)
@@ -298,7 +301,6 @@ namespace dnn
 
 			const auto size = IsPlainFormat() ? CDHW() : PaddedCDHW();
 			const auto part = GetVectorPart(size);
-			const auto threads = GetThreads(batchSize * size);
 
 #ifdef DNN_STOCHASTIC
 			if (batchSize == 1)
@@ -322,6 +324,8 @@ namespace dnn
 			else
 			{
 #endif
+				const auto threads = batchSize == 1ull ? 1ull : GetThreads(batchSize * GetElementsCount(), BwdTrainingWeight);
+
 				for_i(batchSize, threads, [=](UInt b)
 				{
 					const auto start = b * size;

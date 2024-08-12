@@ -25,6 +25,9 @@ namespace dnn
 			P(p),
 			algorithm(dnnl::algorithm::reduction_mean)
 		{
+			FwdInferenceWeight = Float(5);
+			FwdTrainingWeight = Float(10);
+			BwdTrainingWeight = Float(10);
 		}
 
 		void UpdateResolution() final override
@@ -36,7 +39,7 @@ namespace dnn
 
 		std::string GetDescription() const final override
 		{
-			return GetDescriptionHeader().append(nwl + std::string(" Operation:") + tab + std::string(magic_enum::enum_name<ReduceOperations>(Op)));
+			return GetDescriptionHeader().append(nwl + std::string(" Operation:  ") + tab + std::string(magic_enum::enum_name<ReduceOperations>(Op)));
 		}
 
 		UInt FanIn() const final override
@@ -118,8 +121,6 @@ namespace dnn
 		void BackwardPropAvg(const UInt batchSize)
 		{
 			const auto plain = IsPlainFormat();
-			const auto elements = batchSize * (plain ? CDHW() : PaddedCDHW());
-			const auto threads = batchSize == 1 ? 1ull : GetThreads(elements, Float(10));
 			const auto strideHW = HW() * VectorSize;
 
 #ifdef DNN_STOCHASTIC
@@ -158,8 +159,9 @@ namespace dnn
 			else
 			{
 #endif
+				const auto threads = batchSize == 1ull ? 1ull : GetThreads(batchSize * GetElementsCount(), BwdTrainingWeight);
+
 				if (!plain)
-				{
 					for_i(batchSize, threads, [=](UInt n)
 					{
 						VecFloat InD1;
@@ -176,9 +178,7 @@ namespace dnn
 							}
 						}
 					});
-				}
 				else
-				{
 					for_i(batchSize, threads, [=](UInt n)
 					{
 						const auto start = n * HW();
@@ -188,7 +188,6 @@ namespace dnn
 							for (auto hw = 0; hw < HW(); hw++)
 								InputLayer->NeuronsD1[inStart + (c * HW()) + hw] += NeuronsD1[start + hw] / Float(InputLayer->C);
 					});
-				}
 #ifdef DNN_STOCHASTIC
 			}
 #endif
@@ -197,8 +196,6 @@ namespace dnn
 		void BackwardPropMin(const UInt batchSize)
 		{
 			const auto plain = IsPlainFormat();
-			const auto elements = batchSize * (plain ? CDHW() : PaddedCDHW());
-			const auto threads = batchSize == 1 ? 1ull : GetThreads(elements, Float(10));
 			const auto strideHW = HW() * VectorSize;
 
 #ifdef DNN_STOCHASTIC
@@ -238,8 +235,9 @@ namespace dnn
 			else
 			{
 #endif
+				const auto threads = batchSize == 1ull ? 1ull : GetThreads(batchSize * GetElementsCount(), BwdTrainingWeight);
+
 				if (!plain)
-				{
 					for_i(batchSize, threads, [=](UInt n)
 					{
 						VecFloat In, InD1;
@@ -256,9 +254,7 @@ namespace dnn
 							}
 						}
 					});
-				}
 				else
-				{
 					for_i(batchSize, threads, [=](UInt n)
 					{
 						const auto start = n * HW();
@@ -268,7 +264,6 @@ namespace dnn
 							for (auto hw = 0; hw < HW(); hw++)
 								InputLayer->NeuronsD1[inStart + (c * HW()) + hw] += (InputLayer->Neurons[inStart + (c * HW()) + hw] == Neurons[start + hw]) ? NeuronsD1[start + hw] : Float(0);
 					});
-				}
 #ifdef DNN_STOCHASTIC
 			}
 #endif
@@ -277,8 +272,6 @@ namespace dnn
 		void BackwardPropMax(const UInt batchSize)
 		{
 			const auto plain = IsPlainFormat();
-			const auto elements = batchSize * (plain ? CDHW() : PaddedCDHW());
-			const auto threads = batchSize == 1 ? 1ull : GetThreads(elements, Float(10));
 			const auto strideHW = HW() * VectorSize;
 
 #ifdef DNN_STOCHASTIC
@@ -318,8 +311,9 @@ namespace dnn
 			else
 			{
 #endif
+				const auto threads = batchSize == 1ull ? 1ull : GetThreads(batchSize * GetElementsCount(), BwdTrainingWeight);
+
 				if (!plain)
-				{
 					for_i(batchSize, threads, [=](UInt n)
 					{
 						VecFloat In, InD1;
@@ -336,9 +330,7 @@ namespace dnn
 							}
 						}
 					});
-				}
 				else
-				{
 					for_i(batchSize, threads, [=](UInt n)
 					{
 						const auto start = n * HW();
@@ -348,7 +340,6 @@ namespace dnn
 							for (auto hw = 0; hw < HW(); hw++)
 								InputLayer->NeuronsD1[inStart + (c * HW()) + hw] += (InputLayer->Neurons[inStart + (c * HW()) + hw] == Neurons[start + hw]) ? NeuronsD1[start + hw] : Float(0);
 					});
-				}
 #ifdef DNN_STOCHASTIC
 			}
 #endif
@@ -357,8 +348,6 @@ namespace dnn
 		void BackwardPropSum(const UInt batchSize)
 		{
 			const auto plain = IsPlainFormat();
-			const auto elements = batchSize * (plain ? CDHW() : PaddedCDHW());
-			const auto threads = batchSize == 1 ? 1ull : GetThreads(elements, Float(10));
 			const auto strideHW = HW() * VectorSize;
 
 #ifdef DNN_STOCHASTIC
@@ -397,8 +386,9 @@ namespace dnn
 			else
 			{
 #endif
+				const auto threads = batchSize == 1ull ? 1ull : GetThreads(batchSize * GetElementsCount(), BwdTrainingWeight);
+
 				if (!plain)
-				{
 					for_i(batchSize, threads, [=](UInt n)
 					{
 						VecFloat InD1;
@@ -414,9 +404,7 @@ namespace dnn
 							}
 						}
 					});
-				}
 				else
-				{
 					for_i(batchSize, threads, [=](UInt n)
 					{
 						const auto start = n * HW();
@@ -426,7 +414,6 @@ namespace dnn
 							for (auto hw = 0; hw < HW(); hw++)
 								InputLayer->NeuronsD1[inStart + (c * HW()) + hw] += NeuronsD1[start + hw];
 					});
-				}
 #ifdef DNN_STOCHASTIC
 			}
 #endif

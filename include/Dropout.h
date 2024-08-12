@@ -19,6 +19,10 @@ namespace dnn
 			NeuronsActive(FloatArray())
 		{
 			assert(Inputs.size() == 1);
+
+			FwdInferenceWeight = Float(2);
+			FwdTrainingWeight = Float(4);
+			BwdTrainingWeight = Float(4);
 		}
 
 		void UpdateResolution() final override
@@ -86,11 +90,9 @@ namespace dnn
 		{
 			const auto size = IsPlainFormat() ? CDHW() : PaddedCDHW();
 			const auto part = GetVectorPart(size);
-			const auto threads = GetThreads(batchSize * size);
-
+			
 			if (Enabled && training)
-			{
-				
+			{				
 #ifdef DNN_STOCHASTIC
 				if (batchSize == 1)
 				{
@@ -115,6 +117,8 @@ namespace dnn
 				}
 				else
 #endif
+					const auto threads = batchSize == 1ull ? 1ull : GetThreads(batchSize * GetElementsCount(), FwdTrainingWeight);
+
 					for_i(batchSize, threads, [=](UInt b)
 					{
 						const auto start = b * size;
@@ -151,6 +155,8 @@ namespace dnn
 				}
 				else
 #endif
+					const auto threads = batchSize == 1ull ? 1ull : GetThreads(batchSize * GetElementsCount(), FwdInferenceWeight);
+
 					for_i(batchSize, threads, [=](UInt b)
 					{
 						const auto start = b * size;
@@ -171,8 +177,7 @@ namespace dnn
 #endif
 			const auto size = IsPlainFormat() ? CDHW() : PaddedCDHW();
 			const auto part = GetVectorPart(size);
-			const auto threads = GetThreads(batchSize * size);
-			
+						
 			if (Enabled)
 			{
 #ifdef DNN_STOCHASTIC
@@ -185,6 +190,8 @@ namespace dnn
 				}
 				else
 #endif
+					const auto threads = batchSize == 1ull ? 1ull : GetThreads(batchSize * GetElementsCount(), BwdTrainingWeight);
+
 					for_i(batchSize, threads, [=](UInt b)
 					{
 						const auto start = b * size;
@@ -207,6 +214,8 @@ namespace dnn
 				}
 				else
 #endif
+					const auto threads = batchSize == 1ull ? 1ull : GetThreads(batchSize * GetElementsCount(), BwdTrainingWeight);
+
 					for_i(batchSize, threads, [=](UInt b)
 					{
 						const auto start = b * size;

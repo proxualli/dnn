@@ -504,6 +504,9 @@ namespace dnn
 		Float B1;
 		Float B2;
 		Float Gamma;
+		Float FwdInferenceWeight;
+		Float FwdTrainingWeight;
+		Float BwdTrainingWeight;
 		FloatArray Neurons;
 		FloatArray NeuronsD1;
 		FloatVector Weights;
@@ -633,6 +636,11 @@ namespace dnn
 				ChosenFormat == dnnl::memory::format_tag::abc || 
 				ChosenFormat == dnnl::memory::format_tag::abcd || 
 				ChosenFormat == dnnl::memory::format_tag::abcde; 
+		}
+
+		UInt GetElementsCount() const
+		{
+			return IsPlainFormat() ? CDHW() : PaddedCDHW();
 		}
 
 		std::string GetDescriptionHeader() const
@@ -1644,7 +1652,7 @@ namespace dnn
 			if (WeightCount % VectorSize != 0)
 			{
 				if (!amsbound)
-					PRAGMA_OMP_SIMD()
+					//PRAGMA_OMP_SIMD()
 					for (auto i = 0ull; i < WeightCount; i++)
 					{
 						(*weights.WeightsPar1)[i] = (beta1 * (*weights.WeightsPar1)[i]) + (oneMinusBeta1 * (*weights.WeightsD1)[i] * batchRecip);
@@ -1652,7 +1660,7 @@ namespace dnn
 						(*weights.Weights)[i] -= Clamp<Float>(step_size / (std::sqrt((*weights.WeightsPar2)[i]) + eps), lowerBound, upperBound) * (*weights.WeightsPar1)[i];
 					}
 				else
-					PRAGMA_OMP_SIMD()
+					//PRAGMA_OMP_SIMD()
 					for (auto i = 0ull; i < WeightCount; i++)
 					{
 						(*weights.WeightsPar1)[i] = (beta1 * (*weights.WeightsPar1)[i]) + (oneMinusBeta1 * (*weights.WeightsD1)[i] * batchRecip);
@@ -1750,7 +1758,7 @@ namespace dnn
 			if (WeightCount % VectorSize != 0)
 			{
 				if (!amsbound)
-					PRAGMA_OMP_SIMD()
+					//PRAGMA_OMP_SIMD()
 					for (auto i = 0ull; i < WeightCount; i++)
 					{
 						(*weights.WeightsD1)[i] += weightDecay * (*weights.Weights)[i];
@@ -1759,7 +1767,7 @@ namespace dnn
 						(*weights.Weights)[i] -= Clamp<Float>(step_size / (std::sqrt((*weights.WeightsPar2)[i]) + eps), lowerBound, upperBound) * (*weights.WeightsPar1)[i];
 					}
 				else
-					PRAGMA_OMP_SIMD()
+					//PRAGMA_OMP_SIMD()
 					for (auto i = 0ull; i < WeightCount; i++)
 					{
 						(*weights.WeightsD1)[i] += weightDecay * (*weights.Weights)[i];

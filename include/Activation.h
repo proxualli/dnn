@@ -851,6 +851,10 @@ namespace dnn
 			reorderBwdDiffSrc(false)
 		{
 			assert(Inputs.size() == 1);
+
+			FwdInferenceWeight = Float(5);
+			FwdTrainingWeight = Float(10);
+			BwdTrainingWeight = Float(10);
 		}
 			
 		void UpdateResolution() final override
@@ -1012,7 +1016,6 @@ namespace dnn
 			case Activations::TanhExp:
 			{
 				const auto plain = IsPlainFormat();
-				const auto threads = batchSize == 1 ? 1ull : GetThreads(batchSize * (plain ? CDHW() : PaddedCDHW()), Float(10));
 				const auto strideHW = HW() * VectorSize;
 
 				if (GetMemoryNDims(*InputLayer->DstMemDesc) == 2)
@@ -1058,6 +1061,8 @@ namespace dnn
 #endif
 						if (training)
 						{
+							const auto threads = batchSize == 1 ? 1ull : GetThreads(batchSize * GetElementsCount(), FwdTrainingWeight);
+
 							if (!plain)
 								for_i(batchSize, threads, [=](UInt n)
 								{
@@ -1087,6 +1092,8 @@ namespace dnn
 						}
 						else
 						{
+							const auto threads = batchSize == 1 ? 1ull : GetThreads(batchSize * GetElementsCount(), FwdInferenceWeight);
+
 							if (!plain)
 								for_i(batchSize, threads, [=](UInt n)
 								{
@@ -1163,6 +1170,8 @@ namespace dnn
 #endif
 						if (training)
 						{
+							const auto threads = batchSize == 1 ? 1ull : GetThreads(batchSize * GetElementsCount(), FwdTrainingWeight);
+
 							if (!plain)
 								for_i(batchSize, threads, [=](UInt n)
 								{
@@ -1198,6 +1207,8 @@ namespace dnn
 						}
 						else
 						{
+							const auto threads = batchSize == 1 ? 1ull : GetThreads(batchSize * GetElementsCount(), FwdInferenceWeight);
+
 							if (!plain)
 							{
 								for_i(batchSize, threads, [=](UInt n)
@@ -1271,7 +1282,7 @@ namespace dnn
 			case Activations::TanhExp:
 			{
 				const auto plain = IsPlainFormat();
-				const auto threads = batchSize == 1ull ? 1ull : GetThreads(batchSize * (plain ? CDHW() : PaddedCDHW()), Float(10));
+				const auto threads = batchSize == 1 ? 1ull : GetThreads(batchSize * GetElementsCount(), BwdTrainingWeight);
 				const auto strideHW = HW() * VectorSize;
 
 				if (GetMemoryNDims(*InputLayer->DstMemDesc) == 2)
@@ -1459,7 +1470,7 @@ namespace dnn
 
 				const auto& diffDstMem = dnnl::memory(bwdDesc->diff_dst_desc(), Device.engine, NeuronsD1.data());
 
-				const auto& memDiffSrc = SharesInput ? dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine) : dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data());
+				auto memDiffSrc = SharesInput ? dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine) : dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data());
 				auto& diffSrcMem = reorderBwdDiffSrc ? dnnl::memory(bwdDesc->diff_src_desc(), Device.engine) : memDiffSrc;
 
 				//if (reorderBwdDiffSrc)

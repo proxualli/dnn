@@ -28,6 +28,10 @@ namespace dnn
 			assert(Inputs[0]->D == Inputs[1]->D);
 			
 			scales = std::vector<Float>(2, Float(1));
+
+			FwdInferenceWeight = Float(5);
+			FwdTrainingWeight = Float(10);
+			BwdTrainingWeight = Float(10);
 		}
 
 		void UpdateResolution() final override
@@ -98,7 +102,7 @@ namespace dnn
 				const auto plain = IsPlainFormat();
 				const auto size = plain ? CDHW() : PaddedCDHW();
 				const auto part = GetVectorPart(size);
-				const auto threads = batchSize == 1 ? 1ull : GetThreads(batchSize * size, Float(10));
+				const auto threads = batchSize == 1ull ? 1ull : GetThreads(batchSize * GetElementsCount(), FwdTrainingWeight);
 				const auto strideHW = HW() * VectorSize;
 
 				if (plain)
@@ -381,7 +385,7 @@ namespace dnn
 			else
 			{
 #endif
-				const auto threads = GetThreads(batchSize * size, Float(10));
+				const auto threads = batchSize == 1ull ? 1ull : GetThreads(batchSize * GetElementsCount(), BwdTrainingWeight);
 
 				if (EqualDimensions(Inputs))
 				{
