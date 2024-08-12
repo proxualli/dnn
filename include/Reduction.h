@@ -185,7 +185,7 @@ namespace dnn
 						const auto inStart = n * InputLayer->CDHW();
 						for (auto c = 0ull; c < C; c++)
 							PRAGMA_OMP_SIMD()
-							for (auto hw = 0; hw < HW(); hw++)
+							for (auto hw = 0ull; hw < HW(); hw++)
 								InputLayer->NeuronsD1[inStart + (c * HW()) + hw] += NeuronsD1[start + hw] / Float(InputLayer->C);
 					});
 #ifdef DNN_STOCHASTIC
@@ -227,7 +227,7 @@ namespace dnn
 						const auto inStart = n * InputLayer->CDHW();
 						for (auto c = 0ull; c < C; c++)
 							PRAGMA_OMP_SIMD()
-							for (auto hw = 0; hw < HW(); hw++)
+							for (auto hw = 0ull; hw < HW(); hw++)
 								InputLayer->NeuronsD1[(c * HW()) + hw] += (InputLayer->Neurons[(c * HW()) + hw] == Neurons[hw]) ? NeuronsD1[hw] : Float(0);
 					});
 				}
@@ -261,7 +261,7 @@ namespace dnn
 						const auto inStart = n * InputLayer->CDHW();
 						for (auto c = 0ull; c < C; c++)
 							PRAGMA_OMP_SIMD()
-							for (auto hw = 0; hw < HW(); hw++)
+							for (auto hw = 0ull; hw < HW(); hw++)
 								InputLayer->NeuronsD1[inStart + (c * HW()) + hw] += (InputLayer->Neurons[inStart + (c * HW()) + hw] == Neurons[start + hw]) ? NeuronsD1[start + hw] : Float(0);
 					});
 #ifdef DNN_STOCHASTIC
@@ -303,7 +303,7 @@ namespace dnn
 						const auto inStart = n * InputLayer->CDHW();
 						for (auto c = 0ull; c < C; c++)
 							PRAGMA_OMP_SIMD()
-							for (auto hw = 0; hw < HW(); hw++)
+							for (auto hw = 0ull; hw < HW(); hw++)
 								InputLayer->NeuronsD1[(c * HW()) + hw] += (InputLayer->Neurons[(c * HW()) + hw] == Neurons[hw]) ? NeuronsD1[hw] : Float(0);
 					});
 				}
@@ -337,7 +337,7 @@ namespace dnn
 						const auto inStart = n * InputLayer->CDHW();
 						for (auto c = 0ull; c < C; c++)
 							PRAGMA_OMP_SIMD()
-							for (auto hw = 0; hw < HW(); hw++)
+							for (auto hw = 0ull; hw < HW(); hw++)
 								InputLayer->NeuronsD1[inStart + (c * HW()) + hw] += (InputLayer->Neurons[inStart + (c * HW()) + hw] == Neurons[start + hw]) ? NeuronsD1[start + hw] : Float(0);
 					});
 #ifdef DNN_STOCHASTIC
@@ -378,7 +378,7 @@ namespace dnn
 						const auto inStart = n * InputLayer->CDHW();
 						for (auto c = 0ull; c < C; c++)
 							PRAGMA_OMP_SIMD()
-							for (auto hw = 0; hw < HW(); hw++)
+							for (auto hw = 0ull; hw < HW(); hw++)
 								InputLayer->NeuronsD1[(c * HW()) + hw] += NeuronsD1[start + hw];
 					});
 				}
@@ -411,7 +411,7 @@ namespace dnn
 						const auto inStart = n * InputLayer->CDHW();
 						for (auto c = 0ull; c < C; c++)
 							PRAGMA_OMP_SIMD()
-							for (auto hw = 0; hw < HW(); hw++)
+							for (auto hw = 0ull; hw < HW(); hw++)
 								InputLayer->NeuronsD1[inStart + (c * HW()) + hw] += NeuronsD1[start + hw];
 					});
 #ifdef DNN_STOCHASTIC
