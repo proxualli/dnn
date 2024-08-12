@@ -571,7 +571,7 @@ namespace
 			}
 		}
 		inline auto data() noexcept { return dataPtr; }
-		inline const auto data() const noexcept { return dataPtr; }
+		inline auto data() const noexcept { return dataPtr; }
 		inline auto size() const noexcept { return nelems; }
 		void resize(size_type elements, const T value = T()) NOEXCEPT
 		{ 
@@ -659,7 +659,7 @@ namespace
 		}
 		inline auto memory() noexcept { return arrPtr.get(); }
 		inline auto data() noexcept { return dataPtr; }
-		inline const auto data() const noexcept { return dataPtr; }
+		inline auto data() const noexcept { return dataPtr; }
 		inline auto size() const noexcept { return nelems; }
 		auto desc() { return description; }
 		void resizeMem(const dnnl::memory::desc& md, const dnnl::engine& engine, const T value = T()) NOEXCEPT
