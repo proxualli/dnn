@@ -4,9 +4,6 @@
 [submodule "deps/magic_enum"]
 	path = deps/magic_enum
 	url = https://github.com/Neargye/magic_enum
-[submodule "deps/oneDNN"]
-	path = deps/oneDNN
-	url = https://github.com/oneapi-src/oneDNN
 [submodule "deps/googletest"]
 	path = deps/googletest
 	url = https://github.com/google/googletest
@@ -21,13 +18,13 @@
 	url = https://github.com/vincentlaucsb/csv-parser
 [submodule "deps/libpng"]
 	path = deps/libpng
-	url = https://github.com/glennrp/libpng.git
+	url = https://github.com/glennrp/libpng
 [submodule "deps/bitsery"]
 	path = deps/bitsery
-	url = https://github.com/fraillt/bitsery.git
+	url = https://github.com/fraillt/bitsery
 [submodule "deps/libjpeg-turbo"]
 	path = deps/libjpeg-turbo
-	url = https://github.com/libjpeg-turbo/libjpeg-turbo.git
+	url = https://github.com/libjpeg-turbo/libjpeg-turbo
 [submodule "deps/nameof"]
 	path = deps/nameof
-	url = https://github.com/Neargye/nameof.git
+	url = https://github.com/Neargye/nameof
