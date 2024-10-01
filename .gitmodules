@@ -28,3 +28,6 @@
 [submodule "deps/oneDNN"]
 	path = deps/oneDNN
 	url = https://github.com/oneapi-src/oneDNN
+[submodule "deps/zlib"]
+	path = deps/zlib
+	url = https://github.com/madler/zlib
