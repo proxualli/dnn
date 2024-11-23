@@ -94,6 +94,7 @@ namespace dnn
 				if (std::filesystem::exists(path / "wnids.txt") && std::filesystem::exists(path / "words.txt"))
 					available = true;
 				break;
+
 			default:
 				available = false;
 			}

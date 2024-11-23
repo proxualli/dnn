@@ -45,11 +45,9 @@ namespace dnn
 		{
 			auto description = GetDescriptionHeader();
 
-			description.append(nwl + std::string(" Scaling:") + tab + FloatToString(FactorH, 4) + std::string("x") + FloatToString(FactorW, 4));
-			if (Algorithm == Algorithms::Linear)
-				description.append(nwl + std::string(" Algorithm:\tlinear"));
-			else
-				description.append(nwl + std::string(" Algorithm:\tnearest"));
+			description.append(nwl + std::string(" Scaling:") + dtab + FloatToString(FactorH, 4) + std::string("x") + FloatToString(FactorW, 4));
+			description.append(nwl + std::string(" Algorithm:  ") + tab + std::string(magic_enum::enum_name<Algorithms>(Algorithm)));
+			
 			return description;
 		}
 
@@ -63,7 +61,7 @@ namespace dnn
 			return 1;
 		}
 
-		void InitializeDescriptors(const UInt batchSize) final override
+		void InitializeDescriptorsFwd(const UInt batchSize) final override
 		{
 			dnnl::algorithm algorithm;
 			switch (Algorithm)
@@ -102,6 +100,10 @@ namespace dnn
 			bwd = std::make_unique<dnnl::resampling_backward>(dnnl::resampling_backward(*bwdDesc));
 			bwdAdd = std::make_unique<dnnl::binary>(dnnl::binary(*bwdAddDesc));
 #endif
+		}
+
+		void InitializeDescriptorsBwd(const UInt batchSize) final override
+		{
 		}
 
 		void ForwardProp(const UInt batchSize, const bool training) final override

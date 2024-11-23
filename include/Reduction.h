@@ -52,7 +52,7 @@ namespace dnn
 			return 1;
 		}
 
-		void InitializeDescriptors(const UInt batchSize)  final override
+		void InitializeDescriptorsFwd(const UInt batchSize)  final override
 		{
 			if (GetMemoryNDims(*InputLayer->DstMemDesc) == 2)
 			{
@@ -101,6 +101,10 @@ namespace dnn
 			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(fwdDescReduction->dst_desc());
 
 			fwdArgs = std::unordered_map<int, dnnl::memory>{ { DNNL_ARG_SRC, dnnl::memory(*InputLayer->DstMemDesc, Device.engine, InputLayer->Neurons.data()) }, { DNNL_ARG_DST, dnnl::memory(*DstMemDesc, Device.engine, Neurons.data()) } };
+		}
+
+		void InitializeDescriptorsBwd(const UInt batchSize) final override
+		{
 		}
 
 		void ForwardProp(const UInt batchSize, const bool training) final override

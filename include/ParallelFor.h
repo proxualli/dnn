@@ -155,7 +155,6 @@ namespace dnn
 		for (auto i = 0ull; i < range; i++)
 			f(i);
 	#endif
-	
 #else
 		for_(0ull, range, [&](const blocked_range& r)
 		{

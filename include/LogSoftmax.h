@@ -47,7 +47,7 @@ namespace dnn
 			return 1;
 		}
 
-		void InitializeDescriptors(const UInt batchSize) final override
+		void InitializeDescriptorsFwd(const UInt batchSize) final override
 		{
 			std::unique_ptr<dnnl::memory::desc> InputLayerDstMemDesc;
 			std::unique_ptr<dnnl::memory::desc> InputLayerDiffDstMemDesc;
@@ -88,6 +88,10 @@ namespace dnn
 #endif
 		}
 
+		void InitializeDescriptorsBwd(const UInt batchSize) final override
+		{
+		}
+
 		void ForwardProp(const UInt batchSize, const bool training) final override
 		{
 			const auto& memSrc = dnnl::memory(*InputLayer->DstMemDesc, Device.engine, InputLayer->Neurons.data());
@@ -122,7 +126,7 @@ namespace dnn
 			const auto& dstMem = dnnl::memory(bwdDesc->dst_desc(), Device.engine, Neurons.data());
 			const auto& diffDstMem = dnnl::memory(bwdDesc->diff_dst_desc(), Device.engine, NeuronsD1.data());
 
-			const auto& memDiffSrc = SharesInput ? dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine) : dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data());
+			auto memDiffSrc = SharesInput ? dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine) : dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data());
 			const auto& diffSrcMem = reorderBwdDiffSrc ? dnnl::memory(bwdDesc->diff_src_desc(), Device.engine) : memDiffSrc;
 
 #ifdef DNN_CACHE_PRIMITIVES

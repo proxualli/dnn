@@ -54,7 +54,7 @@ namespace dnn
 			return 1;
 		}
 
-		void InitializeDescriptors(const UInt batchSize) final override
+		void InitializeDescriptorsFwd(const UInt batchSize) final override
 		{
 			if (GetMemoryNDims(*InputLayer->DstMemDesc) == 2)
 			{
@@ -85,6 +85,10 @@ namespace dnn
 			fwd = std::make_unique<dnnl::shuffle_forward>(dnnl::shuffle_forward(*fwdDesc));
 			bwd = std::make_unique<dnnl::shuffle_backward>(dnnl::shuffle_backward(*bwdDesc));
 #endif
+		}
+
+		void InitializeDescriptorsBwd(const UInt batchSize) final override
+		{
 		}
 
 		void ForwardProp(const UInt batchSize, const bool training) final override

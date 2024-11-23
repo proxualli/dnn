@@ -286,6 +286,7 @@ namespace dnn
 		LayerTypes LayerType;
 		Activations Activation;
 		Algorithms Algorithm;
+		ReduceOperations ReduceOperation;
 		Costs Cost;
 		UInt NeuronCount;
 		UInt WeightCount;
@@ -321,6 +322,8 @@ namespace dnn
 		Float K;
 		Float fH;
 		Float fW;
+		Float P;
+		Float Eps;
 		bool HasBias;
 		bool Scaling;
 		bool AcrossChannels;
@@ -352,6 +355,7 @@ namespace dnn
 		Float TrainLoss;
 		Float AvgTrainLoss;
 		Float TrainErrorPercentage;
+		
 		UInt TestErrors;
 		Float TestLoss;
 		Float AvgTestLoss;
@@ -1245,7 +1249,7 @@ namespace dnn
 			{
 				for (auto& layer : Layers)
 				{
-					layer->InitializeDescriptors(N);
+					layer->InitializeDescriptorsFwd(N);
 					layer->SetOptimizer(optimizer);
 				}
 
@@ -1468,10 +1472,10 @@ namespace dnn
 								break;
 							/*case LayerTypes::Multiply:
 								dynamic_cast<Multiply*>(layer.get())->SurvivalProbability[inputLayer] = survivalProb;
-								break;*/
+								break;
 							case LayerTypes::Divide:
 								dynamic_cast<Divide*>(layer.get())->SurvivalProbability[inputLayer] = survivalProb;
-								break;
+								break;*/
 							default:
 								break;
 							}

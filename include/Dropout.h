@@ -61,7 +61,7 @@ namespace dnn
 			return 1;
 		}
 
-		void InitializeDescriptors(const UInt batchSize) final override
+		void InitializeDescriptorsFwd(const UInt batchSize) final override
 		{
 			DNN_UNREF_PAR(batchSize);
 
@@ -69,6 +69,10 @@ namespace dnn
 
 			DstMemDesc = std::make_unique<dnnl::memory::desc>(*InputLayer->DstMemDesc);
 			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(*InputLayer->DiffDstMemDesc);
+		}
+
+		void InitializeDescriptorsBwd(const UInt batchSize) final override
+		{
 		}
 
 		void SetBatchSize(const UInt batchSize) final override
@@ -88,7 +92,7 @@ namespace dnn
 
 		void ForwardProp(const UInt batchSize, const bool training) final override
 		{
-			const auto size = IsPlainFormat() ? CDHW() : PaddedCDHW();
+			const auto size = GetElementsCount();
 			const auto part = GetVectorPart(size);
 			
 			if (Enabled && training)
@@ -175,7 +179,7 @@ namespace dnn
 #ifdef DNN_LEAN
 			ZeroGradient(batchSize);
 #endif
-			const auto size = IsPlainFormat() ? CDHW() : PaddedCDHW();
+			const auto size = GetElementsCount();
 			const auto part = GetVectorPart(size);
 						
 			if (Enabled)

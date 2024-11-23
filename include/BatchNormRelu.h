@@ -65,10 +65,11 @@ namespace dnn
 
 		std::string GetDescription() const final override
 		{
-			auto description = GetDescriptionHeader() + GetWeightsDescription(Scaling);
+			auto description = GetDescriptionHeader();
 
-			description.append(nwl + std::string(" Momentum:") + tab + FloatToString(Momentum));
-			description.append(nwl + std::string(" Eps:") + dtab + FloatToStringScientific(Eps));
+			description += GetWeightsDescription(Scaling);
+			description.append(nwl + std::string(" Momentum:   ") + tab + FloatToString(Momentum));
+			description.append(nwl + std::string(" Eps:        ") + tab + FloatToStringScientific(Eps));
 
 			auto mean = Float(0);
 			auto variance = Float(0);
@@ -80,8 +81,8 @@ namespace dnn
 			mean /= C;
 			variance /= C;
 
-			description.append(nwl + std::string(" Mean:") + dtab + FloatToStringFixed(mean));
-			description.append(nwl + std::string(" Variance:") + tab + FloatToStringFixed(variance));
+			description.append(nwl + std::string(" Mean:       ") + tab + FloatToStringFixed(mean));
+			description.append(nwl + std::string(" Variance:   ") + tab + FloatToStringFixed(variance));
 
 			return description;
 		}
@@ -96,7 +97,7 @@ namespace dnn
 			return 1;
 		}
 
-		void InitializeDescriptors(const UInt batchSize) final override
+		void InitializeDescriptorsFwd(const UInt batchSize) final override
 		{
 			if (GetMemoryNDims(*InputLayer->DstMemDesc) == 2)
 			{
@@ -140,21 +141,23 @@ namespace dnn
 			{
 				workspaceMemory = std::make_unique<dnnl::memory>(dnnl::memory(fwdDesc->workspace_desc(), Device.engine));
 
-				bwdDesc = std::make_unique<dnnl::batch_normalization_backward::primitive_desc>(dnnl::batch_normalization_backward::primitive_desc(Device.engine, Scaling ? dnnl::prop_kind::backward : dnnl::prop_kind::backward_data, *DiffDstMemDesc, *DiffDstMemDesc, *DstMemDesc, Eps, flags, *fwdDesc));
+				bwdDesc = std::make_unique<dnnl::batch_normalization_backward::primitive_desc>(dnnl::batch_normalization_backward::primitive_desc(Device.engine, Scaling ? dnnl::prop_kind::backward : dnnl::prop_kind::backward_data, *DiffDstMemDesc, *InputLayer->DiffDstMemDesc, *DstMemDesc, Eps, flags, *fwdDesc));
 
 				reorderBwdSrc = bwdDesc->src_desc() != *InputLayer->DstMemDesc;
 				reorderBwdDiffSrc = bwdDesc->diff_src_desc() != *InputLayer->DiffDstMemDesc;
 				reorderBwdDiffDst = bwdDesc->diff_dst_desc() != *DiffDstMemDesc;
 
+				bwdAddDesc = std::make_unique<dnnl::binary::primitive_desc>(dnnl::binary::primitive_desc(Device.engine, dnnl::algorithm::binary_add, *InputLayer->DiffDstMemDesc, *InputLayer->DiffDstMemDesc, *InputLayer->DiffDstMemDesc));
+
 #ifdef DNN_CACHE_PRIMITIVES
 				bwd = std::make_unique<dnnl::batch_normalization_backward>(dnnl::batch_normalization_backward(*bwdDesc));
+				bwdAdd = std::make_unique<dnnl::binary>(dnnl::binary(*bwdAddDesc));
 #endif
 			}
+		}
 
-			bwdAddDesc = std::make_unique<dnnl::binary::primitive_desc>(dnnl::binary::primitive_desc(Device.engine, dnnl::algorithm::binary_add, *InputLayer->DiffDstMemDesc, *InputLayer->DiffDstMemDesc, *InputLayer->DiffDstMemDesc));
-#ifdef DNN_CACHE_PRIMITIVES
-			bwdAdd = std::make_unique<dnnl::binary>(dnnl::binary(*bwdAddDesc));
-#endif
+		void InitializeDescriptorsBwd(const UInt batchSize) final override
+		{
 		}
 
 		bool Lockable() const final override
@@ -169,7 +172,7 @@ namespace dnn
 				if (!inference)
 				{
 					inference = true;
-					InitializeDescriptors(batchSize);
+					InitializeDescriptorsFwd(batchSize);
 				}
 
 				const auto& memSrc = dnnl::memory(*InputLayer->DstMemDesc, Device.engine, InputLayer->Neurons.data());
@@ -208,7 +211,7 @@ namespace dnn
 				if (inference)
 				{
 					inference = false;
-					InitializeDescriptors(batchSize);
+					InitializeDescriptorsFwd(batchSize);
 				}
 
 				const auto& memSrc = dnnl::memory(*InputLayer->DstMemDesc, Device.engine, InputLayer->Neurons.data());

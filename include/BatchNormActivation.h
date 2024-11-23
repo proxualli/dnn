@@ -120,7 +120,7 @@ namespace dnn
 				InputNeurons.resize(batchSize, C, H, W, dnnl::memory::data_type::f32, BlockedFmt, Device.engine);
 		}
 
-		void InitializeDescriptors(const UInt batchSize) final override
+		void InitializeDescriptorsFwd(const UInt batchSize) final override
 		{
 			if (GetMemoryNDims(*InputLayer->DstMemDesc) == 2)
 			{
@@ -164,7 +164,7 @@ namespace dnn
 #endif
 				if (!inference)
 				{
-					bwdDesc = std::make_unique<dnnl::batch_normalization_backward::primitive_desc>(dnnl::batch_normalization_backward::primitive_desc(Device.engine, Scaling ? dnnl::prop_kind::backward : dnnl::prop_kind::backward_data, *DiffDstMemDesc, *DiffDstMemDesc, *DstMemDesc, Eps, flags, *fwdDesc));
+					bwdDesc = std::make_unique<dnnl::batch_normalization_backward::primitive_desc>(dnnl::batch_normalization_backward::primitive_desc(Device.engine, Scaling ? dnnl::prop_kind::backward : dnnl::prop_kind::backward_data, *DiffDstMemDesc, *InputLayer->DiffDstMemDesc, *DstMemDesc, Eps, flags, *fwdDesc));
 
 					reorderBwdSrc = bwdDesc->src_desc() != *InputLayer->DstMemDesc;
 					reorderBwdDiffSrc = bwdDesc->diff_src_desc() != *InputLayer->DiffDstMemDesc;
@@ -178,6 +178,10 @@ namespace dnn
 #endif
 				}
 			}
+		}
+
+		void InitializeDescriptorsBwd(const UInt batchSize) final override
+		{
 		}
 
 		bool Lockable() const final override
@@ -228,8 +232,8 @@ namespace dnn
 
 						for_i(PaddedC / VectorSize, threads, [=](UInt c)
 						{
-							const auto overflow = ((!padded) && (c >= (part / VectorSize)));
-							const auto cutoff = overflow ? int(VectorSize - (PaddedC - C)) : int(VectorSize);
+							//const auto overflow = ((!padded) && (c >= (part / VectorSize)));
+							//const auto cutoff = overflow ? int(VectorSize - (PaddedC - C)) : int(VectorSize);
 
 							const auto channelOffset = c * VectorSize;
 							const auto mapOffset = channelOffset * HW();
@@ -809,7 +813,7 @@ namespace dnn
 				if (!inference)
 				{
 					inference = true;
-					InitializeDescriptors(batchSize);
+					InitializeDescriptorsFwd(batchSize);
 				}
 
 				auto memSrc = dnnl::memory(*InputLayer->DstMemDesc, Device.engine, InputLayer->Neurons.data());
@@ -848,7 +852,7 @@ namespace dnn
 				if (inference)
 				{
 					inference = false;
-					InitializeDescriptors(batchSize);
+					InitializeDescriptorsFwd(batchSize);
 				}
 
 				auto memSrc = dnnl::memory(*InputLayer->DstMemDesc, Device.engine, InputLayer->Neurons.data());

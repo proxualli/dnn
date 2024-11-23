@@ -296,7 +296,9 @@ namespace dnn
 		const dnnl::engine engine;
 		dnnl::stream stream;
 		
-		Device(const dnnl::engine& eng, dnnl::stream str) : engine(eng), stream(str) 
+		Device(const dnnl::engine& eng, dnnl::stream str) : 
+			engine(eng), 
+			stream(str) 
 		{ 
 		}
 	};
@@ -381,13 +383,13 @@ namespace dnn
 			if constexpr (Inplace)
 			{
 				if ((layerType == LayerTypes::Activation || 
-					layerType == LayerTypes::LayerNorm || 
 					layerType == LayerTypes::BatchNorm || 
 					layerType == LayerTypes::BatchNormActivation || 
 					layerType == LayerTypes::BatchNormActivationDropout || 
 					layerType == LayerTypes::BatchNormRelu ||
-					layerType == LayerTypes::GroupNorm) &&
-					(inputs.size() == 1) &&
+					layerType == LayerTypes::GroupNorm || 
+					layerType == LayerTypes::LayerNorm) &&
+					(inputs.size() == 1) && 
 					(inputs[0]->LayerType == LayerTypes::Convolution || 
 					inputs[0]->LayerType == LayerTypes::DepthwiseConvolution || 
 					inputs[0]->LayerType == LayerTypes::ConvolutionTranspose))
@@ -629,7 +631,7 @@ namespace dnn
 			BiasesWDM = biasesWDM;
 		}
 
-		bool IsPlainFormat() const 
+		bool IsPlainFormat() const noexcept
 		{ 
 			return 
 				ChosenFormat == dnnl::memory::format_tag::ab || 
@@ -638,7 +640,7 @@ namespace dnn
 				ChosenFormat == dnnl::memory::format_tag::abcde; 
 		}
 
-		UInt GetElementsCount() const
+		UInt GetElementsCount() const noexcept
 		{
 			return IsPlainFormat() ? CDHW() : PaddedCDHW();
 		}
@@ -700,7 +702,9 @@ namespace dnn
 			return WeightCount > 0;
 		}
 
-		virtual void InitializeDescriptors(const UInt) = 0;
+		virtual void InitializeDescriptorsFwd(const UInt) = 0;
+		
+		virtual void InitializeDescriptorsBwd(const UInt) = 0;
 
 #ifdef DNN_LEAN
 		inline void ZeroGradient(const UInt batchSize)
@@ -737,7 +741,7 @@ namespace dnn
 			ReleaseGradient();
 #endif // DNN_LEAN
 
-			InitializeDescriptors(batchSize);
+			InitializeDescriptorsFwd(batchSize);
 		}
 
 		virtual void ForwardProp(const UInt batchSize, const bool training) = 0;
@@ -807,16 +811,16 @@ namespace dnn
 						variance /= batchSize;
 						variance -= Square<Float>(mean);
 
-						if ((stats.Min < -NEURONS_LIMIT) || (stats.Max > NEURONS_LIMIT))
-							goto FAIL;
+						/*if ((stats.Min < -NEURONS_LIMIT) || (stats.Max > NEURONS_LIMIT))
+							goto FAIL;*/
 						
-						if (!std::isnan(mean) && !std::isinf(mean) && !std::isnan(variance) && !std::isinf(variance))
+						//if (!std::isnan(mean) && !std::isinf(mean) && !std::isnan(variance) && !std::isinf(variance))
 						{
 							stats.Mean = mean;
 							stats.StdDev = std::sqrt(std::max(Float(0), variance));
 						}
-						else
-							goto FAIL;
+						/*else
+							goto FAIL;*/
 					}
 					else
 					{
@@ -834,20 +838,20 @@ namespace dnn
 							KahanSum<Float>(Square<Float>(Neurons[i]), variance, correctionVariance);
 						}
 
-						if ((stats.Min < -NEURONS_LIMIT) || (stats.Max > NEURONS_LIMIT))
-							goto FAIL;
+						/*if ((stats.Min < -NEURONS_LIMIT) || (stats.Max > NEURONS_LIMIT))
+							goto FAIL;*/
 
 						mean /= ncdhw;
 						variance /= ncdhw;
 						variance -= Square<Float>(mean);
 
-						if (!std::isnan(mean) && !std::isinf(mean) && !std::isnan(variance) && !std::isinf(variance))
+						//if (!std::isnan(mean) && !std::isinf(mean) && !std::isnan(variance) && !std::isinf(variance))
 						{
 							stats.Mean = mean;
 							stats.StdDev = std::sqrt(std::max(0.f, variance));
 						}
-						else
-							goto FAIL;
+						/*else
+							goto FAIL;*/
 					}
 
 					NeuronsStats = stats;

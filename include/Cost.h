@@ -95,7 +95,7 @@ namespace dnn
 			return 1;
 		}
 
-		void InitializeDescriptors(const UInt batchSize) final override
+		void InitializeDescriptorsFwd(const UInt batchSize) final override
 		{
 			if (GetMemoryNDims(*InputLayer->DstMemDesc) == 2)
 			{
@@ -112,6 +112,10 @@ namespace dnn
 
 			reorderFwdSrc = *DstMemDesc != *InputLayer->DstMemDesc;
 			reorderBwdDiffSrc = *DiffDstMemDesc != *InputLayer->DiffDstMemDesc;
+		}
+
+		void InitializeDescriptorsBwd(const UInt batchSize) final override
+		{
 		}
 
 		void SetSampleLabel(const std::vector<LabelInfo>& label)

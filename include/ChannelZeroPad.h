@@ -36,7 +36,7 @@ namespace dnn
 			return 1;
 		}
 
-		void InitializeDescriptors(const UInt batchSize) final override
+		void InitializeDescriptorsFwd(const UInt batchSize) final override
 		{
 			if (GetMemoryNDims(*InputLayer->DstMemDesc) == 2)
 			{
@@ -65,10 +65,14 @@ namespace dnn
 				throw std::invalid_argument("Incompatible memory formats in " + std::string(magic_enum::enum_name<LayerTypes>(LayerType)) + " layer " + InputLayer->Name);
 		}
 
+		void InitializeDescriptorsBwd(const UInt batchSize) final override
+		{
+		}
+
 		void ForwardProp(const UInt batchSize, const bool training) final override
 		{
 			const auto plain = IsPlainFormat();
-			const auto threads = GetThreads(batchSize * (plain ? CDHW() : PaddedCDHW()));
+			const auto threads = GetThreads(batchSize * GetElementsCount());
 			const auto strideHW = HW() * VectorSize;
 
 			DNN_UNREF_PAR(training);
@@ -267,7 +271,7 @@ namespace dnn
 #endif // DNN_LEAN
 
 			const auto plain = IsPlainFormat();
-			const auto threads = GetThreads(batchSize * (plain ? CDHW() : PaddedCDHW()));
+			const auto threads = GetThreads(batchSize * GetElementsCount());
 			const auto strideHW = HW() * VectorSize;
 
 			if (GetMemoryNDims(*InputLayer->DstMemDesc) == 2)

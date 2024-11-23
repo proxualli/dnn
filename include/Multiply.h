@@ -54,7 +54,7 @@ namespace dnn
 			return 1;
 		}
 
-		void InitializeDescriptors(const UInt batchSize)  final override
+		void InitializeDescriptorsFwd(const UInt batchSize)  final override
 		{
 			if (GetMemoryNDims(*Inputs[first]->DstMemDesc) == 2)
 			{
@@ -88,6 +88,10 @@ namespace dnn
 #ifdef DNN_CACHE_PRIMITIVES
 			fwd = std::make_unique<dnnl::binary>(dnnl::binary(*fwdDesc));
 #endif
+		}
+
+		void InitializeDescriptorsBwd(const UInt batchSize) final override
+		{
 		}
 
 		void SetBatchSize(const UInt batchSize) final override
@@ -180,13 +184,13 @@ namespace dnn
 								if (EqualDimensions(Inputs))
 								{
 									PRAGMA_OMP_SIMD()
-										for (auto cdhw = 0ull; cdhw < CDHW(); cdhw++)
-										{
-											Neurons[cdhw] = Inputs[0]->Neurons[cdhw] * Inputs[1]->Neurons[cdhw];
+									for (auto cdhw = 0ull; cdhw < CDHW(); cdhw++)
+									{
+										Neurons[cdhw] = Inputs[0]->Neurons[cdhw] * Inputs[1]->Neurons[cdhw];
 #ifndef DNN_LEAN
-											NeuronsD1[cdhw] = 0;
+										NeuronsD1[cdhw] = 0;
 #endif
-										}
+									}
 								}
 								else
 								{
@@ -213,13 +217,13 @@ namespace dnn
 										const auto outputOffset = c * HW();
 										auto offset = 0ull;
 										PRAGMA_OMP_SIMD()
-											for (auto hw = 0ull; hw < HW(); hw++)
-											{
-												Neurons[hw + outputOffset] = Inputs[first]->Neurons[hw + outputOffset] * Inputs[second]->Neurons[offset++];
+										for (auto hw = 0ull; hw < HW(); hw++)
+										{
+											Neurons[hw + outputOffset] = Inputs[first]->Neurons[hw + outputOffset] * Inputs[second]->Neurons[offset++];
 #ifndef DNN_LEAN
-												NeuronsD1[hw + outputOffset] = 0;
+											NeuronsD1[hw + outputOffset] = 0;
 #endif
-											}
+										}
 									}
 								}
 							}
@@ -460,7 +464,6 @@ namespace dnn
 					{
 #endif
 						if (!plain)
-						{
 							for_i(batchSize, threads, [=](UInt n)
 							{
 								VecFloat neuronsD1;
@@ -475,9 +478,7 @@ namespace dnn
 									}
 								}
 							});
-						}
 						else
-						{
 							for_i(batchSize, threads, [=](UInt n)
 							{
 								const auto start = n * CDHW();
@@ -489,7 +490,6 @@ namespace dnn
 									Inputs[second]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * InputsFwd[first]->Neurons[cdhw];
 								}
 							});
-						}
 #ifdef DNN_STOCHASTIC
 					}
 #endif
@@ -531,7 +531,6 @@ namespace dnn
 					{
 #endif
 						if (!plain)
-						{
 							for_i(batchSize, threads, [=](UInt n)
 							{
 								VecFloat neuronsD1;
@@ -547,9 +546,7 @@ namespace dnn
 									}
 								}
 							});
-						}
 						else
-						{
 							for_i(batchSize, threads, [=](UInt n)
 							{
 								for (auto c = 0ull; c < C; c++)
@@ -564,7 +561,6 @@ namespace dnn
 									}
 								}
 							});
-						}
 #ifdef DNN_STOCHASTIC
 					}
 #endif
@@ -575,7 +571,6 @@ namespace dnn
 				if (EqualDimensions(Inputs))
 				{
 					if (!plain)
-					{
 						for_i(batchSize, threads, [=](UInt n)
 						{
 							const auto channelOffset = n * Inputs[second]->PaddedCDHW();
@@ -592,9 +587,7 @@ namespace dnn
 								}
 							}
 						});
-					}
 					else
-					{
 						for_i(batchSize, threads, [=](UInt n)
 						{
 							const auto channelOffset = n * HW();
@@ -609,7 +602,6 @@ namespace dnn
 								}
 							}
 						});
-					}
 				}
 			}
 #ifdef DNN_LEAN

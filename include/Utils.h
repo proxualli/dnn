@@ -106,10 +106,6 @@
 #define MAGIC_ENUM_RANGE_MAX 255
 #include "magic_enum/magic_enum.hpp"
 
-// #define NAMEOF_ENUM_RANGE_MIN 0
-// #define NAMEOF_ENUM_RANGE_MAX 255
-// #include "nameof.hpp"
-
 #include "bitsery/bitsery.h"
 #include "bitsery/adapter/stream.h"
 #include "bitsery/traits/string.h"
@@ -136,17 +132,24 @@ namespace
 
 	constexpr auto ReferenceBatchNormalization = false;
 	constexpr auto ReferenceConcat = false;
-	constexpr auto ReferenceMultiply = true;
-
+	constexpr auto ReferenceMultiply = false;
+	
 	typedef float Float;
 	typedef double Double;
 	typedef long long Int;
 	typedef std::size_t UInt;
 	typedef unsigned char Byte;
 	
-	static const auto MAX_THREADS = static_cast<UInt>(omp_get_max_threads());
-	auto GetThreads(const UInt elements, const Float weight = Float(1)) NOEXCEPT
+	//constexpr bool IS_LITTLE_ENDIAN = std::endian::native == std::endian::little;
+	//constexpr auto NEURONS_LIMIT = Float(5000);	// limit for all the neurons and derivatives [-NEURONS_LIMIT,NEURONS_LIMIT]
+	constexpr auto WEIGHTS_LIMIT = Float(500);	// limit for all the weights and biases [-WEIGHTS_LIMIT,WEIGHTS_LIMIT]
+	constexpr auto PlainFmt = dnnl::memory::format_tag::abcd;
+	
+	//static const auto MAX_THREADS = static_cast<UInt>(omp_get_max_threads());
+
+	const auto GetThreads(const UInt elements, const Float weight = Float(1)) NOEXCEPT
 	{
+		const auto MAX_THREADS = static_cast<UInt>(omp_get_max_threads());
 		const auto load = static_cast<UInt>(Float(elements) * weight);
 
 		constexpr auto ULTRALIGHT_THRESHOLD =   2097152ull;
@@ -169,13 +172,7 @@ namespace
 			load < MAXIMUM_THRESHOLD ?    ULTRAHEAVY : MAX_THREADS;
 	}
 	
-	struct LabelInfo
-	{
-		UInt LabelA;
-		UInt LabelB;
-		Float Lambda;	
-	};
-
+	
 #if defined(DNN_AVX512BW) || defined(DNN_AVX512)
 	typedef Vec16f VecFloat;
 	typedef Vec16fb VecFloatBool;
@@ -194,10 +191,30 @@ namespace
 #endif
 	inline const auto VecZero = VecFloat(Float(0));
 
+	/*
+	static inline int div_up(int value, int divisor) {	return (value + divisor - 1) / divisor;	}
+	// Round value down to a multiple of factor.
+	static inline int align_down(int value, int factor)	{ return factor * (value / factor);	}
+	// Round value up to a multiple of factor.
+	static inline int align_up(int value, int factor) {	return factor * div_up(value, factor); }
+	*/
+
+	template<typename T>
+	static inline constexpr auto Square(const T& value) NOEXCEPT { return (value * value); }
+	template <typename T>
+	static inline constexpr auto Clamp(T val, T lo, T hi) NOEXCEPT { return std::min<T>(hi, std::max<T>(lo, val)); }
+	template<typename T>
+	static inline constexpr auto Saturate(const T& value) NOEXCEPT { return (value > T(255)) ? Byte(255) : (value < T(0)) ? Byte(0) : Byte(value); }
+	template<typename T>
+	static inline constexpr auto GetColorFromRange(const T& range, const T& minimum, const T& value) NOEXCEPT { return Saturate<T>(T(255) - ((value - minimum) * range)); }
+	template<typename T>
+	static inline constexpr auto GetColorRange(const T& min, const T& max) NOEXCEPT { return (min == max) ? T(0) : T(255) / ((std::signbit(min) && std::signbit(max)) ? -(min + max) : (max - min)); }
+	static auto inline ClampVecFloat(const VecFloat& v, const Float& lo, const Float& hi) NOEXCEPT { return min(VecFloat(hi), max(v, VecFloat(lo))); }
+	
 	constexpr auto GetVectorPart(const UInt& elements) NOEXCEPT { return (elements / VectorSize) * VectorSize; }
 	constexpr auto DivUp(const UInt& c) NOEXCEPT { if (c == 0ull) return 0ull; else return (((c - 1) / VectorSize) + 1) * VectorSize; }
+	
 	auto IsPlainDataFmt(const dnnl::memory::desc& md) NOEXCEPT { return md.get_format_kind() == dnnl::memory::format_kind::blocked && md.get_inner_nblks() == 0; }
-	constexpr auto PlainFmt = dnnl::memory::format_tag::abcd;
 	auto GetMemoryNDims(const dnnl::memory::desc& md) NOEXCEPT
 	{
 		if (!md.is_zero())
@@ -208,7 +225,7 @@ namespace
 	auto GetMemoryFormat(const dnnl::memory::desc& md) NOEXCEPT
 	{
 		using format_tag = dnnl::memory::format_tag;
-		
+
 		if (!md.is_zero())
 		{
 			const auto data_type = md.get_data_type();
@@ -474,10 +491,134 @@ namespace
 				}
 			}
 		}
-		
+
 		return format_tag::undef;
 	}
-		
+
+	/* https://en.wikipedia.org/wiki/Kahan_summation_algorithm */
+	template<typename T>
+	static void KahanSum(const T& value, T& sum, T& correction) NOEXCEPT
+	{
+		if constexpr (Kahan)
+		{
+			const auto y = value - correction;
+			const auto t = sum + y;
+			correction = (t - sum) - y;
+			sum = t;
+		}
+		else
+			sum += value;
+	}
+
+#if defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW32__)
+	const auto nwl = std::string("\r\n");
+#elif defined(__APPLE__)
+	const auto nwl = std::string("\r");
+#else // assuming Linux
+	const auto nwl = std::string("\n");
+#endif
+	const auto tab = std::string("\t");
+	const auto dtab = std::string("\t\t");
+
+#ifdef DNN_FAST_SEED
+	template<typename T>
+	static T Seed() NOEXCEPT
+	{
+		return static_cast<T>(__rdtsc());
+	}
+#else
+	template<typename T>
+	static T Seed() NOEXCEPT
+	{
+		return static_cast<T>(physicalSeed());
+	}
+#endif
+
+	static auto BernoulliVecFloat(const Float p = Float(0.5)) NOEXCEPT
+	{
+#ifndef NDEBUG
+		if (p < 0 || p > 1)
+			throw std::invalid_argument("Parameter out of range in BernoulliVecFloat function");
+#endif
+		static thread_local auto generator = Ranvec1(3, Seed<int>(), static_cast<int>(std::hash<std::thread::id>()(std::this_thread::get_id())));
+
+#if defined(DNN_AVX512BW) || defined(DNN_AVX512)
+		return select(generator.random16f() < p, VecFloat(1), VecFloat(0));
+#elif defined(DNN_AVX2) || defined(DNN_AVX)
+		return select(generator.random8f() < p, VecFloat(1), VecFloat(0));
+#elif defined(DNN_SSE42) || defined(DNN_SSE41)
+		return select(generator.random4f() < p, VecFloat(1), VecFloat(0));
+#endif
+	}
+
+	static auto UniformVecFloat(const Float min = Float(0), const Float max = Float(1)) NOEXCEPT
+	{
+#ifndef NDEBUG
+		if (min >= max)
+			throw std::invalid_argument("Parameter out of range in UniformVecFloat function");
+#endif
+		static thread_local auto generator = Ranvec1(3, Seed<int>(), static_cast<int>(std::hash<std::thread::id>()(std::this_thread::get_id())));
+		const auto scale = std::abs(max - min);
+
+#if defined(DNN_AVX512BW) || defined(DNN_AVX512)
+		return (generator.random16f() * scale) + min;
+#elif defined(DNN_AVX2) || defined(DNN_AVX)
+		return (generator.random8f() * scale) + min;
+#elif defined(DNN_SSE42) || defined(DNN_SSE41)
+		return (generator.random4f() * scale) + min;
+#endif
+	}
+
+	template<typename T>
+	static auto Bernoulli(const Float p = Float(0.5)) NOEXCEPT
+	{
+#ifndef NDEBUG
+		if (p < 0 || p > 1)
+			throw std::invalid_argument("Parameter out of range in Bernoulli function");
+#endif
+		static thread_local auto generator = std::mt19937(Seed<unsigned>());
+		return static_cast<T>(std::bernoulli_distribution(static_cast<double>(p))(generator));
+	}
+
+	template<typename T>
+	static auto UniformInt(const T min, const T max) NOEXCEPT
+	{
+		static_assert(std::is_integral<T>::value, "Only integral type supported in UniformInt function");
+#ifndef NDEBUG
+		if (min > max)
+			throw std::invalid_argument("Parameter out of range in UniformInt function");
+#endif
+		static thread_local auto generator = std::mt19937(Seed<unsigned>());
+		return std::uniform_int_distribution<T>(min, max)(generator);
+	}
+
+	template<typename T>
+	static auto UniformReal(const T min, const T max) NOEXCEPT
+	{
+		static_assert(std::is_floating_point<T>::value, "Only Floating point type supported in UniformReal function");
+#ifndef NDEBUG
+		if (min > max)
+			throw std::invalid_argument("Parameter out of range in UniformReal function");
+#endif
+		static thread_local auto generator = std::mt19937(Seed<unsigned>());
+		return std::uniform_real_distribution<T>(min, max)(generator);
+	}
+
+	template<typename T>
+	static auto TruncatedNormal(const T m, const T s, const T limit) NOEXCEPT
+	{
+		static_assert(std::is_floating_point<T>::value, "Only Floating point type supported in TruncatedNormal function");
+#ifndef NDEBUG
+		if (limit < s)
+			throw std::invalid_argument("limit out of range in TruncatedNormal function");
+#endif
+		static thread_local auto generator = std::mt19937(Seed<unsigned>());
+		T x;
+		do { x = std::normal_distribution<T>(T(0), s)(generator); } while (std::abs(x) > limit); // reject if beyond limit
+
+		return x + m;
+	}
+
 	template<typename T>
 	static void InitArray(T* destination, const std::size_t elements, const int initValue = 0) NOEXCEPT
 	{
@@ -720,148 +861,8 @@ namespace
 	typedef AlignedMemory<Float> FloatArray;
 	typedef AlignedArray<Byte, 64ull> ByteArray;
 	typedef std::vector<Float, AlignedAllocator<Float, 64ull>> FloatVector;
-	//constexpr bool IS_LITTLE_ENDIAN = std::endian::native == std::endian::little;
-	constexpr auto NEURONS_LIMIT = Float(5000);	// limit for all the neurons and derivatives [-NEURONS_LIMIT,NEURONS_LIMIT]
-	constexpr auto WEIGHTS_LIMIT = Float(500);	// limit for all the weights and biases [-WEIGHTS_LIMIT,WEIGHTS_LIMIT]
 	
-	template<typename T>
-	constexpr auto inline Square(const T& value) NOEXCEPT { return (value * value); }
-	template<typename T>
-	constexpr auto inline Clamp(const T& v, const T& lo, const T& hi) NOEXCEPT { return std::clamp<T>(v, lo, hi); }
-	template<typename T>
-	constexpr auto inline Saturate(const T& value) NOEXCEPT { return (value > T(255)) ? Byte(255) : (value < T(0)) ? Byte(0) : Byte(value); }
-	template<typename T>
-	constexpr auto inline GetColorFromRange(const T& range, const T& minimum, const T& value) NOEXCEPT { return Saturate<T>(T(255) - ((value - minimum) * range)); }
-	template<typename T>
-	constexpr auto inline GetColorRange(const T& min, const T& max) NOEXCEPT { return (min == max) ? T(0) : T(255) / ((std::signbit(min) && std::signbit(max)) ? -(min + max) : (max - min)); }
-		
-	static auto inline ClampVecFloat(const VecFloat& v, const Float& lo, const Float& hi) NOEXCEPT { return min(max(v, VecFloat(lo)), VecFloat(hi)); }
-
-	/* https://en.wikipedia.org/wiki/Kahan_summation_algorithm */
-	template<typename T>
-	inline void KahanSum(const T& value, T& sum, T& correction) NOEXCEPT
-	{
-		if constexpr (Kahan)
-		{
-			const auto y = value - correction;
-			const auto t = sum + y;
-			correction = (t - sum) - y;
-			sum = t;
-		}
-		else
-			sum += value;
-	}
 	
-#if defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW32__)
-	const auto nwl = std::string("\r\n");
-#elif defined(__APPLE__)
-	const auto nwl = std::string("\r");
-#else // assuming Linux
-	const auto nwl = std::string("\n");
-#endif
-	const auto tab = std::string("\t");
-	const auto dtab = std::string("\t\t");	
-	
-#ifdef DNN_FAST_SEED
-	template<typename T>
-	static T Seed() NOEXCEPT
-	{
-		return static_cast<T>(__rdtsc());
-	}
-#else
-	template<typename T>
-	static T Seed() NOEXCEPT
-	{
-		return static_cast<T>(physicalSeed());
-	}
-#endif
-
-	static auto BernoulliVecFloat(const Float p = Float(0.5)) NOEXCEPT
-	{
-#ifndef NDEBUG
-		if (p < 0 || p > 1)
-			throw std::invalid_argument("Parameter out of range in BernoulliVecFloat function");
-#endif
-		static thread_local auto generator = Ranvec1(3, Seed<int>(), static_cast<int>(std::hash<std::thread::id>()(std::this_thread::get_id())));
-
-#if defined(DNN_AVX512BW) || defined(DNN_AVX512)
-		return select(generator.random16f() < p, VecFloat(1), VecFloat(0));
-#elif defined(DNN_AVX2) || defined(DNN_AVX)
-		return select(generator.random8f() < p, VecFloat(1), VecFloat(0));
-#elif defined(DNN_SSE42) || defined(DNN_SSE41)
-		return select(generator.random4f() < p, VecFloat(1), VecFloat(0));
-#endif
-	}
-
-	static auto UniformVecFloat(const Float min = Float(0), const Float max = Float(1)) NOEXCEPT
-	{
-#ifndef NDEBUG
-		if (min >= max)
-			throw std::invalid_argument("Parameter out of range in UniformVecFloat function");
-#endif
-		static thread_local auto generator = Ranvec1(3, Seed<int>(), static_cast<int>(std::hash<std::thread::id>()(std::this_thread::get_id())));
-		const auto scale = std::abs(max - min);
-	
-#if defined(DNN_AVX512BW) || defined(DNN_AVX512)
-		return (generator.random16f() * scale) + min;
-#elif defined(DNN_AVX2) || defined(DNN_AVX)
-		return (generator.random8f() * scale) + min;
-#elif defined(DNN_SSE42) || defined(DNN_SSE41)
-		return (generator.random4f() * scale) + min;
-#endif
-	}
-
-	template<typename T>
-	static auto Bernoulli(const Float p = Float(0.5)) NOEXCEPT
-	{
-#ifndef NDEBUG
-		if (p < 0 || p > 1)
-			throw std::invalid_argument("Parameter out of range in Bernoulli function");
-#endif
-		static thread_local auto generator = std::mt19937(Seed<unsigned>());
-		return static_cast<T>(std::bernoulli_distribution(static_cast<double>(p))(generator));
-	}
-
-	template<typename T>
-	static auto UniformInt(const T min, const T max) NOEXCEPT
-	{
-		static_assert(std::is_integral<T>::value, "Only integral type supported in UniformInt function");
-#ifndef NDEBUG
-		if (min > max)
-			throw std::invalid_argument("Parameter out of range in UniformInt function");
-#endif
-		static thread_local auto generator = std::mt19937(Seed<unsigned>());
-		return std::uniform_int_distribution<T>(min, max)(generator);
-	}
-
-	template<typename T>
-	static auto UniformReal(const T min, const T max) NOEXCEPT
-	{
-		static_assert(std::is_floating_point<T>::value, "Only Floating point type supported in UniformReal function");
-#ifndef NDEBUG
-		if (min > max)
-			throw std::invalid_argument("Parameter out of range in UniformReal function");
-#endif
-		static thread_local auto generator = std::mt19937(Seed<unsigned>());
-		return std::uniform_real_distribution<T>(min, max)(generator);
-	}
-
-	template<typename T>
-	static auto TruncatedNormal(const T m, const T s, const T limit) NOEXCEPT
-	{
-		static_assert(std::is_floating_point<T>::value, "Only Floating point type supported in TruncatedNormal function");
-#ifndef NDEBUG
-		if (limit < s)
-	     throw std::invalid_argument("limit out of range in TruncatedNormal function");
-#endif
-		static thread_local auto generator = std::mt19937(Seed<unsigned>());
-		T x;
-		do { x = std::normal_distribution<T>(T(0), s)(generator); }
-		while (std::abs(x) > limit); // reject if beyond limit
-		
-		return x + m;
-	}
-
 	/* https://stackoverflow.com/questions/15165202/random-number-generator-with-beta-distribution */
 	template <typename RealType = double>
 	class beta_distribution
@@ -1178,4 +1179,11 @@ namespace
 
 		return std::make_tuple(hrs, mins, secs, ms);
 	}
+
+	struct LabelInfo
+	{
+		UInt LabelA;
+		UInt LabelB;
+		Float Lambda;
+	};
 }

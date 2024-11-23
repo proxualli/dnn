@@ -346,12 +346,22 @@ namespace scripts
         {
             if (activation == "Relu")
                 return "[" + group + prefix + std::to_string(id) + "]" + nwl +
-                    "Type=BatchNormActivationRelu" + nwl +
+                    "Type=BatchNormRelu" + nwl +
                     "Inputs=" + inputs + nwl + nwl;
             else
+                /*
                 return "[" + group + prefix + std::to_string(id) + "]" + nwl +
                     "Type=BatchNormActivation" + nwl +
                     "Inputs=" + inputs + nwl + 
+                    "Activation=" + activation + nwl + nwl;
+                */
+
+                return "[" + group + "BN" + std::to_string(id) + "]" + nwl +
+                    "Type=BatchNorm" + nwl +
+                    "Inputs=" + inputs + nwl + nwl +
+                    "[" + group + prefix + std::to_string(id) + "]" + nwl +
+                    "Type=Activation" + nwl +
+                    "Inputs=" + group + "BN" + std::to_string(id) + nwl +
                     "Activation=" + activation + nwl + nwl;
         }
 
@@ -362,13 +372,23 @@ namespace scripts
                 if (activation == scripts::Activations::Relu)
                     return 
                         "[" + group + prefix + std::to_string(id) + "]" + nwl +
-                        "Type=BatchNormActivationRelu" + nwl +
+                        "Type=BatchNormRelu" + nwl +
                         "Inputs=" + inputs + nwl + nwl;
                 else
+                    /*
                     return 
                         "[" + group + prefix + std::to_string(id) + "]" + nwl +
                         "Type=BatchNormActivation" + nwl +
                         "Inputs=" + inputs + nwl + 
+                        "Activation=" + std::string(magic_enum::enum_name<scripts::Activations>(activation)) + nwl + nwl;
+                    */
+
+                    return "[" + group + "BN" + std::to_string(id) + "]" + nwl +
+                        "Type=BatchNorm" + nwl +
+                        "Inputs=" + inputs + nwl + nwl +
+                        "[" + group + prefix + std::to_string(id) + "]" + nwl +
+                        "Type=Activation" + nwl +
+                        "Inputs=" + group + "BN" + std::to_string(id) + nwl +
                         "Activation=" + std::string(magic_enum::enum_name<scripts::Activations>(activation)) + nwl + nwl;
             }
             else

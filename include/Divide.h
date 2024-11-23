@@ -51,7 +51,7 @@ namespace dnn
 			return 1;
 		}
 
-		void InitializeDescriptors(const UInt batchSize) final override
+		void InitializeDescriptorsFwd(const UInt batchSize) final override
 		{
 			if (GetMemoryNDims(*Inputs[first]->DstMemDesc) == 2)
 			{
@@ -87,6 +87,10 @@ namespace dnn
 #endif
 		}
 
+		void InitializeDescriptorsBwd(const UInt batchSize) final override
+		{
+		}
+
 		void ForwardProp(const UInt batchSize, const bool training) final override
 		{
 			const auto fullDepth = SurvivalProbability[0] == Float(1) && SurvivalProbability[1] == Float(1);
@@ -96,7 +100,7 @@ namespace dnn
 			if (training)
 			{
 				const auto plain = IsPlainFormat();
-				const auto size = plain ? CDHW() : PaddedCDHW();
+				const auto size = GetElementsCount();
 				const auto part = GetVectorPart(size);
 				const auto threads = batchSize == 1 ? 1ull : GetThreads(batchSize * size, Float(4));
 
@@ -457,7 +461,7 @@ namespace dnn
 #endif // DNN_LEAN
 
 			const auto plain = IsPlainFormat();
-			const auto size = plain ? CDHW() : PaddedCDHW();
+			const auto size = GetElementsCount();
 			const auto threads = batchSize == 1 ? 1ull : GetThreads(batchSize * size, Float(4));
 
 #ifdef DNN_STOCHASTIC
