@@ -81,8 +81,8 @@ namespace dnn
 
 			fwdDesc = std::make_unique<dnnl::binary::primitive_desc>(dnnl::binary::primitive_desc(Device.engine, dnnl::algorithm::binary_add, *Inputs[first]->DstMemDesc, *Inputs[second]->DstMemDesc, *DstMemDesc));
 
-			/*DstMemDesc = std::make_unique<dnnl::memory::desc>(fwdDesc->dst_desc());
-			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(fwdDesc->dst_desc());*/
+			DstMemDesc = std::make_unique<dnnl::memory::desc>(fwdDesc->dst_desc());
+			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(fwdDesc->dst_desc());
 
 			fwdArgs = std::unordered_map<int, dnnl::memory>{ { DNNL_ARG_SRC_0, dnnl::memory(*Inputs[first]->DstMemDesc, Device.engine, Inputs[first]->Neurons.data()) }, { DNNL_ARG_SRC_1, dnnl::memory(*Inputs[second]->DstMemDesc, Device.engine, Inputs[second]->Neurons.data()) }, { DNNL_ARG_DST, dnnl::memory(*DstMemDesc, Device.engine, Neurons.data()) } };
 
