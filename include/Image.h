@@ -432,9 +432,9 @@ namespace dnn
 				if (Bernoulli<bool>())
 				{
 					if (Bernoulli<bool>())
-						dstImage = Solarize(dstImage, IntLevel(2, 0, 256));
+						dstImage = Solarize(dstImage, static_cast<T>(IntLevel(2, 0, 256)));
 					else
-						dstImage = Solarize(dstImage, IntLevel(8, 0, 256));
+						dstImage = Solarize(dstImage, static_cast<T>(IntLevel(8, 0, 256)));
 				}
 			}
 			break;
@@ -480,7 +480,7 @@ namespace dnn
 					dstImage = AutoContrast(dstImage);
 
 				if (Bernoulli<bool>(Float(0.2)))
-					dstImage = Solarize(dstImage, IntLevel(8, 0, 256));
+					dstImage = Solarize(dstImage, static_cast<T>(IntLevel(8, 0, 256)));
 			}
 			break;
 
@@ -497,7 +497,7 @@ namespace dnn
 			case 20:
 			{
 				if (Bernoulli<bool>(Float(0.4)))
-					dstImage = Solarize(dstImage, IntLevel(5, 0, 256));
+					dstImage = Solarize(dstImage, static_cast<T>(IntLevel(5, 0, 256)));
 
 				if (Bernoulli<bool>(Float(0.9)))
 					dstImage = AutoContrast(dstImage);
@@ -530,7 +530,7 @@ namespace dnn
 					dstImage = AutoContrast(dstImage);
 
 				if (Bernoulli<bool>(Float(0.8)))
-					dstImage = Solarize(dstImage, IntLevel(3, 0, 256));
+					dstImage = Solarize(dstImage, static_cast<T>(IntLevel(3, 0, 256)));
 			}
 			break;
 

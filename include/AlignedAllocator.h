@@ -80,7 +80,7 @@ namespace dnn
 		}
 
 	protected:
-		size_type DIVALIGN(const size_type align, const size_type size) const
+		size_type DIVALIGN([[maybe_unused]] const size_type align, const size_type size) const
 		{
 #if defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW32__)
 			return size;

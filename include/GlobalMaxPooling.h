@@ -70,7 +70,7 @@ namespace dnn
 			return 1;
 		}
 
-		void InitializeDescriptorsFwd(const UInt batchSize) final override
+		void InitializeDescriptors(const UInt batchSize) final override
 		{
 			if (GetMemoryNDims(*InputLayer->DstMemDesc) == 2)
 			{
@@ -107,14 +107,10 @@ namespace dnn
 #endif
 		}
 
-		void InitializeDescriptorsBwd(const UInt batchSize) final override
-		{
-		}
-
 		void ForwardProp(const UInt batchSize, const bool training) final override
 		{
 			const auto& memSrc = dnnl::memory(*InputLayer->DstMemDesc, Device.engine, InputLayer->Neurons.data());
-			auto& srcMem = reorderFwdSrc ? dnnl::memory(fwdDesc->src_desc(), Device.engine) : memSrc;
+			auto srcMem = reorderFwdSrc ? dnnl::memory(fwdDesc->src_desc(), Device.engine) : memSrc;
 			if (reorderFwdSrc)
 			{
 				dnnl::reorder(memSrc, srcMem).execute(Device.stream, std::unordered_map<int, dnnl::memory> { {DNNL_ARG_FROM, memSrc}, { DNNL_ARG_TO, srcMem } });

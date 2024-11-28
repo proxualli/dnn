@@ -61,7 +61,7 @@ namespace dnn
 			return 1;
 		}
 
-		void InitializeDescriptorsFwd(const UInt batchSize) final override
+		void InitializeDescriptors(const UInt batchSize) final override
 		{
 			if (GetMemoryNDims(*InputLayer->DstMemDesc) == 2)
 			{
@@ -122,10 +122,6 @@ namespace dnn
 #endif
 		}
 
-		void InitializeDescriptorsBwd(const UInt batchSize) final override
-		{
-		}
-
 		ByteArray GetImage(const Byte fillColor) final override
 		{
 			if (HasWeights)
@@ -167,7 +163,7 @@ namespace dnn
 			DNN_UNREF_PAR(biasesFillerScale);
 		}
 
-		void ForwardProp(const UInt batchSize, const bool training) final override
+		void ForwardProp([[maybe_unused]] const UInt batchSize, const bool training) final override
 		{
 			auto memSrc = dnnl::memory(*InputLayer->DstMemDesc, Device.engine, InputLayer->Neurons.data());
 			auto srcMem = reorderFwdSrc ? dnnl::memory(fwdDescPRelu->src_desc(), Device.engine) : memSrc;
@@ -193,16 +189,11 @@ namespace dnn
 #endif
 		}
 
-		void BackwardProp(const UInt batchSize) final override
+		void BackwardProp([[maybe_unused]] const UInt batchSize) final override
 		{
 #ifdef DNN_LEAN
 			ZeroGradient(batchSize);
 #endif // DNN_LEAN
-
-			//const auto plain = IsPlainFormat();
-			
-			const auto threads = GetThreads(batchSize * GetElementsCount());
-			const auto strideHW = HW() * VectorSize;
 
 			auto dstMem = dnnl::memory(bwdDescPRelu->dst_desc(), Device.engine, Neurons.data());
 			auto diffDstMem = dnnl::memory(bwdDescPRelu->diff_dst_desc(), Device.engine, NeuronsD1.data());

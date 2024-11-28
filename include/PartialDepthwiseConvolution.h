@@ -115,7 +115,7 @@ namespace dnn
 			return Multiplier * KernelH * KernelW / StrideH * StrideW;
 		}
 
-		void InitializeDescriptorsFwd(const UInt batchSize) final override
+		void InitializeDescriptors(const UInt batchSize) final override
 		{
 			if (InputLayer->PaddedC % Groups != 0)
 				throw std::invalid_argument("input not splittable in PartialDepthwiseConvolution");
@@ -171,10 +171,6 @@ namespace dnn
 			bwdWeights = std::make_unique<dnnl::convolution_backward_weights>(dnnl::convolution_backward_weights(*bwdWeightsDesc));
 			bwdData = std::make_unique<dnnl::convolution_backward_data>(dnnl::convolution_backward_data(*bwdDataDesc));
 #endif
-		}
-
-		void InitializeDescriptorsBwd(const UInt batchSize) final override
-		{
 		}
 
 		void ForwardProp(const UInt batchSize, const bool training) final override
@@ -257,7 +253,7 @@ namespace dnn
 			auto memDiffSrc = dnnl::memory(partDiffSrc, Device.engine, InputLayer->NeuronsD1.data());
 			auto diffSrcMem = reorderBwdDataDiffSrc ? dnnl::memory(bwdDataDesc->diff_src_desc(), Device.engine) : memDiffSrc;
 
-			auto& diffDataDst = reorderBwdDataDiffDst ? dnnl::memory(bwdDataDesc->diff_dst_desc(), Device.engine) : diffDstMem;
+			auto diffDataDst = reorderBwdDataDiffDst ? dnnl::memory(bwdDataDesc->diff_dst_desc(), Device.engine) : diffDstMem;
 			if (reorderBwdDataDiffDst)
 			{
 				dnnl::reorder(diffDstMem, diffDataDst).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_FROM, diffDstMem}, { DNNL_ARG_TO, diffDataDst } });

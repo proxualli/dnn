@@ -26,15 +26,11 @@ namespace dnn
 			return CDHW();
 		}
 
-		void InitializeDescriptorsFwd(const UInt batchSize) final override
+		void InitializeDescriptors(const UInt batchSize) final override
 		{
 			ChosenFormat = PlainFmt;
 			DstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ int(batchSize), int(C), int(H), int(W) }), dnnl::memory::data_type::f32, ChosenFormat));
 			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ int(batchSize), int(C), int(H), int(W) }), dnnl::memory::data_type::f32, ChosenFormat));
-		}
-
-		void InitializeDescriptorsBwd(const UInt batchSize) final override
-		{
 		}
 
 		void ForwardProp(const UInt batchSize, const bool training) override { DNN_UNREF_PAR(batchSize); DNN_UNREF_PAR(training); }

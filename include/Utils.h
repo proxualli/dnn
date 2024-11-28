@@ -228,7 +228,7 @@ namespace
 
 		if (!md.is_zero())
 		{
-			const auto data_type = md.get_data_type();
+			//const auto data_type = md.get_data_type();
 			const auto dims = md.get_dims();
 			const auto format_kind = md.get_format_kind();
 			const auto inner_blks = md.get_inner_blks();

@@ -400,7 +400,7 @@ namespace dnn
 #endif
 		}
 
-		std::vector<Float> GetMean(const UInt N, const UInt C, const UInt D, const UInt H, const UInt W)
+		std::vector<Float> GetMean(const UInt N)
 		{
 			auto mean = std::vector<double>(C);
 			
@@ -432,7 +432,7 @@ namespace dnn
 			return result;
 		}
 		
-		std::vector<Float> GetStdDev(const std::vector<Float>& mean, const UInt N, const UInt C, const UInt D, const UInt H, const UInt W)
+		std::vector<Float> GetStdDev(const std::vector<Float>& mean, const UInt N)
 		{
 			auto stddev = std::vector<double>(C);
 			
@@ -822,8 +822,8 @@ namespace dnn
 
 			if constexpr (!DefaultDatasetMeanStdDev)
 			{
-				Mean = GetMean(TrainSamplesCount, C, D, H, W);
-				StdDev = GetStdDev(Mean, TrainSamplesCount, C, D, H, W);
+				Mean = GetMean(TrainSamplesCount);
+				StdDev = GetStdDev(Mean, TrainSamplesCount);
 			}
 
 			Dataset = dataset;

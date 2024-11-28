@@ -36,7 +36,7 @@ namespace dnn
 			return 1;
 		}
 
-		void InitializeDescriptorsFwd(const UInt batchSize) final override
+		void InitializeDescriptors(const UInt batchSize) final override
 		{
 			if (GetMemoryNDims(*InputLayer->DstMemDesc) == 2)
 			{
@@ -63,10 +63,6 @@ namespace dnn
 			assert(ChosenFormat == GetMemoryFormat(*InputLayer->DstMemDesc));
 			if (ChosenFormat != GetMemoryFormat(*InputLayer->DstMemDesc))
 				throw std::invalid_argument("Incompatible memory formats in " + std::string(magic_enum::enum_name<LayerTypes>(LayerType)) + " layer " + InputLayer->Name);
-		}
-
-		void InitializeDescriptorsBwd(const UInt batchSize) final override
-		{
 		}
 
 		void ForwardProp(const UInt batchSize, const bool training) final override

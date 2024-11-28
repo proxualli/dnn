@@ -94,7 +94,7 @@ namespace dnn
 			return 1;
 		}
 
-		void InitializeDescriptorsFwd(const UInt batchSize) final override
+		void InitializeDescriptors(const UInt batchSize) final override
 		{
 			if (GetMemoryNDims(*InputLayer->DstMemDesc) == 2)
 			{
@@ -151,10 +151,6 @@ namespace dnn
 			}
 		}
 
-		void InitializeDescriptorsBwd(const UInt batchSize) final override
-		{
-		}
-
 		bool Lockable() const final override
 		{
 			return WeightCount > 0 && Scaling;
@@ -167,11 +163,11 @@ namespace dnn
 				if (!inference)
 				{
 					inference = true;
-					InitializeDescriptorsFwd(batchSize);
+					InitializeDescriptors(batchSize);
 				}
 
 				const auto& memSrc = dnnl::memory(*InputLayer->DstMemDesc, Device.engine, InputLayer->Neurons.data());
-				auto& srcMem = reorderFwdSrc ? dnnl::memory(fwdDesc->src_desc(), Device.engine) : memSrc;
+				auto srcMem = reorderFwdSrc ? dnnl::memory(fwdDesc->src_desc(), Device.engine) : memSrc;
 				if (reorderFwdSrc)
 				{
 					dnnl::reorder(memSrc, srcMem).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_FROM, memSrc}, { DNNL_ARG_TO, srcMem } });
@@ -206,11 +202,11 @@ namespace dnn
 				if (inference)
 				{
 					inference = false;
-					InitializeDescriptorsFwd(batchSize);
+					InitializeDescriptors(batchSize);
 				}
 
 				const auto& memSrc = dnnl::memory(*InputLayer->DstMemDesc, Device.engine, InputLayer->Neurons.data());
-				auto& srcMem = reorderFwdSrc ? dnnl::memory(fwdDesc->src_desc(), Device.engine) : memSrc;
+				auto srcMem = reorderFwdSrc ? dnnl::memory(fwdDesc->src_desc(), Device.engine) : memSrc;
 				if (reorderFwdSrc)
 				{
 					dnnl::reorder(memSrc, srcMem).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_FROM, memSrc}, { DNNL_ARG_TO, srcMem } });
@@ -265,7 +261,7 @@ namespace dnn
 #endif // DNN_LEAN
 
 			const auto& memSrc = dnnl::memory(*InputLayerFwd->DstMemDesc, Device.engine, InputLayerFwd->Neurons.data());
-			auto& srcMem = reorderBwdSrc ? dnnl::memory(bwdDesc->src_desc(), Device.engine) : memSrc;
+			auto srcMem = reorderBwdSrc ? dnnl::memory(bwdDesc->src_desc(), Device.engine) : memSrc;
 			if (reorderBwdSrc)
 			{
 				dnnl::reorder(memSrc, srcMem).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_FROM, memSrc}, { DNNL_ARG_TO, srcMem } });
@@ -273,7 +269,7 @@ namespace dnn
 			}
 
 			const auto& memDiffDst = !InplaceBwd ? dnnl::memory(*DiffDstMemDesc, Device.engine, NeuronsD1.data()): dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data());
-			auto& diffDstMem = reorderBwdDiffDst ? dnnl::memory(bwdDesc->diff_dst_desc(), Device.engine) : memDiffDst;
+			auto diffDstMem = reorderBwdDiffDst ? dnnl::memory(bwdDesc->diff_dst_desc(), Device.engine) : memDiffDst;
 			if (reorderBwdDiffDst)
 			{
 				dnnl::reorder(memDiffDst, diffDstMem).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_FROM, memDiffDst}, { DNNL_ARG_TO, diffDstMem } });

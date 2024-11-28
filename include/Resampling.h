@@ -61,7 +61,7 @@ namespace dnn
 			return 1;
 		}
 
-		void InitializeDescriptorsFwd(const UInt batchSize) final override
+		void InitializeDescriptors(const UInt batchSize) final override
 		{
 			dnnl::algorithm algorithm;
 			switch (Algorithm)
@@ -100,10 +100,6 @@ namespace dnn
 			bwd = std::make_unique<dnnl::resampling_backward>(dnnl::resampling_backward(*bwdDesc));
 			bwdAdd = std::make_unique<dnnl::binary>(dnnl::binary(*bwdAddDesc));
 #endif
-		}
-
-		void InitializeDescriptorsBwd(const UInt batchSize) final override
-		{
 		}
 
 		void ForwardProp(const UInt batchSize, const bool training) final override

@@ -61,7 +61,7 @@ namespace dnn
 			return 1;
 		}
 
-		void InitializeDescriptorsFwd(const UInt batchSize) final override
+		void InitializeDescriptors(const UInt batchSize) final override
 		{
 			DNN_UNREF_PAR(batchSize);
 
@@ -69,10 +69,6 @@ namespace dnn
 
 			DstMemDesc = std::make_unique<dnnl::memory::desc>(*InputLayer->DstMemDesc);
 			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(*InputLayer->DiffDstMemDesc);
-		}
-
-		void InitializeDescriptorsBwd(const UInt batchSize) final override
-		{
 		}
 
 		void SetBatchSize(const UInt batchSize) final override

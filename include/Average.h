@@ -56,7 +56,7 @@ namespace dnn
 			return 1;
 		}
 
-		void InitializeDescriptorsFwd(const UInt batchSize) final override
+		void InitializeDescriptors(const UInt batchSize) final override
 		{
 			if (GetMemoryNDims(*InputLayer->DstMemDesc) == 2)
 			{
@@ -98,10 +98,6 @@ namespace dnn
 #endif
 		}
 
-		void InitializeDescriptorsBwd(const UInt batchSize) final override
-		{
-		}
-
 		void ForwardProp(const UInt batchSize, const bool training) final override
 		{
 			const auto fullDepth = SurvivalProbability[0] == Float(1) && SurvivalProbability[1] == Float(1);
@@ -110,7 +106,7 @@ namespace dnn
 
 			if (training)
 			{
-				if (Reference && fullDepth)
+				if constexpr (Reference && fullDepth)
 				{
 #ifdef DNN_CACHE_PRIMITIVES
 					fwd->execute(Device.stream, fwdArgs);

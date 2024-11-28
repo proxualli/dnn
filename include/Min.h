@@ -55,7 +55,7 @@ namespace dnn
 			return 1;
 		}
 
-		void InitializeDescriptorsFwd(const UInt batchSize) final override
+		void InitializeDescriptors(const UInt batchSize) final override
 		{
 			if (GetMemoryNDims(*Inputs[first]->DstMemDesc) == 2)
 			{
@@ -91,10 +91,6 @@ namespace dnn
 #endif
 		}
 
-		void InitializeDescriptorsBwd(const UInt batchSize) final override
-		{
-		}
-
 		void ForwardProp(const UInt batchSize, const bool training) final override
 		{
 			const auto fullDepth = SurvivalProbability[0] == Float(1) && SurvivalProbability[1] == Float(1);
@@ -103,7 +99,7 @@ namespace dnn
 
 			if (training)
 			{
-				if (Reference && fullDepth)
+				if constexpr (Reference && fullDepth)
 				{
 #ifdef DNN_CACHE_PRIMITIVES
 					fwd->execute(Device.stream, fwdArgs);
@@ -335,7 +331,7 @@ namespace dnn
 					const auto end = start + part;
 
 					VecFloat In0, In1, D1;
-					for (auto cdhw = 0ull; cdhw < part; cdhw += VectorSize)
+					for (auto cdhw = start; cdhw < end; cdhw += VectorSize)
 					{
 						In0.load_a(&InputsFwd[0]->Neurons[cdhw]);
 						In1.load_a(&InputsFwd[1]->Neurons[cdhw]);
@@ -344,7 +340,7 @@ namespace dnn
 						if_add(In0 <= In1, VecFloat().load_a(&Inputs[0]->NeuronsD1[cdhw]), D1).store_a(&Inputs[0]->NeuronsD1[cdhw]);
 						if_add(In0 > In1, VecFloat().load_a(&Inputs[1]->NeuronsD1[cdhw]), D1).store_a(&Inputs[1]->NeuronsD1[cdhw]);
 					}
-					for (auto cdhw = part; cdhw < size; cdhw++)
+					for (auto cdhw = end; cdhw < start + size; cdhw++)
 					{
 						Inputs[0]->NeuronsD1[cdhw] += InputsFwd[0]->Neurons[cdhw] <= InputsFwd[1]->Neurons[cdhw] ? NeuronsD1[cdhw] : Float(0);
 						Inputs[1]->NeuronsD1[cdhw] += InputsFwd[0]->Neurons[cdhw] <= InputsFwd[1]->Neurons[cdhw] ? Float(0) : NeuronsD1[cdhw];

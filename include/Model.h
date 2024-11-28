@@ -1249,7 +1249,7 @@ namespace dnn
 			{
 				for (auto& layer : Layers)
 				{
-					layer->InitializeDescriptorsFwd(N);
+					layer->InitializeDescriptors(N);
 					layer->SetOptimizer(optimizer);
 				}
 
@@ -2134,7 +2134,7 @@ namespace dnn
 			{
 				TaskState.store(TaskStates::Running);
 				State.store(States::Idle);
-				const auto totalSkipConnections = GetTotalSkipConnections();
+				//const auto totalSkipConnections = GetTotalSkipConnections();
 
 				auto timer = std::chrono::high_resolution_clock();
 				auto timePoint = timer.now();
@@ -2164,8 +2164,8 @@ namespace dnn
 				if (Dropout != CurrentTrainingRate.Dropout)
 					ChangeDropout(CurrentTrainingRate.Dropout, N);
 
-				auto learningRateEpochs = CurrentTrainingRate.Epochs;
-				auto learningRateIndex = 0ull;
+				//auto learningRateEpochs = CurrentTrainingRate.Epochs;
+				//auto learningRateIndex = 0ull;
 
 				RandomTrainSamples = std::vector<UInt>(DataProv->TrainSamplesCount);
 				for (auto i = 0ull; i < DataProv->TrainSamplesCount; i++)
@@ -2216,7 +2216,7 @@ namespace dnn
 					auto os = std::ofstream((path / "testB.bin").string(), std::ios::out | std::ios::binary | std::ios::trunc);
 					auto oss = std::ofstream((path / "testB.txt").string(), std::ios::out | std::ios::trunc);
 
-					size_t point = 0;
+					//size_t point = 0;
 					if (!os.bad() && os.is_open())
 					{
 						Layers[0]->SaveNeurons(os);
