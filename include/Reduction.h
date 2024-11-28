@@ -121,8 +121,7 @@ namespace dnn
 		void BackwardPropAvg(const UInt batchSize)
 		{
 			const auto plain = IsPlainFormat();
-			const auto strideHW = HW() * VectorSize;
-
+			
 #ifdef DNN_STOCHASTIC
 			if (batchSize == 1)
 			{
@@ -130,17 +129,10 @@ namespace dnn
 				{
 					for_i(batchSize, threads, [=](UInt n)
 					{
-						VecFloat InD1;
-						for (auto c = 0ull; c < PaddedC; c += VectorSize)
-						{
-							const auto inputOffset = c * HW();
-							for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
-							{
-								InD1.load_a(&InputLayer->NeuronsD1[hw + inputOffset]);
-								InD1 += NeuronsD1[hw] / Float(InputLayer->C);
-								InD1.store_a(&InputLayer->NeuronsD1[hw + inputOffset]);
-							}
-						}
+						for (auto c = 0ull; c < InputLayer->C; c++)
+							for (auto h = 0ull; h < H; h++)
+								for (auto w = 0ull; w < W; w++)
+									InputLayer->NeuronsD1[InputLayer->OffsetPaddedMem(0, c, h, w)] += NeuronsD1[OffsetPaddedMem(0, 0, h, w)] / Float(InputLayerFwd->C);
 					});
 				}
 				else
@@ -149,7 +141,7 @@ namespace dnn
 					{
 						const auto start = n * CDHW();
 						const auto inStart = n * InputLayer->CDHW();
-						for (auto c = 0ull; c < C; c++)
+						for (auto c = 0ull; c < InputLayer->C; c++)
 							PRAGMA_OMP_SIMD()
 							for (auto hw = 0; hw < HW(); hw++)
 								InputLayer->NeuronsD1[(c * HW()) + hw] += NeuronsD1[hw] / Float(InputLayer->C);
@@ -164,29 +156,20 @@ namespace dnn
 				if (!plain)
 					for_i(batchSize, threads, [=](UInt n)
 					{
-						VecFloat InD1;
-						for (auto c = 0ull; c < PaddedC; c += VectorSize)
-						{
-							const auto inputOffset = (n * InputLayer->PaddedCDHW()) + (c * HW());
-							auto outputOffset = n * PaddedCDHW();
-							for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
-							{
-								InD1.load_a(&InputLayer->NeuronsD1[hw + inputOffset]);
-								InD1 += NeuronsD1[hw + outputOffset] / Float(InputLayer->C);
-								InD1.store_a(&InputLayer->NeuronsD1[hw + inputOffset]);
-
-							}
-						}
+						for (auto c = 0ull; c < InputLayer->C; c++)
+							for (auto h = 0ull; h < H; h++)
+								for (auto w = 0ull; w < W; w++)
+									InputLayer->NeuronsD1[InputLayer->OffsetPaddedMem(n, c, h, w)] += NeuronsD1[OffsetPaddedMem(n, 0, h, w)] / Float(InputLayerFwd->C);
 					});
 				else
 					for_i(batchSize, threads, [=](UInt n)
 					{
 						const auto start = n * HW();
 						const auto inStart = n * InputLayer->CDHW();
-						for (auto c = 0ull; c < C; c++)
+						for (auto c = 0ull; c < InputLayer->C; c++)
 							PRAGMA_OMP_SIMD()
 							for (auto hw = 0ull; hw < HW(); hw++)
-								InputLayer->NeuronsD1[inStart + (c * HW()) + hw] += NeuronsD1[start + hw] / Float(InputLayer->C);
+								InputLayer->NeuronsD1[inStart + (c * HW()) + hw] += NeuronsD1[start + hw] / Float(InputLayerFwd->C);
 					});
 #ifdef DNN_STOCHASTIC
 			}
@@ -196,84 +179,7 @@ namespace dnn
 		void BackwardPropMax(const UInt batchSize)
 		{
 			const auto plain = IsPlainFormat();
-			const auto strideHW = HW() * VectorSize;
-
-#ifdef DNN_STOCHASTIC
-			if (batchSize == 1)
-			{
-				if (!plain)
-				{
-					for_i(batchSize, threads, [=](UInt n)
-						{
-							VecFloat In, InD1;
-							for (auto c = 0ull; c < PaddedC; c += VectorSize)
-							{
-								const auto inputOffset = c * HW();
-								for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
-								{
-									In.load_a(&InputLayer->Neurons[hw + inputOffset]);
-									InD1.load_a(&InputLayer->NeuronsD1[hw + inputOffset]);
-									if_add(In == Neurons[hw], InD1, NeuronsD1[hw]);
-									InD1.store_a(&InputLayer->NeuronsD1[hw + inputOffset]);
-								}
-							}
-						});
-				}
-				else
-				{
-					for_i(batchSize, threads, [=](UInt n)
-						{
-							const auto start = n * CDHW();
-							const auto inStart = n * InputLayer->CDHW();
-							for (auto c = 0ull; c < C; c++)
-								PRAGMA_OMP_SIMD()
-								for (auto hw = 0ull; hw < HW(); hw++)
-									InputLayer->NeuronsD1[(c * HW()) + hw] += (InputLayer->Neurons[(c * HW()) + hw] == Neurons[hw]) ? NeuronsD1[hw] : Float(0);
-						});
-				}
-			}
-			else
-			{
-#endif
-				const auto threads = batchSize == 1ull ? 1ull : GetThreads(batchSize * GetElementsCount(), BwdTrainingWeight);
-
-				if (!plain)
-					for_i(batchSize, threads, [=](UInt n)
-						{
-							VecFloat In, InD1;
-							for (auto c = 0ull; c < PaddedC; c += VectorSize)
-							{
-								const auto inputOffset = (n * InputLayer->PaddedCDHW()) + (c * HW());
-								const auto outputOffset = n * PaddedCDHW();
-								for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
-								{
-									In.load_a(&InputLayer->Neurons[hw + inputOffset]);
-									InD1.load_a(&InputLayer->NeuronsD1[hw + inputOffset]);
-									if_add(In == Neurons[hw + outputOffset], InD1, NeuronsD1[hw + outputOffset]);
-									InD1.store_a(&InputLayer->NeuronsD1[hw + inputOffset]);
-								}
-							}
-						});
-				else
-					for_i(batchSize, threads, [=](UInt n)
-						{
-							const auto start = n * HW();
-							const auto inStart = n * InputLayer->CDHW();
-							for (auto c = 0ull; c < C; c++)
-								PRAGMA_OMP_SIMD()
-								for (auto hw = 0ull; hw < HW(); hw++)
-									InputLayer->NeuronsD1[inStart + (c * HW()) + hw] += (InputLayer->Neurons[inStart + (c * HW()) + hw] == Neurons[start + hw]) ? NeuronsD1[start + hw] : Float(0);
-						});
-#ifdef DNN_STOCHASTIC
-			}
-#endif
-		}
-
-		void BackwardPropMin(const UInt batchSize)
-		{
-			const auto plain = IsPlainFormat();
-			const auto strideHW = HW() * VectorSize;
-
+			
 #ifdef DNN_STOCHASTIC
 			if (batchSize == 1)
 			{
@@ -281,18 +187,10 @@ namespace dnn
 				{
 					for_i(batchSize, threads, [=](UInt n)
 					{
-						VecFloat In, InD1;
-						for (auto c = 0ull; c < PaddedC; c += VectorSize)
-						{
-							const auto inputOffset = c * HW();
-							for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
-							{
-								In.load_a(&InputLayer->Neurons[hw + inputOffset]);
-								InD1.load_a(&InputLayer->NeuronsD1[hw + inputOffset]);
-								if_add(In == Neurons[hw], InD1, NeuronsD1[hw]);
-								InD1.store_a(&InputLayer->NeuronsD1[hw + inputOffset]);
-							}
-						}
+						for (auto c = 0ull; c < InputLayer->C; c++)
+							for (auto h = 0ull; h < H; h++)
+								for (auto w = 0ull; w < W; w++)
+									InputLayer->NeuronsD1[InputLayer->OffsetPaddedMem(0, c, h, w)] += (InputLayerFwd->Neurons[InputLayerFwd->OffsetPaddedMem(0, c, h, w)] == Neurons[OffsetPaddedMem(0, 0, h, w)] ? NeuronsD1[OffsetPaddedMem(0, 0, h, w)] : Float(0));
 					});
 				}
 				else
@@ -301,7 +199,7 @@ namespace dnn
 					{
 						const auto start = n * CDHW();
 						const auto inStart = n * InputLayer->CDHW();
-						for (auto c = 0ull; c < C; c++)
+						for (auto c = 0ull; c < InputLayer->C; c++)
 							PRAGMA_OMP_SIMD()
 							for (auto hw = 0ull; hw < HW(); hw++)
 								InputLayer->NeuronsD1[(c * HW()) + hw] += (InputLayer->Neurons[(c * HW()) + hw] == Neurons[hw]) ? NeuronsD1[hw] : Float(0);
@@ -316,29 +214,78 @@ namespace dnn
 				if (!plain)
 					for_i(batchSize, threads, [=](UInt n)
 					{
-						VecFloat In, InD1;
-						for (auto c = 0ull; c < PaddedC; c += VectorSize)
-						{
-							const auto inputOffset = (n * InputLayer->PaddedCDHW()) + (c * HW());
-							const auto outputOffset = n * PaddedCDHW();
-							for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
-							{
-								In.load_a(&InputLayer->Neurons[hw + inputOffset]);
-								InD1.load_a(&InputLayer->NeuronsD1[hw + inputOffset]);
-								if_add(In == Neurons[hw + outputOffset], InD1, NeuronsD1[hw + outputOffset]);
-								InD1.store_a(&InputLayer->NeuronsD1[hw + inputOffset]);
-							}
-						}
+						for (auto c = 0ull; c < InputLayer->C; c++)
+							for (auto h = 0ull; h < H; h++)
+								for (auto w = 0ull; w < W; w++)
+									InputLayer->NeuronsD1[InputLayer->OffsetPaddedMem(n, c, h, w)] += (InputLayerFwd->Neurons[InputLayerFwd->OffsetPaddedMem(n, c, h, w)] == Neurons[OffsetPaddedMem(n, 0, h, w)] ? NeuronsD1[OffsetPaddedMem(n, 0, h, w)] : Float(0));
 					});
 				else
 					for_i(batchSize, threads, [=](UInt n)
 					{
 						const auto start = n * HW();
 						const auto inStart = n * InputLayer->CDHW();
-						for (auto c = 0ull; c < C; c++)
+						for (auto c = 0ull; c < InputLayer->C; c++)
 							PRAGMA_OMP_SIMD()
 							for (auto hw = 0ull; hw < HW(); hw++)
-								InputLayer->NeuronsD1[inStart + (c * HW()) + hw] += (InputLayer->Neurons[inStart + (c * HW()) + hw] == Neurons[start + hw]) ? NeuronsD1[start + hw] : Float(0);
+								InputLayer->NeuronsD1[inStart + (c * HW()) + hw] += (InputLayerFwd->Neurons[inStart + (c * HW()) + hw] == Neurons[start + hw]) ? NeuronsD1[start + hw] : Float(0);
+					});
+#ifdef DNN_STOCHASTIC
+			}
+#endif
+		}
+
+		void BackwardPropMin(const UInt batchSize)
+		{
+			const auto plain = IsPlainFormat();
+
+#ifdef DNN_STOCHASTIC
+			if (batchSize == 1)
+			{
+				if (!plain)
+				{
+					for_i(batchSize, threads, [=](UInt n)
+					{
+						for (auto c = 0ull; c < InputLayer->C; c++)
+							for (auto h = 0ull; h < H; h++)
+								for (auto w = 0ull; w < W; w++)
+									InputLayer->NeuronsD1[InputLayer->OffsetPaddedMem(0, c, h, w)] += (InputLayerFwd->Neurons[InputLayerFwd->OffsetPaddedMem(0, c, h, w)] == Neurons[OffsetPaddedMem(0, 0, h, w)] ? NeuronsD1[OffsetPaddedMem(0, 0, h, w)] : Float(0));
+					});
+				}
+				else
+				{
+					for_i(batchSize, threads, [=](UInt n)
+					{
+						const auto start = n * CDHW();
+						const auto inStart = n * InputLayer->CDHW();
+						for (auto c = 0ull; c < InputLayer->C; c++)
+							PRAGMA_OMP_SIMD()
+							for (auto hw = 0ull; hw < HW(); hw++)
+								InputLayer->NeuronsD1[(c * HW()) + hw] += (InputLayer->Neurons[(c * HW()) + hw] == Neurons[hw]) ? NeuronsD1[hw] : Float(0);
+					});
+				}
+			}
+			else
+			{
+#endif
+				const auto threads = batchSize == 1ull ? 1ull : GetThreads(batchSize * GetElementsCount(), BwdTrainingWeight);
+
+				if (!plain)
+					for_i(batchSize, threads, [=](UInt n)
+					{
+						for (auto c = 0ull; c < InputLayer->C; c++)
+							for (auto h = 0ull; h < H; h++)
+								for (auto w = 0ull; w < W; w++)
+									InputLayer->NeuronsD1[InputLayer->OffsetPaddedMem(n, c, h, w)] += (InputLayerFwd->Neurons[InputLayerFwd->OffsetPaddedMem(n, c, h, w)] == Neurons[OffsetPaddedMem(n, 0, h, w)] ? NeuronsD1[OffsetPaddedMem(n, 0, h, w)] : Float(0));
+					});
+				else
+					for_i(batchSize, threads, [=](UInt n)
+					{
+						const auto start = n * HW();
+						const auto inStart = n * InputLayer->CDHW();
+						for (auto c = 0ull; c < InputLayer->C; c++)
+							PRAGMA_OMP_SIMD()
+							for (auto hw = 0ull; hw < HW(); hw++)
+								InputLayer->NeuronsD1[inStart + (c * HW()) + hw] += (InputLayerFwd->Neurons[inStart + (c * HW()) + hw] == Neurons[start + hw]) ? NeuronsD1[start + hw] : Float(0);
 					});
 #ifdef DNN_STOCHASTIC
 			}
@@ -348,7 +295,6 @@ namespace dnn
 		void BackwardPropSum(const UInt batchSize)
 		{
 			const auto plain = IsPlainFormat();
-			const auto strideHW = HW() * VectorSize;
 
 #ifdef DNN_STOCHASTIC
 			if (batchSize == 1)
@@ -357,17 +303,10 @@ namespace dnn
 				{
 					for_i(batchSize, threads, [=](UInt n)
 					{
-						VecFloat InD1;
-						for (auto c = 0ull; c < PaddedC; c += VectorSize)
-						{
-							const auto inputOffset = c * HW();
-							for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
-							{
-								InD1.load_a(&InputLayer->NeuronsD1[hw + inputOffset]);
-								InD1 += NeuronsD1[hw];
-								InD1.store_a(&InputLayer->NeuronsD1[hw + inputOffset]);
-							}
-						}
+						for (auto c = 0ull; c < InputLayer->C; c++)
+							for (auto h = 0ull; h < H; h++)
+								for (auto w = 0ull; w < W; w++)
+									InputLayer->NeuronsD1[InputLayer->OffsetPaddedMem(0, c, h, w)] += NeuronsD1[OffsetPaddedMem(0, 0, h, w)];
 					});
 				}
 				else
@@ -376,7 +315,7 @@ namespace dnn
 					{
 						const auto start = n * HW();
 						const auto inStart = n * InputLayer->CDHW();
-						for (auto c = 0ull; c < C; c++)
+						for (auto c = 0ull; c < InputLayer->C; c++)
 							PRAGMA_OMP_SIMD()
 							for (auto hw = 0ull; hw < HW(); hw++)
 								InputLayer->NeuronsD1[(c * HW()) + hw] += NeuronsD1[start + hw];
@@ -391,25 +330,17 @@ namespace dnn
 				if (!plain)
 					for_i(batchSize, threads, [=](UInt n)
 					{
-						VecFloat InD1;
-						for (auto c = 0ull; c < PaddedC; c += VectorSize)
-						{
-							const auto inputOffset = (n * InputLayer->PaddedCDHW()) + (c * HW());
-							const auto outputOffset = n * PaddedCDHW();
-							for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
-							{
-								InD1.load_a(&InputLayer->NeuronsD1[hw + inputOffset]);
-								InD1 += NeuronsD1[hw + outputOffset];
-								InD1.store_a(&InputLayer->NeuronsD1[hw + inputOffset]);
-							}
-						}
+						for (auto c = 0ull; c < InputLayer->C; c++)
+							for (auto h = 0ull; h < H; h++)
+								for (auto w = 0ull; w < W; w++)
+									InputLayer->NeuronsD1[InputLayer->OffsetPaddedMem(n, c, h, w)] += NeuronsD1[OffsetPaddedMem(n, 0, h, w)];
 					});
 				else
 					for_i(batchSize, threads, [=](UInt n)
 					{
 						const auto start = n * HW();
 						const auto inStart = n * InputLayer->CDHW();
-						for (auto c = 0ull; c < C; c++)
+						for (auto c = 0ull; c < InputLayer->C; c++)
 							PRAGMA_OMP_SIMD()
 							for (auto hw = 0ull; hw < HW(); hw++)
 								InputLayer->NeuronsD1[inStart + (c * HW()) + hw] += NeuronsD1[start + hw];
