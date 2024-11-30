@@ -552,16 +552,34 @@ namespace dnn
 			else
 			{
 #endif
+				const auto strideHW = HW() * VectorSize;
 				const auto threads = batchSize == 1ull ? 1ull : GetThreads(batchSize * GetElementsCount(), BwdTrainingWeight);
+				const bool padded = InputLayer->PaddedC == InputLayer->C;
 
 				if (!plain)
 					for_i(batchSize, threads, [=](UInt n)
-					{
-						for (auto c = 0ull; c < InputLayer->C; c++)
-							for (auto h = 0ull; h < H; h++)
-								for (auto w = 0ull; w < W; w++)
-									InputLayer->NeuronsD1[InputLayer->OffsetPaddedMem(n, c, h, w)] += NeuronsD1[OffsetPaddedMem(n, 0, h, w)];
-					});
+						{
+							const auto outputOffset = OffsetPaddedMem(n, 0, 0, 0);
+
+							if (padded)
+								for (auto c = 0ull; c < InputLayer->PaddedC; c += VectorSize)
+								{
+									const auto inputOffset = InputLayer->OffsetPaddedMem(n, c, 0, 0);
+
+									for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
+									{
+										auto inputNeuronsD1 = VecFloat().load_a(&InputLayer->NeuronsD1[hw + inputOffset]);
+
+										inputNeuronsD1 += NeuronsD1[hw + outputOffset];
+										inputNeuronsD1.store_a(&InputLayer->NeuronsD1[hw + inputOffset]);
+									}
+								}
+							else
+								for (auto c = 0ull; c < InputLayer->C; c++)
+									for (auto h = 0ull; h < H; h++)
+										for (auto w = 0ull; w < W; w++)
+											InputLayer->NeuronsD1[InputLayer->OffsetPaddedMem(n, c, h, w)] += (InputLayer->Neurons[InputLayer->OffsetPaddedMem(n, c, h, w)] == Neurons[OffsetPaddedMem(n, 0, h, w)] ? NeuronsD1[OffsetPaddedMem(n, 0, h, w)] : Float(0));
+						});
 				else
 					for_i(batchSize, threads, [=](UInt n)
 					{
