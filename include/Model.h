@@ -1654,7 +1654,7 @@ namespace dnn
 					State.store(States::Completed);
 					return;
 				};
-
+				
 				const auto totalSkipConnections = GetTotalSkipConnections();
 
 				auto timer = std::chrono::high_resolution_clock();
