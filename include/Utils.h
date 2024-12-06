@@ -146,7 +146,7 @@ namespace
 	constexpr auto WEIGHTS_LIMIT = Float(500);	// limit for all the weights and biases [-WEIGHTS_LIMIT,WEIGHTS_LIMIT]
 	constexpr auto PlainFmt = dnnl::memory::format_tag::abcd;
 	
-	const auto GetThreads(const UInt elements, const Float weight = Float(1)) NOEXCEPT
+	auto GetThreads(const UInt elements, const Float weight = Float(1)) NOEXCEPT
 	{
 		static const auto MAX_THREADS = static_cast<UInt>(omp_get_max_threads());
 
