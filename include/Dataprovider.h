@@ -1,6 +1,7 @@
 #pragma once
 #include "Image.h"
 
+
 namespace dnn
 {
 	//using namespace image;
@@ -1064,6 +1065,7 @@ namespace dnn
 		static cimg_library::CImg<Byte> LoadPNG(const std::string& fileName, const bool forceColorFormat = false) NOEXCEPT
 		{
 			auto bitsPerPixel = 0u;
+
 			auto img = cimg_library::CImg<Byte>().get_load_png(fileName.c_str(), &bitsPerPixel);
 
 			if (forceColorFormat && img._spectrum == 1)

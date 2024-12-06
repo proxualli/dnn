@@ -255,7 +255,7 @@ namespace scripts
 
         auto GetName() const
         {
-            auto common = std::string(magic_enum::enum_name<Scripts>(Script)) + std::string("-") + std::to_string(Groups) + std::string("-") + std::to_string(Iterations) + std::string("-");
+            const auto common = std::string(magic_enum::enum_name<Scripts>(Script)) + std::string("-") + std::to_string(Groups) + std::string("-") + std::to_string(Iterations) + std::string("-");
 
             switch (Script)
             {
@@ -349,20 +349,20 @@ namespace scripts
                     "Type=BatchNormRelu" + nwl +
                     "Inputs=" + inputs + nwl + nwl;
             else
-                /*
+                
                 return "[" + group + prefix + std::to_string(id) + "]" + nwl +
                     "Type=BatchNormActivation" + nwl +
                     "Inputs=" + inputs + nwl + 
                     "Activation=" + activation + nwl + nwl;
-                */
+                
 
-                return "[" + group + "BN" + std::to_string(id) + "]" + nwl +
+                /*return "[" + group + "BN" + std::to_string(id) + "]" + nwl +
                     "Type=BatchNorm" + nwl +
                     "Inputs=" + inputs + nwl + nwl +
                     "[" + group + prefix + std::to_string(id) + "]" + nwl +
                     "Type=Activation" + nwl +
                     "Inputs=" + group + "BN" + std::to_string(id) + nwl +
-                    "Activation=" + activation + nwl + nwl;
+                    "Activation=" + activation + nwl + nwl;*/
         }
 
         static std::string BatchNormActivation(UInt id, std::string inputs, scripts::Activations activation = scripts::Activations::Relu, std::string group = "", std::string prefix = "B")
@@ -375,21 +375,21 @@ namespace scripts
                         "Type=BatchNormRelu" + nwl +
                         "Inputs=" + inputs + nwl + nwl;
                 else
-                    /*
+                    
                     return 
                         "[" + group + prefix + std::to_string(id) + "]" + nwl +
                         "Type=BatchNormActivation" + nwl +
                         "Inputs=" + inputs + nwl + 
                         "Activation=" + std::string(magic_enum::enum_name<scripts::Activations>(activation)) + nwl + nwl;
-                    */
+                    
 
-                    return "[" + group + "BN" + std::to_string(id) + "]" + nwl +
+                    /*return "[" + group + "BN" + std::to_string(id) + "]" + nwl +
                         "Type=BatchNorm" + nwl +
                         "Inputs=" + inputs + nwl + nwl +
                         "[" + group + prefix + std::to_string(id) + "]" + nwl +
                         "Type=Activation" + nwl +
                         "Inputs=" + group + "BN" + std::to_string(id) + nwl +
-                        "Activation=" + std::string(magic_enum::enum_name<scripts::Activations>(activation)) + nwl + nwl;
+                        "Activation=" + std::string(magic_enum::enum_name<scripts::Activations>(activation)) + nwl + nwl;*/
             }
             else
             {

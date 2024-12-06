@@ -6,10 +6,10 @@ namespace dnn
 	class Reduction final : public Layer
 	{
 	private:
-		std::unique_ptr<dnnl::reduction::primitive_desc> fwdDescReduction;
+		std::unique_ptr<dnnl::reduction::primitive_desc> fwdDesc;
 		std::unordered_map<int, dnnl::memory> fwdArgs;
 #ifdef DNN_CACHE_PRIMITIVES
-		std::unique_ptr<dnnl::reduction> fwdReduction;
+		std::unique_ptr<dnnl::reduction> fwd;
 #endif
 		dnnl::algorithm algorithm; 
 
@@ -92,13 +92,13 @@ namespace dnn
 				break;
 			}
 
-			fwdDescReduction = std::make_unique<dnnl::reduction::primitive_desc>(dnnl::reduction::primitive_desc(Device.engine, algorithm, *InputLayer->DstMemDesc, *DstMemDesc, P, Eps));
+			fwdDesc = std::make_unique<dnnl::reduction::primitive_desc>(dnnl::reduction::primitive_desc(Device.engine, algorithm, *InputLayer->DstMemDesc, *DstMemDesc, P, Eps));
 #ifdef DNN_CACHE_PRIMITIVES
-			fwdReduction = std::make_unique<dnnl::reduction>(dnnl::reduction(*fwdDescReduction));
+			fwd = std::make_unique<dnnl::reduction>(dnnl::reduction(*fwdDesc));
 #endif
 
-			DstMemDesc = std::make_unique<dnnl::memory::desc>(fwdDescReduction->dst_desc());
-			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(fwdDescReduction->dst_desc());
+			DstMemDesc = std::make_unique<dnnl::memory::desc>(fwdDesc->dst_desc());
+			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(fwdDesc->dst_desc());
 
 			fwdArgs = std::unordered_map<int, dnnl::memory>{ { DNNL_ARG_SRC, dnnl::memory(*InputLayer->DstMemDesc, Device.engine, InputLayer->Neurons.data()) }, { DNNL_ARG_DST, dnnl::memory(*DstMemDesc, Device.engine, Neurons.data()) } };
 		}
@@ -106,9 +106,9 @@ namespace dnn
 		void ForwardProp(const UInt batchSize, const bool training) final override
 		{
 #ifdef DNN_CACHE_PRIMITIVES
-			fwdReduction->execute(Device.stream, fwdArgs);
+			fwd->execute(Device.stream, fwdArgs);
 #else
-			dnnl::reduction(*fwdDescReduction).execute(Device.stream, fwdArgs);
+			dnnl::reduction(*fwdDesc).execute(Device.stream, fwdArgs);
 #endif
 			Device.stream.wait();
 

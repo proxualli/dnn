@@ -178,7 +178,7 @@ namespace dnn
 					f(i);
 			}
 	#else
-            #pragma omp parallel for shared(f) schedule(static,1) num_threads(static_cast<int>(threads))
+            #pragma omp parallel for schedule(static,1) num_threads(static_cast<int>(threads))
 			for (auto i = 0ull; i < range; i++)
 				f(i);
 	#endif
@@ -187,7 +187,7 @@ namespace dnn
 			for_(0ull, range, [&](const blocked_range& r)
 			{
 				for (auto i = r.begin(); i < r.end(); i++)
-				f(i);
+					f(i);
 			});
 #endif
 		}
