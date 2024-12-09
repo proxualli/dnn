@@ -465,12 +465,13 @@ namespace dnn
 								VecFloat neuronsD1;
 								for (auto c = 0ull; c < PaddedC; c += VectorSize)
 								{
-									const auto outputOffset = n * PaddedCDHW() + c * HW();
-									for (auto hw = 0ull; hw < strideHW; hw += VectorSize)
+									const auto start = OffsetPaddedMem(n, c, 0, 0);
+									const auto end = start + strideHW;
+									for (auto hw = start; hw < end; hw += VectorSize)
 									{
-										neuronsD1.load_a(&NeuronsD1[hw + outputOffset]);
-										mul_add(neuronsD1, VecFloat().load_a(&InputsFwd[second]->Neurons[hw + outputOffset]), VecFloat().load_a(&Inputs[first]->NeuronsD1[hw + outputOffset])).store_a(&Inputs[first]->NeuronsD1[hw + outputOffset]);
-										mul_add(neuronsD1, VecFloat().load_a(&InputsFwd[first]->Neurons[hw + outputOffset]), VecFloat().load_a(&Inputs[second]->NeuronsD1[hw + outputOffset])).store_a(&Inputs[second]->NeuronsD1[hw + outputOffset]);
+										neuronsD1.load_a(&NeuronsD1[hw]);
+										mul_add(neuronsD1, VecFloat().load_a(&InputsFwd[second]->Neurons[hw]), VecFloat().load_a(&Inputs[first]->NeuronsD1[hw])).store_a(&Inputs[first]->NeuronsD1[hw]);
+										mul_add(neuronsD1, VecFloat().load_a(&InputsFwd[first]->Neurons[hw]), VecFloat().load_a(&Inputs[second]->NeuronsD1[hw])).store_a(&Inputs[second]->NeuronsD1[hw]);
 									}
 								}
 							});

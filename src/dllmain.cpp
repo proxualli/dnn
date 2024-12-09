@@ -11,7 +11,7 @@ std::unique_ptr<dnn::Dataprovider> dataprovider;
 FILE* stream;
 #endif
 
-BOOL APIENTRY DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
+BOOL APIENTRY DllMain([[maybe_unused]] HMODULE hModule, DWORD fdwReason, [[maybe_unused]] LPVOID lpReserved)
 {
 	switch (fdwReason)
 	{
@@ -593,9 +593,7 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, LayerInfo* info)
 		{
 			auto bn = dynamic_cast<BatchNorm*>(model->Layers[layerIndex].get());
 			if (bn)
-			{
 				info->Scaling = bn->Scaling;
-			}
 		}
 		break;
 
@@ -741,9 +739,7 @@ extern "C" DNN_API void DNNGetLayerInfo(const UInt layerIndex, LayerInfo* info)
 		{
 			auto gn = dynamic_cast<GroupNorm*>(model->Layers[layerIndex].get());
 			if (gn)
-			{
 				info->Scaling = gn->Scaling;
-			}
 		}
 		break;
 

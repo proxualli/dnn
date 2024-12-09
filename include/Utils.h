@@ -134,7 +134,8 @@ namespace
 	constexpr auto ReferenceBatchNormalization = false;
 	constexpr auto ReferenceConcat = false;
 	constexpr auto ReferenceMultiply = false;
-	
+	constexpr auto ReferenceReduction = false;
+		
 	typedef float Float;
 	typedef double Double;
 	typedef long long Int;
