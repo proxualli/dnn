@@ -99,7 +99,7 @@ namespace dnn
 
 			if (training)
 			{
-				if constexpr (Reference && fullDepth)
+				if (Reference && fullDepth)
 				{
 #ifdef DNN_CACHE_PRIMITIVES
 					fwd->execute(Device.stream, fwdArgs);
