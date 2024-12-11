@@ -85,7 +85,7 @@ namespace dnn
     	}
 
 		void ForwardProp(const UInt batchSize, const bool training) final override
-//		{
+		{
 //			if (Padded && !training)
 //			{
 //				const auto& memSrc = dnnl::memory(*MemDesc, Device.engine, InputLayer->Neurons.data());
