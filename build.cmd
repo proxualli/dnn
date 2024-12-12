@@ -1,5 +1,7 @@
 @ECHO OFF
 
+rmdir /s /q .\build
+
 IF "%~1"=="" GOTO release
 
 mkdir build
