@@ -164,13 +164,13 @@ namespace dnn
 #endif
 				if (!inference)
 				{
-					bwdDesc = std::make_unique<dnnl::batch_normalization_backward::primitive_desc>(dnnl::batch_normalization_backward::primitive_desc(Device.engine, Scaling ? dnnl::prop_kind::backward : dnnl::prop_kind::backward_data, *DiffDstMemDesc, *InputLayer->DiffDstMemDesc, *DstMemDesc, Eps, flags, *fwdDesc));
+					bwdDesc = std::make_unique<dnnl::batch_normalization_backward::primitive_desc>(dnnl::batch_normalization_backward::primitive_desc(Device.engine, Scaling ? dnnl::prop_kind::backward : dnnl::prop_kind::backward_data, *DiffDstMemDesc, *InputLayerBwd->DiffDstMemDesc, *DstMemDesc, Eps, flags, *fwdDesc));
 
 					reorderBwdSrc = bwdDesc->src_desc() != *InputLayer->DstMemDesc;
-					reorderBwdDiffSrc = bwdDesc->diff_src_desc() != *InputLayer->DiffDstMemDesc;
-					reorderBwdDiffDst = bwdDesc->diff_dst_desc() != (!InplaceBwd ? *DiffDstMemDesc : *InputLayer->DiffDstMemDesc);
+					reorderBwdDiffSrc = bwdDesc->diff_src_desc() != *InputLayerBwd->DiffDstMemDesc;
+					reorderBwdDiffDst = bwdDesc->diff_dst_desc() != (!InplaceBwd ? *DiffDstMemDesc : *InputLayerBwd->DiffDstMemDesc);
 
-					bwdAddDesc = std::make_unique<dnnl::binary::primitive_desc>(dnnl::binary::primitive_desc(Device.engine, dnnl::algorithm::binary_add, *InputLayer->DiffDstMemDesc, *InputLayer->DiffDstMemDesc, *InputLayer->DiffDstMemDesc));
+					bwdAddDesc = std::make_unique<dnnl::binary::primitive_desc>(dnnl::binary::primitive_desc(Device.engine, dnnl::algorithm::binary_add, *InputLayerBwd->DiffDstMemDesc, *InputLayerBwd->DiffDstMemDesc, *InputLayerBwd->DiffDstMemDesc));
 
 #ifdef DNN_CACHE_PRIMITIVES
 					bwd = std::make_unique<dnnl::batch_normalization_backward>(dnnl::batch_normalization_backward(*bwdDesc));
