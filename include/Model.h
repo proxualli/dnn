@@ -2170,12 +2170,8 @@ namespace dnn
 
 				if (CheckTaskState())
 				{
-					if constexpr (Inplace)
-						SwitchInplaceBwd(false);
-
 					for (auto cost : CostLayers)
 						cost->Reset();
-
 
 					auto overflow = false;
 					SampleIndex = 0;
