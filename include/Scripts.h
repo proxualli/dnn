@@ -1084,7 +1084,7 @@ namespace scripts
                         auto identity = stride == 1ull && inputChannels == outputChannels;
 
                         auto subblocks = beginStage ? FusedMBConv(A, C, input, inputChannels, outputChannels, stride, rec.ExpandRatio, rec.SE, p.Activation) :
-                                                             MBConv(A, C, input, inputChannels, outputChannels, stride, rec.ExpandRatio, rec.SE, p.Activation);
+                                                           MBConv(A, C, input, inputChannels, outputChannels, stride, rec.ExpandRatio, rec.SE, p.Activation);
                         for(auto blk : subblocks)
                             net += blk;
 

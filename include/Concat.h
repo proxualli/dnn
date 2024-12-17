@@ -23,11 +23,11 @@ namespace dnn
 		}
 
 	public:
-		FloatArray InputNeurons;
+		FloatArray OutputNeurons;
 		
 		Concat(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs) :
 			Layer(device, format, name, LayerTypes::Concat, 0, 0, InputChannels(inputs), inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs),
-			InputNeurons(FloatArray())
+			OutputNeurons(FloatArray())
 		{
 			assert(Inputs.size() > 1);
 
@@ -62,7 +62,7 @@ namespace dnn
 			Layer::SetBatchSize(batchSize);
 
 			if constexpr (TestConcat)
-				InputNeurons.resize(batchSize, C, H, W, dnnl::memory::data_type::f32, BlockedFmt, Device.engine);
+				OutputNeurons.resize(batchSize, C, H, W, dnnl::memory::data_type::f32, BlockedFmt, Device.engine);
 		}
 
 		void InitializeDescriptors(const UInt batchSize) final override
@@ -251,12 +251,13 @@ namespace dnn
 #endif
 					if constexpr (TestConcat)
 					{
-						fwdArgs = std::unordered_map<int, dnnl::memory>{ { DNNL_ARG_DST, dnnl::memory(*DstMemDesc, Device.engine, InputNeurons.data()) } };
-						for (auto i = 0ull; i < InputsFwd.size(); i++)
+						fwdArgs = std::unordered_map<int, dnnl::memory>{ { DNNL_ARG_DST, dnnl::memory(*DstMemDesc, Device.engine, OutputNeurons.data()) } };
+						for (auto i = 0ull; i < Inputs.size(); i++)
 							fwdArgs.insert({ DNNL_ARG_MULTIPLE_SRC + int(i), dnnl::memory(srcMemsDesc[i], Device.engine, Inputs[i]->Neurons.data()) });
 
-						for (auto i = 0ull; i < InputNeurons.size(); i++)
-							InputNeurons[i] = Float(0);
+						PRAGMA_OMP_SIMD()
+						for (auto i = 0ull; i < OutputNeurons.size(); i++)
+							OutputNeurons[i] = Float(0);
 
 #ifdef DNN_CACHE_PRIMITIVES
 						fwd->execute(Device.stream, fwdArgs);
@@ -270,7 +271,7 @@ namespace dnn
 
 						for (auto i = 0ull; i < Neurons.size(); i++)
 						{
-							if (((InputNeurons[i] - margin) > Neurons[i]) || ((InputNeurons[i] + margin) < Neurons[i]))
+							if (((OutputNeurons[i] - margin) > Neurons[i]) || ((OutputNeurons[i] + margin) < Neurons[i]))
 							{
 								cimg_library::cimg::dialog("Concat Sanity Check", (std::string("Forward Check not passed: ") + Name).c_str(), "OK");
 								break;
@@ -323,31 +324,31 @@ namespace dnn
 				if (!plain)
 				{
 					auto channelOffset = 0ull;
-					for (auto inputLayer = 0ull; inputLayer < Inputs.size(); inputLayer++)
+					for (auto inputLayer = 0ull; inputLayer < InputsBwd.size(); inputLayer++)
 					{
-						for (auto c = channelOffset; c < channelOffset + Inputs[inputLayer]->C; c++)
+						for (auto c = channelOffset; c < channelOffset + InputsBwd[inputLayer]->C; c++)
 							for (auto h = 0ull; h < H; h++)
 								for (auto w = 0ull; w < W; w++)
-									Inputs[inputLayer]->NeuronsD1[Inputs[inputLayer]->OffsetPaddedMem(0, c - channelOffset, h, w)] += NeuronsD1[OffsetPaddedMem(0, c, h, w)];
+									InputsBwd[inputLayer]->NeuronsD1[InputsBwd[inputLayer]->OffsetPaddedMem(0, c - channelOffset, h, w)] += NeuronsD1[OffsetPaddedMem(0, c, h, w)];
 
-						channelOffset += Inputs[inputLayer]->C;
+						channelOffset += InputsBwd[inputLayer]->C;
 					}
 				}
 				else
 				{
 					auto channelOffset = 0ull;
 					UInt inputIndex, outputIndex;
-					for (auto inputLayer = 0ull; inputLayer < Inputs.size(); inputLayer++)
+					for (auto inputLayer = 0ull; inputLayer < InputsBwd.size(); inputLayer++)
 					{
-						for (auto c = channelOffset; c < channelOffset + Inputs[inputLayer]->C; c++)
+						for (auto c = channelOffset; c < channelOffset + InputsBwd[inputLayer]->C; c++)
 						{
 							inputIndex = ((c - channelOffset) * HW());
 							outputIndex = (c * HW());
 							PRAGMA_OMP_SIMD()
 							for (auto hw = 0ull; hw < HW(); hw++)
-								Inputs[inputLayer]->NeuronsD1[inputIndex + hw] += NeuronsD1[outputIndex + hw];
+								InputsBwd[inputLayer]->NeuronsD1[inputIndex + hw] += NeuronsD1[outputIndex + hw];
 						}
-						channelOffset += Inputs[inputLayer]->C;
+						channelOffset += InputsBwd[inputLayer]->C;
 					}
 				}
 			}
@@ -360,14 +361,14 @@ namespace dnn
 					for_i(batchSize, threads, [=](UInt n)
 					{
 						auto channelOffset = 0ull;
-						for (auto inputLayer = 0ull; inputLayer < Inputs.size(); inputLayer++)
+						for (auto inputLayer = 0ull; inputLayer < InputsBwd.size(); inputLayer++)
 						{
-							for (auto c = channelOffset; c < channelOffset + Inputs[inputLayer]->C; c++)
+							for (auto c = channelOffset; c < channelOffset + InputsBwd[inputLayer]->C; c++)
 								for (auto h = 0ull; h < H; h++)
 									for (auto w = 0ull; w < W; w++)
-										Inputs[inputLayer]->NeuronsD1[Inputs[inputLayer]->OffsetPaddedMem(n, c - channelOffset, h, w)] += NeuronsD1[OffsetPaddedMem(n, c, h, w)];
+										InputsBwd[inputLayer]->NeuronsD1[InputsBwd[inputLayer]->OffsetPaddedMem(n, c - channelOffset, h, w)] += NeuronsD1[OffsetPaddedMem(n, c, h, w)];
 
-							channelOffset += Inputs[inputLayer]->C;
+							channelOffset += InputsBwd[inputLayer]->C;
 						}
 					});
 				else
@@ -376,18 +377,18 @@ namespace dnn
 						const auto outputSampleOffset = n * CDHW();
 						auto channelOffset = 0ull;
 						UInt inputIndex, outputIndex;
-						for (auto inputLayer = 0ull; inputLayer < Inputs.size(); inputLayer++)
+						for (auto inputLayer = 0ull; inputLayer < InputsBwd.size(); inputLayer++)
 						{
-							const auto inputSampleOffset = n * Inputs[inputLayer]->CDHW();
-							for (auto c = channelOffset; c < channelOffset + Inputs[inputLayer]->C; c++)
+							const auto inputSampleOffset = n * InputsBwd[inputLayer]->CDHW();
+							for (auto c = channelOffset; c < channelOffset + InputsBwd[inputLayer]->C; c++)
 							{
 								inputIndex = ((c - channelOffset) * HW()) + inputSampleOffset;
 								outputIndex = (c * HW()) + outputSampleOffset;
 								PRAGMA_OMP_SIMD()
 								for (auto hw = 0ull; hw < HW(); hw++)
-									Inputs[inputLayer]->NeuronsD1[inputIndex + hw] += NeuronsD1[outputIndex + hw];
+									InputsBwd[inputLayer]->NeuronsD1[inputIndex + hw] += NeuronsD1[outputIndex + hw];
 							}
-							channelOffset += Inputs[inputLayer]->C;
+							channelOffset += InputsBwd[inputLayer]->C;
 						}
 					});
 #ifdef DNN_STOCHASTIC

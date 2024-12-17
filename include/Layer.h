@@ -409,9 +409,8 @@ namespace dnn
 			{
 				auto inputsInplace = std::vector<Layer*>();
 				
-				if (inputs.size() > 0)
-					for (auto input : inputs)
-						inputsInplace.push_back(input->InplaceBwd ? input->InputLayerFwd : input);
+				for (auto input : inputs)
+					inputsInplace.push_back(input->InplaceBwd ? input->InputLayer : input);
 				
 				return inputsInplace;
 			}
@@ -473,7 +472,6 @@ namespace dnn
 		const bool InplaceBwd;
 		bool LayerBeforeCost;
 		bool SharesInput;
-		bool SharesInputOriginal;
 		bool SharesInputInplace;
 		bool Enabled;
 		bool Skip;
@@ -482,13 +480,11 @@ namespace dnn
 		std::atomic<bool> Bwd;
 		std::atomic<bool> LockUpdate;
 		std::atomic<bool> RefreshingStats;
-		const std::vector<Layer*> InputsFwd;
+		const std::vector<Layer*> Inputs;
 		const std::vector<Layer*> InputsBwd;
-		std::vector<Layer*> Inputs;
 		std::vector<Layer*> Outputs;
 		Layer* InputLayer;
 		Layer* InputLayerBwd;
-		Layer* InputLayerFwd;
 		dnnl::memory::format_tag NeuronsFormat;
 		dnnl::memory::format_tag WeightsFormat;
 		Fillers WeightsFiller;
@@ -552,8 +548,7 @@ namespace dnn
 			HasWeights(IsNorm(layerType) ? scaling : (weightCount > 0)),
 			InplaceBwd(IsInplaceBwd(layerType, inputs)),
 			LayerBeforeCost(false),
-			SharesInput(false),										// 
-			SharesInputOriginal(false),
+			SharesInput(false),
 			SharesInputInplace(false),
 			Enabled(enabled),
 			Skip(false),
@@ -562,11 +557,9 @@ namespace dnn
 			Bwd(false),
 			LockUpdate(false),
 			RefreshingStats(false),
-			Inputs(std::vector<Layer*>(inputs)),					// Inputs is switched between non-inplace (forward) and inplace (backprop) during training 
-			InputsFwd(std::vector<Layer*>(inputs)),					// InputsFwd = the non-inplace inputs 
+			Inputs(std::vector<Layer*>(inputs)),					
 			InputsBwd(GetInputsBwd(layerType, inputs)),				// InputsBwd = the inplace inputs for backward prop
 			InputLayer(inputs.size() > 0 ? inputs[0] : nullptr),
-			InputLayerFwd(inputs.size() > 0 ? inputs[0] : nullptr),
 			InputLayerBwd(GetInputsBwd(layerType, inputs).size() > 0 ? GetInputsBwd(layerType, inputs)[0] : nullptr),
 			NeuronsFormat(format),
 			WeightsFormat(format),
@@ -654,14 +647,37 @@ namespace dnn
 			if (LayerType != LayerTypes::Input)
 			{
 				description.append(nwl + std::string(" Inputs:     ") + tab);
-				for (auto i = 0ull; i < InputsFwd.size(); i++)
-					description.append((i == 0 ? std::string("") : std::string(",")) + InputsFwd[i]->Name);
+				for (auto i = 0ull; i < Inputs.size(); i++)
+					description.append((i == 0 ? std::string("") : std::string(",")) + Inputs[i]->Name);
+#ifndef NDEBUG			
+				if constexpr (Inplace)
+				{
+					auto print = false;
+					for (auto i = 0ull; i < Inputs.size(); i++)
+					{
+						if (Inputs[i] != InputsBwd[i])
+						{
+							print = true;
+							break;
+						}
+					}
+					
+					if (print)
+					{
+						description.append(nwl + std::string(" Inputs Bwd: ") + tab);
+						for (auto i = 0ull; i < InputsBwd.size(); i++)
+							description.append((i == 0 ? std::string("") : std::string(",")) + InputsBwd[i]->Name);
+					}
+				}
+#endif
 			}
 			
 			description.append(nwl + std::string(" Features:   ") + tab + std::to_string(C) + std::string("x") + std::to_string(H) + std::string("x") + std::to_string(W));
 			description.append(nwl + std::string(" Neurons:    ") + tab + std::to_string(CDHW()));
 			description.append(nwl + std::string(" Format:     ") + tab + std::string(dnnl_fmt_tag2str(static_cast<dnnl_format_tag_t>(ChosenFormat))));
 #ifndef NDEBUG
+			if (DiffDstMemDesc.get() != nullptr && ChosenFormat != GetMemoryFormat(*DiffDstMemDesc))
+				description.append(nwl + std::string(" Format Bwd: ") + tab + std::string(dnnl_fmt_tag2str(static_cast<dnnl_format_tag_t>(GetMemoryFormat(*DiffDstMemDesc)))));
 			description.append(nwl + std::string(" SharesInput:") + tab + BoolToString(SharesInput));
 			description.append(nwl + std::string(" InplaceBwd: ") + tab + BoolToString(InplaceBwd));
 #endif

@@ -220,13 +220,13 @@ namespace dnn
 										const auto inputOffset = (n * InputLayer->CDHW()) + ((c + ChannelsLeft) * HW());
 										const auto outputOffset = (n * CDHW()) + (c * HW());
 										PRAGMA_OMP_SIMD()
-											for (auto hw = 0ull; hw < HW(); hw++)
-											{
-												Neurons[hw + outputOffset] = InputLayer->Neurons[hw + inputOffset];
+										for (auto hw = 0ull; hw < HW(); hw++)
+										{
+											Neurons[hw + outputOffset] = InputLayer->Neurons[hw + inputOffset];
 #ifndef DNN_LEAN
-												NeuronsD1[hw + outputOffset] = Float(0);
+											NeuronsD1[hw + outputOffset] = Float(0);
 #endif // DNN_LEAN
-											}
+										}
 									}
 								});
 					}
@@ -285,7 +285,7 @@ namespace dnn
 						for (auto h = 0ull; h < H; h++)
 							PRAGMA_OMP_SIMD()
 							for (auto w = 0ull; w < W; w++)
-								InputLayer->NeuronsD1[InputLayer->OffsetPaddedMem(0, c + ChannelsLeft, h, w)] += NeuronsD1[OffsetPaddedMem(0, c, h, w)];
+								InputLayerBwd->NeuronsD1[InputLayerBwd->OffsetPaddedMem(0, c + ChannelsLeft, h, w)] += NeuronsD1[OffsetPaddedMem(0, c, h, w)];
 				}
 				else
 					for (auto c = 0ull; c < C; c++)
@@ -293,8 +293,8 @@ namespace dnn
 						const auto inputOffset = (c + ChannelsLeft) * HW();
 						const auto outputOffset = c * HW();
 						PRAGMA_OMP_SIMD()
-							for (auto hw = 0ull; hw < HW(); hw++)
-								InputLayer->NeuronsD1[hw + inputOffset] += NeuronsD1[hw + outputOffset];
+						for (auto hw = 0ull; hw < HW(); hw++)
+							InputLayerBwd->NeuronsD1[hw + inputOffset] += NeuronsD1[hw + outputOffset];
 					}
 			}
 			else
@@ -309,18 +309,18 @@ namespace dnn
 							for (auto h = 0ull; h < H; h++)
 								PRAGMA_OMP_SIMD()
 								for (auto w = 0ull; w < W; w++)
-									InputLayer->NeuronsD1[InputLayer->OffsetPaddedMem(n, c + ChannelsLeft, h, w)] += NeuronsD1[OffsetPaddedMem(n, c, h, w)];
+									InputLayerBwd->NeuronsD1[InputLayerBwd->OffsetPaddedMem(n, c + ChannelsLeft, h, w)] += NeuronsD1[OffsetPaddedMem(n, c, h, w)];
 					});
 				else
 					for_i(batchSize, threads, [=](UInt n)
 					{
 						for (auto c = 0ull; c < C; c++)
 						{
-							const auto inputOffset = (n * InputLayer->CDHW()) + ((c + ChannelsLeft) * HW());
+							const auto inputOffset = (n * InputLayerBwd->CDHW()) + ((c + ChannelsLeft) * HW());
 							const auto outputOffset = (n * CDHW()) + (c * HW());
 							PRAGMA_OMP_SIMD()
-								for (auto hw = 0ull; hw < HW(); hw++)
-									InputLayer->NeuronsD1[hw + inputOffset] += NeuronsD1[hw + outputOffset];
+							for (auto hw = 0ull; hw < HW(); hw++)
+								InputLayerBwd->NeuronsD1[hw + inputOffset] += NeuronsD1[hw + outputOffset];
 						}
 					});
 #ifdef DNN_STOCHASTIC

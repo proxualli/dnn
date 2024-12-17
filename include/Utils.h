@@ -131,6 +131,7 @@ namespace
 	constexpr auto TestReduction = false;
 
 	constexpr auto Reference = false;
+	constexpr auto ReferenceAdd = false;
 	constexpr auto ReferenceBatchNormalization = false;
 	constexpr auto ReferenceConcat = false;
 	constexpr auto ReferenceMultiply = false;
@@ -143,7 +144,6 @@ namespace
 	typedef unsigned char Byte;
 	
 	//constexpr bool IS_LITTLE_ENDIAN = std::endian::native == std::endian::little;
-	//constexpr auto NEURONS_LIMIT = Float(5000);	// limit for all the neurons and derivatives [-NEURONS_LIMIT,NEURONS_LIMIT]
 	constexpr auto WEIGHTS_LIMIT = Float(500);	// limit for all the weights and biases [-WEIGHTS_LIMIT,WEIGHTS_LIMIT]
 	constexpr auto PlainFmt = dnnl::memory::format_tag::abcd;
 	

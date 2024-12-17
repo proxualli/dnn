@@ -116,6 +116,7 @@ namespace dnn
 					}
 				}
 				else
+				{
 #endif
 					const auto threads = batchSize == 1ull ? 1ull : GetThreads(batchSize * GetElementsCount(), FwdTrainingWeight);
 
@@ -142,6 +143,9 @@ namespace dnn
 #endif
 						}
 					});
+#ifdef DNN_STOCHASTIC
+				}
+#endif
 			}
 			else
 			{
@@ -154,6 +158,7 @@ namespace dnn
 						Neurons[i] = InputLayer->Neurons[i];
 				}
 				else
+				{
 #endif
 					const auto threads = batchSize == 1ull ? 1ull : GetThreads(batchSize * GetElementsCount(), FwdInferenceWeight);
 
@@ -166,6 +171,9 @@ namespace dnn
 						for (auto i = end; i < start + size; i++)
 							Neurons[i] = InputLayer->Neurons[i];
 					});
+#ifdef DNN_STOCHASTIC
+				}
+#endif
 			}
 		}
 
@@ -184,11 +192,12 @@ namespace dnn
 				if (batchSize == 1)
 				{
 					for (auto i = 0ull; i < part; i += VectorSize)
-						mul_add(VecFloat().load_a(&NeuronsActive[i]), VecFloat().load_a(&NeuronsD1[i]), VecFloat().load_a(&InputLayer->NeuronsD1[i])).store_a(&InputLayer->NeuronsD1[i]);
+						mul_add(VecFloat().load_a(&NeuronsActive[i]), VecFloat().load_a(&NeuronsD1[i]), VecFloat().load_a(&InputLayerBwd->NeuronsD1[i])).store_a(&InputLayerBwd->NeuronsD1[i]);
 					for (auto i = part; i < size; i++)
-						InputLayer->NeuronsD1[i] += NeuronsActive[i] * NeuronsD1[i];
+						InputLayerBwd->NeuronsD1[i] += NeuronsActive[i] * NeuronsD1[i];
 				}
 				else
+				{
 #endif
 					const auto threads = batchSize == 1ull ? 1ull : GetThreads(batchSize * GetElementsCount(), BwdTrainingWeight);
 
@@ -197,10 +206,13 @@ namespace dnn
 						const auto start = b * size;
 						const auto end = start + part;
 						for (auto i = start; i < end; i += VectorSize)
-							mul_add(VecFloat().load_a(&NeuronsActive[i]), VecFloat().load_a(&NeuronsD1[i]), VecFloat().load_a(&InputLayer->NeuronsD1[i])).store_a(&InputLayer->NeuronsD1[i]);
+							mul_add(VecFloat().load_a(&NeuronsActive[i]), VecFloat().load_a(&NeuronsD1[i]), VecFloat().load_a(&InputLayerBwd->NeuronsD1[i])).store_a(&InputLayerBwd->NeuronsD1[i]);
 						for (auto i = end; i < start + size; i++)
-							InputLayer->NeuronsD1[i] += NeuronsActive[i] * NeuronsD1[i];
+							InputLayerBwd->NeuronsD1[i] += NeuronsActive[i] * NeuronsD1[i];
 					});
+#ifdef DNN_STOCHASTIC
+				}
+#endif
 			}
 			else
 			{
@@ -208,11 +220,12 @@ namespace dnn
 				if (batchSize == 1)
 				{
 					for (auto i = 0ull; i < part; i += VectorSize)
-						(VecFloat().load_a(&InputLayer->NeuronsD1[i]) + VecFloat().load_a(&NeuronsD1[i])).store_a(&InputLayer->NeuronsD1[i]);
+						(VecFloat().load_a(&InputLayerBwd->NeuronsD1[i]) + VecFloat().load_a(&NeuronsD1[i])).store_a(&InputLayerBwd->NeuronsD1[i]);
 					for (auto i = part; i < size; i++)
-						InputLayer->NeuronsD1[i] += NeuronsD1[i];
+						InputLayerBwd->NeuronsD1[i] += NeuronsD1[i];
 				}
 				else
+				{
 #endif
 					const auto threads = batchSize == 1ull ? 1ull : GetThreads(batchSize * GetElementsCount(), BwdTrainingWeight);
 
@@ -221,10 +234,13 @@ namespace dnn
 						const auto start = b * size;
 						const auto end = start + part;
 						for (auto i = start; i < end; i += VectorSize)
-							(VecFloat().load_a(&InputLayer->NeuronsD1[i]) + VecFloat().load_a(&NeuronsD1[i])).store_a(&InputLayer->NeuronsD1[i]);
+							(VecFloat().load_a(&InputLayerBwd->NeuronsD1[i]) + VecFloat().load_a(&NeuronsD1[i])).store_a(&InputLayerBwd->NeuronsD1[i]);
 						for (auto i = end; i < start + size; i++)
-							InputLayer->NeuronsD1[i] += NeuronsD1[i];
+							InputLayerBwd->NeuronsD1[i] += NeuronsD1[i];
 					});
+#ifdef DNN_STOCHASTIC
+				}
+#endif
 			}
 #ifdef DNN_LEAN
 			ReleaseGradient();

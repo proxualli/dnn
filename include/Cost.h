@@ -111,7 +111,7 @@ namespace dnn
 			}
 
 			reorderFwdSrc = *DstMemDesc != *InputLayer->DstMemDesc;
-			reorderBwdDiffSrc = *DiffDstMemDesc != *InputLayer->DiffDstMemDesc;
+			reorderBwdDiffSrc = *DiffDstMemDesc != *InputLayerBwd->DiffDstMemDesc;
 		}
 
 		void SetSampleLabel(const std::vector<LabelInfo>& label)
@@ -402,7 +402,7 @@ namespace dnn
 			ZeroGradient(batchSize);
 #endif // DNN_LEAN
 
-			auto memSrc = dnnl::memory(*InputLayer->DstMemDesc, Device.engine, InputLayerFwd->Neurons.data());
+			auto memSrc = dnnl::memory(*InputLayer->DstMemDesc, Device.engine, InputLayer->Neurons.data());
 			auto srcMem = reorderFwdSrc ? dnnl::memory(*DstMemDesc, Device.engine) : memSrc;
 			if (reorderFwdSrc)
 			{
@@ -410,7 +410,7 @@ namespace dnn
 				Device.stream.wait();
 			}
 
-			auto memDiffSrc = dnnl::memory(*InputLayer->DiffDstMemDesc, Device.engine, InputLayer->NeuronsD1.data());
+			auto memDiffSrc = dnnl::memory(*InputLayerBwd->DiffDstMemDesc, Device.engine, InputLayerBwd->NeuronsD1.data());
 			auto diffSrcMem = reorderBwdDiffSrc ? dnnl::memory(*DiffDstMemDesc, Device.engine) : memDiffSrc;
 
 			Float* inputNeurons = (Float*)srcMem.get_data_handle();
