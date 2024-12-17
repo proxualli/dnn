@@ -665,7 +665,7 @@ namespace dnn
 					if (print)
 					{
 						description.append(nwl + std::string(" Inputs Bwd: ") + tab);
-						for (auto i = 0ull; i < InputsBwd.size(); i++)
+						for (auto i = 0ull; i < Inputs.size(); i++)
 							description.append((i == 0 ? std::string("") : std::string(",")) + InputsBwd[i]->Name);
 					}
 				}
@@ -723,12 +723,12 @@ namespace dnn
 #ifdef DNN_LEAN
 		inline void ZeroGradient(const UInt batchSize)
 		{
-			InputLayer->NeuronsD1.resize(batchSize, InputLayer->C, InputLayer->H, InputLayer->W, dnnl::memory::data_type::f32, BlockedFmt, Device.engine);
+			InputLayerBwd->NeuronsD1.resize(batchSize, InputLayerBwd->C, InputLayerBwd->H, InputLayerBwd->W, dnnl::memory::data_type::f32, BlockedFmt, Device.engine);
 		}
 
 		inline void ZeroGradientMulti(const UInt batchSize)
 		{
-			for (auto& inputLayer : Inputs)
+			for (auto& inputLayer : InputsBwd)
 				inputLayer->NeuronsD1.resize(batchSize, inputLayer->C, inputLayer->H, inputLayer->W, dnnl::memory::data_type::f32, BlockedFmt, Device.engine);
 		}
 
@@ -825,16 +825,8 @@ namespace dnn
 						variance /= batchSize;
 						variance -= Square<Float>(mean);
 
-						/*if ((stats.Min < -NEURONS_LIMIT) || (stats.Max > NEURONS_LIMIT))
-							goto FAIL;*/
-						
-						//if (!std::isnan(mean) && !std::isinf(mean) && !std::isnan(variance) && !std::isinf(variance))
-						{
-							stats.Mean = mean;
-							stats.StdDev = std::sqrt(std::max(Float(0), variance));
-						}
-						/*else
-							goto FAIL;*/
+						stats.Mean = mean;
+						stats.StdDev = std::sqrt(std::max(Float(0), variance));
 					}
 					else
 					{
@@ -852,20 +844,12 @@ namespace dnn
 							KahanSum<Float>(Square<Float>(Neurons[i]), variance, correctionVariance);
 						}
 
-						/*if ((stats.Min < -NEURONS_LIMIT) || (stats.Max > NEURONS_LIMIT))
-							goto FAIL;*/
-
 						mean /= ncdhw;
 						variance /= ncdhw;
 						variance -= Square<Float>(mean);
 
-						//if (!std::isnan(mean) && !std::isinf(mean) && !std::isnan(variance) && !std::isinf(variance))
-						{
-							stats.Mean = mean;
-							stats.StdDev = std::sqrt(std::max(0.f, variance));
-						}
-						/*else
-							goto FAIL;*/
+						stats.Mean = mean;
+						stats.StdDev = std::sqrt(std::max(0.f, variance));
 					}
 
 					NeuronsStats = stats;
