@@ -1520,12 +1520,15 @@ namespace dnn
 			// This determines how the backprop step correctly flows
 			// When SharesInput is true we have to add our diff vector instead of just copying it because there's more than one layer involved
 
-			// determine SharesInput
-			for (auto& layer : Layers)
-				layer->SharesInput = false;
-			
 			auto unreferencedLayers = std::vector<Layer*>();
 
+			for (auto& layer : Layers)
+			{
+				layer->SharesInput = false;
+				layer->SharesInputInplace = false;
+			}
+
+			// determine SharesInput
 			for (auto& layer : Layers)
 			{
 				layer->Outputs = GetLayerOutputs(layer.get());
@@ -2743,7 +2746,7 @@ namespace dnn
 			const auto elements = batchSize * C * D * H * W;
 			const auto threads = GetThreads(elements, Float(10));
 
-			for_i_dynamic(batchSize, threads, [=, &SampleLabels](const UInt batchIndex)
+			for_i(batchSize, threads, [=, &SampleLabels](const UInt batchIndex)
 			{
 				const auto sampleIndex = ((index + batchIndex) >= DataProv->TestSamplesCount) ? batchIndex : index + batchIndex;
 
