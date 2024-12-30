@@ -481,6 +481,7 @@ namespace dnn
 		std::atomic<bool> RefreshingStats;
 		const std::vector<Layer*> Inputs;
 		const std::vector<Layer*> InputsBwd;
+		std::vector<Layer*> Outputs;
 		Layer* InputLayer;
 		Layer* InputLayerBwd;
 		dnnl::memory::format_tag NeuronsFormat;

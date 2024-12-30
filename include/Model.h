@@ -1527,7 +1527,9 @@ namespace dnn
 			
 			for (auto& layer : Layers)
 			{
-				auto outputsCount = GetLayerOutputs(layer.get()).size();
+				layer->Outputs = GetLayerOutputs(layer.get());
+
+				auto outputsCount = layer->Outputs.size();
 
 				if (outputsCount > 1)  // layer is used as input more than once
 				{
