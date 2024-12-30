@@ -466,8 +466,7 @@ namespace dnn
 								for (auto c = 0ull; c < PaddedC; c += VectorSize)
 								{
 									const auto start = OffsetPaddedMem(n, c, 0, 0);
-									const auto end = start + strideHW;
-									for (auto hw = start; hw < end; hw += VectorSize)
+									for (auto hw = start; hw < start + strideHW; hw += VectorSize)
 									{
 										neuronsD1.load_a(&NeuronsD1[hw]);
 										mul_add(neuronsD1, VecFloat().load_a(&Inputs[second]->Neurons[hw]), VecFloat().load_a(&InputsBwd[first]->NeuronsD1[hw])).store_a(&InputsBwd[first]->NeuronsD1[hw]);
@@ -479,9 +478,8 @@ namespace dnn
 							for_i(batchSize, threads, [=](UInt n)
 							{
 								const auto start = n * CDHW();
-								const auto end = start + CDHW();
 								PRAGMA_OMP_SIMD()
-								for (auto cdhw = start; cdhw < end; cdhw++)
+								for (auto cdhw = start; cdhw < start + CDHW(); cdhw++)
 								{
 									InputsBwd[first]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * Inputs[second]->Neurons[cdhw];
 									InputsBwd[second]->NeuronsD1[cdhw] += NeuronsD1[cdhw] * Inputs[first]->Neurons[cdhw];
@@ -587,7 +585,7 @@ namespace dnn
 					else
 						for_i(batchSize, threads, [=](UInt n)
 						{
-							const auto channelOffset = n * HW();
+							const auto channelOffset = n * Inputs[second]->CDHW();
 							for (auto c = 0ull; c < C; c++)
 							{
 								const auto outputOffset = n * CDHW() + c * HW();

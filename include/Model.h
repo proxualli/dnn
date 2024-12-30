@@ -1523,16 +1523,11 @@ namespace dnn
 			auto unreferencedLayers = std::vector<Layer*>();
 
 			for (auto& layer : Layers)
-			{
 				layer->SharesInput = false;
-				layer->SharesInputInplace = false;
-			}
-
-			// determine SharesInput
+			
 			for (auto& layer : Layers)
 			{
-				layer->Outputs = GetLayerOutputs(layer.get());
-				auto outputsCount = layer->Outputs.size();
+				auto outputsCount = GetLayerOutputs(layer.get()).size();
 
 				if (outputsCount > 1)  // layer is used as input more than once
 				{
@@ -1545,7 +1540,6 @@ namespace dnn
 						{
 							if (input->Name == layer->Name)
 							{
-								l->SharesInput = !l->InplaceBwd;
 								outputsCount--;
 								break;
 							}
@@ -1562,7 +1556,7 @@ namespace dnn
 				}
 			}
 
-			// determine SharesInputInplace
+			// determine SharesInput
 			for (auto& layer : Layers)
 			{
 				auto outputsCount = GetLayerOutputs(layer.get(), true).size();
@@ -1578,7 +1572,7 @@ namespace dnn
 						{
 							if (input->Name == layer->Name)
 							{
-								l->SharesInputInplace = !l->InplaceBwd;
+								l->SharesInput = !l->InplaceBwd;
 								outputsCount--;
 								break;
 							}
@@ -1593,31 +1587,6 @@ namespace dnn
 			return unreferencedLayers;
 		}
 	
-		/*
-		bool CheckRelation()
-		{
-			auto listA = std::vector<bool>();
-			for (auto& layer : Layers)
-			{
-				listA.push_back(layer->SharesInput);
-
-				if (layer->InplaceBwd && layer->SharesInput)
-					return false;
-			}
-
-			auto listB = std::vector<bool>();
-			for (auto& layer : Layers)
-			{
-				listB.push_back(layer->SharesInputInplace);
-
-				if (layer->InplaceBwd && layer->SharesInputInplace)
-					return false;
-			}
-
-			return std::equal(listA.begin(), listA.end(), listB.begin());
-		}
-		*/
-
 		void Training()
 		{
 			if (TaskState.load() == TaskStates::Stopped && !BatchSizeChanging.load() && !ResettingWeights.load())
@@ -1698,14 +1667,6 @@ namespace dnn
 						FirstUnlockedLayer.store(i);
 						break;
 					}
-
-				/*
-				if (!CheckRelation())
-				{
-					State.store(States::Completed);
-					return;
-				}
-				*/
 
 				while (CurrentEpoch < TotalEpochs)
 				{
