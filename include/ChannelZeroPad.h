@@ -13,6 +13,8 @@ namespace dnn
 
 			assert(InputLayer->C >= 1);
 			assert(InputLayer->C < C);
+
+			FwdZeroGradient = Float(1);
 		}
 
 		void UpdateResolution() final override

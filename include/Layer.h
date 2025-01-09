@@ -409,9 +409,13 @@ namespace dnn
 			{
 				auto inputsInplace = std::vector<Layer*>();
 				
-				for (auto input : inputs)
-					inputsInplace.push_back(input->InplaceBwd ? input->InputLayer : input);
-				
+				for (auto& input : inputs)
+				{
+					if (IsInplaceBwd(input->LayerType, input->Inputs))
+						inputsInplace.push_back(input->InputLayer);
+					else
+						inputsInplace.push_back(input);
+				}
 				return inputsInplace;
 			}
 		}
@@ -480,10 +484,10 @@ namespace dnn
 		std::atomic<bool> LockUpdate;
 		std::atomic<bool> RefreshingStats;
 		const std::vector<Layer*> Inputs;
-		const std::vector<Layer*> InputsBwd;
-		std::vector<Layer*> Outputs;
 		Layer* InputLayer;
+		const std::vector<Layer*> InputsBwd;
 		Layer* InputLayerBwd;
+		std::vector<Layer*> Outputs;
 		dnnl::memory::format_tag NeuronsFormat;
 		dnnl::memory::format_tag WeightsFormat;
 		Fillers WeightsFiller;
@@ -501,6 +505,7 @@ namespace dnn
 		Float B1;
 		Float B2;
 		Float Gamma;
+		Float FwdZeroGradient;
 		Float FwdInferenceWeight;
 		Float FwdTrainingWeight;
 		Float BwdTrainingWeight;
@@ -555,9 +560,9 @@ namespace dnn
 			Bwd(false),
 			LockUpdate(false),
 			RefreshingStats(false),
-			Inputs(std::vector<Layer*>(inputs)),					
-			InputsBwd(GetInputsBwd(layerType, inputs)),				// InputsBwd = the inplace inputs for backward prop
+			Inputs(std::vector<Layer*>(inputs)),	
 			InputLayer(inputs.size() > 0 ? inputs[0] : nullptr),
+			InputsBwd(GetInputsBwd(layerType, inputs)),				// InputsBwd = the inplace inputs for backward prop
 			InputLayerBwd(GetInputsBwd(layerType, inputs).size() > 0 ? GetInputsBwd(layerType, inputs)[0] : nullptr),
 			NeuronsFormat(format),
 			WeightsFormat(format),
@@ -593,6 +598,7 @@ namespace dnn
 			bpropTime(std::chrono::duration<Float>(Float(0))),
 			updateTime(std::chrono::duration<Float>(Float(0)))
 		{
+			assert(Inputs.size() == InputsBwd.size());
 		}
 
 		virtual ~Layer() = default;
@@ -651,7 +657,7 @@ namespace dnn
 				if constexpr (Inplace)
 				{
 					auto print = false;
-					for (auto i = 0ull; i < Inputs.size(); i++)
+					for (auto i = 0ull; i < InputsBwd.size(); i++)
 					{
 						if (Inputs[i] != InputsBwd[i])
 						{
@@ -662,12 +668,16 @@ namespace dnn
 					
 					if (print)
 					{
-						description.append(nwl + std::string(" Inputs Bwd: ") + tab);
-						for (auto i = 0ull; i < Inputs.size(); i++)
+						description.append(nwl + std::string(" InputsBwd:  ") + tab);
+						for (auto i = 0ull; i < InputsBwd.size(); i++)
 							description.append((i == 0 ? std::string("") : std::string(",")) + InputsBwd[i]->Name);
 					}
 				}
 #endif
+
+				description.append(nwl + std::string(" Outputs:    ") + tab);
+				for (auto i = 0ull; i < Outputs.size(); i++)
+					description.append((i == 0 ? std::string("") : std::string(",")) + Outputs[i]->Name);
 			}
 			
 			description.append(nwl + std::string(" Features:   ") + tab + std::to_string(C) + std::string("x") + std::to_string(H) + std::string("x") + std::to_string(W));
@@ -679,7 +689,7 @@ namespace dnn
 			description.append(nwl + std::string(" SharesInput:") + tab + BoolToString(SharesInput));
 			description.append(nwl + std::string(" InplaceBwd: ") + tab + BoolToString(InplaceBwd));
 #endif
-			
+
 			return description;
 		}
 
@@ -875,7 +885,7 @@ namespace dnn
 							vecVariance += square(weights);
 						}
 
-						if ((stats.Min < -WEIGHTS_LIMIT) || (stats.Max > WEIGHTS_LIMIT))
+						if ((stats.Min < -WeightsLimit) || (stats.Max > WeightsLimit))
 							goto FAIL;
 
 						mean = horizontal_add(vecMean) / WeightCount;
@@ -899,7 +909,7 @@ namespace dnn
 							variance += Square<Float>(Weights[i]);
 						}
 
-						if ((stats.Min < -WEIGHTS_LIMIT) || (stats.Max > WEIGHTS_LIMIT))
+						if ((stats.Min < -WeightsLimit) || (stats.Max > WeightsLimit))
 							goto FAIL;
 
 						mean /= WeightCount;
@@ -927,7 +937,7 @@ namespace dnn
 							BiasesStats.Min = std::min(BiasesStats.Min, Biases[i]);
 							BiasesStats.Max = std::max(BiasesStats.Max, Biases[i]);
 
-							if ((BiasesStats.Min < -WEIGHTS_LIMIT) || (BiasesStats.Max > WEIGHTS_LIMIT))
+							if ((BiasesStats.Min < -WeightsLimit) || (BiasesStats.Max > WeightsLimit))
 								goto FAIL;
 
 							mean += Biases[i];

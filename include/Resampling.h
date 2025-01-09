@@ -33,6 +33,8 @@ namespace dnn
 			FactorW(factorW)
 		{
 			assert(Inputs.size() == 1);
+
+			FwdZeroGradient = Float(1);
 		}
 
 		void UpdateResolution() final override
@@ -116,7 +118,7 @@ namespace dnn
 
 #ifndef DNN_LEAN
 			if (training)
-				InitArray<Float>(NeuronsD1.data(), batchSize * PaddedCDHW());
+				InitArray<Float>(NeuronsD1.data(), PaddedCDHW(), batchSize, FwdZeroGradient);
 #else
 			DNN_UNREF_PAR(batchSize);
 			DNN_UNREF_PAR(training);

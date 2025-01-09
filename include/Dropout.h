@@ -20,6 +20,7 @@ namespace dnn
 		{
 			assert(Inputs.size() == 1);
 
+			FwdZeroGradient = Float(1);
 			FwdInferenceWeight = Float(2);
 			FwdTrainingWeight = Float(4);
 			BwdTrainingWeight = Float(4);

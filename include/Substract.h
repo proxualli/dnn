@@ -27,6 +27,8 @@ namespace dnn
 			assert(Inputs[0]->C == Inputs[1]->C);
 			assert(Inputs[0]->D == Inputs[1]->D);
 
+			FwdZeroGradient = Float(1);
+
 			scales = std::vector<Float>(2, Float(1));
 		}
 
@@ -104,7 +106,7 @@ namespace dnn
 #endif
 					Device.stream.wait();
 #ifndef DNN_LEAN
-					InitArray<Float>(NeuronsD1.data(), batchSize * PaddedCDHW());
+					InitArray<Float>(NeuronsD1.data(), PaddedCDHW(), batchSize, FwdZeroGradient);
 #endif // DNN_LEAN
 				}
 				else

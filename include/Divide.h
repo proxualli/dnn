@@ -27,6 +27,8 @@ namespace dnn
 			assert(Inputs[0]->C == Inputs[1]->C);
 			assert(Inputs[0]->D == Inputs[1]->D);
 
+			FwdZeroGradient = Float(1);
+			
 			scales = std::vector<Float>(2, Float(1));
 		}
 

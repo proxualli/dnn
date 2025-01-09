@@ -29,6 +29,7 @@ namespace dnn
 
 			scales = std::vector<Float>(2, Float(1));
 
+			FwdZeroGradient = Float(1);
 			FwdInferenceWeight = Float(2);
 			FwdTrainingWeight = Float(4);
 			BwdTrainingWeight = Float(4);
@@ -108,7 +109,7 @@ namespace dnn
 #endif
 					Device.stream.wait();
 #ifndef DNN_LEAN
-					InitArray<Float>(NeuronsD1.data(), batchSize * PaddedCDHW());
+					InitArray<Float>(NeuronsD1.data(), PaddedCDHW(), batchSize, FwdZeroGradient);
 #endif // DNN_LEAN
 				}
 				else

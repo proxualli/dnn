@@ -43,6 +43,8 @@ namespace dnn
 		{
 			assert(Inputs.size() == 1);
 
+			FwdZeroGradient = Float(1);
+
 			WeightsMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::a));
 			PersistWeightsMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(C) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::a));
 			WeightsFormat = GetMemoryFormat(*WeightsMemDesc);
@@ -254,7 +256,7 @@ namespace dnn
 				}
 #ifndef DNN_LEAN
 				if (!InplaceBwd)
-					InitArray<Float>(NeuronsD1.data(), batchSize * PaddedCDHW());
+					InitArray<Float>(NeuronsD1.data(), PaddedCDHW(), batchSize, FwdZeroGradient);
 #else
 				DNN_UNREF_PAR(batchSize);
 #endif // DNN_LEAN

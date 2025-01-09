@@ -144,33 +144,34 @@ namespace
 	typedef unsigned char Byte;
 	
 	//constexpr bool IS_LITTLE_ENDIAN = std::endian::native == std::endian::little;
-	constexpr auto WEIGHTS_LIMIT = Float(500);	// limit for all the weights and biases [-WEIGHTS_LIMIT,WEIGHTS_LIMIT]
+	constexpr auto WeightsLimit = Float(500);	// limit for all the weights and biases [-WEIGHTS_LIMIT,WEIGHTS_LIMIT]
 	constexpr auto PlainFmt = dnnl::memory::format_tag::abcd;
 	
 	auto GetThreads(const UInt elements, const Float weight = Float(1)) NOEXCEPT
 	{
-		static const auto MAX_THREADS = static_cast<UInt>(omp_get_max_threads());
+		static const auto maxThreads = static_cast<UInt>(omp_get_max_threads());
+
+		constexpr auto ultraLightThreshold =   2097152ull;
+		constexpr auto lightThreshold =        8338608ull;
+		constexpr auto mediumThreshold =      68338608ull;
+		constexpr auto heavyThreshold =      120338608ull;
+		constexpr auto maximumThreshold =    187538608ull;
+		
+		const auto ultraLight = 2ull;
+		const auto light      = maxThreads >=  6ull ?  4ull : 2ull;
+		const auto medium     = maxThreads >=  8ull ?  8ull : maxThreads >=  6ull ?  6ull : maxThreads >=  4ull ?  4ull : 2ull;
+		const auto heavy      = maxThreads >= 32ull ? 16ull : maxThreads >= 24ull ?  16ll : maxThreads >= 16ull ? 16ull : maxThreads >= 12ull ? 12ull : maxThreads >= 8ull ? 8ull : maxThreads >= 6ull ? 6ull : maxThreads >= 4ull ? 4ull : 2ull;
+		const auto ultraHeavy = maxThreads >= 32ull ? 32ull : maxThreads >= 24ull ? 24ull : maxThreads >= 16ull ? 16ull : maxThreads >= 12ull ? 12ull : maxThreads >= 8ull ? 8ull : maxThreads >= 6ull ? 6ull : maxThreads >= 4ull ? 4ull : 2ull;
+
 
 		const auto load = static_cast<UInt>(Float(elements) * weight);
 
-		constexpr auto ULTRALIGHT_THRESHOLD =   2097152ull;
-		constexpr auto LIGHT_THRESHOLD =        8338608ull;
-		constexpr auto MEDIUM_THRESHOLD =      68338608ull;
-		constexpr auto HEAVY_THRESHOLD =      120338608ull;
-		constexpr auto MAXIMUM_THRESHOLD =    187538608ull;
-		
-		const auto ULTRALIGHT = 2ull;
-		const auto LIGHT      = MAX_THREADS >=  6ull ?  4ull : 2ull;
-		const auto MEDIUM     = MAX_THREADS >=  8ull ?  8ull : MAX_THREADS >=  6ull ?  6ull : MAX_THREADS >=  4ull ?  4ull : 2ull;
-		const auto HEAVY      = MAX_THREADS >= 32ull ? 16ull : MAX_THREADS >= 24ull ?  16ll : MAX_THREADS >= 16ull ? 16ull : MAX_THREADS >= 12ull ? 12ull : MAX_THREADS >= 8ull ? 8ull : MAX_THREADS >= 6ull ? 6ull : MAX_THREADS >= 4ull ? 4ull : 2ull;
-		const auto ULTRAHEAVY = MAX_THREADS >= 32ull ? 32ull : MAX_THREADS >= 24ull ? 24ull : MAX_THREADS >= 16ull ? 16ull : MAX_THREADS >= 12ull ? 12ull : MAX_THREADS >= 8ull ? 8ull : MAX_THREADS >= 6ull ? 6ull : MAX_THREADS >= 4ull ? 4ull : 2ull;
-
 		return
-			load < ULTRALIGHT_THRESHOLD ? ULTRALIGHT :
-			load < LIGHT_THRESHOLD ?           LIGHT :
-			load < MEDIUM_THRESHOLD ?         MEDIUM :
-			load < HEAVY_THRESHOLD ?           HEAVY :
-			load < MAXIMUM_THRESHOLD ?    ULTRAHEAVY : MAX_THREADS;
+			load < ultraLightThreshold ? ultraLight :
+			load < lightThreshold ?           light :
+			load < mediumThreshold ?         medium :
+			load < heavyThreshold ?           heavy :
+			load < maximumThreshold ?    ultraHeavy : maxThreads;
 	}
 	
 	
@@ -621,17 +622,19 @@ namespace
 	}
 
 	template<typename T>
-	static void InitArray(T* destination, const std::size_t elements, const int initValue = 0) NOEXCEPT
+	static void InitArray(T* destination, const std::size_t elements, const std::size_t batchSize = 1, const Float weight = Float(1), const int initValue = 0) NOEXCEPT
 	{
-		if (elements < 1048576ull)
-			::memset(destination, initValue, elements * sizeof(T));
+		const auto items = elements * batchSize;
+
+		if (items < 1048576ull)
+			::memset(destination, initValue, items * sizeof(T));
 		else
 		{
-			const auto threads = GetThreads(elements);
-			const auto part = elements / threads;
+			const auto threads = GetThreads(items, weight);
+			const auto part = items / threads;
 			for_i(threads, [=](const std::size_t thread) { ::memset(destination + part * thread, initValue, part * sizeof(T)); });
-			if (elements % threads != 0)
-				::memset(destination + part * threads, initValue, (elements - part * threads) * sizeof(T));
+			if (items % threads != 0)
+				::memset(destination + (part * threads), initValue, (items - (part * threads)) * sizeof(T));
 		}
 	}
 
@@ -701,7 +704,7 @@ namespace
 				if constexpr (std::is_floating_point_v<T>)
 				{
 					if (value == T(0))
-						InitArray<T>(dataPtr, nelems, 0);
+						InitArray<T>(dataPtr, nelems, 1, Float(1), 0);
 					else
 						PRAGMA_OMP_SIMD()
 						for (auto i = 0ull; i < nelems; i++)
@@ -732,7 +735,7 @@ namespace
 					if constexpr (std::is_floating_point_v<T>)
 					{
 						if (value == T(0))
-							InitArray<T>(dataPtr, nelems, 0);
+							InitArray<T>(dataPtr, nelems, 1, Float(1), 0);
 						else
 							PRAGMA_OMP_SIMD()
 							for (auto i = 0ull; i < nelems; i++)
@@ -785,7 +788,7 @@ namespace
 					if constexpr (std::is_floating_point_v<T>)
 					{
 						if (value == T(0))
-							InitArray<T>(dataPtr, nelems, 0);
+							InitArray<T>(dataPtr, nelems, 1, Float(1), 0);
 						else
 							PRAGMA_OMP_SIMD()
 							for (auto i = 0ull; i < nelems; i++)
@@ -823,7 +826,7 @@ namespace
 						if constexpr (std::is_floating_point_v<T>)
 						{
 							if (value == T(0))
-								InitArray<T>(dataPtr, nelems, 0);
+								InitArray<T>(dataPtr, nelems, 1, Float(1), 0);
 							else
 								PRAGMA_OMP_SIMD()
 								for (auto i = 0ull; i < nelems; i++)
