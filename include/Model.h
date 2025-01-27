@@ -1623,9 +1623,9 @@ namespace dnn
 				TrainSamplesFlip = std::vector<Flip>();
 				TestSamplesFlip = std::vector<Flip>();
 				for (auto index = 0ull; index < DataProv->TrainSamplesCount; index++)
-					TrainSamplesFlip.push_back(Flip{ Bernoulli<bool>(Float(0.5)) , Bernoulli<bool>(Float(0.5)) });
+					TrainSamplesFlip.push_back(Flip{ Bernoulli<bool>(Float(0.5)), Bernoulli<bool>(Float(0.5)) });
 				for (auto index = 0ull; index < DataProv->TestSamplesCount; index++)
-					TestSamplesFlip.push_back(Flip{ Bernoulli<bool>(Float(0.5)) , Bernoulli<bool>(Float(0.5)) });
+					TestSamplesFlip.push_back(Flip{ Bernoulli<bool>(Float(0.5)), Bernoulli<bool>(Float(0.5)) });
 				
 				SetOptimizer(CurrentTrainingRate.Optimizer);
 				for (auto& layer : Layers)

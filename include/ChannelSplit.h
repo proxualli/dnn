@@ -119,7 +119,6 @@ namespace dnn
 						{
 							for (auto c = 0ull; c < C; c++)
 								for (auto h = 0ull; h < H; h++)
-									PRAGMA_OMP_SIMD()
 									for (auto w = 0ull; w < W; w++)
 									{
 										Neurons[OffsetPaddedMem(0, c, h, w)] = InputLayer->Neurons[InputLayer->OffsetPaddedMem(0, c + ChannelsLeft, h, w)];
@@ -130,7 +129,6 @@ namespace dnn
 
 							for (auto c = C; c < PaddedC; c++)
 								for (auto h = 0ull; h < H; h++)
-									PRAGMA_OMP_SIMD()
 									for (auto w = 0ull; w < W; w++)
 									{
 										Neurons[OffsetPaddedMem(0, c, h, w)] = Float(0);
@@ -162,13 +160,11 @@ namespace dnn
 						{
 							for (auto c = 0ull; c < C; c++)
 								for (auto h = 0ull; h < H; h++)
-									PRAGMA_OMP_SIMD()
 									for (auto w = 0ull; w < W; w++)
 										Neurons[OffsetPaddedMem(0, c, h, w)] = InputLayer->Neurons[InputLayer->OffsetPaddedMem(0, c + ChannelsLeft, h, w)];
 
 							for (auto c = C; c < PaddedC; c++)
 								for (auto h = 0ull; h < H; h++)
-									PRAGMA_OMP_SIMD()
 									for (auto w = 0ull; w < W; w++)
 										Neurons[OffsetPaddedMem(0, c, h, w)] = Float(0);
 						}
@@ -176,8 +172,8 @@ namespace dnn
 						{
 							for (auto c = 0ull; c < C; c++)
 							{
-								const auto inputOffset = InputLayer->OffsetPaddedMem(0, c + ChannelsLeft, 0, 0);
-								const auto outputOffset = OffsetPaddedMem(0, c, 0, 0);
+								const auto inputOffset = (c + ChannelsLeft) * HW();
+								const auto outputOffset = c * HW();
 								PRAGMA_OMP_SIMD()
 								for (auto hw = 0ull; hw < HW(); hw++)
 									Neurons[hw + outputOffset] = InputLayer->Neurons[hw + inputOffset];
@@ -197,7 +193,6 @@ namespace dnn
 							{
 								for (auto c = 0ull; c < C; c++)
 									for (auto h = 0ull; h < H; h++)
-										PRAGMA_OMP_SIMD()
 										for (auto w = 0ull; w < W; w++)
 										{
 											Neurons[OffsetPaddedMem(n, c, h, w)] = InputLayer->Neurons[InputLayer->OffsetPaddedMem(n, c + ChannelsLeft, h, w)];
@@ -208,7 +203,6 @@ namespace dnn
 
 								for (auto c = C; c < PaddedC; c++)
 									for (auto h = 0ull; h < H; h++)
-										PRAGMA_OMP_SIMD()
 										for (auto w = 0ull; w < W; w++)
 										{
 											Neurons[OffsetPaddedMem(n, c, h, w)] = Float(0);
@@ -244,13 +238,11 @@ namespace dnn
 							{
 								for (auto c = 0ull; c < C; c++)
 									for (auto h = 0ull; h < H; h++)
-										PRAGMA_OMP_SIMD()
 										for (auto w = 0ull; w < W; w++)
 											Neurons[OffsetPaddedMem(n, c, h, w)] = InputLayer->Neurons[InputLayer->OffsetPaddedMem(n, c + ChannelsLeft, h, w)];
 
 								for (auto c = C; c < PaddedC; c++)
 									for (auto h = 0ull; h < H; h++)
-										PRAGMA_OMP_SIMD()
 										for (auto w = 0ull; w < W; w++)
 											Neurons[OffsetPaddedMem(n, c, h, w)] = Float(0);
 							});
@@ -289,7 +281,6 @@ namespace dnn
 				{
 					for (auto c = 0ull; c < C; c++)
 						for (auto h = 0ull; h < H; h++)
-							PRAGMA_OMP_SIMD()
 							for (auto w = 0ull; w < W; w++)
 								InputLayerBwd->NeuronsD1[InputLayerBwd->OffsetPaddedMem(0, c + ChannelsLeft, h, w)] += NeuronsD1[OffsetPaddedMem(0, c, h, w)];
 				}
@@ -299,8 +290,8 @@ namespace dnn
 						const auto inputOffset = (c + ChannelsLeft) * HW();
 						const auto outputOffset = c * HW();
 						PRAGMA_OMP_SIMD()
-							for (auto hw = 0ull; hw < HW(); hw++)
-								InputLayerBwd->NeuronsD1[hw + inputOffset] += NeuronsD1[hw + outputOffset];
+						for (auto hw = 0ull; hw < HW(); hw++)
+							InputLayerBwd->NeuronsD1[hw + inputOffset] += NeuronsD1[hw + outputOffset];
 					}
 			}
 			else
@@ -313,7 +304,6 @@ namespace dnn
 					{
 						for (auto c = 0ull; c < C; c++)
 							for (auto h = 0ull; h < H; h++)
-								PRAGMA_OMP_SIMD()
 								for (auto w = 0ull; w < W; w++)
 									InputLayerBwd->NeuronsD1[InputLayerBwd->OffsetPaddedMem(n, c + ChannelsLeft, h, w)] += NeuronsD1[OffsetPaddedMem(n, c, h, w)];
 					});

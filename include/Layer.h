@@ -689,7 +689,7 @@ namespace dnn
 			description.append(nwl + std::string(" SharesInput:") + tab + BoolToString(SharesInput));
 			description.append(nwl + std::string(" InplaceBwd: ") + tab + BoolToString(InplaceBwd));
 #endif
-
+			
 			return description;
 		}
 

@@ -195,13 +195,13 @@ namespace dnn
 									{
 										const auto outputOffset = c * HW();
 										PRAGMA_OMP_SIMD()
-											for (auto hw = 0ull; hw < HW(); hw++)
-											{
-												Neurons[hw + outputOffset] = Inputs[first]->Neurons[hw + outputOffset] * Inputs[second]->Neurons[c];
+										for (auto hw = 0ull; hw < HW(); hw++)
+										{
+											Neurons[hw + outputOffset] = Inputs[first]->Neurons[hw + outputOffset] * Inputs[second]->Neurons[c];
 #ifndef DNN_LEAN
-												NeuronsD1[hw + outputOffset] = 0;
+											NeuronsD1[hw + outputOffset] = 0;
 #endif
-											}
+										}
 									}
 								}
 							}

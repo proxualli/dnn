@@ -602,7 +602,7 @@ namespace dnn
 			for (auto d = 0ull; d < image.Depth; d++)
 				for (auto h = 0ull; h < image.Height; h++)
 					for (auto w = 0ull; w < image.Width; w++)
-						srcImage(uint32_t(w), uint32_t(h), uint32_t(d), 2) = cimg_library::cimg::cut(srcImage(uint32_t(w), uint32_t(h), uint32_t(d), 2) + delta, 0, 1);
+						srcImage(uint32_t(w), uint32_t(h), uint32_t(d), 2) = cimg_library::cimg::cut<Float>(srcImage(uint32_t(w), uint32_t(h), uint32_t(d), 2) + delta, 0, 1);
 
 			srcImage.HSLtoRGB();
 
@@ -629,7 +629,7 @@ namespace dnn
 			for (auto d = 0ull; d < image.Depth; d++)
 				for (auto h = 0ull; h < image.Height; h++)
 					for (auto w = 0ull; w < image.Width; w++)
-						srcImage(uint32_t(w), uint32_t(h), uint32_t(d), 0) = cimg_library::cimg::cut(srcImage(uint32_t(w), uint32_t(h), uint32_t(d), 0) * magnitude, 0, 360);
+						srcImage(uint32_t(w), uint32_t(h), uint32_t(d), 0) = cimg_library::cimg::cut<Float>(srcImage(uint32_t(w), uint32_t(h), uint32_t(d), 0) * magnitude, 0, 360);
 
 			srcImage.HSLtoRGB();
 
@@ -654,7 +654,7 @@ namespace dnn
 			for (auto d = 0ull; d < image.Depth; d++)
 				for (auto h = 0ull; h < image.Height; h++)
 					for (auto w = 0ull; w < image.Width; w++)
-						srcImage(uint32_t(w), uint32_t(h), uint32_t(d), 0) = cimg_library::cimg::cut(srcImage(uint32_t(w), uint32_t(h), uint32_t(d), 0) + shift, 0, 360);
+						srcImage(uint32_t(w), uint32_t(h), uint32_t(d), 0) = cimg_library::cimg::cut<Float>(srcImage(uint32_t(w), uint32_t(h), uint32_t(d), 0) + shift, 0, 360);
 				
 			srcImage.HSLtoRGB();
 
@@ -680,7 +680,7 @@ namespace dnn
 			for (auto d = 0ull; d < image.Depth; d++)
 				for (auto h = 0ull; h < image.Height; h++)
 					for (auto w = 0ull; w < image.Width; w++)
-						srcImage(uint32_t(w), uint32_t(h), uint32_t(d), 1) = cimg_library::cimg::cut(srcImage(uint32_t(w), uint32_t(h), uint32_t(d), 1) * magnitude, 0, 1);
+						srcImage(uint32_t(w), uint32_t(h), uint32_t(d), 1) = cimg_library::cimg::cut<Float>(srcImage(uint32_t(w), uint32_t(h), uint32_t(d), 1) * magnitude, 0, 1);
 
 			srcImage.HSLtoRGB();
 
