@@ -33,7 +33,7 @@ namespace dnn
 		const dnnl::memory::dims Padding;
 				
 		MaxPooling(const dnn::Device& device, const dnnl::memory::format_tag format, const std::string& name, const std::vector<Layer*>& inputs, const UInt kernelH = 2, const UInt kernelW = 2, const UInt strideH = 2, const UInt strideW = 2, const UInt dilationH = 1, const UInt dilationW = 1, const UInt padH = 0, const UInt padW = 0) :
-			Layer(device, format, name, LayerTypes::MaxPooling, 0, 0, inputs[0]->C, inputs[0]->D, (((inputs[0]->H - kernelH) + (padH * 2)) / strideH) + 1, (((inputs[0]->W - kernelW) + (padW * 2)) / strideW) + 1, 0, padH, padW, inputs),
+			Layer(device, format, name, LayerTypes::MaxPooling, 0, 0, inputs[0]->C, inputs[0]->D, (((inputs[0]->H - (1 + (kernelH - 1) * dilationH)) + (padH * 2)) / strideH) + 1, (((inputs[0]->W - (1 + (kernelW - 1) * dilationW)) + (padW * 2)) / strideW) + 1, 0, padH, padW, inputs),
 			KernelH(kernelH),
 			KernelW(kernelW),
 			StrideH(strideH),
@@ -56,8 +56,8 @@ namespace dnn
 
 		void UpdateResolution() final override
 		{
-			H = (((InputLayer->H - (1 + (KernelH - 1) * DilationH)) + (Padding[0] * 2)) / StrideH) + 1;
-			W = (((InputLayer->W - (1 + (KernelW - 1) * DilationW)) + (Padding[1] * 2)) / StrideW) + 1;
+			H = (((InputLayer->H - DilationKernelH) + (PadH * 2)) / StrideH) + 1;
+			W = (((InputLayer->W - DilationKernelW) + (PadW * 2)) / StrideW) + 1;
 		}
 
 		std::string GetDescription() const final override

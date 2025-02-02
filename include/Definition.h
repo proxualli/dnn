@@ -374,7 +374,6 @@ namespace dnn
 					{
 						auto kerH = 1 + ((int)kernelH - 1) * (int)dilationH;
 						auto kerW = 1 + ((int)kernelW - 1) * (int)dilationW;
-
 						auto y = ((h - kerH + 1) + (2 * padH)) / (double)strideH;
 						auto x = ((w - kerW + 1) + (2 * padW)) / (double)strideW;
 
