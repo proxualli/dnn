@@ -113,7 +113,6 @@
 // #include "bitsery/ext/std_atomic.h"
 // #include "bitsery/ext/growable.h"
 
-
 using namespace dnn;
 
 namespace
@@ -143,8 +142,8 @@ namespace
 	typedef std::size_t UInt;
 	typedef unsigned char Byte;
 	
-	//constexpr bool IS_LITTLE_ENDIAN = std::endian::native == std::endian::little;
-	constexpr auto WeightsLimit = Float(500);	// limit for all the weights and biases [-WEIGHTS_LIMIT,WEIGHTS_LIMIT]
+	//constexpr bool IsLittleEndian = std::endian::native == std::endian::little;
+	constexpr auto WeightsLimit = Float(500);	// limit for all the weights and biases [-WeightsLimit,WeightsLimit]
 	constexpr auto PlainFmt = dnnl::memory::format_tag::abcd;
 	
 	auto GetThreads(const UInt elements, const Float weight = Float(1)) NOEXCEPT

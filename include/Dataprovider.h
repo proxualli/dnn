@@ -1,7 +1,6 @@
 #pragma once
 #include "Image.h"
 
-
 namespace dnn
 {
 	//using namespace image;
@@ -225,7 +224,7 @@ namespace dnn
 					std::string("@echo off") << std::endl <<
 					std::string("echo loading ") + std::string(magic_enum::enum_name<Datasets>(dataset)) + std::string(" dataset...") << std::endl <<
 					std::string("echo.") << std::endl <<
-					std::string("cd ") + path.string() << std::endl <<
+					std::string("cd /d ") + path.string() << std::endl <<
 					std::string("curl -O http://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz && tar -xf cifar-10-binary.tar.gz --strip-components=1 && del /Q cifar-10-binary.tar.gz") << std::endl;
 #else
 					std::string("#!/bin/bash") << std::endl <<
@@ -248,7 +247,7 @@ namespace dnn
 					std::string("@echo off") << std::endl <<
 					std::string("echo loading ") + std::string(magic_enum::enum_name<Datasets>(dataset)) + std::string(" dataset...") << std::endl <<
 					std::string("echo.") << std::endl <<
-					std::string("cd ") + path.string() << std::endl <<
+					std::string("cd /d ") + path.string() << std::endl <<
 					std::string("curl -O http://www.cs.toronto.edu/~kriz/cifar-100-binary.tar.gz && tar -xf cifar-100-binary.tar.gz --strip-components=1 && del /Q cifar-100-binary.tar.gz") << std::endl;
 #else
 					std::string("#!/bin/bash") << std::endl <<
@@ -272,16 +271,16 @@ namespace dnn
 #else
 					std::string("#!/bin/bash") << std::endl <<
 					std::string("echo loading ") + std::string(magic_enum::enum_name<Datasets>(dataset)) + std::string(" dataset...") << std::endl <<
-					std::string("cd ") + path.string() << std::endl <<
+					std::string("cd /d ") + path.string() << std::endl <<
 #endif
 					std::string("curl -O http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/train-images-idx3-ubyte.gz") << std::endl <<
 					std::string("curl -O http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/t10k-images-idx3-ubyte.gz") << std::endl <<
 					std::string("curl -O http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/train-labels-idx1-ubyte.gz") << std::endl <<
 					std::string("curl -O http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/t10k-labels-idx1-ubyte.gz") << std::endl <<
 #if defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW32__)
-					"powershell -ExecutionPolicy Bypass -command \"& {&./UnZip-File.ps1}\";" << std::endl <<
-					"del *.gz" << std::endl <<
-					"del UnZip-File.ps1" << std::endl;
+					std::string("powershell -ExecutionPolicy Bypass -command \"& {&./UnZip-File.ps1}\";") << std::endl <<
+					std::string("del *.gz") << std::endl <<
+					std::string("del UnZip-File.ps1") << std::endl;
 #else
 					std::string("gunzip -f ./train-images-idx3-ubyte.gz") << std::endl <<
 					std::string("gunzip -f ./t10k-images-idx3-ubyte.gz") << std::endl <<
@@ -293,25 +292,29 @@ namespace dnn
 
 			case Datasets::mnist:
 			{
+				// auto url = std::string("http://yann.lecun.com/exdb/mnist/");  this url is offline at the moment
+				auto url = std::string("https://ossci-datasets.s3.amazonaws.com/mnist/");
+				
 				batch <<
 #if defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW32__)
 					std::string("@echo off") << std::endl <<
 					std::string("echo loading ") + std::string(magic_enum::enum_name<Datasets>(dataset)) + std::string(" dataset...") << std::endl <<
 					std::string("echo.") << std::endl <<
-					std::string("cd ") + path.string() << std::endl <<
+					std::string("cd /d ") + path.string() << std::endl <<
 #else
 					std::string("#!/bin/bash") << std::endl <<
 					std::string("echo loading ") + std::string(magic_enum::enum_name<Datasets>(dataset)) + std::string(" dataset...") << std::endl <<
 					std::string("cd ") + path.string() << std::endl <<
 #endif
-					std::string("curl -O http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz") << std::endl <<
-					std::string("curl -O http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz") << std::endl <<
-					std::string("curl -O http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz") << std::endl <<
-					std::string("curl -O http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz") << std::endl <<
+
+					std::string("curl -O ") + url + std::string("train-images-idx3-ubyte.gz") << std::endl <<
+					std::string("curl -O ") + url + std::string("t10k-images-idx3-ubyte.gz") << std::endl <<
+					std::string("curl -O ") + url + std::string("train-labels-idx1-ubyte.gz") << std::endl <<
+					std::string("curl -O ") + url + std::string("t10k-labels-idx1-ubyte.gz") << std::endl <<
 #if defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW32__)
-					"powershell -ExecutionPolicy Bypass -command \"& {&./UnZip-File.ps1}\";" << std::endl <<
-					"del *.gz" << std::endl <<
-					"del UnZip-File.ps1" << std::endl;
+					std::string("powershell -ExecutionPolicy Bypass -command \"& {&./UnZip-File.ps1}\";") << std::endl <<
+					std::string("del *.gz") << std::endl <<
+					std::string("del UnZip-File.ps1") << std::endl;
 #else
 					std::string("gunzip -f ./train-images-idx3-ubyte.gz") << std::endl <<
 					std::string("gunzip -f ./t10k-images-idx3-ubyte.gz") << std::endl <<
@@ -330,7 +333,7 @@ namespace dnn
 					std::string("@echo off") << std::endl <<
 					std::string("echo loading ") + std::string(magic_enum::enum_name<Datasets>(dataset)) + std::string(" dataset...") << std::endl <<
 					std::string("echo.") << std::endl <<
-					std::string("cd ") + path.string() << std::endl <<
+					std::string("cd /d ") + path.string() << std::endl <<
 #else
 					std::string("#!/bin/bash") << std::endl <<
 					std::string("echo loading ") + std::string(magic_enum::enum_name<Datasets>(dataset)) + std::string(" dataset...") << std::endl <<
@@ -338,9 +341,9 @@ namespace dnn
 #endif
 					std::string("curl -O http://cs231n.stanford.edu/tiny-imagenet-200.zip") << std::endl <<
 #if defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW32__)
-					"powershell -ExecutionPolicy Bypass -command \"& {&./UnZip-File.ps1}\";" << std::endl <<
-					"ren tiny-imagenet-200 tinyimagenet && del /Q tiny-imagenet-200.zip" << std::endl <<
-					"del UnZip-File.ps1" << std::endl;
+					std::string("powershell -ExecutionPolicy Bypass -command \"& {&./UnZip-File.ps1}\";") << std::endl <<
+					std::string("ren tiny-imagenet-200 tinyimagenet && del /Q tiny-imagenet-200.zip") << std::endl <<
+					std::string("del UnZip-File.ps1") << std::endl;
 #else
 					std::string("unzip -o ./tiny-imagenet-200.zip") << std::endl <<
 					std::string("mv tiny-imagenet-200 tinyimagenet") << std::endl <<
@@ -360,9 +363,10 @@ namespace dnn
 			const std::wstring command = L"cmd /c " + (DatasetsDirectory / fileName).wstring();
 			LPTSTR cmdLine = _wcsdup(command.c_str());
 #else
-			const std::string command = "cmd /c " + (DatasetsDirectory / fileName).string();
+			const std::string command = std::string("cmd /c ") + (DatasetsDirectory / fileName).string();
 			LPSTR cmdLine = _strdup(command.c_str());
 #endif
+
 			STARTUPINFO info;
 			PROCESS_INFORMATION processInfo;
 			ZeroMemory(&info, sizeof(STARTUPINFO));
