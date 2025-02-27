@@ -121,7 +121,7 @@ namespace
 	constexpr auto Inplace = true;
 	constexpr auto Kahan = true;
 	constexpr auto PlainOptimizerWeights = true;
-	constexpr auto SingleMeanVariancePass = false;
+	constexpr auto SingleMeanVariancePass = true;
 
 	constexpr auto TestActivations = false;
 	constexpr auto TestBatchNormalization = false;
