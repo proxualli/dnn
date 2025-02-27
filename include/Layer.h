@@ -1918,7 +1918,7 @@ namespace dnn
 			const auto eps = rate.Eps;
 			const auto batchRecip = Float(1) / rate.N;
 
-			PRAGMA_OMP_SIMD()
+			//PRAGMA_OMP_SIMD()
 			for (auto i = 0ull; i < WeightCount; i++)
 			{
 				(*weights.WeightsPar1)[i] += Square<Float>((*weights.WeightsD1)[i] * batchRecip);
@@ -1928,7 +1928,7 @@ namespace dnn
 			if (HasBias)
 			{
 				const auto lrBias = rate.MaximumRate * BiasesLRM;
-				PRAGMA_OMP_SIMD()
+				//PRAGMA_OMP_SIMD()
 				for (auto i = 0ull; i < BiasCount; i++)
 				{
 					BiasesPar1[i] += Square<Float>(BiasesD1[i] * batchRecip);
@@ -2152,7 +2152,7 @@ namespace dnn
 			const auto oneMinusMomentum = Float(1) - momentum;
 			const auto batchRecip = Float(1) / rate.N;
 
-			PRAGMA_OMP_SIMD()
+			//PRAGMA_OMP_SIMD()
 			for (auto i = 0ull; i < WeightCount; i++)
 			{
 				(*weights.WeightsPar1)[i] = (momentum * (*weights.WeightsPar1)[i]) + (oneMinusMomentum * Square<Float>((*weights.WeightsD1)[i] * batchRecip));
@@ -2162,7 +2162,7 @@ namespace dnn
 			if (HasBias)
 			{
 				const auto lrBias = rate.MaximumRate * BiasesLRM / rate.N;
-				PRAGMA_OMP_SIMD()
+				//PRAGMA_OMP_SIMD()
 				for (auto i = 0ull; i < BiasCount; i++)
 				{
 					BiasesPar1[i] = (momentum * BiasesPar1[i]) + (oneMinusMomentum * Square<Float>(BiasesD1[i] * batchRecip));

@@ -53,7 +53,7 @@ if(WIN32 OR MSVC)
   set(debug_flags /bigobj /openmp:llvm /W4 /Od)
   set(release_flags /bigobj /openmp:llvm /W3 /O2 /Ob2 /Oi /Ot /GL /GF /Gy /fp:fast)
 else()
-  set(flags -mrdseed -mrdrnd -mfma -mavx512f -mavx512dq -mavx512vl -mavx512bw -mavx512ifma -mavx512vbmi -mavx512vbmi2 -mavx512bitalg -mavx512vpopcntdq -mavx512vnni -mavx512bf16 -march=native -fopenmp)
+  set(flags -mrdseed -mrdrnd -mfma -mavx512f -mavx512dq -mavx512vl -mavx512bw -mavx512ifma -mavx512vbmi -mavx512vbmi2 -mavx512bitalg -mavx512vpopcntdq -mavx512vnni -mavx512bf16 -mavx512vp2intersect -mavxvnni -mmovdiri -mmovdir64b -mprefetchi -march=native -mtune=native -fopenmp)
   if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set(linkflags -fopenmp=libiomp5 -z noexecstack)
   else()
@@ -88,13 +88,14 @@ set(DNNL_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(DNNL_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(DNNL_ENABLE_CONCURRENT_EXEC ON CACHE BOOL "" FORCE)
 set(DNNL_ENABLE_PRIMITIVE_CACHE ON CACHE BOOL "" FORCE)
+set(DNNL_EXPERIMENTAL ON CACHE BOOL "" FORCE)
 if(WIN32 OR MSVC)
   set(DNNL_ARCH_OPT_FLAGS "/arch:AVX512 /openmp:llvm" CACHE STRING "" FORCE)
 else()
   if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    set(DNNL_ARCH_OPT_FLAGS "-O3 -ffp-contract=on -funroll-loops -ftree-vectorize -Wno-error -mfma -mavx512f -mavx512dq -mavx512vl -mavx512bw -mavx512ifma -mavx512vbmi -mavx512vbmi2 -mavx512bitalg -mavx512vpopcntdq -mavx512vnni -mavx512bf16 -march=native -fopenmp" CACHE STRING "" FORCE)
+    set(DNNL_ARCH_OPT_FLAGS "-O3 -ffp-contract=on -funroll-loops -ftree-vectorize -Wno-error -mfma -mavx512f -mavx512dq -mavx512vl -mavx512bw -mavx512ifma -mavx512vbmi -mavx512vbmi2 -mavx512bitalg -mavx512vpopcntdq -mavx512vnni -mavx512bf16 -mavx512vp2intersect -mavxvnni -mmovdiri -mmovdir64b -mprefetchi -march=native -mtune=native -fopenmp" CACHE STRING "" FORCE)
   else()
-    set(DNNL_ARCH_OPT_FLAGS "-O3 -ffp-contract=on -funroll-loops -ftree-vectorize -Wno-error -mfma -mavx512f -mavx512dq -mavx512vl -mavx512bw -mavx512ifma -mavx512vbmi -mavx512vbmi2 -mavx512bitalg -mavx512vpopcntdq -mavx512vnni -mavx512bf16 -march=native -fopenmp -unroll-aggressive" CACHE STRING "" FORCE)
+    set(DNNL_ARCH_OPT_FLAGS "-O3 -ffp-contract=on -funroll-loops -ftree-vectorize -Wno-error -mfma -mavx512f -mavx512dq -mavx512vl -mavx512bw -mavx512ifma -mavx512vbmi -mavx512vbmi2 -mavx512bitalg -mavx512vpopcntdq -mavx512vnni -mavx512bf16 -mavx512vp2intersect -mavxvnni -mmovdiri -mmovdir64b -mprefetchi -march=native -mtune=native -fopenmp -unroll-aggressive" CACHE STRING "" FORCE)
   endif()
 endif()
 set(WITH_TURBOJPEG FALSE CACHE BOOL "" FORCE) 
@@ -139,6 +140,7 @@ set(libdnn_headers
   include/Layer.h
   include/LayerNorm.h
   include/LocalResponseNorm.h
+  include/LogSoftmax.h
   include/Max.h
   include/MaxPooling.h
   include/Min.h
@@ -151,6 +153,7 @@ set(libdnn_headers
   include/Resampling.h
   include/Scripts.h
   include/Shuffle.h
+  include/Softmax.h
   include/stdafx.h
   include/Substract.h
   include/Utils.h
@@ -181,16 +184,6 @@ IF(NOT DEFINED BITSERY_SOURCE_DIR)
   EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" --build .
     WORKING_DIRECTORY "${DNN_DEPENDENCIES_BINARY_DIR}/bitsery-download")
   SET(BITSERY_SOURCE_DIR "${DNN_DEPENDENCIES_SOURCE_DIR}/bitsery" CACHE STRING "bitsery source directory")
-ENDIF()
-
-IF(NOT DEFINED CSVPARSER_SOURCE_DIR)
-  MESSAGE(STATUS "Downloading csv-parser to ${DNN_DEPENDENCIES_SOURCE_DIR}/csv-parser (define CSVPARSER_SOURCE_DIR to avoid it)")
-  CONFIGURE_FILE(cmake/DownloadCSVParser.cmake "${DNN_DEPENDENCIES_BINARY_DIR}/csv-parser-download/CMakeLists.txt")
-  EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
-    WORKING_DIRECTORY "${DNN_DEPENDENCIES_BINARY_DIR}/csv-parser-download")
-  EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" --build .
-    WORKING_DIRECTORY "${DNN_DEPENDENCIES_BINARY_DIR}/csv-parser-download")
-  SET(CSVPARSER_SOURCE_DIR "${DNN_DEPENDENCIES_SOURCE_DIR}/csv-parser" CACHE STRING "csv-parser source directory")
 ENDIF()
 
 IF(NOT DEFINED ZLIB_SOURCE_DIR)
@@ -270,16 +263,6 @@ IF(NOT DEFINED VECTORCLASS_SOURCE_DIR)
   SET(CIMG_SOURCE_DIR "${DNN_DEPENDENCIES_SOURCE_DIR}/CImg" CACHE STRING "CImg source directory")
  ENDIF()
 
-IF(DNN_BUILD_TESTS AND NOT DEFINED GOOGLETEST_SOURCE_DIR)
-  MESSAGE(STATUS "Downloading Google Test to ${DNN_DEPENDENCIES_SOURCE_DIR}/googletest (define GOOGLETEST_SOURCE_DIR to avoid it)")
-  CONFIGURE_FILE(cmake/DownloadGoogleTest.cmake "${DNN_DEPENDENCIES_BINARY_DIR}/googletest-download/CMakeLists.txt")
-  EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
-    WORKING_DIRECTORY "${DNN_DEPENDENCIES_BINARY_DIR}/googletest-download")
-  EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" --build .
-    WORKING_DIRECTORY "${DNN_DEPENDENCIES_BINARY_DIR}/googletest-download")
-  SET(GOOGLETEST_SOURCE_DIR "${DNN_DEPENDENCIES_SOURCE_DIR}/googletest" CACHE STRING "Google Test source directory")
-ENDIF()
-
 add_library(${PROJECT_NAME} ${libdnn_sources})
 DNN_TARGET_ENABLE_CXX17(${PROJECT_NAME})
 if(BUILD_SHARED_LIBS)
@@ -309,7 +292,6 @@ target_include_directories(test
        ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/bitsery)
-include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/csv-parser)
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/zlib)
 include_directories(${DNN_DEPENDENCIES_BINARY_DIR}/zlib)
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/libpng)
@@ -331,14 +313,6 @@ IF(NOT TARGET bitsery)
     "${DNN_DEPENDENCIES_BINARY_DIR}/bitsery")
 ENDIF()
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC bitsery)
-
-# ---[ Configure csv
-IF(NOT TARGET csv)
-  ADD_SUBDIRECTORY(
-    "${CSVPARSER_SOURCE_DIR}"
-    "${DNN_DEPENDENCIES_BINARY_DIR}/csv-parser")
-ENDIF()
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC csv)
 
 # ---[ Configure ZLIB
 IF(NOT TARGET zlib)
@@ -388,21 +362,6 @@ IF(NOT TARGET magic_enum)
   ADD_SUBDIRECTORY(
     "${MAGIC_ENUM_SOURCE_DIR}"
     "${DNN_DEPENDENCIES_BINARY_DIR}/magic_enum")
-ENDIF()
-
-IF(DNN_BUILD_TESTS)
-  # ---[ Build google test
-  IF(NOT TARGET gtest)
-    SET(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-    ADD_SUBDIRECTORY(
-      "${GOOGLETEST_SOURCE_DIR}"
-      "${DNN_DEPENDENCIES_BINARY_DIR}/googletest")
-  ENDIF()
-  ADD_EXECUTABLE(batchnormactivation-smoketest test/bachnormactivation/smoke.cc)
-  DNN_TARGET_ENABLE_CXX17(batchnormactivation-smoketest)
-  TARGET_INCLUDE_DIRECTORIES(batchnormactivation-smoketest PRIVATE test)
-  TARGET_LINK_LIBRARIES(batchnormactivation-smoketest PRIVATE dnn gtest)
-  ADD_TEST(batchnormactivation-smoketest batchnormactivation-smoketest)
 ENDIF()
 
 TARGET_LINK_LIBRARIES(test PUBLIC ${PROJECT_NAME})
