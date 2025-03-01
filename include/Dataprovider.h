@@ -378,7 +378,7 @@ namespace dnn
 
 				CloseHandle(processInfo.hProcess);
 				CloseHandle(processInfo.hThread);
-				std::free(cmdLine);
+				::free(cmdLine);
 
 				if (status == 0ul && dataset == Datasets::tinyimagenet)
 					GetTinyImageNetLabels(path / std::string(magic_enum::enum_name<Datasets>(dataset)));
@@ -389,7 +389,7 @@ namespace dnn
 			}
 			else
 			{
-				std::free(cmdLine);
+				::free(cmdLine);
 
 				return false;
 			}

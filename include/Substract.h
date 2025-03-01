@@ -28,6 +28,9 @@ namespace dnn
 			assert(Inputs[0]->D == Inputs[1]->D);
 
 			FwdZeroGradient = Float(1);
+			FwdInferenceWeight = Float(5);
+			FwdTrainingWeight = Float(10);
+			BwdTrainingWeight = Float(10);
 
 			scales = std::vector<Float>(2, Float(1));
 		}
@@ -114,7 +117,7 @@ namespace dnn
 					const auto plain = IsPlainFormat();
 					const auto size = GetElementsCount();
 					const auto part = GetVectorPart(size);
-					const auto threads = batchSize == 1 ? 1ull : GetThreads(batchSize * size, Float(4));
+					const auto threads = batchSize == 1 ? 1ull : GetThreads(batchSize * size, FwdTrainingWeight);
 					const auto strideHW = HW() * VectorSize;
 
 					if (plain)
@@ -199,21 +202,21 @@ namespace dnn
 							if (fullDepth)
 								for_i(batchSize, threads, [=](UInt n)
 								{
-										const auto start = n * size;
-										for (auto cdhw = start; cdhw < start + part; cdhw += VectorSize)
-										{
-											(VecFloat().load_a(&Inputs[0]->Neurons[cdhw]) - VecFloat().load_a(&Inputs[1]->Neurons[cdhw])).store_a(&Neurons[cdhw]);
+									const auto start = n * size;
+									for (auto cdhw = start; cdhw < start + part; cdhw += VectorSize)
+									{
+										(VecFloat().load_a(&Inputs[0]->Neurons[cdhw]) - VecFloat().load_a(&Inputs[1]->Neurons[cdhw])).store_a(&Neurons[cdhw]);
 #ifndef DNN_LEAN
-											VecZero.store_nt(&NeuronsD1[cdhw]);
+										VecZero.store_nt(&NeuronsD1[cdhw]);
 #endif
-										}
-										for (auto cdhw = start + part; cdhw < start + size; cdhw++)
-										{
-											Neurons[cdhw] = Inputs[0]->Neurons[cdhw] - Inputs[1]->Neurons[cdhw];
+									}
+									for (auto cdhw = start + part; cdhw < start + size; cdhw++)
+									{
+										Neurons[cdhw] = Inputs[0]->Neurons[cdhw] - Inputs[1]->Neurons[cdhw];
 #ifndef DNN_LEAN
-											NeuronsD1[cdhw] = 0;
+										NeuronsD1[cdhw] = 0;
 #endif
-										}
+									}
 								});
 							else
 								for_i(batchSize, threads, [=](UInt n)
@@ -381,7 +384,7 @@ namespace dnn
 			else
 			{
 #endif
-				const auto threads = GetThreads(batchSize * size, Float(4));
+				const auto threads = GetThreads(batchSize * size, BwdTrainingWeight);
 
 				if (EqualDimensions(Inputs))
 				{

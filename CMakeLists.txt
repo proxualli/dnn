@@ -306,6 +306,7 @@ include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/version2)
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/magic_enum/include)
 include_directories(${DNN_DEPENDENCIES_SOURCE_DIR}/CImg)
 
+
 # ---[ Configure Bisery
 IF(NOT TARGET bitsery)
   ADD_SUBDIRECTORY(

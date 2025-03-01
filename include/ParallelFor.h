@@ -143,18 +143,21 @@ namespace dnn
 	inline void for_i(const size_t range, const Func& f)
 	{
 #if DNNL_CPU_RUNTIME == DNNL_RUNTIME_OMP
-	#if defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER)
-		PRAGMA_OMP_PARALLEL_THREADS(omp_get_max_threads())
+		const auto thrds = static_cast<int>(std::min(range, static_cast<size_t>(omp_get_max_threads())));
+		const auto chunk = static_cast<int>(std::ceil(static_cast<double>(range) / static_cast<double>(thrds)));
+
+#if defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER)
+		PRAGMA_OMP_PARALLEL_THREADS(thrds)
 		{
-			PRAGMA_OMP_FOR_SCHEDULE_STATIC(1)
-			for (auto i = 0ll; i < static_cast<long long>(range); i++)
-				f(i);
+			PRAGMA_OMP_FOR_SCHEDULE_STATIC(chunk)
+				for (auto i = 0ll; i < static_cast<long long>(range); i++)
+					f(i);
 		}
-	#else
-		#pragma omp parallel for schedule(static,1) num_threads(omp_get_max_threads())
+#else
+#pragma omp parallel for schedule(static,chunk) num_threads(thrds)
 		for (auto i = 0ull; i < range; i++)
 			f(i);
-	#endif
+#endif
 #else
 		for_(0ull, range, [&](const blocked_range& r)
 		{
@@ -167,23 +170,26 @@ namespace dnn
 	template <typename Func>
 	inline void for_i(const size_t range, const size_t threads, const Func& f)
 	{
-		if (threads > 1)
+		if (std::min(range, threads) > 1)
 		{
 #if DNNL_CPU_RUNTIME == DNNL_RUNTIME_OMP
+			const auto thrds = static_cast<int>(std::min(range, threads));
+			const auto chunk = static_cast<int>(std::ceil(static_cast<double>(range) / static_cast<double>(thrds)));
+
 	#if defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER)
-			PRAGMA_OMP_PARALLEL_THREADS(static_cast<int>(threads))
+			PRAGMA_OMP_PARALLEL_THREADS(thrds)
 			{
-				PRAGMA_OMP_FOR_SCHEDULE_STATIC(1)
+				PRAGMA_OMP_FOR_SCHEDULE_STATIC(chunk)
 				for (auto i = 0ll; i < static_cast<long long>(range); i++)
 					f(i);
 			}
 	#else
-            #pragma omp parallel for schedule(static,1) num_threads(static_cast<int>(threads))
+			
+            #pragma omp parallel for schedule(static,chunk) num_threads(thrds)
 			for (auto i = 0ull; i < range; i++)
 				f(i);
 	#endif
 #else
-			DNN_UNREF_PAR(threads);
 			for_(0ull, range, [&](const blocked_range& r)
 			{
 				for (auto i = r.begin(); i < r.end(); i++)
@@ -200,15 +206,17 @@ namespace dnn
 	inline void for_i_dynamic(const size_t range, const Func& f)
 	{
 #if DNNL_CPU_RUNTIME == DNNL_RUNTIME_OMP
+		const auto thrds = static_cast<int>(std::min(range, static_cast<size_t>(omp_get_max_threads())));
+
 	#if defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER)
-		PRAGMA_OMP_PARALLEL_THREADS(omp_get_max_threads())
+		PRAGMA_OMP_PARALLEL_THREADS(thrds)
 		{
 			PRAGMA_OMP_FOR_SCHEDULE_DYNAMIC(1)
 			for (auto i = 0ll; i < static_cast<long long>(range); i++)
 				f(i);
 		}
 	#else
-		#pragma omp parallel for schedule(dynamic,1) num_threads(omp_get_max_threads())
+		#pragma omp parallel for schedule(dynamic,1) num_threads(thrds)
 		for (auto i = 0ull; i < range; i++)
 			f(i);
 	#endif
@@ -224,18 +232,20 @@ namespace dnn
 	template <typename Func>
 	inline void for_i_dynamic(const size_t range, const size_t threads, const Func& f)
 	{
-		if (threads > 1)
+		if (std::min(range, threads) > 1)
 		{
 #if DNNL_CPU_RUNTIME == DNNL_RUNTIME_OMP
+			const auto thrds = static_cast<int>(std::min(range, static_cast<size_t>(omp_get_max_threads())));
+
 	#if defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER)
-			PRAGMA_OMP_PARALLEL_THREADS(static_cast<int>(threads))
+			PRAGMA_OMP_PARALLEL_THREADS(thrds)
 			{
 				PRAGMA_OMP_FOR_SCHEDULE_DYNAMIC(1)
 				for (auto i = 0ll; i < static_cast<long long>(range); i++)
 					f(i);
 			}
 	#else
-			#pragma omp parallel for schedule(dynamic,1) num_threads(static_cast<int>(threads))
+			#pragma omp parallel for schedule(dynamic,1) num_threads(thrds)
 			for (auto i = 0ull; i < range; i++)
 				f(i);
 	#endif

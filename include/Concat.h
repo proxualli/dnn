@@ -134,7 +134,7 @@ namespace dnn
 				if constexpr (!Reference && !ReferenceConcat)
 				{
 					const auto plain = IsPlainFormat();
-					const auto threads = GetThreads(batchSize * GetElementsCount(), FwdTrainingWeight);
+					const auto threads = batchSize == 1 ? 1ull : GetThreads(batchSize * GetElementsCount(), FwdTrainingWeight);
 
 #ifdef DNN_STOCHASTIC
 					if (batchSize == 1)
@@ -356,7 +356,7 @@ namespace dnn
 			else
 			{
 #endif
-				const auto threads = GetThreads(batchSize * GetElementsCount(), BwdTrainingWeight);
+				const auto threads = batchSize == 1 ? 1ull : GetThreads(batchSize * GetElementsCount(), BwdTrainingWeight);
 
 				if (!plain)
 					for_i(batchSize, threads, [=](UInt n)

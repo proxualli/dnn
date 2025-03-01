@@ -100,7 +100,7 @@ namespace dnn
 				const auto plain = IsPlainFormat();
 				const auto size = GetElementsCount();
 				const auto part = GetVectorPart(size);
-				const auto threads = batchSize == 1 ? 1ull : GetThreads(batchSize * size, Float(4));
+				const auto threads = GetThreads(batchSize * size, Float(4));
 
 				const auto strideHW = HW() * VectorSize;
 
@@ -460,7 +460,7 @@ namespace dnn
 
 			const auto plain = IsPlainFormat();
 			const auto size = GetElementsCount();
-			const auto threads = batchSize == 1 ? 1ull : GetThreads(batchSize * size, Float(4));
+			const auto threads = GetThreads(batchSize * size, Float(4));
 
 #ifdef DNN_STOCHASTIC
 			if (batchSize == 1)

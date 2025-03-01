@@ -2562,7 +2562,7 @@ namespace dnn
 			const auto resize = DataProv->D != D || DataProv->H != H || DataProv->W != W;
 
 			const auto elements = batchSize * C * D * H * W;
-			const auto threads = GetThreads(elements, Float(10));
+			const auto threads = batchSize == 1 ? 1ull : GetThreads(elements, Float(10));
 
 			for_i(batchSize, threads, [=, &SampleLabels](const UInt batchIndex)
 			{
@@ -2601,7 +2601,7 @@ namespace dnn
 			const auto resize = DataProv->D != D || DataProv->H != H || DataProv->W != W;
 
 			const auto elements = batchSize * C * D * H * W;
-			const auto threads = GetThreads(elements, Float(10));
+			const auto threads = batchSize == 1 ? 1ull : GetThreads(elements, Float(10));
 
 			for_i_dynamic(batchSize, threads, [=, &SampleLabels](const UInt batchIndex)
 			{
@@ -2682,7 +2682,7 @@ namespace dnn
 			const auto resize = DataProv->D != D || DataProv->H != H || DataProv->W != W;
 
 			const auto elements = batchSize * C * D * H * W;
-			const auto threads = GetThreads(elements, Float(10));
+			const auto threads = batchSize == 1 ? 1ull : GetThreads(elements, Float(10));
 
 			for_i(batchSize, threads, [=, &SampleLabels](const UInt batchIndex)
 			{
@@ -2721,7 +2721,7 @@ namespace dnn
 			const auto resize = DataProv->D != D || DataProv->H != H || DataProv->W != W;
 
 			const auto elements = batchSize * C * D * H * W;
-			const auto threads = GetThreads(elements, Float(10));
+			const auto threads = batchSize == 1 ? 1ull : GetThreads(elements, Float(10));
 
 			for_i_dynamic(batchSize, threads, [=, &SampleLabels](const UInt batchIndex)
 			{
