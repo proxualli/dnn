@@ -17,7 +17,7 @@ namespace dnn
 			Layer(device, format, name, LayerTypes::ChannelSplitRatioRight, 0, 0, UInt(std::roundf(Float(inputs[0]->C)) * ratio), inputs[0]->D, inputs[0]->H, inputs[0]->W, 0, 0, 0, inputs),
 			Ratio(ratio),
 			ChannelsLeft(UInt(std::roundf(Float(inputs[0]->C)) * (std::roundf(Float(1)) - ratio))),
-			Padded(InputLayer->C % VectorSize == 0 && C % VectorSize == 0 && ChannelsLeft % VectorSize == 0)
+			Padded(inputs[0]->C % VectorSize == 0 && C % VectorSize == 0 && UInt(std::roundf(Float(inputs[0]->C)) * (std::roundf(Float(1)) - ratio)) % VectorSize == 0)
 		{
 			assert(Inputs.size() == 1);
 			assert(Ratio > Float(0));
@@ -87,22 +87,22 @@ namespace dnn
 
 		void ForwardProp(const UInt batchSize, const bool training) final override
 		{
-//			if (Padded && !training)
-//			{
-//				const auto& memSrc = dnnl::memory(*MemDesc, Device.engine, InputLayer->Neurons.data());
-//				auto srcMem = dnnl::memory(*DstMemDesc, Device.engine, Neurons.data());
-//				dnnl::reorder(memSrc, srcMem).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_FROM, memSrc}, { DNNL_ARG_TO, srcMem } });
-//				Device.stream.wait();
-//
-//#ifndef DNN_LEAN
-//				/*if (training)
-//					InitArray<Float>(NeuronsD1.data(), batchSize * PaddedCDHW(), FwdZeroGradient);*/
-//#else
-//				DNN_UNREF_PAR(batchSize);
-//#endif // DNN_LEAN		
-//			}
-//			else
-//			{
+			if (Padded && !training)
+			{
+				const auto& memSrc = dnnl::memory(*MemDesc, Device.engine, InputLayer->Neurons.data());
+				auto srcMem = dnnl::memory(*DstMemDesc, Device.engine, Neurons.data());
+				dnnl::reorder(memSrc, srcMem).execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_FROM, memSrc}, { DNNL_ARG_TO, srcMem } });
+				Device.stream.wait();
+
+#ifndef DNN_LEAN
+				/*if (training)
+					InitArray<Float>(NeuronsD1.data(), batchSize * PaddedCDHW(), FwdZeroGradient);*/
+#else
+				DNN_UNREF_PAR(batchSize);
+#endif // DNN_LEAN		
+			}
+			else
+			{
 				const auto plain = IsPlainFormat();
 
 #ifdef DNN_STOCHASTIC
@@ -258,7 +258,7 @@ namespace dnn
 #ifdef DNN_STOCHASTIC
 				}
 #endif
-			//}
+			}
 		}
 
 		void BackwardProp(const UInt batchSize) final override
