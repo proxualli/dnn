@@ -356,7 +356,7 @@ namespace dnn
 			else
 			{
 #endif
-				const auto threads = batchSize == 1 ? 1ull : GetThreads(batchSize * GetElementsCount(), BwdTrainingWeight);
+				const auto threads = GetThreads(batchSize * GetElementsCount(), BwdTrainingWeight);
 
 				if (!plain)
 					for_i(batchSize, threads, [=](UInt n)

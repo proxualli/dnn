@@ -429,8 +429,9 @@ namespace dnn
 #endif // DNN_LEAN
 
 			const auto plain = IsPlainFormat();
-			const auto threads = batchSize == 1ull ? 1ull : GetThreads(batchSize * GetElementsCount(), BwdTrainingWeight);
 			const auto strideHW = HW() * VectorSize;
+			
+			const auto threads = GetThreads(batchSize * GetElementsCount(), BwdTrainingWeight);
 
 			if (EqualChannels(Inputs))
 			{

@@ -28,6 +28,9 @@ namespace dnn
 			assert(Inputs[0]->D == Inputs[1]->D);
 
 			FwdZeroGradient = Float(1);
+			FwdInferenceWeight = Float(5);
+			FwdTrainingWeight = Float(10);
+			BwdTrainingWeight = Float(10);
 			
 			scales = std::vector<Float>(2, Float(1));
 		}
@@ -100,8 +103,6 @@ namespace dnn
 				const auto plain = IsPlainFormat();
 				const auto size = GetElementsCount();
 				const auto part = GetVectorPart(size);
-				const auto threads = GetThreads(batchSize * size, Float(4));
-
 				const auto strideHW = HW() * VectorSize;
 
 #ifdef DNN_STOCHASTIC
@@ -258,6 +259,8 @@ namespace dnn
 				else
 				{
 #endif
+					const auto threads = GetThreads(batchSize * size, FwdTrainingWeight);
+
 					if (!plain)
 					{
 						if (EqualDimensions(Inputs))
@@ -459,8 +462,6 @@ namespace dnn
 #endif // DNN_LEAN
 
 			const auto plain = IsPlainFormat();
-			const auto size = GetElementsCount();
-			const auto threads = GetThreads(batchSize * size, Float(4));
 
 #ifdef DNN_STOCHASTIC
 			if (batchSize == 1)
@@ -522,6 +523,8 @@ namespace dnn
 			else
 			{
 #endif
+				const auto threads = GetThreads(batchSize * GetElementsCount(), BwdTrainingWeight);
+
 				if (EqualDimensions(Inputs))
 				{
 					if (!plain)
