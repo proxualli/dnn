@@ -117,6 +117,22 @@ namespace dnn
 #endif
 		}
 
+		void ForwardProp(const UInt batchSize, const bool training)
+		{
+#ifdef DNN_CACHE_PRIMITIVES
+			fwd->execute(Device.stream, fwdArgs);
+#else
+			dnnl::concat(*fwdDesc).execute(Device.stream, fwdArgs);
+#endif
+			Device.stream.wait();
+
+#ifndef DNN_LEAN
+			if (training)
+				InitArray<Float>(NeuronsD1.data(), PaddedCDHW(), batchSize, FwdZeroGradient);
+#endif // DNN_LEAN
+		}
+
+		/*
 		void ForwardProp(const UInt batchSize, const bool training) final override
 		{
 			if (training)
@@ -310,6 +326,7 @@ namespace dnn
 				Device.stream.wait();
 			}
 		}
+*/
 
 		void BackwardProp(const UInt batchSize) final override
 		{
@@ -400,5 +417,22 @@ namespace dnn
 			ReleaseGradient();
 #endif // DNN_LEAN
 		}
+
+
+	
+		/*
+		void BackwardProp(const UInt batchSize)
+		{
+#ifdef DNN_LEAN
+			ZeroGradientMulti(batchSize);
+#endif
+
+
+
+#ifdef DNN_LEAN
+			ReleaseGradient();
+#endif // DNN_LEAN
+		}
+*/
 	};
 }
