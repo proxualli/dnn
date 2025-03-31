@@ -116,6 +116,7 @@ namespace dnn
 			fwd = std::make_unique<dnnl::concat>(dnnl::concat(*fwdDesc));
 #endif
 		}
+		
 
 		void ForwardProp(const UInt batchSize, const bool training)
 		{
@@ -128,7 +129,7 @@ namespace dnn
 
 #ifndef DNN_LEAN
 			if (training)
-				InitArray<Float>(NeuronsD1.data(), PaddedCDHW(), batchSize, FwdZeroGradient);
+				InitArray<Float>(NeuronsD1.data(), PaddedCDHW(), batchSize, FwdZeroGradient);		
 #endif // DNN_LEAN
 		}
 
@@ -326,7 +327,8 @@ namespace dnn
 				Device.stream.wait();
 			}
 		}
-*/
+		*/
+
 
 		void BackwardProp(const UInt batchSize) final override
 		{

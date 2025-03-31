@@ -90,11 +90,14 @@ namespace dnn
 				DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(batchSize), dnnl::memory::dim(C), dnnl::memory::dim(H), dnnl::memory::dim(W) }), dnnl::memory::data_type::f32, ChosenFormat));
 			}
 
+			
 			dnnl::primitive_attr attr;
 			attr.set_scales_mask(DNNL_ARG_SRC_0, 0);
 			attr.set_scales_mask(DNNL_ARG_SRC_1, 0);
 			fwdDesc = std::make_unique<dnnl::binary::primitive_desc>(dnnl::binary::primitive_desc(Device.engine, dnnl::algorithm::binary_add, *Inputs[first]->DstMemDesc, *Inputs[second]->DstMemDesc, *DstMemDesc, attr));
 			
+
+			fwdDesc = std::make_unique<dnnl::binary::primitive_desc>(dnnl::binary::primitive_desc(Device.engine, dnnl::algorithm::binary_add, *Inputs[first]->DstMemDesc, *Inputs[second]->DstMemDesc, *DstMemDesc));
 			/*
 			bwd0Desc = std::make_unique<dnnl::binary::primitive_desc>(dnnl::binary::primitive_desc(Device.engine, dnnl::algorithm::binary_add, *Inputs[first]->DiffDstMemDesc, *DiffDstMemDesc, *Inputs[first]->DiffDstMemDesc, attr));
 			if (!EqualDimensions(Inputs))
@@ -116,7 +119,7 @@ namespace dnn
 			DiffDstMemDesc = std::make_unique<dnnl::memory::desc>(fwdDesc->dst_desc());
 
 			fwdArgs = std::unordered_map<int, dnnl::memory>{ { DNNL_ARG_SRC_0, dnnl::memory(*Inputs[first]->DstMemDesc, Device.engine, Inputs[first]->Neurons.data()) }, { DNNL_ARG_SRC_1, dnnl::memory(*Inputs[second]->DstMemDesc, Device.engine, Inputs[second]->Neurons.data()) }, { DNNL_ARG_DST, dnnl::memory(*DstMemDesc, Device.engine, Neurons.data()) }, { DNNL_ARG_ATTR_SCALES | DNNL_ARG_SRC_0, dnnl::memory(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(1) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::x), Device.engine, scale0.data()) }, { DNNL_ARG_ATTR_SCALES | DNNL_ARG_SRC_1, dnnl::memory(dnnl::memory::desc(dnnl::memory::dims({ dnnl::memory::dim(1) }), dnnl::memory::data_type::f32, dnnl::memory::format_tag::x), Device.engine, scale1.data()) } };
-	
+			//fwdArgs = std::unordered_map<int, dnnl::memory>{ { DNNL_ARG_SRC_0, dnnl::memory(*Inputs[first]->DstMemDesc, Device.engine, Inputs[first]->Neurons.data()) }, { DNNL_ARG_SRC_1, dnnl::memory(*Inputs[second]->DstMemDesc, Device.engine, Inputs[second]->Neurons.data()) }, { DNNL_ARG_DST, dnnl::memory(*DstMemDesc, Device.engine, Neurons.data()) } };
 #ifdef DNN_CACHE_PRIMITIVES
 			fwd = std::make_unique<dnnl::binary>(dnnl::binary(*fwdDesc));
 			/*
@@ -128,34 +131,35 @@ namespace dnn
 #endif
 		}
 
-		void ForwardProp(const UInt batchSize, const bool training)
+		void ForwardProp(const UInt batchSize, const bool training) final override
 		{
 			const auto fullDepth = !training || (SurvivalProbability[first] == Float(1) && SurvivalProbability[second] == Float(1));
 			scale0[0] = (!fullDepth && Inputs[first]->Skip) ? Float(0) : Float(1);
 			scale1[0] = (!fullDepth && Inputs[second]->Skip) ? Float(0) : Float(1);
 
-#ifdef DNN_CACHE_PRIMITIVES
-			fwd->execute(Device.stream, fwdArgs);
-#else
-			dnnl::binary(*fwdDesc).execute(Device.stream, fwdArgs);
-#endif
+			#ifdef DNN_CACHE_PRIMITIVES
+				fwd->execute(Device.stream, fwdArgs);
+			#else
+				dnnl::binary(*fwdDesc).execute(Device.stream, fwdArgs);
+		    #endif
 			Device.stream.wait();
-
+			
 #ifndef DNN_LEAN
-			if (training)
+			 if (training)
 				InitArray<Float>(NeuronsD1.data(), PaddedCDHW(), batchSize, FwdZeroGradient);
 #endif // DNN_LEAN
+		
 		}
-
+		
 		/*
 		void ForwardProp(const UInt batchSize, const bool training) final override
 		{
-			const auto fullDepth = SurvivalProbability[0] == Float(1) && SurvivalProbability[1] == Float(1);
-			scales[0] = fullDepth ? Float(1) : (Inputs[0]->Skip ? Float(0) : Float(1));
-			scales[1] = fullDepth ? Float(1) : (Inputs[1]->Skip ? Float(0) : Float(1));
+			const auto fullDepth = !training || (SurvivalProbability[first] == Float(1) && SurvivalProbability[second] == Float(1));
+			scales[first] = (!fullDepth && Inputs[first]->Skip) ? Float(0) : Float(1);
+			scales[second] = (!fullDepth && Inputs[second]->Skip) ? Float(0) : Float(1);
 					
-			scale0[0] = (!training || fullDepth) ? Float(1) : (Inputs[first]->Skip ? Float(0) : Float(1));
-			scale1[0] = (!training || fullDepth) ? Float(1) : (Inputs[second]->Skip ? Float(0) : Float(1));
+			scale0[0] = (!fullDepth && Inputs[first]->Skip) ? Float(0) : Float(1);
+			scale1[0] = (!fullDepth && Inputs[second]->Skip) ? Float(0) : Float(1);
 
 			if (training)
 			{

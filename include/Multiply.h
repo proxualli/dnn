@@ -147,8 +147,8 @@ namespace dnn
 				InitArray<Float>(NeuronsD1.data(), PaddedCDHW(), batchSize, FwdZeroGradient);
 #endif // DNN_LEAN
 		}
-
-		/*
+	
+/*
 		void ForwardProp(const UInt batchSize, const bool training) final override
 		{
 			if (training)
@@ -470,7 +470,7 @@ namespace dnn
 				Device.stream.wait();
 			}
 		}
-		*/
+*/
 
 		void BackwardProp(const UInt batchSize)  final override
 		{
