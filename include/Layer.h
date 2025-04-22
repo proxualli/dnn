@@ -25,17 +25,20 @@ namespace dnn
 		AdamW = 7,
 		AmsBound = 8,
 		AmsBoundW = 9,
-		NAG = 10,
-		RMSProp = 11,
-		SGD = 12,
-		SGDMomentum = 13,
-		SGDW = 14
+		DiffGrad = 10,
+		NAG = 11,
+		RMSProp = 12,
+		SGD = 13,
+		SGDMomentum = 14,
+		SGDW = 15
 	};
 	
 	constexpr auto GetOptimizerParameters(const Optimizers& optimizer)
 	{
 		switch (optimizer)
 		{
+		case Optimizers::DiffGrad:
+			return 3ull;
 		case Optimizers::AdaBelief:
 		case Optimizers::AdaBound:
 		case Optimizers::AdaBoundW:
@@ -69,6 +72,7 @@ namespace dnn
 		case Optimizers::AdamW:
 		case Optimizers::AmsBound:
 		case Optimizers::AmsBoundW:
+		case Optimizers::DiffGrad:
 			return true;
 		default:
 			return false;
@@ -86,6 +90,7 @@ namespace dnn
 		case Optimizers::AdamW:
 		case Optimizers::AmsBound:
 		case Optimizers::AmsBoundW:
+		case Optimizers::DiffGrad:
 			return true;
 		default:
 			return false;
@@ -341,28 +346,31 @@ namespace dnn
 		FloatVector* WeightsD1;
 		FloatVector* WeightsPar1;
 		FloatVector* WeightsPar2;
+		FloatVector* WeightsPar3;
 
 		bool operator==(const WeightsStruct& o) const
 		{
 			return
-				std::tie(Weights, WeightsD1, WeightsPar1, WeightsPar2)
+				std::tie(Weights, WeightsD1, WeightsPar1, WeightsPar2, WeightsPar3)
 				==
-				std::tie(o.Weights, o.WeightsD1, o.WeightsPar1, o.WeightsPar2);
+				std::tie(o.Weights, o.WeightsD1, o.WeightsPar1, o.WeightsPar2, o.WeightsPar3);
 		}
 
 		WeightsStruct() :
 			Weights(nullptr),
 			WeightsD1(nullptr),
 			WeightsPar1(nullptr),
-			WeightsPar2(nullptr)
+			WeightsPar2(nullptr),
+			WeightsPar3(nullptr)
 		{
 		}
 
-		WeightsStruct(FloatVector* weights, FloatVector* weightsD1, FloatVector* weightsPar1, FloatVector* weightsPar2) :
+		WeightsStruct(FloatVector* weights, FloatVector* weightsD1, FloatVector* weightsPar1, FloatVector* weightsPar2, FloatVector* weightsPar3) :
 			Weights(weights),
 			WeightsD1(weightsD1),
 			WeightsPar1(weightsPar1),
-			WeightsPar2(weightsPar2)
+			WeightsPar2(weightsPar2),
+			WeightsPar3(weightsPar3)
 		{
 		}
 	};
@@ -515,10 +523,12 @@ namespace dnn
 		FloatVector WeightsD1;
 		FloatVector WeightsPar1;
 		FloatVector WeightsPar2;
+		FloatVector WeightsPar3;
 		FloatVector Biases;
 		FloatVector BiasesD1;
 		FloatVector BiasesPar1;
 		FloatVector BiasesPar2;
+		FloatVector BiasesPar3;
 		Stats NeuronsStats;
 		Stats WeightsStats;
 		Stats BiasesStats;
@@ -587,10 +597,12 @@ namespace dnn
 			WeightsD1(FloatVector(weightCount)),
 			WeightsPar1(FloatVector()),
 			WeightsPar2(FloatVector()),
+			WeightsPar3(FloatVector()),
 			Biases(FloatVector(biasCount)),
 			BiasesD1(FloatVector(biasCount)),
 			BiasesPar1(FloatVector()),
 			BiasesPar2(FloatVector()),
+			BiasesPar3(FloatVector()),
 			NeuronsStats(Stats()),
 			WeightsStats(Stats()),
 			BiasesStats(Stats()),
@@ -1001,12 +1013,66 @@ namespace dnn
 				dirty = true;
 			if (HasOptimizerParameterGamma(optimizer) && (std::isnan(Gamma) || std::isinf(Gamma)))
 				dirty = true;
-
+			
 			if (dirty)
 				return dirty;
 
 			switch (GetOptimizerParameters(optimizer))
 			{
+			case 3ull:
+			{
+				if (HasWeights)
+					for (auto i = 0ull; i < WeightCount; i++)
+					{
+						if (std::isnan(Weights[i]) || std::isinf(Weights[i]))
+						{
+							dirty = true;
+							break;
+						}
+						if (std::isnan(WeightsPar1[i]) || std::isinf(WeightsPar1[i]))
+						{
+							dirty = true;
+							break;
+						}
+						if (std::isnan(WeightsPar2[i]) || std::isinf(WeightsPar2[i]))
+						{
+							dirty = true;
+							break;
+						}
+						if (std::isnan(WeightsPar3[i]) || std::isinf(WeightsPar3[i]))
+						{
+							dirty = true;
+							break;
+						}
+					}
+
+				if (HasBias && !dirty)
+					for (auto i = 0ull; i < BiasCount; i++)
+					{
+						if (std::isnan(Biases[i]) || std::isinf(Biases[i]))
+						{
+							dirty = true;
+							break;
+						}
+						if (std::isnan(BiasesPar1[i]) || std::isinf(BiasesPar1[i]))
+						{
+							dirty = true;
+							break;
+						}
+						if (std::isnan(BiasesPar2[i]) || std::isinf(BiasesPar2[i]))
+						{
+							dirty = true;
+							break;
+						}
+						if (std::isnan(BiasesPar3[i]) || std::isinf(BiasesPar3[i]))
+						{
+							dirty = true;
+							break;
+						}
+					}
+			}
+			break;
+
 			case 2ull:
 			{
 				if (HasWeights)
@@ -1121,7 +1187,7 @@ namespace dnn
 				B1 = Float(0);
 				B2 = Float(0);
 				Gamma = Float(0);
-
+				
 				const auto weightsSize = WeightsMemDesc->get_size() / sizeof(Float);
 				const auto biasesSize = HasBias ? BiasCount : 0;
 
@@ -1130,6 +1196,21 @@ namespace dnn
 			
 				switch (GetOptimizerParameters(optimizer))
 				{
+				case 3ull:
+					WeightsPar1.resize(weightsSize);
+					WeightsPar2.resize(weightsSize);
+					WeightsPar3.resize(weightsSize);
+					BiasesPar1.resize(biasesSize);
+					BiasesPar2.resize(biasesSize);
+					BiasesPar3.resize(biasesSize);
+					std::fill(WeightsPar1.begin(), WeightsPar1.end(), Float(0));
+					std::fill(WeightsPar2.begin(), WeightsPar2.end(), Float(0));
+					std::fill(WeightsPar3.begin(), WeightsPar3.end(), Float(0));
+					std::fill(BiasesPar1.begin(), BiasesPar1.end(), Float(0));
+					std::fill(BiasesPar2.begin(), BiasesPar2.end(), Float(0));
+					std::fill(BiasesPar3.begin(), BiasesPar3.end(), Float(0));
+					break;
+
 				case 2ull:
 					WeightsPar1.resize(weightsSize);
 					WeightsPar2.resize(weightsSize);
@@ -1172,6 +1253,15 @@ namespace dnn
 
 				switch (GetOptimizerParameters(optimizer))
 				{
+				case 3ull:
+					WeightsPar1.resize(weightsSize, Float(0));
+					WeightsPar2.resize(weightsSize, Float(0));
+					WeightsPar3.resize(weightsSize, Float(0));
+					BiasesPar1.resize(biasesSize, Float(0));
+					BiasesPar2.resize(biasesSize, Float(0));
+					BiasesPar3.resize(biasesSize, Float(0));
+					break;
+
 				case 2ull:
 					WeightsPar1.resize(weightsSize, Float(0));
 					WeightsPar2.resize(weightsSize, Float(0));
@@ -1457,12 +1547,13 @@ namespace dnn
 			{
 				const bool differentOptimzerWeightFormat = PlainOptimizerWeights && (*WeightsMemDesc != *PersistWeightsMemDesc);
 				
-				auto optWeights = WeightsStruct(&Weights, &WeightsD1, &WeightsPar1, &WeightsPar2);
+				auto optWeights = WeightsStruct(&Weights, &WeightsD1, &WeightsPar1, &WeightsPar2, &WeightsPar3);
 				
 				auto weights = FloatVector();
 				auto weightsD1 = FloatVector();
 				auto weightsPar1 = FloatVector();
 				auto weightsPar2 = FloatVector();
+				auto weightsPar3 = FloatVector();
 
 				if (differentOptimzerWeightFormat)
 				{
@@ -1499,6 +1590,16 @@ namespace dnn
 						dnnl::reorder(memWeightsPar2, weightsPar2Mem).execute(Device.stream, { {DNNL_ARG_FROM, memWeightsPar2}, {DNNL_ARG_TO, weightsPar2Mem} });
 						Device.stream.wait();
 					}
+
+					if (WeightsPar3.size() > 0)
+					{
+						weightsPar3 = FloatVector(WeightCount);
+						optWeights.WeightsPar3 = &weightsPar3;
+						auto memWeightsPar3 = dnnl::memory(*WeightsMemDesc, Device.engine, WeightsPar3.data());
+						auto weightsPar3Mem = dnnl::memory(*PersistWeightsMemDesc, Device.engine, weightsPar3.data());
+						dnnl::reorder(memWeightsPar3, weightsPar3Mem).execute(Device.stream, { {DNNL_ARG_FROM, memWeightsPar3}, {DNNL_ARG_TO, weightsPar3Mem} });
+						Device.stream.wait();
+					}
 				}
 				
 				switch (optimizer)
@@ -1532,6 +1633,9 @@ namespace dnn
 					break;
 				case Optimizers::AmsBoundW:
 					AdaBoundW(rate, optWeights, true);
+					break;
+				case Optimizers::DiffGrad:
+					DiffGrad(rate, optWeights);
 					break;
 				case Optimizers::NAG:
 					NAG(rate, optWeights);
@@ -1574,6 +1678,13 @@ namespace dnn
 						auto weightsPar2Mem = dnnl::memory(*PersistWeightsMemDesc, Device.engine, weightsPar2.data());
 						auto memWeightsPar2 = dnnl::memory(*WeightsMemDesc, Device.engine, WeightsPar2.data());
 						dnnl::reorder(weightsPar2Mem, memWeightsPar2).execute(Device.stream, { {DNNL_ARG_FROM, weightsPar2Mem}, {DNNL_ARG_TO, memWeightsPar2} });
+						Device.stream.wait();
+					}
+					if (WeightsPar3.size() > 0)
+					{
+						auto weightsPar3Mem = dnnl::memory(*PersistWeightsMemDesc, Device.engine, weightsPar3.data());
+						auto memWeightsPar3 = dnnl::memory(*WeightsMemDesc, Device.engine, WeightsPar3.data());
+						dnnl::reorder(weightsPar3Mem, memWeightsPar3).execute(Device.stream, { {DNNL_ARG_FROM, weightsPar3Mem}, {DNNL_ARG_TO, memWeightsPar3} });
 						Device.stream.wait();
 					}
 				}
@@ -1973,7 +2084,7 @@ namespace dnn
 
 					par1 = (beta1 * par1) + (oneMinusBeta1 * weightD1);
 					par2 = (beta2 * par2) + (oneMinusBeta2 * square(weightD1 * batchRecip));
-					weight -= lr * (par1 / oneMinusB1) / square((par2 / oneMinusB2) + eps);
+					weight -= lr * (par1 / oneMinusB1) / sqrt((par2 / oneMinusB2) + eps);
 
 					weight.store_a(&(*weights.Weights)[i]);
 					par1.store_a(&(*weights.WeightsPar1)[i]);
@@ -2089,7 +2200,7 @@ namespace dnn
 
 					par1 = (beta1 * par1) + (oneMinusBeta1 * weightD1 * batchRecip);
 					par2 = (beta2 * par2) + (oneMinusBeta2 * square(weightD1 * batchRecip));
-					weight -= lr * (par1 / oneMinusB1) / square((par2 / oneMinusB2) + eps) + (weightDecay * weight);
+					weight -= lr * (par1 / oneMinusB1) / sqrt((par2 / oneMinusB2) + eps) + (weightDecay * weight);
 
 					weight.store_a(&(*weights.Weights)[i]);
 					par1.store_a(&(*weights.WeightsPar1)[i]);
@@ -2107,6 +2218,88 @@ namespace dnn
 					BiasesPar1[i] = (beta1 * BiasesPar1[i]) + (oneMinusBeta1 * BiasesD1[i] * batchRecip);
 					BiasesPar2[i] = (beta2 * BiasesPar2[i]) + (oneMinusBeta2 * Square<Float>(BiasesD1[i] * batchRecip));
 					Biases[i] -= lrBias * ((BiasesPar1[i] / oneMinusB1) / std::sqrt((BiasesPar2[i] / oneMinusB2) + eps) + (weightDecayBias * Biases[i]));
+				}
+			}
+
+			B1 *= beta1;
+			B2 *= beta2;
+		}
+
+		inline void DiffGrad(const TrainingRate& rate, WeightsStruct weights)
+		{
+			const auto beta1 = rate.Momentum;
+			const auto beta2 = rate.Beta2;
+			const auto lr = rate.MaximumRate * WeightsLRM;
+			const auto weightDecay = rate.L2Penalty * WeightsWDM;
+			const auto eps = rate.Eps;
+			const auto oneMinusBeta1 = (Float(1) - beta1) / rate.N;
+			const auto oneMinusBeta2 = Float(1) - beta2;
+			const auto batchRecip = Float(1) / rate.N;
+			B1 = B1 == Float(0) ? beta1 : B1;
+			B2 = B2 == Float(0) ? beta2 : B2;
+			const auto oneMinusB1 = Float(1) - B1;
+			const auto oneMinusB2 = Float(1) - B2;
+
+
+			if (WeightCount % VectorSize != 0)
+			{
+				for (auto i = 0ull; i < WeightCount; i++)
+				{
+					(*weights.WeightsPar1)[i] = (beta1 * (*weights.WeightsPar1)[i]) + (oneMinusBeta1 * (*weights.WeightsD1)[i]);
+					(*weights.WeightsPar2)[i] = (beta2 * (*weights.WeightsPar2)[i]) + (oneMinusBeta2 * Square<Float>((*weights.WeightsD1)[i] * batchRecip));
+
+					auto diff = std::abs((*weights.WeightsPar3)[i] - (*weights.WeightsD1)[i]);
+					auto dfc = Float(1) / (Float(1) + std::exp(-diff));
+					(*weights.WeightsPar3)[i] = (*weights.WeightsD1)[i];
+					auto exp_avg1 = ((*weights.WeightsPar1)[i] / oneMinusB1) * dfc;
+
+					(*weights.Weights)[i] -= lr * exp_avg1 / std::sqrt(((*weights.WeightsPar2)[i] / oneMinusB2) + eps) + (weightDecay * (*weights.Weights)[i]);
+				}
+			}
+			else
+			{
+				VecFloat weight, weightD1, par1, par2, par3;
+				for (auto i = 0ull; i < WeightCount; i += VectorSize)
+				{
+					weight.load_a(&(*weights.Weights)[i]);
+					weightD1.load_a(&(*weights.WeightsD1)[i]);
+					par1.load_a(&(*weights.WeightsPar1)[i]);
+					par2.load_a(&(*weights.WeightsPar2)[i]);
+					par3.load_a(&(*weights.WeightsPar3)[i]);
+
+					par1 = (beta1 * par1) + (oneMinusBeta1 * weightD1);
+					par2 = (beta2 * par2) + (oneMinusBeta2 * square(weightD1 * batchRecip));
+
+					auto diff = abs(par3 - weightD1);
+					auto dfc = VecFloat(1) / (VecFloat(1) + exp(-diff));
+					par3 = weightD1;
+					auto exp_avg1 = (par1 / oneMinusB1) * dfc;
+					
+					weight -= lr * exp_avg1 / sqrt((par2 / oneMinusB2) + eps) + (weightDecay * weight);
+
+					weight.store_a(&(*weights.Weights)[i]);
+					par1.store_a(&(*weights.WeightsPar1)[i]);
+					par2.store_a(&(*weights.WeightsPar2)[i]);
+					par3.store_a(&(*weights.WeightsPar3)[i]);
+				}
+			}
+
+			if (HasBias)
+			{
+				const auto lrBias = rate.MaximumRate * BiasesLRM;
+				const auto weightDecayBias = rate.L2Penalty * BiasesWDM;
+				// PRAGMA_OMP_SIMD()
+				for (auto i = 0ull; i < BiasCount; i++)
+				{
+					BiasesPar1[i] = (beta1 * BiasesPar1[i]) + (oneMinusBeta1 * BiasesD1[i]);
+					BiasesPar2[i] = (beta2 * BiasesPar2[i]) + (oneMinusBeta2 * Square<Float>(BiasesD1[i] * batchRecip));
+
+					auto diff = std::abs(BiasesPar3[i] - BiasesD1[i]);
+					auto dfc = Float(1) / (Float(1) + std::exp(-diff));
+					BiasesPar3[i] = BiasesD1[i];
+					auto exp_avg1 = (BiasesPar1[i] / oneMinusB1) * dfc;
+										
+					Biases[i] -= lrBias * exp_avg1 / std::sqrt((BiasesPar2[i] / oneMinusB2) + eps) + (weightDecayBias * Biases[i]);
 				}
 			}
 
@@ -2289,6 +2482,34 @@ namespace dnn
 					{
 						switch (GetOptimizerParameters(optimizer))
 						{
+						case 3ull:
+						{
+							auto memWeightsPar1 = dnnl::memory(*WeightsMemDesc, Device.engine, WeightsPar1.data());
+							auto weightsPar1Mem = dnnl::memory(*PersistWeightsMemDesc, Device.engine);
+							dnnl::reorder(memWeightsPar1, weightsPar1Mem).execute(Device.stream, { {DNNL_ARG_FROM, memWeightsPar1}, {DNNL_ARG_TO, weightsPar1Mem} });
+							Device.stream.wait();
+							os.write(reinterpret_cast<const char*>(weightsPar1Mem.get_data_handle()), std::streamsize(WeightCount * sizeof(Float)));
+							if (HasBias)
+								os.write(reinterpret_cast<const char*>(BiasesPar1.data()), std::streamsize(BiasCount * sizeof(Float)));
+
+							auto memWeightsPar2 = dnnl::memory(*WeightsMemDesc, Device.engine, WeightsPar2.data());
+							auto weightsPar2Mem = dnnl::memory(*PersistWeightsMemDesc, Device.engine);
+							dnnl::reorder(memWeightsPar2, weightsPar2Mem).execute(Device.stream, { {DNNL_ARG_FROM, memWeightsPar2}, {DNNL_ARG_TO, weightsPar2Mem} });
+							Device.stream.wait();
+							os.write(reinterpret_cast<const char*>(weightsPar2Mem.get_data_handle()), std::streamsize(WeightCount * sizeof(Float)));
+							if (HasBias)
+								os.write(reinterpret_cast<const char*>(BiasesPar2.data()), std::streamsize(BiasCount * sizeof(Float)));
+
+							auto memWeightsPar3 = dnnl::memory(*WeightsMemDesc, Device.engine, WeightsPar3.data());
+							auto weightsPar3Mem = dnnl::memory(*PersistWeightsMemDesc, Device.engine);
+							dnnl::reorder(memWeightsPar3, weightsPar3Mem).execute(Device.stream, { {DNNL_ARG_FROM, memWeightsPar3}, {DNNL_ARG_TO, weightsPar3Mem} });
+							Device.stream.wait();
+							os.write(reinterpret_cast<const char*>(weightsPar3Mem.get_data_handle()), std::streamsize(WeightCount * sizeof(Float)));
+							if (HasBias)
+								os.write(reinterpret_cast<const char*>(BiasesPar3.data()), std::streamsize(BiasCount * sizeof(Float)));
+						}
+						break;
+
 						case 2ull:
 						{
 							auto memWeightsPar1 = dnnl::memory(*WeightsMemDesc, Device.engine, WeightsPar1.data());
@@ -2345,6 +2566,20 @@ namespace dnn
 					{
 						switch (GetOptimizerParameters(optimizer))
 						{
+						case 3ull:
+						{
+							os.write(reinterpret_cast<const char*>(WeightsPar1.data()), std::streamsize(WeightCount * sizeof(Float)));
+							if (HasBias)
+								os.write(reinterpret_cast<const char*>(BiasesPar1.data()), std::streamsize(BiasCount * sizeof(Float)));
+							os.write(reinterpret_cast<const char*>(WeightsPar2.data()), std::streamsize(WeightCount * sizeof(Float)));
+							if (HasBias)
+								os.write(reinterpret_cast<const char*>(BiasesPar2.data()), std::streamsize(BiasCount * sizeof(Float)));
+							os.write(reinterpret_cast<const char*>(WeightsPar3.data()), std::streamsize(WeightCount * sizeof(Float)));
+							if (HasBias)
+								os.write(reinterpret_cast<const char*>(BiasesPar3.data()), std::streamsize(BiasCount * sizeof(Float)));
+						}
+						break;
+
 						case 2ull:
 						{
 							os.write(reinterpret_cast<const char*>(WeightsPar1.data()), std::streamsize(WeightCount * sizeof(Float)));
@@ -2401,6 +2636,34 @@ namespace dnn
 					{
 						switch (GetOptimizerParameters(optimizer))
 						{
+						case 3ull:
+						{
+							auto memWeightsPar1 = dnnl::memory(*PersistWeightsMemDesc, Device.engine);
+							is.read(reinterpret_cast<char*>(memWeightsPar1.get_data_handle()), std::streamsize(WeightCount * sizeof(Float)));
+							auto weightsPar1Mem = dnnl::memory(*WeightsMemDesc, Device.engine, WeightsPar1.data());
+							dnnl::reorder(memWeightsPar1, weightsPar1Mem).execute(Device.stream, { {DNNL_ARG_FROM, memWeightsPar1}, {DNNL_ARG_TO, weightsPar1Mem} });
+							Device.stream.wait();
+							if (HasBias)
+								is.read(reinterpret_cast<char*>(BiasesPar1.data()), std::streamsize(BiasCount * sizeof(Float)));
+
+							auto memWeightsPar2 = dnnl::memory(*PersistWeightsMemDesc, Device.engine);
+							is.read(reinterpret_cast<char*>(memWeightsPar2.get_data_handle()), std::streamsize(WeightCount * sizeof(Float)));
+							auto weightsPar2Mem = dnnl::memory(*WeightsMemDesc, Device.engine, WeightsPar2.data());
+							dnnl::reorder(memWeightsPar2, weightsPar2Mem).execute(Device.stream, { {DNNL_ARG_FROM, memWeightsPar2}, {DNNL_ARG_TO, weightsPar2Mem} });
+							Device.stream.wait();
+							if (HasBias)
+								is.read(reinterpret_cast<char*>(BiasesPar2.data()), std::streamsize(BiasCount * sizeof(Float)));
+
+							auto memWeightsPar3 = dnnl::memory(*PersistWeightsMemDesc, Device.engine);
+							is.read(reinterpret_cast<char*>(memWeightsPar3.get_data_handle()), std::streamsize(WeightCount * sizeof(Float)));
+							auto weightsPar3Mem = dnnl::memory(*WeightsMemDesc, Device.engine, WeightsPar3.data());
+							dnnl::reorder(memWeightsPar3, weightsPar2Mem).execute(Device.stream, { {DNNL_ARG_FROM, memWeightsPar3}, {DNNL_ARG_TO, weightsPar3Mem} });
+							Device.stream.wait();
+							if (HasBias)
+								is.read(reinterpret_cast<char*>(BiasesPar3.data()), std::streamsize(BiasCount * sizeof(Float)));
+						}
+						break;
+
 						case 2ull:
 						{
 							auto memWeightsPar1 = dnnl::memory(*PersistWeightsMemDesc, Device.engine);
@@ -2457,6 +2720,20 @@ namespace dnn
 					{
 						switch (GetOptimizerParameters(optimizer))
 						{
+						case 3ull:
+						{
+							is.read(reinterpret_cast<char*>(WeightsPar1.data()), std::streamsize(WeightCount * sizeof(Float)));
+							if (HasBias)
+								is.read(reinterpret_cast<char*>(BiasesPar1.data()), std::streamsize(BiasCount * sizeof(Float)));
+							is.read(reinterpret_cast<char*>(WeightsPar2.data()), std::streamsize(WeightCount * sizeof(Float)));
+							if (HasBias)
+								is.read(reinterpret_cast<char*>(BiasesPar2.data()), std::streamsize(BiasCount * sizeof(Float)));
+							is.read(reinterpret_cast<char*>(WeightsPar3.data()), std::streamsize(WeightCount * sizeof(Float)));
+							if (HasBias)
+								is.read(reinterpret_cast<char*>(BiasesPar3.data()), std::streamsize(BiasCount * sizeof(Float)));
+						}
+						break;
+
 						case 2ull:
 						{
 							is.read(reinterpret_cast<char*>(WeightsPar1.data()), std::streamsize(WeightCount * sizeof(Float)));

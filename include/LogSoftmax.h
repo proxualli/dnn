@@ -100,7 +100,7 @@ namespace dnn
 				Device.stream.wait();
 			}
 
-			const auto& dstMem = dnnl::memory(fwdDesc->dst_desc(), Device.engine, Neurons.data());
+			auto dstMem = dnnl::memory(fwdDesc->dst_desc(), Device.engine, Neurons.data());
 
 #ifdef DNN_CACHE_PRIMITIVES
 			fwd->execute(Device.stream, std::unordered_map<int, dnnl::memory>{ {DNNL_ARG_SRC, srcMem}, { DNNL_ARG_DST, dstMem } });

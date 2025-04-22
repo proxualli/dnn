@@ -132,7 +132,7 @@ namespace dnn
 				InputNeurons.resize(batchSize, C, H, W, dnnl::memory::data_type::f32, BlockedFmt, Device.engine);
 		}
 
-		void ForwardProp(const UInt batchSize, const bool training)
+		void ForwardProp(const UInt batchSize, const bool training) final override
 		{
 
 #ifdef DNN_CACHE_PRIMITIVES
